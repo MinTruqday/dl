@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibShrinkToFit implements BlockTool {
   static readonly feature = {
     id: "DocLibShrinkToFit",
-    title: "DocLib Shrink To Fit",
+    title: "DocLib ShrinkToFit",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9fed716ada0bec59"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="10,20 15,8 18,15 19,8 6,18 14,4"/></svg>',
     product: "doclib",
   } as const;

@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLineSpacing15 implements BlockTool {
   static readonly feature = {
     id: "DocLibLineSpacing15",
-    title: "DocLib Line Spacing15",
+    title: "DocLib LineSpacing15",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="868f34fbae99dc36"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,11 5,17 8,4 20,7 20,9 10,7"/></svg>',
     product: "doclib",
   } as const;

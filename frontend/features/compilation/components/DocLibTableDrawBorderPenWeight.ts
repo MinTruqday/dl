@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableDrawBorderPenWeight implements BlockTool {
   static readonly feature = {
     id: "DocLibTableDrawBorderPenWeight",
-    title: "DocLib Table Draw Border Pen Weight",
+    title: "DocLib TableDrawBorderPenWeight",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8d43db052a8e41dc"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,20 19,9 12,10 18,20 14,4 11,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Table Draw Border Pen Weight",
+      title: "DocLib TableDrawBorderPenWeight",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8d43db052a8e41dc"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,20 19,9 12,10 18,20 14,4 11,12"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibTableDrawBorderPenWeight implements BlockTool {
   }
 
   readonly id = "DocLibTableDrawBorderPenWeight";
-  readonly title = "DocLib Table Draw Border Pen Weight";
+  readonly title = "DocLib TableDrawBorderPenWeight";
   readonly category = "table" as const;
   readonly mode = "TableDrawBorderPenWeight";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "TableDrawBorderPenWeight";
+  readonly controlType = "dropDown";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibTableDrawBorderPenWeight implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

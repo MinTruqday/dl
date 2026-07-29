@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibParagraphSpacingCustom implements BlockTool {
   static readonly feature = {
     id: "DocLibParagraphSpacingCustom",
-    title: "DocLib Paragraph Spacing Custom",
+    title: "DocLib ParagraphSpacingCustom",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9cb17dd0155bf099"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="7,11 10,8 8,10 6,4 4,17 15,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Paragraph Spacing Custom",
+      title: "DocLib ParagraphSpacingCustom",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9cb17dd0155bf099"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="7,11 10,8 8,10 6,4 4,17 15,8"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibParagraphSpacingCustom implements BlockTool {
   }
 
   readonly id = "DocLibParagraphSpacingCustom";
-  readonly title = "DocLib Paragraph Spacing Custom";
+  readonly title = "DocLib ParagraphSpacingCustom";
   readonly category = "format" as const;
   readonly mode = "ParagraphSpacingCustom";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "ParagraphSpacingCustom";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibParagraphSpacingCustom implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

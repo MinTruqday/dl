@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibBuildingBlocksOrganizer implements BlockTool {
   static readonly feature = {
     id: "DocLibBuildingBlocksOrganizer",
-    title: "DocLib Building Blocks Organizer",
+    title: "DocLib BuildingBlocksOrganizer",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8be1b5fa500339bc"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="7,8 15,16 16,7 10,5 20,11 18,14"/></svg>',
     product: "doclib",
   } as const;

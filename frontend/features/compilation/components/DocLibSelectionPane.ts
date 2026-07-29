@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSelectionPane implements BlockTool {
   static readonly feature = {
     id: "DocLibSelectionPane",
-    title: "DocLib Selection Pane",
+    title: "DocLib SelectionPane",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="55e9cd37de68eb3b"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="4,16 5,8 5,6 18,12 7,16 15,8"/></svg>',
     product: "doclib",
   } as const;

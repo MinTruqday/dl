@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibExpandHeading implements BlockTool {
   static readonly feature = {
     id: "DocLibExpandHeading",
-    title: "DocLib Expand Heading",
+    title: "DocLib ExpandHeading",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c1fdb6d6f05a77f6"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="10,19 16,14 6,9 4,12 15,8 6,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Expand Heading",
+      title: "DocLib ExpandHeading",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c1fdb6d6f05a77f6"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="10,19 16,14 6,9 4,12 15,8 6,15"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibExpandHeading implements BlockTool {
   }
 
   readonly id = "DocLibExpandHeading";
-  readonly title = "DocLib Expand Heading";
+  readonly title = "DocLib ExpandHeading";
   readonly category = "format" as const;
   readonly mode = "ExpandHeading";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "ExpandHeading";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibExpandHeading implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

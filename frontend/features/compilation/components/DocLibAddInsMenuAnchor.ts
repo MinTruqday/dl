@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAddInsMenuAnchor implements BlockTool {
   static readonly feature = {
     id: "DocLibAddInsMenuAnchor",
-    title: "DocLib Add Ins Menu Anchor",
+    title: "DocLib AddInsMenuAnchor",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c2b650a22a258849"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="11,16 16,13 12,7 4,9 9,16 4,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Add Ins Menu Anchor",
+      title: "DocLib AddInsMenuAnchor",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c2b650a22a258849"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="11,16 16,13 12,7 4,9 9,16 4,13"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibAddInsMenuAnchor implements BlockTool {
   }
 
   readonly id = "DocLibAddInsMenuAnchor";
-  readonly title = "DocLib Add Ins Menu Anchor";
+  readonly title = "DocLib AddInsMenuAnchor";
   readonly category = "insert" as const;
   readonly mode = "AddInsMenuAnchor";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "AddInsMenuAnchor";
+  readonly controlType = "menu";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibAddInsMenuAnchor implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibShowAllHeadings implements BlockTool {
   static readonly feature = {
     id: "DocLibShowAllHeadings",
-    title: "DocLib Show All Headings",
+    title: "DocLib ShowAllHeadings",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ad7335c0b797e4f6"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="7,17 6,9 17,19 11,12 11,14 12,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Show All Headings",
+      title: "DocLib ShowAllHeadings",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ad7335c0b797e4f6"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="7,17 6,9 17,19 11,12 11,14 12,15"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibShowAllHeadings implements BlockTool {
   }
 
   readonly id = "DocLibShowAllHeadings";
-  readonly title = "DocLib Show All Headings";
+  readonly title = "DocLib ShowAllHeadings";
   readonly category = "format" as const;
   readonly mode = "ShowAllHeadings";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "ShowAllHeadings";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibShowAllHeadings implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

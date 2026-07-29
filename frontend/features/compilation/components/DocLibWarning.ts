@@ -40,7 +40,7 @@ export default class DocLibWarning implements BlockTool {
     this._CSS = {
       block: this.api.styles.block,
       wrapper: "cdx-warning",
-      title: "DocLib Warning",
+      title: "DocLib cdx-warning__title",
       message: "cdx-warning__message",
     };
   }

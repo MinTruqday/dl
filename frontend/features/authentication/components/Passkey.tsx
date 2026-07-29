@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { Loader2 } from "lucide-react";
 import {
   passkeyRegisterBeginAPI,
   passkeyRegisterFinishAPI,
@@ -83,6 +84,7 @@ export default function Passkey({ email, onClose, onSuccess }: PasskeyProps) {
       showToast("Kích hoạt chứng thư số Passkey hoàn tất", "success");
       onSuccess();
     } catch (err: any) {
+      console.error("Error during passkey verification:", err);
       showToast(err.message || "Lỗi khởi tạo luồng định danh chứng thư số", "error");
     } finally {
       setLoading(false);
@@ -105,11 +107,12 @@ export default function Passkey({ email, onClose, onSuccess }: PasskeyProps) {
       <ModalContent>
         <div className="space-y-4">
           <div className="space-y-2">
-            <label className="block text-[13px] font-medium text-[var(--ink-muted)] mb-2">
+            <label className="block text-[13px] font-medium text-[#6E6E73] mb-2">
               Xác thực sinh trắc học
             </label>
-            <p className="text-[15px] font-medium text-[var(--ink)] leading-relaxed">
-              Dùng vân tay hoặc khuôn mặt để đăng nhập thay cho mật khẩu
+            <p className="text-[15px] font-medium text-[#1D1D1F] leading-relaxed">
+              Kích hoạt Passkey để đăng nhập nhanh chóng bằng vân tay hoặc khuôn
+              mặt mà không cần mật khẩu.
             </p>
           </div>
         </div>
@@ -119,7 +122,7 @@ export default function Passkey({ email, onClose, onSuccess }: PasskeyProps) {
         {!loading && (
           <button
             onClick={onClose}
-            className="button-secondary flex-1"
+            className="flex-1 py-3 bg-white text-[#1D1D1F] text-[15px] font-medium disabled:opacity-50 flex items-center justify-center rounded-full hover:bg-[#E8E8ED] transition-colors"
           >
             Để sau
           </button>
@@ -127,8 +130,9 @@ export default function Passkey({ email, onClose, onSuccess }: PasskeyProps) {
         <button
           onClick={handleRegister}
           disabled={loading}
-          className="button-primary flex-1 disabled:opacity-50"
+          className="flex-1 py-3 bg-[#0071E3] text-white text-[15px] font-medium disabled:opacity-50 flex items-center justify-center rounded-full hover:bg-[#0077ED] transition-colors"
         >
+          {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : null}
           {loading ? "Đang xử lý" : "Xác nhận kích hoạt"}
         </button>
       </ModalFooter>

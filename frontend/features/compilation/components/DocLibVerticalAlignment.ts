@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibVerticalAlignment implements BlockTool {
   static readonly feature = {
     id: "DocLibVerticalAlignment",
-    title: "DocLib Vertical Alignment",
+    title: "DocLib VerticalAlignment",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8dbb0d7ce823dbf9"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="9,4 17,9 15,5 19,15 17,17 11,11"/></svg>',
     product: "doclib",
   } as const;

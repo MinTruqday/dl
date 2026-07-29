@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPasteExcelTableSourceFormatting implements BlockTool {
   static readonly feature = {
     id: "DocLibPasteExcelTableSourceFormatting",
-    title: "DocLib Paste Excel Table Source Formatting",
+    title: "DocLib PasteExcelTableSourceFormatting",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="855c1332dc592e87"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,11 6,20 20,8 16,20 15,17 18,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Paste Excel Table Source Formatting",
+      title: "DocLib PasteExcelTableSourceFormatting",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="855c1332dc592e87"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,11 6,20 20,8 16,20 15,17 18,4"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibPasteExcelTableSourceFormatting implements BlockTool 
   }
 
   readonly id = "DocLibPasteExcelTableSourceFormatting";
-  readonly title = "DocLib Paste Excel Table Source Formatting";
+  readonly title = "DocLib PasteExcelTableSourceFormatting";
   readonly category = "format" as const;
   readonly mode = "PasteExcelTableSourceFormatting";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "PasteExcelTableSourceFormatting";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibPasteExcelTableSourceFormatting implements BlockTool 
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

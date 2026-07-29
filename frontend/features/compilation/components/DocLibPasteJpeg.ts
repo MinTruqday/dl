@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPasteJpeg implements BlockTool {
   static readonly feature = {
     id: "DocLibPasteJpeg",
-    title: "DocLib Paste Jpeg",
+    title: "DocLib PasteJpeg",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="46dc37833768d88d"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="6,20 8,16 8,6 16,9 20,4 8,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Paste Jpeg",
+      title: "DocLib PasteJpeg",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="46dc37833768d88d"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="6,20 8,16 8,6 16,9 20,4 8,20"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibPasteJpeg implements BlockTool {
   }
 
   readonly id = "DocLibPasteJpeg";
-  readonly title = "DocLib Paste Jpeg";
+  readonly title = "DocLib PasteJpeg";
   readonly category = "format" as const;
   readonly mode = "PasteJpeg";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "PasteJpeg";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibPasteJpeg implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

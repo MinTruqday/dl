@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibColorPickerParagraphShading implements BlockTool {
   static readonly feature = {
     id: "DocLibColorPickerParagraphShading",
-    title: "DocLib Color Picker Paragraph Shading",
+    title: "DocLib ColorPickerParagraphShading",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8995af72201022d9"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="5,17 9,16 19,20 4,17 19,18 9,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Color Picker Paragraph Shading",
+      title: "DocLib ColorPickerParagraphShading",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8995af72201022d9"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="5,17 9,16 19,20 4,17 19,18 9,20"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibColorPickerParagraphShading implements BlockTool {
   }
 
   readonly id = "DocLibColorPickerParagraphShading";
-  readonly title = "DocLib Color Picker Paragraph Shading";
+  readonly title = "DocLib ColorPickerParagraphShading";
   readonly category = "format" as const;
   readonly mode = "ColorPickerParagraphShading";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "ColorPickerParagraphShading";
+  readonly controlType = "gallery";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibColorPickerParagraphShading implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibObjectSendToBack implements BlockTool {
   static readonly feature = {
     id: "DocLibObjectSendToBack",
-    title: "DocLib Object Send To Back",
+    title: "DocLib ObjectSendToBack",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3a119df13bd30357"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,4 8,7 12,11 7,6 19,19 5,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Object Send To Back",
+      title: "DocLib ObjectSendToBack",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3a119df13bd30357"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,4 8,7 12,11 7,6 19,19 5,10"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibObjectSendToBack implements BlockTool {
   }
 
   readonly id = "DocLibObjectSendToBack";
-  readonly title = "DocLib Object Send To Back";
+  readonly title = "DocLib ObjectSendToBack";
   readonly category = "layout" as const;
   readonly mode = "ObjectSendToBack";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "ObjectSendToBack";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibObjectSendToBack implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

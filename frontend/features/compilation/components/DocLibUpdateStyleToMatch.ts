@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibUpdateStyleToMatch implements BlockTool {
   static readonly feature = {
     id: "DocLibUpdateStyleToMatch",
-    title: "DocLib Update Style To Match",
+    title: "DocLib UpdateStyleToMatch",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a33dfe2cfad9fa8e"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="14,14 20,14 16,17 16,10 16,19 20,13"/></svg>',
     product: "doclib",
   } as const;

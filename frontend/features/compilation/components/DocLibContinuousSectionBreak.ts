@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibContinuousSectionBreak implements BlockTool {
   static readonly feature = {
     id: "DocLibContinuousSectionBreak",
-    title: "DocLib Continuous Section Break",
+    title: "DocLib ContinuousSectionBreak",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e78f6978af291461"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="14,11 7,5 9,11 7,16 4,17 16,14"/></svg>',
     product: "doclib",
   } as const;

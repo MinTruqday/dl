@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibReplaceWithAutoText implements BlockTool {
   static readonly feature = {
     id: "DocLibReplaceWithAutoText",
-    title: "DocLib Replace With Auto Text",
+    title: "DocLib ReplaceWithAutoText",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5e8b7fbbc81fda69"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="13,7 12,4 17,18 18,7 9,8 6,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Replace With Auto Text",
+      title: "DocLib ReplaceWithAutoText",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5e8b7fbbc81fda69"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="13,7 12,4 17,18 18,7 9,8 6,4"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibReplaceWithAutoText implements BlockTool {
   }
 
   readonly id = "DocLibReplaceWithAutoText";
-  readonly title = "DocLib Replace With Auto Text";
+  readonly title = "DocLib ReplaceWithAutoText";
   readonly category = "format" as const;
   readonly mode = "ReplaceWithAutoText";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "ReplaceWithAutoText";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibReplaceWithAutoText implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

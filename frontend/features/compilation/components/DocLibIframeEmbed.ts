@@ -1,10 +1,9 @@
 import { API, BlockTool } from "@editorjs/editorjs";
-import { requestEditorInput } from "./editor-dialog";
 
 export default class DocLibIframeEmbed implements BlockTool {
   static readonly feature = {
     id: "DocLibIframeEmbed",
-    title: "DocLib Iframe Embed",
+    title: "DocLib IframeEmbed",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2d38698e32ba92c8"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="15,9 7,10 20,20 14,17 19,4 14,9"/></svg>',
     product: "doclib",
   } as const;
@@ -16,7 +15,7 @@ export default class DocLibIframeEmbed implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "DocLib Iframe Embed",
+      title: "DocLib Embed",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2d38698e32ba92c8"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="15,9 7,10 20,20 14,17 19,4 14,9"/></svg>',
     };
   }
@@ -99,12 +98,8 @@ export default class DocLibIframeEmbed implements BlockTool {
         const heightBtn = document.createElement("button");
         heightBtn.classList.add("doclib-if-height-btn");
         heightBtn.innerText = `Height: ${this.data.height}px`;
-        heightBtn.addEventListener("click", async () => {
-          const h = await requestEditorInput({
-            title: "DocLib Iframe Embed",
-            label: "Chiều cao theo px",
-            initialValue: this.data.height.toString(),
-          });
+        heightBtn.addEventListener("click", () => {
+          const h = prompt("Enter height (px):", this.data.height.toString());
           if (h && !isNaN(parseInt(h))) {
             this.data.height = parseInt(h);
             this.buildUI();

@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibActiveXImage implements BlockTool {
   static readonly feature = {
     id: "DocLibActiveXImage",
-    title: "DocLib Active X Image",
+    title: "DocLib ActiveXImage",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1c4bdc69b2db7019"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="15,11 20,7 12,19 14,12 19,10 15,11"/></svg>',
     product: "doclib",
   } as const;

@@ -4,7 +4,9 @@
   "private": true,
   "packageManager": "pnpm@9.15.4",
   "scripts": {
+    "predev": "pnpm install",
     "dev": "next dev",
+    "prebuild": "pnpm install",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -20,6 +22,7 @@
     "editorjs-html": "latest",
     "lucide-react": "^0.370.0",
     "next": "^14.1.0",
+    "next-themes": "^0.4.6",
     "qrcode.react": "^3.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

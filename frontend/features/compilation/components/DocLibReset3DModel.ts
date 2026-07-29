@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibReset3DModel implements BlockTool {
   static readonly feature = {
     id: "DocLibReset3DModel",
-    title: "DocLib Reset3D Model",
+    title: "DocLib Reset3DModel",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fe8e39d516e9432f"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="20,10 10,13 9,16 20,17 16,11 15,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Reset3D Model",
+      title: "DocLib Reset3DModel",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fe8e39d516e9432f"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="20,10 10,13 9,16 20,17 16,11 15,6"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibReset3DModel implements BlockTool {
   }
 
   readonly id = "DocLibReset3DModel";
-  readonly title = "DocLib Reset3D Model";
+  readonly title = "DocLib Reset3DModel";
   readonly category = "format" as const;
   readonly mode = "Reset3DModel";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "Reset3DModel";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibReset3DModel implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

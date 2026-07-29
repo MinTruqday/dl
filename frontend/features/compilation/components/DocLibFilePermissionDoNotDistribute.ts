@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFilePermissionDoNotDistribute implements BlockTool {
   static readonly feature = {
     id: "DocLibFilePermissionDoNotDistribute",
-    title: "DocLib File Permission Do Not Distribute",
+    title: "DocLib FilePermissionDoNotDistribute",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="93dcc06d6d8c413c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="15,20 9,11 11,8 18,13 10,10 6,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib File Permission Do Not Distribute",
+      title: "DocLib FilePermissionDoNotDistribute",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="93dcc06d6d8c413c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="15,20 9,11 11,8 18,13 10,10 6,12"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibFilePermissionDoNotDistribute implements BlockTool {
   }
 
   readonly id = "DocLibFilePermissionDoNotDistribute";
-  readonly title = "DocLib File Permission Do Not Distribute";
+  readonly title = "DocLib FilePermissionDoNotDistribute";
   readonly category = "format" as const;
   readonly mode = "FilePermissionDoNotDistribute";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "FilePermissionDoNotDistribute";
+  readonly controlType = "toggleButton";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibFilePermissionDoNotDistribute implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

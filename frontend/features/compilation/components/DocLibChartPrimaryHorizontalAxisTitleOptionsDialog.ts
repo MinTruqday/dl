@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartPrimaryHorizontalAxisTitleOptionsDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibChartPrimaryHorizontalAxisTitleOptionsDialog",
-    title: "DocLib Chart Primary Horizontal Axis Title Options Dialog",
+    title: "DocLib ChartPrimaryHorizontalAxisTitleOptionsDialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4e42d930a56fb5ba"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="14,19 17,18 16,13 15,20 20,9 11,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Chart Primary Horizontal Axis Title Options Dialog",
+      title: "DocLib ChartPrimaryHorizontalAxisTitleOptionsDialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4e42d930a56fb5ba"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="14,19 17,18 16,13 15,20 20,9 11,11"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibChartPrimaryHorizontalAxisTitleOptionsDialog implemen
   }
 
   readonly id = "DocLibChartPrimaryHorizontalAxisTitleOptionsDialog";
-  readonly title = "DocLib Chart Primary Horizontal Axis Title Options Dialog";
+  readonly title = "DocLib ChartPrimaryHorizontalAxisTitleOptionsDialog";
   readonly category = "layout" as const;
   readonly mode = "ChartPrimaryHorizontalAxisTitleOptionsDialog";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "ChartPrimaryHorizontalAxisTitleOptionsDialog";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibChartPrimaryHorizontalAxisTitleOptionsDialog implemen
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

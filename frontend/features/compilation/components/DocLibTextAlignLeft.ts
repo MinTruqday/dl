@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextAlignLeft implements BlockTool {
   static readonly feature = {
     id: "DocLibTextAlignLeft",
-    title: "DocLib Text Align Left",
+    title: "DocLib TextAlignLeft",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="72b6a6f9dfec6732"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="16,16 17,15 6,19 5,20 8,18 9,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Text Align Left",
+      title: "DocLib TextAlignLeft",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="72b6a6f9dfec6732"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="16,16 17,15 6,19 5,20 8,18 9,4"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibTextAlignLeft implements BlockTool {
   }
 
   readonly id = "DocLibTextAlignLeft";
-  readonly title = "DocLib Text Align Left";
+  readonly title = "DocLib TextAlignLeft";
   readonly category = "format" as const;
   readonly mode = "TextAlignLeft";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "TextAlignLeft";
+  readonly controlType = "toggleButton";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibTextAlignLeft implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDistributeRows implements BlockTool {
   static readonly feature = {
     id: "DocLibDistributeRows",
-    title: "DocLib Distribute Rows",
+    title: "DocLib DistributeRows",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="930ce941fc517365"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="15,16 16,18 18,17 17,20 17,8 10,12"/></svg>',
     product: "doclib",
   } as const;

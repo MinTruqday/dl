@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibHeading3Apply implements BlockTool {
   static readonly feature = {
     id: "DocLibHeading3Apply",
-    title: "DocLib Heading3 Apply",
+    title: "DocLib Heading3Apply",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4282e2dbb2b29bc7"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,15 9,19 12,12 6,16 12,4 14,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Heading3 Apply",
+      title: "DocLib Heading3Apply",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4282e2dbb2b29bc7"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,15 9,19 12,12 6,16 12,4 14,14"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibHeading3Apply implements BlockTool {
   }
 
   readonly id = "DocLibHeading3Apply";
-  readonly title = "DocLib Heading3 Apply";
+  readonly title = "DocLib Heading3Apply";
   readonly category = "format" as const;
   readonly mode = "Heading3Apply";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "Heading3Apply";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibHeading3Apply implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

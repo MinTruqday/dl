@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFileCloseOrExit implements BlockTool {
   static readonly feature = {
     id: "DocLibFileCloseOrExit",
-    title: "DocLib File Close Or Exit",
+    title: "DocLib FileCloseOrExit",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4acebca90e5ae55a"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,6 5,20 18,9 12,9 6,7 6,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib File Close Or Exit",
+      title: "DocLib FileCloseOrExit",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4acebca90e5ae55a"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,6 5,20 18,9 12,9 6,7 6,17"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibFileCloseOrExit implements BlockTool {
   }
 
   readonly id = "DocLibFileCloseOrExit";
-  readonly title = "DocLib File Close Or Exit";
+  readonly title = "DocLib FileCloseOrExit";
   readonly category = "format" as const;
   readonly mode = "FileCloseOrExit";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "FileCloseOrExit";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibFileCloseOrExit implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

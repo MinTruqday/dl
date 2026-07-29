@@ -11,7 +11,6 @@ import {
   compilePreviewAPI,
   globalFindReplaceAPI,
   addInlineCommentAPI,
-  getInlineCommentsAPI,
   getVersionDiffAPI,
   getAiSuggestionsAPI,
   summarizeDocumentAPI,
@@ -21,8 +20,11 @@ import {
   getSynonymsAPI,
   translateTextAPI,
 } from "@/features/agentic_ai/services/inference.service";
-import { peerReviewAPI } from "@/features/agentic_ai/services/interaction.service";
-import { getToken } from "@/features/authentication/services/session.service";
+import {
+  API_URL,
+  getAuthHeaders,
+  getToken,
+} from "@/features/authentication/services/session.service";
 import {
   Sparkles,
   CheckSquare,
@@ -317,7 +319,16 @@ ${latexCode}
         const data = await getDocumentVersionsAPI(documentId);
         setSidebarData(data || []);
       } else if (activeSidebar === "comments") {
-        setSidebarData(await getInlineCommentsAPI(documentId));
+        const res = await fetch(
+          `${API_URL}/soan-thao/${documentId}/binh-luan`,
+          {
+            headers: getAuthHeaders(),
+          },
+        );
+        if (!res.ok)
+          throw new Error("Invalid response stream");
+        const data = await res.json();
+        setSidebarData(data.data || []);
       }
     } catch (err: any) {
       showToast("Table of contents extraction failed", "error");
@@ -338,9 +349,16 @@ ${latexCode}
       const data = await editorRef.current.save();
       const text = data.blocks.map((b) => b.data?.text || "").join(" ");
       const contextText = text.length > 3000 ? text.slice(-3000) : text;
-      const result = await peerReviewAPI(contextText, ["consistency"]);
-      const conflicts =
-        result.data?.conflicts || result.conflicts || result.data?.issues || [];
+      const res = await fetch(
+        `${API_URL}/soan-thao/${documentId}/kiem-tra-logic`,
+        {
+          method: "POST",
+          headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+          body: JSON.stringify({ content: contextText }),
+        },
+      );
+      const result = await res.json();
+      const conflicts = result.data?.conflicts || [];
       if (conflicts.length > 0) {
         showToast(`Content consistency conflict: ${conflicts[0]}`, "error");
       } else {
@@ -836,34 +854,34 @@ ${latexCode}
         )}
       </div>
 
-      <div className="h-10 border-t border-[var(--border-strong)] bg-white px-6 flex items-center justify-between shrink-0 z-30">
+      <div className="h-10 border-t border-[#D2D2D7] bg-white px-6 flex items-center justify-between shrink-0 z-30">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
-            <span className="text-[13px] text-[var(--ink-muted)]">Speed</span>
-            <span className="text-[13px] font-medium text-[var(--ink)]">
+            <span className="text-[13px] text-[#6E6E73]">Speed</span>
+            <span className="text-[13px] font-medium text-[#1D1D1F]">
               {stats.wpm} WPM
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[13px] text-[var(--ink-muted)]">Characters</span>
-            <span className="text-[13px] font-medium text-[var(--ink)]">
+            <span className="text-[13px] text-[#6E6E73]">Characters</span>
+            <span className="text-[13px] font-medium text-[#1D1D1F]">
               {stats.charCount}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[13px] text-[var(--ink-muted)]">Reading time</span>
-            <span className="text-[13px] font-medium text-[var(--ink)]">
+            <span className="text-[13px] text-[#6E6E73]">Reading time</span>
+            <span className="text-[13px] font-medium text-[#1D1D1F]">
               {readingTime} minutes
             </span>
           </div>
           {tags.length > 0 && (
             <div className="flex items-center gap-2">
-              <span className="text-[13px] text-[var(--ink-muted)]">Tags</span>
+              <span className="text-[13px] text-[#6E6E73]">Tags</span>
               <div className="flex gap-1.5">
                 {tags.map((t, idx) => (
                   <span
                     key={idx}
-                    className="px-2 py-0.5 bg-[var(--surface-quiet)] rounded-md text-[13px] text-[var(--ink-muted)] font-medium"
+                    className="px-2 py-0.5 bg-[#F5F5F7] rounded-md text-[13px] text-[#6E6E73] font-medium"
                   >
                     #{t}
                   </span>
@@ -875,30 +893,30 @@ ${latexCode}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <span
-              className={`w-2 h-2 rounded-full ${onlineUsers > 1 ? "bg-[#34C759]" : "bg-[var(--border-strong)]"}`}
+              className={`w-2 h-2 rounded-full ${onlineUsers > 1 ? "bg-[#34C759]" : "bg-[#D2D2D7]"}`}
             ></span>
-            <span className="text-[13px] text-[var(--ink-muted)]">Collaboration</span>
-            <span className="text-[13px] font-medium text-[var(--ink)]">
+            <span className="text-[13px] text-[#6E6E73]">Collaboration</span>
+            <span className="text-[13px] font-medium text-[#1D1D1F]">
               {onlineUsers > 1
                 ? `${onlineUsers} online`
                 : "Online"}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[13px] text-[var(--ink-muted)]">Status</span>
-            <span className="text-[13px] font-medium text-[var(--ink)]">
+            <span className="text-[13px] text-[#6E6E73]">Status</span>
+            <span className="text-[13px] font-medium text-[#1D1D1F]">
               {saveStatus}
             </span>
           </div>
-          <div className="w-32 h-1.5 bg-[var(--border)] rounded-full relative overflow-hidden">
+          <div className="w-32 h-1.5 bg-[#E8E8ED] rounded-full relative overflow-hidden">
             <div
-              className="absolute top-0 left-0 h-full bg-[var(--brand)] transition-all duration-300"
+              className="absolute top-0 left-0 h-full bg-[#0071E3] transition-all duration-300"
               style={{
                 width: `${Math.min(100, (stats.charCount / parseInt(typeof window !== "undefined" ? localStorage.getItem("doclib_daily_goal") || "5000" : "5000")) * 100)}%`,
               }}
             />
           </div>
-          <span className="text-[13px] text-[var(--ink-muted)]">Daily goal</span>
+          <span className="text-[13px] text-[#6E6E73]">Daily goal</span>
         </div>
       </div>
     </div>

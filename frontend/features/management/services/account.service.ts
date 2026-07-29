@@ -1,7 +1,6 @@
 import {
   API_URL,
   getAuthHeaders,
-  removeToken,
 } from "@/features/authentication/services/session.service";
 
 export async function getMyProfileAPI() {
@@ -41,31 +40,3 @@ export async function getUserProfileAPI(slug: string) {
   return data;
 }
 
-export async function applyForAuthorAPI(
-  motivation: string,
-  portfolio: string,
-) {
-  const res = await fetch(`${API_URL}/ho-so/tac-gia/ung-tuyen`, {
-    method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ motivation, portfolio }),
-  });
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.message || data.detail || "Không thể gửi yêu cầu");
-  }
-  return data;
-}
-
-export async function deleteMyAccountAPI() {
-  const res = await fetch(`${API_URL}/ho-so/xoa-tai-khoan`, {
-    method: "DELETE",
-    headers: getAuthHeaders(),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(data.message || data.detail || "Không thể xóa tài khoản");
-  }
-  removeToken();
-  return data;
-}

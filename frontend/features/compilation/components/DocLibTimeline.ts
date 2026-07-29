@@ -41,7 +41,7 @@ export default class DocLibTimeline implements BlockTool {
           ? data.items
           : [
               {
-                title: "DocLib Timeline",
+                title: "DocLib Start Project",
                 date: "Jan 2024",
                 desc: "Kickoff and detailed planning.",
               },

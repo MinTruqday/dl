@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSimpleMarkup implements BlockTool {
   static readonly feature = {
     id: "DocLibSimpleMarkup",
-    title: "DocLib Simple Markup",
+    title: "DocLib SimpleMarkup",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9b9eb1268bb08390"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="6,9 11,8 7,10 16,12 14,4 6,20"/></svg>',
     product: "doclib",
   } as const;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartFormatAxis implements BlockTool {
   static readonly feature = {
     id: "DocLibChartFormatAxis",
-    title: "DocLib Chart Format Axis",
+    title: "DocLib ChartFormatAxis",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a83f6f3f39d87c22"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,16 13,16 10,16 9,4 4,20 13,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Chart Format Axis",
+      title: "DocLib ChartFormatAxis",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a83f6f3f39d87c22"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,16 13,16 10,16 9,4 4,20 13,18"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibChartFormatAxis implements BlockTool {
   }
 
   readonly id = "DocLibChartFormatAxis";
-  readonly title = "DocLib Chart Format Axis";
+  readonly title = "DocLib ChartFormatAxis";
   readonly category = "media" as const;
   readonly mode = "ChartFormatAxis";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "ChartFormatAxis";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibChartFormatAxis implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibGoToTableOfContents implements BlockTool {
   static readonly feature = {
     id: "DocLibGoToTableOfContents",
-    title: "DocLib Go To Table Of Contents",
+    title: "DocLib GoToTableOfContents",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="640c4b1d12be633d"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,16 11,16 5,7 18,14 9,9 17,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Go To Table Of Contents",
+      title: "DocLib GoToTableOfContents",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="640c4b1d12be633d"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,16 11,16 5,7 18,14 9,9 17,6"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibGoToTableOfContents implements BlockTool {
   }
 
   readonly id = "DocLibGoToTableOfContents";
-  readonly title = "DocLib Go To Table Of Contents";
+  readonly title = "DocLib GoToTableOfContents";
   readonly category = "format" as const;
   readonly mode = "GoToTableOfContents";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "GoToTableOfContents";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibGoToTableOfContents implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

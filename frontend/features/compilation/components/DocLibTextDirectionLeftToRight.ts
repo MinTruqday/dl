@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextDirectionLeftToRight implements BlockTool {
   static readonly feature = {
     id: "DocLibTextDirectionLeftToRight",
-    title: "DocLib Text Direction Left To Right",
+    title: "DocLib TextDirectionLeftToRight",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="40440aecf19e6a93"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,4 14,19 7,9 8,15 13,17 5,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Text Direction Left To Right",
+      title: "DocLib TextDirectionLeftToRight",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="40440aecf19e6a93"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,4 14,19 7,9 8,15 13,17 5,4"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibTextDirectionLeftToRight implements BlockTool {
   }
 
   readonly id = "DocLibTextDirectionLeftToRight";
-  readonly title = "DocLib Text Direction Left To Right";
+  readonly title = "DocLib TextDirectionLeftToRight";
   readonly category = "format" as const;
   readonly mode = "TextDirectionLeftToRight";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "TextDirectionLeftToRight";
+  readonly controlType = "toggleButton";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibTextDirectionLeftToRight implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

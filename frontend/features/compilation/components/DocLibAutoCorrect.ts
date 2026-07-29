@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAutoCorrect implements BlockTool {
   static readonly feature = {
     id: "DocLibAutoCorrect",
-    title: "DocLib Auto Correct",
+    title: "DocLib AutoCorrect",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="22c2ad501ad57907"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,11 7,16 13,13 6,11 18,8 19,6"/></svg>',
     product: "doclib",
   } as const;

@@ -1,50 +1,46 @@
 "use client";
 
 import React from "react";
-import { cn } from "../../lib/app_utils";
 
-type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
+type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "danger";
 type ButtonSize = "sm" | "md" | "lg" | "icon";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
+  className?: string;
+  icon?: React.ReactNode;
 }
 
 export function Button({
   variant = "primary",
   size = "md",
-  className,
+  className = "",
   children,
+  icon,
   ...props
 }: ButtonProps) {
-  const variants = {
-    primary:
-      "border-[var(--brand)] bg-[var(--brand)] text-white hover:border-[var(--brand-hover)] hover:bg-[var(--brand-hover)]",
-    secondary:
-      "border-[var(--border)] bg-[var(--surface)] text-[var(--ink)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-quiet)]",
-    ghost:
-      "border-transparent bg-transparent text-[var(--ink-muted)] hover:bg-[var(--surface-quiet)] hover:text-[var(--ink)]",
-    danger:
-      "border-[var(--danger)] bg-[var(--danger)] text-white hover:brightness-95",
+  const vClass = {
+    primary: "bg-black text-white border-black ",
+    secondary: "bg-white text-black border-zinc-200 ",
+    outline: "bg-transparent text-black border-zinc-200 ",
+    ghost: "bg-transparent text-black border-transparent ",
+    danger: "bg-white text-black border-zinc-200 ",
   };
-  const sizes = {
-    sm: "min-h-9 px-3 text-[13px]",
-    md: "min-h-10 px-4 text-[14px]",
-    lg: "min-h-11 px-5 text-[15px]",
-    icon: "size-10 p-0",
+
+  const sClass = {
+    sm: "px-3 py-1.5 text-[11px] font-bold border",
+    md: "px-5 py-2.5 text-xs font-bold border",
+    lg: "px-8 py-3.5 text-sm font-bold border",
+    icon: "p-2 border border-zinc-200 ",
   };
 
   return (
     <button
-      className={cn(
-        "inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-[var(--radius-control)] border font-semibold transition duration-150 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50",
-        variants[variant],
-        sizes[size],
-        className,
-      )}
+      className={`inline-flex items-center justify-center font-sans disabled:opacity-50 disabled:cursor-not-allowed rounded-none ${vClass[variant]} ${sClass[size]} ${className}`}
       {...props}
     >
+      {icon && <span className={children ? "mr-2" : ""}>{icon}</span>}
       {children}
     </button>
   );

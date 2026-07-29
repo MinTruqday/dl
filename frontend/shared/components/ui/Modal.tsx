@@ -1,7 +1,13 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
-import { cn } from "../../lib/app_utils";
+import React, { useEffect } from "react";
+import { X } from "lucide-react";
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 interface ModalProps {
   isOpen: boolean;
@@ -9,7 +15,6 @@ interface ModalProps {
   children: React.ReactNode;
   className?: string;
   showCloseButton?: boolean;
-  closeOnBackdrop?: boolean;
 }
 
 export function Modal({
@@ -18,52 +23,34 @@ export function Modal({
   children,
   className,
   showCloseButton = true,
-  closeOnBackdrop = true,
 }: ModalProps) {
-  const panelRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
-    if (!isOpen) return;
-    const previous = document.activeElement as HTMLElement | null;
-    const close = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    document.body.style.overflow = "hidden";
-    document.addEventListener("keydown", close);
-    requestAnimationFrame(() => panelRef.current?.focus());
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
     return () => {
-      document.body.style.overflow = "";
-      document.removeEventListener("keydown", close);
-      previous?.focus();
+      document.body.style.overflow = "unset";
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-[2000] flex items-center justify-center bg-[color:rgba(32,32,30,0.36)] p-4 backdrop-blur-[2px]"
-      onMouseDown={(event) => {
-        if (closeOnBackdrop && event.target === event.currentTarget) onClose();
-      }}
-    >
+    <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 animate-in fade-in backdrop-blur-sm bg-black/40">
       <div
-        ref={panelRef}
-        role="dialog"
-        aria-modal="true"
-        tabIndex={-1}
         className={cn(
-          "relative max-h-[min(88dvh,760px)] w-full max-w-lg overflow-y-auto rounded-[var(--radius-workspace)] border border-[var(--border)] bg-[var(--surface)] shadow-[0_28px_80px_rgba(32,32,30,0.18)] outline-none",
+          "bg-[#F5F5F7] w-full max-w-md animate-in zoom-in-95 rounded-[18px] relative p-0 shadow-2xl border-none overflow-hidden",
           className,
         )}
       >
         {showCloseButton && (
           <button
-            type="button"
             onClick={onClose}
-            className="absolute right-4 top-4 z-10 min-h-9 rounded-[var(--radius-control)] px-3 text-[13px] font-medium text-[var(--ink-muted)] hover:bg-[var(--surface-quiet)] hover:text-[var(--ink)]"
+            className="absolute top-6 right-6 p-1 text-[#6E6E73] hover:text-[#1D1D1F] transition-colors rounded-full hover:bg-[#E8E8ED]"
           >
-            Đóng
+            <X className="w-5 h-5" />
           </button>
         )}
         {children}
@@ -80,7 +67,7 @@ export function ModalHeader({
   className?: string;
 }) {
   return (
-    <div className={cn("border-b border-[var(--border)] px-6 py-5 pr-20", className)}>
+    <div className={cn("border-b border-[#E8E8ED] p-6 mb-0", className)}>
       {children}
     </div>
   );
@@ -94,7 +81,7 @@ export function ModalTitle({
   className?: string;
 }) {
   return (
-    <h3 className={cn("text-[20px] font-semibold tracking-[-0.02em] text-[var(--ink)]", className)}>
+    <h3 className={cn("text-[20px] font-semibold text-[#1D1D1F] pr-8", className)}>
       {children}
     </h3>
   );
@@ -108,7 +95,12 @@ export function ModalDescription({
   className?: string;
 }) {
   return (
-    <p className={cn("mt-1 text-[14px] leading-6 text-[var(--ink-muted)]", className)}>
+    <p
+      className={cn(
+        "text-[13px] text-[#6E6E73] mt-1",
+        className,
+      )}
+    >
       {children}
     </p>
   );
@@ -121,7 +113,7 @@ export function ModalContent({
   children: React.ReactNode;
   className?: string;
 }) {
-  return <div className={cn("space-y-4 px-6 py-5", className)}>{children}</div>;
+  return <div className={cn("p-6 space-y-4 bg-white", className)}>{children}</div>;
 }
 
 export function ModalFooter({
@@ -134,7 +126,7 @@ export function ModalFooter({
   return (
     <div
       className={cn(
-        "flex flex-wrap justify-end gap-2 border-t border-[var(--border)] bg-[var(--surface-raised)] px-6 py-4",
+        "p-6 flex justify-end gap-3 border-t border-[#E8E8ED] rounded-b-[18px]",
         className,
       )}
     >

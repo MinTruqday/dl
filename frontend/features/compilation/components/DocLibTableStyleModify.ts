@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableStyleModify implements BlockTool {
   static readonly feature = {
     id: "DocLibTableStyleModify",
-    title: "DocLib Table Style Modify",
+    title: "DocLib TableStyleModify",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="337af2d7334663b8"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="4,7 8,15 4,6 18,18 10,11 16,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Table Style Modify",
+      title: "DocLib TableStyleModify",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="337af2d7334663b8"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="4,7 8,15 4,6 18,18 10,11 16,20"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibTableStyleModify implements BlockTool {
   }
 
   readonly id = "DocLibTableStyleModify";
-  readonly title = "DocLib Table Style Modify";
+  readonly title = "DocLib TableStyleModify";
   readonly category = "table" as const;
   readonly mode = "TableStyleModify";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "TableStyleModify";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibTableStyleModify implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

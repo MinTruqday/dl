@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibOleObjectInsertMenu implements BlockTool {
   static readonly feature = {
     id: "DocLibOleObjectInsertMenu",
-    title: "DocLib Ole Object Insert Menu",
+    title: "DocLib OleObjectInsertMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ff1705b8dd45b15a"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="4,10 9,18 4,5 11,9 15,15 9,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Ole Object Insert Menu",
+      title: "DocLib OleObjectInsertMenu",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ff1705b8dd45b15a"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="4,10 9,18 4,5 11,9 15,15 9,12"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibOleObjectInsertMenu implements BlockTool {
   }
 
   readonly id = "DocLibOleObjectInsertMenu";
-  readonly title = "DocLib Ole Object Insert Menu";
+  readonly title = "DocLib OleObjectInsertMenu";
   readonly category = "insert" as const;
   readonly mode = "OleObjectInsertMenu";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "OleObjectInsertMenu";
+  readonly controlType = "splitButton";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibOleObjectInsertMenu implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

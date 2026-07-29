@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLearningToolsWebViewColumnWidthNarrow implements BlockTool {
   static readonly feature = {
     id: "DocLibLearningToolsWebViewColumnWidthNarrow",
-    title: "DocLib Learning Tools Web View Column Width Narrow",
+    title: "DocLib LearningToolsWebViewColumnWidthNarrow",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1751097d8c5786d5"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="10,17 13,10 8,6 19,13 9,16 8,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Learning Tools Web View Column Width Narrow",
+      title: "DocLib LearningToolsWebViewColumnWidthNarrow",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1751097d8c5786d5"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="10,17 13,10 8,6 19,13 9,16 8,16"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibLearningToolsWebViewColumnWidthNarrow implements Bloc
   }
 
   readonly id = "DocLibLearningToolsWebViewColumnWidthNarrow";
-  readonly title = "DocLib Learning Tools Web View Column Width Narrow";
+  readonly title = "DocLib LearningToolsWebViewColumnWidthNarrow";
   readonly category = "table" as const;
   readonly mode = "LearningToolsWebViewColumnWidthNarrow";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "LearningToolsWebViewColumnWidthNarrow";
+  readonly controlType = "toggleButton";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibLearningToolsWebViewColumnWidthNarrow implements Bloc
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

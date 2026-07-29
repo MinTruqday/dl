@@ -1,5 +1,4 @@
 import { API, BlockTool } from "@editorjs/editorjs";
-import { requestEditorInput } from "./editor-dialog";
 
 export default class DocLibKanban implements BlockTool {
   static readonly feature = {
@@ -109,12 +108,11 @@ export default class DocLibKanban implements BlockTool {
 
       if (!this.readOnly) {
         dot.style.cursor = "pointer";
-        dot.addEventListener("click", async () => {
-          const newColor = await requestEditorInput({
-            title: "DocLib Kanban",
-            label: "Mã màu",
-            initialValue: col.color,
-          });
+        dot.addEventListener("click", () => {
+          const newColor = prompt(
+            "Enter color code (Hex/Name) for this column:",
+            col.color,
+          );
           if (newColor) {
             col.color = newColor;
             dot.style.backgroundColor = newColor;
@@ -221,7 +219,7 @@ export default class DocLibKanban implements BlockTool {
       addColBtn.addEventListener("click", () => {
         this.data.columns.push({
           id: Date.now().toString(),
-          title: "DocLib Kanban",
+          title: "DocLib New Column",
           color: "#94a3b8",
           tasks: [],
         });

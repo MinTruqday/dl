@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableDistributeEvenly implements BlockTool {
   static readonly feature = {
     id: "DocLibTableDistributeEvenly",
-    title: "DocLib Table Distribute Evenly",
+    title: "DocLib TableDistributeEvenly",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="285b0ee87e16da91"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,10 18,15 11,9 18,13 20,15 20,4"/></svg>',
     product: "doclib",
   } as const;

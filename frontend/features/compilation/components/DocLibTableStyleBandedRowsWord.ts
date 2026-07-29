@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableStyleBandedRowsWord implements BlockTool {
   static readonly feature = {
     id: "DocLibTableStyleBandedRowsWord",
-    title: "DocLib Table Style Banded Rows Word",
+    title: "DocLib TableStyleBandedRowsWord",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2e987a0d5bc35825"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="16,20 7,17 10,12 7,7 8,6 4,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Table Style Banded Rows Word",
+      title: "DocLib TableStyleBandedRowsWord",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2e987a0d5bc35825"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="16,20 7,17 10,12 7,7 8,6 4,4"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibTableStyleBandedRowsWord implements BlockTool {
   }
 
   readonly id = "DocLibTableStyleBandedRowsWord";
-  readonly title = "DocLib Table Style Banded Rows Word";
+  readonly title = "DocLib TableStyleBandedRowsWord";
   readonly category = "table" as const;
   readonly mode = "TableStyleBandedRowsWord";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "TableStyleBandedRowsWord";
+  readonly controlType = "checkBox";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibTableStyleBandedRowsWord implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

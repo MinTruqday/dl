@@ -18,7 +18,7 @@ export default class DocLibSpoiler implements InlineTool {
     return true;
   }
   static get title() {
-    return "Spoiler";
+    return "DocLib Spoiler";
   }
 
   get state() {

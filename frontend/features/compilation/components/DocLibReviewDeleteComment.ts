@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibReviewDeleteComment implements BlockTool {
   static readonly feature = {
     id: "DocLibReviewDeleteComment",
-    title: "DocLib Review Delete Comment",
+    title: "DocLib ReviewDeleteComment",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f0c53c35e1d99552"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="6,14 13,6 8,17 17,18 6,14 18,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Review Delete Comment",
+      title: "DocLib ReviewDeleteComment",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f0c53c35e1d99552"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="6,14 13,6 8,17 17,18 6,14 18,5"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibReviewDeleteComment implements BlockTool {
   }
 
   readonly id = "DocLibReviewDeleteComment";
-  readonly title = "DocLib Review Delete Comment";
+  readonly title = "DocLib ReviewDeleteComment";
   readonly category = "review" as const;
   readonly mode = "ReviewDeleteComment";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "ReviewDeleteComment";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibReviewDeleteComment implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

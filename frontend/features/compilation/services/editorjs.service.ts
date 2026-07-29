@@ -156,17 +156,6 @@ export async function addInlineCommentAPI(
   return data.data;
 }
 
-export async function getInlineCommentsAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/soan-thao/${documentId}/binh-luan`, {
-    headers: getAuthHeaders(),
-  });
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.message || data.detail || "Không thể tải bình luận");
-  }
-  return data.data || [];
-}
-
 export async function resolveCommentAPI(commentId: string) {
   const res = await fetch(
     `${API_URL}/soan-thao/binh-luan/${commentId}/giai-quyet`,
@@ -220,14 +209,5 @@ export async function summarizeDocumentAPI(documentId: string) {
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Lỗi khởi chạy tiến trình cô đọng nội dung tài liệu");
-  return data;
-}
-
-export async function uploadEditorAssetAPI(endpoint: string, file: File) {
-  const body = new FormData();
-  body.append("file", file);
-  const response = await fetch(endpoint, { method: "POST", body });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.message || "Không thể tải tệp");
   return data;
 }

@@ -18,7 +18,7 @@ export default class DocLibHyperlink implements InlineTool {
     return true;
   }
   static get title() {
-    return "Hyperlink";
+    return "DocLib Hyperlink";
   }
 
   get state() {

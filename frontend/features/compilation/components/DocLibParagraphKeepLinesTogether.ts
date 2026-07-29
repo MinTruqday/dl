@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibParagraphKeepLinesTogether implements BlockTool {
   static readonly feature = {
     id: "DocLibParagraphKeepLinesTogether",
-    title: "DocLib Paragraph Keep Lines Together",
+    title: "DocLib ParagraphKeepLinesTogether",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ba9b5b9deadfaee5"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,6 10,8 17,6 8,12 17,16 17,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Paragraph Keep Lines Together",
+      title: "DocLib ParagraphKeepLinesTogether",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ba9b5b9deadfaee5"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,6 10,8 17,6 8,12 17,16 17,19"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibParagraphKeepLinesTogether implements BlockTool {
   }
 
   readonly id = "DocLibParagraphKeepLinesTogether";
-  readonly title = "DocLib Paragraph Keep Lines Together";
+  readonly title = "DocLib ParagraphKeepLinesTogether";
   readonly category = "format" as const;
   readonly mode = "ParagraphKeepLinesTogether";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "ParagraphKeepLinesTogether";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibParagraphKeepLinesTogether implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

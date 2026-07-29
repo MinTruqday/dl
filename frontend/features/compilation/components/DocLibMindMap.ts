@@ -9,7 +9,7 @@ interface MindNode {
 export default class DocLibMindMap implements BlockTool {
   static readonly feature = {
     id: "DocLibMindMap",
-    title: "DocLib Mind Map",
+    title: "DocLib MindMap",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b00415978b0509aa"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,8 8,19 7,9 13,4 15,5 12,7"/></svg>',
     product: "doclib",
   } as const;

@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableCellAlignmentTopRight implements BlockTool {
   static readonly feature = {
     id: "DocLibTableCellAlignmentTopRight",
-    title: "DocLib Table Cell Alignment Top Right",
+    title: "DocLib TableCellAlignmentTopRight",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="36f2a1dbc79bc72d"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="7,8 12,19 16,6 16,15 5,15 14,5"/></svg>',
     product: "doclib",
   } as const;

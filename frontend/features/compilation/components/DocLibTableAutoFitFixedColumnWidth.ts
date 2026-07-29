@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableAutoFitFixedColumnWidth implements BlockTool {
   static readonly feature = {
     id: "DocLibTableAutoFitFixedColumnWidth",
-    title: "DocLib Table Auto Fit Fixed Column Width",
+    title: "DocLib TableAutoFitFixedColumnWidth",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d15e3327194bb638"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,13 4,9 12,11 16,9 11,17 10,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Table Auto Fit Fixed Column Width",
+      title: "DocLib TableAutoFitFixedColumnWidth",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d15e3327194bb638"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,13 4,9 12,11 16,9 11,17 10,11"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibTableAutoFitFixedColumnWidth implements BlockTool {
   }
 
   readonly id = "DocLibTableAutoFitFixedColumnWidth";
-  readonly title = "DocLib Table Auto Fit Fixed Column Width";
+  readonly title = "DocLib TableAutoFitFixedColumnWidth";
   readonly category = "table" as const;
   readonly mode = "TableAutoFitFixedColumnWidth";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "TableAutoFitFixedColumnWidth";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibTableAutoFitFixedColumnWidth implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

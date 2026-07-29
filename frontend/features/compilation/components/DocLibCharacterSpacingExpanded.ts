@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibCharacterSpacingExpanded implements BlockTool {
   static readonly feature = {
     id: "DocLibCharacterSpacingExpanded",
-    title: "DocLib Character Spacing Expanded",
+    title: "DocLib CharacterSpacingExpanded",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7f4a042b523dc689"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="12,10 8,13 18,14 15,5 7,12 14,8"/></svg>',
     product: "doclib",
   } as const;

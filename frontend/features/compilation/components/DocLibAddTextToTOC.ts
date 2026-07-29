@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAddTextToTOC implements BlockTool {
   static readonly feature = {
     id: "DocLibAddTextToTOC",
-    title: "DocLib Add Text To TOC",
+    title: "DocLib AddTextToTOC",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6d16e0a3a6a0777d"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="11,9 7,14 17,11 4,10 15,13 6,7"/></svg>',
     product: "doclib",
   } as const;

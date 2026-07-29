@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibOptionalHyphen implements BlockTool {
   static readonly feature = {
     id: "DocLibOptionalHyphen",
-    title: "DocLib Optional Hyphen",
+    title: "DocLib OptionalHyphen",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fe0b7ef1626bdb84"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="20,15 11,7 17,9 19,17 14,9 10,18"/></svg>',
     product: "doclib",
   } as const;

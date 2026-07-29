@@ -18,7 +18,7 @@ export default class DocLibUnderline implements InlineTool {
     return true;
   }
   static get title() {
-    return "Underline";
+    return "DocLib Underline";
   }
   static get sanitize() {
     return { u: { class: true } };

@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFirstLineIndent implements BlockTool {
   static readonly feature = {
     id: "DocLibFirstLineIndent",
-    title: "DocLib First Line Indent",
+    title: "DocLib FirstLineIndent",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3f7849f0d1cb291e"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="16,5 9,6 9,20 11,17 6,19 6,13"/></svg>',
     product: "doclib",
   } as const;

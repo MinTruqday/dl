@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSuppressLineNumbers implements BlockTool {
   static readonly feature = {
     id: "DocLibSuppressLineNumbers",
-    title: "DocLib Suppress Line Numbers",
+    title: "DocLib SuppressLineNumbers",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ca3e50c462d444af"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,15 16,13 17,12 4,9 15,17 19,18"/></svg>',
     product: "doclib",
   } as const;

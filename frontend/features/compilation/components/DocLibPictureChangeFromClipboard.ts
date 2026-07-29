@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPictureChangeFromClipboard implements BlockTool {
   static readonly feature = {
     id: "DocLibPictureChangeFromClipboard",
-    title: "DocLib Picture Change From Clipboard",
+    title: "DocLib PictureChangeFromClipboard",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="955e40452b2e062f"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="17,13 17,5 13,16 10,17 13,19 17,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Picture Change From Clipboard",
+      title: "DocLib PictureChangeFromClipboard",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="955e40452b2e062f"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="17,13 17,5 13,16 10,17 13,19 17,19"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibPictureChangeFromClipboard implements BlockTool {
   }
 
   readonly id = "DocLibPictureChangeFromClipboard";
-  readonly title = "DocLib Picture Change From Clipboard";
+  readonly title = "DocLib PictureChangeFromClipboard";
   readonly category = "media" as const;
   readonly mode = "PictureChangeFromClipboard";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "PictureChangeFromClipboard";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibPictureChangeFromClipboard implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

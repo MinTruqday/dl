@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPrintSetupDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibPrintSetupDialog",
-    title: "DocLib Print Setup Dialog",
+    title: "DocLib PrintSetupDialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e577193d9dbd60c8"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="12,4 12,14 8,6 15,17 8,18 11,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Print Setup Dialog",
+      title: "DocLib PrintSetupDialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e577193d9dbd60c8"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="12,4 12,14 8,6 15,17 8,18 11,4"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibPrintSetupDialog implements BlockTool {
   }
 
   readonly id = "DocLibPrintSetupDialog";
-  readonly title = "DocLib Print Setup Dialog";
+  readonly title = "DocLib PrintSetupDialog";
   readonly category = "format" as const;
   readonly mode = "PrintSetupDialog";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "PrintSetupDialog";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibPrintSetupDialog implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

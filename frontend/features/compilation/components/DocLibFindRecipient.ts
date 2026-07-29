@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFindRecipient implements BlockTool {
   static readonly feature = {
     id: "DocLibFindRecipient",
-    title: "DocLib Find Recipient",
+    title: "DocLib FindRecipient",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c0eb7dd15cad0cb0"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="9,18 10,9 11,7 16,10 8,5 12,17"/></svg>',
     product: "doclib",
   } as const;

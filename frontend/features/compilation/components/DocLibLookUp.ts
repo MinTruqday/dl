@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLookUp implements BlockTool {
   static readonly feature = {
     id: "DocLibLookUp",
-    title: "DocLib Look Up",
+    title: "DocLib LookUp",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="89911a4210916a35"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,13 13,19 20,13 8,6 12,15 11,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Look Up",
+      title: "DocLib LookUp",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="89911a4210916a35"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,13 13,19 20,13 8,6 12,15 11,17"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibLookUp implements BlockTool {
   }
 
   readonly id = "DocLibLookUp";
-  readonly title = "DocLib Look Up";
+  readonly title = "DocLib LookUp";
   readonly category = "format" as const;
   readonly mode = "LookUp";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "LookUp";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibLookUp implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

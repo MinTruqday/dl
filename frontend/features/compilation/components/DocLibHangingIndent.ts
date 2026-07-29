@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibHangingIndent implements BlockTool {
   static readonly feature = {
     id: "DocLibHangingIndent",
-    title: "DocLib Hanging Indent",
+    title: "DocLib HangingIndent",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="76be1b8b3bae1815"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="20,7 14,7 12,8 11,8 12,16 15,7"/></svg>',
     product: "doclib",
   } as const;

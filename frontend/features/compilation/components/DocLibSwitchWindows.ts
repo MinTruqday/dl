@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSwitchWindows implements BlockTool {
   static readonly feature = {
     id: "DocLibSwitchWindows",
-    title: "DocLib Switch Windows",
+    title: "DocLib SwitchWindows",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6bd44273c517899f"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="9,12 19,17 14,10 5,10 19,17 15,14"/></svg>',
     product: "doclib",
   } as const;

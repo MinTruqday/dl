@@ -3,7 +3,7 @@ import { BlockTool, API, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPageColor implements BlockTool {
   static readonly feature = {
     id: "DocLibPageColor",
-    title: "DocLib Page Color",
+    title: "DocLib PageColor",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f972184e18ee8e47"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="15,16 11,14 11,4 10,7 6,13 12,15"/></svg>',
     product: "doclib",
   } as const;

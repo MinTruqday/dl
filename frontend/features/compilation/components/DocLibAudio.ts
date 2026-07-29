@@ -1,6 +1,4 @@
 import { API, BlockTool } from "@editorjs/editorjs";
-import { requestEditorInput } from "./editor-dialog";
-import { uploadEditorAssetAPI } from "@/features/compilation/services/editorjs.service";
 
 export default class DocLibAudio implements BlockTool {
   static readonly feature = {
@@ -104,12 +102,15 @@ export default class DocLibAudio implements BlockTool {
       fileInput.addEventListener("change", () => {
         if (fileInput.files && fileInput.files[0]) {
           const file = fileInput.files[0];
+          const formData = new FormData();
+          formData.append("file", file);
           const endpoint = this.config?.endpoints?.byFile || "/api/uploadFile";
 
           uploader.innerHTML =
       '<div style="padding: 20px; font-weight: 500;">Uploading</div>';
 
-          uploadEditorAssetAPI(endpoint, file)
+          fetch(endpoint, { method: "POST", body: formData })
+            .then((res) => res.json())
             .then((res) => {
               if (res.success === 1 && res.file && res.file.url) {
                 this.data.url = res.file.url;
@@ -130,12 +131,9 @@ export default class DocLibAudio implements BlockTool {
 
       uploader.appendChild(fileInput);
 
-      uploader.addEventListener("contextmenu", async (e) => {
+      uploader.addEventListener("contextmenu", (e) => {
         e.preventDefault();
-        const url = await requestEditorInput({
-          title: "DocLib Audio",
-          label: "Liên kết âm thanh",
-        });
+        const url = prompt("Enter a direct audio URL");
         if (url) {
           this.data.url = url;
 

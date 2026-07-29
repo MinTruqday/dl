@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLib3DRotation implements BlockTool {
   static readonly feature = {
     id: "DocLib3DRotation",
-    title: "DocLib 3D Rotation",
+    title: "DocLib 3DRotation",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="43c522767bb6d6fd"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="20,14 4,20 8,16 14,19 13,9 12,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib 3D Rotation",
+      title: "DocLib 3 D Rotation",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="43c522767bb6d6fd"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="20,14 4,20 8,16 14,19 13,9 12,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLib3DRotation implements BlockTool {
   }
 
   readonly id = "DocLib3DRotation";
-  readonly title = "DocLib 3D Rotation";
+  readonly title = "DocLib 3 D Rotation";
   readonly category = "media" as const;
   readonly mode = "3DRotation";
   readonly requiresSelection = false;

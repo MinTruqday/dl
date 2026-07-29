@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibKeepWithNext implements BlockTool {
   static readonly feature = {
     id: "DocLibKeepWithNext",
-    title: "DocLib Keep With Next",
+    title: "DocLib KeepWithNext",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="54d446a837b3f4d5"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="20,12 6,19 8,13 10,13 15,7 11,20"/></svg>',
     product: "doclib",
   } as const;

@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWatermarkText implements BlockTool {
   static readonly feature = {
     id: "DocLibWatermarkText",
-    title: "DocLib Watermark Text",
+    title: "DocLib WatermarkText",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="074855bd5da7743d"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="11,8 4,6 12,18 18,14 8,19 11,13"/></svg>',
     product: "doclib",
   } as const;

@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLineFocus implements BlockTool {
   static readonly feature = {
     id: "DocLibLineFocus",
-    title: "DocLib Line Focus",
+    title: "DocLib LineFocus",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="91a7f57238f6b519"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="13,18 11,16 9,12 15,12 12,20 13,20"/></svg>',
     product: "doclib",
   } as const;

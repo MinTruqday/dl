@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibObjectsAlignCenterHorizontalSmart implements BlockTool {
   static readonly feature = {
     id: "DocLibObjectsAlignCenterHorizontalSmart",
-    title: "DocLib Objects Align Center Horizontal Smart",
+    title: "DocLib ObjectsAlignCenterHorizontalSmart",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1f7f980da1b8dc71"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,12 20,17 12,18 20,15 8,19 5,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Objects Align Center Horizontal Smart",
+      title: "DocLib ObjectsAlignCenterHorizontalSmart",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1f7f980da1b8dc71"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,12 20,17 12,18 20,15 8,19 5,19"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibObjectsAlignCenterHorizontalSmart implements BlockToo
   }
 
   readonly id = "DocLibObjectsAlignCenterHorizontalSmart";
-  readonly title = "DocLib Objects Align Center Horizontal Smart";
+  readonly title = "DocLib ObjectsAlignCenterHorizontalSmart";
   readonly category = "layout" as const;
   readonly mode = "ObjectsAlignCenterHorizontalSmart";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "ObjectsAlignCenterHorizontalSmart";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibObjectsAlignCenterHorizontalSmart implements BlockToo
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibNonbreakingSpace implements BlockTool {
   static readonly feature = {
     id: "DocLibNonbreakingSpace",
-    title: "DocLib Nonbreaking Space",
+    title: "DocLib NonbreakingSpace",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="54ea7ccc1ba6e752"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="20,17 9,4 14,17 14,18 7,7 19,16"/></svg>',
     product: "doclib",
   } as const;

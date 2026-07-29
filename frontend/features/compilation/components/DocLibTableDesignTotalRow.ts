@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableDesignTotalRow implements BlockTool {
   static readonly feature = {
     id: "DocLibTableDesignTotalRow",
-    title: "DocLib Table Design Total Row",
+    title: "DocLib TableDesignTotalRow",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="99d052328085bd02"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="4,8 18,20 13,18 6,6 14,12 18,19"/></svg>',
     product: "doclib",
   } as const;

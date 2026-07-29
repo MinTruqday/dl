@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLearningToolsWebViewColumnWidthMenu implements BlockTool {
   static readonly feature = {
     id: "DocLibLearningToolsWebViewColumnWidthMenu",
-    title: "DocLib Learning Tools Web View Column Width Menu",
+    title: "DocLib LearningToolsWebViewColumnWidthMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ec06dc42be98eb66"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="19,10 20,19 7,20 18,4 18,6 10,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Learning Tools Web View Column Width Menu",
+      title: "DocLib LearningToolsWebViewColumnWidthMenu",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ec06dc42be98eb66"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="19,10 20,19 7,20 18,4 18,6 10,18"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibLearningToolsWebViewColumnWidthMenu implements BlockT
   }
 
   readonly id = "DocLibLearningToolsWebViewColumnWidthMenu";
-  readonly title = "DocLib Learning Tools Web View Column Width Menu";
+  readonly title = "DocLib LearningToolsWebViewColumnWidthMenu";
   readonly category = "table" as const;
   readonly mode = "LearningToolsWebViewColumnWidthMenu";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "LearningToolsWebViewColumnWidthMenu";
+  readonly controlType = "menu";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibLearningToolsWebViewColumnWidthMenu implements BlockT
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

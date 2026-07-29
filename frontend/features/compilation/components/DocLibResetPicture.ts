@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibResetPicture implements BlockTool {
   static readonly feature = {
     id: "DocLibResetPicture",
-    title: "DocLib Reset Picture",
+    title: "DocLib ResetPicture",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7ac0d16e099f23b3"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="7,9 9,12 13,10 5,13 18,13 18,12"/></svg>',
     product: "doclib",
   } as const;

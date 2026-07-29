@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSensitivityLabel implements BlockTool {
   static readonly feature = {
     id: "DocLibSensitivityLabel",
-    title: "DocLib Sensitivity Label",
+    title: "DocLib SensitivityLabel",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="157ae05d04f0a66f"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,7 7,12 8,6 17,13 6,17 20,19"/></svg>',
     product: "doclib",
   } as const;

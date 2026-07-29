@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibGreetingLine implements BlockTool {
   static readonly feature = {
     id: "DocLibGreetingLine",
-    title: "DocLib Greeting Line",
+    title: "DocLib GreetingLine",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3bc0ad078809e7fe"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,9 7,11 4,13 14,20 13,13 17,6"/></svg>',
     product: "doclib",
   } as const;

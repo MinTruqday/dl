@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPictureEffects3DRotation implements BlockTool {
   static readonly feature = {
     id: "DocLibPictureEffects3DRotation",
-    title: "DocLib Picture Effects3D Rotation",
+    title: "DocLib PictureEffects3DRotation",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a5caaeeea14e5274"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="16,19 8,4 12,14 18,18 5,15 19,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Picture Effects3D Rotation",
+      title: "DocLib Picture Effects3 D Rotation",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a5caaeeea14e5274"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="16,19 8,4 12,14 18,18 5,15 19,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPictureEffects3DRotation implements BlockTool {
   }
 
   readonly id = "DocLibPictureEffects3DRotation";
-  readonly title = "DocLib Picture Effects3D Rotation";
+  readonly title = "DocLib Picture Effects3 D Rotation";
   readonly category = "media" as const;
   readonly mode = "PictureEffects3DRotation";
   readonly requiresSelection = false;

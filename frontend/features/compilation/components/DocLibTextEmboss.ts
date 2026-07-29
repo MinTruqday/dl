@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextEmboss implements BlockTool {
   static readonly feature = {
     id: "DocLibTextEmboss",
-    title: "DocLib Text Emboss",
+    title: "DocLib TextEmboss",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="189bfe56d6b83724"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="11,6 20,5 14,18 8,6 13,12 9,8"/></svg>',
     product: "doclib",
   } as const;

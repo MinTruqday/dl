@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLegacyFormsDrop implements BlockTool {
   static readonly feature = {
     id: "DocLibLegacyFormsDrop",
-    title: "DocLib Legacy Forms Drop",
+    title: "DocLib LegacyFormsDrop",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="847d83e05bb26fc3"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,10 16,7 10,12 13,12 17,17 6,20"/></svg>',
     product: "doclib",
   } as const;

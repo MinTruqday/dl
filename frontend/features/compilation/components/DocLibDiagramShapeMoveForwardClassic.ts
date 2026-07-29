@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDiagramShapeMoveForwardClassic implements BlockTool {
   static readonly feature = {
     id: "DocLibDiagramShapeMoveForwardClassic",
-    title: "DocLib Diagram Shape Move Forward Classic",
+    title: "DocLib DiagramShapeMoveForwardClassic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4cccf7c15f8d1cf0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="12,4 13,10 14,9 15,6 15,13 11,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Diagram Shape Move Forward Classic",
+      title: "DocLib DiagramShapeMoveForwardClassic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4cccf7c15f8d1cf0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="12,4 13,10 14,9 15,6 15,13 11,20"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibDiagramShapeMoveForwardClassic implements BlockTool {
   }
 
   readonly id = "DocLibDiagramShapeMoveForwardClassic";
-  readonly title = "DocLib Diagram Shape Move Forward Classic";
+  readonly title = "DocLib DiagramShapeMoveForwardClassic";
   readonly category = "layout" as const;
   readonly mode = "DiagramShapeMoveForwardClassic";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "DiagramShapeMoveForwardClassic";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibDiagramShapeMoveForwardClassic implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

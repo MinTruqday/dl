@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTwoLinesInOne implements BlockTool {
   static readonly feature = {
     id: "DocLibTwoLinesInOne",
-    title: "DocLib Two Lines In One",
+    title: "DocLib TwoLinesInOne",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fb3a64e526bf18ee"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="17,11 19,12 8,8 11,4 14,10 13,9"/></svg>',
     product: "doclib",
   } as const;

@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSoftEdges implements BlockTool {
   static readonly feature = {
     id: "DocLibSoftEdges",
-    title: "DocLib Soft Edges",
+    title: "DocLib SoftEdges",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5cef5650c143279a"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="11,5 5,16 10,20 9,5 5,10 5,5"/></svg>',
     product: "doclib",
   } as const;

@@ -19,7 +19,7 @@ export default class DocLibStrikethrough implements InlineTool {
     return true;
   }
   static get title() {
-    return "Strikethrough";
+    return "DocLib Strikethrough";
   }
   static get sanitize() {
     return { s: { class: true } };

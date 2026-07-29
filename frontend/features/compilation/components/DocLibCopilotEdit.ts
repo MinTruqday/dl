@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibCopilotEdit implements BlockTool {
   static readonly feature = {
     id: "DocLibCopilotEdit",
-    title: "DocLib Copilot Edit",
+    title: "DocLib CopilotEdit",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cafab27289c78f71"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="19,16 12,16 5,16 11,15 16,20 15,13"/></svg>',
     product: "doclib",
   } as const;

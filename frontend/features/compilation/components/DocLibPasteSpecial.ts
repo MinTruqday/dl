@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPasteSpecial implements BlockTool {
   static readonly feature = {
     id: "DocLibPasteSpecial",
-    title: "DocLib Paste Special",
+    title: "DocLib PasteSpecial",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5d2b09bb2d66eafb"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,13 13,4 15,4 17,17 17,15 12,15"/></svg>',
     product: "doclib",
   } as const;

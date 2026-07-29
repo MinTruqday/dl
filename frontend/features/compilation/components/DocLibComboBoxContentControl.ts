@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibComboBoxContentControl implements BlockTool {
   static readonly feature = {
     id: "DocLibComboBoxContentControl",
-    title: "DocLib Combo Box Content Control",
+    title: "DocLib ComboBoxContentControl",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="499825cb40515b72"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="9,20 7,20 17,17 10,16 10,4 10,11"/></svg>',
     product: "doclib",
   } as const;

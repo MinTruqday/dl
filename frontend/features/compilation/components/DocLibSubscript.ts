@@ -18,7 +18,7 @@ export default class DocLibSubscript implements InlineTool {
     return true;
   }
   static get title() {
-    return "Subscript";
+    return "DocLib Subscript";
   }
   static get sanitize() {
     return { sub: { class: true } };

@@ -3,7 +3,7 @@ import { API, BlockTool } from "@editorjs/editorjs";
 export default class DocLibAiText implements BlockTool {
   static readonly feature = {
     id: "DocLibAiText",
-    title: "DocLib AI Text",
+    title: "DocLib AiText",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="38f70a61c87e820c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,13 14,16 17,11 15,16 19,10 12,18"/></svg>',
     product: "doclib",
   } as const;
@@ -115,7 +115,19 @@ export default class DocLibAiText implements BlockTool {
         this.data.status = "generating";
         this.buildUI();
 
-        generateTextAPI(this.data.prompt)
+        const apiUrl =
+          (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000") +
+          "/inference/tao-noi-dung";
+        fetch(apiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prompt: this.data.prompt,
+            max_tokens: 500,
+            temperature: 0.3,
+          }),
+        })
+          .then((res) => res.json())
           .then((res) => {
             this.data.response =
               res.data?.result ||
@@ -168,4 +180,3 @@ export default class DocLibAiText implements BlockTool {
     return this.data;
   }
 }
-import { generateTextAPI } from "@/features/agentic_ai/services/inference.service";

@@ -18,7 +18,7 @@ export default class DocLibTooltip implements InlineTool {
     return true;
   }
   static get title() {
-    return "Tooltip";
+    return "DocLib Tooltip";
   }
 
   get state() {

@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibScreenClipping implements BlockTool {
   static readonly feature = {
     id: "DocLibScreenClipping",
-    title: "DocLib Screen Clipping",
+    title: "DocLib ScreenClipping",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="33e8ad037af717fa"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="4,15 7,7 7,13 10,16 7,16 11,14"/></svg>',
     product: "doclib",
   } as const;

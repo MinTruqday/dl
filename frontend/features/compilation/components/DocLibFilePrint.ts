@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFilePrint implements BlockTool {
   static readonly feature = {
     id: "DocLibFilePrint",
-    title: "DocLib File Print",
+    title: "DocLib FilePrint",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fc38ff268ea767eb"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,9 4,8 10,18 5,18 15,5 9,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib File Print",
+      title: "DocLib FilePrint",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fc38ff268ea767eb"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,9 4,8 10,18 5,18 15,5 9,16"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibFilePrint implements BlockTool {
   }
 
   readonly id = "DocLibFilePrint";
-  readonly title = "DocLib File Print";
+  readonly title = "DocLib FilePrint";
   readonly category = "format" as const;
   readonly mode = "FilePrint";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "FilePrint";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibFilePrint implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

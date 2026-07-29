@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableSplitTable implements BlockTool {
   static readonly feature = {
     id: "DocLibTableSplitTable",
-    title: "DocLib Table Split Table",
+    title: "DocLib TableSplitTable",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="554137d7a20a2b34"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="4,18 8,15 13,14 13,5 6,16 5,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Table Split Table",
+      title: "DocLib TableSplitTable",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="554137d7a20a2b34"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="4,18 8,15 13,14 13,5 6,16 5,17"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibTableSplitTable implements BlockTool {
   }
 
   readonly id = "DocLibTableSplitTable";
-  readonly title = "DocLib Table Split Table";
+  readonly title = "DocLib TableSplitTable";
   readonly category = "table" as const;
   readonly mode = "TableSplitTable";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "TableSplitTable";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibTableSplitTable implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

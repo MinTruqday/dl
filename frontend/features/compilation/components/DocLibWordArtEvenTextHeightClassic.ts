@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWordArtEvenTextHeightClassic implements BlockTool {
   static readonly feature = {
     id: "DocLibWordArtEvenTextHeightClassic",
-    title: "DocLib Word Art Even Text Height Classic",
+    title: "DocLib WordArtEvenTextHeightClassic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f0cb0a6a7cf25bf9"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="6,20 14,8 9,8 10,15 7,7 10,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Word Art Even Text Height Classic",
+      title: "DocLib WordArtEvenTextHeightClassic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f0cb0a6a7cf25bf9"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="6,20 14,8 9,8 10,15 7,7 10,14"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibWordArtEvenTextHeightClassic implements BlockTool {
   }
 
   readonly id = "DocLibWordArtEvenTextHeightClassic";
-  readonly title = "DocLib Word Art Even Text Height Classic";
+  readonly title = "DocLib WordArtEvenTextHeightClassic";
   readonly category = "format" as const;
   readonly mode = "WordArtEvenTextHeightClassic";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "WordArtEvenTextHeightClassic";
+  readonly controlType = "toggleButton";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibWordArtEvenTextHeightClassic implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

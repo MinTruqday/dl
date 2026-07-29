@@ -3,7 +3,7 @@ import { API, BlockTool } from "@editorjs/editorjs";
 export default class DocLibNestedList implements BlockTool {
   static readonly feature = {
     id: "DocLibNestedList",
-    title: "DocLib Nested List",
+    title: "DocLib NestedList",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1505862bd4202408"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,9 19,13 12,19 6,12 14,17 5,12"/></svg>',
     product: "doclib",
   } as const;

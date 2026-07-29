@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartFormatWalls implements BlockTool {
   static readonly feature = {
     id: "DocLibChartFormatWalls",
-    title: "DocLib Chart Format Walls",
+    title: "DocLib ChartFormatWalls",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0144b26e8c67c302"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="5,4 12,12 8,5 12,6 5,11 18,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Chart Format Walls",
+      title: "DocLib ChartFormatWalls",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0144b26e8c67c302"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="5,4 12,12 8,5 12,6 5,11 18,6"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibChartFormatWalls implements BlockTool {
   }
 
   readonly id = "DocLibChartFormatWalls";
-  readonly title = "DocLib Chart Format Walls";
+  readonly title = "DocLib ChartFormatWalls";
   readonly category = "media" as const;
   readonly mode = "ChartFormatWalls";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "ChartFormatWalls";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibChartFormatWalls implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

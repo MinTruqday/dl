@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTranslateMenu implements BlockTool {
   static readonly feature = {
     id: "DocLibTranslateMenu",
-    title: "DocLib Translate Menu",
+    title: "DocLib TranslateMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2b313393b971be77"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="13,19 4,15 19,15 7,4 5,8 13,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Translate Menu",
+      title: "DocLib TranslateMenu",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2b313393b971be77"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="13,19 4,15 19,15 7,4 5,8 13,20"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibTranslateMenu implements BlockTool {
   }
 
   readonly id = "DocLibTranslateMenu";
-  readonly title = "DocLib Translate Menu";
+  readonly title = "DocLib TranslateMenu";
   readonly category = "review" as const;
   readonly mode = "TranslateMenu";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "TranslateMenu";
+  readonly controlType = "menu";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibTranslateMenu implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

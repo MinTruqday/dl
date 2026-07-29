@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAcceptAllChangesInDocAndStopTracking implements BlockTool {
   static readonly feature = {
     id: "DocLibAcceptAllChangesInDocAndStopTracking",
-    title: "DocLib Accept All Changes In Doc And Stop Tracking",
+    title: "DocLib AcceptAllChangesInDocAndStopTracking",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cd98588bd2b4fc1c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,20 7,7 10,14 18,15 12,18 9,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Accept All Changes In Doc And Stop Tracking",
+      title: "DocLib AcceptAllChangesInDocAndStopTracking",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cd98588bd2b4fc1c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,20 7,7 10,14 18,15 12,18 9,8"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibAcceptAllChangesInDocAndStopTracking implements Block
   }
 
   readonly id = "DocLibAcceptAllChangesInDocAndStopTracking";
-  readonly title = "DocLib Accept All Changes In Doc And Stop Tracking";
+  readonly title = "DocLib AcceptAllChangesInDocAndStopTracking";
   readonly category = "review" as const;
   readonly mode = "AcceptAllChangesInDocAndStopTracking";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "AcceptAllChangesInDocAndStopTracking";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibAcceptAllChangesInDocAndStopTracking implements Block
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

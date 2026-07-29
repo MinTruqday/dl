@@ -48,32 +48,17 @@ export async function getAiSessionsAPI(documentId?: string, userId?: string) {
 }
 
 export async function createAiSessionAPI(
-  documentId?: string,
+  documentId: string,
   firstQuery: string = "",
 ) {
-  const payload: { document_id?: string; first_query: string } = {
-    first_query: firstQuery,
-  };
-  if (documentId) payload.document_id = documentId;
   const res = await fetch(`${API_URL}/lich-su`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ document_id: documentId, first_query: firstQuery }),
   });
   const data = await res.json();
   if (!res.ok)
     throw new Error(data.message || "MODULE AGENTIC_AI: Failed to initialize AI session");
-  return data;
-}
-
-export async function getAiSessionAPI(sessionId: string) {
-  const res = await fetch(`${API_URL}/lich-su/${sessionId}`, {
-    headers: getAuthHeaders(),
-  });
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.message || "Không thể tải cuộc trò chuyện");
-  }
   return data;
 }
 

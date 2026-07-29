@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAsianLayoutCharacterScaling implements BlockTool {
   static readonly feature = {
     id: "DocLibAsianLayoutCharacterScaling",
-    title: "DocLib Asian Layout Character Scaling",
+    title: "DocLib AsianLayoutCharacterScaling",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="440835b8783e47e7"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,12 6,18 5,15 7,14 5,14 13,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Asian Layout Character Scaling",
+      title: "DocLib AsianLayoutCharacterScaling",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="440835b8783e47e7"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,12 6,18 5,15 7,14 5,14 13,11"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibAsianLayoutCharacterScaling implements BlockTool {
   }
 
   readonly id = "DocLibAsianLayoutCharacterScaling";
-  readonly title = "DocLib Asian Layout Character Scaling";
+  readonly title = "DocLib AsianLayoutCharacterScaling";
   readonly category = "format" as const;
   readonly mode = "AsianLayoutCharacterScaling";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "AsianLayoutCharacterScaling";
+  readonly controlType = "menu";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibAsianLayoutCharacterScaling implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

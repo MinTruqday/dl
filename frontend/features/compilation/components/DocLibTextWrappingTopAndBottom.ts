@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextWrappingTopAndBottom implements BlockTool {
   static readonly feature = {
     id: "DocLibTextWrappingTopAndBottom",
-    title: "DocLib Text Wrapping Top And Bottom",
+    title: "DocLib TextWrappingTopAndBottom",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9e59e8a97d5be321"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="9,8 15,20 10,10 10,20 14,13 4,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Text Wrapping Top And Bottom",
+      title: "DocLib TextWrappingTopAndBottom",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9e59e8a97d5be321"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="9,8 15,20 10,10 10,20 14,13 4,9"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibTextWrappingTopAndBottom implements BlockTool {
   }
 
   readonly id = "DocLibTextWrappingTopAndBottom";
-  readonly title = "DocLib Text Wrapping Top And Bottom";
+  readonly title = "DocLib TextWrappingTopAndBottom";
   readonly category = "format" as const;
   readonly mode = "TextWrappingTopAndBottom";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "TextWrappingTopAndBottom";
+  readonly controlType = "toggleButton";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibTextWrappingTopAndBottom implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

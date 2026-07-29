@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibReviewShowComments implements BlockTool {
   static readonly feature = {
     id: "DocLibReviewShowComments",
-    title: "DocLib Review Show Comments",
+    title: "DocLib ReviewShowComments",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3d0dfc7ce8ea529e"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="14,17 18,9 15,17 18,9 19,6 7,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Review Show Comments",
+      title: "DocLib ReviewShowComments",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3d0dfc7ce8ea529e"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="14,17 18,9 15,17 18,9 19,6 7,8"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibReviewShowComments implements BlockTool {
   }
 
   readonly id = "DocLibReviewShowComments";
-  readonly title = "DocLib Review Show Comments";
+  readonly title = "DocLib ReviewShowComments";
   readonly category = "review" as const;
   readonly mode = "ReviewShowComments";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "ReviewShowComments";
+  readonly controlType = "toggleButton";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibReviewShowComments implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

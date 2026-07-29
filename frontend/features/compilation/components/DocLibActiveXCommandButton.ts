@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibActiveXCommandButton implements BlockTool {
   static readonly feature = {
     id: "DocLibActiveXCommandButton",
-    title: "DocLib Active X Command Button",
+    title: "DocLib ActiveXCommandButton",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="15320266e193d38a"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="8,20 6,4 8,15 11,6 6,5 11,5"/></svg>',
     product: "doclib",
   } as const;

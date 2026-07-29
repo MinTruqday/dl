@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibHyphenationZone implements BlockTool {
   static readonly feature = {
     id: "DocLibHyphenationZone",
-    title: "DocLib Hyphenation Zone",
+    title: "DocLib HyphenationZone",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ab33caabefc99345"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,4 19,5 5,18 15,5 6,20 6,20"/></svg>',
     product: "doclib",
   } as const;

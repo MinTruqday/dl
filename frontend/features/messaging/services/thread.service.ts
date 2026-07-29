@@ -188,7 +188,7 @@ export const createAnnouncementAPI = async (groupId: string, title: string, body
 export const generateGroupInviteAPI = async (groupId: string) => {
   const token = getToken();
   if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
-  const res = await fetch(`${API_URL}/tin-nhan/nhom/${groupId}/link`, {
+  const res = await fetch(`${API_URL}/tin-nhan/${groupId}/link-moi`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -200,9 +200,13 @@ export const generateGroupInviteAPI = async (groupId: string) => {
 export const joinByInviteAPI = async (inviteCode: string) => {
   const token = getToken();
   if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
-  const res = await fetch(`${API_URL}/tin-nhan/nhom/tham-gia/${inviteCode}`, {
+  const res = await fetch(`${API_URL}/tin-nhan/nhom/tham-gia`, {
     method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ invite_code: inviteCode }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Lỗi gia nhập nhóm trò chuyện");
@@ -731,21 +735,13 @@ export const addGroupMemberAPI = async (groupId: string, userId: string) => {
   return data;
 };
 
-export const removeGroupMemberAPI = async (
-  groupId: string,
-  userId: string,
-  silent: boolean = false,
-) => {
+export const removeGroupMemberAPI = async (groupId: string, userId: string) => {
   const token = getToken();
   if (!token) throw new Error("Lỗi thiếu hụt phiên xác thực người dùng hợp lệ");
-  const query = new URLSearchParams({ silent: String(silent) });
-  const res = await fetch(
-    `${API_URL}/tin-nhan/nhom/${groupId}/thanh-vien/${userId}?${query.toString()}`,
-    {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    },
-  );
+  const res = await fetch(`${API_URL}/tin-nhan/nhom/${groupId}/thanh-vien/${userId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Lỗi xóa thành viên khỏi nhóm");
   return data;
@@ -764,30 +760,6 @@ export const updateGroupInfoAPI = async (groupId: string, groupName: string, ava
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Lỗi cập nhật thông tin nhóm");
-  return data;
-};
-
-export const updateGroupSettingsAPI = async (
-  groupId: string,
-  settings: {
-    messaging_restricted?: boolean;
-    requires_approval?: boolean;
-  },
-) => {
-  const token = getToken();
-  if (!token) throw new Error("Yêu cầu đăng nhập");
-  const res = await fetch(`${API_URL}/tin-nhan/nhom/${groupId}/cai-dat`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(settings),
-  });
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.message || data.detail || "Không thể lưu cài đặt nhóm");
-  }
   return data;
 };
 
@@ -998,3 +970,4 @@ export const setDisappearingTimerAPI = async (otherUserId: string, timerSeconds:
   if (!res.ok) throw new Error(data.message || "Lỗi cấu hình tự xóa tin nhắn");
   return data;
 };
+

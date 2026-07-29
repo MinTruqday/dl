@@ -18,7 +18,7 @@ export default class DocLibSuperscript implements InlineTool {
     return true;
   }
   static get title() {
-    return "Superscript";
+    return "DocLib Superscript";
   }
   static get sanitize() {
     return { sup: { class: true } };

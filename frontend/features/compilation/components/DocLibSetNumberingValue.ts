@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSetNumberingValue implements BlockTool {
   static readonly feature = {
     id: "DocLibSetNumberingValue",
-    title: "DocLib Set Numbering Value",
+    title: "DocLib SetNumberingValue",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1efd3af36e53ddcb"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="17,19 11,9 12,19 4,20 7,18 20,20"/></svg>',
     product: "doclib",
   } as const;

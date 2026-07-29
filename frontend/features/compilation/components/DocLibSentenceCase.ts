@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSentenceCase implements BlockTool {
   static readonly feature = {
     id: "DocLibSentenceCase",
-    title: "DocLib Sentence Case",
+    title: "DocLib SentenceCase",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="da6a2f30b013189e"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="18,8 17,18 10,6 11,9 13,6 14,16"/></svg>',
     product: "doclib",
   } as const;

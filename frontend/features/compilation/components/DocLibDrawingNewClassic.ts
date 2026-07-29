@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDrawingNewClassic implements BlockTool {
   static readonly feature = {
     id: "DocLibDrawingNewClassic",
-    title: "DocLib Drawing New Classic",
+    title: "DocLib DrawingNewClassic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="530207184f62f41e"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,6 11,11 15,17 10,17 11,16 17,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Drawing New Classic",
+      title: "DocLib DrawingNewClassic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="530207184f62f41e"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,6 11,11 15,17 10,17 11,16 17,18"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibDrawingNewClassic implements BlockTool {
   }
 
   readonly id = "DocLibDrawingNewClassic";
-  readonly title = "DocLib Drawing New Classic";
+  readonly title = "DocLib DrawingNewClassic";
   readonly category = "format" as const;
   readonly mode = "DrawingNewClassic";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "DrawingNewClassic";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibDrawingNewClassic implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

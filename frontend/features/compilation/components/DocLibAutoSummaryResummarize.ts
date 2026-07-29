@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAutoSummaryResummarize implements BlockTool {
   static readonly feature = {
     id: "DocLibAutoSummaryResummarize",
-    title: "DocLib Auto Summary Resummarize",
+    title: "DocLib AutoSummaryResummarize",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9580fe119f937ee6"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="17,13 20,4 10,15 11,13 16,17 10,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Auto Summary Resummarize",
+      title: "DocLib AutoSummaryResummarize",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9580fe119f937ee6"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="17,13 20,4 10,15 11,13 16,17 10,11"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibAutoSummaryResummarize implements BlockTool {
   }
 
   readonly id = "DocLibAutoSummaryResummarize";
-  readonly title = "DocLib Auto Summary Resummarize";
+  readonly title = "DocLib AutoSummaryResummarize";
   readonly category = "format" as const;
   readonly mode = "AutoSummaryResummarize";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "AutoSummaryResummarize";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibAutoSummaryResummarize implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

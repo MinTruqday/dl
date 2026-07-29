@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextFill implements BlockTool {
   static readonly feature = {
     id: "DocLibTextFill",
-    title: "DocLib Text Fill",
+    title: "DocLib TextFill",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a1c450ba2fa92bbc"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="12,13 16,20 17,20 13,5 13,10 8,10"/></svg>',
     product: "doclib",
   } as const;

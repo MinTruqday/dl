@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPagePrevious implements BlockTool {
   static readonly feature = {
     id: "DocLibPagePrevious",
-    title: "DocLib Page Previous",
+    title: "DocLib PagePrevious",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f3feb35dcba3fddf"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,20 13,12 20,14 19,6 6,4 20,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Page Previous",
+      title: "DocLib PagePrevious",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f3feb35dcba3fddf"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,20 13,12 20,14 19,6 6,4 20,16"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibPagePrevious implements BlockTool {
   }
 
   readonly id = "DocLibPagePrevious";
-  readonly title = "DocLib Page Previous";
+  readonly title = "DocLib PagePrevious";
   readonly category = "format" as const;
   readonly mode = "PagePrevious";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "PagePrevious";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibPagePrevious implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibCustomFooterGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibCustomFooterGallery",
-    title: "DocLib Custom Footer Gallery",
+    title: "DocLib CustomFooterGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5dde3f6638549252"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,5 16,4 9,20 14,18 20,8 6,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Custom Footer Gallery",
+      title: "DocLib CustomFooterGallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5dde3f6638549252"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,5 16,4 9,20 14,18 20,8 6,10"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibCustomFooterGallery implements BlockTool {
   }
 
   readonly id = "DocLibCustomFooterGallery";
-  readonly title = "DocLib Custom Footer Gallery";
+  readonly title = "DocLib CustomFooterGallery";
   readonly category = "format" as const;
   readonly mode = "CustomFooterGallery";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "CustomFooterGallery";
+  readonly controlType = "gallery";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibCustomFooterGallery implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

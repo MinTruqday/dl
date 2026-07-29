@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPasteAsPicture implements BlockTool {
   static readonly feature = {
     id: "DocLibPasteAsPicture",
-    title: "DocLib Paste As Picture",
+    title: "DocLib PasteAsPicture",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="024c70105deb66cc"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="6,12 14,20 12,18 4,4 8,11 4,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Paste As Picture",
+      title: "DocLib PasteAsPicture",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="024c70105deb66cc"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="6,12 14,20 12,18 4,4 8,11 4,12"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibPasteAsPicture implements BlockTool {
   }
 
   readonly id = "DocLibPasteAsPicture";
-  readonly title = "DocLib Paste As Picture";
+  readonly title = "DocLib PasteAsPicture";
   readonly category = "format" as const;
   readonly mode = "PasteAsPicture";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "PasteAsPicture";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibPasteAsPicture implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

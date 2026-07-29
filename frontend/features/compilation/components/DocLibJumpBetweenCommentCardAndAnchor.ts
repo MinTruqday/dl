@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibJumpBetweenCommentCardAndAnchor implements BlockTool {
   static readonly feature = {
     id: "DocLibJumpBetweenCommentCardAndAnchor",
-    title: "DocLib Jump Between Comment Card And Anchor",
+    title: "DocLib JumpBetweenCommentCardAndAnchor",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="81d78176cdb6be8c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="14,15 14,20 5,16 7,8 8,12 5,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Jump Between Comment Card And Anchor",
+      title: "DocLib JumpBetweenCommentCardAndAnchor",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="81d78176cdb6be8c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="14,15 14,20 5,16 7,8 8,12 5,8"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibJumpBetweenCommentCardAndAnchor implements BlockTool 
   }
 
   readonly id = "DocLibJumpBetweenCommentCardAndAnchor";
-  readonly title = "DocLib Jump Between Comment Card And Anchor";
+  readonly title = "DocLib JumpBetweenCommentCardAndAnchor";
   readonly category = "format" as const;
   readonly mode = "JumpBetweenCommentCardAndAnchor";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "JumpBetweenCommentCardAndAnchor";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibJumpBetweenCommentCardAndAnchor implements BlockTool 
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

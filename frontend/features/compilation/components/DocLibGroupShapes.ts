@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibGroupShapes implements BlockTool {
   static readonly feature = {
     id: "DocLibGroupShapes",
-    title: "DocLib Group Shapes",
+    title: "DocLib GroupShapes",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e782b6fe00688510"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="14,15 16,20 4,6 18,20 18,10 6,4"/></svg>',
     product: "doclib",
   } as const;

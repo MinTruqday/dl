@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMenuMode implements BlockTool {
   static readonly feature = {
     id: "DocLibMenuMode",
-    title: "DocLib Menu Mode",
+    title: "DocLib MenuMode",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6f0249ac02d316c0"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="13,6 9,6 6,11 9,9 9,17 7,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Menu Mode",
+      title: "DocLib MenuMode",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6f0249ac02d316c0"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="13,6 9,6 6,11 9,9 9,17 7,17"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibMenuMode implements BlockTool {
   }
 
   readonly id = "DocLibMenuMode";
-  readonly title = "DocLib Menu Mode";
+  readonly title = "DocLib MenuMode";
   readonly category = "format" as const;
   readonly mode = "MenuMode";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "MenuMode";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibMenuMode implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibReviewShowRevisionsInBalloons implements BlockTool {
   static readonly feature = {
     id: "DocLibReviewShowRevisionsInBalloons",
-    title: "DocLib Review Show Revisions In Balloons",
+    title: "DocLib ReviewShowRevisionsInBalloons",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="73d28137230529af"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="17,10 14,8 5,9 11,9 13,8 9,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Review Show Revisions In Balloons",
+      title: "DocLib ReviewShowRevisionsInBalloons",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="73d28137230529af"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="17,10 14,8 5,9 11,9 13,8 9,5"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibReviewShowRevisionsInBalloons implements BlockTool {
   }
 
   readonly id = "DocLibReviewShowRevisionsInBalloons";
-  readonly title = "DocLib Review Show Revisions In Balloons";
+  readonly title = "DocLib ReviewShowRevisionsInBalloons";
   readonly category = "review" as const;
   readonly mode = "ReviewShowRevisionsInBalloons";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "ReviewShowRevisionsInBalloons";
+  readonly controlType = "toggleButton";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibReviewShowRevisionsInBalloons implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

@@ -18,7 +18,7 @@ export default class DocLibAnnotation implements InlineTool {
     return true;
   }
   static get title() {
-    return "Annotation";
+    return "DocLib Annotation";
   }
 
   get state() {

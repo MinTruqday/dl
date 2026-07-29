@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibImeDictionaryUpdate implements BlockTool {
   static readonly feature = {
     id: "DocLibImeDictionaryUpdate",
-    title: "DocLib Ime Dictionary Update",
+    title: "DocLib ImeDictionaryUpdate",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4da0a9de06229bcd"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="13,11 20,5 10,4 6,5 4,10 8,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Ime Dictionary Update",
+      title: "DocLib ImeDictionaryUpdate",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4da0a9de06229bcd"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="13,11 20,5 10,4 6,5 4,10 8,18"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibImeDictionaryUpdate implements BlockTool {
   }
 
   readonly id = "DocLibImeDictionaryUpdate";
-  readonly title = "DocLib Ime Dictionary Update";
+  readonly title = "DocLib ImeDictionaryUpdate";
   readonly category = "review" as const;
   readonly mode = "ImeDictionaryUpdate";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "ImeDictionaryUpdate";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibImeDictionaryUpdate implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

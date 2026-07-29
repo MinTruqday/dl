@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibOutlineMoveDown implements BlockTool {
   static readonly feature = {
     id: "DocLibOutlineMoveDown",
-    title: "DocLib Outline Move Down",
+    title: "DocLib OutlineMoveDown",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="45e5cdaf41cd02dd"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="5,12 5,9 18,5 6,4 17,15 10,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Outline Move Down",
+      title: "DocLib OutlineMoveDown",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="45e5cdaf41cd02dd"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="5,12 5,9 18,5 6,4 17,15 10,12"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibOutlineMoveDown implements BlockTool {
   }
 
   readonly id = "DocLibOutlineMoveDown";
-  readonly title = "DocLib Outline Move Down";
+  readonly title = "DocLib OutlineMoveDown";
   readonly category = "format" as const;
   readonly mode = "OutlineMoveDown";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "OutlineMoveDown";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibOutlineMoveDown implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

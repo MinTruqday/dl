@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSortText implements BlockTool {
   static readonly feature = {
     id: "DocLibSortText",
-    title: "DocLib Sort Text",
+    title: "DocLib SortText",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bbd83a1bf3a7d8dc"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="4,16 11,14 9,18 16,20 4,15 11,13"/></svg>',
     product: "doclib",
   } as const;

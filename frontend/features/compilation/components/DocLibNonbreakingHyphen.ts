@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibNonbreakingHyphen implements BlockTool {
   static readonly feature = {
     id: "DocLibNonbreakingHyphen",
-    title: "DocLib Nonbreaking Hyphen",
+    title: "DocLib NonbreakingHyphen",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d09503765758ed8b"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="8,17 7,20 6,7 20,7 12,8 10,4"/></svg>',
     product: "doclib",
   } as const;

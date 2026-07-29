@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMatchFields implements BlockTool {
   static readonly feature = {
     id: "DocLibMatchFields",
-    title: "DocLib Match Fields",
+    title: "DocLib MatchFields",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d5f4b14f6d5c9223"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="13,10 11,15 11,11 14,5 5,6 5,19"/></svg>',
     product: "doclib",
   } as const;

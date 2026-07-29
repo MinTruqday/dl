@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibVersionHistory implements BlockTool {
   static readonly feature = {
     id: "DocLibVersionHistory",
-    title: "DocLib Version History",
+    title: "DocLib VersionHistory",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="485808a509c0d047"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="8,7 12,16 13,9 8,7 18,17 12,10"/></svg>',
     product: "doclib",
   } as const;

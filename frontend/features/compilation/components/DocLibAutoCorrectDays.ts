@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAutoCorrectDays implements BlockTool {
   static readonly feature = {
     id: "DocLibAutoCorrectDays",
-    title: "DocLib Auto Correct Days",
+    title: "DocLib AutoCorrectDays",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7f3c34b4ceb3ce9c"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="12,13 5,14 6,13 6,7 19,16 12,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Auto Correct Days",
+      title: "DocLib AutoCorrectDays",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7f3c34b4ceb3ce9c"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="12,13 5,14 6,13 6,7 19,16 12,7"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibAutoCorrectDays implements BlockTool {
   }
 
   readonly id = "DocLibAutoCorrectDays";
-  readonly title = "DocLib Auto Correct Days";
+  readonly title = "DocLib AutoCorrectDays";
   readonly category = "format" as const;
   readonly mode = "AutoCorrectDays";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "AutoCorrectDays";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibAutoCorrectDays implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

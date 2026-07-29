@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
-import { Manrope } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
-const manrope = Manrope({
-  subsets: ["latin", "vietnamese"],
+const inter = Inter({
+  subsets: ["latin"],
   variable: "--font-sans",
 });
 
 export const metadata: Metadata = {
   title: "DocLib",
-  description: "Soạn thảo cộng tác và xuất bản tài liệu",
+  description: "Hệ thống quản lý tài liệu thông minh",
 };
 
 import { AuthProvider } from "@/features/authentication/contexts/AuthContext";
@@ -22,8 +22,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="vi">
-      <body className={`${manrope.variable} min-h-[100dvh]`}>
+    <html lang="vi" suppressHydrationWarning>
+      <body className={`${inter.variable} font-sans min-h-screen bg-white`}>
         <AuthProvider>
           <ToastProvider>
             <AnnouncementProvider>{children}</AnnouncementProvider>

@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibOpenTypeAllLigatures implements BlockTool {
   static readonly feature = {
     id: "DocLibOpenTypeAllLigatures",
-    title: "DocLib Open Type All Ligatures",
+    title: "DocLib OpenTypeAllLigatures",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1f031b850034d4c7"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="18,7 14,18 4,5 12,16 7,13 9,16"/></svg>',
     product: "doclib",
   } as const;

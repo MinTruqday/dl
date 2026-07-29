@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMailMergeStartEnvelopes implements BlockTool {
   static readonly feature = {
     id: "DocLibMailMergeStartEnvelopes",
-    title: "DocLib Mail Merge Start Envelopes",
+    title: "DocLib MailMergeStartEnvelopes",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="860d3f17a9c5081f"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,17 16,10 20,14 12,18 15,4 9,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Mail Merge Start Envelopes",
+      title: "DocLib MailMergeStartEnvelopes",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="860d3f17a9c5081f"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,17 16,10 20,14 12,18 15,4 9,15"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibMailMergeStartEnvelopes implements BlockTool {
   }
 
   readonly id = "DocLibMailMergeStartEnvelopes";
-  readonly title = "DocLib Mail Merge Start Envelopes";
+  readonly title = "DocLib MailMergeStartEnvelopes";
   readonly category = "mailing" as const;
   readonly mode = "MailMergeStartEnvelopes";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "MailMergeStartEnvelopes";
+  readonly controlType = "toggleButton";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibMailMergeStartEnvelopes implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

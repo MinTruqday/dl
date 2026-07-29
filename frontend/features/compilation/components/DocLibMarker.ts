@@ -19,7 +19,7 @@ export default class DocLibMarker implements InlineTool {
     return true;
   }
   static get title() {
-    return "Marker";
+    return "DocLib Marker";
   }
   static get sanitize() {
     return { mark: { class: true } };

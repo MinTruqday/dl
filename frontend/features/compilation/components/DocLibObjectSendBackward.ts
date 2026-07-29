@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibObjectSendBackward implements BlockTool {
   static readonly feature = {
     id: "DocLibObjectSendBackward",
-    title: "DocLib Object Send Backward",
+    title: "DocLib ObjectSendBackward",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b8c413845640433b"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="18,13 6,17 5,17 20,12 20,10 18,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Object Send Backward",
+      title: "DocLib ObjectSendBackward",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b8c413845640433b"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="18,13 6,17 5,17 20,12 20,10 18,9"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibObjectSendBackward implements BlockTool {
   }
 
   readonly id = "DocLibObjectSendBackward";
-  readonly title = "DocLib Object Send Backward";
+  readonly title = "DocLib ObjectSendBackward";
   readonly category = "layout" as const;
   readonly mode = "ObjectSendBackward";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "ObjectSendBackward";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibObjectSendBackward implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

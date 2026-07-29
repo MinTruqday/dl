@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMailMergeRuleSetBookmark implements BlockTool {
   static readonly feature = {
     id: "DocLibMailMergeRuleSetBookmark",
-    title: "DocLib Mail Merge Rule Set Bookmark",
+    title: "DocLib MailMergeRuleSetBookmark",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="16c537201400bbd8"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="9,14 8,19 7,4 4,16 14,11 5,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Mail Merge Rule Set Bookmark",
+      title: "DocLib MailMergeRuleSetBookmark",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="16c537201400bbd8"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="9,14 8,19 7,4 4,16 14,11 5,19"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibMailMergeRuleSetBookmark implements BlockTool {
   }
 
   readonly id = "DocLibMailMergeRuleSetBookmark";
-  readonly title = "DocLib Mail Merge Rule Set Bookmark";
+  readonly title = "DocLib MailMergeRuleSetBookmark";
   readonly category = "format" as const;
   readonly mode = "MailMergeRuleSetBookmark";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "MailMergeRuleSetBookmark";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibMailMergeRuleSetBookmark implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

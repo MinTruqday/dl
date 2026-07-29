@@ -28,7 +28,6 @@ def capability_manifest():
             or not feature_id.startswith("DocLib")
             or feature_id in ids
             or not isinstance(title, str)
-            or not title
             or not title.startswith("DocLib ")
             or not isinstance(icon, str)
             or icon in icons
@@ -78,7 +77,8 @@ def capability_page(
             not normalized
             or normalized in feature["id"].lower()
             or normalized in feature["title"].lower()
-            or normalized in str(feature.get("mode") or "").lower()
+            or normalized
+            in str(feature.get("microsoftControlId") or "").lower()
         )
     ]
     page = selected[offset:offset + limit]
@@ -96,6 +96,8 @@ def capability_page(
         "offset": offset,
         "limit": limit,
         "items": page,
+        "source": capability_manifest()["source"],
+        "sourceSha256": capability_manifest()["sourceSha256"],
     }
 
 

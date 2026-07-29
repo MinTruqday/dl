@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibCoverPageInsertGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibCoverPageInsertGallery",
-    title: "DocLib Cover Page Insert Gallery",
+    title: "DocLib CoverPageInsertGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5b9e8ee7a0240798"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,9 10,14 11,6 11,20 14,14 8,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Cover Page Insert Gallery",
+      title: "DocLib CoverPageInsertGallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5b9e8ee7a0240798"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,9 10,14 11,6 11,20 14,14 8,14"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibCoverPageInsertGallery implements BlockTool {
   }
 
   readonly id = "DocLibCoverPageInsertGallery";
-  readonly title = "DocLib Cover Page Insert Gallery";
+  readonly title = "DocLib CoverPageInsertGallery";
   readonly category = "insert" as const;
   readonly mode = "CoverPageInsertGallery";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "CoverPageInsertGallery";
+  readonly controlType = "gallery";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibCoverPageInsertGallery implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

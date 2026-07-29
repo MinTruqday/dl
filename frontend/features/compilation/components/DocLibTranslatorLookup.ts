@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTranslatorLookup implements BlockTool {
   static readonly feature = {
     id: "DocLibTranslatorLookup",
-    title: "DocLib Translator Lookup",
+    title: "DocLib TranslatorLookup",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8752225ecd79e0b2"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="20,18 4,13 5,6 7,12 9,8 7,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Translator Lookup",
+      title: "DocLib TranslatorLookup",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8752225ecd79e0b2"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="20,18 4,13 5,6 7,12 9,8 7,12"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibTranslatorLookup implements BlockTool {
   }
 
   readonly id = "DocLibTranslatorLookup";
-  readonly title = "DocLib Translator Lookup";
+  readonly title = "DocLib TranslatorLookup";
   readonly category = "review" as const;
   readonly mode = "TranslatorLookup";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "TranslatorLookup";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibTranslatorLookup implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

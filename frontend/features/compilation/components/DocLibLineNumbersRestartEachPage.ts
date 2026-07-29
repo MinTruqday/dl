@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLineNumbersRestartEachPage implements BlockTool {
   static readonly feature = {
     id: "DocLibLineNumbersRestartEachPage",
-    title: "DocLib Line Numbers Restart Each Page",
+    title: "DocLib LineNumbersRestartEachPage",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="59fbcb0cf2382c4e"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="8,17 20,16 8,9 14,14 15,18 18,7"/></svg>',
     product: "doclib",
   } as const;

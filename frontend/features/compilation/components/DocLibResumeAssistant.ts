@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibResumeAssistant implements BlockTool {
   static readonly feature = {
     id: "DocLibResumeAssistant",
-    title: "DocLib Resume Assistant",
+    title: "DocLib ResumeAssistant",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="31724506c284a0ed"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,16 5,10 11,17 11,20 7,9 13,10"/></svg>',
     product: "doclib",
   } as const;

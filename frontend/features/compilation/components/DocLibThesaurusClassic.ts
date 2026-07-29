@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibThesaurusClassic implements BlockTool {
   static readonly feature = {
     id: "DocLibThesaurusClassic",
-    title: "DocLib Thesaurus Classic",
+    title: "DocLib ThesaurusClassic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c075f9df82b15756"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="9,19 15,6 15,11 6,5 19,13 13,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Thesaurus Classic",
+      title: "DocLib ThesaurusClassic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c075f9df82b15756"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="9,19 15,6 15,11 6,5 19,13 13,11"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibThesaurusClassic implements BlockTool {
   }
 
   readonly id = "DocLibThesaurusClassic";
-  readonly title = "DocLib Thesaurus Classic";
+  readonly title = "DocLib ThesaurusClassic";
   readonly category = "format" as const;
   readonly mode = "ThesaurusClassic";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "ThesaurusClassic";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibThesaurusClassic implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

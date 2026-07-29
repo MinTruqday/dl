@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibGlowColorPicker implements BlockTool {
   static readonly feature = {
     id: "DocLibGlowColorPicker",
-    title: "DocLib Glow Color Picker",
+    title: "DocLib GlowColorPicker",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8619d6cddf1421eb"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="19,12 14,5 6,7 20,18 6,14 15,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Glow Color Picker",
+      title: "DocLib GlowColorPicker",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8619d6cddf1421eb"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="19,12 14,5 6,7 20,18 6,14 15,10"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibGlowColorPicker implements BlockTool {
   }
 
   readonly id = "DocLibGlowColorPicker";
-  readonly title = "DocLib Glow Color Picker";
+  readonly title = "DocLib GlowColorPicker";
   readonly category = "format" as const;
   readonly mode = "GlowColorPicker";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "GlowColorPicker";
+  readonly controlType = "gallery";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibGlowColorPicker implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

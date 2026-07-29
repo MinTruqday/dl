@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSendDoc implements BlockTool {
   static readonly feature = {
     id: "DocLibSendDoc",
-    title: "DocLib Send Doc",
+    title: "DocLib SendDoc",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ef897ead7ab4729a"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,5 11,7 7,14 16,5 4,8 14,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Send Doc",
+      title: "DocLib SendDoc",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ef897ead7ab4729a"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,5 11,7 7,14 16,5 4,8 14,13"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibSendDoc implements BlockTool {
   }
 
   readonly id = "DocLibSendDoc";
-  readonly title = "DocLib Send Doc";
+  readonly title = "DocLib SendDoc";
   readonly category = "format" as const;
   readonly mode = "SendDoc";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "SendDoc";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibSendDoc implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

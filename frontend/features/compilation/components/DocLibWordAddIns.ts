@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWordAddIns implements BlockTool {
   static readonly feature = {
     id: "DocLibWordAddIns",
-    title: "DocLib Word Add Ins",
+    title: "DocLib WordAddIns",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="940420d6515a5a87"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="16,8 19,14 17,9 9,20 13,11 13,9"/></svg>',
     product: "doclib",
   } as const;

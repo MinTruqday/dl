@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFootnoteContinuationSeparator implements BlockTool {
   static readonly feature = {
     id: "DocLibFootnoteContinuationSeparator",
-    title: "DocLib Footnote Continuation Separator",
+    title: "DocLib FootnoteContinuationSeparator",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fc9256f7fdecbf07"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,14 5,13 19,19 8,11 5,20 16,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Footnote Continuation Separator",
+      title: "DocLib FootnoteContinuationSeparator",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fc9256f7fdecbf07"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,14 5,13 19,19 8,11 5,20 16,20"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibFootnoteContinuationSeparator implements BlockTool {
   }
 
   readonly id = "DocLibFootnoteContinuationSeparator";
-  readonly title = "DocLib Footnote Continuation Separator";
+  readonly title = "DocLib FootnoteContinuationSeparator";
   readonly category = "format" as const;
   readonly mode = "FootnoteContinuationSeparator";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "FootnoteContinuationSeparator";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibFootnoteContinuationSeparator implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

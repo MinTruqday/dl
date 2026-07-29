@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSpeakLearnFromDocument implements BlockTool {
   static readonly feature = {
     id: "DocLibSpeakLearnFromDocument",
-    title: "DocLib Speak Learn From Document",
+    title: "DocLib SpeakLearnFromDocument",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b99d0516ae5f4619"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,8 9,9 8,14 6,12 10,9 13,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Speak Learn From Document",
+      title: "DocLib SpeakLearnFromDocument",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b99d0516ae5f4619"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,8 9,9 8,14 6,12 10,9 13,16"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibSpeakLearnFromDocument implements BlockTool {
   }
 
   readonly id = "DocLibSpeakLearnFromDocument";
-  readonly title = "DocLib Speak Learn From Document";
+  readonly title = "DocLib SpeakLearnFromDocument";
   readonly category = "format" as const;
   readonly mode = "SpeakLearnFromDocument";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "SpeakLearnFromDocument";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibSpeakLearnFromDocument implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

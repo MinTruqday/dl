@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibShapeFillSolid implements BlockTool {
   static readonly feature = {
     id: "DocLibShapeFillSolid",
-    title: "DocLib Shape Fill Solid",
+    title: "DocLib ShapeFillSolid",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="597415a21410e410"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,18 8,13 7,20 11,20 11,18 16,9"/></svg>',
     product: "doclib",
   } as const;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAsianLayoutMenu implements BlockTool {
   static readonly feature = {
     id: "DocLibAsianLayoutMenu",
-    title: "DocLib Asian Layout Menu",
+    title: "DocLib AsianLayoutMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ec951f5497059c8a"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="19,17 18,20 19,9 7,6 6,9 6,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Asian Layout Menu",
+      title: "DocLib AsianLayoutMenu",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ec951f5497059c8a"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="19,17 18,20 19,9 7,6 6,9 6,7"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibAsianLayoutMenu implements BlockTool {
   }
 
   readonly id = "DocLibAsianLayoutMenu";
-  readonly title = "DocLib Asian Layout Menu";
+  readonly title = "DocLib AsianLayoutMenu";
   readonly category = "format" as const;
   readonly mode = "AsianLayoutMenu";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "AsianLayoutMenu";
+  readonly controlType = "menu";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibAsianLayoutMenu implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

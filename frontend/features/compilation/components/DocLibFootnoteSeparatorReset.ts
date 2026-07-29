@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFootnoteSeparatorReset implements BlockTool {
   static readonly feature = {
     id: "DocLibFootnoteSeparatorReset",
-    title: "DocLib Footnote Separator Reset",
+    title: "DocLib FootnoteSeparatorReset",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="52e037dc8f8863ee"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,7 8,20 11,4 18,4 7,14 9,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Footnote Separator Reset",
+      title: "DocLib FootnoteSeparatorReset",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="52e037dc8f8863ee"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,7 8,20 11,4 18,4 7,14 9,13"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibFootnoteSeparatorReset implements BlockTool {
   }
 
   readonly id = "DocLibFootnoteSeparatorReset";
-  readonly title = "DocLib Footnote Separator Reset";
+  readonly title = "DocLib FootnoteSeparatorReset";
   readonly category = "format" as const;
   readonly mode = "FootnoteSeparatorReset";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "FootnoteSeparatorReset";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibFootnoteSeparatorReset implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

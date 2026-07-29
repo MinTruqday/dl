@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDiagramAutoLayoutClassic implements BlockTool {
   static readonly feature = {
     id: "DocLibDiagramAutoLayoutClassic",
-    title: "DocLib Diagram Auto Layout Classic",
+    title: "DocLib DiagramAutoLayoutClassic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="71b825e0548afc7c"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="15,18 7,7 20,6 18,9 8,17 12,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Diagram Auto Layout Classic",
+      title: "DocLib DiagramAutoLayoutClassic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="71b825e0548afc7c"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="15,18 7,7 20,6 18,9 8,17 12,6"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibDiagramAutoLayoutClassic implements BlockTool {
   }
 
   readonly id = "DocLibDiagramAutoLayoutClassic";
-  readonly title = "DocLib Diagram Auto Layout Classic";
+  readonly title = "DocLib DiagramAutoLayoutClassic";
   readonly category = "layout" as const;
   readonly mode = "DiagramAutoLayoutClassic";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "DiagramAutoLayoutClassic";
+  readonly controlType = "toggleButton";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibDiagramAutoLayoutClassic implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

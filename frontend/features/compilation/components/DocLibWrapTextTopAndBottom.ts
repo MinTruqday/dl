@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWrapTextTopAndBottom implements BlockTool {
   static readonly feature = {
     id: "DocLibWrapTextTopAndBottom",
-    title: "DocLib Wrap Text Top And Bottom",
+    title: "DocLib WrapTextTopAndBottom",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f597fe904a0f5ebd"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="11,19 20,12 10,19 13,6 8,7 13,12"/></svg>',
     product: "doclib",
   } as const;

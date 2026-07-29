@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWrapTextInFrontOfText implements BlockTool {
   static readonly feature = {
     id: "DocLibWrapTextInFrontOfText",
-    title: "DocLib Wrap Text In Front Of Text",
+    title: "DocLib WrapTextInFrontOfText",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a6c8b7f1481a0247"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="17,17 17,7 8,13 6,7 8,19 5,4"/></svg>',
     product: "doclib",
   } as const;

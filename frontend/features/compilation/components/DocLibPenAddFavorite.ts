@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPenAddFavorite implements BlockTool {
   static readonly feature = {
     id: "DocLibPenAddFavorite",
-    title: "DocLib Pen Add Favorite",
+    title: "DocLib PenAddFavorite",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="16cf993f793dc4a3"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,7 4,16 6,14 13,14 13,4 14,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Pen Add Favorite",
+      title: "DocLib PenAddFavorite",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="16cf993f793dc4a3"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,7 4,16 6,14 13,14 13,4 14,5"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibPenAddFavorite implements BlockTool {
   }
 
   readonly id = "DocLibPenAddFavorite";
-  readonly title = "DocLib Pen Add Favorite";
+  readonly title = "DocLib PenAddFavorite";
   readonly category = "format" as const;
   readonly mode = "PenAddFavorite";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "PenAddFavorite";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibPenAddFavorite implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

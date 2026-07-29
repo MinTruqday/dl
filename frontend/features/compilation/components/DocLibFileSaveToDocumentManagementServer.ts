@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFileSaveToDocumentManagementServer implements BlockTool {
   static readonly feature = {
     id: "DocLibFileSaveToDocumentManagementServer",
-    title: "DocLib File Save To Document Management Server",
+    title: "DocLib FileSaveToDocumentManagementServer",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f3dc0eea617e4458"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,20 18,17 16,11 4,7 16,16 20,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib File Save To Document Management Server",
+      title: "DocLib FileSaveToDocumentManagementServer",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f3dc0eea617e4458"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,20 18,17 16,11 4,7 16,16 20,13"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibFileSaveToDocumentManagementServer implements BlockTo
   }
 
   readonly id = "DocLibFileSaveToDocumentManagementServer";
-  readonly title = "DocLib File Save To Document Management Server";
+  readonly title = "DocLib FileSaveToDocumentManagementServer";
   readonly category = "format" as const;
   readonly mode = "FileSaveToDocumentManagementServer";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "FileSaveToDocumentManagementServer";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibFileSaveToDocumentManagementServer implements BlockTo
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

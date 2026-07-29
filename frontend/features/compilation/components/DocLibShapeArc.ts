@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibShapeArc implements BlockTool {
   static readonly feature = {
     id: "DocLibShapeArc",
-    title: "DocLib Shape Arc",
+    title: "DocLib ShapeArc",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bc4a8ed1b8e330ac"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="5,10 10,9 18,10 18,6 20,19 7,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Shape Arc",
+      title: "DocLib ShapeArc",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bc4a8ed1b8e330ac"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="5,10 10,9 18,10 18,6 20,19 7,8"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibShapeArc implements BlockTool {
   }
 
   readonly id = "DocLibShapeArc";
-  readonly title = "DocLib Shape Arc";
+  readonly title = "DocLib ShapeArc";
   readonly category = "format" as const;
   readonly mode = "ShapeArc";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "ShapeArc";
+  readonly controlType = "toggleButton";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibShapeArc implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

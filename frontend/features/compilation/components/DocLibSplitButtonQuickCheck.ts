@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSplitButtonQuickCheck implements BlockTool {
   static readonly feature = {
     id: "DocLibSplitButtonQuickCheck",
-    title: "DocLib Split Button Quick Check",
+    title: "DocLib SplitButtonQuickCheck",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9e8d68339588d185"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="9,9 6,4 17,4 9,18 17,8 9,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Split Button Quick Check",
+      title: "DocLib SplitButtonQuickCheck",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9e8d68339588d185"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="9,9 6,4 17,4 9,18 17,8 9,6"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibSplitButtonQuickCheck implements BlockTool {
   }
 
   readonly id = "DocLibSplitButtonQuickCheck";
-  readonly title = "DocLib Split Button Quick Check";
+  readonly title = "DocLib SplitButtonQuickCheck";
   readonly category = "review" as const;
   readonly mode = "SplitButtonQuickCheck";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "SplitButtonQuickCheck";
+  readonly controlType = "splitButton";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibSplitButtonQuickCheck implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

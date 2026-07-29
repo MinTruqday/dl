@@ -1,5 +1,4 @@
 import { API, BlockTool } from "@editorjs/editorjs";
-import { requestEditorInput } from "./editor-dialog";
 
 export default class DocLibBookmark implements BlockTool {
   static readonly feature = {
@@ -126,13 +125,9 @@ export default class DocLibBookmark implements BlockTool {
         editImg.style.bottom = "4px";
         editImg.style.right = "4px";
         editImg.style.fontSize = "10px";
-        editImg.addEventListener("click", async (e) => {
+        editImg.addEventListener("click", (e) => {
           e.stopPropagation();
-          const newImg = await requestEditorInput({
-            title: "DocLib Bookmark",
-            label: "Liên kết ảnh",
-            initialValue: this.data.img,
-          });
+          const newImg = prompt("Preview Image URL:", this.data.img);
           if (newImg) {
             this.data.img = newImg;
             this.buildUI();

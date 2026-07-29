@@ -19,10 +19,10 @@ export default class DocLibAlignmentTune implements BlockTune {
   private block: any;
   private wrapper: HTMLElement | null = null;
   private alignments = [
-    { name: "left", icon: IconAlignLeft, title: "DocLib Alignment" },
-    { name: "center", icon: IconAlignCenter, title: "DocLib Alignment" },
-    { name: "right", icon: IconAlignRight, title: "DocLib Alignment" },
-    { name: "justify", icon: IconAlignJustify, title: "DocLib Alignment" },
+    { name: "left", icon: IconAlignLeft, title: "DocLib Align Left" },
+    { name: "center", icon: IconAlignCenter, title: "DocLib Align Center" },
+    { name: "right", icon: IconAlignRight, title: "DocLib Align Right" },
+    { name: "justify", icon: IconAlignJustify, title: "DocLib Justify" },
   ];
 
   static get isTune() {

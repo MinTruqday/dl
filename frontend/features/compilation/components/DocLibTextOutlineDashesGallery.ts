@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextOutlineDashesGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibTextOutlineDashesGallery",
-    title: "DocLib Text Outline Dashes Gallery",
+    title: "DocLib TextOutlineDashesGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7c833e6059cb6ba7"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,16 15,15 8,20 9,18 5,6 16,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Text Outline Dashes Gallery",
+      title: "DocLib TextOutlineDashesGallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7c833e6059cb6ba7"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,16 15,15 8,20 9,18 5,6 16,20"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibTextOutlineDashesGallery implements BlockTool {
   }
 
   readonly id = "DocLibTextOutlineDashesGallery";
-  readonly title = "DocLib Text Outline Dashes Gallery";
+  readonly title = "DocLib TextOutlineDashesGallery";
   readonly category = "format" as const;
   readonly mode = "TextOutlineDashesGallery";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "TextOutlineDashesGallery";
+  readonly controlType = "gallery";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibTextOutlineDashesGallery implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

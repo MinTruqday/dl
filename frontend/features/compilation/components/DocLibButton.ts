@@ -1,5 +1,4 @@
 import { API, BlockTool } from "@editorjs/editorjs";
-import { showEditorNotice } from "./editor-dialog";
 
 export default class DocLibButton implements BlockTool {
   static readonly feature = {
@@ -139,7 +138,7 @@ export default class DocLibButton implements BlockTool {
 
     this.registButton.addEventListener("click", () => {
       if (!this.linkInput?.textContent || !this.textInput?.textContent) {
-        showEditorNotice("Thiếu thông tin", "Nhập nhãn và liên kết cho nút");
+        alert("A label and URL are required");
         return;
       }
       this.data = {

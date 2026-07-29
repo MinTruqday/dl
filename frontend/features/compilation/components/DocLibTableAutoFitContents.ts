@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableAutoFitContents implements BlockTool {
   static readonly feature = {
     id: "DocLibTableAutoFitContents",
-    title: "DocLib Table Auto Fit Contents",
+    title: "DocLib TableAutoFitContents",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="31c5a9dcf59080ec"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="19,14 20,20 11,12 13,19 18,14 9,20"/></svg>',
     product: "doclib",
   } as const;

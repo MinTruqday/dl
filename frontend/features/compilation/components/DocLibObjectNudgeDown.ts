@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibObjectNudgeDown implements BlockTool {
   static readonly feature = {
     id: "DocLibObjectNudgeDown",
-    title: "DocLib Object Nudge Down",
+    title: "DocLib ObjectNudgeDown",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7b3102770d3eb420"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,19 6,4 17,15 14,19 13,10 16,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Object Nudge Down",
+      title: "DocLib ObjectNudgeDown",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7b3102770d3eb420"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,19 6,4 17,15 14,19 13,10 16,6"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibObjectNudgeDown implements BlockTool {
   }
 
   readonly id = "DocLibObjectNudgeDown";
-  readonly title = "DocLib Object Nudge Down";
+  readonly title = "DocLib ObjectNudgeDown";
   readonly category = "format" as const;
   readonly mode = "ObjectNudgeDown";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "ObjectNudgeDown";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibObjectNudgeDown implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

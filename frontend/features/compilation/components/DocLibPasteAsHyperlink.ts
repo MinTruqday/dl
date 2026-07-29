@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPasteAsHyperlink implements BlockTool {
   static readonly feature = {
     id: "DocLibPasteAsHyperlink",
-    title: "DocLib Paste As Hyperlink",
+    title: "DocLib PasteAsHyperlink",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="18bb999daa4bf94a"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,4 4,8 4,11 15,10 11,19 17,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Paste As Hyperlink",
+      title: "DocLib PasteAsHyperlink",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="18bb999daa4bf94a"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,4 4,8 4,11 15,10 11,19 17,9"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibPasteAsHyperlink implements BlockTool {
   }
 
   readonly id = "DocLibPasteAsHyperlink";
-  readonly title = "DocLib Paste As Hyperlink";
+  readonly title = "DocLib PasteAsHyperlink";
   readonly category = "format" as const;
   readonly mode = "PasteAsHyperlink";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "PasteAsHyperlink";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibPasteAsHyperlink implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

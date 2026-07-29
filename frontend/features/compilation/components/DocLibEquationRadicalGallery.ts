@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibEquationRadicalGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibEquationRadicalGallery",
-    title: "DocLib Equation Radical Gallery",
+    title: "DocLib EquationRadicalGallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9b7b23d5acf5c93e"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="6,8 5,13 6,11 18,15 9,16 18,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Equation Radical Gallery",
+      title: "DocLib EquationRadicalGallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9b7b23d5acf5c93e"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="6,8 5,13 6,11 18,15 9,16 18,14"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibEquationRadicalGallery implements BlockTool {
   }
 
   readonly id = "DocLibEquationRadicalGallery";
-  readonly title = "DocLib Equation Radical Gallery";
+  readonly title = "DocLib EquationRadicalGallery";
   readonly category = "format" as const;
   readonly mode = "EquationRadicalGallery";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "EquationRadicalGallery";
+  readonly controlType = "gallery";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibEquationRadicalGallery implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

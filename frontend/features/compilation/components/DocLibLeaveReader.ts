@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLeaveReader implements BlockTool {
   static readonly feature = {
     id: "DocLibLeaveReader",
-    title: "DocLib Leave Reader",
+    title: "DocLib LeaveReader",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c23f01327539506e"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="11,16 5,20 19,10 16,12 18,19 5,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Leave Reader",
+      title: "DocLib LeaveReader",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c23f01327539506e"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="11,16 5,20 19,10 16,12 18,19 5,16"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibLeaveReader implements BlockTool {
   }
 
   readonly id = "DocLibLeaveReader";
-  readonly title = "DocLib Leave Reader";
+  readonly title = "DocLib LeaveReader";
   readonly category = "format" as const;
   readonly mode = "LeaveReader";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "LeaveReader";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibLeaveReader implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

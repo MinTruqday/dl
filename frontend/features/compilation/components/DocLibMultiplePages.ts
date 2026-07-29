@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMultiplePages implements BlockTool {
   static readonly feature = {
     id: "DocLibMultiplePages",
-    title: "DocLib Multiple Pages",
+    title: "DocLib MultiplePages",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="56260e57c503f229"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,8 18,6 14,7 8,11 8,15 18,19"/></svg>',
     product: "doclib",
   } as const;

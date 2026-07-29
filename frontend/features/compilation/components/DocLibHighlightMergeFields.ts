@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibHighlightMergeFields implements BlockTool {
   static readonly feature = {
     id: "DocLibHighlightMergeFields",
-    title: "DocLib Highlight Merge Fields",
+    title: "DocLib HighlightMergeFields",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f773abf3008e9f84"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="13,17 5,9 4,10 10,17 13,14 14,20"/></svg>',
     product: "doclib",
   } as const;

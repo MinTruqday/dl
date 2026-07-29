@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibObjectBorderOutlineColorMoreColorsDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibObjectBorderOutlineColorMoreColorsDialog",
-    title: "DocLib Object Border Outline Color More Colors Dialog",
+    title: "DocLib ObjectBorderOutlineColorMoreColorsDialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4cef2bec51d9da2a"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="12,5 13,19 17,17 18,12 13,13 14,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Object Border Outline Color More Colors Dialog",
+      title: "DocLib ObjectBorderOutlineColorMoreColorsDialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4cef2bec51d9da2a"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="12,5 13,19 17,17 18,12 13,13 14,10"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibObjectBorderOutlineColorMoreColorsDialog implements B
   }
 
   readonly id = "DocLibObjectBorderOutlineColorMoreColorsDialog";
-  readonly title = "DocLib Object Border Outline Color More Colors Dialog";
+  readonly title = "DocLib ObjectBorderOutlineColorMoreColorsDialog";
   readonly category = "format" as const;
   readonly mode = "ObjectBorderOutlineColorMoreColorsDialog";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "ObjectBorderOutlineColorMoreColorsDialog";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibObjectBorderOutlineColorMoreColorsDialog implements B
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

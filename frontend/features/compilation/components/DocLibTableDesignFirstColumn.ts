@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableDesignFirstColumn implements BlockTool {
   static readonly feature = {
     id: "DocLibTableDesignFirstColumn",
-    title: "DocLib Table Design First Column",
+    title: "DocLib TableDesignFirstColumn",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d8ccbb7db68df9b7"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="16,4 4,10 16,9 15,17 19,14 17,15"/></svg>',
     product: "doclib",
   } as const;

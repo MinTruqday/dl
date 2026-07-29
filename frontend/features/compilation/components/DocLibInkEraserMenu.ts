@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibInkEraserMenu implements BlockTool {
   static readonly feature = {
     id: "DocLibInkEraserMenu",
-    title: "DocLib Ink Eraser Menu",
+    title: "DocLib InkEraserMenu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2ff4a08fff83f678"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="17,10 11,11 4,16 12,5 4,19 4,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Ink Eraser Menu",
+      title: "DocLib InkEraserMenu",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2ff4a08fff83f678"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="17,10 11,11 4,16 12,5 4,19 4,12"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibInkEraserMenu implements BlockTool {
   }
 
   readonly id = "DocLibInkEraserMenu";
-  readonly title = "DocLib Ink Eraser Menu";
+  readonly title = "DocLib InkEraserMenu";
   readonly category = "format" as const;
   readonly mode = "InkEraserMenu";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "InkEraserMenu";
+  readonly controlType = "splitButton";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibInkEraserMenu implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

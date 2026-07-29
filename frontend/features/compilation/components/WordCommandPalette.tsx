@@ -2,18 +2,12 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import type EditorJS from "@editorjs/editorjs";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { WORD_COMMANDS } from "./word-command-catalog";
 import {
   executeWordCommand,
   type WordCommandCategory,
 } from "./word-command-engine";
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalTitle,
-} from "@/shared/components/ui/Modal";
 
 interface WordCommandPaletteProps {
   editorRef: React.MutableRefObject<EditorJS | null>;
@@ -39,22 +33,6 @@ const categories: Array<WordCommandCategory | "all"> = [
   "automation",
   "ai",
 ];
-
-const categoryLabels: Record<WordCommandCategory | "all", string> = {
-  all: "Tất cả",
-  format: "Định dạng",
-  insert: "Chèn",
-  layout: "Bố cục",
-  table: "Bảng",
-  review: "Rà soát",
-  reference: "Tham chiếu",
-  mailing: "Thư",
-  view: "Hiển thị",
-  media: "Nội dung",
-  security: "Bảo mật",
-  automation: "Tự động hóa",
-  ai: "Metis",
-};
 
 export default function WordCommandPalette({
   editorRef,
@@ -93,26 +71,26 @@ export default function WordCommandPalette({
     const editor = editorRef.current;
     const command = WORD_COMMANDS.find((item) => item.id === commandId);
     if (!editor || !command) {
-      showToast?.("Trình soạn thảo chưa sẵn sàng", "error");
+      showToast?.("Editor is not ready", "error");
       return;
     }
     if (
       command.requiresSelection &&
       !window.getSelection()?.toString().trim()
     ) {
-      showToast?.("Chọn nội dung trước khi chạy lệnh", "info");
+      showToast?.("Select text before running this command", "info");
       return;
     }
     setRunning(command.id);
     try {
       const data = await executeWordCommand(editor, command);
       onSave?.(JSON.stringify(data));
-      showToast?.(`Đã chạy ${command.title}`, "success");
+      showToast?.(`${command.title} applied`, "success");
       setOpen(false);
       setQuery("");
     } catch (error) {
       showToast?.(
-        error instanceof Error ? error.message : "Không thể chạy lệnh",
+        error instanceof Error ? error.message : "Command failed",
         "error",
       );
     } finally {
@@ -125,82 +103,90 @@ export default function WordCommandPalette({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="button-secondary shrink-0 gap-2"
-        title="Lệnh soạn thảo"
+        className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] whitespace-nowrap shrink-0 rounded-lg hover:bg-zinc-50 flex items-center gap-1.5"
+        title="Word commands"
       >
         <Search className="w-3.5 h-3.5" />
-        Lệnh soạn thảo
+        Word features
+        <span className="text-zinc-400">2296 commands 2449 features</span>
       </button>
 
-      <Modal
-        isOpen={open}
-        onClose={() => setOpen(false)}
-        className="max-w-[760px]"
-      >
-        <ModalHeader>
-          <ModalTitle>Lệnh soạn thảo</ModalTitle>
-        </ModalHeader>
-        <ModalContent>
-            <div className="flex items-center gap-3">
+      {open && (
+        <div className="fixed inset-0 z-[80] bg-black/30 flex items-start justify-center pt-[10vh]">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Word features"
+            className="w-[min(760px,92vw)] max-h-[80vh] bg-white border border-zinc-300 rounded-xl shadow-2xl flex flex-col overflow-hidden"
+          >
+            <div className="p-4 border-b border-zinc-200 flex items-center gap-3">
+              <Search className="w-4 h-4 text-zinc-400" />
               <input
                 autoFocus
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Tìm lệnh"
-                className="field-control min-w-0 flex-1"
+                placeholder="Search 2296 DocLib commands"
+                className="flex-1 text-sm outline-none"
               />
-              <span className="text-[13px] text-[var(--ink-muted)]">
-                {commands.length}
-              </span>
+              <span className="text-xs text-zinc-400">{commands.length}</span>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="p-1 text-zinc-500"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
-            <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
+            <div className="px-4 py-3 border-b border-zinc-200 flex gap-2 overflow-x-auto">
               {categories.map((item) => (
                 <button
                   type="button"
                   key={item}
                   onClick={() => setCategory(item)}
-                  className={`whitespace-nowrap rounded-[var(--radius-control)] px-3 py-1.5 text-[12px] ${
+                  className={`px-3 py-1 text-xs rounded-full capitalize whitespace-nowrap ${
                     category === item
-                      ? "bg-[var(--brand-soft)] text-[var(--brand)]"
-                      : "bg-[var(--surface-quiet)] text-[var(--ink-muted)]"
+                      ? "bg-black text-white"
+                      : "bg-zinc-100 text-zinc-600"
                   }`}
                 >
-                  {categoryLabels[item]}
+                  {item}
                 </button>
               ))}
             </div>
 
-            <div className="mt-2 max-h-[52dvh] overflow-y-auto">
+            <div className="overflow-y-auto p-2">
               {commands.map((command) => (
                 <button
                   type="button"
                   key={command.id}
                   disabled={running !== null}
                   onClick={() => run(command.id)}
-                  className="flex w-full items-center justify-between rounded-[var(--radius-control)] px-3 py-2.5 text-left hover:bg-[var(--surface-quiet)] disabled:opacity-50"
+                  className="w-full px-3 py-2.5 flex items-center justify-between text-left rounded-lg hover:bg-zinc-100 disabled:opacity-50"
                 >
                   <span>
-                    <span className="block text-[14px] font-medium text-[var(--ink)]">
+                    <span className="block text-sm font-medium text-zinc-900">
                       {command.title}
                     </span>
-                    <span className="block text-[12px] text-[var(--ink-muted)]">
-                      {categoryLabels[command.category]}
+                    <span className="block text-xs text-zinc-400 capitalize">
+                      {command.category}
                     </span>
                   </span>
-                  <span className="text-[12px] text-[var(--ink-muted)]">
-                    {running === command.id ? "Đang chạy" : "Chạy"}
+                  <span className="text-xs text-zinc-400">
+                    {running === command.id ? "Running" : "Run"}
                   </span>
                 </button>
               ))}
               {commands.length === 0 && (
-                <div className="p-10 text-center text-[14px] text-[var(--ink-muted)]">
-                  Không có lệnh phù hợp
+                <div className="p-10 text-center text-sm text-zinc-400">
+                  No matching feature
                 </div>
               )}
             </div>
-        </ModalContent>
-      </Modal>
+          </div>
+        </div>
+      )}
     </>
   );
 }

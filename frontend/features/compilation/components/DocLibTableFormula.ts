@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableFormula implements BlockTool {
   static readonly feature = {
     id: "DocLibTableFormula",
-    title: "DocLib Table Formula",
+    title: "DocLib TableFormula",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6e397e86f86abfd9"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,10 11,19 14,8 8,17 13,5 16,10"/></svg>',
     product: "doclib",
   } as const;

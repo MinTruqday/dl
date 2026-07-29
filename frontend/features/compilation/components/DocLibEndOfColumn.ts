@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibEndOfColumn implements BlockTool {
   static readonly feature = {
     id: "DocLibEndOfColumn",
-    title: "DocLib End Of Column",
+    title: "DocLib EndOfColumn",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="03907c72c8a062de"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="7,12 9,16 17,11 17,5 13,14 13,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib End Of Column",
+      title: "DocLib EndOfColumn",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="03907c72c8a062de"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="7,12 9,16 17,11 17,5 13,14 13,19"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibEndOfColumn implements BlockTool {
   }
 
   readonly id = "DocLibEndOfColumn";
-  readonly title = "DocLib End Of Column";
+  readonly title = "DocLib EndOfColumn";
   readonly category = "format" as const;
   readonly mode = "EndOfColumn";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "EndOfColumn";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibEndOfColumn implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

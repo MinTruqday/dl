@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFieldPrevious implements BlockTool {
   static readonly feature = {
     id: "DocLibFieldPrevious",
-    title: "DocLib Field Previous",
+    title: "DocLib FieldPrevious",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="38f19aa66511ce6c"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,7 5,17 20,4 6,10 12,16 19,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Field Previous",
+      title: "DocLib FieldPrevious",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="38f19aa66511ce6c"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,7 5,17 20,4 6,10 12,16 19,16"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibFieldPrevious implements BlockTool {
   }
 
   readonly id = "DocLibFieldPrevious";
-  readonly title = "DocLib Field Previous";
+  readonly title = "DocLib FieldPrevious";
   readonly category = "format" as const;
   readonly mode = "FieldPrevious";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "FieldPrevious";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibFieldPrevious implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

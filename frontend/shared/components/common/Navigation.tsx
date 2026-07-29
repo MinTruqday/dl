@@ -1,206 +1,240 @@
 "use client";
-
 import Link from "next/link";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { smartSearchAPI } from "@/features/content/services/discovery.service";
 import { useRouter } from "next/navigation";
+import {
+  Bell,
+  Search,
+  X,
+} from "lucide-react";
 import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import { useAnnouncements } from "@/shared/contexts/AnnouncementContext";
-import { MenuGroups } from "./Dock";
 
 export default function Navigation() {
-  const router = useRouter();
   const { user, logoutState } = useAuth() as any;
-  const { unreadCount } = useAnnouncements();
-  const [query, setQuery] = useState("");
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [accountOpen, setAccountOpen] = useState(false);
-  const accountRef = useRef<HTMLDivElement>(null);
+  const { announcements, unreadCount, markAsRead } = useAnnouncements();
+  const [showAnnouncements, setShowAnnouncements] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
-    const close = (event: MouseEvent) => {
-      if (
-        accountRef.current &&
-        !accountRef.current.contains(event.target as Node)
-      ) {
-        setAccountOpen(false);
+    const handleClickOutside = (event: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
+        setShowAnnouncements(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false);
       }
     };
-    document.addEventListener("mousedown", close);
-    return () => document.removeEventListener("mousedown", close);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    if (!mobileOpen) return;
-    const close = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setMobileOpen(false);
-    };
-    document.body.style.overflow = "hidden";
-    document.addEventListener("keydown", close);
-    return () => {
-      document.body.style.overflow = "";
-      document.removeEventListener("keydown", close);
-    };
-  }, [mobileOpen]);
+  const handleLogout = () => {
+    logoutState();
+  };
 
-  const search = (event: FormEvent) => {
-    event.preventDefault();
-    const value = query.trim();
-    if (!value) return;
-    router.push(`/tim-kiem?q=${encodeURIComponent(value)}`);
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+    setIsSearching(true);
+    try {
+      await smartSearchAPI(searchQuery);
+      router.push(`/tim-kiem?q=${encodeURIComponent(searchQuery)}`);
+    } catch (err: any) {
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   return (
-    <>
-      <header className="fixed inset-x-0 top-0 z-40 h-[var(--topbar-height)] border-b border-[var(--border)] bg-[color:rgba(255,255,255,0.94)] backdrop-blur-xl">
-        <div className="flex h-full items-center gap-4 px-4 lg:px-5">
-          <button
-            type="button"
-            onClick={() => setMobileOpen(true)}
-            className="min-h-10 rounded-[var(--radius-control)] px-3 text-[14px] font-medium text-[var(--ink)] hover:bg-[var(--surface-quiet)] lg:hidden"
-          >
-            Menu
-          </button>
+    <nav
+      className="fixed top-0 left-0 right-0 z-[100] w-full bg-white/80 backdrop-blur-xl border-b border-[#E8E8ED] transition-all duration-300"
+      style={{ height: "56px" }}
+    >
+      <div className="h-full flex items-center justify-between px-6 w-full gap-4">
+        <Link
+          href="/"
+          className="text-lg font-semibold tracking-tight text-[#1D1D1F] leading-none flex items-center gap-2 shrink-0 transition-opacity hover:opacity-80"
+        >
+          <span>DocLib</span>
+        </Link>
 
-          <Link
-            href="/kham-pha"
-            className="w-auto shrink-0 text-[17px] font-semibold tracking-[-0.02em] text-[var(--ink)] lg:w-[calc(var(--sidebar-width)-20px)]"
-          >
-            DocLib
-          </Link>
-
-          <form
-            onSubmit={search}
-            role="search"
-            className="mx-auto hidden w-full max-w-[560px] md:block"
-          >
-            <label htmlFor="global-search" className="sr-only">
-              Tìm trong DocLib
-            </label>
+        <form onSubmit={handleSearch} className="flex-1 max-w-xl hidden lg:block relative">
+          <div className="relative group">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#6E6E73] transition-colors group-focus-within:text-[#0071E3]" />
             <input
-              id="global-search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Tìm tài liệu và tác giả"
-              className="h-10 w-full rounded-[var(--radius-control)] border border-transparent bg-[var(--surface-quiet)] px-4 text-[14px] text-[var(--ink)] outline-none transition focus:border-[var(--brand)] focus:bg-[var(--surface)] focus:ring-2 focus:ring-[var(--brand-soft)]"
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-[#F5F5F7] border border-transparent rounded-[10px] pl-9 pr-9 py-1 text-[13px] focus:bg-white focus:border-[#0071E3] focus:outline-none transition-all duration-200"
             />
-          </form>
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6E6E73] hover:text-[#1D1D1F] transition-colors"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        </form>
 
-          <div className="ml-auto flex items-center gap-1">
-            {user ? (
-              <>
-                <Link
-                  href="/thong-bao"
-                  className="min-h-10 rounded-[var(--radius-control)] px-3 py-2 text-[14px] text-[var(--ink-muted)] hover:bg-[var(--surface-quiet)] hover:text-[var(--ink)]"
+        <div className="flex items-center gap-4 shrink-0">
+          {user ? (
+            <>
+              <div className="relative" ref={notifRef}>
+                <button
+                  onClick={() => setShowAnnouncements(!showAnnouncements)}
+                  className={`relative flex items-center justify-center transition-opacity hover:opacity-80 ${
+                    showAnnouncements ? "text-[#0071E3]" : "text-[#1D1D1F]"
+                  }`}
+                  aria-label="Thông báo"
                 >
-                  Thông báo{unreadCount > 0 ? ` ${unreadCount}` : ""}
-                </Link>
+                  <Bell className="w-[18px] h-[18px]" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-[8px] h-[8px] bg-[#0071E3] rounded-full" />
+                  )}
+                </button>
 
-                <div ref={accountRef} className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setAccountOpen((value) => !value)}
-                    aria-expanded={accountOpen}
-                    className="flex min-h-10 items-center gap-2 rounded-[var(--radius-control)] px-2 text-[14px] hover:bg-[var(--surface-quiet)]"
-                  >
-                    <span className="flex size-7 items-center justify-center overflow-hidden rounded-full bg-[var(--brand)] text-[12px] font-semibold text-white">
-                      {user.avatar_url ? (
-                        <img
-                          src={user.avatar_url}
-                          alt=""
-                          className="size-full object-cover"
-                        />
-                      ) : (
-                        String(user.full_name || user.username || "D").charAt(0)
+                {showAnnouncements && (
+                  <div className="absolute right-0 mt-4 w-[360px] bg-white border border-[#D2D2D7] z-[200] rounded-[18px] shadow-2xl p-4">
+                    <div className="flex items-center justify-between mb-4 px-2">
+                      <span className="text-[13px] font-semibold text-[#1D1D1F]">Thông báo</span>
+                      {unreadCount > 0 && (
+                        <span className="text-[12px] text-[#0071E3] font-medium">
+                          {unreadCount} mới
+                        </span>
                       )}
-                    </span>
-                    <span className="hidden max-w-32 truncate sm:block">
-                      {user.full_name || user.username}
-                    </span>
-                  </button>
+                    </div>
+                    <div className="max-h-[360px] overflow-y-auto">
+                      {announcements.length > 0 ? (
+                        <div className="space-y-1">
+                          {announcements.slice(0, 8).map((notif: any) => (
+                            <div
+                              key={notif._id}
+                              className={`px-3 py-3 rounded-[10px] cursor-pointer transition-colors hover:bg-[#F5F5F7] ${
+                                !notif.is_read ? "bg-[#F5F5F7]" : "bg-white"
+                              }`}
+                              onClick={() => {
+                                if (!notif.is_read) markAsRead(notif._id);
+                                if (notif.link) router.push(notif.link);
+                                setShowAnnouncements(false);
+                              }}
+                            >
+                              <div className="flex gap-3 items-start">
+                                <div className="flex-1 min-w-0">
+                                  <p
+                                    className={`text-[13px] leading-snug ${
+                                      notif.is_read ? "text-[#6E6E73]" : "text-[#1D1D1F] font-medium"
+                                    }`}
+                                  >
+                                    {notif.message}
+                                  </p>
+                                  <span className="text-[11px] text-[#6E6E73] mt-1 block">
+                                    {new Date(notif.created_at).toLocaleDateString("vi-VN")}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="py-8 text-center">
+                          <p className="text-[13px] text-[#6E6E73]">Không có thông báo mới</p>
+                        </div>
+                      )}
+                    </div>
+                    <div className="pt-3 mt-2 border-t border-[#D2D2D7]">
+                      <Link
+                        href="/thong-bao"
+                        onClick={() => setShowAnnouncements(false)}
+                        className="block text-center text-[13px] text-[#0071E3] hover:underline"
+                      >
+                        Xem tất cả
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
 
-                  {accountOpen && (
-                    <div className="absolute right-0 mt-2 w-60 rounded-[var(--radius-panel)] border border-[var(--border)] bg-[var(--surface)] p-2 shadow-[0_18px_50px_rgba(32,32,30,0.12)]">
-                      <div className="px-3 py-2">
-                        <p className="truncate text-[14px] font-semibold text-[var(--ink)]">
-                          {user.full_name || user.username}
-                        </p>
-                        <p className="truncate text-[12px] text-[var(--ink-muted)]">
-                          {user.email}
-                        </p>
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center justify-center transition-opacity hover:opacity-80"
+                >
+                  <div className="w-[24px] h-[24px] bg-[#F5F5F7] rounded-full overflow-hidden shrink-0 border border-[#D2D2D7]">
+                    {user.avatar_url ? (
+                      <img
+                        src={user.avatar_url}
+                        className="w-full h-full object-cover"
+                        alt=""
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-[#0071E3] text-white flex items-center justify-center text-[11px] font-semibold uppercase">
+                        {(user.full_name || user.username || "U").charAt(0)}
                       </div>
-                      <div className="my-1 h-px bg-[var(--border)]" />
+                    )}
+                  </div>
+                </button>
+
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-4 w-[240px] bg-white border border-[#D2D2D7] z-[200] p-4 rounded-[18px] shadow-2xl">
+                    <div className="mb-4 px-2">
+                      <p className="text-[15px] font-semibold text-[#1D1D1F]">{user.full_name || user.username}</p>
+                      <p className="text-[13px] text-[#6E6E73]">{user.email}</p>
+                    </div>
+                    <div className="space-y-1">
                       <Link
                         href="/ho-so"
-                        onClick={() => setAccountOpen(false)}
-                        className="block rounded-[var(--radius-control)] px-3 py-2 text-[14px] hover:bg-[var(--surface-quiet)]"
+                        onClick={() => setShowUserMenu(false)}
+                        className="block px-3 py-2 text-[15px] text-[#1D1D1F] hover:bg-[#F5F5F7] rounded-[10px] transition-colors"
                       >
                         Hồ sơ
                       </Link>
                       <Link
                         href="/cai-dat"
-                        onClick={() => setAccountOpen(false)}
-                        className="block rounded-[var(--radius-control)] px-3 py-2 text-[14px] hover:bg-[var(--surface-quiet)]"
+                        onClick={() => setShowUserMenu(false)}
+                        className="block px-3 py-2 text-[15px] text-[#1D1D1F] hover:bg-[#F5F5F7] rounded-[10px] transition-colors"
                       >
                         Cài đặt
                       </Link>
+                      <div className="h-px bg-[#D2D2D7] my-2 mx-2" />
                       <button
-                        type="button"
-                        onClick={logoutState}
-                        className="block w-full rounded-[var(--radius-control)] px-3 py-2 text-left text-[14px] text-[var(--danger)] hover:bg-[var(--danger-soft)]"
+                        onClick={handleLogout}
+                        className="block w-full text-left px-3 py-2 text-[15px] text-[#FF3B30] hover:bg-[#F5F5F7] rounded-[10px] transition-colors"
                       >
                         Đăng xuất
                       </button>
                     </div>
-                  )}
-                </div>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/dang-nhap"
-                  className="min-h-10 rounded-[var(--radius-control)] px-3 py-2 text-[14px] font-medium text-[var(--ink)] hover:bg-[var(--surface-quiet)]"
-                >
-                  Đăng nhập
-                </Link>
-                <Link
-                  href="/dang-ky"
-                  className="hidden min-h-10 rounded-[var(--radius-control)] bg-[var(--brand)] px-4 py-2 text-[14px] font-semibold text-white hover:bg-[var(--brand-hover)] sm:block"
-                >
-                  Tạo tài khoản
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {mobileOpen && (
-        <div
-          className="fixed inset-0 z-50 bg-[color:rgba(32,32,30,0.32)] lg:hidden"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Điều hướng"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setMobileOpen(false);
-          }}
-        >
-          <div className="h-full w-[min(88vw,340px)] overflow-y-auto bg-[var(--surface)] p-4 shadow-[20px_0_60px_rgba(32,32,30,0.14)]">
-            <div className="mb-6 flex h-10 items-center justify-between">
-              <span className="text-[17px] font-semibold">DocLib</span>
-              <button
-                type="button"
-                onClick={() => setMobileOpen(false)}
-                className="min-h-10 rounded-[var(--radius-control)] px-3 text-[14px] hover:bg-[var(--surface-quiet)]"
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center gap-4">
+              <Link
+                href="/dang-nhap"
+                className="text-[13px] text-[#1D1D1F] hover:text-[#0071E3] transition-colors"
               >
-                Đóng
-              </button>
+                Đăng nhập
+              </Link>
+              <Link
+                href="/dang-ky"
+                className="text-[13px] bg-[#0071E3] text-white px-3 py-1.5 rounded-[980px] hover:bg-[#0055C6] transition-colors"
+              >
+                Đăng ký
+              </Link>
             </div>
-            <nav aria-label="Điều hướng di động">
-              <MenuGroups onNavigate={() => setMobileOpen(false)} />
-            </nav>
-          </div>
+          )}
         </div>
-      )}
-    </>
+      </div>
+    </nav>
   );
 }

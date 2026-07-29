@@ -20,6 +20,7 @@ BACKEND_MANIFEST = (
     / "resources"
     / "word-feature-manifest.json"
 )
+WORD_SOURCE = "https://github.com/OfficeDev/office-fluent-ui-command-identifiers/blob/master/Microsoft%20365/Current%20Channel/wordcontrols.xlsx"
 INTERACTIVE_TYPES = {
     "button",
     "checkBox",
@@ -196,35 +197,39 @@ def icon_for(name):
 
 
 def title_for(name):
-    title = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", name)
-    title = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1 \2", title)
-    title = re.sub(r"(\d)([A-Za-z])", r"\1 \2", title)
-    title = title.replace("3 D", "3D").strip()
-    acronyms = {
-        "Ai": "AI",
-        "Api": "API",
-        "Csv": "CSV",
-        "Html": "HTML",
-        "Json": "JSON",
-        "Pdf": "PDF",
-        "Sql": "SQL",
-        "Uri": "URI",
-        "Url": "URL",
-        "Xml": "XML",
-    }
-    normalized = " ".join(acronyms.get(token, token) for token in title.split())
-    return f"DocLib {normalized}"
+    return "DocLib " + name
 
 
 def feature_record(name, row, origin, tool_key=None, mode=None):
+    if origin == "microsoft-word":
+        location = " ".join(
+            value
+            for value in (
+                row.get("Tab", ""),
+                row.get("Group/Context Menu Name", ""),
+            )
+            if value
+        )
+        description = (
+            f"DocLib feature mapped to Microsoft Word {row.get('Control Type', 'control')} {location}"
+        ).strip()
+    elif origin == "word-compatible":
+        description = "DocLib editing feature"
+    else:
+        description = "DocLib EditorJS feature"
     return {
         "id": "DocLib" + name,
         "title": title_for(name),
         "icon": icon_for("DocLib" + name),
         "product": "doclib",
-        "description": f"Editor command for {title_for(name)}",
+        "description": description,
+        "microsoftControlId": name if origin == "microsoft-word" else None,
+        "controlType": row.get("Control Type") if row else None,
+        "tab": row.get("Tab") if row else None,
+        "group": row.get("Group/Context Menu Name") if row else None,
         "toolKey": tool_key,
         "mode": mode,
+        "source": WORD_SOURCE if origin == "microsoft-word" else None,
     }
 
 
@@ -259,13 +264,22 @@ def update_existing_file(path, record):
         flags=re.S,
     )
     source = re.sub(
-        r'(\btitle:\s*")[^"]+(")',
-        lambda match: match.group(1) + record["title"] + match.group(2),
+        r'(\btitle:\s*")(?!(?:DocLib)\s)([^"]+)(")',
+        lambda match: match.group(1) + "DocLib " + match.group(2) + match.group(3),
         source,
     )
     source = re.sub(
-        r'(readonly title = ")[^"]+(")',
-        lambda match: match.group(1) + record["title"] + match.group(2),
+        r'(readonly title = ")(?!(?:DocLib)\s)([^"]+)(")',
+        lambda match: match.group(1) + "DocLib " + match.group(2) + match.group(3),
+        source,
+    )
+    source = re.sub(
+        r'(return ")(?!(?:DocLib)\s)([^"]+)(";)',
+        lambda match: (
+            match.group(1) + "DocLib " + match.group(2) + match.group(3)
+            if "title" in source[max(0, match.start() - 100):match.start()]
+            else match.group(0)
+        ),
         source,
     )
     path.write_text(source, encoding="utf-8")
@@ -276,7 +290,8 @@ def new_feature_source(record, row):
     title = record["title"]
     icon = record["icon"]
     category = category_for(row)
-    control_id = record["mode"]
+    control_id = record["microsoftControlId"]
+    control_type = record["controlType"]
     return f'''import {{ API, BlockTool, BlockToolData }} from "@editorjs/editorjs";
 
 export default class {identifier} implements BlockTool {{
@@ -303,6 +318,8 @@ export default class {identifier} implements BlockTool {{
   readonly category = "{category}" as const;
   readonly mode = "{control_id}";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "{control_id}";
+  readonly controlType = "{control_type}";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -359,17 +376,18 @@ export default class {identifier} implements BlockTool {{
   }}
 
   async execute(editor: any) {{
-    const event = new CustomEvent("doclib-command", {{
+    const event = new CustomEvent("doclib-microsoft-word-control", {{
       cancelable: true,
       detail: {{
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       }},
     }});
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {{
-      throw new Error(`No handler registered for ${{this.mode}}`);
+      throw new Error(`No handler registered for ${{this.microsoftControlId}}`);
     }}
   }}
 }}
@@ -423,9 +441,10 @@ if (
 
 
 def main():
-    if len(sys.argv) > 2:
-        raise SystemExit("usage: rebuild_word_feature_catalog.py [wordcontrols.xlsx]")
-    rows = spreadsheet_rows(pathlib.Path(sys.argv[1])) if len(sys.argv) == 2 else []
+    if len(sys.argv) != 2:
+        raise SystemExit("wordcontrols.xlsx path required")
+    spreadsheet_path = pathlib.Path(sys.argv[1])
+    rows = spreadsheet_rows(spreadsheet_path)
     controls = unique_controls(rows)
     legacy = legacy_names()
     commands = command_names()
@@ -485,6 +504,21 @@ def main():
         json.dumps(
             {
                 "schemaVersion": 1,
+                "source": WORD_SOURCE,
+                "sourceSha256": hashlib.sha256(
+                    spreadsheet_path.read_bytes()
+                ).hexdigest(),
+                "microsoftInteractiveControlCount": len(
+                    [
+                        row
+                        for row in controls.values()
+                        if row.get("Control Type") in INTERACTIVE_TYPES
+                        and re.fullmatch(
+                            r"[A-Za-z][A-Za-z0-9]*",
+                            row.get("Control Name", ""),
+                        )
+                    ]
+                ),
                 "features": records,
             },
             ensure_ascii=True,

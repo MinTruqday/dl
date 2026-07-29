@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibShapeConnectorStyleCurved implements BlockTool {
   static readonly feature = {
     id: "DocLibShapeConnectorStyleCurved",
-    title: "DocLib Shape Connector Style Curved",
+    title: "DocLib ShapeConnectorStyleCurved",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fe0cc1b3a34f135f"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="20,16 10,13 14,15 6,14 17,19 5,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Shape Connector Style Curved",
+      title: "DocLib ShapeConnectorStyleCurved",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fe0cc1b3a34f135f"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="20,16 10,13 14,15 6,14 17,19 5,6"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibShapeConnectorStyleCurved implements BlockTool {
   }
 
   readonly id = "DocLibShapeConnectorStyleCurved";
-  readonly title = "DocLib Shape Connector Style Curved";
+  readonly title = "DocLib ShapeConnectorStyleCurved";
   readonly category = "format" as const;
   readonly mode = "ShapeConnectorStyleCurved";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "ShapeConnectorStyleCurved";
+  readonly controlType = "toggleButton";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibShapeConnectorStyleCurved implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }

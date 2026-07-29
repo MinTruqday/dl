@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibCharacterBorder implements BlockTool {
   static readonly feature = {
     id: "DocLibCharacterBorder",
-    title: "DocLib Character Border",
+    title: "DocLib CharacterBorder",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="30222ed3c4c168ad"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="18,4 16,11 13,10 6,7 12,4 16,13"/></svg>',
     product: "doclib",
   } as const;

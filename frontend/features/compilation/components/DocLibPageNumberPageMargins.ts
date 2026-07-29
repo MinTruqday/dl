@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPageNumberPageMargins implements BlockTool {
   static readonly feature = {
     id: "DocLibPageNumberPageMargins",
-    title: "DocLib Page Number Page Margins",
+    title: "DocLib PageNumberPageMargins",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="952490892b005102"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="17,6 12,5 13,4 17,6 15,20 6,19"/></svg>',
     product: "doclib",
   } as const;

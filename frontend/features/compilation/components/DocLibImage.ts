@@ -1,6 +1,4 @@
 import { API, BlockTool } from "@editorjs/editorjs";
-import { requestEditorInput } from "./editor-dialog";
-import { uploadEditorAssetAPI } from "@/features/compilation/services/editorjs.service";
 
 export default class DocLibImage implements BlockTool {
   static readonly feature = {
@@ -155,12 +153,19 @@ export default class DocLibImage implements BlockTool {
       input.addEventListener("change", () => {
         if (input.files && input.files[0]) {
           const file = input.files[0];
+          const formData = new FormData();
+          formData.append("file", file);
+
           const endpoint = this.config.endpoints?.byFile || "/api/uploadFile";
 
           uploader.innerHTML =
       '<div style="padding: 20px; font-weight: 500;">Uploading</div>';
 
-          uploadEditorAssetAPI(endpoint, file)
+          fetch(endpoint, {
+            method: "POST",
+            body: formData,
+          })
+            .then((res) => res.json())
             .then((res) => {
               if (res.success === 1 && res.file && res.file.url) {
                 if (this.data.file) this.data.file.url = res.file.url;
@@ -183,12 +188,9 @@ export default class DocLibImage implements BlockTool {
       uploader.appendChild(input);
       outer.appendChild(uploader);
 
-      uploader.addEventListener("contextmenu", async (e) => {
+      uploader.addEventListener("contextmenu", (e) => {
         e.preventDefault();
-        const url = await requestEditorInput({
-          title: "DocLib Image",
-          label: "Liên kết ảnh",
-        });
+        const url = prompt("Enter a direct image URL");
         if (url) {
           if (this.data.file) this.data.file.url = url;
           this.buildUI();

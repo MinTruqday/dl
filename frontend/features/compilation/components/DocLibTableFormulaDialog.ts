@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableFormulaDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibTableFormulaDialog",
-    title: "DocLib Table Formula Dialog",
+    title: "DocLib TableFormulaDialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7bf3cbca94b52d81"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="8,9 20,19 16,15 15,14 15,15 4,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Table Formula Dialog",
+      title: "DocLib TableFormulaDialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7bf3cbca94b52d81"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="8,9 20,19 16,15 15,14 15,15 4,18"/></svg>',
     };
   }
@@ -20,10 +20,12 @@ export default class DocLibTableFormulaDialog implements BlockTool {
   }
 
   readonly id = "DocLibTableFormulaDialog";
-  readonly title = "DocLib Table Formula Dialog";
+  readonly title = "DocLib TableFormulaDialog";
   readonly category = "table" as const;
   readonly mode = "TableFormulaDialog";
   readonly requiresSelection = false;
+  readonly microsoftControlId = "TableFormulaDialog";
+  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -80,17 +82,18 @@ export default class DocLibTableFormulaDialog implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-command", {
+    const event = new CustomEvent("doclib-microsoft-word-control", {
       cancelable: true,
       detail: {
         command: this.id,
-        mode: this.mode,
+        controlId: this.microsoftControlId,
+        controlType: this.controlType,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.mode}`);
+      throw new Error(`No handler registered for ${this.microsoftControlId}`);
     }
   }
 }
