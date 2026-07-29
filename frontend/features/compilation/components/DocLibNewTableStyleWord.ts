@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibNewTableStyleWord implements BlockTool {
   static readonly feature = {
     id: "DocLibNewTableStyleWord",
-    title: "DocLib NewTableStyleWord",
+    title: "New Table Style Word",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8dcd7708b36ea9b6"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="9,5 4,12 13,12 20,16 8,4 18,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib NewTableStyleWord",
+      title: "New Table Style Word",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8dcd7708b36ea9b6"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="9,5 4,12 13,12 20,16 8,4 18,12"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibNewTableStyleWord implements BlockTool {
   }
 
   readonly id = "DocLibNewTableStyleWord";
-  readonly title = "DocLib NewTableStyleWord";
+  readonly title = "New Table Style Word";
   readonly category = "table" as const;
   readonly mode = "NewTableStyleWord";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "NewTableStyleWord";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibNewTableStyleWord implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

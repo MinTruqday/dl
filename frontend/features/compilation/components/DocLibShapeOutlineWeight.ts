@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibShapeOutlineWeight implements BlockTool {
   static readonly feature = {
     id: "DocLibShapeOutlineWeight",
-    title: "DocLib ShapeOutlineWeight",
+    title: "Shape Outline Weight",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cb9badb976cb2d12"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="20,6 7,19 20,20 15,5 7,13 18,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Shape Outline Weight",
+      title: "Shape Outline Weight",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cb9badb976cb2d12"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="20,6 7,19 20,20 15,5 7,13 18,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibShapeOutlineWeight implements BlockTool {
   }
 
   readonly id = "DocLibShapeOutlineWeight";
-  readonly title = "DocLib Shape Outline Weight";
+  readonly title = "Shape Outline Weight";
   readonly category = "media" as const;
   readonly mode = "ShapeOutlineWeight";
   readonly requiresSelection = false;

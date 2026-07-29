@@ -3,7 +3,7 @@ import { API } from "@editorjs/editorjs";
 export default class DocLibStyleTune {
   static readonly feature = {
     id: "DocLibStyleTune",
-    title: "DocLib StyleTune",
+    title: "Style Tune",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="02ece0b2c751a1b9"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="6,19 7,12 16,17 12,19 7,12 15,8"/></svg>',
     product: "doclib",
   } as const;

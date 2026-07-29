@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibReviewAcceptOrRejectChangeDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibReviewAcceptOrRejectChangeDialog",
-    title: "DocLib ReviewAcceptOrRejectChangeDialog",
+    title: "Review Accept Or Reject Change Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3ca5fde794744496"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="13,16 19,14 16,18 4,18 14,9 11,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib ReviewAcceptOrRejectChangeDialog",
+      title: "Review Accept Or Reject Change Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3ca5fde794744496"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="13,16 19,14 16,18 4,18 14,9 11,6"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibReviewAcceptOrRejectChangeDialog implements BlockTool
   }
 
   readonly id = "DocLibReviewAcceptOrRejectChangeDialog";
-  readonly title = "DocLib ReviewAcceptOrRejectChangeDialog";
+  readonly title = "Review Accept Or Reject Change Dialog";
   readonly category = "format" as const;
   readonly mode = "ReviewAcceptOrRejectChangeDialog";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "ReviewAcceptOrRejectChangeDialog";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibReviewAcceptOrRejectChangeDialog implements BlockTool
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

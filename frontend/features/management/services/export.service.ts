@@ -24,3 +24,19 @@ export async function exportDocumentDocxAPI(documentId: string) {
   }
   return res.blob();
 }
+
+export async function exportProtectedDocumentAPI(documentId: string) {
+  const res = await fetch(`${API_URL}/ket-xuat/${documentId}/drm`, {
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(
+      data.message || data.detail || "Không thể kết xuất tài liệu bảo mật",
+    );
+  }
+  return {
+    blob: await res.blob(),
+    contentDisposition: res.headers.get("content-disposition") || "",
+  };
+}

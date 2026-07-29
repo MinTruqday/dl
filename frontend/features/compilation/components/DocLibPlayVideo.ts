@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPlayVideo implements BlockTool {
   static readonly feature = {
     id: "DocLibPlayVideo",
-    title: "DocLib PlayVideo",
+    title: "Play Video",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8342d0f6c16e708d"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="16,19 8,12 10,12 14,9 16,15 19,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib PlayVideo",
+      title: "Play Video",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8342d0f6c16e708d"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="16,19 8,12 10,12 14,9 16,15 19,15"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibPlayVideo implements BlockTool {
   }
 
   readonly id = "DocLibPlayVideo";
-  readonly title = "DocLib PlayVideo";
+  readonly title = "Play Video";
   readonly category = "media" as const;
   readonly mode = "PlayVideo";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "PlayVideo";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibPlayVideo implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

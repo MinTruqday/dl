@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLineUp implements BlockTool {
   static readonly feature = {
     id: "DocLibLineUp",
-    title: "DocLib LineUp",
+    title: "Line Up",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="eec7167b771e0bc2"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="4,16 9,8 4,17 15,11 12,16 14,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib LineUp",
+      title: "Line Up",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="eec7167b771e0bc2"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="4,16 9,8 4,17 15,11 12,16 14,19"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibLineUp implements BlockTool {
   }
 
   readonly id = "DocLibLineUp";
-  readonly title = "DocLib LineUp";
+  readonly title = "Line Up";
   readonly category = "format" as const;
   readonly mode = "LineUp";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "LineUp";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibLineUp implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

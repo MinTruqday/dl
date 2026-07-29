@@ -52,24 +52,24 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           {toasts.map((t) => {
             let icon = null;
             if (t.type === "error") {
-              icon = <AlertCircle className="w-4 h-4 text-white" />;
+              icon = <AlertCircle className="size-4" />;
             } else if (t.type === "success") {
-              icon = <CheckCircle2 className="w-4 h-4 text-black" />;
+              icon = <CheckCircle2 className="size-4" />;
             } else {
-              icon = <Info className="w-4 h-4 text-black" />;
+              icon = <Info className="size-4" />;
             }
 
             return (
               <div
                 key={t.id}
-                className="relative bg-white border border-zinc-200 rounded-2xl p-4 shadow-xl pointer-events-auto animate-in fade-in slide-in-from-bottom-4 [transition-duration:420ms] ease-out min-w-[300px] max-w-[400px] flex items-center gap-3"
+                className="pointer-events-auto relative flex min-w-[280px] max-w-[400px] items-center gap-3 rounded-[var(--radius-panel)] border border-[var(--border)] bg-[var(--surface)] p-3 shadow-[0_18px_48px_rgba(32,32,30,0.14)]"
               >
-                <div className={`shrink-0 flex items-center justify-center w-8 h-8 rounded-full ${t.type === "error" ? "bg-red-50 text-red-600" : t.type === "success" ? "bg-green-50 text-green-600" : "bg-zinc-100 text-zinc-900"}`}>
+                <div className={`flex size-8 shrink-0 items-center justify-center rounded-[var(--radius-control)] ${t.type === "error" ? "bg-[var(--danger-soft)] text-[var(--danger)]" : t.type === "success" ? "bg-[var(--success-soft)] text-[var(--success)]" : "bg-[var(--surface-quiet)] text-[var(--ink)]"}`}>
                   {icon}
                 </div>
 
                 <div className="flex-1 min-w-0 flex items-center">
-                  <p className="text-sm font-medium text-zinc-900 break-words">
+                  <p className="break-words text-[14px] font-medium text-[var(--ink)]">
                     {t.message}
                   </p>
                 </div>
@@ -77,9 +77,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 <button
                   type="button"
                   onClick={() => removeToast(t.id)}
-                  className="shrink-0 flex items-center justify-center w-8 h-8 cursor-pointer rounded-xl text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 transition-colors"
+                  aria-label="Đóng thông báo"
+                  className="flex size-8 shrink-0 items-center justify-center rounded-[var(--radius-control)] text-[var(--ink-muted)] hover:bg-[var(--surface-quiet)] hover:text-[var(--ink)]"
                 >
-                  <X className="w-4 h-4" />
+                  <X aria-hidden="true" className="size-4" />
                 </button>
               </div>
             );

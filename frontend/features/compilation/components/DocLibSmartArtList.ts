@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSmartArtList implements BlockTool {
   static readonly feature = {
     id: "DocLibSmartArtList",
-    title: "DocLib SmartArtList",
+    title: "Smart Art List",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4b0eda2b9ccb224c"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="11,18 18,13 7,20 4,12 10,15 4,10"/></svg>',
     product: "doclib",
   } as const;
@@ -15,7 +15,7 @@ export default class DocLibSmartArtList implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "DocLib SmartArt List",
+      title: "Smart Art List",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4b0eda2b9ccb224c"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="11,18 18,13 7,20 4,12 10,15 4,10"/></svg>',
     };
   }
@@ -40,8 +40,8 @@ export default class DocLibSmartArtList implements BlockTool {
         data?.items && data.items.length > 0
           ? data.items
           : [
-              { title: "DocLib Main Point 1", desc: "DocLib Detail 1" },
-              { title: "DocLib Main Point 2", desc: "DocLib Detail 2" },
+              { title: "Smart Art List", desc: "DocLib Detail 1" },
+              { title: "Smart Art List", desc: "DocLib Detail 2" },
             ],
     };
   }
@@ -114,7 +114,7 @@ export default class DocLibSmartArtList implements BlockTool {
         addBtn.innerText = "+ Add List Item";
         addBtn.addEventListener("click", () => {
           this.data.items.push({
-            title: "DocLib Title",
+            title: "Smart Art List",
             desc: "DocLib Description",
           });
           renderList();

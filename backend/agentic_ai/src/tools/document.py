@@ -21,7 +21,6 @@ async def search_editorjs_capabilities(
     <contract>
     Use this before creating or editing EditorJS blocks when the exact tool key schema or Microsoft Word control mapping is unknown
     Every returned capability belongs to DocLib
-    microsoftControlId is source verification metadata when an official mapping exists
     Never invent a block type control ID mode or implementation status
     </contract>
     """

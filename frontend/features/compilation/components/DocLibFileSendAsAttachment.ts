@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFileSendAsAttachment implements BlockTool {
   static readonly feature = {
     id: "DocLibFileSendAsAttachment",
-    title: "DocLib FileSendAsAttachment",
+    title: "File Send As Attachment",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="263d08fc17817754"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="8,14 12,18 10,14 4,20 15,12 16,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib FileSendAsAttachment",
+      title: "File Send As Attachment",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="263d08fc17817754"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="8,14 12,18 10,14 4,20 15,12 16,12"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibFileSendAsAttachment implements BlockTool {
   }
 
   readonly id = "DocLibFileSendAsAttachment";
-  readonly title = "DocLib FileSendAsAttachment";
+  readonly title = "File Send As Attachment";
   readonly category = "format" as const;
   readonly mode = "FileSendAsAttachment";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "FileSendAsAttachment";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibFileSendAsAttachment implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartFormatDataPointAndSelect implements BlockTool {
   static readonly feature = {
     id: "DocLibChartFormatDataPointAndSelect",
-    title: "DocLib ChartFormatDataPointAndSelect",
+    title: "Chart Format Data Point And Select",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="94f42917fc241f9d"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="16,10 11,10 18,6 18,8 12,12 20,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib ChartFormatDataPointAndSelect",
+      title: "Chart Format Data Point And Select",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="94f42917fc241f9d"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="16,10 11,10 18,6 18,8 12,12 20,12"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibChartFormatDataPointAndSelect implements BlockTool {
   }
 
   readonly id = "DocLibChartFormatDataPointAndSelect";
-  readonly title = "DocLib ChartFormatDataPointAndSelect";
+  readonly title = "Chart Format Data Point And Select";
   readonly category = "media" as const;
   readonly mode = "ChartFormatDataPointAndSelect";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "ChartFormatDataPointAndSelect";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibChartFormatDataPointAndSelect implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

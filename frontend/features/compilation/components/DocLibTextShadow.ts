@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextShadow implements BlockTool {
   static readonly feature = {
     id: "DocLibTextShadow",
-    title: "DocLib TextShadow",
+    title: "Text Shadow",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5c02e7ea0c4631e9"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="11,6 14,17 16,6 19,16 18,8 6,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Text Shadow",
+      title: "Text Shadow",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5c02e7ea0c4631e9"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="11,6 14,17 16,6 19,16 18,8 6,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTextShadow implements BlockTool {
   }
 
   readonly id = "DocLibTextShadow";
-  readonly title = "DocLib Text Shadow";
+  readonly title = "Text Shadow";
   readonly category = "format" as const;
   readonly mode = "TextShadow";
   readonly requiresSelection = true;

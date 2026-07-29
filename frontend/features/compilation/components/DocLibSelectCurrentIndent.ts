@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSelectCurrentIndent implements BlockTool {
   static readonly feature = {
     id: "DocLibSelectCurrentIndent",
-    title: "DocLib SelectCurrentIndent",
+    title: "Select Current Indent",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="556d60b38e462151"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="4,11 15,13 10,6 20,17 10,14 14,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib SelectCurrentIndent",
+      title: "Select Current Indent",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="556d60b38e462151"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="4,11 15,13 10,6 20,17 10,14 14,5"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibSelectCurrentIndent implements BlockTool {
   }
 
   readonly id = "DocLibSelectCurrentIndent";
-  readonly title = "DocLib SelectCurrentIndent";
+  readonly title = "Select Current Indent";
   readonly category = "format" as const;
   readonly mode = "SelectCurrentIndent";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "SelectCurrentIndent";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibSelectCurrentIndent implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

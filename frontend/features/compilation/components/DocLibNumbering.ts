@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibNumbering implements BlockTool {
   static readonly feature = {
     id: "DocLibNumbering",
-    title: "DocLib Numbering",
+    title: "Numbering",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4c21f19fe1d1df28"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,20 7,10 8,9 6,10 14,4 11,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Numbering",
+      title: "Numbering",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4c21f19fe1d1df28"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,20 7,10 8,9 6,10 14,4 11,17"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibNumbering implements BlockTool {
   }
 
   readonly id = "DocLibNumbering";
-  readonly title = "DocLib Numbering";
+  readonly title = "Numbering";
   readonly category = "format" as const;
   readonly mode = "Numbering";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "Numbering";
-  readonly controlType = "toggleButton";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibNumbering implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

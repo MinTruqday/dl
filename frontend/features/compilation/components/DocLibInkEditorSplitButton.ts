@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibInkEditorSplitButton implements BlockTool {
   static readonly feature = {
     id: "DocLibInkEditorSplitButton",
-    title: "DocLib InkEditorSplitButton",
+    title: "Ink Editor Split Button",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="df44347aee02e255"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="6,4 5,7 4,6 9,4 14,8 9,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib InkEditorSplitButton",
+      title: "Ink Editor Split Button",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="df44347aee02e255"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="6,4 5,7 4,6 9,4 14,8 9,18"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibInkEditorSplitButton implements BlockTool {
   }
 
   readonly id = "DocLibInkEditorSplitButton";
-  readonly title = "DocLib InkEditorSplitButton";
+  readonly title = "Ink Editor Split Button";
   readonly category = "format" as const;
   readonly mode = "InkEditorSplitButton";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "InkEditorSplitButton";
-  readonly controlType = "splitButton";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibInkEditorSplitButton implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

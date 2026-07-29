@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibParagraphBorders implements BlockTool {
   static readonly feature = {
     id: "DocLibParagraphBorders",
-    title: "DocLib ParagraphBorders",
+    title: "Paragraph Borders",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="af1c9f777ee12415"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,15 10,4 11,8 6,8 16,13 11,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Paragraph Borders",
+      title: "Paragraph Borders",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="af1c9f777ee12415"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,15 10,4 11,8 6,8 16,13 11,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibParagraphBorders implements BlockTool {
   }
 
   readonly id = "DocLibParagraphBorders";
-  readonly title = "DocLib Paragraph Borders";
+  readonly title = "Paragraph Borders";
   readonly category = "format" as const;
   readonly mode = "ParagraphBorders";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibReviewEndReview implements BlockTool {
   static readonly feature = {
     id: "DocLibReviewEndReview",
-    title: "DocLib ReviewEndReview",
+    title: "Review End Review",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9c43de68c667de04"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="7,20 5,6 15,5 5,8 17,17 8,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib ReviewEndReview",
+      title: "Review End Review",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9c43de68c667de04"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="7,20 5,6 15,5 5,8 17,17 8,17"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibReviewEndReview implements BlockTool {
   }
 
   readonly id = "DocLibReviewEndReview";
-  readonly title = "DocLib ReviewEndReview";
+  readonly title = "Review End Review";
   readonly category = "format" as const;
   readonly mode = "ReviewEndReview";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "ReviewEndReview";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibReviewEndReview implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

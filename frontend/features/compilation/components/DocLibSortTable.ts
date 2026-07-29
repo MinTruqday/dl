@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSortTable implements BlockTool {
   static readonly feature = {
     id: "DocLibSortTable",
-    title: "DocLib SortTable",
+    title: "Sort Table",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="855faf67b0d901c7"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="18,14 9,5 10,17 5,16 12,17 14,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Sort Table",
+      title: "Sort Table",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="855faf67b0d901c7"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="18,14 9,5 10,17 5,16 12,17 14,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSortTable implements BlockTool {
   }
 
   readonly id = "DocLibSortTable";
-  readonly title = "DocLib Sort Table";
+  readonly title = "Sort Table";
   readonly category = "table" as const;
   readonly mode = "SortTable";
   readonly requiresSelection = false;

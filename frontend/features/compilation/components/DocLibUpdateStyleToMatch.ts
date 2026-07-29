@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibUpdateStyleToMatch implements BlockTool {
   static readonly feature = {
     id: "DocLibUpdateStyleToMatch",
-    title: "DocLib UpdateStyleToMatch",
+    title: "Update Style To Match",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a33dfe2cfad9fa8e"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="14,14 20,14 16,17 16,10 16,19 20,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Update Style To Match",
+      title: "Update Style To Match",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a33dfe2cfad9fa8e"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="14,14 20,14 16,17 16,10 16,19 20,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibUpdateStyleToMatch implements BlockTool {
   }
 
   readonly id = "DocLibUpdateStyleToMatch";
-  readonly title = "DocLib Update Style To Match";
+  readonly title = "Update Style To Match";
   readonly category = "format" as const;
   readonly mode = "UpdateStyleToMatch";
   readonly requiresSelection = false;

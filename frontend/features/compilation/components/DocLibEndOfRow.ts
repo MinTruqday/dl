@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibEndOfRow implements BlockTool {
   static readonly feature = {
     id: "DocLibEndOfRow",
-    title: "DocLib EndOfRow",
+    title: "End Of Row",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="04ebf718b4beb1e5"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,18 13,11 14,7 11,12 20,9 20,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib EndOfRow",
+      title: "End Of Row",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="04ebf718b4beb1e5"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,18 13,11 14,7 11,12 20,9 20,16"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibEndOfRow implements BlockTool {
   }
 
   readonly id = "DocLibEndOfRow";
-  readonly title = "DocLib EndOfRow";
+  readonly title = "End Of Row";
   readonly category = "format" as const;
   readonly mode = "EndOfRow";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "EndOfRow";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibEndOfRow implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

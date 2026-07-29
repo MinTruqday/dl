@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSplitTable implements BlockTool {
   static readonly feature = {
     id: "DocLibSplitTable",
-    title: "DocLib SplitTable",
+    title: "Split Table",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6f3b5b2a10ffab3f"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="13,12 10,12 20,4 5,16 14,14 12,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Split Table",
+      title: "Split Table",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6f3b5b2a10ffab3f"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="13,12 10,12 20,4 5,16 14,14 12,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSplitTable implements BlockTool {
   }
 
   readonly id = "DocLibSplitTable";
-  readonly title = "DocLib Split Table";
+  readonly title = "Split Table";
   readonly category = "table" as const;
   readonly mode = "SplitTable";
   readonly requiresSelection = false;

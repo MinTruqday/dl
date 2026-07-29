@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibUnderlineColorMoreColorsDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibUnderlineColorMoreColorsDialog",
-    title: "DocLib UnderlineColorMoreColorsDialog",
+    title: "Underline Color More Colors Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="66f4ea54bba4600f"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,10 17,20 4,15 15,19 12,4 18,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib UnderlineColorMoreColorsDialog",
+      title: "Underline Color More Colors Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="66f4ea54bba4600f"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,10 17,20 4,15 15,19 12,4 18,17"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibUnderlineColorMoreColorsDialog implements BlockTool {
   }
 
   readonly id = "DocLibUnderlineColorMoreColorsDialog";
-  readonly title = "DocLib UnderlineColorMoreColorsDialog";
+  readonly title = "Underline Color More Colors Dialog";
   readonly category = "format" as const;
   readonly mode = "UnderlineColorMoreColorsDialog";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "UnderlineColorMoreColorsDialog";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibUnderlineColorMoreColorsDialog implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

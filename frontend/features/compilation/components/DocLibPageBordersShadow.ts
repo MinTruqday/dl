@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPageBordersShadow implements BlockTool {
   static readonly feature = {
     id: "DocLibPageBordersShadow",
-    title: "DocLib PageBordersShadow",
+    title: "Page Borders Shadow",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3f029287becf0276"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="16,6 14,20 7,7 6,20 16,14 15,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Page Borders Shadow",
+      title: "Page Borders Shadow",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3f029287becf0276"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="16,6 14,20 7,7 6,20 16,14 15,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPageBordersShadow implements BlockTool {
   }
 
   readonly id = "DocLibPageBordersShadow";
-  readonly title = "DocLib Page Borders Shadow";
+  readonly title = "Page Borders Shadow";
   readonly category = "layout" as const;
   readonly mode = "PageBordersShadow";
   readonly requiresSelection = false;

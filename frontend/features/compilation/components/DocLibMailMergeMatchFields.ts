@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMailMergeMatchFields implements BlockTool {
   static readonly feature = {
     id: "DocLibMailMergeMatchFields",
-    title: "DocLib MailMergeMatchFields",
+    title: "Mail Merge Match Fields",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8a19b2490ccc3c04"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="6,12 12,9 16,4 13,8 12,10 17,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib MailMergeMatchFields",
+      title: "Mail Merge Match Fields",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8a19b2490ccc3c04"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="6,12 12,9 16,4 13,8 12,10 17,10"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibMailMergeMatchFields implements BlockTool {
   }
 
   readonly id = "DocLibMailMergeMatchFields";
-  readonly title = "DocLib MailMergeMatchFields";
+  readonly title = "Mail Merge Match Fields";
   readonly category = "mailing" as const;
   readonly mode = "MailMergeMatchFields";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "MailMergeMatchFields";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibMailMergeMatchFields implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

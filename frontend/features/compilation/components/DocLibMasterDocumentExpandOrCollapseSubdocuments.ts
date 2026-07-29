@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMasterDocumentExpandOrCollapseSubdocuments implements BlockTool {
   static readonly feature = {
     id: "DocLibMasterDocumentExpandOrCollapseSubdocuments",
-    title: "DocLib MasterDocumentExpandOrCollapseSubdocuments",
+    title: "Master Document Expand Or Collapse Subdocuments",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fb62b99445650dac"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,17 19,16 5,20 17,6 16,11 19,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib MasterDocumentExpandOrCollapseSubdocuments",
+      title: "Master Document Expand Or Collapse Subdocuments",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fb62b99445650dac"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,17 19,16 5,20 17,6 16,11 19,16"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibMasterDocumentExpandOrCollapseSubdocuments implements
   }
 
   readonly id = "DocLibMasterDocumentExpandOrCollapseSubdocuments";
-  readonly title = "DocLib MasterDocumentExpandOrCollapseSubdocuments";
+  readonly title = "Master Document Expand Or Collapse Subdocuments";
   readonly category = "format" as const;
   readonly mode = "MasterDocumentExpandOrCollapseSubdocuments";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "MasterDocumentExpandOrCollapseSubdocuments";
-  readonly controlType = "toggleButton";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibMasterDocumentExpandOrCollapseSubdocuments implements
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

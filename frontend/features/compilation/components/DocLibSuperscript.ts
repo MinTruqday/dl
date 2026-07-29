@@ -3,7 +3,7 @@ import { API, InlineTool } from "@editorjs/editorjs";
 export default class DocLibSuperscript implements InlineTool {
   static readonly feature = {
     id: "DocLibSuperscript",
-    title: "DocLib Superscript",
+    title: "Superscript",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="99e7a14bc4c34da5"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="4,14 12,11 13,12 13,16 8,17 19,11"/></svg>',
     product: "doclib",
   } as const;
@@ -18,7 +18,7 @@ export default class DocLibSuperscript implements InlineTool {
     return true;
   }
   static get title() {
-    return "DocLib Superscript";
+    return "Superscript";
   }
   static get sanitize() {
     return { sup: { class: true } };

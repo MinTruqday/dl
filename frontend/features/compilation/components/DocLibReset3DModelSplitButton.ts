@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibReset3DModelSplitButton implements BlockTool {
   static readonly feature = {
     id: "DocLibReset3DModelSplitButton",
-    title: "DocLib Reset3DModelSplitButton",
+    title: "Reset3D Model Split Button",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="dd4414f8eb9399a7"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="4,4 7,14 18,15 4,18 8,12 4,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Reset3DModelSplitButton",
+      title: "Reset3D Model Split Button",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="dd4414f8eb9399a7"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="4,4 7,14 18,15 4,18 8,12 4,5"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibReset3DModelSplitButton implements BlockTool {
   }
 
   readonly id = "DocLibReset3DModelSplitButton";
-  readonly title = "DocLib Reset3DModelSplitButton";
+  readonly title = "Reset3D Model Split Button";
   readonly category = "format" as const;
   readonly mode = "Reset3DModelSplitButton";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "Reset3DModelSplitButton";
-  readonly controlType = "splitButton";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibReset3DModelSplitButton implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

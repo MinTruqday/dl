@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFirstLineIndent implements BlockTool {
   static readonly feature = {
     id: "DocLibFirstLineIndent",
-    title: "DocLib FirstLineIndent",
+    title: "First Line Indent",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3f7849f0d1cb291e"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="16,5 9,6 9,20 11,17 6,19 6,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib First Line Indent",
+      title: "First Line Indent",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3f7849f0d1cb291e"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="16,5 9,6 9,20 11,17 6,19 6,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFirstLineIndent implements BlockTool {
   }
 
   readonly id = "DocLibFirstLineIndent";
-  readonly title = "DocLib First Line Indent";
+  readonly title = "First Line Indent";
   readonly category = "layout" as const;
   readonly mode = "FirstLineIndent";
   readonly requiresSelection = false;

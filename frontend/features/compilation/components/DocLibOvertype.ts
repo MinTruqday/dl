@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibOvertype implements BlockTool {
   static readonly feature = {
     id: "DocLibOvertype",
-    title: "DocLib Overtype",
+    title: "Overtype",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="434b6c8236cfc9c5"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,11 10,15 7,7 18,14 5,19 13,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Overtype",
+      title: "Overtype",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="434b6c8236cfc9c5"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,11 10,15 7,7 18,14 5,19 13,9"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibOvertype implements BlockTool {
   }
 
   readonly id = "DocLibOvertype";
-  readonly title = "DocLib Overtype";
+  readonly title = "Overtype";
   readonly category = "format" as const;
   readonly mode = "Overtype";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "Overtype";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibOvertype implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibBringForward implements BlockTool {
   static readonly feature = {
     id: "DocLibBringForward",
-    title: "DocLib BringForward",
+    title: "Bring Forward",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="caf8f49b718dd7b3"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,14 10,6 15,9 15,13 18,6 17,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Bring Forward",
+      title: "Bring Forward",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="caf8f49b718dd7b3"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,14 10,6 15,9 15,13 18,6 17,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibBringForward implements BlockTool {
   }
 
   readonly id = "DocLibBringForward";
-  readonly title = "DocLib Bring Forward";
+  readonly title = "Bring Forward";
   readonly category = "media" as const;
   readonly mode = "BringForward";
   readonly requiresSelection = false;

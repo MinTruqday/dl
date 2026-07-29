@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibConvertTextToTable implements BlockTool {
   static readonly feature = {
     id: "DocLibConvertTextToTable",
-    title: "DocLib ConvertTextToTable",
+    title: "Convert Text To Table",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="009f1f4651398c8e"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="4,10 18,6 17,10 8,10 18,20 14,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Convert Text To Table",
+      title: "Convert Text To Table",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="009f1f4651398c8e"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="4,10 18,6 17,10 8,10 18,20 14,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibConvertTextToTable implements BlockTool {
   }
 
   readonly id = "DocLibConvertTextToTable";
-  readonly title = "DocLib Convert Text To Table";
+  readonly title = "Convert Text To Table";
   readonly category = "table" as const;
   readonly mode = "ConvertTextToTable";
   readonly requiresSelection = false;

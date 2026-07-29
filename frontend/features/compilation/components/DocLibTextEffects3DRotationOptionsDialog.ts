@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextEffects3DRotationOptionsDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibTextEffects3DRotationOptionsDialog",
-    title: "DocLib TextEffects3DRotationOptionsDialog",
+    title: "Text Effects3D Rotation Options Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="271badb583f9ca88"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="9,14 7,15 16,15 19,4 13,8 17,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib TextEffects3DRotationOptionsDialog",
+      title: "Text Effects3D Rotation Options Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="271badb583f9ca88"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="9,14 7,15 16,15 19,4 13,8 17,9"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibTextEffects3DRotationOptionsDialog implements BlockTo
   }
 
   readonly id = "DocLibTextEffects3DRotationOptionsDialog";
-  readonly title = "DocLib TextEffects3DRotationOptionsDialog";
+  readonly title = "Text Effects3D Rotation Options Dialog";
   readonly category = "format" as const;
   readonly mode = "TextEffects3DRotationOptionsDialog";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "TextEffects3DRotationOptionsDialog";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibTextEffects3DRotationOptionsDialog implements BlockTo
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFileOpen implements BlockTool {
   static readonly feature = {
     id: "DocLibFileOpen",
-    title: "DocLib FileOpen",
+    title: "File Open",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bbcf2fb6fd8801ff"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,7 17,16 19,4 5,4 9,7 12,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib FileOpen",
+      title: "File Open",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bbcf2fb6fd8801ff"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,7 17,16 19,4 5,4 9,7 12,8"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibFileOpen implements BlockTool {
   }
 
   readonly id = "DocLibFileOpen";
-  readonly title = "DocLib FileOpen";
+  readonly title = "File Open";
   readonly category = "format" as const;
   readonly mode = "FileOpen";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "FileOpen";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibFileOpen implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

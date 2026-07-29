@@ -3,7 +3,7 @@ import { API, InlineTool } from "@editorjs/editorjs";
 export default class DocLibTooltip implements InlineTool {
   static readonly feature = {
     id: "DocLibTooltip",
-    title: "DocLib Tooltip",
+    title: "Tooltip",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d219c6c081934b8e"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,12 15,9 14,15 11,10 12,15 6,4"/></svg>',
     product: "doclib",
   } as const;
@@ -18,7 +18,7 @@ export default class DocLibTooltip implements InlineTool {
     return true;
   }
   static get title() {
-    return "DocLib Tooltip";
+    return "Tooltip";
   }
 
   get state() {

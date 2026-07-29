@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableAutoFitWindow implements BlockTool {
   static readonly feature = {
     id: "DocLibTableAutoFitWindow",
-    title: "DocLib TableAutoFitWindow",
+    title: "Table Auto Fit Window",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f1209f952d3a24eb"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="7,19 10,17 15,11 6,18 4,12 8,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Table Auto Fit Window",
+      title: "Table Auto Fit Window",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f1209f952d3a24eb"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="7,19 10,17 15,11 6,18 4,12 8,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTableAutoFitWindow implements BlockTool {
   }
 
   readonly id = "DocLibTableAutoFitWindow";
-  readonly title = "DocLib Table Auto Fit Window";
+  readonly title = "Table Auto Fit Window";
   readonly category = "table" as const;
   readonly mode = "TableAutoFitWindow";
   readonly requiresSelection = false;

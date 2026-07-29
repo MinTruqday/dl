@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibScreenRefresh implements BlockTool {
   static readonly feature = {
     id: "DocLibScreenRefresh",
-    title: "DocLib ScreenRefresh",
+    title: "Screen Refresh",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0cd4b4685a66d9ed"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="16,12 14,6 9,4 17,20 6,17 19,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib ScreenRefresh",
+      title: "Screen Refresh",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0cd4b4685a66d9ed"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="16,12 14,6 9,4 17,20 6,17 19,12"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibScreenRefresh implements BlockTool {
   }
 
   readonly id = "DocLibScreenRefresh";
-  readonly title = "DocLib ScreenRefresh";
+  readonly title = "Screen Refresh";
   readonly category = "format" as const;
   readonly mode = "ScreenRefresh";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "ScreenRefresh";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibScreenRefresh implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

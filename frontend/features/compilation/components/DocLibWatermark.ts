@@ -3,7 +3,7 @@ import { BlockTool, API, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWatermark implements BlockTool {
   static readonly feature = {
     id: "DocLibWatermark",
-    title: "DocLib Watermark",
+    title: "Watermark",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e6caee02a19dba4e"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="13,19 4,6 12,8 20,14 14,19 12,5"/></svg>',
     product: "doclib",
   } as const;
@@ -15,7 +15,7 @@ export default class DocLibWatermark implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "DocLib Watermark",
+      title: "Watermark",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e6caee02a19dba4e"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="13,19 4,6 12,8 20,14 14,19 12,5"/></svg>',
     };
   }

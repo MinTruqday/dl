@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibCellsDelete implements BlockTool {
   static readonly feature = {
     id: "DocLibCellsDelete",
-    title: "DocLib CellsDelete",
+    title: "Cells Delete",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4ac2ad1de4dcba24"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,11 7,16 11,20 20,6 8,15 8,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib CellsDelete",
+      title: "Cells Delete",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4ac2ad1de4dcba24"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,11 7,16 11,20 20,6 8,15 8,17"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibCellsDelete implements BlockTool {
   }
 
   readonly id = "DocLibCellsDelete";
-  readonly title = "DocLib CellsDelete";
+  readonly title = "Cells Delete";
   readonly category = "table" as const;
   readonly mode = "CellsDelete";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "CellsDelete";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibCellsDelete implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSendCopyFocusSubject implements BlockTool {
   static readonly feature = {
     id: "DocLibSendCopyFocusSubject",
-    title: "DocLib SendCopyFocusSubject",
+    title: "Send Copy Focus Subject",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f3e38565c191206d"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,10 18,20 10,13 19,11 9,5 10,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib SendCopyFocusSubject",
+      title: "Send Copy Focus Subject",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f3e38565c191206d"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,10 18,20 10,13 19,11 9,5 10,13"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibSendCopyFocusSubject implements BlockTool {
   }
 
   readonly id = "DocLibSendCopyFocusSubject";
-  readonly title = "DocLib SendCopyFocusSubject";
+  readonly title = "Send Copy Focus Subject";
   readonly category = "format" as const;
   readonly mode = "SendCopyFocusSubject";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "SendCopyFocusSubject";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibSendCopyFocusSubject implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

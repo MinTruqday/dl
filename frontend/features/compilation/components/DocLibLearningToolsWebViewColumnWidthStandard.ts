@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLearningToolsWebViewColumnWidthStandard implements BlockTool {
   static readonly feature = {
     id: "DocLibLearningToolsWebViewColumnWidthStandard",
-    title: "DocLib LearningToolsWebViewColumnWidthStandard",
+    title: "Learning Tools Web View Column Width Standard",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4b5972877dacc1e5"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="11,8 16,20 10,6 10,12 12,14 4,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib LearningToolsWebViewColumnWidthStandard",
+      title: "Learning Tools Web View Column Width Standard",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4b5972877dacc1e5"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="11,8 16,20 10,6 10,12 12,14 4,18"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibLearningToolsWebViewColumnWidthStandard implements Bl
   }
 
   readonly id = "DocLibLearningToolsWebViewColumnWidthStandard";
-  readonly title = "DocLib LearningToolsWebViewColumnWidthStandard";
+  readonly title = "Learning Tools Web View Column Width Standard";
   readonly category = "table" as const;
   readonly mode = "LearningToolsWebViewColumnWidthStandard";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "LearningToolsWebViewColumnWidthStandard";
-  readonly controlType = "toggleButton";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibLearningToolsWebViewColumnWidthStandard implements Bl
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

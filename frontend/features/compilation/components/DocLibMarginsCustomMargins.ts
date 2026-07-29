@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMarginsCustomMargins implements BlockTool {
   static readonly feature = {
     id: "DocLibMarginsCustomMargins",
-    title: "DocLib MarginsCustomMargins",
+    title: "Margins Custom Margins",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="33843fcdca4287d4"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="4,17 16,5 19,19 20,12 10,14 20,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib MarginsCustomMargins",
+      title: "Margins Custom Margins",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="33843fcdca4287d4"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="4,17 16,5 19,19 20,12 10,14 20,12"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibMarginsCustomMargins implements BlockTool {
   }
 
   readonly id = "DocLibMarginsCustomMargins";
-  readonly title = "DocLib MarginsCustomMargins";
+  readonly title = "Margins Custom Margins";
   readonly category = "layout" as const;
   readonly mode = "MarginsCustomMargins";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "MarginsCustomMargins";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibMarginsCustomMargins implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

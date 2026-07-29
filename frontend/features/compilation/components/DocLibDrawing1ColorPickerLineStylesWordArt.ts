@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDrawing1ColorPickerLineStylesWordArt implements BlockTool {
   static readonly feature = {
     id: "DocLibDrawing1ColorPickerLineStylesWordArt",
-    title: "DocLib Drawing1ColorPickerLineStylesWordArt",
+    title: "Drawing1 Color Picker Line Styles Word Art",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0c6ab18d3eebe832"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="16,8 11,9 15,18 15,20 13,18 14,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Drawing1ColorPickerLineStylesWordArt",
+      title: "Drawing1 Color Picker Line Styles Word Art",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0c6ab18d3eebe832"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="16,8 11,9 15,18 15,20 13,18 14,11"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibDrawing1ColorPickerLineStylesWordArt implements Block
   }
 
   readonly id = "DocLibDrawing1ColorPickerLineStylesWordArt";
-  readonly title = "DocLib Drawing1ColorPickerLineStylesWordArt";
+  readonly title = "Drawing1 Color Picker Line Styles Word Art";
   readonly category = "format" as const;
   readonly mode = "Drawing1ColorPickerLineStylesWordArt";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "Drawing1ColorPickerLineStylesWordArt";
-  readonly controlType = "gallery";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibDrawing1ColorPickerLineStylesWordArt implements Block
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

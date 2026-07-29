@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAddressBlock implements BlockTool {
   static readonly feature = {
     id: "DocLibAddressBlock",
-    title: "DocLib AddressBlock",
+    title: "Address Block",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a707108168c85494"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,11 20,14 6,17 20,16 16,16 10,13"/></svg>',
     product: "doclib",
   } as const;
@@ -15,7 +15,7 @@ export default class DocLibAddressBlock implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "DocLib Address Block",
+      title: "Address Block",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a707108168c85494"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,11 20,14 6,17 20,16 16,16 10,13"/></svg>',
     };
   }

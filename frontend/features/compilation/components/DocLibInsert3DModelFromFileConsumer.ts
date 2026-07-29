@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibInsert3DModelFromFileConsumer implements BlockTool {
   static readonly feature = {
     id: "DocLibInsert3DModelFromFileConsumer",
-    title: "DocLib Insert3DModelFromFileConsumer",
+    title: "Insert3D Model From File Consumer",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="75a9e82644f2dc87"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,20 15,8 4,8 20,20 6,8 16,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Insert3DModelFromFileConsumer",
+      title: "Insert3D Model From File Consumer",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="75a9e82644f2dc87"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,20 15,8 4,8 20,20 6,8 16,20"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibInsert3DModelFromFileConsumer implements BlockTool {
   }
 
   readonly id = "DocLibInsert3DModelFromFileConsumer";
-  readonly title = "DocLib Insert3DModelFromFileConsumer";
+  readonly title = "Insert3D Model From File Consumer";
   readonly category = "insert" as const;
   readonly mode = "Insert3DModelFromFileConsumer";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "Insert3DModelFromFileConsumer";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibInsert3DModelFromFileConsumer implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

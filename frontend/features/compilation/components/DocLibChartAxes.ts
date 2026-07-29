@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartAxes implements BlockTool {
   static readonly feature = {
     id: "DocLibChartAxes",
-    title: "DocLib ChartAxes",
+    title: "Chart Axes",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8feb690c66ffbebd"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="11,18 7,16 4,4 7,6 18,11 10,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib ChartAxes",
+      title: "Chart Axes",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8feb690c66ffbebd"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="11,18 7,16 4,4 7,6 18,11 10,4"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibChartAxes implements BlockTool {
   }
 
   readonly id = "DocLibChartAxes";
-  readonly title = "DocLib ChartAxes";
+  readonly title = "Chart Axes";
   readonly category = "layout" as const;
   readonly mode = "ChartAxes";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "ChartAxes";
-  readonly controlType = "menu";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibChartAxes implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

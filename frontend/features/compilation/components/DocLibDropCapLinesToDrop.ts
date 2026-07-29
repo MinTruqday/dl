@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDropCapLinesToDrop implements BlockTool {
   static readonly feature = {
     id: "DocLibDropCapLinesToDrop",
-    title: "DocLib DropCapLinesToDrop",
+    title: "Drop Cap Lines To Drop",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="24ba8ed7496c39f9"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="6,20 10,15 9,10 10,15 10,17 18,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Drop Cap Lines To Drop",
+      title: "Drop Cap Lines To Drop",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="24ba8ed7496c39f9"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="6,20 10,15 9,10 10,15 10,17 18,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDropCapLinesToDrop implements BlockTool {
   }
 
   readonly id = "DocLibDropCapLinesToDrop";
-  readonly title = "DocLib Drop Cap Lines To Drop";
+  readonly title = "Drop Cap Lines To Drop";
   readonly category = "format" as const;
   readonly mode = "DropCapLinesToDrop";
   readonly requiresSelection = false;

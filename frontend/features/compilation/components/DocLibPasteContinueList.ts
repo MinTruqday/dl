@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPasteContinueList implements BlockTool {
   static readonly feature = {
     id: "DocLibPasteContinueList",
-    title: "DocLib PasteContinueList",
+    title: "Paste Continue List",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="746e61dd2ae97e02"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,12 16,4 12,16 11,6 20,4 15,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib PasteContinueList",
+      title: "Paste Continue List",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="746e61dd2ae97e02"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,12 16,4 12,16 11,6 20,4 15,16"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibPasteContinueList implements BlockTool {
   }
 
   readonly id = "DocLibPasteContinueList";
-  readonly title = "DocLib PasteContinueList";
+  readonly title = "Paste Continue List";
   readonly category = "format" as const;
   readonly mode = "PasteContinueList";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "PasteContinueList";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibPasteContinueList implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

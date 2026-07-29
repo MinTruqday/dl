@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibActiveXComboBox implements BlockTool {
   static readonly feature = {
     id: "DocLibActiveXComboBox",
-    title: "DocLib ActiveXComboBox",
+    title: "Active X Combo Box",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="af2b9d6b80d9126e"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,13 8,9 13,17 5,12 11,18 10,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Active X Combo Box",
+      title: "Active X Combo Box",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="af2b9d6b80d9126e"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,13 8,9 13,17 5,12 11,18 10,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibActiveXComboBox implements BlockTool {
   }
 
   readonly id = "DocLibActiveXComboBox";
-  readonly title = "DocLib Active X Combo Box";
+  readonly title = "Active X Combo Box";
   readonly category = "automation" as const;
   readonly mode = "ActiveXComboBox";
   readonly requiresSelection = false;

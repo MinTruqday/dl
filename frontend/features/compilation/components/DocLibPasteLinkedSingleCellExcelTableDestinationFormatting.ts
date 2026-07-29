@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPasteLinkedSingleCellExcelTableDestinationFormatting implements BlockTool {
   static readonly feature = {
     id: "DocLibPasteLinkedSingleCellExcelTableDestinationFormatting",
-    title: "DocLib PasteLinkedSingleCellExcelTableDestinationFormatting",
+    title: "Paste Linked Single Cell Excel Table Destination Formatting",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="118fd2065afdc19f"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="4,11 10,10 9,19 10,10 6,9 9,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib PasteLinkedSingleCellExcelTableDestinationFormatting",
+      title: "Paste Linked Single Cell Excel Table Destination Formatting",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="118fd2065afdc19f"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="4,11 10,10 9,19 10,10 6,9 9,13"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibPasteLinkedSingleCellExcelTableDestinationFormatting 
   }
 
   readonly id = "DocLibPasteLinkedSingleCellExcelTableDestinationFormatting";
-  readonly title = "DocLib PasteLinkedSingleCellExcelTableDestinationFormatting";
+  readonly title = "Paste Linked Single Cell Excel Table Destination Formatting";
   readonly category = "format" as const;
   readonly mode = "PasteLinkedSingleCellExcelTableDestinationFormatting";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "PasteLinkedSingleCellExcelTableDestinationFormatting";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibPasteLinkedSingleCellExcelTableDestinationFormatting 
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

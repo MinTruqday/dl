@@ -156,6 +156,17 @@ export async function addInlineCommentAPI(
   return data.data;
 }
 
+export async function getInlineCommentsAPI(documentId: string) {
+  const res = await fetch(`${API_URL}/soan-thao/${documentId}/binh-luan`, {
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || data.detail || "Không thể tải bình luận");
+  }
+  return data.data || [];
+}
+
 export async function resolveCommentAPI(commentId: string) {
   const res = await fetch(
     `${API_URL}/soan-thao/binh-luan/${commentId}/giai-quyet`,

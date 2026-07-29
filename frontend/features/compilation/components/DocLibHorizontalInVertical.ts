@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibHorizontalInVertical implements BlockTool {
   static readonly feature = {
     id: "DocLibHorizontalInVertical",
-    title: "DocLib HorizontalInVertical",
+    title: "Horizontal In Vertical",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e5d1867ed12032e3"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="12,9 19,11 9,19 20,10 15,10 15,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Horizontal In Vertical",
+      title: "Horizontal In Vertical",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e5d1867ed12032e3"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="12,9 19,11 9,19 20,10 15,10 15,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibHorizontalInVertical implements BlockTool {
   }
 
   readonly id = "DocLibHorizontalInVertical";
-  readonly title = "DocLib Horizontal In Vertical";
+  readonly title = "Horizontal In Vertical";
   readonly category = "format" as const;
   readonly mode = "HorizontalInVertical";
   readonly requiresSelection = false;

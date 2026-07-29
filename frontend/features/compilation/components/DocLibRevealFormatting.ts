@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibRevealFormatting implements BlockTool {
   static readonly feature = {
     id: "DocLibRevealFormatting",
-    title: "DocLib RevealFormatting",
+    title: "Reveal Formatting",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ab17f8d073970d7f"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,10 14,8 17,19 17,12 19,15 17,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Reveal Formatting",
+      title: "Reveal Formatting",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ab17f8d073970d7f"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,10 14,8 17,19 17,12 19,15 17,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibRevealFormatting implements BlockTool {
   }
 
   readonly id = "DocLibRevealFormatting";
-  readonly title = "DocLib Reveal Formatting";
+  readonly title = "Reveal Formatting";
   readonly category = "format" as const;
   readonly mode = "RevealFormatting";
   readonly requiresSelection = false;

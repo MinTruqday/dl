@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPageColorPattern implements BlockTool {
   static readonly feature = {
     id: "DocLibPageColorPattern",
-    title: "DocLib PageColorPattern",
+    title: "Page Color Pattern",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c0b1c7764cb75720"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,11 16,20 12,17 6,19 4,4 17,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Page Color Pattern",
+      title: "Page Color Pattern",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c0b1c7764cb75720"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,11 16,20 12,17 6,19 4,4 17,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPageColorPattern implements BlockTool {
   }
 
   readonly id = "DocLibPageColorPattern";
-  readonly title = "DocLib Page Color Pattern";
+  readonly title = "Page Color Pattern";
   readonly category = "layout" as const;
   readonly mode = "PageColorPattern";
   readonly requiresSelection = false;

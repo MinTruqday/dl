@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableBordersDiagonal implements BlockTool {
   static readonly feature = {
     id: "DocLibTableBordersDiagonal",
-    title: "DocLib TableBordersDiagonal",
+    title: "Table Borders Diagonal",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="beb60897cc0a152c"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="7,16 12,19 4,14 8,14 19,9 8,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Table Borders Diagonal",
+      title: "Table Borders Diagonal",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="beb60897cc0a152c"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="7,16 12,19 4,14 8,14 19,9 8,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTableBordersDiagonal implements BlockTool {
   }
 
   readonly id = "DocLibTableBordersDiagonal";
-  readonly title = "DocLib Table Borders Diagonal";
+  readonly title = "Table Borders Diagonal";
   readonly category = "table" as const;
   readonly mode = "TableBordersDiagonal";
   readonly requiresSelection = false;

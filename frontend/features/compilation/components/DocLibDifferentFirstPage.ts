@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDifferentFirstPage implements BlockTool {
   static readonly feature = {
     id: "DocLibDifferentFirstPage",
-    title: "DocLib DifferentFirstPage",
+    title: "Different First Page",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="24971991f48024ad"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="6,19 12,13 10,13 6,7 7,15 10,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Different First Page",
+      title: "Different First Page",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="24971991f48024ad"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="6,19 12,13 10,13 6,7 7,15 10,6"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDifferentFirstPage implements BlockTool {
   }
 
   readonly id = "DocLibDifferentFirstPage";
-  readonly title = "DocLib Different First Page";
+  readonly title = "Different First Page";
   readonly category = "layout" as const;
   readonly mode = "DifferentFirstPage";
   readonly requiresSelection = false;

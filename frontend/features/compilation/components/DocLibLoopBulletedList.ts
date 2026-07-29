@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLoopBulletedList implements BlockTool {
   static readonly feature = {
     id: "DocLibLoopBulletedList",
-    title: "DocLib LoopBulletedList",
+    title: "Loop Bulleted List",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="50e4bd5ae540e90a"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="16,11 6,9 12,17 16,14 4,13 15,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib LoopBulletedList",
+      title: "Loop Bulleted List",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="50e4bd5ae540e90a"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="16,11 6,9 12,17 16,14 4,13 15,5"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibLoopBulletedList implements BlockTool {
   }
 
   readonly id = "DocLibLoopBulletedList";
-  readonly title = "DocLib LoopBulletedList";
+  readonly title = "Loop Bulleted List";
   readonly category = "insert" as const;
   readonly mode = "LoopBulletedList";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "LoopBulletedList";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibLoopBulletedList implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

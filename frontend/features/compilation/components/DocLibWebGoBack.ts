@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWebGoBack implements BlockTool {
   static readonly feature = {
     id: "DocLibWebGoBack",
-    title: "DocLib WebGoBack",
+    title: "Web Go Back",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4c8fe37e2b596cc0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="12,11 10,11 13,8 10,9 16,19 6,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib WebGoBack",
+      title: "Web Go Back",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4c8fe37e2b596cc0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="12,11 10,11 13,8 10,9 16,19 6,14"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibWebGoBack implements BlockTool {
   }
 
   readonly id = "DocLibWebGoBack";
-  readonly title = "DocLib WebGoBack";
+  readonly title = "Web Go Back";
   readonly category = "format" as const;
   readonly mode = "WebGoBack";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "WebGoBack";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibWebGoBack implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

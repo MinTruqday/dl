@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAutoCheckForErrors implements BlockTool {
   static readonly feature = {
     id: "DocLibAutoCheckForErrors",
-    title: "DocLib AutoCheckForErrors",
+    title: "Auto Check For Errors",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f00f606078b470bd"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="6,19 15,15 5,14 14,6 15,12 8,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Auto Check For Errors",
+      title: "Auto Check For Errors",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f00f606078b470bd"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="6,19 15,15 5,14 14,6 15,12 8,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibAutoCheckForErrors implements BlockTool {
   }
 
   readonly id = "DocLibAutoCheckForErrors";
-  readonly title = "DocLib Auto Check For Errors";
+  readonly title = "Auto Check For Errors";
   readonly category = "ai" as const;
   readonly mode = "AutoCheckForErrors";
   readonly requiresSelection = false;

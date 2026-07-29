@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibInsertAbove implements BlockTool {
   static readonly feature = {
     id: "DocLibInsertAbove",
-    title: "DocLib InsertAbove",
+    title: "Insert Above",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="63a7fbbcf65a5ba5"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="18,18 17,5 12,9 10,16 14,15 11,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Insert Above",
+      title: "Insert Above",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="63a7fbbcf65a5ba5"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="18,18 17,5 12,9 10,16 14,15 11,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibInsertAbove implements BlockTool {
   }
 
   readonly id = "DocLibInsertAbove";
-  readonly title = "DocLib Insert Above";
+  readonly title = "Insert Above";
   readonly category = "table" as const;
   readonly mode = "InsertAbove";
   readonly requiresSelection = false;

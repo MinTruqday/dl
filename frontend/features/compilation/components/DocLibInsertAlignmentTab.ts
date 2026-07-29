@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibInsertAlignmentTab implements BlockTool {
   static readonly feature = {
     id: "DocLibInsertAlignmentTab",
-    title: "DocLib InsertAlignmentTab",
+    title: "Insert Alignment Tab",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3e7619002a8fe193"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="15,20 12,4 12,11 8,15 9,12 4,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Insert Alignment Tab",
+      title: "Insert Alignment Tab",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3e7619002a8fe193"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="15,20 12,4 12,11 8,15 9,12 4,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibInsertAlignmentTab implements BlockTool {
   }
 
   readonly id = "DocLibInsertAlignmentTab";
-  readonly title = "DocLib Insert Alignment Tab";
+  readonly title = "Insert Alignment Tab";
   readonly category = "insert" as const;
   readonly mode = "InsertAlignmentTab";
   readonly requiresSelection = false;

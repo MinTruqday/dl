@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableCellAlignTopCenter implements BlockTool {
   static readonly feature = {
     id: "DocLibTableCellAlignTopCenter",
-    title: "DocLib TableCellAlignTopCenter",
+    title: "Table Cell Align Top Center",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a8c70b05eaf047e7"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,16 15,9 17,6 7,14 8,20 4,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib TableCellAlignTopCenter",
+      title: "Table Cell Align Top Center",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a8c70b05eaf047e7"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,16 15,9 17,6 7,14 8,20 4,14"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibTableCellAlignTopCenter implements BlockTool {
   }
 
   readonly id = "DocLibTableCellAlignTopCenter";
-  readonly title = "DocLib TableCellAlignTopCenter";
+  readonly title = "Table Cell Align Top Center";
   readonly category = "table" as const;
   readonly mode = "TableCellAlignTopCenter";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "TableCellAlignTopCenter";
-  readonly controlType = "toggleButton";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibTableCellAlignTopCenter implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

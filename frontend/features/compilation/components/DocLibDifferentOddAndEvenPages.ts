@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDifferentOddAndEvenPages implements BlockTool {
   static readonly feature = {
     id: "DocLibDifferentOddAndEvenPages",
-    title: "DocLib DifferentOddAndEvenPages",
+    title: "Different Odd And Even Pages",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="aecfebb122e980a0"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,7 18,11 4,16 13,11 4,14 17,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Different Odd And Even Pages",
+      title: "Different Odd And Even Pages",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="aecfebb122e980a0"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,7 18,11 4,16 13,11 4,14 17,9"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDifferentOddAndEvenPages implements BlockTool {
   }
 
   readonly id = "DocLibDifferentOddAndEvenPages";
-  readonly title = "DocLib Different Odd And Even Pages";
+  readonly title = "Different Odd And Even Pages";
   readonly category = "layout" as const;
   readonly mode = "DifferentOddAndEvenPages";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextDirectionGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibTextDirectionGallery",
-    title: "DocLib TextDirectionGallery",
+    title: "Text Direction Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4dca1a9190981428"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="13,19 13,13 12,20 7,10 17,16 10,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib TextDirectionGallery",
+      title: "Text Direction Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4dca1a9190981428"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="13,19 13,13 12,20 7,10 17,16 10,12"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibTextDirectionGallery implements BlockTool {
   }
 
   readonly id = "DocLibTextDirectionGallery";
-  readonly title = "DocLib TextDirectionGallery";
+  readonly title = "Text Direction Gallery";
   readonly category = "format" as const;
   readonly mode = "TextDirectionGallery";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "TextDirectionGallery";
-  readonly controlType = "gallery";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibTextDirectionGallery implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWordCountRecount implements BlockTool {
   static readonly feature = {
     id: "DocLibWordCountRecount",
-    title: "DocLib WordCountRecount",
+    title: "Word Count Recount",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="002cb0b28e57b0b9"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="4,14 10,12 10,6 10,19 8,6 13,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib WordCountRecount",
+      title: "Word Count Recount",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="002cb0b28e57b0b9"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="4,14 10,12 10,6 10,19 8,6 13,16"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibWordCountRecount implements BlockTool {
   }
 
   readonly id = "DocLibWordCountRecount";
-  readonly title = "DocLib WordCountRecount";
+  readonly title = "Word Count Recount";
   readonly category = "format" as const;
   readonly mode = "WordCountRecount";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "WordCountRecount";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibWordCountRecount implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

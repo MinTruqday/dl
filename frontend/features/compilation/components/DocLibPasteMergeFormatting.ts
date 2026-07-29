@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPasteMergeFormatting implements BlockTool {
   static readonly feature = {
     id: "DocLibPasteMergeFormatting",
-    title: "DocLib PasteMergeFormatting",
+    title: "Paste Merge Formatting",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="77f173ff2f6a1ba8"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="4,7 17,4 17,8 14,19 19,18 9,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib PasteMergeFormatting",
+      title: "Paste Merge Formatting",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="77f173ff2f6a1ba8"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="4,7 17,4 17,8 14,19 19,18 9,8"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibPasteMergeFormatting implements BlockTool {
   }
 
   readonly id = "DocLibPasteMergeFormatting";
-  readonly title = "DocLib PasteMergeFormatting";
+  readonly title = "Paste Merge Formatting";
   readonly category = "format" as const;
   readonly mode = "PasteMergeFormatting";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "PasteMergeFormatting";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibPasteMergeFormatting implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

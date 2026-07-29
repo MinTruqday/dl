@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextFillMoreTextures implements BlockTool {
   static readonly feature = {
     id: "DocLibTextFillMoreTextures",
-    title: "DocLib TextFillMoreTextures",
+    title: "Text Fill More Textures",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="68c619ff06ed2ef8"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="6,15 12,4 10,20 16,14 13,12 13,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib TextFillMoreTextures",
+      title: "Text Fill More Textures",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="68c619ff06ed2ef8"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="6,15 12,4 10,20 16,14 13,12 13,19"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibTextFillMoreTextures implements BlockTool {
   }
 
   readonly id = "DocLibTextFillMoreTextures";
-  readonly title = "DocLib TextFillMoreTextures";
+  readonly title = "Text Fill More Textures";
   readonly category = "format" as const;
   readonly mode = "TextFillMoreTextures";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "TextFillMoreTextures";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibTextFillMoreTextures implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

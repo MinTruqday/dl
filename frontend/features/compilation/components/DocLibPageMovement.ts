@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPageMovement implements BlockTool {
   static readonly feature = {
     id: "DocLibPageMovement",
-    title: "DocLib PageMovement",
+    title: "Page Movement",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8cb120991936a36e"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="8,11 19,4 12,7 14,12 4,13 10,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Page Movement",
+      title: "Page Movement",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8cb120991936a36e"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="8,11 19,4 12,7 14,12 4,13 10,9"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPageMovement implements BlockTool {
   }
 
   readonly id = "DocLibPageMovement";
-  readonly title = "DocLib Page Movement";
+  readonly title = "Page Movement";
   readonly category = "layout" as const;
   readonly mode = "PageMovement";
   readonly requiresSelection = false;

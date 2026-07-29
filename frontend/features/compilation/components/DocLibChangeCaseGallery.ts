@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChangeCaseGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibChangeCaseGallery",
-    title: "DocLib ChangeCaseGallery",
+    title: "Change Case Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9fbcb9e48acec67a"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,5 19,11 6,6 15,7 9,15 5,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib ChangeCaseGallery",
+      title: "Change Case Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9fbcb9e48acec67a"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,5 19,11 6,6 15,7 9,15 5,16"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibChangeCaseGallery implements BlockTool {
   }
 
   readonly id = "DocLibChangeCaseGallery";
-  readonly title = "DocLib ChangeCaseGallery";
+  readonly title = "Change Case Gallery";
   readonly category = "format" as const;
   readonly mode = "ChangeCaseGallery";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "ChangeCaseGallery";
-  readonly controlType = "gallery";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibChangeCaseGallery implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAutoCorrectSmartQuotes implements BlockTool {
   static readonly feature = {
     id: "DocLibAutoCorrectSmartQuotes",
-    title: "DocLib AutoCorrectSmartQuotes",
+    title: "Auto Correct Smart Quotes",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="145539fb211ef2b0"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="7,4 10,17 20,17 8,10 15,12 12,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib AutoCorrectSmartQuotes",
+      title: "Auto Correct Smart Quotes",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="145539fb211ef2b0"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="7,4 10,17 20,17 8,10 15,12 12,18"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibAutoCorrectSmartQuotes implements BlockTool {
   }
 
   readonly id = "DocLibAutoCorrectSmartQuotes";
-  readonly title = "DocLib AutoCorrectSmartQuotes";
+  readonly title = "Auto Correct Smart Quotes";
   readonly category = "format" as const;
   readonly mode = "AutoCorrectSmartQuotes";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "AutoCorrectSmartQuotes";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibAutoCorrectSmartQuotes implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

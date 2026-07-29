@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDefineNewBullet implements BlockTool {
   static readonly feature = {
     id: "DocLibDefineNewBullet",
-    title: "DocLib DefineNewBullet",
+    title: "Define New Bullet",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="12bca374273f1abb"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="5,5 14,18 9,16 13,4 12,10 7,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Define New Bullet",
+      title: "Define New Bullet",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="12bca374273f1abb"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="5,5 14,18 9,16 13,4 12,10 7,6"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDefineNewBullet implements BlockTool {
   }
 
   readonly id = "DocLibDefineNewBullet";
-  readonly title = "DocLib Define New Bullet";
+  readonly title = "Define New Bullet";
   readonly category = "format" as const;
   readonly mode = "DefineNewBullet";
   readonly requiresSelection = false;

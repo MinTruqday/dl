@@ -3,7 +3,7 @@ import { API, BlockTool } from "@editorjs/editorjs";
 export default class DocLibMath implements BlockTool {
   static readonly feature = {
     id: "DocLibMath",
-    title: "DocLib Math",
+    title: "Math",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f821e57a41c9e5dd"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="14,20 12,7 18,18 12,4 5,20 15,10"/></svg>',
     product: "doclib",
   } as const;
@@ -15,7 +15,7 @@ export default class DocLibMath implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "DocLib Math (KaTeX)",
+      title: "Math",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f821e57a41c9e5dd"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="14,20 12,7 18,18 12,4 5,20 15,10"/></svg>',
     };
   }

@@ -3,7 +3,7 @@ import { BlockTool, API, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDateAndTime implements BlockTool {
   static readonly feature = {
     id: "DocLibDateAndTime",
-    title: "DocLib DateAndTime",
+    title: "Date And Time",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6daf2a2048b1afb0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,9 12,19 8,11 9,10 18,8 5,12"/></svg>',
     product: "doclib",
   } as const;
@@ -15,7 +15,7 @@ export default class DocLibDateAndTime implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "DocLib Date & Time",
+      title: "Date And Time",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6daf2a2048b1afb0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,9 12,19 8,11 9,10 18,8 5,12"/></svg>',
     };
   }

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSaveSelectionToQuickPartGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibSaveSelectionToQuickPartGallery",
-    title: "DocLib SaveSelectionToQuickPartGallery",
+    title: "Save Selection To Quick Part Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ddb00d3066f170ea"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="4,10 17,18 4,7 14,17 9,6 14,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib SaveSelectionToQuickPartGallery",
+      title: "Save Selection To Quick Part Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ddb00d3066f170ea"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="4,10 17,18 4,7 14,17 9,6 14,5"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibSaveSelectionToQuickPartGallery implements BlockTool 
   }
 
   readonly id = "DocLibSaveSelectionToQuickPartGallery";
-  readonly title = "DocLib SaveSelectionToQuickPartGallery";
+  readonly title = "Save Selection To Quick Part Gallery";
   readonly category = "insert" as const;
   readonly mode = "SaveSelectionToQuickPartGallery";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "SaveSelectionToQuickPartGallery";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibSaveSelectionToQuickPartGallery implements BlockTool 
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

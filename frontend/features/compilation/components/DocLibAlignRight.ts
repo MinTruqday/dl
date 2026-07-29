@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAlignRight implements BlockTool {
   static readonly feature = {
     id: "DocLibAlignRight",
-    title: "DocLib AlignRight",
+    title: "Align Right",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b2d86963d03df2b8"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="12,16 7,18 8,14 8,18 20,19 13,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib AlignRight",
+      title: "Align Right",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b2d86963d03df2b8"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="12,16 7,18 8,14 8,18 20,19 13,9"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibAlignRight implements BlockTool {
   }
 
   readonly id = "DocLibAlignRight";
-  readonly title = "DocLib AlignRight";
+  readonly title = "Align Right";
   readonly category = "format" as const;
   readonly mode = "AlignRight";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "AlignRight";
-  readonly controlType = "toggleButton";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibAlignRight implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

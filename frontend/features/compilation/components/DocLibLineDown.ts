@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLineDown implements BlockTool {
   static readonly feature = {
     id: "DocLibLineDown",
-    title: "DocLib LineDown",
+    title: "Line Down",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="79a27a5088f79312"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="6,13 7,16 4,13 15,5 8,13 12,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib LineDown",
+      title: "Line Down",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="79a27a5088f79312"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="6,13 7,16 4,13 15,5 8,13 12,7"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibLineDown implements BlockTool {
   }
 
   readonly id = "DocLibLineDown";
-  readonly title = "DocLib LineDown";
+  readonly title = "Line Down";
   readonly category = "format" as const;
   readonly mode = "LineDown";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "LineDown";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibLineDown implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

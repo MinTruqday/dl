@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibContentControlRepeating implements BlockTool {
   static readonly feature = {
     id: "DocLibContentControlRepeating",
-    title: "DocLib ContentControlRepeating",
+    title: "Content Control Repeating",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="adabcc8a534e7ea3"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,5 4,6 19,14 11,14 8,5 18,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib ContentControlRepeating",
+      title: "Content Control Repeating",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="adabcc8a534e7ea3"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,5 4,6 19,14 11,14 8,5 18,5"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibContentControlRepeating implements BlockTool {
   }
 
   readonly id = "DocLibContentControlRepeating";
-  readonly title = "DocLib ContentControlRepeating";
+  readonly title = "Content Control Repeating";
   readonly category = "automation" as const;
   readonly mode = "ContentControlRepeating";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "ContentControlRepeating";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibContentControlRepeating implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

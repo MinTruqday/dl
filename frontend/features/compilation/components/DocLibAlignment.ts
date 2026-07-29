@@ -9,7 +9,7 @@ import {
 export default class DocLibAlignmentTune implements BlockTune {
   static readonly feature = {
     id: "DocLibAlignment",
-    title: "DocLib Alignment",
+    title: "Alignment",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c15452765a08ff21"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,20 18,20 9,12 4,20 7,9 4,6"/></svg>',
     product: "doclib",
   } as const;
@@ -19,10 +19,10 @@ export default class DocLibAlignmentTune implements BlockTune {
   private block: any;
   private wrapper: HTMLElement | null = null;
   private alignments = [
-    { name: "left", icon: IconAlignLeft, title: "DocLib Align Left" },
-    { name: "center", icon: IconAlignCenter, title: "DocLib Align Center" },
-    { name: "right", icon: IconAlignRight, title: "DocLib Align Right" },
-    { name: "justify", icon: IconAlignJustify, title: "DocLib Justify" },
+    { name: "left", icon: IconAlignLeft, title: "Alignment" },
+    { name: "center", icon: IconAlignCenter, title: "Alignment" },
+    { name: "right", icon: IconAlignRight, title: "Alignment" },
+    { name: "justify", icon: IconAlignJustify, title: "Alignment" },
   ];
 
   static get isTune() {

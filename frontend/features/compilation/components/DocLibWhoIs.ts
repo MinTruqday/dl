@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWhoIs implements BlockTool {
   static readonly feature = {
     id: "DocLibWhoIs",
-    title: "DocLib WhoIs",
+    title: "Who Is",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="15ad5e6a8591ecce"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="8,7 13,8 18,13 19,6 13,14 14,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib WhoIs",
+      title: "Who Is",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="15ad5e6a8591ecce"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="8,7 13,8 18,13 19,6 13,14 14,9"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibWhoIs implements BlockTool {
   }
 
   readonly id = "DocLibWhoIs";
-  readonly title = "DocLib WhoIs";
+  readonly title = "Who Is";
   readonly category = "format" as const;
   readonly mode = "WhoIs";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "WhoIs";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibWhoIs implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

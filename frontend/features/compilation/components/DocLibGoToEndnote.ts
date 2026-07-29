@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibGoToEndnote implements BlockTool {
   static readonly feature = {
     id: "DocLibGoToEndnote",
-    title: "DocLib GoToEndnote",
+    title: "Go To Endnote",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a28ad648a809d5f8"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="13,6 14,8 19,13 13,14 5,13 4,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib GoToEndnote",
+      title: "Go To Endnote",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a28ad648a809d5f8"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="13,6 14,8 19,13 13,14 5,13 4,12"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibGoToEndnote implements BlockTool {
   }
 
   readonly id = "DocLibGoToEndnote";
-  readonly title = "DocLib GoToEndnote";
+  readonly title = "Go To Endnote";
   readonly category = "format" as const;
   readonly mode = "GoToEndnote";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "GoToEndnote";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibGoToEndnote implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

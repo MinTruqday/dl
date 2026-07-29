@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAddressBook implements BlockTool {
   static readonly feature = {
     id: "DocLibAddressBook",
-    title: "DocLib AddressBook",
+    title: "Address Book",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="43343a7fcc511711"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="20,5 11,12 4,17 10,4 17,20 16,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib AddressBook",
+      title: "Address Book",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="43343a7fcc511711"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="20,5 11,12 4,17 10,4 17,20 16,16"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibAddressBook implements BlockTool {
   }
 
   readonly id = "DocLibAddressBook";
-  readonly title = "DocLib AddressBook";
+  readonly title = "Address Book";
   readonly category = "format" as const;
   readonly mode = "AddressBook";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "AddressBook";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibAddressBook implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

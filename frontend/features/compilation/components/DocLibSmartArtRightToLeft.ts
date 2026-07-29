@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSmartArtRightToLeft implements BlockTool {
   static readonly feature = {
     id: "DocLibSmartArtRightToLeft",
-    title: "DocLib SmartArtRightToLeft",
+    title: "Smart Art Right To Left",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="306954246e9f27f5"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,7 20,6 12,10 9,11 10,4 6,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib SmartArtRightToLeft",
+      title: "Smart Art Right To Left",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="306954246e9f27f5"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,7 20,6 12,10 9,11 10,4 6,17"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibSmartArtRightToLeft implements BlockTool {
   }
 
   readonly id = "DocLibSmartArtRightToLeft";
-  readonly title = "DocLib SmartArtRightToLeft";
+  readonly title = "Smart Art Right To Left";
   readonly category = "format" as const;
   readonly mode = "SmartArtRightToLeft";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "SmartArtRightToLeft";
-  readonly controlType = "toggleButton";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibSmartArtRightToLeft implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

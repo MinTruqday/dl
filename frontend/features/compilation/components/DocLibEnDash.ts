@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibEnDash implements BlockTool {
   static readonly feature = {
     id: "DocLibEnDash",
-    title: "DocLib EnDash",
+    title: "En Dash",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c93f04f1cb2f0d6c"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,16 8,7 20,17 17,10 6,4 8,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib En Dash",
+      title: "En Dash",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c93f04f1cb2f0d6c"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,16 8,7 20,17 17,10 6,4 8,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibEnDash implements BlockTool {
   }
 
   readonly id = "DocLibEnDash";
-  readonly title = "DocLib En Dash";
+  readonly title = "En Dash";
   readonly category = "insert" as const;
   readonly mode = "EnDash";
   readonly requiresSelection = false;

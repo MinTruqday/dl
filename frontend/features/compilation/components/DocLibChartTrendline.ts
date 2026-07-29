@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartTrendline implements BlockTool {
   static readonly feature = {
     id: "DocLibChartTrendline",
-    title: "DocLib ChartTrendline",
+    title: "Chart Trendline",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b0b89a0a91108c82"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,18 5,14 13,20 8,15 14,11 8,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib ChartTrendline",
+      title: "Chart Trendline",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b0b89a0a91108c82"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,18 5,14 13,20 8,15 14,11 8,11"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibChartTrendline implements BlockTool {
   }
 
   readonly id = "DocLibChartTrendline";
-  readonly title = "DocLib ChartTrendline";
+  readonly title = "Chart Trendline";
   readonly category = "layout" as const;
   readonly mode = "ChartTrendline";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "ChartTrendline";
-  readonly controlType = "gallery";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibChartTrendline implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

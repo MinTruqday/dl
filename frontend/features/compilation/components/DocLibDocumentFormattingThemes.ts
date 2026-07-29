@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDocumentFormattingThemes implements BlockTool {
   static readonly feature = {
     id: "DocLibDocumentFormattingThemes",
-    title: "DocLib DocumentFormattingThemes",
+    title: "Document Formatting Themes",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="81363bfd5b6af6fc"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="14,7 12,19 10,8 12,18 19,13 17,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Document Formatting Themes",
+      title: "Document Formatting Themes",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="81363bfd5b6af6fc"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="14,7 12,19 10,8 12,18 19,13 17,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDocumentFormattingThemes implements BlockTool {
   }
 
   readonly id = "DocLibDocumentFormattingThemes";
-  readonly title = "DocLib Document Formatting Themes";
+  readonly title = "Document Formatting Themes";
   readonly category = "format" as const;
   readonly mode = "DocumentFormattingThemes";
   readonly requiresSelection = false;

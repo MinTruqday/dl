@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWindowMinimizeAll implements BlockTool {
   static readonly feature = {
     id: "DocLibWindowMinimizeAll",
-    title: "DocLib WindowMinimizeAll",
+    title: "Window Minimize All",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="45f19f1c940ecadd"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="5,7 10,15 16,18 19,4 18,13 14,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib WindowMinimizeAll",
+      title: "Window Minimize All",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="45f19f1c940ecadd"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="5,7 10,15 16,18 19,4 18,13 14,4"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibWindowMinimizeAll implements BlockTool {
   }
 
   readonly id = "DocLibWindowMinimizeAll";
-  readonly title = "DocLib WindowMinimizeAll";
+  readonly title = "Window Minimize All";
   readonly category = "format" as const;
   readonly mode = "WindowMinimizeAll";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "WindowMinimizeAll";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibWindowMinimizeAll implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

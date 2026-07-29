@@ -3,7 +3,7 @@ import { API, BlockTool } from "@editorjs/editorjs";
 export default class DocLibKanbanBoard implements BlockTool {
   static readonly feature = {
     id: "DocLibKanbanBoard",
-    title: "DocLib KanbanBoard",
+    title: "Kanban Board",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="08e2f3296b39cf12"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,9 9,11 9,10 7,5 6,5 5,15"/></svg>',
     product: "doclib",
   } as const;
@@ -21,7 +21,7 @@ export default class DocLibKanbanBoard implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "DocLib Kanban",
+      title: "Kanban Board",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="08e2f3296b39cf12"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,9 9,11 9,10 7,5 6,5 5,15"/></svg>',
     };
   }
@@ -209,7 +209,7 @@ export default class DocLibKanbanBoard implements BlockTool {
       addCol.addEventListener("click", () => {
         this.data.columns.push({
           id: this.mkId(),
-          title: "DocLib New Column",
+          title: "Kanban Board",
           tasks: [],
         });
         this.buildUI();

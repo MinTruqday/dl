@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibXmlSchema implements BlockTool {
   static readonly feature = {
     id: "DocLibXmlSchema",
-    title: "DocLib XmlSchema",
+    title: "XML Schema",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e7b7f640a9979aa6"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="14,17 12,17 20,19 5,17 14,6 4,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib XmlSchema",
+      title: "XML Schema",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e7b7f640a9979aa6"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="14,17 12,17 20,19 5,17 14,6 4,17"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibXmlSchema implements BlockTool {
   }
 
   readonly id = "DocLibXmlSchema";
-  readonly title = "DocLib XmlSchema";
+  readonly title = "XML Schema";
   readonly category = "format" as const;
   readonly mode = "XmlSchema";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "XmlSchema";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibXmlSchema implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

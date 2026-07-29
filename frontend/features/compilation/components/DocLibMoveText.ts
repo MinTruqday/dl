@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMoveText implements BlockTool {
   static readonly feature = {
     id: "DocLibMoveText",
-    title: "DocLib MoveText",
+    title: "Move Text",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="57d8d26466f4140a"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="6,16 10,19 4,10 7,14 8,6 16,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib MoveText",
+      title: "Move Text",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="57d8d26466f4140a"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="6,16 10,19 4,10 7,14 8,6 16,13"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibMoveText implements BlockTool {
   }
 
   readonly id = "DocLibMoveText";
-  readonly title = "DocLib MoveText";
+  readonly title = "Move Text";
   readonly category = "format" as const;
   readonly mode = "MoveText";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "MoveText";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibMoveText implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

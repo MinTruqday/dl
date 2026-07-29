@@ -3,7 +3,7 @@ import { API } from "@editorjs/editorjs";
 export default class DocLibTextVariant {
   static readonly feature = {
     id: "DocLibTextVariant",
-    title: "DocLib TextVariant",
+    title: "Text Variant",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ca8d3865d094b68e"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,9 9,20 8,16 16,10 18,9 8,12"/></svg>',
     product: "doclib",
   } as const;
@@ -27,17 +27,17 @@ export default class DocLibTextVariant {
       {
         name: "call-out",
         icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ca8d3865d094b68e"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,9 9,20 8,16 16,10 18,9 8,12"/></svg>',
-        title: "DocLib Call-out",
+        title: "Text Variant",
       },
       {
         name: "citation",
         icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ca8d3865d094b68e"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,9 9,20 8,16 16,10 18,9 8,12"/></svg>',
-        title: "DocLib Citation",
+        title: "Text Variant",
       },
       {
         name: "details",
         icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ca8d3865d094b68e"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,9 9,20 8,16 16,10 18,9 8,12"/></svg>',
-        title: "DocLib Details",
+        title: "Text Variant",
       },
     ];
   }

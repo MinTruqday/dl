@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibNumberSpacingProportional implements BlockTool {
   static readonly feature = {
     id: "DocLibNumberSpacingProportional",
-    title: "DocLib NumberSpacingProportional",
+    title: "Number Spacing Proportional",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8e7ce01f0fdc6561"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,9 7,18 19,20 20,16 19,19 9,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Number Spacing Proportional",
+      title: "Number Spacing Proportional",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8e7ce01f0fdc6561"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,9 7,18 19,20 20,16 19,19 9,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibNumberSpacingProportional implements BlockTool {
   }
 
   readonly id = "DocLibNumberSpacingProportional";
-  readonly title = "DocLib Number Spacing Proportional";
+  readonly title = "Number Spacing Proportional";
   readonly category = "format" as const;
   readonly mode = "NumberSpacingProportional";
   readonly requiresSelection = false;

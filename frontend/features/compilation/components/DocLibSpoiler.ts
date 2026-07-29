@@ -3,7 +3,7 @@ import { API, InlineTool } from "@editorjs/editorjs";
 export default class DocLibSpoiler implements InlineTool {
   static readonly feature = {
     id: "DocLibSpoiler",
-    title: "DocLib Spoiler",
+    title: "Spoiler",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f846714337da456b"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="14,6 15,20 8,18 5,9 20,13 10,7"/></svg>',
     product: "doclib",
   } as const;
@@ -18,7 +18,7 @@ export default class DocLibSpoiler implements InlineTool {
     return true;
   }
   static get title() {
-    return "DocLib Spoiler";
+    return "Spoiler";
   }
 
   get state() {

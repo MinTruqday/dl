@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibHighlightMergeFields implements BlockTool {
   static readonly feature = {
     id: "DocLibHighlightMergeFields",
-    title: "DocLib HighlightMergeFields",
+    title: "Highlight Merge Fields",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f773abf3008e9f84"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="13,17 5,9 4,10 10,17 13,14 14,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Highlight Merge Fields",
+      title: "Highlight Merge Fields",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f773abf3008e9f84"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="13,17 5,9 4,10 10,17 13,14 14,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibHighlightMergeFields implements BlockTool {
   }
 
   readonly id = "DocLibHighlightMergeFields";
-  readonly title = "DocLib Highlight Merge Fields";
+  readonly title = "Highlight Merge Fields";
   readonly category = "mailing" as const;
   readonly mode = "HighlightMergeFields";
   readonly requiresSelection = false;

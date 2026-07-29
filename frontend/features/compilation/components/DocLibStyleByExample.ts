@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibStyleByExample implements BlockTool {
   static readonly feature = {
     id: "DocLibStyleByExample",
-    title: "DocLib StyleByExample",
+    title: "Style By Example",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a7b85e894440c0f0"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="18,18 13,5 4,17 9,6 12,4 15,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib StyleByExample",
+      title: "Style By Example",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a7b85e894440c0f0"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="18,18 13,5 4,17 9,6 12,4 15,20"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibStyleByExample implements BlockTool {
   }
 
   readonly id = "DocLibStyleByExample";
-  readonly title = "DocLib StyleByExample";
+  readonly title = "Style By Example";
   readonly category = "format" as const;
   readonly mode = "StyleByExample";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "StyleByExample";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibStyleByExample implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

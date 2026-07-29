@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibRepeatHeaderRows implements BlockTool {
   static readonly feature = {
     id: "DocLibRepeatHeaderRows",
-    title: "DocLib RepeatHeaderRows",
+    title: "Repeat Header Rows",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fcb81d43948c707e"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="18,18 16,20 16,8 14,11 9,12 20,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Repeat Header Rows",
+      title: "Repeat Header Rows",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fcb81d43948c707e"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="18,18 16,20 16,8 14,11 9,12 20,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibRepeatHeaderRows implements BlockTool {
   }
 
   readonly id = "DocLibRepeatHeaderRows";
-  readonly title = "DocLib Repeat Header Rows";
+  readonly title = "Repeat Header Rows";
   readonly category = "table" as const;
   readonly mode = "RepeatHeaderRows";
   readonly requiresSelection = false;

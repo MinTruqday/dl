@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibZoomClassic implements BlockTool {
   static readonly feature = {
     id: "DocLibZoomClassic",
-    title: "DocLib ZoomClassic",
+    title: "Zoom Classic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2a5fd360840ecab1"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,14 11,15 17,18 19,11 6,11 4,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib ZoomClassic",
+      title: "Zoom Classic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2a5fd360840ecab1"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,14 11,15 17,18 19,11 6,11 4,15"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibZoomClassic implements BlockTool {
   }
 
   readonly id = "DocLibZoomClassic";
-  readonly title = "DocLib ZoomClassic";
+  readonly title = "Zoom Classic";
   readonly category = "format" as const;
   readonly mode = "ZoomClassic";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "ZoomClassic";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibZoomClassic implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

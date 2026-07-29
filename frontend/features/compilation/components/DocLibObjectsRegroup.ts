@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibObjectsRegroup implements BlockTool {
   static readonly feature = {
     id: "DocLibObjectsRegroup",
-    title: "DocLib ObjectsRegroup",
+    title: "Objects Regroup",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5103042b63b0bb31"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,7 8,13 18,10 4,19 5,11 5,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib ObjectsRegroup",
+      title: "Objects Regroup",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5103042b63b0bb31"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,7 8,13 18,10 4,19 5,11 5,9"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibObjectsRegroup implements BlockTool {
   }
 
   readonly id = "DocLibObjectsRegroup";
-  readonly title = "DocLib ObjectsRegroup";
+  readonly title = "Objects Regroup";
   readonly category = "layout" as const;
   readonly mode = "ObjectsRegroup";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "ObjectsRegroup";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibObjectsRegroup implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

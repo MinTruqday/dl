@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPrivacyOptionsDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibPrivacyOptionsDialog",
-    title: "DocLib PrivacyOptionsDialog",
+    title: "Privacy Options Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4fd13fec8db8e1d8"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="15,9 16,19 9,18 8,16 12,10 5,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib PrivacyOptionsDialog",
+      title: "Privacy Options Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4fd13fec8db8e1d8"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="15,9 16,19 9,18 8,16 12,10 5,10"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibPrivacyOptionsDialog implements BlockTool {
   }
 
   readonly id = "DocLibPrivacyOptionsDialog";
-  readonly title = "DocLib PrivacyOptionsDialog";
+  readonly title = "Privacy Options Dialog";
   readonly category = "format" as const;
   readonly mode = "PrivacyOptionsDialog";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "PrivacyOptionsDialog";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibPrivacyOptionsDialog implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

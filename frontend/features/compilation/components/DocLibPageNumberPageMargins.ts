@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPageNumberPageMargins implements BlockTool {
   static readonly feature = {
     id: "DocLibPageNumberPageMargins",
-    title: "DocLib PageNumberPageMargins",
+    title: "Page Number Page Margins",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="952490892b005102"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="17,6 12,5 13,4 17,6 15,20 6,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Page Number Page Margins",
+      title: "Page Number Page Margins",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="952490892b005102"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="17,6 12,5 13,4 17,6 15,20 6,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPageNumberPageMargins implements BlockTool {
   }
 
   readonly id = "DocLibPageNumberPageMargins";
-  readonly title = "DocLib Page Number Page Margins";
+  readonly title = "Page Number Page Margins";
   readonly category = "layout" as const;
   readonly mode = "PageNumberPageMargins";
   readonly requiresSelection = false;

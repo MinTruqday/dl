@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableCellAlignBottom implements BlockTool {
   static readonly feature = {
     id: "DocLibTableCellAlignBottom",
-    title: "DocLib TableCellAlignBottom",
+    title: "Table Cell Align Bottom",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3f115ae4669e729b"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="16,4 9,11 4,9 16,6 18,4 12,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib TableCellAlignBottom",
+      title: "Table Cell Align Bottom",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3f115ae4669e729b"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="16,4 9,11 4,9 16,6 18,4 12,6"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibTableCellAlignBottom implements BlockTool {
   }
 
   readonly id = "DocLibTableCellAlignBottom";
-  readonly title = "DocLib TableCellAlignBottom";
+  readonly title = "Table Cell Align Bottom";
   readonly category = "format" as const;
   readonly mode = "TableCellAlignBottom";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "TableCellAlignBottom";
-  readonly controlType = "toggleButton";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibTableCellAlignBottom implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

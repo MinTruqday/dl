@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibHideInk implements BlockTool {
   static readonly feature = {
     id: "DocLibHideInk",
-    title: "DocLib HideInk",
+    title: "Hide Ink",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d70631271cac3e12"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="15,10 19,9 15,6 15,5 13,12 5,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib HideInk",
+      title: "Hide Ink",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d70631271cac3e12"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="15,10 19,9 15,6 15,5 13,12 5,6"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibHideInk implements BlockTool {
   }
 
   readonly id = "DocLibHideInk";
-  readonly title = "DocLib HideInk";
+  readonly title = "Hide Ink";
   readonly category = "review" as const;
   readonly mode = "HideInk";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "HideInk";
-  readonly controlType = "toggleButton";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibHideInk implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

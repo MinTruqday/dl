@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibHighlightColorPink implements BlockTool {
   static readonly feature = {
     id: "DocLibHighlightColorPink",
-    title: "DocLib HighlightColorPink",
+    title: "Highlight Color Pink",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9578cea26aa47c04"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="17,5 6,13 8,15 9,8 18,5 18,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Highlight Color Pink",
+      title: "Highlight Color Pink",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9578cea26aa47c04"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="17,5 6,13 8,15 9,8 18,5 18,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibHighlightColorPink implements BlockTool {
   }
 
   readonly id = "DocLibHighlightColorPink";
-  readonly title = "DocLib Highlight Color Pink";
+  readonly title = "Highlight Color Pink";
   readonly category = "format" as const;
   readonly mode = "HighlightColorPink";
   readonly requiresSelection = false;

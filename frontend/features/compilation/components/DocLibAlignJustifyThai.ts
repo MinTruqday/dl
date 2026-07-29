@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAlignJustifyThai implements BlockTool {
   static readonly feature = {
     id: "DocLibAlignJustifyThai",
-    title: "DocLib AlignJustifyThai",
+    title: "Align Justify Thai",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="34ea0867c1b2c6a0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,17 12,5 10,12 15,11 6,14 10,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib AlignJustifyThai",
+      title: "Align Justify Thai",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="34ea0867c1b2c6a0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,17 12,5 10,12 15,11 6,14 10,11"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibAlignJustifyThai implements BlockTool {
   }
 
   readonly id = "DocLibAlignJustifyThai";
-  readonly title = "DocLib AlignJustifyThai";
+  readonly title = "Align Justify Thai";
   readonly category = "format" as const;
   readonly mode = "AlignJustifyThai";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "AlignJustifyThai";
-  readonly controlType = "toggleButton";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibAlignJustifyThai implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

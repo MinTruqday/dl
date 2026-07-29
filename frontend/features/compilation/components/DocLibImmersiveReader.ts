@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibImmersiveReader implements BlockTool {
   static readonly feature = {
     id: "DocLibImmersiveReader",
-    title: "DocLib ImmersiveReader",
+    title: "Immersive Reader",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e2699ff6fde1a2c2"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="9,7 10,12 19,8 13,11 4,7 9,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Immersive Reader",
+      title: "Immersive Reader",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e2699ff6fde1a2c2"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="9,7 10,12 19,8 13,11 4,7 9,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibImmersiveReader implements BlockTool {
   }
 
   readonly id = "DocLibImmersiveReader";
-  readonly title = "DocLib Immersive Reader";
+  readonly title = "Immersive Reader";
   readonly category = "view" as const;
   readonly mode = "ImmersiveReader";
   readonly requiresSelection = false;

@@ -174,7 +174,6 @@ async def main():
         from src.engines.editorjs_capabilities import capability_manifest
         manifest = capability_manifest()
         assert len(manifest["features"]) == 2449
-        assert manifest["microsoftInteractiveControlCount"] == 2005
         assert call(
             "GET",
             "/soan-thao/editorjs/capabilities",

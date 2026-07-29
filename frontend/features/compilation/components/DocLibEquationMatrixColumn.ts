@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibEquationMatrixColumn implements BlockTool {
   static readonly feature = {
     id: "DocLibEquationMatrixColumn",
-    title: "DocLib EquationMatrixColumn",
+    title: "Equation Matrix Column",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c0587c4c104fefc7"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="9,7 9,12 20,15 5,16 9,12 20,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Equation Matrix Column",
+      title: "Equation Matrix Column",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c0587c4c104fefc7"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="9,7 9,12 20,15 5,16 9,12 20,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibEquationMatrixColumn implements BlockTool {
   }
 
   readonly id = "DocLibEquationMatrixColumn";
-  readonly title = "DocLib Equation Matrix Column";
+  readonly title = "Equation Matrix Column";
   readonly category = "insert" as const;
   readonly mode = "EquationMatrixColumn";
   readonly requiresSelection = false;

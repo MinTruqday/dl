@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableCellAlignCenterVertically implements BlockTool {
   static readonly feature = {
     id: "DocLibTableCellAlignCenterVertically",
-    title: "DocLib TableCellAlignCenterVertically",
+    title: "Table Cell Align Center Vertically",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="23fd902e29c25221"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,19 12,16 11,11 18,20 8,13 4,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib TableCellAlignCenterVertically",
+      title: "Table Cell Align Center Vertically",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="23fd902e29c25221"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,19 12,16 11,11 18,20 8,13 4,11"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibTableCellAlignCenterVertically implements BlockTool {
   }
 
   readonly id = "DocLibTableCellAlignCenterVertically";
-  readonly title = "DocLib TableCellAlignCenterVertically";
+  readonly title = "Table Cell Align Center Vertically";
   readonly category = "format" as const;
   readonly mode = "TableCellAlignCenterVertically";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "TableCellAlignCenterVertically";
-  readonly controlType = "toggleButton";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibTableCellAlignCenterVertically implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

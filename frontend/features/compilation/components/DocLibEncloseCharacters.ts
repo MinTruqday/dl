@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibEncloseCharacters implements BlockTool {
   static readonly feature = {
     id: "DocLibEncloseCharacters",
-    title: "DocLib EncloseCharacters",
+    title: "Enclose Characters",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="dc0e681fe73c1ff1"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="20,18 6,18 14,13 18,7 11,19 9,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Enclose Characters",
+      title: "Enclose Characters",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="dc0e681fe73c1ff1"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="20,18 6,18 14,13 18,7 11,19 9,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibEncloseCharacters implements BlockTool {
   }
 
   readonly id = "DocLibEncloseCharacters";
-  readonly title = "DocLib Enclose Characters";
+  readonly title = "Enclose Characters";
   readonly category = "format" as const;
   readonly mode = "EncloseCharacters";
   readonly requiresSelection = true;

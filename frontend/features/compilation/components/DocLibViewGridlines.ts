@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibViewGridlines implements BlockTool {
   static readonly feature = {
     id: "DocLibViewGridlines",
-    title: "DocLib ViewGridlines",
+    title: "View Gridlines",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="eb096beaea81444c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="18,13 9,17 17,14 4,12 19,7 20,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib ViewGridlines",
+      title: "View Gridlines",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="eb096beaea81444c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="18,13 9,17 17,14 4,12 19,7 20,4"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibViewGridlines implements BlockTool {
   }
 
   readonly id = "DocLibViewGridlines";
-  readonly title = "DocLib ViewGridlines";
+  readonly title = "View Gridlines";
   readonly category = "view" as const;
   readonly mode = "ViewGridlines";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "ViewGridlines";
-  readonly controlType = "checkBox";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibViewGridlines implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

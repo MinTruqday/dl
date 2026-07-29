@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibNumberFormsLining implements BlockTool {
   static readonly feature = {
     id: "DocLibNumberFormsLining",
-    title: "DocLib NumberFormsLining",
+    title: "Number Forms Lining",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="92068ff2ad5e0651"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="14,10 11,8 7,13 10,17 9,10 14,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Number Forms Lining",
+      title: "Number Forms Lining",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="92068ff2ad5e0651"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="14,10 11,8 7,13 10,17 9,10 14,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibNumberFormsLining implements BlockTool {
   }
 
   readonly id = "DocLibNumberFormsLining";
-  readonly title = "DocLib Number Forms Lining";
+  readonly title = "Number Forms Lining";
   readonly category = "format" as const;
   readonly mode = "NumberFormsLining";
   readonly requiresSelection = false;

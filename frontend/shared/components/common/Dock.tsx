@@ -1,131 +1,202 @@
 "use client";
-import React, { useState, useEffect } from "react";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/features/authentication/contexts/AuthContext";
-import {
-  Search,
-  Library,
-  User,
-  Wallet,
-  Settings,
-  PenTool,
-  AlertTriangle,
-  Users,
-  FolderOpen,
-  Clock,
-  MessageSquare,
-  Database,
-  Files,
-  Sparkles,
-  Shield,
-  BarChart,
-  Brain,
-  HelpCircle,
-  Bell,
-  ArrowUpCircle,
-} from "lucide-react";
 
-export const MENU_ITEMS = [
-  { id: "explore", label: "Khám phá", href: "/kham-pha", icon: Search, group: "chung" },
-  { id: "message", label: "Tin nhắn", href: "/tin-nhan", icon: MessageSquare, requireAuth: true, group: "chung" },
-  { id: "chat", label: "Trò chuyện", href: "/tro-chuyen", icon: Sparkles, requireAuth: true, group: "chung" },
-  { id: "library", label: "Thư viện", href: "/thu-vien", icon: Library, requireAuth: true, group: "chung" },
-  { id: "profile", label: "Hồ sơ", href: "/ho-so", icon: User, requireAuth: true, group: "ca_nhan" },
-  { id: "wallet", label: "Ví tiền", href: "/vi-tien", icon: Wallet, requireAuth: true, group: "ca_nhan" },
-  { id: "settings", label: "Cài đặt", href: "/cai-dat", icon: Settings, requireAuth: true, group: "ca_nhan" },
-  { id: "provision", label: "Soạn thảo", href: "/soan-thao", icon: PenTool, roles: ["author", "admin"], group: "sang_tac" },
-  { id: "documents", label: "Tài liệu", href: "/tai-lieu", icon: Files, roles: ["author", "admin"], group: "sang_tac" },
-  { id: "collaboration", label: "Cộng tác", href: "/cong-tac", icon: Users, roles: ["author", "admin"], group: "sang_tac" },
-  { id: "storage", label: "Lưu trữ", href: "/luu-tru", icon: FolderOpen, roles: ["author", "admin"], group: "sang_tac" },
-  { id: "audit", label: "Kiểm toán", href: "/kiem-toan", icon: Clock, roles: ["admin"], group: "he_thong" },
-  { id: "collect", label: "Thu thập", href: "/thu-thap", icon: Database, roles: ["admin"], group: "he_thong" },
-  { id: "user_manage", label: "Người dùng", href: "/nguoi-dung", icon: Users, roles: ["admin"], group: "he_thong" },
-  { id: "report", label: "Báo cáo", href: "/bao-cao", icon: AlertTriangle, roles: ["admin"], group: "he_thong" },
-  { id: "operation", label: "Vận hành", href: "/van-hanh", icon: Shield, roles: ["admin"], group: "he_thong" },
-  { id: "analytics", label: "Phân tích", href: "/phan-tich", icon: BarChart, roles: ["admin", "author"], group: "he_thong" },
-  { id: "finetune", label: "Tinh chỉnh", href: "/tinh-chinh", icon: Brain, roles: ["admin"], group: "he_thong" },
-  { id: "help", label: "Trợ giúp", href: "/tro-giup", icon: HelpCircle, requireAuth: true, group: "tro_giup" },
-  { id: "announcement", label: "Thông báo", href: "/thong-bao", icon: Bell, requireAuth: true, group: "tro_giup" },
-  { id: "upgrade", label: "Nâng cấp", href: "/nang-cap", icon: ArrowUpCircle, requireAuth: true, group: "tro_giup" },
+interface MenuItem {
+  id: string;
+  label: string;
+  href: string;
+  requireAuth?: boolean;
+  roles?: string[];
+}
+
+interface MenuGroup {
+  label: string;
+  items: MenuItem[];
+}
+
+export const MENU_GROUPS: MenuGroup[] = [
+  {
+    label: "Không gian",
+    items: [
+      { id: "explore", label: "Khám phá", href: "/kham-pha" },
+      {
+        id: "chat",
+        label: "Metis",
+        href: "/tro-chuyen",
+        requireAuth: true,
+      },
+      {
+        id: "message",
+        label: "Tin nhắn",
+        href: "/tin-nhan",
+        requireAuth: true,
+      },
+      {
+        id: "library",
+        label: "Thư viện",
+        href: "/thu-vien",
+        requireAuth: true,
+      },
+    ],
+  },
+  {
+    label: "Tài liệu",
+    items: [
+      {
+        id: "editor",
+        label: "Soạn thảo",
+        href: "/soan-thao",
+        roles: ["author", "admin"],
+      },
+      {
+        id: "documents",
+        label: "Tài liệu",
+        href: "/tai-lieu",
+        roles: ["author", "admin"],
+      },
+      {
+        id: "collaboration",
+        label: "Cộng tác",
+        href: "/cong-tac",
+        roles: ["author", "admin"],
+      },
+      {
+        id: "storage",
+        label: "Lưu trữ",
+        href: "/luu-tru",
+        roles: ["author", "admin"],
+      },
+      {
+        id: "analytics",
+        label: "Phân tích",
+        href: "/phan-tich",
+        roles: ["author", "admin"],
+      },
+    ],
+  },
+  {
+    label: "Tài khoản",
+    items: [
+      {
+        id: "profile",
+        label: "Hồ sơ",
+        href: "/ho-so",
+        requireAuth: true,
+      },
+      {
+        id: "wallet",
+        label: "Ví tiền",
+        href: "/vi-tien",
+        requireAuth: true,
+      },
+      {
+        id: "settings",
+        label: "Cài đặt",
+        href: "/cai-dat",
+        requireAuth: true,
+      },
+    ],
+  },
+  {
+    label: "Quản trị",
+    items: [
+      {
+        id: "audit",
+        label: "Kiểm toán",
+        href: "/kiem-toan",
+        roles: ["admin"],
+      },
+      {
+        id: "collect",
+        label: "Thu thập",
+        href: "/thu-thap",
+        roles: ["admin"],
+      },
+      {
+        id: "users",
+        label: "Người dùng",
+        href: "/nguoi-dung",
+        roles: ["admin"],
+      },
+      {
+        id: "reports",
+        label: "Báo cáo",
+        href: "/bao-cao",
+        roles: ["admin"],
+      },
+      {
+        id: "operations",
+        label: "Vận hành",
+        href: "/van-hanh",
+        roles: ["admin"],
+      },
+    ],
+  },
 ];
 
-export default function Dock() {
+export function getAvailableMenuGroups(user: any) {
+  const role = String(user?.role || "").toLowerCase();
+  return MENU_GROUPS.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => {
+      if (item.requireAuth && !user) return false;
+      if (item.roles && !item.roles.includes(role)) return false;
+      return true;
+    }),
+  })).filter((group) => group.items.length > 0);
+}
+
+export function MenuGroups({
+  onNavigate,
+}: {
+  onNavigate?: () => void;
+}) {
   const pathname = usePathname();
   const { user } = useAuth() as any;
-  const [mounted, setMounted] = useState(false);
-  const [hoveredTooltip, setHoveredTooltip] = useState<{ label: string; top: number } | null>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const getAvailableItems = () => {
-    return MENU_ITEMS.filter((item) => {
-      if (item.requireAuth && !user) return false;
-      if (item.roles) {
-        const userRole = (user?.role || "").toLowerCase();
-        const normalizedRoles = item.roles.map((r) => r.toLowerCase());
-        if (!normalizedRoles.includes(userRole)) return false;
-      }
-      return true;
-    });
-  };
-
-  if (!mounted) return null;
-
-  const availableItems = getAvailableItems();
-
-  const isActive = (href: string) => {
-    if (href === "/") return pathname === "/";
-    return pathname.startsWith(href);
-  };
+  const groups = getAvailableMenuGroups(user);
 
   return (
-    <>
-      <aside className="fixed left-0 top-[56px] bottom-0 w-[56px] bg-white/80 backdrop-blur-xl border-r border-[#E8E8ED] overflow-y-auto hide-scrollbar z-[90] hidden lg:block">
-        <div className="py-4 px-2">
-          <div className="flex flex-col gap-2">
-            {availableItems.map((item, index) => {
-              const active = isActive(item.href);
-              const showSeparator = index > 0 && item.group !== availableItems[index - 1].group;
-              
+    <div className="space-y-6">
+      {groups.map((group) => (
+        <section key={group.label}>
+          <h2 className="mb-2 px-3 text-[12px] font-medium text-[var(--ink-faint)]">
+            {group.label}
+          </h2>
+          <div className="space-y-1">
+            {group.items.map((item) => {
+              const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
               return (
-                <React.Fragment key={item.id}>
-                  {showSeparator && (
-                    <div className="w-8 h-px bg-[#D2D2D7] mx-auto my-1" />
-                  )}
-                  <Link
-                    href={item.href}
-                    onMouseEnter={(e) => {
-                      const rect = e.currentTarget.getBoundingClientRect();
-                      setHoveredTooltip({ label: item.label, top: rect.top + rect.height / 2 });
-                    }}
-                    onMouseLeave={() => setHoveredTooltip(null)}
-                    className={`flex items-center justify-center w-[40px] h-[40px] rounded-[12px] transition-colors mx-auto ${
-                      active
-                        ? "bg-[#0071E3] text-white shadow-sm"
-                        : "text-[#6E6E73] hover:bg-[#F5F5F7] hover:text-[#1D1D1F]"
-                    }`}
-                  >
-                    <item.icon className="w-[20px] h-[20px] shrink-0" />
-                  </Link>
-                </React.Fragment>
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  onClick={onNavigate}
+                  aria-current={active ? "page" : undefined}
+                  className={`block min-h-10 rounded-[var(--radius-control)] px-3 py-2 text-[14px] transition-colors ${
+                    active
+                      ? "bg-[var(--brand-soft)] font-semibold text-[var(--brand)]"
+                      : "text-[var(--ink-muted)] hover:bg-[var(--surface-quiet)] hover:text-[var(--ink)]"
+                  }`}
+                >
+                  {item.label}
+                </Link>
               );
             })}
           </div>
-        </div>
-      </aside>
+        </section>
+      ))}
+    </div>
+  );
+}
 
-      {hoveredTooltip && (
-        <div
-          className="fixed left-[68px] z-[9999] px-3 py-1.5 bg-[#1D1D1F] text-white text-[13px] font-medium rounded-[8px] whitespace-nowrap pointer-events-none shadow-lg -translate-y-1/2 animate-in fade-in zoom-in-95 duration-200"
-          style={{ top: hoveredTooltip.top }}
-        >
-          {hoveredTooltip.label}
-          <div className="absolute top-1/2 -translate-y-1/2 -left-1 w-2 h-2 bg-[#1D1D1F] rotate-45 rounded-sm"></div>
-        </div>
-      )}
-    </>
+export default function Dock() {
+  return (
+    <aside className="fixed bottom-0 left-0 top-[var(--topbar-height)] z-30 hidden w-[var(--sidebar-width)] overflow-y-auto border-r border-[var(--border)] bg-[var(--surface-raised)] lg:block">
+      <nav aria-label="Điều hướng chính" className="px-3 py-6">
+        <MenuGroups />
+      </nav>
+    </aside>
   );
 }

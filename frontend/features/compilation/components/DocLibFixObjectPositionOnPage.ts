@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFixObjectPositionOnPage implements BlockTool {
   static readonly feature = {
     id: "DocLibFixObjectPositionOnPage",
-    title: "DocLib FixObjectPositionOnPage",
+    title: "Fix Object Position On Page",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="11bf891d0ee71416"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="4,8 5,16 18,14 7,9 9,20 7,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib FixObjectPositionOnPage",
+      title: "Fix Object Position On Page",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="11bf891d0ee71416"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="4,8 5,16 18,14 7,9 9,20 7,9"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibFixObjectPositionOnPage implements BlockTool {
   }
 
   readonly id = "DocLibFixObjectPositionOnPage";
-  readonly title = "DocLib FixObjectPositionOnPage";
+  readonly title = "Fix Object Position On Page";
   readonly category = "layout" as const;
   readonly mode = "FixObjectPositionOnPage";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "FixObjectPositionOnPage";
-  readonly controlType = "checkBox";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibFixObjectPositionOnPage implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

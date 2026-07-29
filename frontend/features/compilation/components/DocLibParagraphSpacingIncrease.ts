@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibParagraphSpacingIncrease implements BlockTool {
   static readonly feature = {
     id: "DocLibParagraphSpacingIncrease",
-    title: "DocLib ParagraphSpacingIncrease",
+    title: "Paragraph Spacing Increase",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b042de352a8642e4"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="10,19 5,6 12,19 19,11 18,12 12,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib ParagraphSpacingIncrease",
+      title: "Paragraph Spacing Increase",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b042de352a8642e4"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="10,19 5,6 12,19 19,11 18,12 12,5"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibParagraphSpacingIncrease implements BlockTool {
   }
 
   readonly id = "DocLibParagraphSpacingIncrease";
-  readonly title = "DocLib ParagraphSpacingIncrease";
+  readonly title = "Paragraph Spacing Increase";
   readonly category = "format" as const;
   readonly mode = "ParagraphSpacingIncrease";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "ParagraphSpacingIncrease";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibParagraphSpacingIncrease implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartLegend implements BlockTool {
   static readonly feature = {
     id: "DocLibChartLegend",
-    title: "DocLib ChartLegend",
+    title: "Chart Legend",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c8ffeaa181bbcf34"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,4 17,12 14,4 7,5 17,11 4,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib ChartLegend",
+      title: "Chart Legend",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c8ffeaa181bbcf34"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,4 17,12 14,4 7,5 17,11 4,7"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibChartLegend implements BlockTool {
   }
 
   readonly id = "DocLibChartLegend";
-  readonly title = "DocLib ChartLegend";
+  readonly title = "Chart Legend";
   readonly category = "layout" as const;
   readonly mode = "ChartLegend";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "ChartLegend";
-  readonly controlType = "gallery";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibChartLegend implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

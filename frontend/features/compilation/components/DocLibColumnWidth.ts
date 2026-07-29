@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibColumnWidth implements BlockTool {
   static readonly feature = {
     id: "DocLibColumnWidth",
-    title: "DocLib ColumnWidth",
+    title: "Column Width",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3383dc5fef3ecc51"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,16 20,14 5,15 4,17 10,6 16,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib ColumnWidth",
+      title: "Column Width",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3383dc5fef3ecc51"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,16 20,14 5,15 4,17 10,6 16,17"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibColumnWidth implements BlockTool {
   }
 
   readonly id = "DocLibColumnWidth";
-  readonly title = "DocLib ColumnWidth";
+  readonly title = "Column Width";
   readonly category = "format" as const;
   readonly mode = "ColumnWidth";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "ColumnWidth";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibColumnWidth implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

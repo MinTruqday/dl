@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSaveSelectionToPageNumberTop implements BlockTool {
   static readonly feature = {
     id: "DocLibSaveSelectionToPageNumberTop",
-    title: "DocLib SaveSelectionToPageNumberTop",
+    title: "Save Selection To Page Number Top",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="171ddb9ca1ae335f"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,16 19,7 12,8 4,14 19,16 8,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib SaveSelectionToPageNumberTop",
+      title: "Save Selection To Page Number Top",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="171ddb9ca1ae335f"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,16 19,7 12,8 4,14 19,16 8,5"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibSaveSelectionToPageNumberTop implements BlockTool {
   }
 
   readonly id = "DocLibSaveSelectionToPageNumberTop";
-  readonly title = "DocLib SaveSelectionToPageNumberTop";
+  readonly title = "Save Selection To Page Number Top";
   readonly category = "insert" as const;
   readonly mode = "SaveSelectionToPageNumberTop";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "SaveSelectionToPageNumberTop";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibSaveSelectionToPageNumberTop implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

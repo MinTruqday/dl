@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibGrammar implements BlockTool {
   static readonly feature = {
     id: "DocLibGrammar",
-    title: "DocLib Grammar",
+    title: "Grammar",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2e0c59badf0c0e38"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="16,16 8,20 6,16 18,9 18,13 10,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Grammar",
+      title: "Grammar",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2e0c59badf0c0e38"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="16,16 8,20 6,16 18,9 18,13 10,9"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibGrammar implements BlockTool {
   }
 
   readonly id = "DocLibGrammar";
-  readonly title = "DocLib Grammar";
+  readonly title = "Grammar";
   readonly category = "format" as const;
   readonly mode = "Grammar";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "Grammar";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibGrammar implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

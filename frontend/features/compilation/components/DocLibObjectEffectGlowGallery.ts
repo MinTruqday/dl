@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibObjectEffectGlowGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibObjectEffectGlowGallery",
-    title: "DocLib ObjectEffectGlowGallery",
+    title: "Object Effect Glow Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d09d57ee9fae3ad3"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="8,8 6,4 10,8 11,11 8,12 9,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib ObjectEffectGlowGallery",
+      title: "Object Effect Glow Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d09d57ee9fae3ad3"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="8,8 6,4 10,8 11,11 8,12 9,14"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibObjectEffectGlowGallery implements BlockTool {
   }
 
   readonly id = "DocLibObjectEffectGlowGallery";
-  readonly title = "DocLib ObjectEffectGlowGallery";
+  readonly title = "Object Effect Glow Gallery";
   readonly category = "format" as const;
   readonly mode = "ObjectEffectGlowGallery";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "ObjectEffectGlowGallery";
-  readonly controlType = "gallery";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibObjectEffectGlowGallery implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

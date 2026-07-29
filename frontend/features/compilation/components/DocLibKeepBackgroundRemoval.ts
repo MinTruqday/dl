@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibKeepBackgroundRemoval implements BlockTool {
   static readonly feature = {
     id: "DocLibKeepBackgroundRemoval",
-    title: "DocLib KeepBackgroundRemoval",
+    title: "Keep Background Removal",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e3bfc9f05c47e245"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="10,8 18,6 11,7 9,5 9,4 6,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib KeepBackgroundRemoval",
+      title: "Keep Background Removal",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e3bfc9f05c47e245"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="10,8 18,6 11,7 9,5 9,4 6,7"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibKeepBackgroundRemoval implements BlockTool {
   }
 
   readonly id = "DocLibKeepBackgroundRemoval";
-  readonly title = "DocLib KeepBackgroundRemoval";
+  readonly title = "Keep Background Removal";
   readonly category = "format" as const;
   readonly mode = "KeepBackgroundRemoval";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "KeepBackgroundRemoval";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibKeepBackgroundRemoval implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

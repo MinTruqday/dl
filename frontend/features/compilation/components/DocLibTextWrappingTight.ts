@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextWrappingTight implements BlockTool {
   static readonly feature = {
     id: "DocLibTextWrappingTight",
-    title: "DocLib TextWrappingTight",
+    title: "Text Wrapping Tight",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d64951944f23f0ad"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="14,9 17,16 15,5 6,7 14,17 11,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib TextWrappingTight",
+      title: "Text Wrapping Tight",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d64951944f23f0ad"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="14,9 17,16 15,5 6,7 14,17 11,17"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibTextWrappingTight implements BlockTool {
   }
 
   readonly id = "DocLibTextWrappingTight";
-  readonly title = "DocLib TextWrappingTight";
+  readonly title = "Text Wrapping Tight";
   readonly category = "format" as const;
   readonly mode = "TextWrappingTight";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "TextWrappingTight";
-  readonly controlType = "toggleButton";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibTextWrappingTight implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

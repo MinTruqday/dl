@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDiagramCycleInsertClassic implements BlockTool {
   static readonly feature = {
     id: "DocLibDiagramCycleInsertClassic",
-    title: "DocLib DiagramCycleInsertClassic",
+    title: "Diagram Cycle Insert Classic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="66c5214fc628b496"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,14 20,15 15,10 14,18 15,4 4,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib DiagramCycleInsertClassic",
+      title: "Diagram Cycle Insert Classic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="66c5214fc628b496"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,14 20,15 15,10 14,18 15,4 4,9"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibDiagramCycleInsertClassic implements BlockTool {
   }
 
   readonly id = "DocLibDiagramCycleInsertClassic";
-  readonly title = "DocLib DiagramCycleInsertClassic";
+  readonly title = "Diagram Cycle Insert Classic";
   readonly category = "format" as const;
   readonly mode = "DiagramCycleInsertClassic";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "DiagramCycleInsertClassic";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibDiagramCycleInsertClassic implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

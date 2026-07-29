@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSendCopyAddressBookCc implements BlockTool {
   static readonly feature = {
     id: "DocLibSendCopyAddressBookCc",
-    title: "DocLib SendCopyAddressBookCc",
+    title: "Send Copy Address Book Cc",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ae8b446625a93db4"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="8,7 4,4 7,20 14,14 14,10 4,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib SendCopyAddressBookCc",
+      title: "Send Copy Address Book Cc",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ae8b446625a93db4"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="8,7 4,4 7,20 14,14 14,10 4,8"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibSendCopyAddressBookCc implements BlockTool {
   }
 
   readonly id = "DocLibSendCopyAddressBookCc";
-  readonly title = "DocLib SendCopyAddressBookCc";
+  readonly title = "Send Copy Address Book Cc";
   readonly category = "format" as const;
   readonly mode = "SendCopyAddressBookCc";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "SendCopyAddressBookCc";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibSendCopyAddressBookCc implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

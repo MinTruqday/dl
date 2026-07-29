@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartSecondaryHorizontalAxisTitle implements BlockTool {
   static readonly feature = {
     id: "DocLibChartSecondaryHorizontalAxisTitle",
-    title: "DocLib ChartSecondaryHorizontalAxisTitle",
+    title: "Chart Secondary Horizontal Axis Title",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f5e064d87b57e228"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,7 19,16 8,6 9,10 17,8 20,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib ChartSecondaryHorizontalAxisTitle",
+      title: "Chart Secondary Horizontal Axis Title",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f5e064d87b57e228"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,7 19,16 8,6 9,10 17,8 20,10"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibChartSecondaryHorizontalAxisTitle implements BlockToo
   }
 
   readonly id = "DocLibChartSecondaryHorizontalAxisTitle";
-  readonly title = "DocLib ChartSecondaryHorizontalAxisTitle";
+  readonly title = "Chart Secondary Horizontal Axis Title";
   readonly category = "layout" as const;
   readonly mode = "ChartSecondaryHorizontalAxisTitle";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "ChartSecondaryHorizontalAxisTitle";
-  readonly controlType = "gallery";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibChartSecondaryHorizontalAxisTitle implements BlockToo
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

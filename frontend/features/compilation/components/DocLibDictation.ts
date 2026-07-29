@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDictation implements BlockTool {
   static readonly feature = {
     id: "DocLibDictation",
-    title: "DocLib Dictation",
+    title: "Dictation",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1567e4d922722b1e"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,5 11,17 4,16 13,17 12,20 11,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Dictation",
+      title: "Dictation",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1567e4d922722b1e"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,5 11,17 4,16 13,17 12,20 11,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDictation implements BlockTool {
   }
 
   readonly id = "DocLibDictation";
-  readonly title = "DocLib Dictation";
+  readonly title = "Dictation";
   readonly category = "ai" as const;
   readonly mode = "Dictation";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibOpenOptionsTrustCenterSettings implements BlockTool {
   static readonly feature = {
     id: "DocLibOpenOptionsTrustCenterSettings",
-    title: "DocLib OpenOptionsTrustCenterSettings",
+    title: "Open Options Trust Center Settings",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7b9720afbe641443"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,19 19,9 7,19 7,20 14,7 15,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib OpenOptionsTrustCenterSettings",
+      title: "Open Options Trust Center Settings",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7b9720afbe641443"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,19 19,9 7,19 7,20 14,7 15,17"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibOpenOptionsTrustCenterSettings implements BlockTool {
   }
 
   readonly id = "DocLibOpenOptionsTrustCenterSettings";
-  readonly title = "DocLib OpenOptionsTrustCenterSettings";
+  readonly title = "Open Options Trust Center Settings";
   readonly category = "format" as const;
   readonly mode = "OpenOptionsTrustCenterSettings";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "OpenOptionsTrustCenterSettings";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibOpenOptionsTrustCenterSettings implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

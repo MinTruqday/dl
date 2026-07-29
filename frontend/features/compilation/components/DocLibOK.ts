@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibOK implements BlockTool {
   static readonly feature = {
     id: "DocLibOK",
-    title: "DocLib OK",
+    title: "OK",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c6a2ec3274f04a5f"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="15,13 19,20 18,6 10,14 7,19 4,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib OK",
+      title: "OK",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c6a2ec3274f04a5f"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="15,13 19,20 18,6 10,14 7,19 4,12"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibOK implements BlockTool {
   }
 
   readonly id = "DocLibOK";
-  readonly title = "DocLib OK";
+  readonly title = "OK";
   readonly category = "format" as const;
   readonly mode = "OK";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "OK";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibOK implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

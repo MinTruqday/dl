@@ -14,7 +14,7 @@ type CitationTextKey = Exclude<keyof CitationData, "style">;
 export default class DocLibCitation implements BlockTool {
   static readonly feature = {
     id: "DocLibCitation",
-    title: "DocLib Citation",
+    title: "Citation",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d8730ef74236f09c"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="16,17 18,13 19,7 6,7 18,12 5,4"/></svg>',
     product: "doclib",
   } as const;
@@ -26,7 +26,7 @@ export default class DocLibCitation implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "DocLib Citation",
+      title: "Citation",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d8730ef74236f09c"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="16,17 18,13 19,7 6,7 18,12 5,4"/></svg>',
     };
   }

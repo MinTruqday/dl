@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibShapeFillGradient implements BlockTool {
   static readonly feature = {
     id: "DocLibShapeFillGradient",
-    title: "DocLib ShapeFillGradient",
+    title: "Shape Fill Gradient",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7bdca059da5ec54a"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,20 11,8 18,13 14,10 4,6 14,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Shape Fill Gradient",
+      title: "Shape Fill Gradient",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7bdca059da5ec54a"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,20 11,8 18,13 14,10 4,6 14,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibShapeFillGradient implements BlockTool {
   }
 
   readonly id = "DocLibShapeFillGradient";
-  readonly title = "DocLib Shape Fill Gradient";
+  readonly title = "Shape Fill Gradient";
   readonly category = "media" as const;
   readonly mode = "ShapeFillGradient";
   readonly requiresSelection = false;

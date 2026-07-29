@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFontSpacingNormal implements BlockTool {
   static readonly feature = {
     id: "DocLibFontSpacingNormal",
-    title: "DocLib FontSpacingNormal",
+    title: "Font Spacing Normal",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a791736fe5b4a5c9"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="18,13 17,13 12,14 16,18 9,20 16,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib FontSpacingNormal",
+      title: "Font Spacing Normal",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a791736fe5b4a5c9"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="18,13 17,13 12,14 16,18 9,20 16,9"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibFontSpacingNormal implements BlockTool {
   }
 
   readonly id = "DocLibFontSpacingNormal";
-  readonly title = "DocLib FontSpacingNormal";
+  readonly title = "Font Spacing Normal";
   readonly category = "format" as const;
   readonly mode = "FontSpacingNormal";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "FontSpacingNormal";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibFontSpacingNormal implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

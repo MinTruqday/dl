@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableDeleteRowsAndColumnsMenuWord implements BlockTool {
   static readonly feature = {
     id: "DocLibTableDeleteRowsAndColumnsMenuWord",
-    title: "DocLib TableDeleteRowsAndColumnsMenuWord",
+    title: "Table Delete Rows And Columns Menu Word",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4fa9c7160eba2f5f"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,20 16,9 18,20 17,14 15,10 8,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib TableDeleteRowsAndColumnsMenuWord",
+      title: "Table Delete Rows And Columns Menu Word",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4fa9c7160eba2f5f"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,20 16,9 18,20 17,14 15,10 8,8"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibTableDeleteRowsAndColumnsMenuWord implements BlockToo
   }
 
   readonly id = "DocLibTableDeleteRowsAndColumnsMenuWord";
-  readonly title = "DocLib TableDeleteRowsAndColumnsMenuWord";
+  readonly title = "Table Delete Rows And Columns Menu Word";
   readonly category = "table" as const;
   readonly mode = "TableDeleteRowsAndColumnsMenuWord";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "TableDeleteRowsAndColumnsMenuWord";
-  readonly controlType = "menu";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibTableDeleteRowsAndColumnsMenuWord implements BlockToo
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

@@ -3,7 +3,7 @@ import { BlockTool, API, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMacroButton implements BlockTool {
   static readonly feature = {
     id: "DocLibMacroButton",
-    title: "DocLib MacroButton",
+    title: "Macro Button",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c51a03c21bc817d5"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="14,13 7,11 14,17 10,13 19,8 8,4"/></svg>',
     product: "doclib",
   } as const;
@@ -15,7 +15,7 @@ export default class DocLibMacroButton implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "DocLib Macro Button",
+      title: "Macro Button",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c51a03c21bc817d5"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="14,13 7,11 14,17 10,13 19,8 8,4"/></svg>',
     };
   }

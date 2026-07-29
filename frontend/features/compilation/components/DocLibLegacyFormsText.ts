@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLegacyFormsText implements BlockTool {
   static readonly feature = {
     id: "DocLibLegacyFormsText",
-    title: "DocLib LegacyFormsText",
+    title: "Legacy Forms Text",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a650e810927fe98c"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="17,16 15,20 14,12 16,8 17,14 4,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Legacy Forms Text",
+      title: "Legacy Forms Text",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a650e810927fe98c"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="17,16 15,20 14,12 16,8 17,14 4,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibLegacyFormsText implements BlockTool {
   }
 
   readonly id = "DocLibLegacyFormsText";
-  readonly title = "DocLib Legacy Forms Text";
+  readonly title = "Legacy Forms Text";
   readonly category = "automation" as const;
   readonly mode = "LegacyFormsText";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDiagramRadialInsertClassic implements BlockTool {
   static readonly feature = {
     id: "DocLibDiagramRadialInsertClassic",
-    title: "DocLib DiagramRadialInsertClassic",
+    title: "Diagram Radial Insert Classic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c46f109fc28c5b1e"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="13,13 20,10 11,8 10,17 15,16 4,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib DiagramRadialInsertClassic",
+      title: "Diagram Radial Insert Classic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c46f109fc28c5b1e"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="13,13 20,10 11,8 10,17 15,16 4,8"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibDiagramRadialInsertClassic implements BlockTool {
   }
 
   readonly id = "DocLibDiagramRadialInsertClassic";
-  readonly title = "DocLib DiagramRadialInsertClassic";
+  readonly title = "Diagram Radial Insert Classic";
   readonly category = "format" as const;
   readonly mode = "DiagramRadialInsertClassic";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "DiagramRadialInsertClassic";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibDiagramRadialInsertClassic implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

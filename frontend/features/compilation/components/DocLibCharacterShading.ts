@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibCharacterShading implements BlockTool {
   static readonly feature = {
     id: "DocLibCharacterShading",
-    title: "DocLib CharacterShading",
+    title: "Character Shading",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bad36117fe9cf1fa"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,11 16,10 20,7 7,16 14,8 5,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Character Shading",
+      title: "Character Shading",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bad36117fe9cf1fa"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,11 16,10 20,7 7,16 14,8 5,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibCharacterShading implements BlockTool {
   }
 
   readonly id = "DocLibCharacterShading";
-  readonly title = "DocLib Character Shading";
+  readonly title = "Character Shading";
   readonly category = "format" as const;
   readonly mode = "CharacterShading";
   readonly requiresSelection = false;

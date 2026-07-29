@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibOddPageBreak implements BlockTool {
   static readonly feature = {
     id: "DocLibOddPageBreak",
-    title: "DocLib OddPageBreak",
+    title: "Odd Page Break",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1ffb2b22ac95435c"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="18,17 13,4 6,17 20,11 6,19 13,4"/></svg>',
     product: "doclib",
   } as const;
@@ -15,7 +15,7 @@ export default class DocLibOddPageBreak implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "DocLib Odd Page Break",
+      title: "Odd Page Break",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1ffb2b22ac95435c"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="18,17 13,4 6,17 20,11 6,19 13,4"/></svg>',
     };
   }

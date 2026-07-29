@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibColumnBreak implements BlockTool {
   static readonly feature = {
     id: "DocLibColumnBreak",
-    title: "DocLib ColumnBreak",
+    title: "Column Break",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d446c0f2ac86c1d9"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="12,6 9,8 6,19 10,17 13,20 9,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Column Break",
+      title: "Column Break",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d446c0f2ac86c1d9"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="12,6 9,8 6,19 10,17 13,20 9,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibColumnBreak implements BlockTool {
   }
 
   readonly id = "DocLibColumnBreak";
-  readonly title = "DocLib Column Break";
+  readonly title = "Column Break";
   readonly category = "insert" as const;
   readonly mode = "ColumnBreak";
   readonly requiresSelection = false;

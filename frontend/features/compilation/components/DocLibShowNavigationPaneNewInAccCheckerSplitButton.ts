@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibShowNavigationPaneNewInAccCheckerSplitButton implements BlockTool {
   static readonly feature = {
     id: "DocLibShowNavigationPaneNewInAccCheckerSplitButton",
-    title: "DocLib ShowNavigationPaneNewInAccCheckerSplitButton",
+    title: "Show Navigation Pane New In Acc Checker Split Button",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="86280a0d72b950e0"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="19,10 14,17 16,19 16,7 16,9 5,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib ShowNavigationPaneNewInAccCheckerSplitButton",
+      title: "Show Navigation Pane New In Acc Checker Split Button",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="86280a0d72b950e0"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="19,10 14,17 16,19 16,7 16,9 5,19"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibShowNavigationPaneNewInAccCheckerSplitButton implemen
   }
 
   readonly id = "DocLibShowNavigationPaneNewInAccCheckerSplitButton";
-  readonly title = "DocLib ShowNavigationPaneNewInAccCheckerSplitButton";
+  readonly title = "Show Navigation Pane New In Acc Checker Split Button";
   readonly category = "review" as const;
   readonly mode = "ShowNavigationPaneNewInAccCheckerSplitButton";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "ShowNavigationPaneNewInAccCheckerSplitButton";
-  readonly controlType = "toggleButton";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibShowNavigationPaneNewInAccCheckerSplitButton implemen
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWatermarkWashout implements BlockTool {
   static readonly feature = {
     id: "DocLibWatermarkWashout",
-    title: "DocLib WatermarkWashout",
+    title: "Watermark Washout",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="59574303430d09c0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="8,6 20,7 20,17 13,9 8,14 18,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Watermark Washout",
+      title: "Watermark Washout",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="59574303430d09c0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="8,6 20,7 20,17 13,9 8,14 18,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibWatermarkWashout implements BlockTool {
   }
 
   readonly id = "DocLibWatermarkWashout";
-  readonly title = "DocLib Watermark Washout";
+  readonly title = "Watermark Washout";
   readonly category = "layout" as const;
   readonly mode = "WatermarkWashout";
   readonly requiresSelection = false;

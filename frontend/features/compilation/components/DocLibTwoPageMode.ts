@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTwoPageMode implements BlockTool {
   static readonly feature = {
     id: "DocLibTwoPageMode",
-    title: "DocLib TwoPageMode",
+    title: "Two Page Mode",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c7b97e5cbabede9e"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="16,19 11,11 20,7 5,9 20,8 11,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib TwoPageMode",
+      title: "Two Page Mode",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c7b97e5cbabede9e"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="16,19 11,11 20,7 5,9 20,8 11,5"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibTwoPageMode implements BlockTool {
   }
 
   readonly id = "DocLibTwoPageMode";
-  readonly title = "DocLib TwoPageMode";
+  readonly title = "Two Page Mode";
   readonly category = "view" as const;
   readonly mode = "TwoPageMode";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "TwoPageMode";
-  readonly controlType = "toggleButton";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibTwoPageMode implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

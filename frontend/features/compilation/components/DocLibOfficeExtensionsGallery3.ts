@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibOfficeExtensionsGallery3 implements BlockTool {
   static readonly feature = {
     id: "DocLibOfficeExtensionsGallery3",
-    title: "DocLib OfficeExtensionsGallery3",
+    title: "Office Extensions Gallery3",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="714d209d8c358797"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,13 19,8 8,6 20,19 9,12 18,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib OfficeExtensionsGallery3",
+      title: "Office Extensions Gallery3",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="714d209d8c358797"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,13 19,8 8,6 20,19 9,12 18,5"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibOfficeExtensionsGallery3 implements BlockTool {
   }
 
   readonly id = "DocLibOfficeExtensionsGallery3";
-  readonly title = "DocLib OfficeExtensionsGallery3";
+  readonly title = "Office Extensions Gallery3";
   readonly category = "automation" as const;
   readonly mode = "OfficeExtensionsGallery3";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "OfficeExtensionsGallery3";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibOfficeExtensionsGallery3 implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

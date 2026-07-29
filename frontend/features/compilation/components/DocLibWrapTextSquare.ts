@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWrapTextSquare implements BlockTool {
   static readonly feature = {
     id: "DocLibWrapTextSquare",
-    title: "DocLib WrapTextSquare",
+    title: "Wrap Text Square",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8cd81dff38a09858"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,16 16,4 9,11 20,7 10,10 7,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Wrap Text Square",
+      title: "Wrap Text Square",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8cd81dff38a09858"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,16 16,4 9,11 20,7 10,10 7,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibWrapTextSquare implements BlockTool {
   }
 
   readonly id = "DocLibWrapTextSquare";
-  readonly title = "DocLib Wrap Text Square";
+  readonly title = "Wrap Text Square";
   readonly category = "media" as const;
   readonly mode = "WrapTextSquare";
   readonly requiresSelection = false;

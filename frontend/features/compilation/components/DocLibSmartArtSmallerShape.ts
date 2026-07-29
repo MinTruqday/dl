@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSmartArtSmallerShape implements BlockTool {
   static readonly feature = {
     id: "DocLibSmartArtSmallerShape",
-    title: "DocLib SmartArtSmallerShape",
+    title: "Smart Art Smaller Shape",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0fc2eb87dda16857"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="19,11 18,20 4,12 6,6 8,7 5,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib SmartArtSmallerShape",
+      title: "Smart Art Smaller Shape",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0fc2eb87dda16857"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="19,11 18,20 4,12 6,6 8,7 5,15"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibSmartArtSmallerShape implements BlockTool {
   }
 
   readonly id = "DocLibSmartArtSmallerShape";
-  readonly title = "DocLib SmartArtSmallerShape";
+  readonly title = "Smart Art Smaller Shape";
   readonly category = "format" as const;
   readonly mode = "SmartArtSmallerShape";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "SmartArtSmallerShape";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibSmartArtSmallerShape implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

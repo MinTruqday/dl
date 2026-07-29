@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibVoiceInsertInComment implements BlockTool {
   static readonly feature = {
     id: "DocLibVoiceInsertInComment",
-    title: "DocLib VoiceInsertInComment",
+    title: "Voice Insert In Comment",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1a64a118e42cae99"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="13,19 12,11 11,14 8,4 8,20 10,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib VoiceInsertInComment",
+      title: "Voice Insert In Comment",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1a64a118e42cae99"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="13,19 12,11 11,14 8,4 8,20 10,13"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibVoiceInsertInComment implements BlockTool {
   }
 
   readonly id = "DocLibVoiceInsertInComment";
-  readonly title = "DocLib VoiceInsertInComment";
+  readonly title = "Voice Insert In Comment";
   readonly category = "format" as const;
   readonly mode = "VoiceInsertInComment";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "VoiceInsertInComment";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibVoiceInsertInComment implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

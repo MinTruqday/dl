@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWordArtSpacingKernCharacterPairs implements BlockTool {
   static readonly feature = {
     id: "DocLibWordArtSpacingKernCharacterPairs",
-    title: "DocLib WordArtSpacingKernCharacterPairs",
+    title: "Word Art Spacing Kern Character Pairs",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="72f93420a9f51eb2"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="16,15 5,19 20,11 17,12 20,17 14,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib WordArtSpacingKernCharacterPairs",
+      title: "Word Art Spacing Kern Character Pairs",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="72f93420a9f51eb2"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="16,15 5,19 20,11 17,12 20,17 14,6"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibWordArtSpacingKernCharacterPairs implements BlockTool
   }
 
   readonly id = "DocLibWordArtSpacingKernCharacterPairs";
-  readonly title = "DocLib WordArtSpacingKernCharacterPairs";
+  readonly title = "Word Art Spacing Kern Character Pairs";
   readonly category = "format" as const;
   readonly mode = "WordArtSpacingKernCharacterPairs";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "WordArtSpacingKernCharacterPairs";
-  readonly controlType = "toggleButton";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibWordArtSpacingKernCharacterPairs implements BlockTool
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

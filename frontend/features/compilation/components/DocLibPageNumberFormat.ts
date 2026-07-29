@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPageNumberFormat implements BlockTool {
   static readonly feature = {
     id: "DocLibPageNumberFormat",
-    title: "DocLib PageNumberFormat",
+    title: "Page Number Format",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="55932a1ba6b3b074"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="4,15 12,14 17,13 10,18 7,10 12,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Page Number Format",
+      title: "Page Number Format",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="55932a1ba6b3b074"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="4,15 12,14 17,13 10,18 7,10 12,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPageNumberFormat implements BlockTool {
   }
 
   readonly id = "DocLibPageNumberFormat";
-  readonly title = "DocLib Page Number Format";
+  readonly title = "Page Number Format";
   readonly category = "layout" as const;
   readonly mode = "PageNumberFormat";
   readonly requiresSelection = false;

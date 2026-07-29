@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibGrammarHideErrors implements BlockTool {
   static readonly feature = {
     id: "DocLibGrammarHideErrors",
-    title: "DocLib GrammarHideErrors",
+    title: "Grammar Hide Errors",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4a1c9410b672117b"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="10,15 16,20 16,16 4,8 13,11 16,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib GrammarHideErrors",
+      title: "Grammar Hide Errors",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4a1c9410b672117b"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="10,15 16,20 16,16 4,8 13,11 16,6"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibGrammarHideErrors implements BlockTool {
   }
 
   readonly id = "DocLibGrammarHideErrors";
-  readonly title = "DocLib GrammarHideErrors";
+  readonly title = "Grammar Hide Errors";
   readonly category = "format" as const;
   readonly mode = "GrammarHideErrors";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "GrammarHideErrors";
-  readonly controlType = "toggleButton";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibGrammarHideErrors implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

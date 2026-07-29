@@ -3,7 +3,7 @@ import { API, BlockTool } from "@editorjs/editorjs";
 export default class DocLibTable implements BlockTool {
   static readonly feature = {
     id: "DocLibTable",
-    title: "DocLib Table",
+    title: "Table",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="eab225f6131a7830"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="17,12 7,12 6,13 5,18 19,8 6,6"/></svg>',
     product: "doclib",
   } as const;
@@ -15,7 +15,7 @@ export default class DocLibTable implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "DocLib Table",
+      title: "Table",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="eab225f6131a7830"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="17,12 7,12 6,13 5,18 19,8 6,6"/></svg>',
     };
   }

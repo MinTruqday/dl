@@ -212,3 +212,16 @@ export const getGoogleLoginUrlAPI = async (): Promise<string> => {
     throw new Error("Lỗi truy xuất điểm cuối xác thực định danh Google");
   return data.data.url;
 };
+
+export const finishGoogleLoginAPI = async (
+  code: string,
+  state: string,
+): Promise<any> => {
+  const query = new URLSearchParams({ code, state });
+  const res = await fetch(`${API_URL}/google/callback?${query.toString()}`);
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || data.detail || "Không thể xác thực Google");
+  }
+  return data.data || data;
+};

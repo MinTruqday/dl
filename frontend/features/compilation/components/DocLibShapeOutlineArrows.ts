@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibShapeOutlineArrows implements BlockTool {
   static readonly feature = {
     id: "DocLibShapeOutlineArrows",
-    title: "DocLib ShapeOutlineArrows",
+    title: "Shape Outline Arrows",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3749b859cd6bb1a8"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="8,9 18,8 5,9 11,19 11,4 16,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Shape Outline Arrows",
+      title: "Shape Outline Arrows",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3749b859cd6bb1a8"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="8,9 18,8 5,9 11,19 11,4 16,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibShapeOutlineArrows implements BlockTool {
   }
 
   readonly id = "DocLibShapeOutlineArrows";
-  readonly title = "DocLib Shape Outline Arrows";
+  readonly title = "Shape Outline Arrows";
   readonly category = "media" as const;
   readonly mode = "ShapeOutlineArrows";
   readonly requiresSelection = false;

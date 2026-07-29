@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFormRadioButton implements BlockTool {
   static readonly feature = {
     id: "DocLibFormRadioButton",
-    title: "DocLib FormRadioButton",
+    title: "Form Radio Button",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6e4dc1980dc29cd8"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,13 10,20 17,11 7,16 19,13 4,7"/></svg>',
     product: "doclib",
   } as const;
@@ -15,7 +15,7 @@ export default class DocLibFormRadioButton implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "DocLib Form Radio Button",
+      title: "Form Radio Button",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6e4dc1980dc29cd8"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,13 10,20 17,11 7,16 19,13 4,7"/></svg>',
     };
   }

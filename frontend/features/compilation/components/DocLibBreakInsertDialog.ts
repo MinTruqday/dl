@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibBreakInsertDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibBreakInsertDialog",
-    title: "DocLib BreakInsertDialog",
+    title: "Break Insert Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d819742ab951ae65"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="16,12 18,12 19,17 8,20 5,11 12,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib BreakInsertDialog",
+      title: "Break Insert Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d819742ab951ae65"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="16,12 18,12 19,17 8,20 5,11 12,18"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibBreakInsertDialog implements BlockTool {
   }
 
   readonly id = "DocLibBreakInsertDialog";
-  readonly title = "DocLib BreakInsertDialog";
+  readonly title = "Break Insert Dialog";
   readonly category = "format" as const;
   readonly mode = "BreakInsertDialog";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "BreakInsertDialog";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibBreakInsertDialog implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableFind implements BlockTool {
   static readonly feature = {
     id: "DocLibTableFind",
-    title: "DocLib TableFind",
+    title: "Table Find",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="05eb97e79362482e"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,18 19,14 15,17 8,16 12,8 18,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib TableFind",
+      title: "Table Find",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="05eb97e79362482e"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,18 19,14 15,17 8,16 12,8 18,4"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibTableFind implements BlockTool {
   }
 
   readonly id = "DocLibTableFind";
-  readonly title = "DocLib TableFind";
+  readonly title = "Table Find";
   readonly category = "format" as const;
   readonly mode = "TableFind";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "TableFind";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibTableFind implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibCOMAddIns implements BlockTool {
   static readonly feature = {
     id: "DocLibCOMAddIns",
-    title: "DocLib COMAddIns",
+    title: "COM Add Ins",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="26292aa49a7fb261"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,11 12,15 5,12 12,16 20,9 8,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib COM Add Ins",
+      title: "COM Add Ins",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="26292aa49a7fb261"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,11 12,15 5,12 12,16 20,9 8,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibCOMAddIns implements BlockTool {
   }
 
   readonly id = "DocLibCOMAddIns";
-  readonly title = "DocLib COM Add Ins";
+  readonly title = "COM Add Ins";
   readonly category = "automation" as const;
   readonly mode = "COMAddIns";
   readonly requiresSelection = false;

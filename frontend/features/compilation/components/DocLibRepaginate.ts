@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibRepaginate implements BlockTool {
   static readonly feature = {
     id: "DocLibRepaginate",
-    title: "DocLib Repaginate",
+    title: "Repaginate",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="82b6a9636cfedf02"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="15,16 20,18 10,20 6,6 20,9 15,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib Repaginate",
+      title: "Repaginate",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="82b6a9636cfedf02"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="15,16 20,18 10,20 6,6 20,9 15,20"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibRepaginate implements BlockTool {
   }
 
   readonly id = "DocLibRepaginate";
-  readonly title = "DocLib Repaginate";
+  readonly title = "Repaginate";
   readonly category = "format" as const;
   readonly mode = "Repaginate";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "Repaginate";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibRepaginate implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }

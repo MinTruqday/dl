@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPictureCropAspectRatio3To5 implements BlockTool {
   static readonly feature = {
     id: "DocLibPictureCropAspectRatio3To5",
-    title: "DocLib PictureCropAspectRatio3To5",
+    title: "Picture Crop Aspect Ratio3 To5",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bee0d1da6f1044cd"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="7,7 9,18 13,20 4,5 6,18 10,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "DocLib PictureCropAspectRatio3To5",
+      title: "Picture Crop Aspect Ratio3 To5",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bee0d1da6f1044cd"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="7,7 9,18 13,20 4,5 6,18 10,7"/></svg>',
     };
   }
@@ -20,12 +20,10 @@ export default class DocLibPictureCropAspectRatio3To5 implements BlockTool {
   }
 
   readonly id = "DocLibPictureCropAspectRatio3To5";
-  readonly title = "DocLib PictureCropAspectRatio3To5";
+  readonly title = "Picture Crop Aspect Ratio3 To5";
   readonly category = "media" as const;
   readonly mode = "PictureCropAspectRatio3To5";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "PictureCropAspectRatio3To5";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibPictureCropAspectRatio3To5 implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.mode}`);
     }
   }
 }
