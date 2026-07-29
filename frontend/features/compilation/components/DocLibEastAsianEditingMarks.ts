@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibEastAsianEditingMarks implements BlockTool {
   static readonly feature = {
     id: "DocLibEastAsianEditingMarks",
-    title: "East Asian Editing Marks",
+    title: "DocLib East Asian Editing Marks",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ee3a0ce648b8b2b3"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,11 16,13 8,18 12,13 19,20 13,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "East Asian Editing Marks",
+      title: "DocLib East Asian Editing Marks",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ee3a0ce648b8b2b3"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,11 16,13 8,18 12,13 19,20 13,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibEastAsianEditingMarks implements BlockTool {
   }
 
   readonly id = "DocLibEastAsianEditingMarks";
-  readonly title = "East Asian Editing Marks";
+  readonly title = "DocLib East Asian Editing Marks";
   readonly category = "format" as const;
   readonly mode = "EastAsianEditingMarks";
   readonly requiresSelection = false;

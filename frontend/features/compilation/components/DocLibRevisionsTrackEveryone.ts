@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibRevisionsTrackEveryone implements BlockTool {
   static readonly feature = {
     id: "DocLibRevisionsTrackEveryone",
-    title: "Revisions Track Everyone",
+    title: "DocLib Revisions Track Everyone",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9746259e585b41c1"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,6 7,9 7,10 18,10 20,7 4,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Revisions Track Everyone",
+      title: "DocLib Revisions Track Everyone",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9746259e585b41c1"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,6 7,9 7,10 18,10 20,7 4,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibRevisionsTrackEveryone implements BlockTool {
   }
 
   readonly id = "DocLibRevisionsTrackEveryone";
-  readonly title = "Revisions Track Everyone";
+  readonly title = "DocLib Revisions Track Everyone";
   readonly category = "review" as const;
   readonly mode = "RevisionsTrackEveryone";
   readonly requiresSelection = false;

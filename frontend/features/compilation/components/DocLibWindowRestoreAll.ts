@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWindowRestoreAll implements BlockTool {
   static readonly feature = {
     id: "DocLibWindowRestoreAll",
-    title: "Window Restore All",
+    title: "DocLib Window Restore All",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="dbb859a3ab7eb410"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="19,18 8,14 5,11 14,20 8,11 19,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Window Restore All",
+      title: "DocLib Window Restore All",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="dbb859a3ab7eb410"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="19,18 8,14 5,11 14,20 8,11 19,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibWindowRestoreAll implements BlockTool {
   }
 
   readonly id = "DocLibWindowRestoreAll";
-  readonly title = "Window Restore All";
+  readonly title = "DocLib Window Restore All";
   readonly category = "format" as const;
   readonly mode = "WindowRestoreAll";
   readonly requiresSelection = false;

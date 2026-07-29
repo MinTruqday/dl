@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableSelectCell implements BlockTool {
   static readonly feature = {
     id: "DocLibTableSelectCell",
-    title: "Table Select Cell",
+    title: "DocLib Table Select Cell",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9a3d4a2ee190d383"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,14 10,16 8,12 11,16 8,5 14,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Table Select Cell",
+      title: "DocLib Table Select Cell",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9a3d4a2ee190d383"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,14 10,16 8,12 11,16 8,5 14,6"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTableSelectCell implements BlockTool {
   }
 
   readonly id = "DocLibTableSelectCell";
-  readonly title = "Table Select Cell";
+  readonly title = "DocLib Table Select Cell";
   readonly category = "table" as const;
   readonly mode = "TableSelectCell";
   readonly requiresSelection = false;

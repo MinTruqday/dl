@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibGoToNextPage implements BlockTool {
   static readonly feature = {
     id: "DocLibGoToNextPage",
-    title: "Go To Next Page",
+    title: "DocLib Go To Next Page",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="69630029c420db37"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,18 4,11 13,19 19,8 14,5 7,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Go To Next Page",
+      title: "DocLib Go To Next Page",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="69630029c420db37"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,18 4,11 13,19 19,8 14,5 7,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibGoToNextPage implements BlockTool {
   }
 
   readonly id = "DocLibGoToNextPage";
-  readonly title = "Go To Next Page";
+  readonly title = "DocLib Go To Next Page";
   readonly category = "format" as const;
   readonly mode = "GoToNextPage";
   readonly requiresSelection = false;

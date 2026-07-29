@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibEquationRadical implements BlockTool {
   static readonly feature = {
     id: "DocLibEquationRadical",
-    title: "Equation Radical",
+    title: "DocLib Equation Radical",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="de374f51f310c773"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="5,8 15,17 9,20 16,17 16,12 14,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Equation Radical",
+      title: "DocLib Equation Radical",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="de374f51f310c773"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="5,8 15,17 9,20 16,17 16,12 14,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibEquationRadical implements BlockTool {
   }
 
   readonly id = "DocLibEquationRadical";
-  readonly title = "Equation Radical";
+  readonly title = "DocLib Equation Radical";
   readonly category = "insert" as const;
   readonly mode = "EquationRadical";
   readonly requiresSelection = false;

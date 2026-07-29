@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibExtensibilityExperimentation implements BlockTool {
   static readonly feature = {
     id: "DocLibExtensibilityExperimentation",
-    title: "Extensibility Experimentation",
+    title: "DocLib Extensibility Experimentation",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="73f47d086f2ad1d3"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,10 10,12 13,12 9,11 7,5 16,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Extensibility Experimentation",
+      title: "DocLib Extensibility Experimentation",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="73f47d086f2ad1d3"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,10 10,12 13,12 9,11 7,5 16,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibExtensibilityExperimentation implements BlockTool {
   }
 
   readonly id = "DocLibExtensibilityExperimentation";
-  readonly title = "Extensibility Experimentation";
+  readonly title = "DocLib Extensibility Experimentation";
   readonly category = "insert" as const;
   readonly mode = "ExtensibilityExperimentation";
   readonly requiresSelection = false;

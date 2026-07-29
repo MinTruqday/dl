@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibCharacterFormattingReset implements BlockTool {
   static readonly feature = {
     id: "DocLibCharacterFormattingReset",
-    title: "Character Formatting Reset",
+    title: "DocLib Character Formatting Reset",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8a8238cb2593f81e"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="6,15 9,20 7,15 14,17 11,6 15,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Character Formatting Reset",
+      title: "DocLib Character Formatting Reset",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8a8238cb2593f81e"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="6,15 9,20 7,15 14,17 11,6 15,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibCharacterFormattingReset implements BlockTool {
   }
 
   readonly id = "DocLibCharacterFormattingReset";
-  readonly title = "Character Formatting Reset";
+  readonly title = "DocLib Character Formatting Reset";
   readonly category = "format" as const;
   readonly mode = "CharacterFormattingReset";
   readonly requiresSelection = false;

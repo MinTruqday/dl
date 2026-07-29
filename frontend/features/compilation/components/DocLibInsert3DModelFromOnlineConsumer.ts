@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibInsert3DModelFromOnlineConsumer implements BlockTool {
   static readonly feature = {
     id: "DocLibInsert3DModelFromOnlineConsumer",
-    title: "Insert3D Model From Online Consumer",
+    title: "DocLib Insert3D Model From Online Consumer",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a3267eb0c1597ec9"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="14,8 11,10 10,8 11,18 7,8 17,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Insert3D Model From Online Consumer",
+      title: "DocLib Insert3D Model From Online Consumer",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a3267eb0c1597ec9"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="14,8 11,10 10,8 11,18 7,8 17,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibInsert3DModelFromOnlineConsumer implements BlockTool 
   }
 
   readonly id = "DocLibInsert3DModelFromOnlineConsumer";
-  readonly title = "Insert3D Model From Online Consumer";
+  readonly title = "DocLib Insert3D Model From Online Consumer";
   readonly category = "insert" as const;
   readonly mode = "Insert3DModelFromOnlineConsumer";
   readonly requiresSelection = false;

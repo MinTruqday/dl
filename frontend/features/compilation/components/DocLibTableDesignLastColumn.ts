@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableDesignLastColumn implements BlockTool {
   static readonly feature = {
     id: "DocLibTableDesignLastColumn",
-    title: "Table Design Last Column",
+    title: "DocLib Table Design Last Column",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5e8474abf81fd6cd"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="13,17 18,5 14,18 14,5 19,12 20,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Table Design Last Column",
+      title: "DocLib Table Design Last Column",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5e8474abf81fd6cd"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="13,17 18,5 14,18 14,5 19,12 20,6"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTableDesignLastColumn implements BlockTool {
   }
 
   readonly id = "DocLibTableDesignLastColumn";
-  readonly title = "Table Design Last Column";
+  readonly title = "DocLib Table Design Last Column";
   readonly category = "table" as const;
   readonly mode = "TableDesignLastColumn";
   readonly requiresSelection = false;

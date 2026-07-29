@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibObjectEditDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibObjectEditDialog",
-    title: "Object Edit Dialog",
+    title: "DocLib Object Edit Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3a0cd0aaad97c0da"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="11,16 8,4 7,19 9,18 20,11 5,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Object Edit Dialog",
+      title: "DocLib Object Edit Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3a0cd0aaad97c0da"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="11,16 8,4 7,19 9,18 20,11 5,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibObjectEditDialog implements BlockTool {
   }
 
   readonly id = "DocLibObjectEditDialog";
-  readonly title = "Object Edit Dialog";
+  readonly title = "DocLib Object Edit Dialog";
   readonly category = "format" as const;
   readonly mode = "ObjectEditDialog";
   readonly requiresSelection = false;

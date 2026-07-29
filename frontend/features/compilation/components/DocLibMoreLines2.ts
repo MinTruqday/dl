@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMoreLines2 implements BlockTool {
   static readonly feature = {
     id: "DocLibMoreLines2",
-    title: "More Lines2",
+    title: "DocLib More Lines2",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f9c077a40ae87d7a"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="15,9 4,15 14,15 10,7 16,20 6,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "More Lines2",
+      title: "DocLib More Lines2",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f9c077a40ae87d7a"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="15,9 4,15 14,15 10,7 16,20 6,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibMoreLines2 implements BlockTool {
   }
 
   readonly id = "DocLibMoreLines2";
-  readonly title = "More Lines2";
+  readonly title = "DocLib More Lines2";
   readonly category = "format" as const;
   readonly mode = "MoreLines2";
   readonly requiresSelection = false;

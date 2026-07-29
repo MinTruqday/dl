@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartDelete implements BlockTool {
   static readonly feature = {
     id: "DocLibChartDelete",
-    title: "Chart Delete",
+    title: "DocLib Chart Delete",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bb158f4bde4e882e"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,8 11,11 5,14 4,16 19,20 20,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Delete",
+      title: "DocLib Chart Delete",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bb158f4bde4e882e"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,8 11,11 5,14 4,16 19,20 20,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartDelete implements BlockTool {
   }
 
   readonly id = "DocLibChartDelete";
-  readonly title = "Chart Delete";
+  readonly title = "DocLib Chart Delete";
   readonly category = "media" as const;
   readonly mode = "ChartDelete";
   readonly requiresSelection = false;

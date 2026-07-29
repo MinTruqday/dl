@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSendCopySendToMailRecipient implements BlockTool {
   static readonly feature = {
     id: "DocLibSendCopySendToMailRecipient",
-    title: "Send Copy Send To Mail Recipient",
+    title: "DocLib Send Copy Send To Mail Recipient",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="25b65aadc5f92616"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="7,16 9,7 14,15 8,9 11,14 20,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Send Copy Send To Mail Recipient",
+      title: "DocLib Send Copy Send To Mail Recipient",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="25b65aadc5f92616"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="7,16 9,7 14,15 8,9 11,14 20,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSendCopySendToMailRecipient implements BlockTool {
   }
 
   readonly id = "DocLibSendCopySendToMailRecipient";
-  readonly title = "Send Copy Send To Mail Recipient";
+  readonly title = "DocLib Send Copy Send To Mail Recipient";
   readonly category = "format" as const;
   readonly mode = "SendCopySendToMailRecipient";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibShowClipboard implements BlockTool {
   static readonly feature = {
     id: "DocLibShowClipboard",
-    title: "Show Clipboard",
+    title: "DocLib Show Clipboard",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c36072006ffb34aa"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="12,15 16,4 13,17 5,4 20,13 19,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Show Clipboard",
+      title: "DocLib Show Clipboard",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c36072006ffb34aa"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="12,15 16,4 13,17 5,4 20,13 19,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibShowClipboard implements BlockTool {
   }
 
   readonly id = "DocLibShowClipboard";
-  readonly title = "Show Clipboard";
+  readonly title = "DocLib Show Clipboard";
   readonly category = "format" as const;
   readonly mode = "ShowClipboard";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibCompressPictures implements BlockTool {
   static readonly feature = {
     id: "DocLibCompressPictures",
-    title: "Compress Pictures",
+    title: "DocLib Compress Pictures",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3f33021a10d6f1b9"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="16,4 6,13 20,14 7,19 4,9 18,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Compress Pictures",
+      title: "DocLib Compress Pictures",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3f33021a10d6f1b9"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="16,4 6,13 20,14 7,19 4,9 18,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibCompressPictures implements BlockTool {
   }
 
   readonly id = "DocLibCompressPictures";
-  readonly title = "Compress Pictures";
+  readonly title = "DocLib Compress Pictures";
   readonly category = "media" as const;
   readonly mode = "CompressPictures";
   readonly requiresSelection = false;

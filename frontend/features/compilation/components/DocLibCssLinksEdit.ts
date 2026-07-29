@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibCssLinksEdit implements BlockTool {
   static readonly feature = {
     id: "DocLibCssLinksEdit",
-    title: "Css Links Edit",
+    title: "DocLib Css Links Edit",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3f98f8976163594e"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="16,20 14,19 16,18 8,14 19,10 8,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Css Links Edit",
+      title: "DocLib Css Links Edit",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3f98f8976163594e"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="16,20 14,19 16,18 8,14 19,10 8,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibCssLinksEdit implements BlockTool {
   }
 
   readonly id = "DocLibCssLinksEdit";
-  readonly title = "Css Links Edit";
+  readonly title = "DocLib Css Links Edit";
   readonly category = "format" as const;
   readonly mode = "CssLinksEdit";
   readonly requiresSelection = false;

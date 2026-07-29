@@ -3,7 +3,7 @@ import { API, InlineTool } from "@editorjs/editorjs";
 export default class DocLibChangeCase implements InlineTool {
   static readonly feature = {
     id: "DocLibChangeCase",
-    title: "Change Case",
+    title: "DocLib Change Case",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="446c3f322975e3ea"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="4,10 16,20 11,19 10,17 7,17 20,19"/></svg>',
     product: "doclib",
   } as const;

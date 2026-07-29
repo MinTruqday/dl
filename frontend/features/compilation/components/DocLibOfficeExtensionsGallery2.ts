@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibOfficeExtensionsGallery2 implements BlockTool {
   static readonly feature = {
     id: "DocLibOfficeExtensionsGallery2",
-    title: "Office Extensions Gallery2",
+    title: "DocLib Office Extensions Gallery2",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="147cb19e1350cdd1"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="7,9 11,9 6,16 5,9 20,18 8,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Office Extensions Gallery2",
+      title: "DocLib Office Extensions Gallery2",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="147cb19e1350cdd1"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="7,9 11,9 6,16 5,9 20,18 8,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibOfficeExtensionsGallery2 implements BlockTool {
   }
 
   readonly id = "DocLibOfficeExtensionsGallery2";
-  readonly title = "Office Extensions Gallery2";
+  readonly title = "DocLib Office Extensions Gallery2";
   readonly category = "insert" as const;
   readonly mode = "OfficeExtensionsGallery2";
   readonly requiresSelection = false;

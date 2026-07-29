@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibReviewJapaneseConsistencyChecker implements BlockTool {
   static readonly feature = {
     id: "DocLibReviewJapaneseConsistencyChecker",
-    title: "Review Japanese Consistency Checker",
+    title: "DocLib Review Japanese Consistency Checker",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bd8ca65413167ca5"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="6,8 17,20 6,9 9,16 20,9 6,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Review Japanese Consistency Checker",
+      title: "DocLib Review Japanese Consistency Checker",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bd8ca65413167ca5"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="6,8 17,20 6,9 9,16 20,9 6,6"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibReviewJapaneseConsistencyChecker implements BlockTool
   }
 
   readonly id = "DocLibReviewJapaneseConsistencyChecker";
-  readonly title = "Review Japanese Consistency Checker";
+  readonly title = "DocLib Review Japanese Consistency Checker";
   readonly category = "review" as const;
   readonly mode = "ReviewJapaneseConsistencyChecker";
   readonly requiresSelection = false;

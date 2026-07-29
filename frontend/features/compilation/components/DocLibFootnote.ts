@@ -1,9 +1,10 @@
 import { API, InlineTool } from "@editorjs/editorjs";
+import { requestEditorInput } from "./editor-dialog";
 
 export default class DocLibFootnote implements InlineTool {
   static readonly feature = {
     id: "DocLibFootnote",
-    title: "Footnote",
+    title: "DocLib Footnote",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e5388c77fc314199"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,9 8,4 18,19 18,4 13,8 7,9"/></svg>',
     product: "doclib",
   } as const;
@@ -58,14 +59,17 @@ export default class DocLibFootnote implements InlineTool {
   }
 
   wrap(range: Range) {
-    const footnote = prompt("Enter footnote content:");
-    if (!footnote) return;
-
-    const sup = document.createElement("sup");
-    sup.dataset.footnote = footnote;
-    sup.appendChild(range.extractContents());
-    range.insertNode(sup);
-    this.api.selection.expandToTag(sup);
+    void requestEditorInput({
+      title: "DocLib Footnote",
+      label: "Nội dung chú thích",
+    }).then((footnote) => {
+      if (!footnote) return;
+      const sup = document.createElement("sup");
+      sup.dataset.footnote = footnote;
+      sup.appendChild(range.extractContents());
+      range.insertNode(sup);
+      this.api.selection.expandToTag(sup);
+    });
   }
 
   unwrap(termWrapper: HTMLElement) {

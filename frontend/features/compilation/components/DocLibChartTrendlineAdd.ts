@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartTrendlineAdd implements BlockTool {
   static readonly feature = {
     id: "DocLibChartTrendlineAdd",
-    title: "Chart Trendline Add",
+    title: "DocLib Chart Trendline Add",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1e393b0f6f93eb30"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,10 12,19 13,15 18,18 20,16 9,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Trendline Add",
+      title: "DocLib Chart Trendline Add",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1e393b0f6f93eb30"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,10 12,19 13,15 18,18 20,16 9,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartTrendlineAdd implements BlockTool {
   }
 
   readonly id = "DocLibChartTrendlineAdd";
-  readonly title = "Chart Trendline Add";
+  readonly title = "DocLib Chart Trendline Add";
   readonly category = "media" as const;
   readonly mode = "ChartTrendlineAdd";
   readonly requiresSelection = false;

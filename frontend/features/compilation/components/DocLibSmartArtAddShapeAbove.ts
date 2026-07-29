@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSmartArtAddShapeAbove implements BlockTool {
   static readonly feature = {
     id: "DocLibSmartArtAddShapeAbove",
-    title: "Smart Art Add Shape Above",
+    title: "DocLib Smart Art Add Shape Above",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d01e329cc77afa2d"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,17 20,7 16,7 16,15 16,17 5,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Smart Art Add Shape Above",
+      title: "DocLib Smart Art Add Shape Above",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d01e329cc77afa2d"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,17 20,7 16,7 16,15 16,17 5,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSmartArtAddShapeAbove implements BlockTool {
   }
 
   readonly id = "DocLibSmartArtAddShapeAbove";
-  readonly title = "Smart Art Add Shape Above";
+  readonly title = "DocLib Smart Art Add Shape Above";
   readonly category = "format" as const;
   readonly mode = "SmartArtAddShapeAbove";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPasteTableByOverwritingCells implements BlockTool {
   static readonly feature = {
     id: "DocLibPasteTableByOverwritingCells",
-    title: "Paste Table By Overwriting Cells",
+    title: "DocLib Paste Table By Overwriting Cells",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3655369d58dbefa1"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,4 7,8 7,19 5,12 20,13 16,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Paste Table By Overwriting Cells",
+      title: "DocLib Paste Table By Overwriting Cells",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3655369d58dbefa1"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,4 7,8 7,19 5,12 20,13 16,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPasteTableByOverwritingCells implements BlockTool {
   }
 
   readonly id = "DocLibPasteTableByOverwritingCells";
-  readonly title = "Paste Table By Overwriting Cells";
+  readonly title = "DocLib Paste Table By Overwriting Cells";
   readonly category = "format" as const;
   readonly mode = "PasteTableByOverwritingCells";
   readonly requiresSelection = false;

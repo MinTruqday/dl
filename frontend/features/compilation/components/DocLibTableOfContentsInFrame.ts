@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableOfContentsInFrame implements BlockTool {
   static readonly feature = {
     id: "DocLibTableOfContentsInFrame",
-    title: "Table Of Contents In Frame",
+    title: "DocLib Table Of Contents In Frame",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="753dd50351aa403f"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,14 13,7 17,4 17,16 9,12 5,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Table Of Contents In Frame",
+      title: "DocLib Table Of Contents In Frame",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="753dd50351aa403f"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,14 13,7 17,4 17,16 9,12 5,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTableOfContentsInFrame implements BlockTool {
   }
 
   readonly id = "DocLibTableOfContentsInFrame";
-  readonly title = "Table Of Contents In Frame";
+  readonly title = "DocLib Table Of Contents In Frame";
   readonly category = "format" as const;
   readonly mode = "TableOfContentsInFrame";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibResearchPane implements BlockTool {
   static readonly feature = {
     id: "DocLibResearchPane",
-    title: "Research Pane",
+    title: "DocLib Research Pane",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1eb6d9ad49d42cad"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="17,16 17,7 9,12 14,7 4,8 13,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Research Pane",
+      title: "DocLib Research Pane",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1eb6d9ad49d42cad"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="17,16 17,7 9,12 14,7 4,8 13,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibResearchPane implements BlockTool {
   }
 
   readonly id = "DocLibResearchPane";
-  readonly title = "Research Pane";
+  readonly title = "DocLib Research Pane";
   readonly category = "format" as const;
   readonly mode = "ResearchPane";
   readonly requiresSelection = false;

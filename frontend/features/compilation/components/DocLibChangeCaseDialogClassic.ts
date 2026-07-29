@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChangeCaseDialogClassic implements BlockTool {
   static readonly feature = {
     id: "DocLibChangeCaseDialogClassic",
-    title: "Change Case Dialog Classic",
+    title: "DocLib Change Case Dialog Classic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="aa740144d46ea5b5"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="4,18 5,4 12,12 16,15 12,8 4,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Change Case Dialog Classic",
+      title: "DocLib Change Case Dialog Classic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="aa740144d46ea5b5"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="4,18 5,4 12,12 16,15 12,8 4,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChangeCaseDialogClassic implements BlockTool {
   }
 
   readonly id = "DocLibChangeCaseDialogClassic";
-  readonly title = "Change Case Dialog Classic";
+  readonly title = "DocLib Change Case Dialog Classic";
   readonly category = "format" as const;
   readonly mode = "ChangeCaseDialogClassic";
   readonly requiresSelection = false;

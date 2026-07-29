@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartPrimaryVerticalGridlinesOptionsDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibChartPrimaryVerticalGridlinesOptionsDialog",
-    title: "Chart Primary Vertical Gridlines Options Dialog",
+    title: "DocLib Chart Primary Vertical Gridlines Options Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="956969642cdd9697"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,7 7,19 14,4 18,19 20,9 9,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Primary Vertical Gridlines Options Dialog",
+      title: "DocLib Chart Primary Vertical Gridlines Options Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="956969642cdd9697"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,7 7,19 14,4 18,19 20,9 9,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartPrimaryVerticalGridlinesOptionsDialog implements
   }
 
   readonly id = "DocLibChartPrimaryVerticalGridlinesOptionsDialog";
-  readonly title = "Chart Primary Vertical Gridlines Options Dialog";
+  readonly title = "DocLib Chart Primary Vertical Gridlines Options Dialog";
   readonly category = "layout" as const;
   readonly mode = "ChartPrimaryVerticalGridlinesOptionsDialog";
   readonly requiresSelection = false;

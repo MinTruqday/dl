@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartFormatLegendEntry implements BlockTool {
   static readonly feature = {
     id: "DocLibChartFormatLegendEntry",
-    title: "Chart Format Legend Entry",
+    title: "DocLib Chart Format Legend Entry",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7c3ee2c9252e6a03"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,15 9,18 7,16 8,7 17,13 10,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Format Legend Entry",
+      title: "DocLib Chart Format Legend Entry",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7c3ee2c9252e6a03"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,15 9,18 7,16 8,7 17,13 10,9"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartFormatLegendEntry implements BlockTool {
   }
 
   readonly id = "DocLibChartFormatLegendEntry";
-  readonly title = "Chart Format Legend Entry";
+  readonly title = "DocLib Chart Format Legend Entry";
   readonly category = "media" as const;
   readonly mode = "ChartFormatLegendEntry";
   readonly requiresSelection = false;

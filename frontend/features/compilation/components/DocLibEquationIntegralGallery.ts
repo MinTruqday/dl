@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibEquationIntegralGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibEquationIntegralGallery",
-    title: "Equation Integral Gallery",
+    title: "DocLib Equation Integral Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="304b081e40d4c9a9"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,11 12,17 17,12 18,20 10,15 5,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Equation Integral Gallery",
+      title: "DocLib Equation Integral Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="304b081e40d4c9a9"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,11 12,17 17,12 18,20 10,15 5,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibEquationIntegralGallery implements BlockTool {
   }
 
   readonly id = "DocLibEquationIntegralGallery";
-  readonly title = "Equation Integral Gallery";
+  readonly title = "DocLib Equation Integral Gallery";
   readonly category = "format" as const;
   readonly mode = "EquationIntegralGallery";
   readonly requiresSelection = false;

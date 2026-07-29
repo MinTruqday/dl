@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibObjectEffectSoftEdgesGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibObjectEffectSoftEdgesGallery",
-    title: "Object Effect Soft Edges Gallery",
+    title: "DocLib Object Effect Soft Edges Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f8f6f2eba5af4fd8"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="14,12 8,18 16,9 15,16 14,9 7,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Object Effect Soft Edges Gallery",
+      title: "DocLib Object Effect Soft Edges Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f8f6f2eba5af4fd8"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="14,12 8,18 16,9 15,16 14,9 7,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibObjectEffectSoftEdgesGallery implements BlockTool {
   }
 
   readonly id = "DocLibObjectEffectSoftEdgesGallery";
-  readonly title = "Object Effect Soft Edges Gallery";
+  readonly title = "DocLib Object Effect Soft Edges Gallery";
   readonly category = "format" as const;
   readonly mode = "ObjectEffectSoftEdgesGallery";
   readonly requiresSelection = false;

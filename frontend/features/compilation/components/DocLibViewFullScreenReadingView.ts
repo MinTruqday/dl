@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibViewFullScreenReadingView implements BlockTool {
   static readonly feature = {
     id: "DocLibViewFullScreenReadingView",
-    title: "View Full Screen Reading View",
+    title: "DocLib View Full Screen Reading View",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0ef72298fa1c1bb2"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,13 4,20 16,15 14,12 5,20 18,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "View Full Screen Reading View",
+      title: "DocLib View Full Screen Reading View",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0ef72298fa1c1bb2"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,13 4,20 16,15 14,12 5,20 18,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibViewFullScreenReadingView implements BlockTool {
   }
 
   readonly id = "DocLibViewFullScreenReadingView";
-  readonly title = "View Full Screen Reading View";
+  readonly title = "DocLib View Full Screen Reading View";
   readonly category = "view" as const;
   readonly mode = "ViewFullScreenReadingView";
   readonly requiresSelection = false;

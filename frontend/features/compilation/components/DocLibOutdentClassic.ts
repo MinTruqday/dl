@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibOutdentClassic implements BlockTool {
   static readonly feature = {
     id: "DocLibOutdentClassic",
-    title: "Outdent Classic",
+    title: "DocLib Outdent Classic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="078f558791b8714f"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="11,11 4,20 13,18 15,15 20,17 5,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Outdent Classic",
+      title: "DocLib Outdent Classic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="078f558791b8714f"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="11,11 4,20 13,18 15,15 20,17 5,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibOutdentClassic implements BlockTool {
   }
 
   readonly id = "DocLibOutdentClassic";
-  readonly title = "Outdent Classic";
+  readonly title = "DocLib Outdent Classic";
   readonly category = "format" as const;
   readonly mode = "OutdentClassic";
   readonly requiresSelection = false;

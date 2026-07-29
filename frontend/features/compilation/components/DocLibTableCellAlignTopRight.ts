@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableCellAlignTopRight implements BlockTool {
   static readonly feature = {
     id: "DocLibTableCellAlignTopRight",
-    title: "Table Cell Align Top Right",
+    title: "DocLib Table Cell Align Top Right",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a935ad9f82d6ec9b"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,6 7,10 15,14 19,6 20,12 19,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Table Cell Align Top Right",
+      title: "DocLib Table Cell Align Top Right",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a935ad9f82d6ec9b"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,6 7,10 15,14 19,6 20,12 19,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTableCellAlignTopRight implements BlockTool {
   }
 
   readonly id = "DocLibTableCellAlignTopRight";
-  readonly title = "Table Cell Align Top Right";
+  readonly title = "DocLib Table Cell Align Top Right";
   readonly category = "table" as const;
   readonly mode = "TableCellAlignTopRight";
   readonly requiresSelection = false;

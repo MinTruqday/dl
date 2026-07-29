@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibClassifyLabelProtect implements BlockTool {
   static readonly feature = {
     id: "DocLibClassifyLabelProtect",
-    title: "Classify Label Protect",
+    title: "DocLib Classify Label Protect",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9cbf56b84a516f58"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,8 5,18 10,17 13,7 20,13 6,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Classify Label Protect",
+      title: "DocLib Classify Label Protect",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9cbf56b84a516f58"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,8 5,18 10,17 13,7 20,13 6,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibClassifyLabelProtect implements BlockTool {
   }
 
   readonly id = "DocLibClassifyLabelProtect";
-  readonly title = "Classify Label Protect";
+  readonly title = "DocLib Classify Label Protect";
   readonly category = "format" as const;
   readonly mode = "ClassifyLabelProtect";
   readonly requiresSelection = false;

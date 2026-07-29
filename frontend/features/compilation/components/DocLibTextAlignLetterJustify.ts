@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextAlignLetterJustify implements BlockTool {
   static readonly feature = {
     id: "DocLibTextAlignLetterJustify",
-    title: "Text Align Letter Justify",
+    title: "DocLib Text Align Letter Justify",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d7d58117d84f351f"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,13 14,10 16,15 6,18 12,14 20,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Text Align Letter Justify",
+      title: "DocLib Text Align Letter Justify",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d7d58117d84f351f"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,13 14,10 16,15 6,18 12,14 20,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTextAlignLetterJustify implements BlockTool {
   }
 
   readonly id = "DocLibTextAlignLetterJustify";
-  readonly title = "Text Align Letter Justify";
+  readonly title = "DocLib Text Align Letter Justify";
   readonly category = "format" as const;
   readonly mode = "TextAlignLetterJustify";
   readonly requiresSelection = false;

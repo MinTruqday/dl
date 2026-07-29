@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextToOrFromTable implements BlockTool {
   static readonly feature = {
     id: "DocLibTextToOrFromTable",
-    title: "Text To Or From Table",
+    title: "DocLib Text To Or From Table",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="86b3eeafdd0dc078"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="19,13 4,9 4,17 9,5 11,4 17,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Text To Or From Table",
+      title: "DocLib Text To Or From Table",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="86b3eeafdd0dc078"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="19,13 4,9 4,17 9,5 11,4 17,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTextToOrFromTable implements BlockTool {
   }
 
   readonly id = "DocLibTextToOrFromTable";
-  readonly title = "Text To Or From Table";
+  readonly title = "DocLib Text To Or From Table";
   readonly category = "format" as const;
   readonly mode = "TextToOrFromTable";
   readonly requiresSelection = false;

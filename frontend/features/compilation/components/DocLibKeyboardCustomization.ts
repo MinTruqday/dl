@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibKeyboardCustomization implements BlockTool {
   static readonly feature = {
     id: "DocLibKeyboardCustomization",
-    title: "Keyboard Customization",
+    title: "DocLib Keyboard Customization",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="af8e0e2bbb2f45a8"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,10 18,13 4,17 5,19 13,19 8,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Keyboard Customization",
+      title: "DocLib Keyboard Customization",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="af8e0e2bbb2f45a8"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,10 18,13 4,17 5,19 13,19 8,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibKeyboardCustomization implements BlockTool {
   }
 
   readonly id = "DocLibKeyboardCustomization";
-  readonly title = "Keyboard Customization";
+  readonly title = "DocLib Keyboard Customization";
   readonly category = "format" as const;
   readonly mode = "KeyboardCustomization";
   readonly requiresSelection = false;

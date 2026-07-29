@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibHeaderFooterDifferentOddEvenPageWord implements BlockTool {
   static readonly feature = {
     id: "DocLibHeaderFooterDifferentOddEvenPageWord",
-    title: "Header Footer Different Odd Even Page Word",
+    title: "DocLib Header Footer Different Odd Even Page Word",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c00a3433cced62e1"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,14 5,4 4,20 17,8 17,18 9,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Header Footer Different Odd Even Page Word",
+      title: "DocLib Header Footer Different Odd Even Page Word",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c00a3433cced62e1"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,14 5,4 4,20 17,8 17,18 9,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibHeaderFooterDifferentOddEvenPageWord implements Block
   }
 
   readonly id = "DocLibHeaderFooterDifferentOddEvenPageWord";
-  readonly title = "Header Footer Different Odd Even Page Word";
+  readonly title = "DocLib Header Footer Different Odd Even Page Word";
   readonly category = "format" as const;
   readonly mode = "HeaderFooterDifferentOddEvenPageWord";
   readonly requiresSelection = false;

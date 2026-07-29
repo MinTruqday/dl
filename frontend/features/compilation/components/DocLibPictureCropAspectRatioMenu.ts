@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPictureCropAspectRatioMenu implements BlockTool {
   static readonly feature = {
     id: "DocLibPictureCropAspectRatioMenu",
-    title: "Picture Crop Aspect Ratio Menu",
+    title: "DocLib Picture Crop Aspect Ratio Menu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="07b7d0f142298d3f"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="11,17 8,7 19,11 9,16 8,9 4,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Picture Crop Aspect Ratio Menu",
+      title: "DocLib Picture Crop Aspect Ratio Menu",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="07b7d0f142298d3f"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="11,17 8,7 19,11 9,16 8,9 4,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPictureCropAspectRatioMenu implements BlockTool {
   }
 
   readonly id = "DocLibPictureCropAspectRatioMenu";
-  readonly title = "Picture Crop Aspect Ratio Menu";
+  readonly title = "DocLib Picture Crop Aspect Ratio Menu";
   readonly category = "media" as const;
   readonly mode = "PictureCropAspectRatioMenu";
   readonly requiresSelection = false;

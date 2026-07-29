@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLayoutOptionsDialogPosition implements BlockTool {
   static readonly feature = {
     id: "DocLibLayoutOptionsDialogPosition",
-    title: "Layout Options Dialog Position",
+    title: "DocLib Layout Options Dialog Position",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2410ad23f76a0610"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="6,20 7,5 13,8 10,20 7,13 19,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Layout Options Dialog Position",
+      title: "DocLib Layout Options Dialog Position",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2410ad23f76a0610"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="6,20 7,5 13,8 10,20 7,13 19,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibLayoutOptionsDialogPosition implements BlockTool {
   }
 
   readonly id = "DocLibLayoutOptionsDialogPosition";
-  readonly title = "Layout Options Dialog Position";
+  readonly title = "DocLib Layout Options Dialog Position";
   readonly category = "layout" as const;
   readonly mode = "LayoutOptionsDialogPosition";
   readonly requiresSelection = false;

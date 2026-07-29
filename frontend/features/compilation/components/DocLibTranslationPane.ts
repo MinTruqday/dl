@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTranslationPane implements BlockTool {
   static readonly feature = {
     id: "DocLibTranslationPane",
-    title: "Translation Pane",
+    title: "DocLib Translation Pane",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e01ec94608d91a73"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="7,17 18,6 12,17 13,17 18,10 11,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Translation Pane",
+      title: "DocLib Translation Pane",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e01ec94608d91a73"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="7,17 18,6 12,17 13,17 18,10 11,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTranslationPane implements BlockTool {
   }
 
   readonly id = "DocLibTranslationPane";
-  readonly title = "Translation Pane";
+  readonly title = "DocLib Translation Pane";
   readonly category = "review" as const;
   readonly mode = "TranslationPane";
   readonly requiresSelection = false;

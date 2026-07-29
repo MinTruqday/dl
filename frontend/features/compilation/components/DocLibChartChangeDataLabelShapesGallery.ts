@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartChangeDataLabelShapesGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibChartChangeDataLabelShapesGallery",
-    title: "Chart Change Data Label Shapes Gallery",
+    title: "DocLib Chart Change Data Label Shapes Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="31ade0262b080b18"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,7 7,8 13,12 15,11 18,11 14,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Change Data Label Shapes Gallery",
+      title: "DocLib Chart Change Data Label Shapes Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="31ade0262b080b18"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,7 7,8 13,12 15,11 18,11 14,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartChangeDataLabelShapesGallery implements BlockToo
   }
 
   readonly id = "DocLibChartChangeDataLabelShapesGallery";
-  readonly title = "Chart Change Data Label Shapes Gallery";
+  readonly title = "DocLib Chart Change Data Label Shapes Gallery";
   readonly category = "media" as const;
   readonly mode = "ChartChangeDataLabelShapesGallery";
   readonly requiresSelection = false;

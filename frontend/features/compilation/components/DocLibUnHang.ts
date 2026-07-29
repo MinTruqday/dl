@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibUnHang implements BlockTool {
   static readonly feature = {
     id: "DocLibUnHang",
-    title: "Un Hang",
+    title: "DocLib Un Hang",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a227382435a00afd"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="13,9 9,6 6,11 14,19 10,13 5,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Un Hang",
+      title: "DocLib Un Hang",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a227382435a00afd"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="13,9 9,6 6,11 14,19 10,13 5,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibUnHang implements BlockTool {
   }
 
   readonly id = "DocLibUnHang";
-  readonly title = "Un Hang";
+  readonly title = "DocLib Un Hang";
   readonly category = "format" as const;
   readonly mode = "UnHang";
   readonly requiresSelection = false;

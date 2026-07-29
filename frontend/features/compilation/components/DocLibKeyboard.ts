@@ -3,7 +3,7 @@ import { API, InlineTool } from "@editorjs/editorjs";
 export default class DocLibKeyboard implements InlineTool {
   static readonly feature = {
     id: "DocLibKeyboard",
-    title: "Keyboard",
+    title: "DocLib Keyboard",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="154032f3878f4532"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="8,17 20,9 20,11 5,20 10,18 19,16"/></svg>',
     product: "doclib",
   } as const;

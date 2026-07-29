@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibListSetNumberingValue implements BlockTool {
   static readonly feature = {
     id: "DocLibListSetNumberingValue",
-    title: "List Set Numbering Value",
+    title: "DocLib List Set Numbering Value",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c995716cf23e3bfc"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,17 15,10 8,15 12,18 19,18 4,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "List Set Numbering Value",
+      title: "DocLib List Set Numbering Value",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c995716cf23e3bfc"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,17 15,10 8,15 12,18 19,18 4,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibListSetNumberingValue implements BlockTool {
   }
 
   readonly id = "DocLibListSetNumberingValue";
-  readonly title = "List Set Numbering Value";
+  readonly title = "DocLib List Set Numbering Value";
   readonly category = "format" as const;
   readonly mode = "ListSetNumberingValue";
   readonly requiresSelection = false;

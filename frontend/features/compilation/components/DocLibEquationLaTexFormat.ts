@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibEquationLaTexFormat implements BlockTool {
   static readonly feature = {
     id: "DocLibEquationLaTexFormat",
-    title: "Equation La Tex Format",
+    title: "DocLib Equation La Tex Format",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e807f536ffa20eae"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="15,11 11,7 4,13 18,8 18,6 17,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Equation La Tex Format",
+      title: "DocLib Equation La Tex Format",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e807f536ffa20eae"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="15,11 11,7 4,13 18,8 18,6 17,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibEquationLaTexFormat implements BlockTool {
   }
 
   readonly id = "DocLibEquationLaTexFormat";
-  readonly title = "Equation La Tex Format";
+  readonly title = "DocLib Equation La Tex Format";
   readonly category = "format" as const;
   readonly mode = "EquationLaTexFormat";
   readonly requiresSelection = false;

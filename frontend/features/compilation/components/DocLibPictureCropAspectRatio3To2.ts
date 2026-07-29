@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPictureCropAspectRatio3To2 implements BlockTool {
   static readonly feature = {
     id: "DocLibPictureCropAspectRatio3To2",
-    title: "Picture Crop Aspect Ratio3 To2",
+    title: "DocLib Picture Crop Aspect Ratio3 To2",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2689cb429992bcd1"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,5 20,19 4,14 5,9 7,4 16,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Picture Crop Aspect Ratio3 To2",
+      title: "DocLib Picture Crop Aspect Ratio3 To2",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2689cb429992bcd1"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,5 20,19 4,14 5,9 7,4 16,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPictureCropAspectRatio3To2 implements BlockTool {
   }
 
   readonly id = "DocLibPictureCropAspectRatio3To2";
-  readonly title = "Picture Crop Aspect Ratio3 To2";
+  readonly title = "DocLib Picture Crop Aspect Ratio3 To2";
   readonly category = "media" as const;
   readonly mode = "PictureCropAspectRatio3To2";
   readonly requiresSelection = false;

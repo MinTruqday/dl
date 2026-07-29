@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibCropToShape implements BlockTool {
   static readonly feature = {
     id: "DocLibCropToShape",
-    title: "Crop To Shape",
+    title: "DocLib Crop To Shape",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4393809739584202"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="20,15 13,19 10,7 19,6 12,4 8,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Crop To Shape",
+      title: "DocLib Crop To Shape",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4393809739584202"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="20,15 13,19 10,7 19,6 12,4 8,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibCropToShape implements BlockTool {
   }
 
   readonly id = "DocLibCropToShape";
-  readonly title = "Crop To Shape";
+  readonly title = "DocLib Crop To Shape";
   readonly category = "media" as const;
   readonly mode = "CropToShape";
   readonly requiresSelection = false;

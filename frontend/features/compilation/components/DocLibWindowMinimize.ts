@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWindowMinimize implements BlockTool {
   static readonly feature = {
     id: "DocLibWindowMinimize",
-    title: "Window Minimize",
+    title: "DocLib Window Minimize",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bf8544a1f4d2fa74"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,18 4,12 10,10 16,18 6,10 9,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Window Minimize",
+      title: "DocLib Window Minimize",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bf8544a1f4d2fa74"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,18 4,12 10,10 16,18 6,10 9,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibWindowMinimize implements BlockTool {
   }
 
   readonly id = "DocLibWindowMinimize";
-  readonly title = "Window Minimize";
+  readonly title = "DocLib Window Minimize";
   readonly category = "format" as const;
   readonly mode = "WindowMinimize";
   readonly requiresSelection = false;

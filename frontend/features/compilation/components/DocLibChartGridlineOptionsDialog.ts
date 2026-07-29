@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartGridlineOptionsDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibChartGridlineOptionsDialog",
-    title: "Chart Gridline Options Dialog",
+    title: "DocLib Chart Gridline Options Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a3b576edebdd778b"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="14,15 20,20 18,4 4,7 9,16 14,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Gridline Options Dialog",
+      title: "DocLib Chart Gridline Options Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a3b576edebdd778b"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="14,15 20,20 18,4 4,7 9,16 14,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartGridlineOptionsDialog implements BlockTool {
   }
 
   readonly id = "DocLibChartGridlineOptionsDialog";
-  readonly title = "Chart Gridline Options Dialog";
+  readonly title = "DocLib Chart Gridline Options Dialog";
   readonly category = "layout" as const;
   readonly mode = "ChartGridlineOptionsDialog";
   readonly requiresSelection = false;

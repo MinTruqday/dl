@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWhatsNewRecentUpdates implements BlockTool {
   static readonly feature = {
     id: "DocLibWhatsNewRecentUpdates",
-    title: "Whats New Recent Updates",
+    title: "DocLib Whats New Recent Updates",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="556f69a0b9bed5b0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="4,13 7,11 19,7 13,10 13,13 8,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Whats New Recent Updates",
+      title: "DocLib Whats New Recent Updates",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="556f69a0b9bed5b0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="4,13 7,11 19,7 13,10 13,13 8,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibWhatsNewRecentUpdates implements BlockTool {
   }
 
   readonly id = "DocLibWhatsNewRecentUpdates";
-  readonly title = "Whats New Recent Updates";
+  readonly title = "DocLib Whats New Recent Updates";
   readonly category = "format" as const;
   readonly mode = "WhatsNewRecentUpdates";
   readonly requiresSelection = false;

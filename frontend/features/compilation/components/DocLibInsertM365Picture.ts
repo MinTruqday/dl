@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibInsertM365Picture implements BlockTool {
   static readonly feature = {
     id: "DocLibInsertM365Picture",
-    title: "Insert M365 Picture",
+    title: "DocLib Insert M365 Picture",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="07bb90221692e5eb"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="11,4 12,4 9,14 12,18 13,7 9,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Insert M365 Picture",
+      title: "DocLib Insert M365 Picture",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="07bb90221692e5eb"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="11,4 12,4 9,14 12,18 13,7 9,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibInsertM365Picture implements BlockTool {
   }
 
   readonly id = "DocLibInsertM365Picture";
-  readonly title = "Insert M365 Picture";
+  readonly title = "DocLib Insert M365 Picture";
   readonly category = "insert" as const;
   readonly mode = "InsertM365Picture";
   readonly requiresSelection = false;

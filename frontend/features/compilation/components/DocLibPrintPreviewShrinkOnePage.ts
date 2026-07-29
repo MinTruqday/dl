@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPrintPreviewShrinkOnePage implements BlockTool {
   static readonly feature = {
     id: "DocLibPrintPreviewShrinkOnePage",
-    title: "Print Preview Shrink One Page",
+    title: "DocLib Print Preview Shrink One Page",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="15b1f97e180fc6fe"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,11 15,11 11,19 15,20 14,9 7,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Print Preview Shrink One Page",
+      title: "DocLib Print Preview Shrink One Page",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="15b1f97e180fc6fe"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,11 15,11 11,19 15,20 14,9 7,9"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPrintPreviewShrinkOnePage implements BlockTool {
   }
 
   readonly id = "DocLibPrintPreviewShrinkOnePage";
-  readonly title = "Print Preview Shrink One Page";
+  readonly title = "DocLib Print Preview Shrink One Page";
   readonly category = "review" as const;
   readonly mode = "PrintPreviewShrinkOnePage";
   readonly requiresSelection = false;

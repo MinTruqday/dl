@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAddToFavorites implements BlockTool {
   static readonly feature = {
     id: "DocLibAddToFavorites",
-    title: "Add To Favorites",
+    title: "DocLib Add To Favorites",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ab6d9fba862386b2"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="5,11 10,20 19,5 19,12 19,8 12,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Add To Favorites",
+      title: "DocLib Add To Favorites",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ab6d9fba862386b2"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="5,11 10,20 19,5 19,12 19,8 12,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibAddToFavorites implements BlockTool {
   }
 
   readonly id = "DocLibAddToFavorites";
-  readonly title = "Add To Favorites";
+  readonly title = "DocLib Add To Favorites";
   readonly category = "format" as const;
   readonly mode = "AddToFavorites";
   readonly requiresSelection = false;

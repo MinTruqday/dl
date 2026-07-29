@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLearningToolsSyllables implements BlockTool {
   static readonly feature = {
     id: "DocLibLearningToolsSyllables",
-    title: "Learning Tools Syllables",
+    title: "DocLib Learning Tools Syllables",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="62c83d8af6c6cc46"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="17,17 14,6 12,15 4,6 4,19 18,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Learning Tools Syllables",
+      title: "DocLib Learning Tools Syllables",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="62c83d8af6c6cc46"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="17,17 14,6 12,15 4,6 4,19 18,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibLearningToolsSyllables implements BlockTool {
   }
 
   readonly id = "DocLibLearningToolsSyllables";
-  readonly title = "Learning Tools Syllables";
+  readonly title = "DocLib Learning Tools Syllables";
   readonly category = "table" as const;
   readonly mode = "LearningToolsSyllables";
   readonly requiresSelection = false;

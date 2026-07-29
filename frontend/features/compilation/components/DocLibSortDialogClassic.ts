@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSortDialogClassic implements BlockTool {
   static readonly feature = {
     id: "DocLibSortDialogClassic",
-    title: "Sort Dialog Classic",
+    title: "DocLib Sort Dialog Classic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7bb21a45e97568fd"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,12 13,5 16,19 6,19 20,9 19,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Sort Dialog Classic",
+      title: "DocLib Sort Dialog Classic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7bb21a45e97568fd"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,12 13,5 16,19 6,19 20,9 19,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSortDialogClassic implements BlockTool {
   }
 
   readonly id = "DocLibSortDialogClassic";
-  readonly title = "Sort Dialog Classic";
+  readonly title = "DocLib Sort Dialog Classic";
   readonly category = "format" as const;
   readonly mode = "SortDialogClassic";
   readonly requiresSelection = false;

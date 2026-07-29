@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMasterDocumentInsertSubdocument implements BlockTool {
   static readonly feature = {
     id: "DocLibMasterDocumentInsertSubdocument",
-    title: "Master Document Insert Subdocument",
+    title: "DocLib Master Document Insert Subdocument",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="78ccf4b9df580a3e"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,4 10,19 6,7 14,15 12,7 17,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Master Document Insert Subdocument",
+      title: "DocLib Master Document Insert Subdocument",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="78ccf4b9df580a3e"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,4 10,19 6,7 14,15 12,7 17,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibMasterDocumentInsertSubdocument implements BlockTool 
   }
 
   readonly id = "DocLibMasterDocumentInsertSubdocument";
-  readonly title = "Master Document Insert Subdocument";
+  readonly title = "DocLib Master Document Insert Subdocument";
   readonly category = "format" as const;
   readonly mode = "MasterDocumentInsertSubdocument";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAutoCorrectDays implements BlockTool {
   static readonly feature = {
     id: "DocLibAutoCorrectDays",
-    title: "Auto Correct Days",
+    title: "DocLib Auto Correct Days",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7f3c34b4ceb3ce9c"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="12,13 5,14 6,13 6,7 19,16 12,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Auto Correct Days",
+      title: "DocLib Auto Correct Days",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7f3c34b4ceb3ce9c"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="12,13 5,14 6,13 6,7 19,16 12,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibAutoCorrectDays implements BlockTool {
   }
 
   readonly id = "DocLibAutoCorrectDays";
-  readonly title = "Auto Correct Days";
+  readonly title = "DocLib Auto Correct Days";
   readonly category = "format" as const;
   readonly mode = "AutoCorrectDays";
   readonly requiresSelection = false;

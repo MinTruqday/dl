@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibUseContextualAlternates implements BlockTool {
   static readonly feature = {
     id: "DocLibUseContextualAlternates",
-    title: "Use Contextual Alternates",
+    title: "DocLib Use Contextual Alternates",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f13c0cdfb58ceabe"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="7,13 16,6 15,8 17,7 13,6 8,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Use Contextual Alternates",
+      title: "DocLib Use Contextual Alternates",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f13c0cdfb58ceabe"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="7,13 16,6 15,8 17,7 13,6 8,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibUseContextualAlternates implements BlockTool {
   }
 
   readonly id = "DocLibUseContextualAlternates";
-  readonly title = "Use Contextual Alternates";
+  readonly title = "DocLib Use Contextual Alternates";
   readonly category = "format" as const;
   readonly mode = "UseContextualAlternates";
   readonly requiresSelection = false;

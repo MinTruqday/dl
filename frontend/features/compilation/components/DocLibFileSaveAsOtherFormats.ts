@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFileSaveAsOtherFormats implements BlockTool {
   static readonly feature = {
     id: "DocLibFileSaveAsOtherFormats",
-    title: "File Save As Other Formats",
+    title: "DocLib File Save As Other Formats",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bd92f1bbc03f91d2"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="6,14 7,4 9,16 13,10 7,4 14,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "File Save As Other Formats",
+      title: "DocLib File Save As Other Formats",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bd92f1bbc03f91d2"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="6,14 7,4 9,16 13,10 7,4 14,9"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFileSaveAsOtherFormats implements BlockTool {
   }
 
   readonly id = "DocLibFileSaveAsOtherFormats";
-  readonly title = "File Save As Other Formats";
+  readonly title = "DocLib File Save As Other Formats";
   readonly category = "format" as const;
   readonly mode = "FileSaveAsOtherFormats";
   readonly requiresSelection = false;

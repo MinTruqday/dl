@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLegacyFormsDrop implements BlockTool {
   static readonly feature = {
     id: "DocLibLegacyFormsDrop",
-    title: "Legacy Forms Drop",
+    title: "DocLib Legacy Forms Drop",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="847d83e05bb26fc3"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,10 16,7 10,12 13,12 17,17 6,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Legacy Forms Drop",
+      title: "DocLib Legacy Forms Drop",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="847d83e05bb26fc3"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,10 16,7 10,12 13,12 17,17 6,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibLegacyFormsDrop implements BlockTool {
   }
 
   readonly id = "DocLibLegacyFormsDrop";
-  readonly title = "Legacy Forms Drop";
+  readonly title = "DocLib Legacy Forms Drop";
   readonly category = "automation" as const;
   readonly mode = "LegacyFormsDrop";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMagnifier implements BlockTool {
   static readonly feature = {
     id: "DocLibMagnifier",
-    title: "Magnifier",
+    title: "DocLib Magnifier",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e31b3f937269e160"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,14 16,15 16,7 8,15 10,11 17,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Magnifier",
+      title: "DocLib Magnifier",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e31b3f937269e160"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,14 16,15 16,7 8,15 10,11 17,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibMagnifier implements BlockTool {
   }
 
   readonly id = "DocLibMagnifier";
-  readonly title = "Magnifier";
+  readonly title = "DocLib Magnifier";
   readonly category = "review" as const;
   readonly mode = "Magnifier";
   readonly requiresSelection = false;

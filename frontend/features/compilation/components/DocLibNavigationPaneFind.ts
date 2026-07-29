@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibNavigationPaneFind implements BlockTool {
   static readonly feature = {
     id: "DocLibNavigationPaneFind",
-    title: "Navigation Pane Find",
+    title: "DocLib Navigation Pane Find",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5f9f418c9ce8333d"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="14,10 18,8 7,15 4,14 9,9 5,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Navigation Pane Find",
+      title: "DocLib Navigation Pane Find",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5f9f418c9ce8333d"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="14,10 18,8 7,15 4,14 9,9 5,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibNavigationPaneFind implements BlockTool {
   }
 
   readonly id = "DocLibNavigationPaneFind";
-  readonly title = "Navigation Pane Find";
+  readonly title = "DocLib Navigation Pane Find";
   readonly category = "format" as const;
   readonly mode = "NavigationPaneFind";
   readonly requiresSelection = false;

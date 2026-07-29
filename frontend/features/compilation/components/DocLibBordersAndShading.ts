@@ -3,7 +3,7 @@ import { BlockTool, API, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibBordersAndShading implements BlockTool {
   static readonly feature = {
     id: "DocLibBordersAndShading",
-    title: "Borders And Shading",
+    title: "DocLib Borders And Shading",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="76a2043d59b30828"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="20,13 8,14 8,13 12,10 17,6 4,11"/></svg>',
     product: "doclib",
   } as const;
@@ -15,7 +15,7 @@ export default class DocLibBordersAndShading implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "Borders And Shading",
+      title: "DocLib Borders And Shading",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="76a2043d59b30828"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="20,13 8,14 8,13 12,10 17,6 4,11"/></svg>',
     };
   }

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLineNumbersRestartEachSection implements BlockTool {
   static readonly feature = {
     id: "DocLibLineNumbersRestartEachSection",
-    title: "Line Numbers Restart Each Section",
+    title: "DocLib Line Numbers Restart Each Section",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="30d2406225021a85"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,10 17,17 7,6 13,18 18,16 7,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Line Numbers Restart Each Section",
+      title: "DocLib Line Numbers Restart Each Section",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="30d2406225021a85"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,10 17,17 7,6 13,18 18,16 7,6"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibLineNumbersRestartEachSection implements BlockTool {
   }
 
   readonly id = "DocLibLineNumbersRestartEachSection";
-  readonly title = "Line Numbers Restart Each Section";
+  readonly title = "DocLib Line Numbers Restart Each Section";
   readonly category = "layout" as const;
   readonly mode = "LineNumbersRestartEachSection";
   readonly requiresSelection = false;

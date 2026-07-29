@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPictureChangeFromMobile implements BlockTool {
   static readonly feature = {
     id: "DocLibPictureChangeFromMobile",
-    title: "Picture Change From Mobile",
+    title: "DocLib Picture Change From Mobile",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b95acb1064beb571"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="19,9 20,20 19,7 15,15 16,10 20,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Picture Change From Mobile",
+      title: "DocLib Picture Change From Mobile",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b95acb1064beb571"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="19,9 20,20 19,7 15,15 16,10 20,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPictureChangeFromMobile implements BlockTool {
   }
 
   readonly id = "DocLibPictureChangeFromMobile";
-  readonly title = "Picture Change From Mobile";
+  readonly title = "DocLib Picture Change From Mobile";
   readonly category = "media" as const;
   readonly mode = "PictureChangeFromMobile";
   readonly requiresSelection = false;

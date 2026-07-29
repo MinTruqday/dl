@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSendCopyAddressBookTo implements BlockTool {
   static readonly feature = {
     id: "DocLibSendCopyAddressBookTo",
-    title: "Send Copy Address Book To",
+    title: "DocLib Send Copy Address Book To",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1a5db3ed6ec0b803"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="13,12 13,20 12,9 18,7 13,4 17,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Send Copy Address Book To",
+      title: "DocLib Send Copy Address Book To",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1a5db3ed6ec0b803"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="13,12 13,20 12,9 18,7 13,4 17,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSendCopyAddressBookTo implements BlockTool {
   }
 
   readonly id = "DocLibSendCopyAddressBookTo";
-  readonly title = "Send Copy Address Book To";
+  readonly title = "DocLib Send Copy Address Book To";
   readonly category = "format" as const;
   readonly mode = "SendCopyAddressBookTo";
   readonly requiresSelection = false;

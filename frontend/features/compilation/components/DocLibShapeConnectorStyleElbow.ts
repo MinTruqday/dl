@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibShapeConnectorStyleElbow implements BlockTool {
   static readonly feature = {
     id: "DocLibShapeConnectorStyleElbow",
-    title: "Shape Connector Style Elbow",
+    title: "DocLib Shape Connector Style Elbow",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d944c17064581adc"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="17,4 10,14 19,7 13,20 6,17 18,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Shape Connector Style Elbow",
+      title: "DocLib Shape Connector Style Elbow",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d944c17064581adc"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="17,4 10,14 19,7 13,20 6,17 18,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibShapeConnectorStyleElbow implements BlockTool {
   }
 
   readonly id = "DocLibShapeConnectorStyleElbow";
-  readonly title = "Shape Connector Style Elbow";
+  readonly title = "DocLib Shape Connector Style Elbow";
   readonly category = "format" as const;
   readonly mode = "ShapeConnectorStyleElbow";
   readonly requiresSelection = false;

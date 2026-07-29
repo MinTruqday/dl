@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDeleteNode implements BlockTool {
   static readonly feature = {
     id: "DocLibDeleteNode",
-    title: "Delete Node",
+    title: "DocLib Delete Node",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d55d360d2ead9d90"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="13,12 7,17 16,7 8,12 4,20 7,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Delete Node",
+      title: "DocLib Delete Node",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d55d360d2ead9d90"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="13,12 7,17 16,7 8,12 4,20 7,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDeleteNode implements BlockTool {
   }
 
   readonly id = "DocLibDeleteNode";
-  readonly title = "Delete Node";
+  readonly title = "DocLib Delete Node";
   readonly category = "format" as const;
   readonly mode = "DeleteNode";
   readonly requiresSelection = false;

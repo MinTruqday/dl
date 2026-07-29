@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibJapanesePostcardDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibJapanesePostcardDialog",
-    title: "Japanese Postcard Dialog",
+    title: "DocLib Japanese Postcard Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a8d9efd0a96d7776"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,17 5,8 20,11 4,20 18,4 12,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Japanese Postcard Dialog",
+      title: "DocLib Japanese Postcard Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a8d9efd0a96d7776"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,17 5,8 20,11 4,20 18,4 12,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibJapanesePostcardDialog implements BlockTool {
   }
 
   readonly id = "DocLibJapanesePostcardDialog";
-  readonly title = "Japanese Postcard Dialog";
+  readonly title = "DocLib Japanese Postcard Dialog";
   readonly category = "format" as const;
   readonly mode = "JapanesePostcardDialog";
   readonly requiresSelection = false;

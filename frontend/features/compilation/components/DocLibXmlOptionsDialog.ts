@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibXmlOptionsDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibXmlOptionsDialog",
-    title: "XML Options Dialog",
+    title: "DocLib XML Options Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4480b33e4ff23628"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="4,13 13,15 15,8 7,10 13,10 17,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "XML Options Dialog",
+      title: "DocLib XML Options Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4480b33e4ff23628"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="4,13 13,15 15,8 7,10 13,10 17,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibXmlOptionsDialog implements BlockTool {
   }
 
   readonly id = "DocLibXmlOptionsDialog";
-  readonly title = "XML Options Dialog";
+  readonly title = "DocLib XML Options Dialog";
   readonly category = "format" as const;
   readonly mode = "XmlOptionsDialog";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartSecondaryHorizontalAxisTitleOptionsDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibChartSecondaryHorizontalAxisTitleOptionsDialog",
-    title: "Chart Secondary Horizontal Axis Title Options Dialog",
+    title: "DocLib Chart Secondary Horizontal Axis Title Options Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9f69416d12bf9da9"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="10,7 18,11 5,8 8,20 15,15 12,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Secondary Horizontal Axis Title Options Dialog",
+      title: "DocLib Chart Secondary Horizontal Axis Title Options Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9f69416d12bf9da9"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="10,7 18,11 5,8 8,20 15,15 12,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartSecondaryHorizontalAxisTitleOptionsDialog implem
   }
 
   readonly id = "DocLibChartSecondaryHorizontalAxisTitleOptionsDialog";
-  readonly title = "Chart Secondary Horizontal Axis Title Options Dialog";
+  readonly title = "DocLib Chart Secondary Horizontal Axis Title Options Dialog";
   readonly category = "layout" as const;
   readonly mode = "ChartSecondaryHorizontalAxisTitleOptionsDialog";
   readonly requiresSelection = false;

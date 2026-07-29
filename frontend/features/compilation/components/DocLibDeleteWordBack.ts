@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDeleteWordBack implements BlockTool {
   static readonly feature = {
     id: "DocLibDeleteWordBack",
-    title: "Delete Word Back",
+    title: "DocLib Delete Word Back",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c559aa33951ec6e4"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="14,8 4,4 17,17 15,11 13,9 10,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Delete Word Back",
+      title: "DocLib Delete Word Back",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c559aa33951ec6e4"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="14,8 4,4 17,17 15,11 13,9 10,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDeleteWordBack implements BlockTool {
   }
 
   readonly id = "DocLibDeleteWordBack";
-  readonly title = "Delete Word Back";
+  readonly title = "DocLib Delete Word Back";
   readonly category = "format" as const;
   readonly mode = "DeleteWordBack";
   readonly requiresSelection = false;

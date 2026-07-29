@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMailMergeCreateHeaderSource implements BlockTool {
   static readonly feature = {
     id: "DocLibMailMergeCreateHeaderSource",
-    title: "Mail Merge Create Header Source",
+    title: "DocLib Mail Merge Create Header Source",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="304400e9669e6df5"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="18,4 4,16 4,9 11,11 8,7 7,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Mail Merge Create Header Source",
+      title: "DocLib Mail Merge Create Header Source",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="304400e9669e6df5"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="18,4 4,16 4,9 11,11 8,7 7,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibMailMergeCreateHeaderSource implements BlockTool {
   }
 
   readonly id = "DocLibMailMergeCreateHeaderSource";
-  readonly title = "Mail Merge Create Header Source";
+  readonly title = "DocLib Mail Merge Create Header Source";
   readonly category = "format" as const;
   readonly mode = "MailMergeCreateHeaderSource";
   readonly requiresSelection = false;

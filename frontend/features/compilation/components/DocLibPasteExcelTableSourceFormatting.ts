@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPasteExcelTableSourceFormatting implements BlockTool {
   static readonly feature = {
     id: "DocLibPasteExcelTableSourceFormatting",
-    title: "Paste Excel Table Source Formatting",
+    title: "DocLib Paste Excel Table Source Formatting",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="855c1332dc592e87"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,11 6,20 20,8 16,20 15,17 18,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Paste Excel Table Source Formatting",
+      title: "DocLib Paste Excel Table Source Formatting",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="855c1332dc592e87"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,11 6,20 20,8 16,20 15,17 18,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPasteExcelTableSourceFormatting implements BlockTool 
   }
 
   readonly id = "DocLibPasteExcelTableSourceFormatting";
-  readonly title = "Paste Excel Table Source Formatting";
+  readonly title = "DocLib Paste Excel Table Source Formatting";
   readonly category = "format" as const;
   readonly mode = "PasteExcelTableSourceFormatting";
   readonly requiresSelection = false;

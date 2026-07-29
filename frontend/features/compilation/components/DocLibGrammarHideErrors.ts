@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibGrammarHideErrors implements BlockTool {
   static readonly feature = {
     id: "DocLibGrammarHideErrors",
-    title: "Grammar Hide Errors",
+    title: "DocLib Grammar Hide Errors",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4a1c9410b672117b"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="10,15 16,20 16,16 4,8 13,11 16,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Grammar Hide Errors",
+      title: "DocLib Grammar Hide Errors",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4a1c9410b672117b"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="10,15 16,20 16,16 4,8 13,11 16,6"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibGrammarHideErrors implements BlockTool {
   }
 
   readonly id = "DocLibGrammarHideErrors";
-  readonly title = "Grammar Hide Errors";
+  readonly title = "DocLib Grammar Hide Errors";
   readonly category = "format" as const;
   readonly mode = "GrammarHideErrors";
   readonly requiresSelection = false;

@@ -3,7 +3,7 @@ import { API, InlineTool } from "@editorjs/editorjs";
 export default class DocLibSubscript implements InlineTool {
   static readonly feature = {
     id: "DocLibSubscript",
-    title: "Subscript",
+    title: "DocLib Subscript",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="613d363e5dae2712"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="16,14 7,15 12,8 9,5 13,20 13,5"/></svg>',
     product: "doclib",
   } as const;

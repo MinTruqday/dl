@@ -3,7 +3,7 @@ import { BlockTool, API, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSmartArtCycle implements BlockTool {
   static readonly feature = {
     id: "DocLibSmartArtCycle",
-    title: "Smart Art Cycle",
+    title: "DocLib Smart Art Cycle",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2d28cd88502eb639"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,10 5,4 16,16 16,10 15,8 17,11"/></svg>',
     product: "doclib",
   } as const;
@@ -15,7 +15,7 @@ export default class DocLibSmartArtCycle implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "Smart Art Cycle",
+      title: "DocLib Smart Art Cycle",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2d28cd88502eb639"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,10 5,4 16,16 16,10 15,8 17,11"/></svg>',
     };
   }

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibHeaderFooterPageNumberInsert implements BlockTool {
   static readonly feature = {
     id: "DocLibHeaderFooterPageNumberInsert",
-    title: "Header Footer Page Number Insert",
+    title: "DocLib Header Footer Page Number Insert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="294c59131356378f"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="11,12 8,6 6,5 8,11 14,8 20,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Header Footer Page Number Insert",
+      title: "DocLib Header Footer Page Number Insert",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="294c59131356378f"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="11,12 8,6 6,5 8,11 14,8 20,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibHeaderFooterPageNumberInsert implements BlockTool {
   }
 
   readonly id = "DocLibHeaderFooterPageNumberInsert";
-  readonly title = "Header Footer Page Number Insert";
+  readonly title = "DocLib Header Footer Page Number Insert";
   readonly category = "insert" as const;
   readonly mode = "HeaderFooterPageNumberInsert";
   readonly requiresSelection = false;

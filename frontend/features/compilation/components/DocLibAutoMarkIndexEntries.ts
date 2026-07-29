@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAutoMarkIndexEntries implements BlockTool {
   static readonly feature = {
     id: "DocLibAutoMarkIndexEntries",
-    title: "Auto Mark Index Entries",
+    title: "DocLib Auto Mark Index Entries",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="be984680a0f6d293"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="7,20 6,13 11,12 10,15 16,20 12,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Auto Mark Index Entries",
+      title: "DocLib Auto Mark Index Entries",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="be984680a0f6d293"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="7,20 6,13 11,12 10,15 16,20 12,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibAutoMarkIndexEntries implements BlockTool {
   }
 
   readonly id = "DocLibAutoMarkIndexEntries";
-  readonly title = "Auto Mark Index Entries";
+  readonly title = "DocLib Auto Mark Index Entries";
   readonly category = "format" as const;
   readonly mode = "AutoMarkIndexEntries";
   readonly requiresSelection = false;

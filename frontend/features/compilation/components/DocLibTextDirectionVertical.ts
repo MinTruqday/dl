@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextDirectionVertical implements BlockTool {
   static readonly feature = {
     id: "DocLibTextDirectionVertical",
-    title: "Text Direction Vertical",
+    title: "DocLib Text Direction Vertical",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f996c51dc1236349"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,18 14,16 10,5 18,9 11,17 11,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Text Direction Vertical",
+      title: "DocLib Text Direction Vertical",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f996c51dc1236349"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,18 14,16 10,5 18,9 11,17 11,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTextDirectionVertical implements BlockTool {
   }
 
   readonly id = "DocLibTextDirectionVertical";
-  readonly title = "Text Direction Vertical";
+  readonly title = "DocLib Text Direction Vertical";
   readonly category = "layout" as const;
   readonly mode = "TextDirectionVertical";
   readonly requiresSelection = false;

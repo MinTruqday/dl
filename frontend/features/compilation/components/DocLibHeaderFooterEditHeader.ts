@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibHeaderFooterEditHeader implements BlockTool {
   static readonly feature = {
     id: "DocLibHeaderFooterEditHeader",
-    title: "Header Footer Edit Header",
+    title: "DocLib Header Footer Edit Header",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="98a8bf9e7026328e"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="20,19 8,9 14,8 20,10 12,17 4,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Header Footer Edit Header",
+      title: "DocLib Header Footer Edit Header",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="98a8bf9e7026328e"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="20,19 8,9 14,8 20,10 12,17 4,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibHeaderFooterEditHeader implements BlockTool {
   }
 
   readonly id = "DocLibHeaderFooterEditHeader";
-  readonly title = "Header Footer Edit Header";
+  readonly title = "DocLib Header Footer Edit Header";
   readonly category = "insert" as const;
   readonly mode = "HeaderFooterEditHeader";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibBreakInsertDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibBreakInsertDialog",
-    title: "Break Insert Dialog",
+    title: "DocLib Break Insert Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d819742ab951ae65"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="16,12 18,12 19,17 8,20 5,11 12,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Break Insert Dialog",
+      title: "DocLib Break Insert Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d819742ab951ae65"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="16,12 18,12 19,17 8,20 5,11 12,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibBreakInsertDialog implements BlockTool {
   }
 
   readonly id = "DocLibBreakInsertDialog";
-  readonly title = "Break Insert Dialog";
+  readonly title = "DocLib Break Insert Dialog";
   readonly category = "format" as const;
   readonly mode = "BreakInsertDialog";
   readonly requiresSelection = false;

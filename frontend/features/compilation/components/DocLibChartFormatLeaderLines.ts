@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartFormatLeaderLines implements BlockTool {
   static readonly feature = {
     id: "DocLibChartFormatLeaderLines",
-    title: "Chart Format Leader Lines",
+    title: "DocLib Chart Format Leader Lines",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7f2dba4c33665016"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="12,15 20,12 4,4 16,9 4,7 19,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Format Leader Lines",
+      title: "DocLib Chart Format Leader Lines",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7f2dba4c33665016"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="12,15 20,12 4,4 16,9 4,7 19,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartFormatLeaderLines implements BlockTool {
   }
 
   readonly id = "DocLibChartFormatLeaderLines";
-  readonly title = "Chart Format Leader Lines";
+  readonly title = "DocLib Chart Format Leader Lines";
   readonly category = "media" as const;
   readonly mode = "ChartFormatLeaderLines";
   readonly requiresSelection = false;

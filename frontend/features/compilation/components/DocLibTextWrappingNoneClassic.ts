@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextWrappingNoneClassic implements BlockTool {
   static readonly feature = {
     id: "DocLibTextWrappingNoneClassic",
-    title: "Text Wrapping None Classic",
+    title: "DocLib Text Wrapping None Classic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d8c5f7483d492ac5"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="16,14 13,8 14,9 12,14 9,17 10,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Text Wrapping None Classic",
+      title: "DocLib Text Wrapping None Classic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d8c5f7483d492ac5"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="16,14 13,8 14,9 12,14 9,17 10,9"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTextWrappingNoneClassic implements BlockTool {
   }
 
   readonly id = "DocLibTextWrappingNoneClassic";
-  readonly title = "Text Wrapping None Classic";
+  readonly title = "DocLib Text Wrapping None Classic";
   readonly category = "format" as const;
   readonly mode = "TextWrappingNoneClassic";
   readonly requiresSelection = false;

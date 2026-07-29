@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPageBordersCustom implements BlockTool {
   static readonly feature = {
     id: "DocLibPageBordersCustom",
-    title: "Page Borders Custom",
+    title: "DocLib Page Borders Custom",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a002fe7a20611117"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="11,6 20,7 19,16 4,10 15,5 13,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Page Borders Custom",
+      title: "DocLib Page Borders Custom",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a002fe7a20611117"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="11,6 20,7 19,16 4,10 15,5 13,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPageBordersCustom implements BlockTool {
   }
 
   readonly id = "DocLibPageBordersCustom";
-  readonly title = "Page Borders Custom";
+  readonly title = "DocLib Page Borders Custom";
   readonly category = "layout" as const;
   readonly mode = "PageBordersCustom";
   readonly requiresSelection = false;

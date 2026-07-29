@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibEnglishWritingAssistant implements BlockTool {
   static readonly feature = {
     id: "DocLibEnglishWritingAssistant",
-    title: "English Writing Assistant",
+    title: "DocLib English Writing Assistant",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="edf49011eb0657c1"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="20,10 12,4 18,10 6,10 15,18 18,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "English Writing Assistant",
+      title: "DocLib English Writing Assistant",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="edf49011eb0657c1"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="20,10 12,4 18,10 6,10 15,18 18,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibEnglishWritingAssistant implements BlockTool {
   }
 
   readonly id = "DocLibEnglishWritingAssistant";
-  readonly title = "English Writing Assistant";
+  readonly title = "DocLib English Writing Assistant";
   readonly category = "format" as const;
   readonly mode = "EnglishWritingAssistant";
   readonly requiresSelection = false;

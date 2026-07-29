@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextBoxInsert implements BlockTool {
   static readonly feature = {
     id: "DocLibTextBoxInsert",
-    title: "Text Box Insert",
+    title: "DocLib Text Box Insert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6faf84909c64ecfc"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="13,9 17,12 7,19 19,18 19,10 8,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Text Box Insert",
+      title: "DocLib Text Box Insert",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6faf84909c64ecfc"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="13,9 17,12 7,19 19,18 19,10 8,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTextBoxInsert implements BlockTool {
   }
 
   readonly id = "DocLibTextBoxInsert";
-  readonly title = "Text Box Insert";
+  readonly title = "DocLib Text Box Insert";
   readonly category = "insert" as const;
   readonly mode = "TextBoxInsert";
   readonly requiresSelection = false;

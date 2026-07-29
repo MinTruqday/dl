@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableDesignBandedRows implements BlockTool {
   static readonly feature = {
     id: "DocLibTableDesignBandedRows",
-    title: "Table Design Banded Rows",
+    title: "DocLib Table Design Banded Rows",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9381afac36881012"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,14 9,6 7,4 20,5 5,10 17,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Table Design Banded Rows",
+      title: "DocLib Table Design Banded Rows",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9381afac36881012"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,14 9,6 7,4 20,5 5,10 17,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTableDesignBandedRows implements BlockTool {
   }
 
   readonly id = "DocLibTableDesignBandedRows";
-  readonly title = "Table Design Banded Rows";
+  readonly title = "DocLib Table Design Banded Rows";
   readonly category = "table" as const;
   readonly mode = "TableDesignBandedRows";
   readonly requiresSelection = false;

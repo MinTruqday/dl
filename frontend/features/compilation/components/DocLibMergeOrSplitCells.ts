@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMergeOrSplitCells implements BlockTool {
   static readonly feature = {
     id: "DocLibMergeOrSplitCells",
-    title: "Merge Or Split Cells",
+    title: "DocLib Merge Or Split Cells",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cba84d570cad9266"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="20,19 13,6 16,7 14,4 18,7 14,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Merge Or Split Cells",
+      title: "DocLib Merge Or Split Cells",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cba84d570cad9266"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="20,19 13,6 16,7 14,4 18,7 14,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibMergeOrSplitCells implements BlockTool {
   }
 
   readonly id = "DocLibMergeOrSplitCells";
-  readonly title = "Merge Or Split Cells";
+  readonly title = "DocLib Merge Or Split Cells";
   readonly category = "format" as const;
   readonly mode = "MergeOrSplitCells";
   readonly requiresSelection = false;

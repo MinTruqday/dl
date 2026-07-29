@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableAutoFormatStyle implements BlockTool {
   static readonly feature = {
     id: "DocLibTableAutoFormatStyle",
-    title: "Table Auto Format Style",
+    title: "DocLib Table Auto Format Style",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f129feb6fff3d3a8"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="7,11 20,16 4,9 11,19 17,15 13,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Table Auto Format Style",
+      title: "DocLib Table Auto Format Style",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f129feb6fff3d3a8"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="7,11 20,16 4,9 11,19 17,15 13,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTableAutoFormatStyle implements BlockTool {
   }
 
   readonly id = "DocLibTableAutoFormatStyle";
-  readonly title = "Table Auto Format Style";
+  readonly title = "DocLib Table Auto Format Style";
   readonly category = "format" as const;
   readonly mode = "TableAutoFormatStyle";
   readonly requiresSelection = false;

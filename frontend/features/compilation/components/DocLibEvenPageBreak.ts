@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibEvenPageBreak implements BlockTool {
   static readonly feature = {
     id: "DocLibEvenPageBreak",
-    title: "Even Page Break",
+    title: "DocLib Even Page Break",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2b7677076e2aac95"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="13,20 4,11 12,12 6,17 9,18 20,13"/></svg>',
     product: "doclib",
   } as const;
@@ -15,7 +15,7 @@ export default class DocLibEvenPageBreak implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "Even Page Break",
+      title: "DocLib Even Page Break",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2b7677076e2aac95"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="13,20 4,11 12,12 6,17 9,18 20,13"/></svg>',
     };
   }

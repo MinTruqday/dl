@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartSortRightClickMenu implements BlockTool {
   static readonly feature = {
     id: "DocLibChartSortRightClickMenu",
-    title: "Chart Sort Right Click Menu",
+    title: "DocLib Chart Sort Right Click Menu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3b66d789bf96298c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="12,4 15,5 8,18 11,8 9,16 14,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Sort Right Click Menu",
+      title: "DocLib Chart Sort Right Click Menu",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3b66d789bf96298c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="12,4 15,5 8,18 11,8 9,16 14,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartSortRightClickMenu implements BlockTool {
   }
 
   readonly id = "DocLibChartSortRightClickMenu";
-  readonly title = "Chart Sort Right Click Menu";
+  readonly title = "DocLib Chart Sort Right Click Menu";
   readonly category = "media" as const;
   readonly mode = "ChartSortRightClickMenu";
   readonly requiresSelection = false;

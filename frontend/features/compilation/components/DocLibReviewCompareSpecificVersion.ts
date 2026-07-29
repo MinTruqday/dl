@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibReviewCompareSpecificVersion implements BlockTool {
   static readonly feature = {
     id: "DocLibReviewCompareSpecificVersion",
-    title: "Review Compare Specific Version",
+    title: "DocLib Review Compare Specific Version",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7067f99b47fcb25e"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="14,5 15,6 7,18 12,13 14,6 9,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Review Compare Specific Version",
+      title: "DocLib Review Compare Specific Version",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7067f99b47fcb25e"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="14,5 15,6 7,18 12,13 14,6 9,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibReviewCompareSpecificVersion implements BlockTool {
   }
 
   readonly id = "DocLibReviewCompareSpecificVersion";
-  readonly title = "Review Compare Specific Version";
+  readonly title = "DocLib Review Compare Specific Version";
   readonly category = "review" as const;
   readonly mode = "ReviewCompareSpecificVersion";
   readonly requiresSelection = false;

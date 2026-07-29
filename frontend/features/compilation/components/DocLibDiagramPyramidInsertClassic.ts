@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDiagramPyramidInsertClassic implements BlockTool {
   static readonly feature = {
     id: "DocLibDiagramPyramidInsertClassic",
-    title: "Diagram Pyramid Insert Classic",
+    title: "DocLib Diagram Pyramid Insert Classic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="10a4d816769af8c5"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="20,15 16,9 20,5 14,14 9,12 15,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Diagram Pyramid Insert Classic",
+      title: "DocLib Diagram Pyramid Insert Classic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="10a4d816769af8c5"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="20,15 16,9 20,5 14,14 9,12 15,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDiagramPyramidInsertClassic implements BlockTool {
   }
 
   readonly id = "DocLibDiagramPyramidInsertClassic";
-  readonly title = "Diagram Pyramid Insert Classic";
+  readonly title = "DocLib Diagram Pyramid Insert Classic";
   readonly category = "format" as const;
   readonly mode = "DiagramPyramidInsertClassic";
   readonly requiresSelection = false;

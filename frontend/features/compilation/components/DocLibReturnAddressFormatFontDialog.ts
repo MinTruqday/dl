@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibReturnAddressFormatFontDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibReturnAddressFormatFontDialog",
-    title: "Return Address Format Font Dialog",
+    title: "DocLib Return Address Format Font Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ba99abf9a8cd4e42"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,4 5,15 19,5 14,19 16,5 10,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Return Address Format Font Dialog",
+      title: "DocLib Return Address Format Font Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ba99abf9a8cd4e42"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,4 5,15 19,5 14,19 16,5 10,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibReturnAddressFormatFontDialog implements BlockTool {
   }
 
   readonly id = "DocLibReturnAddressFormatFontDialog";
-  readonly title = "Return Address Format Font Dialog";
+  readonly title = "DocLib Return Address Format Font Dialog";
   readonly category = "format" as const;
   readonly mode = "ReturnAddressFormatFontDialog";
   readonly requiresSelection = false;

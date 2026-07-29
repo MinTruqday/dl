@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFileOpenRecentFile implements BlockTool {
   static readonly feature = {
     id: "DocLibFileOpenRecentFile",
-    title: "File Open Recent File",
+    title: "DocLib File Open Recent File",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="52bbc521fe68287c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="18,4 14,20 20,6 10,9 4,19 15,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "File Open Recent File",
+      title: "DocLib File Open Recent File",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="52bbc521fe68287c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="18,4 14,20 20,6 10,9 4,19 15,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFileOpenRecentFile implements BlockTool {
   }
 
   readonly id = "DocLibFileOpenRecentFile";
-  readonly title = "File Open Recent File";
+  readonly title = "DocLib File Open Recent File";
   readonly category = "format" as const;
   readonly mode = "FileOpenRecentFile";
   readonly requiresSelection = false;

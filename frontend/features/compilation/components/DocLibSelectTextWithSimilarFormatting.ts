@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSelectTextWithSimilarFormatting implements BlockTool {
   static readonly feature = {
     id: "DocLibSelectTextWithSimilarFormatting",
-    title: "Select Text With Similar Formatting",
+    title: "DocLib Select Text With Similar Formatting",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8340b4ba67086697"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="16,17 14,20 5,12 4,19 20,8 17,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Select Text With Similar Formatting",
+      title: "DocLib Select Text With Similar Formatting",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8340b4ba67086697"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="16,17 14,20 5,12 4,19 20,8 17,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSelectTextWithSimilarFormatting implements BlockTool 
   }
 
   readonly id = "DocLibSelectTextWithSimilarFormatting";
-  readonly title = "Select Text With Similar Formatting";
+  readonly title = "DocLib Select Text With Similar Formatting";
   readonly category = "format" as const;
   readonly mode = "SelectTextWithSimilarFormatting";
   readonly requiresSelection = false;

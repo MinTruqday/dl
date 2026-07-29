@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibObjectBringInFrontOfText implements BlockTool {
   static readonly feature = {
     id: "DocLibObjectBringInFrontOfText",
-    title: "Object Bring In Front Of Text",
+    title: "DocLib Object Bring In Front Of Text",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="360abb6a602b3558"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="7,14 4,8 15,13 6,7 14,6 10,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Object Bring In Front Of Text",
+      title: "DocLib Object Bring In Front Of Text",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="360abb6a602b3558"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="7,14 4,8 15,13 6,7 14,6 10,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibObjectBringInFrontOfText implements BlockTool {
   }
 
   readonly id = "DocLibObjectBringInFrontOfText";
-  readonly title = "Object Bring In Front Of Text";
+  readonly title = "DocLib Object Bring In Front Of Text";
   readonly category = "layout" as const;
   readonly mode = "ObjectBringInFrontOfText";
   readonly requiresSelection = false;

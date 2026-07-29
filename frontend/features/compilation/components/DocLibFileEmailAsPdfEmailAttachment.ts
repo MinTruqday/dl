@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFileEmailAsPdfEmailAttachment implements BlockTool {
   static readonly feature = {
     id: "DocLibFileEmailAsPdfEmailAttachment",
-    title: "File Email As PDF Email Attachment",
+    title: "DocLib File Email As PDF Email Attachment",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d70082fc19ff088d"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="15,4 15,18 12,4 12,9 11,11 19,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "File Email As PDF Email Attachment",
+      title: "DocLib File Email As PDF Email Attachment",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d70082fc19ff088d"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="15,4 15,18 12,4 12,9 11,11 19,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFileEmailAsPdfEmailAttachment implements BlockTool {
   }
 
   readonly id = "DocLibFileEmailAsPdfEmailAttachment";
-  readonly title = "File Email As PDF Email Attachment";
+  readonly title = "DocLib File Email As PDF Email Attachment";
   readonly category = "format" as const;
   readonly mode = "FileEmailAsPdfEmailAttachment";
   readonly requiresSelection = false;

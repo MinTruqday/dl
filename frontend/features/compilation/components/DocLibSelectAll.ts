@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSelectAll implements BlockTool {
   static readonly feature = {
     id: "DocLibSelectAll",
-    title: "Select All",
+    title: "DocLib Select All",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0299c666b84eca90"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="6,4 15,4 18,14 19,12 5,19 7,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Select All",
+      title: "DocLib Select All",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0299c666b84eca90"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="6,4 15,4 18,14 19,12 5,19 7,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSelectAll implements BlockTool {
   }
 
   readonly id = "DocLibSelectAll";
-  readonly title = "Select All";
+  readonly title = "DocLib Select All";
   readonly category = "format" as const;
   readonly mode = "SelectAll";
   readonly requiresSelection = false;

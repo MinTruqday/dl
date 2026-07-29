@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextFillGradientGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibTextFillGradientGallery",
-    title: "Text Fill Gradient Gallery",
+    title: "DocLib Text Fill Gradient Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="24cf13564ced7913"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="6,7 6,5 12,20 6,6 13,14 4,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Text Fill Gradient Gallery",
+      title: "DocLib Text Fill Gradient Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="24cf13564ced7913"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="6,7 6,5 12,20 6,6 13,14 4,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTextFillGradientGallery implements BlockTool {
   }
 
   readonly id = "DocLibTextFillGradientGallery";
-  readonly title = "Text Fill Gradient Gallery";
+  readonly title = "DocLib Text Fill Gradient Gallery";
   readonly category = "format" as const;
   readonly mode = "TextFillGradientGallery";
   readonly requiresSelection = false;

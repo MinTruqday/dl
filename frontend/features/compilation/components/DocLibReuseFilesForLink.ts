@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibReuseFilesForLink implements BlockTool {
   static readonly feature = {
     id: "DocLibReuseFilesForLink",
-    title: "Reuse Files For Link",
+    title: "DocLib Reuse Files For Link",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c855c3876a81e18f"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="17,4 12,20 8,14 8,11 16,14 6,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Reuse Files For Link",
+      title: "DocLib Reuse Files For Link",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c855c3876a81e18f"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="17,4 12,20 8,14 8,11 16,14 6,9"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibReuseFilesForLink implements BlockTool {
   }
 
   readonly id = "DocLibReuseFilesForLink";
-  readonly title = "Reuse Files For Link";
+  readonly title = "DocLib Reuse Files For Link";
   readonly category = "insert" as const;
   readonly mode = "ReuseFilesForLink";
   readonly requiresSelection = false;

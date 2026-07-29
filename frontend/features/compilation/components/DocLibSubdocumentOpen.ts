@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSubdocumentOpen implements BlockTool {
   static readonly feature = {
     id: "DocLibSubdocumentOpen",
-    title: "Subdocument Open",
+    title: "DocLib Subdocument Open",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7f18e56f8f1bcc17"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,11 12,13 11,14 4,10 12,4 6,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Subdocument Open",
+      title: "DocLib Subdocument Open",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7f18e56f8f1bcc17"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,11 12,13 11,14 4,10 12,4 6,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSubdocumentOpen implements BlockTool {
   }
 
   readonly id = "DocLibSubdocumentOpen";
-  readonly title = "Subdocument Open";
+  readonly title = "DocLib Subdocument Open";
   readonly category = "format" as const;
   readonly mode = "SubdocumentOpen";
   readonly requiresSelection = false;

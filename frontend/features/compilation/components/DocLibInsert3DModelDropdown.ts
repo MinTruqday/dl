@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibInsert3DModelDropdown implements BlockTool {
   static readonly feature = {
     id: "DocLibInsert3DModelDropdown",
-    title: "Insert3D Model Dropdown",
+    title: "DocLib Insert3D Model Dropdown",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9d443ebb3cf33882"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,4 15,4 13,9 9,15 7,11 18,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Insert3D Model Dropdown",
+      title: "DocLib Insert3D Model Dropdown",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9d443ebb3cf33882"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,4 15,4 13,9 9,15 7,11 18,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibInsert3DModelDropdown implements BlockTool {
   }
 
   readonly id = "DocLibInsert3DModelDropdown";
-  readonly title = "Insert3D Model Dropdown";
+  readonly title = "DocLib Insert3D Model Dropdown";
   readonly category = "insert" as const;
   readonly mode = "Insert3DModelDropdown";
   readonly requiresSelection = false;

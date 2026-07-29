@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMailMergeEmailOptions implements BlockTool {
   static readonly feature = {
     id: "DocLibMailMergeEmailOptions",
-    title: "Mail Merge Email Options",
+    title: "DocLib Mail Merge Email Options",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c2e443fc52056c0c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,11 20,18 18,9 10,16 20,14 18,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Mail Merge Email Options",
+      title: "DocLib Mail Merge Email Options",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c2e443fc52056c0c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,11 20,18 18,9 10,16 20,14 18,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibMailMergeEmailOptions implements BlockTool {
   }
 
   readonly id = "DocLibMailMergeEmailOptions";
-  readonly title = "Mail Merge Email Options";
+  readonly title = "DocLib Mail Merge Email Options";
   readonly category = "format" as const;
   readonly mode = "MailMergeEmailOptions";
   readonly requiresSelection = false;

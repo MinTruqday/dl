@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibShapeLeftBrace implements BlockTool {
   static readonly feature = {
     id: "DocLibShapeLeftBrace",
-    title: "Shape Left Brace",
+    title: "DocLib Shape Left Brace",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="dccc023515cf23f1"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="20,4 6,6 8,7 5,7 16,12 14,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Shape Left Brace",
+      title: "DocLib Shape Left Brace",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="dccc023515cf23f1"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="20,4 6,6 8,7 5,7 16,12 14,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibShapeLeftBrace implements BlockTool {
   }
 
   readonly id = "DocLibShapeLeftBrace";
-  readonly title = "Shape Left Brace";
+  readonly title = "DocLib Shape Left Brace";
   readonly category = "format" as const;
   readonly mode = "ShapeLeftBrace";
   readonly requiresSelection = false;

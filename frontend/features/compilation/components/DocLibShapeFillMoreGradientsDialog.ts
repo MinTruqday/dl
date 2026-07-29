@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibShapeFillMoreGradientsDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibShapeFillMoreGradientsDialog",
-    title: "Shape Fill More Gradients Dialog",
+    title: "DocLib Shape Fill More Gradients Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9ad372983da41cc4"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,11 16,20 14,15 15,13 9,4 9,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Shape Fill More Gradients Dialog",
+      title: "DocLib Shape Fill More Gradients Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9ad372983da41cc4"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,11 16,20 14,15 15,13 9,4 9,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibShapeFillMoreGradientsDialog implements BlockTool {
   }
 
   readonly id = "DocLibShapeFillMoreGradientsDialog";
-  readonly title = "Shape Fill More Gradients Dialog";
+  readonly title = "DocLib Shape Fill More Gradients Dialog";
   readonly category = "format" as const;
   readonly mode = "ShapeFillMoreGradientsDialog";
   readonly requiresSelection = false;

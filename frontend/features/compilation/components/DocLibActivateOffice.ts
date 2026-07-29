@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibActivateOffice implements BlockTool {
   static readonly feature = {
     id: "DocLibActivateOffice",
-    title: "Activate Office",
+    title: "DocLib Activate Office",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9f9b4175aa5446b7"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="10,6 18,19 4,20 6,17 8,15 8,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Activate Office",
+      title: "DocLib Activate Office",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9f9b4175aa5446b7"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="10,6 18,19 4,20 6,17 8,15 8,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibActivateOffice implements BlockTool {
   }
 
   readonly id = "DocLibActivateOffice";
-  readonly title = "Activate Office";
+  readonly title = "DocLib Activate Office";
   readonly category = "format" as const;
   readonly mode = "ActivateOffice";
   readonly requiresSelection = false;

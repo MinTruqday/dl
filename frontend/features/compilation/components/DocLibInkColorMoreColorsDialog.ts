@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibInkColorMoreColorsDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibInkColorMoreColorsDialog",
-    title: "Ink Color More Colors Dialog",
+    title: "DocLib Ink Color More Colors Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7b19fcff50e126a8"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="8,12 18,4 16,8 8,19 4,14 13,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Ink Color More Colors Dialog",
+      title: "DocLib Ink Color More Colors Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7b19fcff50e126a8"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="8,12 18,4 16,8 8,19 4,14 13,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibInkColorMoreColorsDialog implements BlockTool {
   }
 
   readonly id = "DocLibInkColorMoreColorsDialog";
-  readonly title = "Ink Color More Colors Dialog";
+  readonly title = "DocLib Ink Color More Colors Dialog";
   readonly category = "format" as const;
   readonly mode = "InkColorMoreColorsDialog";
   readonly requiresSelection = false;

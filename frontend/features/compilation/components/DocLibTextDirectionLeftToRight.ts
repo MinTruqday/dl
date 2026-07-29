@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextDirectionLeftToRight implements BlockTool {
   static readonly feature = {
     id: "DocLibTextDirectionLeftToRight",
-    title: "Text Direction Left To Right",
+    title: "DocLib Text Direction Left To Right",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="40440aecf19e6a93"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,4 14,19 7,9 8,15 13,17 5,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Text Direction Left To Right",
+      title: "DocLib Text Direction Left To Right",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="40440aecf19e6a93"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,4 14,19 7,9 8,15 13,17 5,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTextDirectionLeftToRight implements BlockTool {
   }
 
   readonly id = "DocLibTextDirectionLeftToRight";
-  readonly title = "Text Direction Left To Right";
+  readonly title = "DocLib Text Direction Left To Right";
   readonly category = "format" as const;
   readonly mode = "TextDirectionLeftToRight";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWebGoForward implements BlockTool {
   static readonly feature = {
     id: "DocLibWebGoForward",
-    title: "Web Go Forward",
+    title: "DocLib Web Go Forward",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="64e1fe7c949f519c"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,8 20,9 16,10 17,7 13,12 11,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Web Go Forward",
+      title: "DocLib Web Go Forward",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="64e1fe7c949f519c"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,8 20,9 16,10 17,7 13,12 11,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibWebGoForward implements BlockTool {
   }
 
   readonly id = "DocLibWebGoForward";
-  readonly title = "Web Go Forward";
+  readonly title = "DocLib Web Go Forward";
   readonly category = "format" as const;
   readonly mode = "WebGoForward";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartSecondaryVerticalGridlinesOptionsDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibChartSecondaryVerticalGridlinesOptionsDialog",
-    title: "Chart Secondary Vertical Gridlines Options Dialog",
+    title: "DocLib Chart Secondary Vertical Gridlines Options Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="47fa39f03cafbb61"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="7,16 10,6 13,9 4,16 4,19 20,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Secondary Vertical Gridlines Options Dialog",
+      title: "DocLib Chart Secondary Vertical Gridlines Options Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="47fa39f03cafbb61"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="7,16 10,6 13,9 4,16 4,19 20,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartSecondaryVerticalGridlinesOptionsDialog implemen
   }
 
   readonly id = "DocLibChartSecondaryVerticalGridlinesOptionsDialog";
-  readonly title = "Chart Secondary Vertical Gridlines Options Dialog";
+  readonly title = "DocLib Chart Secondary Vertical Gridlines Options Dialog";
   readonly category = "layout" as const;
   readonly mode = "ChartSecondaryVerticalGridlinesOptionsDialog";
   readonly requiresSelection = false;

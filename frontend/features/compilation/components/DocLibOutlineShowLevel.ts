@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibOutlineShowLevel implements BlockTool {
   static readonly feature = {
     id: "DocLibOutlineShowLevel",
-    title: "Outline Show Level",
+    title: "DocLib Outline Show Level",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3b9ac702a8f47977"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="12,5 16,6 19,10 6,4 18,10 12,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Outline Show Level",
+      title: "DocLib Outline Show Level",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3b9ac702a8f47977"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="12,5 16,6 19,10 6,4 18,10 12,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibOutlineShowLevel implements BlockTool {
   }
 
   readonly id = "DocLibOutlineShowLevel";
-  readonly title = "Outline Show Level";
+  readonly title = "DocLib Outline Show Level";
   readonly category = "format" as const;
   readonly mode = "OutlineShowLevel";
   readonly requiresSelection = false;

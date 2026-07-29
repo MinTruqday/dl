@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextEngrave implements BlockTool {
   static readonly feature = {
     id: "DocLibTextEngrave",
-    title: "Text Engrave",
+    title: "DocLib Text Engrave",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b1d9e264ad8badae"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="11,17 9,19 7,7 7,8 10,7 9,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Text Engrave",
+      title: "DocLib Text Engrave",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b1d9e264ad8badae"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="11,17 9,19 7,7 7,8 10,7 9,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTextEngrave implements BlockTool {
   }
 
   readonly id = "DocLibTextEngrave";
-  readonly title = "Text Engrave";
+  readonly title = "DocLib Text Engrave";
   readonly category = "format" as const;
   readonly mode = "TextEngrave";
   readonly requiresSelection = true;

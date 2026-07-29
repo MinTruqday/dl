@@ -10,7 +10,7 @@ interface GanttTask {
 export default class DocLibGantt implements BlockTool {
   static readonly feature = {
     id: "DocLibGantt",
-    title: "Gantt",
+    title: "DocLib Gantt",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2fb100fbc1408fba"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="17,11 4,17 10,17 11,20 17,12 17,18"/></svg>',
     product: "doclib",
   } as const;
@@ -22,7 +22,7 @@ export default class DocLibGantt implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "Gantt",
+      title: "DocLib Gantt",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2fb100fbc1408fba"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="17,11 4,17 10,17 11,20 17,12 17,18"/></svg>',
     };
   }

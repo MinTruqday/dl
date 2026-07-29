@@ -1,9 +1,10 @@
 import { API, InlineTool } from "@editorjs/editorjs";
+import { requestEditorInput } from "./editor-dialog";
 
 export default class DocLibSpecialCharacter implements InlineTool {
   static readonly feature = {
     id: "DocLibSpecialCharacter",
-    title: "Special Character",
+    title: "DocLib Special Character",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="253c11e2f2daa59f"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,13 4,9 8,18 16,10 19,17 12,13"/></svg>',
     product: "doclib",
   } as const;
@@ -28,11 +29,14 @@ export default class DocLibSpecialCharacter implements InlineTool {
   }
 
   surround(range: Range) {
-    const char = prompt("Enter special character");
-    if (char) {
+    void requestEditorInput({
+      title: "DocLib Special Character",
+      label: "Ký tự",
+    }).then((char) => {
+      if (!char) return;
       const textNode = document.createTextNode(char);
       range.insertNode(textNode);
-    }
+    });
   }
 
   checkState(selection: Selection) {

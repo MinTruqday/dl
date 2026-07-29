@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAsianLayoutCharactersEnclose implements BlockTool {
   static readonly feature = {
     id: "DocLibAsianLayoutCharactersEnclose",
-    title: "Asian Layout Characters Enclose",
+    title: "DocLib Asian Layout Characters Enclose",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="daaf901f3d4b6e54"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="18,9 12,18 14,11 12,20 9,15 14,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Asian Layout Characters Enclose",
+      title: "DocLib Asian Layout Characters Enclose",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="daaf901f3d4b6e54"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="18,9 12,18 14,11 12,20 9,15 14,6"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibAsianLayoutCharactersEnclose implements BlockTool {
   }
 
   readonly id = "DocLibAsianLayoutCharactersEnclose";
-  readonly title = "Asian Layout Characters Enclose";
+  readonly title = "DocLib Asian Layout Characters Enclose";
   readonly category = "format" as const;
   readonly mode = "AsianLayoutCharactersEnclose";
   readonly requiresSelection = false;

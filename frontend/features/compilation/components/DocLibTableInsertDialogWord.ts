@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableInsertDialogWord implements BlockTool {
   static readonly feature = {
     id: "DocLibTableInsertDialogWord",
-    title: "Table Insert Dialog Word",
+    title: "DocLib Table Insert Dialog Word",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2ff8c06fa6eaf179"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,14 9,13 17,17 7,6 20,6 8,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Table Insert Dialog Word",
+      title: "DocLib Table Insert Dialog Word",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2ff8c06fa6eaf179"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,14 9,13 17,17 7,6 20,6 8,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTableInsertDialogWord implements BlockTool {
   }
 
   readonly id = "DocLibTableInsertDialogWord";
-  readonly title = "Table Insert Dialog Word";
+  readonly title = "DocLib Table Insert Dialog Word";
   readonly category = "table" as const;
   readonly mode = "TableInsertDialogWord";
   readonly requiresSelection = false;

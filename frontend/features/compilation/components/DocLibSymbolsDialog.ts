@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSymbolsDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibSymbolsDialog",
-    title: "Symbols Dialog",
+    title: "DocLib Symbols Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8e4ab8eb37365ff2"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,10 18,18 8,7 14,8 20,5 6,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Symbols Dialog",
+      title: "DocLib Symbols Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8e4ab8eb37365ff2"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,10 18,18 8,7 14,8 20,5 6,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSymbolsDialog implements BlockTool {
   }
 
   readonly id = "DocLibSymbolsDialog";
-  readonly title = "Symbols Dialog";
+  readonly title = "DocLib Symbols Dialog";
   readonly category = "insert" as const;
   readonly mode = "SymbolsDialog";
   readonly requiresSelection = false;

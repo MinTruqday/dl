@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSetProofingLanguage implements BlockTool {
   static readonly feature = {
     id: "DocLibSetProofingLanguage",
-    title: "Set Proofing Language",
+    title: "DocLib Set Proofing Language",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4359bf934d3b5d95"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="20,8 8,15 13,12 12,17 20,15 5,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Set Proofing Language",
+      title: "DocLib Set Proofing Language",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4359bf934d3b5d95"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="20,8 8,15 13,12 12,17 20,15 5,6"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSetProofingLanguage implements BlockTool {
   }
 
   readonly id = "DocLibSetProofingLanguage";
-  readonly title = "Set Proofing Language";
+  readonly title = "DocLib Set Proofing Language";
   readonly category = "format" as const;
   readonly mode = "SetProofingLanguage";
   readonly requiresSelection = false;

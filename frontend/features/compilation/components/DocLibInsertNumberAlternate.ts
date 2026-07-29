@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibInsertNumberAlternate implements BlockTool {
   static readonly feature = {
     id: "DocLibInsertNumberAlternate",
-    title: "Insert Number Alternate",
+    title: "DocLib Insert Number Alternate",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="90dbc6f77efb266f"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="12,19 15,13 11,17 8,13 18,15 18,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Insert Number Alternate",
+      title: "DocLib Insert Number Alternate",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="90dbc6f77efb266f"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="12,19 15,13 11,17 8,13 18,15 18,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibInsertNumberAlternate implements BlockTool {
   }
 
   readonly id = "DocLibInsertNumberAlternate";
-  readonly title = "Insert Number Alternate";
+  readonly title = "DocLib Insert Number Alternate";
   readonly category = "insert" as const;
   readonly mode = "InsertNumberAlternate";
   readonly requiresSelection = false;

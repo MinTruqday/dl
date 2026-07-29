@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibEquationLimitGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibEquationLimitGallery",
-    title: "Equation Limit Gallery",
+    title: "DocLib Equation Limit Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e6613646384833eb"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="13,16 7,6 9,8 4,18 12,15 20,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Equation Limit Gallery",
+      title: "DocLib Equation Limit Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e6613646384833eb"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="13,16 7,6 9,8 4,18 12,15 20,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibEquationLimitGallery implements BlockTool {
   }
 
   readonly id = "DocLibEquationLimitGallery";
-  readonly title = "Equation Limit Gallery";
+  readonly title = "DocLib Equation Limit Gallery";
   readonly category = "format" as const;
   readonly mode = "EquationLimitGallery";
   readonly requiresSelection = false;

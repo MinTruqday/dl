@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSpellingHideErrors implements BlockTool {
   static readonly feature = {
     id: "DocLibSpellingHideErrors",
-    title: "Spelling Hide Errors",
+    title: "DocLib Spelling Hide Errors",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="675bd70a603801df"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,10 15,14 15,9 5,6 11,19 4,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Spelling Hide Errors",
+      title: "DocLib Spelling Hide Errors",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="675bd70a603801df"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,10 15,14 15,9 5,6 11,19 4,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSpellingHideErrors implements BlockTool {
   }
 
   readonly id = "DocLibSpellingHideErrors";
-  readonly title = "Spelling Hide Errors";
+  readonly title = "DocLib Spelling Hide Errors";
   readonly category = "format" as const;
   readonly mode = "SpellingHideErrors";
   readonly requiresSelection = false;

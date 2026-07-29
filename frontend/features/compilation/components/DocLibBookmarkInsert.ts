@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibBookmarkInsert implements BlockTool {
   static readonly feature = {
     id: "DocLibBookmarkInsert",
-    title: "Bookmark Insert",
+    title: "DocLib Bookmark Insert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9face227a01d76bb"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="10,6 9,9 11,16 20,4 9,11 16,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Bookmark Insert",
+      title: "DocLib Bookmark Insert",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9face227a01d76bb"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="10,6 9,9 11,16 20,4 9,11 16,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibBookmarkInsert implements BlockTool {
   }
 
   readonly id = "DocLibBookmarkInsert";
-  readonly title = "Bookmark Insert";
+  readonly title = "DocLib Bookmark Insert";
   readonly category = "insert" as const;
   readonly mode = "BookmarkInsert";
   readonly requiresSelection = false;

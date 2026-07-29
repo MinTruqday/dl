@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibReviewShowMarkupMenu implements BlockTool {
   static readonly feature = {
     id: "DocLibReviewShowMarkupMenu",
-    title: "Review Show Markup Menu",
+    title: "DocLib Review Show Markup Menu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6f2ef5e0e89d65d0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="13,16 11,7 15,8 20,8 13,12 11,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Review Show Markup Menu",
+      title: "DocLib Review Show Markup Menu",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6f2ef5e0e89d65d0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="13,16 11,7 15,8 20,8 13,12 11,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibReviewShowMarkupMenu implements BlockTool {
   }
 
   readonly id = "DocLibReviewShowMarkupMenu";
-  readonly title = "Review Show Markup Menu";
+  readonly title = "DocLib Review Show Markup Menu";
   readonly category = "review" as const;
   readonly mode = "ReviewShowMarkupMenu";
   readonly requiresSelection = false;

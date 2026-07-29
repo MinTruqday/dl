@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextBoxStyleGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibTextBoxStyleGallery",
-    title: "Text Box Style Gallery",
+    title: "DocLib Text Box Style Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="46d8f2bde68f83f4"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="6,16 8,6 13,11 16,10 16,17 5,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Text Box Style Gallery",
+      title: "DocLib Text Box Style Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="46d8f2bde68f83f4"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="6,16 8,6 13,11 16,10 16,17 5,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTextBoxStyleGallery implements BlockTool {
   }
 
   readonly id = "DocLibTextBoxStyleGallery";
-  readonly title = "Text Box Style Gallery";
+  readonly title = "DocLib Text Box Style Gallery";
   readonly category = "format" as const;
   readonly mode = "TextBoxStyleGallery";
   readonly requiresSelection = false;

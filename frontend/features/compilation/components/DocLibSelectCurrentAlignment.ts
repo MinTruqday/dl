@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSelectCurrentAlignment implements BlockTool {
   static readonly feature = {
     id: "DocLibSelectCurrentAlignment",
-    title: "Select Current Alignment",
+    title: "DocLib Select Current Alignment",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ba213fe63540d29a"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="20,20 16,13 6,17 10,5 4,13 18,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Select Current Alignment",
+      title: "DocLib Select Current Alignment",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ba213fe63540d29a"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="20,20 16,13 6,17 10,5 4,13 18,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSelectCurrentAlignment implements BlockTool {
   }
 
   readonly id = "DocLibSelectCurrentAlignment";
-  readonly title = "Select Current Alignment";
+  readonly title = "DocLib Select Current Alignment";
   readonly category = "format" as const;
   readonly mode = "SelectCurrentAlignment";
   readonly requiresSelection = false;

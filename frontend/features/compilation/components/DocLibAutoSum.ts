@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAutoSum implements BlockTool {
   static readonly feature = {
     id: "DocLibAutoSum",
-    title: "Auto Sum",
+    title: "DocLib Auto Sum",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5ddcbe6b4ebb3478"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="12,20 7,9 14,4 5,5 7,15 10,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Auto Sum",
+      title: "DocLib Auto Sum",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5ddcbe6b4ebb3478"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="12,20 7,9 14,4 5,5 7,15 10,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibAutoSum implements BlockTool {
   }
 
   readonly id = "DocLibAutoSum";
-  readonly title = "Auto Sum";
+  readonly title = "DocLib Auto Sum";
   readonly category = "format" as const;
   readonly mode = "AutoSum";
   readonly requiresSelection = false;

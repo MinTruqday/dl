@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAutoSummaryUpdateProperties implements BlockTool {
   static readonly feature = {
     id: "DocLibAutoSummaryUpdateProperties",
-    title: "Auto Summary Update Properties",
+    title: "DocLib Auto Summary Update Properties",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="559a402ef8c4b10e"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="4,5 17,16 14,13 11,18 11,10 16,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Auto Summary Update Properties",
+      title: "DocLib Auto Summary Update Properties",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="559a402ef8c4b10e"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="4,5 17,16 14,13 11,18 11,10 16,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibAutoSummaryUpdateProperties implements BlockTool {
   }
 
   readonly id = "DocLibAutoSummaryUpdateProperties";
-  readonly title = "Auto Summary Update Properties";
+  readonly title = "DocLib Auto Summary Update Properties";
   readonly category = "format" as const;
   readonly mode = "AutoSummaryUpdateProperties";
   readonly requiresSelection = false;

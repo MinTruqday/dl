@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPasteAsHyperlink implements BlockTool {
   static readonly feature = {
     id: "DocLibPasteAsHyperlink",
-    title: "Paste As Hyperlink",
+    title: "DocLib Paste As Hyperlink",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="18bb999daa4bf94a"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,4 4,8 4,11 15,10 11,19 17,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Paste As Hyperlink",
+      title: "DocLib Paste As Hyperlink",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="18bb999daa4bf94a"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,4 4,8 4,11 15,10 11,19 17,9"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPasteAsHyperlink implements BlockTool {
   }
 
   readonly id = "DocLibPasteAsHyperlink";
-  readonly title = "Paste As Hyperlink";
+  readonly title = "DocLib Paste As Hyperlink";
   readonly category = "format" as const;
   readonly mode = "PasteAsHyperlink";
   readonly requiresSelection = false;

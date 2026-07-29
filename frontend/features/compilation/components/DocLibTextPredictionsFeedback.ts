@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextPredictionsFeedback implements BlockTool {
   static readonly feature = {
     id: "DocLibTextPredictionsFeedback",
-    title: "Text Predictions Feedback",
+    title: "DocLib Text Predictions Feedback",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c8ca56f3a6668f6f"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="17,19 5,9 17,4 11,13 4,18 8,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Text Predictions Feedback",
+      title: "DocLib Text Predictions Feedback",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c8ca56f3a6668f6f"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="17,19 5,9 17,4 11,13 4,18 8,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTextPredictionsFeedback implements BlockTool {
   }
 
   readonly id = "DocLibTextPredictionsFeedback";
-  readonly title = "Text Predictions Feedback";
+  readonly title = "DocLib Text Predictions Feedback";
   readonly category = "format" as const;
   readonly mode = "TextPredictionsFeedback";
   readonly requiresSelection = false;

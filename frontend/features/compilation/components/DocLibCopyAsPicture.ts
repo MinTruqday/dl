@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibCopyAsPicture implements BlockTool {
   static readonly feature = {
     id: "DocLibCopyAsPicture",
-    title: "Copy As Picture",
+    title: "DocLib Copy As Picture",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="736d57756ddf1f8a"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="17,11 6,19 11,6 18,6 19,10 9,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Copy As Picture",
+      title: "DocLib Copy As Picture",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="736d57756ddf1f8a"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="17,11 6,19 11,6 18,6 19,10 9,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibCopyAsPicture implements BlockTool {
   }
 
   readonly id = "DocLibCopyAsPicture";
-  readonly title = "Copy As Picture";
+  readonly title = "DocLib Copy As Picture";
   readonly category = "format" as const;
   readonly mode = "CopyAsPicture";
   readonly requiresSelection = false;

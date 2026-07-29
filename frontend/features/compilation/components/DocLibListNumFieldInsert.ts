@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibListNumFieldInsert implements BlockTool {
   static readonly feature = {
     id: "DocLibListNumFieldInsert",
-    title: "List Num Field Insert",
+    title: "DocLib List Num Field Insert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e1b32a0e68a72271"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,13 12,18 6,18 4,15 18,12 17,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "List Num Field Insert",
+      title: "DocLib List Num Field Insert",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e1b32a0e68a72271"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,13 12,18 6,18 4,15 18,12 17,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibListNumFieldInsert implements BlockTool {
   }
 
   readonly id = "DocLibListNumFieldInsert";
-  readonly title = "List Num Field Insert";
+  readonly title = "DocLib List Num Field Insert";
   readonly category = "format" as const;
   readonly mode = "ListNumFieldInsert";
   readonly requiresSelection = false;

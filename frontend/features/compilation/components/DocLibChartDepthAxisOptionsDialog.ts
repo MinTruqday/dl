@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartDepthAxisOptionsDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibChartDepthAxisOptionsDialog",
-    title: "Chart Depth Axis Options Dialog",
+    title: "DocLib Chart Depth Axis Options Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="53608ed4e6b76255"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,15 10,12 13,17 17,4 9,5 13,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Depth Axis Options Dialog",
+      title: "DocLib Chart Depth Axis Options Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="53608ed4e6b76255"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,15 10,12 13,17 17,4 9,5 13,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartDepthAxisOptionsDialog implements BlockTool {
   }
 
   readonly id = "DocLibChartDepthAxisOptionsDialog";
-  readonly title = "Chart Depth Axis Options Dialog";
+  readonly title = "DocLib Chart Depth Axis Options Dialog";
   readonly category = "layout" as const;
   readonly mode = "ChartDepthAxisOptionsDialog";
   readonly requiresSelection = false;

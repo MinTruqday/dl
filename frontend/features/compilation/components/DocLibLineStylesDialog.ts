@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLineStylesDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibLineStylesDialog",
-    title: "Line Styles Dialog",
+    title: "DocLib Line Styles Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e77291d6546f5b50"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="14,16 13,14 20,13 10,16 16,17 12,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Line Styles Dialog",
+      title: "DocLib Line Styles Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e77291d6546f5b50"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="14,16 13,14 20,13 10,16 16,17 12,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibLineStylesDialog implements BlockTool {
   }
 
   readonly id = "DocLibLineStylesDialog";
-  readonly title = "Line Styles Dialog";
+  readonly title = "DocLib Line Styles Dialog";
   readonly category = "format" as const;
   readonly mode = "LineStylesDialog";
   readonly requiresSelection = false;

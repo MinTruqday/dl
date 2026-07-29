@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPageDownExtend implements BlockTool {
   static readonly feature = {
     id: "DocLibPageDownExtend",
-    title: "Page Down Extend",
+    title: "DocLib Page Down Extend",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5838a9bf43298f7a"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="7,9 20,8 20,11 11,7 7,11 8,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Page Down Extend",
+      title: "DocLib Page Down Extend",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5838a9bf43298f7a"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="7,9 20,8 20,11 11,7 7,11 8,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPageDownExtend implements BlockTool {
   }
 
   readonly id = "DocLibPageDownExtend";
-  readonly title = "Page Down Extend";
+  readonly title = "DocLib Page Down Extend";
   readonly category = "format" as const;
   readonly mode = "PageDownExtend";
   readonly requiresSelection = false;

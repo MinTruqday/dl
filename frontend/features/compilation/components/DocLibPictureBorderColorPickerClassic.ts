@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPictureBorderColorPickerClassic implements BlockTool {
   static readonly feature = {
     id: "DocLibPictureBorderColorPickerClassic",
-    title: "Picture Border Color Picker Classic",
+    title: "DocLib Picture Border Color Picker Classic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="703a6a4b44de95d3"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="14,11 8,11 4,5 17,11 11,17 12,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Picture Border Color Picker Classic",
+      title: "DocLib Picture Border Color Picker Classic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="703a6a4b44de95d3"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="14,11 8,11 4,5 17,11 11,17 12,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPictureBorderColorPickerClassic implements BlockTool 
   }
 
   readonly id = "DocLibPictureBorderColorPickerClassic";
-  readonly title = "Picture Border Color Picker Classic";
+  readonly title = "DocLib Picture Border Color Picker Classic";
   readonly category = "media" as const;
   readonly mode = "PictureBorderColorPickerClassic";
   readonly requiresSelection = false;

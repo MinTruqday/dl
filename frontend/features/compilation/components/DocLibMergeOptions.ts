@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMergeOptions implements BlockTool {
   static readonly feature = {
     id: "DocLibMergeOptions",
-    title: "Merge Options",
+    title: "DocLib Merge Options",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="75d87be735566116"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="19,16 8,14 6,5 16,9 16,17 16,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Merge Options",
+      title: "DocLib Merge Options",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="75d87be735566116"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="19,16 8,14 6,5 16,9 16,17 16,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibMergeOptions implements BlockTool {
   }
 
   readonly id = "DocLibMergeOptions";
-  readonly title = "Merge Options";
+  readonly title = "DocLib Merge Options";
   readonly category = "format" as const;
   readonly mode = "MergeOptions";
   readonly requiresSelection = false;

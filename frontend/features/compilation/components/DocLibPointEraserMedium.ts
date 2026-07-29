@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPointEraserMedium implements BlockTool {
   static readonly feature = {
     id: "DocLibPointEraserMedium",
-    title: "Point Eraser Medium",
+    title: "DocLib Point Eraser Medium",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="91cf7ff890444666"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="13,7 12,14 12,4 6,4 16,15 14,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Point Eraser Medium",
+      title: "DocLib Point Eraser Medium",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="91cf7ff890444666"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="13,7 12,14 12,4 6,4 16,15 14,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPointEraserMedium implements BlockTool {
   }
 
   readonly id = "DocLibPointEraserMedium";
-  readonly title = "Point Eraser Medium";
+  readonly title = "DocLib Point Eraser Medium";
   readonly category = "format" as const;
   readonly mode = "PointEraserMedium";
   readonly requiresSelection = false;

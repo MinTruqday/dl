@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibActiveXLabel implements BlockTool {
   static readonly feature = {
     id: "DocLibActiveXLabel",
-    title: "Active X Label",
+    title: "DocLib Active X Label",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a2e918b62a28cf8c"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="13,16 11,16 12,10 7,8 10,10 7,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Active X Label",
+      title: "DocLib Active X Label",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a2e918b62a28cf8c"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="13,16 11,16 12,10 7,8 10,10 7,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibActiveXLabel implements BlockTool {
   }
 
   readonly id = "DocLibActiveXLabel";
-  readonly title = "Active X Label";
+  readonly title = "DocLib Active X Label";
   readonly category = "automation" as const;
   readonly mode = "ActiveXLabel";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableColumnSelectWord implements BlockTool {
   static readonly feature = {
     id: "DocLibTableColumnSelectWord",
-    title: "Table Column Select Word",
+    title: "DocLib Table Column Select Word",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="78d1ba505948ec69"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,9 20,16 8,8 19,7 12,4 7,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Table Column Select Word",
+      title: "DocLib Table Column Select Word",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="78d1ba505948ec69"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,9 20,16 8,8 19,7 12,4 7,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTableColumnSelectWord implements BlockTool {
   }
 
   readonly id = "DocLibTableColumnSelectWord";
-  readonly title = "Table Column Select Word";
+  readonly title = "DocLib Table Column Select Word";
   readonly category = "format" as const;
   readonly mode = "TableColumnSelectWord";
   readonly requiresSelection = false;

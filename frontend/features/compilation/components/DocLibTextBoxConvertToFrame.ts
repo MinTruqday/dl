@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextBoxConvertToFrame implements BlockTool {
   static readonly feature = {
     id: "DocLibTextBoxConvertToFrame",
-    title: "Text Box Convert To Frame",
+    title: "DocLib Text Box Convert To Frame",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="567932028f13a05d"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="5,6 20,6 11,6 11,12 5,6 5,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Text Box Convert To Frame",
+      title: "DocLib Text Box Convert To Frame",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="567932028f13a05d"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="5,6 20,6 11,6 11,12 5,6 5,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTextBoxConvertToFrame implements BlockTool {
   }
 
   readonly id = "DocLibTextBoxConvertToFrame";
-  readonly title = "Text Box Convert To Frame";
+  readonly title = "DocLib Text Box Convert To Frame";
   readonly category = "format" as const;
   readonly mode = "TextBoxConvertToFrame";
   readonly requiresSelection = false;

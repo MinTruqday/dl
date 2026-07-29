@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibOrientation implements BlockTool {
   static readonly feature = {
     id: "DocLibOrientation",
-    title: "Orientation",
+    title: "DocLib Orientation",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6b3b5e668c4947b4"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="9,12 13,4 8,9 7,14 13,14 6,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Orientation",
+      title: "DocLib Orientation",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6b3b5e668c4947b4"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="9,12 13,4 8,9 7,14 13,14 6,6"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibOrientation implements BlockTool {
   }
 
   readonly id = "DocLibOrientation";
-  readonly title = "Orientation";
+  readonly title = "DocLib Orientation";
   readonly category = "layout" as const;
   readonly mode = "Orientation";
   readonly requiresSelection = false;

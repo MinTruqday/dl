@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPrintLayout implements BlockTool {
   static readonly feature = {
     id: "DocLibPrintLayout",
-    title: "Print Layout",
+    title: "DocLib Print Layout",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9d735eb9768a3814"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="8,17 13,19 20,6 9,7 13,17 18,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Print Layout",
+      title: "DocLib Print Layout",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9d735eb9768a3814"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="8,17 13,19 20,6 9,7 13,17 18,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPrintLayout implements BlockTool {
   }
 
   readonly id = "DocLibPrintLayout";
-  readonly title = "Print Layout";
+  readonly title = "DocLib Print Layout";
   readonly category = "view" as const;
   readonly mode = "PrintLayout";
   readonly requiresSelection = false;

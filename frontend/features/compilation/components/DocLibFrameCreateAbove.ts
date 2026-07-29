@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFrameCreateAbove implements BlockTool {
   static readonly feature = {
     id: "DocLibFrameCreateAbove",
-    title: "Frame Create Above",
+    title: "DocLib Frame Create Above",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="147c6a73a0fcf36b"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="7,9 8,17 11,18 9,9 13,6 7,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Frame Create Above",
+      title: "DocLib Frame Create Above",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="147c6a73a0fcf36b"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="7,9 8,17 11,18 9,9 13,6 7,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFrameCreateAbove implements BlockTool {
   }
 
   readonly id = "DocLibFrameCreateAbove";
-  readonly title = "Frame Create Above";
+  readonly title = "DocLib Frame Create Above";
   readonly category = "format" as const;
   readonly mode = "FrameCreateAbove";
   readonly requiresSelection = false;

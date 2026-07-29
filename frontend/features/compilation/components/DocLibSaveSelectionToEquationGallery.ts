@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSaveSelectionToEquationGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibSaveSelectionToEquationGallery",
-    title: "Save Selection To Equation Gallery",
+    title: "DocLib Save Selection To Equation Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5dcdf93c9df8eb54"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="12,5 15,13 8,14 18,20 10,15 9,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Save Selection To Equation Gallery",
+      title: "DocLib Save Selection To Equation Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5dcdf93c9df8eb54"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="12,5 15,13 8,14 18,20 10,15 9,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSaveSelectionToEquationGallery implements BlockTool {
   }
 
   readonly id = "DocLibSaveSelectionToEquationGallery";
-  readonly title = "Save Selection To Equation Gallery";
+  readonly title = "DocLib Save Selection To Equation Gallery";
   readonly category = "insert" as const;
   readonly mode = "SaveSelectionToEquationGallery";
   readonly requiresSelection = false;

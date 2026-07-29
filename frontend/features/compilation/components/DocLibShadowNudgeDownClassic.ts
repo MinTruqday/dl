@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibShadowNudgeDownClassic implements BlockTool {
   static readonly feature = {
     id: "DocLibShadowNudgeDownClassic",
-    title: "Shadow Nudge Down Classic",
+    title: "DocLib Shadow Nudge Down Classic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6016f3771523b3ee"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="15,9 9,4 8,5 13,4 20,11 15,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Shadow Nudge Down Classic",
+      title: "DocLib Shadow Nudge Down Classic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6016f3771523b3ee"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="15,9 9,4 8,5 13,4 20,11 15,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibShadowNudgeDownClassic implements BlockTool {
   }
 
   readonly id = "DocLibShadowNudgeDownClassic";
-  readonly title = "Shadow Nudge Down Classic";
+  readonly title = "DocLib Shadow Nudge Down Classic";
   readonly category = "format" as const;
   readonly mode = "ShadowNudgeDownClassic";
   readonly requiresSelection = false;

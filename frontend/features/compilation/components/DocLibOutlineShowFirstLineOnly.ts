@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibOutlineShowFirstLineOnly implements BlockTool {
   static readonly feature = {
     id: "DocLibOutlineShowFirstLineOnly",
-    title: "Outline Show First Line Only",
+    title: "DocLib Outline Show First Line Only",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e6ffc818703113e4"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="13,4 17,11 14,19 6,11 4,11 9,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Outline Show First Line Only",
+      title: "DocLib Outline Show First Line Only",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e6ffc818703113e4"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="13,4 17,11 14,19 6,11 4,11 9,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibOutlineShowFirstLineOnly implements BlockTool {
   }
 
   readonly id = "DocLibOutlineShowFirstLineOnly";
-  readonly title = "Outline Show First Line Only";
+  readonly title = "DocLib Outline Show First Line Only";
   readonly category = "format" as const;
   readonly mode = "OutlineShowFirstLineOnly";
   readonly requiresSelection = false;

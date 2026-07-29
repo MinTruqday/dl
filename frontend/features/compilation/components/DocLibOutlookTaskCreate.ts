@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibOutlookTaskCreate implements BlockTool {
   static readonly feature = {
     id: "DocLibOutlookTaskCreate",
-    title: "Outlook Task Create",
+    title: "DocLib Outlook Task Create",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="92faa47d4f0bbcdc"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="14,16 15,10 15,15 5,20 4,6 14,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Outlook Task Create",
+      title: "DocLib Outlook Task Create",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="92faa47d4f0bbcdc"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="14,16 15,10 15,15 5,20 4,6 14,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibOutlookTaskCreate implements BlockTool {
   }
 
   readonly id = "DocLibOutlookTaskCreate";
-  readonly title = "Outlook Task Create";
+  readonly title = "DocLib Outlook Task Create";
   readonly category = "format" as const;
   readonly mode = "OutlookTaskCreate";
   readonly requiresSelection = false;

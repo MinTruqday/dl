@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibStartOfWindowExtend implements BlockTool {
   static readonly feature = {
     id: "DocLibStartOfWindowExtend",
-    title: "Start Of Window Extend",
+    title: "DocLib Start Of Window Extend",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6c3e9e4fdea59c8c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,15 9,15 5,16 7,8 12,6 14,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Start Of Window Extend",
+      title: "DocLib Start Of Window Extend",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6c3e9e4fdea59c8c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,15 9,15 5,16 7,8 12,6 14,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibStartOfWindowExtend implements BlockTool {
   }
 
   readonly id = "DocLibStartOfWindowExtend";
-  readonly title = "Start Of Window Extend";
+  readonly title = "DocLib Start Of Window Extend";
   readonly category = "format" as const;
   readonly mode = "StartOfWindowExtend";
   readonly requiresSelection = false;

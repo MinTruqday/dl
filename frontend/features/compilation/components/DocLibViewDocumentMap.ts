@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibViewDocumentMap implements BlockTool {
   static readonly feature = {
     id: "DocLibViewDocumentMap",
-    title: "View Document Map",
+    title: "DocLib View Document Map",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e4ffb3a5022511ba"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="11,4 13,16 6,7 4,20 6,10 8,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "View Document Map",
+      title: "DocLib View Document Map",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e4ffb3a5022511ba"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="11,4 13,16 6,7 4,20 6,10 8,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibViewDocumentMap implements BlockTool {
   }
 
   readonly id = "DocLibViewDocumentMap";
-  readonly title = "View Document Map";
+  readonly title = "DocLib View Document Map";
   readonly category = "format" as const;
   readonly mode = "ViewDocumentMap";
   readonly requiresSelection = false;

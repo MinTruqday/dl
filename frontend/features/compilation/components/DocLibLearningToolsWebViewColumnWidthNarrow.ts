@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLearningToolsWebViewColumnWidthNarrow implements BlockTool {
   static readonly feature = {
     id: "DocLibLearningToolsWebViewColumnWidthNarrow",
-    title: "Learning Tools Web View Column Width Narrow",
+    title: "DocLib Learning Tools Web View Column Width Narrow",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1751097d8c5786d5"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="10,17 13,10 8,6 19,13 9,16 8,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Learning Tools Web View Column Width Narrow",
+      title: "DocLib Learning Tools Web View Column Width Narrow",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1751097d8c5786d5"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="10,17 13,10 8,6 19,13 9,16 8,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibLearningToolsWebViewColumnWidthNarrow implements Bloc
   }
 
   readonly id = "DocLibLearningToolsWebViewColumnWidthNarrow";
-  readonly title = "Learning Tools Web View Column Width Narrow";
+  readonly title = "DocLib Learning Tools Web View Column Width Narrow";
   readonly category = "table" as const;
   readonly mode = "LearningToolsWebViewColumnWidthNarrow";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDiagramReverseClassic implements BlockTool {
   static readonly feature = {
     id: "DocLibDiagramReverseClassic",
-    title: "Diagram Reverse Classic",
+    title: "DocLib Diagram Reverse Classic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="938eb70f844e0526"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="15,10 17,19 17,14 9,8 10,14 18,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Diagram Reverse Classic",
+      title: "DocLib Diagram Reverse Classic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="938eb70f844e0526"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="15,10 17,19 17,14 9,8 10,14 18,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDiagramReverseClassic implements BlockTool {
   }
 
   readonly id = "DocLibDiagramReverseClassic";
-  readonly title = "Diagram Reverse Classic";
+  readonly title = "DocLib Diagram Reverse Classic";
   readonly category = "layout" as const;
   readonly mode = "DiagramReverseClassic";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMacroRecorderStop implements BlockTool {
   static readonly feature = {
     id: "DocLibMacroRecorderStop",
-    title: "Macro Recorder Stop",
+    title: "DocLib Macro Recorder Stop",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1ac465937d6c4837"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="13,13 20,15 10,10 8,8 9,16 14,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Macro Recorder Stop",
+      title: "DocLib Macro Recorder Stop",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1ac465937d6c4837"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="13,13 20,15 10,10 8,8 9,16 14,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibMacroRecorderStop implements BlockTool {
   }
 
   readonly id = "DocLibMacroRecorderStop";
-  readonly title = "Macro Recorder Stop";
+  readonly title = "DocLib Macro Recorder Stop";
   readonly category = "format" as const;
   readonly mode = "MacroRecorderStop";
   readonly requiresSelection = false;

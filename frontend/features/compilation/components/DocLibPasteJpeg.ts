@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPasteJpeg implements BlockTool {
   static readonly feature = {
     id: "DocLibPasteJpeg",
-    title: "Paste Jpeg",
+    title: "DocLib Paste Jpeg",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="46dc37833768d88d"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="6,20 8,16 8,6 16,9 20,4 8,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Paste Jpeg",
+      title: "DocLib Paste Jpeg",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="46dc37833768d88d"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="6,20 8,16 8,6 16,9 20,4 8,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPasteJpeg implements BlockTool {
   }
 
   readonly id = "DocLibPasteJpeg";
-  readonly title = "Paste Jpeg";
+  readonly title = "DocLib Paste Jpeg";
   readonly category = "format" as const;
   readonly mode = "PasteJpeg";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFormatObjectDialogClassic implements BlockTool {
   static readonly feature = {
     id: "DocLibFormatObjectDialogClassic",
-    title: "Format Object Dialog Classic",
+    title: "DocLib Format Object Dialog Classic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="444eb96188f7277c"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,14 19,16 4,13 9,9 20,13 13,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Format Object Dialog Classic",
+      title: "DocLib Format Object Dialog Classic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="444eb96188f7277c"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,14 19,16 4,13 9,9 20,13 13,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFormatObjectDialogClassic implements BlockTool {
   }
 
   readonly id = "DocLibFormatObjectDialogClassic";
-  readonly title = "Format Object Dialog Classic";
+  readonly title = "DocLib Format Object Dialog Classic";
   readonly category = "format" as const;
   readonly mode = "FormatObjectDialogClassic";
   readonly requiresSelection = false;

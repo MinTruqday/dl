@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartGridlines implements BlockTool {
   static readonly feature = {
     id: "DocLibChartGridlines",
-    title: "Chart Gridlines",
+    title: "DocLib Chart Gridlines",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d6e70f50c892b801"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="14,14 19,16 17,14 18,5 5,11 6,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Gridlines",
+      title: "DocLib Chart Gridlines",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d6e70f50c892b801"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="14,14 19,16 17,14 18,5 5,11 6,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartGridlines implements BlockTool {
   }
 
   readonly id = "DocLibChartGridlines";
-  readonly title = "Chart Gridlines";
+  readonly title = "DocLib Chart Gridlines";
   readonly category = "layout" as const;
   readonly mode = "ChartGridlines";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAdvancedEdit3DModel implements BlockTool {
   static readonly feature = {
     id: "DocLibAdvancedEdit3DModel",
-    title: "Advanced Edit3D Model",
+    title: "DocLib Advanced Edit3D Model",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a7abfaaaac51cd0a"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="18,5 16,4 6,17 5,14 17,7 15,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Advanced Edit3D Model",
+      title: "DocLib Advanced Edit3D Model",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a7abfaaaac51cd0a"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="18,5 16,4 6,17 5,14 17,7 15,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibAdvancedEdit3DModel implements BlockTool {
   }
 
   readonly id = "DocLibAdvancedEdit3DModel";
-  readonly title = "Advanced Edit3D Model";
+  readonly title = "DocLib Advanced Edit3D Model";
   readonly category = "format" as const;
   readonly mode = "AdvancedEdit3DModel";
   readonly requiresSelection = false;

@@ -4,7 +4,7 @@ import { IconDelimiter } from "@codexteam/icons";
 export default class DocLibDelimiter implements BlockTool {
   static readonly feature = {
     id: "DocLibDelimiter",
-    title: "Delimiter",
+    title: "DocLib Delimiter",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bce14d750fe60686"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="5,8 13,19 19,13 10,19 19,10 6,17"/></svg>',
     product: "doclib",
   } as const;
@@ -15,7 +15,7 @@ export default class DocLibDelimiter implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "Delimiter",
+      title: "DocLib Delimiter",
       icon: IconDelimiter,
     };
   }

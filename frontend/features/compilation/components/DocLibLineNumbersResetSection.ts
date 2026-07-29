@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLineNumbersResetSection implements BlockTool {
   static readonly feature = {
     id: "DocLibLineNumbersResetSection",
-    title: "Line Numbers Reset Section",
+    title: "DocLib Line Numbers Reset Section",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1fdd7b7c61ed7412"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,4 8,9 16,20 18,5 13,9 6,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Line Numbers Reset Section",
+      title: "DocLib Line Numbers Reset Section",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1fdd7b7c61ed7412"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,4 8,9 16,20 18,5 13,9 6,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibLineNumbersResetSection implements BlockTool {
   }
 
   readonly id = "DocLibLineNumbersResetSection";
-  readonly title = "Line Numbers Reset Section";
+  readonly title = "DocLib Line Numbers Reset Section";
   readonly category = "layout" as const;
   readonly mode = "LineNumbersResetSection";
   readonly requiresSelection = false;

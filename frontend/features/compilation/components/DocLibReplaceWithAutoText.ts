@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibReplaceWithAutoText implements BlockTool {
   static readonly feature = {
     id: "DocLibReplaceWithAutoText",
-    title: "Replace With Auto Text",
+    title: "DocLib Replace With Auto Text",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5e8b7fbbc81fda69"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="13,7 12,4 17,18 18,7 9,8 6,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Replace With Auto Text",
+      title: "DocLib Replace With Auto Text",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5e8b7fbbc81fda69"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="13,7 12,4 17,18 18,7 9,8 6,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibReplaceWithAutoText implements BlockTool {
   }
 
   readonly id = "DocLibReplaceWithAutoText";
-  readonly title = "Replace With Auto Text";
+  readonly title = "DocLib Replace With Auto Text";
   readonly category = "format" as const;
   readonly mode = "ReplaceWithAutoText";
   readonly requiresSelection = false;

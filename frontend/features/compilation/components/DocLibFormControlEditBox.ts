@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFormControlEditBox implements BlockTool {
   static readonly feature = {
     id: "DocLibFormControlEditBox",
-    title: "Form Control Edit Box",
+    title: "DocLib Form Control Edit Box",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4f9f9d1e3cca7e8f"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="15,10 8,17 13,19 11,11 18,4 19,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Form Control Edit Box",
+      title: "DocLib Form Control Edit Box",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4f9f9d1e3cca7e8f"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="15,10 8,17 13,19 11,11 18,4 19,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFormControlEditBox implements BlockTool {
   }
 
   readonly id = "DocLibFormControlEditBox";
-  readonly title = "Form Control Edit Box";
+  readonly title = "DocLib Form Control Edit Box";
   readonly category = "format" as const;
   readonly mode = "FormControlEditBox";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartSaveTemplates implements BlockTool {
   static readonly feature = {
     id: "DocLibChartSaveTemplates",
-    title: "Chart Save Templates",
+    title: "DocLib Chart Save Templates",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="201191cd85e04cc9"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,4 13,5 18,7 12,18 7,12 13,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Save Templates",
+      title: "DocLib Chart Save Templates",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="201191cd85e04cc9"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,4 13,5 18,7 12,18 7,12 13,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartSaveTemplates implements BlockTool {
   }
 
   readonly id = "DocLibChartSaveTemplates";
-  readonly title = "Chart Save Templates";
+  readonly title = "DocLib Chart Save Templates";
   readonly category = "media" as const;
   readonly mode = "ChartSaveTemplates";
   readonly requiresSelection = false;

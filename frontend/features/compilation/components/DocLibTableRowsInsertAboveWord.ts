@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableRowsInsertAboveWord implements BlockTool {
   static readonly feature = {
     id: "DocLibTableRowsInsertAboveWord",
-    title: "Table Rows Insert Above Word",
+    title: "DocLib Table Rows Insert Above Word",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4b7ef24fec36e3c0"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="11,11 8,15 19,7 10,9 20,19 19,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Table Rows Insert Above Word",
+      title: "DocLib Table Rows Insert Above Word",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4b7ef24fec36e3c0"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="11,11 8,15 19,7 10,9 20,19 19,6"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTableRowsInsertAboveWord implements BlockTool {
   }
 
   readonly id = "DocLibTableRowsInsertAboveWord";
-  readonly title = "Table Rows Insert Above Word";
+  readonly title = "DocLib Table Rows Insert Above Word";
   readonly category = "table" as const;
   readonly mode = "TableRowsInsertAboveWord";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFootnotePreviousWord implements BlockTool {
   static readonly feature = {
     id: "DocLibFootnotePreviousWord",
-    title: "Footnote Previous Word",
+    title: "DocLib Footnote Previous Word",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7f448813525dd07a"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="12,4 4,6 18,12 8,7 9,5 10,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Footnote Previous Word",
+      title: "DocLib Footnote Previous Word",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7f448813525dd07a"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="12,4 4,6 18,12 8,7 9,5 10,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFootnotePreviousWord implements BlockTool {
   }
 
   readonly id = "DocLibFootnotePreviousWord";
-  readonly title = "Footnote Previous Word";
+  readonly title = "DocLib Footnote Previous Word";
   readonly category = "reference" as const;
   readonly mode = "FootnotePreviousWord";
   readonly requiresSelection = false;

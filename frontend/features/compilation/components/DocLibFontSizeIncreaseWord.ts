@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFontSizeIncreaseWord implements BlockTool {
   static readonly feature = {
     id: "DocLibFontSizeIncreaseWord",
-    title: "Font Size Increase Word",
+    title: "DocLib Font Size Increase Word",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c558d5129bdc7e48"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="14,7 13,5 6,20 11,8 14,5 9,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Font Size Increase Word",
+      title: "DocLib Font Size Increase Word",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c558d5129bdc7e48"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="14,7 13,5 6,20 11,8 14,5 9,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFontSizeIncreaseWord implements BlockTool {
   }
 
   readonly id = "DocLibFontSizeIncreaseWord";
-  readonly title = "Font Size Increase Word";
+  readonly title = "DocLib Font Size Increase Word";
   readonly category = "format" as const;
   readonly mode = "FontSizeIncreaseWord";
   readonly requiresSelection = false;

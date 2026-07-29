@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDropCapInsertGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibDropCapInsertGallery",
-    title: "Drop Cap Insert Gallery",
+    title: "DocLib Drop Cap Insert Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="69d22fcaafd1da26"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="7,10 17,19 9,9 18,8 13,6 13,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Drop Cap Insert Gallery",
+      title: "DocLib Drop Cap Insert Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="69d22fcaafd1da26"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="7,10 17,19 9,9 18,8 13,6 13,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDropCapInsertGallery implements BlockTool {
   }
 
   readonly id = "DocLibDropCapInsertGallery";
-  readonly title = "Drop Cap Insert Gallery";
+  readonly title = "DocLib Drop Cap Insert Gallery";
   readonly category = "insert" as const;
   readonly mode = "DropCapInsertGallery";
   readonly requiresSelection = false;

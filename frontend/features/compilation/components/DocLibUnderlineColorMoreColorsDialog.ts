@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibUnderlineColorMoreColorsDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibUnderlineColorMoreColorsDialog",
-    title: "Underline Color More Colors Dialog",
+    title: "DocLib Underline Color More Colors Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="66f4ea54bba4600f"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,10 17,20 4,15 15,19 12,4 18,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Underline Color More Colors Dialog",
+      title: "DocLib Underline Color More Colors Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="66f4ea54bba4600f"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,10 17,20 4,15 15,19 12,4 18,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibUnderlineColorMoreColorsDialog implements BlockTool {
   }
 
   readonly id = "DocLibUnderlineColorMoreColorsDialog";
-  readonly title = "Underline Color More Colors Dialog";
+  readonly title = "DocLib Underline Color More Colors Dialog";
   readonly category = "format" as const;
   readonly mode = "UnderlineColorMoreColorsDialog";
   readonly requiresSelection = false;

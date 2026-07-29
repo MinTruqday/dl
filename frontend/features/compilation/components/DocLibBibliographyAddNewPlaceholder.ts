@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibBibliographyAddNewPlaceholder implements BlockTool {
   static readonly feature = {
     id: "DocLibBibliographyAddNewPlaceholder",
-    title: "Bibliography Add New Placeholder",
+    title: "DocLib Bibliography Add New Placeholder",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="be8c3d6985130cde"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="7,8 14,7 18,6 16,5 8,9 17,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Bibliography Add New Placeholder",
+      title: "DocLib Bibliography Add New Placeholder",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="be8c3d6985130cde"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="7,8 14,7 18,6 16,5 8,9 17,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibBibliographyAddNewPlaceholder implements BlockTool {
   }
 
   readonly id = "DocLibBibliographyAddNewPlaceholder";
-  readonly title = "Bibliography Add New Placeholder";
+  readonly title = "DocLib Bibliography Add New Placeholder";
   readonly category = "reference" as const;
   readonly mode = "BibliographyAddNewPlaceholder";
   readonly requiresSelection = false;

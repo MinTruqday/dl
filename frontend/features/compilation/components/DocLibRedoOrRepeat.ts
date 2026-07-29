@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibRedoOrRepeat implements BlockTool {
   static readonly feature = {
     id: "DocLibRedoOrRepeat",
-    title: "Redo Or Repeat",
+    title: "DocLib Redo Or Repeat",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1b7cdae68649e2ed"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="14,9 18,13 19,9 9,20 8,8 20,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Redo Or Repeat",
+      title: "DocLib Redo Or Repeat",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1b7cdae68649e2ed"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="14,9 18,13 19,9 9,20 8,8 20,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibRedoOrRepeat implements BlockTool {
   }
 
   readonly id = "DocLibRedoOrRepeat";
-  readonly title = "Redo Or Repeat";
+  readonly title = "DocLib Redo Or Repeat";
   readonly category = "format" as const;
   readonly mode = "RedoOrRepeat";
   readonly requiresSelection = false;

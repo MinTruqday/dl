@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextDirectionGalleryWord implements BlockTool {
   static readonly feature = {
     id: "DocLibTextDirectionGalleryWord",
-    title: "Text Direction Gallery Word",
+    title: "DocLib Text Direction Gallery Word",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="105dd66c842d507c"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="20,12 14,10 17,15 16,9 16,10 18,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Text Direction Gallery Word",
+      title: "DocLib Text Direction Gallery Word",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="105dd66c842d507c"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="20,12 14,10 17,15 16,9 16,10 18,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTextDirectionGalleryWord implements BlockTool {
   }
 
   readonly id = "DocLibTextDirectionGalleryWord";
-  readonly title = "Text Direction Gallery Word";
+  readonly title = "DocLib Text Direction Gallery Word";
   readonly category = "layout" as const;
   readonly mode = "TextDirectionGalleryWord";
   readonly requiresSelection = false;

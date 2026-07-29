@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibRowHeight implements BlockTool {
   static readonly feature = {
     id: "DocLibRowHeight",
-    title: "Row Height",
+    title: "DocLib Row Height",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9a27655370954918"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="5,9 20,19 14,17 9,11 15,6 10,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Row Height",
+      title: "DocLib Row Height",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9a27655370954918"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="5,9 20,19 14,17 9,11 15,6 10,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibRowHeight implements BlockTool {
   }
 
   readonly id = "DocLibRowHeight";
-  readonly title = "Row Height";
+  readonly title = "DocLib Row Height";
   readonly category = "format" as const;
   readonly mode = "RowHeight";
   readonly requiresSelection = false;

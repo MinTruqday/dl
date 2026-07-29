@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibKeepBackgroundRemoval implements BlockTool {
   static readonly feature = {
     id: "DocLibKeepBackgroundRemoval",
-    title: "Keep Background Removal",
+    title: "DocLib Keep Background Removal",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e3bfc9f05c47e245"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="10,8 18,6 11,7 9,5 9,4 6,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Keep Background Removal",
+      title: "DocLib Keep Background Removal",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e3bfc9f05c47e245"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="10,8 18,6 11,7 9,5 9,4 6,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibKeepBackgroundRemoval implements BlockTool {
   }
 
   readonly id = "DocLibKeepBackgroundRemoval";
-  readonly title = "Keep Background Removal";
+  readonly title = "DocLib Keep Background Removal";
   readonly category = "format" as const;
   readonly mode = "KeepBackgroundRemoval";
   readonly requiresSelection = false;

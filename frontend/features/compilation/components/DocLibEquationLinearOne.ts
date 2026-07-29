@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibEquationLinearOne implements BlockTool {
   static readonly feature = {
     id: "DocLibEquationLinearOne",
-    title: "Equation Linear One",
+    title: "DocLib Equation Linear One",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d75446101e1948a8"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,20 6,20 17,12 8,19 14,20 12,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Equation Linear One",
+      title: "DocLib Equation Linear One",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d75446101e1948a8"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,20 6,20 17,12 8,19 14,20 12,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibEquationLinearOne implements BlockTool {
   }
 
   readonly id = "DocLibEquationLinearOne";
-  readonly title = "Equation Linear One";
+  readonly title = "DocLib Equation Linear One";
   readonly category = "format" as const;
   readonly mode = "EquationLinearOne";
   readonly requiresSelection = false;

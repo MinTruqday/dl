@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibShapeConvertToFreeform implements BlockTool {
   static readonly feature = {
     id: "DocLibShapeConvertToFreeform",
-    title: "Shape Convert To Freeform",
+    title: "DocLib Shape Convert To Freeform",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="35e896487108f58d"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="6,15 18,8 15,12 11,9 5,4 8,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Shape Convert To Freeform",
+      title: "DocLib Shape Convert To Freeform",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="35e896487108f58d"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="6,15 18,8 15,12 11,9 5,4 8,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibShapeConvertToFreeform implements BlockTool {
   }
 
   readonly id = "DocLibShapeConvertToFreeform";
-  readonly title = "Shape Convert To Freeform";
+  readonly title = "DocLib Shape Convert To Freeform";
   readonly category = "format" as const;
   readonly mode = "ShapeConvertToFreeform";
   readonly requiresSelection = false;

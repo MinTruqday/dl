@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibReleaseAllMyLocks implements BlockTool {
   static readonly feature = {
     id: "DocLibReleaseAllMyLocks",
-    title: "Release All My Locks",
+    title: "DocLib Release All My Locks",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="44e7860fe572da5b"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="4,14 19,19 12,16 18,10 14,9 6,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Release All My Locks",
+      title: "DocLib Release All My Locks",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="44e7860fe572da5b"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="4,14 19,19 12,16 18,10 14,9 6,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibReleaseAllMyLocks implements BlockTool {
   }
 
   readonly id = "DocLibReleaseAllMyLocks";
-  readonly title = "Release All My Locks";
+  readonly title = "DocLib Release All My Locks";
   readonly category = "review" as const;
   readonly mode = "ReleaseAllMyLocks";
   readonly requiresSelection = false;

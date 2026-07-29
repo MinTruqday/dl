@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibBorderDiagonalDown implements BlockTool {
   static readonly feature = {
     id: "DocLibBorderDiagonalDown",
-    title: "Border Diagonal Down",
+    title: "DocLib Border Diagonal Down",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f4bc8499f542f252"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,5 17,4 11,19 8,18 18,17 13,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Border Diagonal Down",
+      title: "DocLib Border Diagonal Down",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f4bc8499f542f252"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,5 17,4 11,19 8,18 18,17 13,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibBorderDiagonalDown implements BlockTool {
   }
 
   readonly id = "DocLibBorderDiagonalDown";
-  readonly title = "Border Diagonal Down";
+  readonly title = "DocLib Border Diagonal Down";
   readonly category = "format" as const;
   readonly mode = "BorderDiagonalDown";
   readonly requiresSelection = false;

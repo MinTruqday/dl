@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableOfContentsDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibTableOfContentsDialog",
-    title: "Table Of Contents Dialog",
+    title: "DocLib Table Of Contents Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c3f3f19502aaff2d"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="12,9 7,17 6,4 4,15 20,19 20,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Table Of Contents Dialog",
+      title: "DocLib Table Of Contents Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c3f3f19502aaff2d"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="12,9 7,17 6,4 4,15 20,19 20,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTableOfContentsDialog implements BlockTool {
   }
 
   readonly id = "DocLibTableOfContentsDialog";
-  readonly title = "Table Of Contents Dialog";
+  readonly title = "DocLib Table Of Contents Dialog";
   readonly category = "table" as const;
   readonly mode = "TableOfContentsDialog";
   readonly requiresSelection = false;

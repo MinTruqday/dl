@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSynchronousScrolling implements BlockTool {
   static readonly feature = {
     id: "DocLibSynchronousScrolling",
-    title: "Synchronous Scrolling",
+    title: "DocLib Synchronous Scrolling",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="abb846483d8b76c2"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="5,18 6,8 14,7 20,11 9,8 9,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Synchronous Scrolling",
+      title: "DocLib Synchronous Scrolling",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="abb846483d8b76c2"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="5,18 6,8 14,7 20,11 9,8 9,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSynchronousScrolling implements BlockTool {
   }
 
   readonly id = "DocLibSynchronousScrolling";
-  readonly title = "Synchronous Scrolling";
+  readonly title = "DocLib Synchronous Scrolling";
   readonly category = "view" as const;
   readonly mode = "SynchronousScrolling";
   readonly requiresSelection = false;

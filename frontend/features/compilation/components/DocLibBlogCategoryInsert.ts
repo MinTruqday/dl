@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibBlogCategoryInsert implements BlockTool {
   static readonly feature = {
     id: "DocLibBlogCategoryInsert",
-    title: "Blog Category Insert",
+    title: "DocLib Blog Category Insert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="dd7acb75f28bf0cb"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="4,7 20,19 8,7 6,20 12,20 17,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Blog Category Insert",
+      title: "DocLib Blog Category Insert",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="dd7acb75f28bf0cb"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="4,7 20,19 8,7 6,20 12,20 17,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibBlogCategoryInsert implements BlockTool {
   }
 
   readonly id = "DocLibBlogCategoryInsert";
-  readonly title = "Blog Category Insert";
+  readonly title = "DocLib Blog Category Insert";
   readonly category = "format" as const;
   readonly mode = "BlogCategoryInsert";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibHangulHanjaConversion implements BlockTool {
   static readonly feature = {
     id: "DocLibHangulHanjaConversion",
-    title: "Hangul Hanja Conversion",
+    title: "DocLib Hangul Hanja Conversion",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="23bce25575e233ec"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="5,5 9,4 19,9 4,19 12,19 15,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Hangul Hanja Conversion",
+      title: "DocLib Hangul Hanja Conversion",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="23bce25575e233ec"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="5,5 9,4 19,9 4,19 12,19 15,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibHangulHanjaConversion implements BlockTool {
   }
 
   readonly id = "DocLibHangulHanjaConversion";
-  readonly title = "Hangul Hanja Conversion";
+  readonly title = "DocLib Hangul Hanja Conversion";
   readonly category = "review" as const;
   readonly mode = "HangulHanjaConversion";
   readonly requiresSelection = false;

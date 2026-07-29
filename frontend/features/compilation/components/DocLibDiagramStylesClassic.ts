@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDiagramStylesClassic implements BlockTool {
   static readonly feature = {
     id: "DocLibDiagramStylesClassic",
-    title: "Diagram Styles Classic",
+    title: "DocLib Diagram Styles Classic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8560345de82fdf34"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,15 5,12 15,17 6,5 15,9 12,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Diagram Styles Classic",
+      title: "DocLib Diagram Styles Classic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8560345de82fdf34"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,15 5,12 15,17 6,5 15,9 12,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDiagramStylesClassic implements BlockTool {
   }
 
   readonly id = "DocLibDiagramStylesClassic";
-  readonly title = "Diagram Styles Classic";
+  readonly title = "DocLib Diagram Styles Classic";
   readonly category = "format" as const;
   readonly mode = "DiagramStylesClassic";
   readonly requiresSelection = false;

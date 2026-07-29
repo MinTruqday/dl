@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibObjectsUngroup implements BlockTool {
   static readonly feature = {
     id: "DocLibObjectsUngroup",
-    title: "Objects Ungroup",
+    title: "DocLib Objects Ungroup",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="524a1260bfdf1835"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,10 5,15 8,6 11,6 11,12 15,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Objects Ungroup",
+      title: "DocLib Objects Ungroup",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="524a1260bfdf1835"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,10 5,15 8,6 11,6 11,12 15,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibObjectsUngroup implements BlockTool {
   }
 
   readonly id = "DocLibObjectsUngroup";
-  readonly title = "Objects Ungroup";
+  readonly title = "DocLib Objects Ungroup";
   readonly category = "layout" as const;
   readonly mode = "ObjectsUngroup";
   readonly requiresSelection = false;

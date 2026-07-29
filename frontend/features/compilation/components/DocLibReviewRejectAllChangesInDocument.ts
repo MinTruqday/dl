@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibReviewRejectAllChangesInDocument implements BlockTool {
   static readonly feature = {
     id: "DocLibReviewRejectAllChangesInDocument",
-    title: "Review Reject All Changes In Document",
+    title: "DocLib Review Reject All Changes In Document",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="269290eeb2a5303c"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,14 12,4 12,16 18,13 11,16 13,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Review Reject All Changes In Document",
+      title: "DocLib Review Reject All Changes In Document",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="269290eeb2a5303c"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,14 12,4 12,16 18,13 11,16 13,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibReviewRejectAllChangesInDocument implements BlockTool
   }
 
   readonly id = "DocLibReviewRejectAllChangesInDocument";
-  readonly title = "Review Reject All Changes In Document";
+  readonly title = "DocLib Review Reject All Changes In Document";
   readonly category = "review" as const;
   readonly mode = "ReviewRejectAllChangesInDocument";
   readonly requiresSelection = false;

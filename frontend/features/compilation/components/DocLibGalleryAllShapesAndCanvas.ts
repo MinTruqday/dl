@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibGalleryAllShapesAndCanvas implements BlockTool {
   static readonly feature = {
     id: "DocLibGalleryAllShapesAndCanvas",
-    title: "Gallery All Shapes And Canvas",
+    title: "DocLib Gallery All Shapes And Canvas",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a95889cad21754c9"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,7 5,19 10,10 20,18 12,9 20,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Gallery All Shapes And Canvas",
+      title: "DocLib Gallery All Shapes And Canvas",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a95889cad21754c9"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,7 5,19 10,10 20,18 12,9 20,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibGalleryAllShapesAndCanvas implements BlockTool {
   }
 
   readonly id = "DocLibGalleryAllShapesAndCanvas";
-  readonly title = "Gallery All Shapes And Canvas";
+  readonly title = "DocLib Gallery All Shapes And Canvas";
   readonly category = "insert" as const;
   readonly mode = "GalleryAllShapesAndCanvas";
   readonly requiresSelection = false;

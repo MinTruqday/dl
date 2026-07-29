@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableCellVerticalAlignmentMenu implements BlockTool {
   static readonly feature = {
     id: "DocLibTableCellVerticalAlignmentMenu",
-    title: "Table Cell Vertical Alignment Menu",
+    title: "DocLib Table Cell Vertical Alignment Menu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4d32cc1e602dc38d"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="13,20 4,17 15,15 12,9 11,18 7,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Table Cell Vertical Alignment Menu",
+      title: "DocLib Table Cell Vertical Alignment Menu",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4d32cc1e602dc38d"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="13,20 4,17 15,15 12,9 11,18 7,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTableCellVerticalAlignmentMenu implements BlockTool {
   }
 
   readonly id = "DocLibTableCellVerticalAlignmentMenu";
-  readonly title = "Table Cell Vertical Alignment Menu";
+  readonly title = "DocLib Table Cell Vertical Alignment Menu";
   readonly category = "format" as const;
   readonly mode = "TableCellVerticalAlignmentMenu";
   readonly requiresSelection = false;

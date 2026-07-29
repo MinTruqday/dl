@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibQuickTablesInsertGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibQuickTablesInsertGallery",
-    title: "Quick Tables Insert Gallery",
+    title: "DocLib Quick Tables Insert Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3f7ccfb7d207382a"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="16,9 7,17 10,11 9,12 8,13 6,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Quick Tables Insert Gallery",
+      title: "DocLib Quick Tables Insert Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3f7ccfb7d207382a"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="16,9 7,17 10,11 9,12 8,13 6,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibQuickTablesInsertGallery implements BlockTool {
   }
 
   readonly id = "DocLibQuickTablesInsertGallery";
-  readonly title = "Quick Tables Insert Gallery";
+  readonly title = "DocLib Quick Tables Insert Gallery";
   readonly category = "table" as const;
   readonly mode = "QuickTablesInsertGallery";
   readonly requiresSelection = false;

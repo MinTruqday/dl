@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibStylesStyleSeparator implements BlockTool {
   static readonly feature = {
     id: "DocLibStylesStyleSeparator",
-    title: "Styles Style Separator",
+    title: "DocLib Styles Style Separator",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4be026d3f5527b60"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="11,7 8,11 11,18 8,15 5,18 8,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Styles Style Separator",
+      title: "DocLib Styles Style Separator",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4be026d3f5527b60"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="11,7 8,11 11,18 8,15 5,18 8,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibStylesStyleSeparator implements BlockTool {
   }
 
   readonly id = "DocLibStylesStyleSeparator";
-  readonly title = "Styles Style Separator";
+  readonly title = "DocLib Styles Style Separator";
   readonly category = "format" as const;
   readonly mode = "StylesStyleSeparator";
   readonly requiresSelection = false;

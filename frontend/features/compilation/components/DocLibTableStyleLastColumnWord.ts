@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableStyleLastColumnWord implements BlockTool {
   static readonly feature = {
     id: "DocLibTableStyleLastColumnWord",
-    title: "Table Style Last Column Word",
+    title: "DocLib Table Style Last Column Word",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="748f164d2de19733"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="18,11 9,13 15,8 19,4 19,18 17,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Table Style Last Column Word",
+      title: "DocLib Table Style Last Column Word",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="748f164d2de19733"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="18,11 9,13 15,8 19,4 19,18 17,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTableStyleLastColumnWord implements BlockTool {
   }
 
   readonly id = "DocLibTableStyleLastColumnWord";
-  readonly title = "Table Style Last Column Word";
+  readonly title = "DocLib Table Style Last Column Word";
   readonly category = "table" as const;
   readonly mode = "TableStyleLastColumnWord";
   readonly requiresSelection = false;

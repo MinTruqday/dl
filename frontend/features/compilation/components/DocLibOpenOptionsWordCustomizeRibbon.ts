@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibOpenOptionsWordCustomizeRibbon implements BlockTool {
   static readonly feature = {
     id: "DocLibOpenOptionsWordCustomizeRibbon",
-    title: "Open Options Word Customize Ribbon",
+    title: "DocLib Open Options Word Customize Ribbon",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7408bba118955de7"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="18,12 4,12 11,17 12,14 8,16 6,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Open Options Word Customize Ribbon",
+      title: "DocLib Open Options Word Customize Ribbon",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7408bba118955de7"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="18,12 4,12 11,17 12,14 8,16 6,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibOpenOptionsWordCustomizeRibbon implements BlockTool {
   }
 
   readonly id = "DocLibOpenOptionsWordCustomizeRibbon";
-  readonly title = "Open Options Word Customize Ribbon";
+  readonly title = "DocLib Open Options Word Customize Ribbon";
   readonly category = "format" as const;
   readonly mode = "OpenOptionsWordCustomizeRibbon";
   readonly requiresSelection = false;

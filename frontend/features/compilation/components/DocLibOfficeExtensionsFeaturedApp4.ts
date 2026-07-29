@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibOfficeExtensionsFeaturedApp4 implements BlockTool {
   static readonly feature = {
     id: "DocLibOfficeExtensionsFeaturedApp4",
-    title: "Office Extensions Featured App4",
+    title: "DocLib Office Extensions Featured App4",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5d8ab2c60ef0e407"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="12,6 12,15 18,6 11,11 11,17 16,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Office Extensions Featured App4",
+      title: "DocLib Office Extensions Featured App4",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5d8ab2c60ef0e407"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="12,6 12,15 18,6 11,11 11,17 16,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibOfficeExtensionsFeaturedApp4 implements BlockTool {
   }
 
   readonly id = "DocLibOfficeExtensionsFeaturedApp4";
-  readonly title = "Office Extensions Featured App4";
+  readonly title = "DocLib Office Extensions Featured App4";
   readonly category = "insert" as const;
   readonly mode = "OfficeExtensionsFeaturedApp4";
   readonly requiresSelection = false;

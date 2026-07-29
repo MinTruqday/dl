@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDeleteStyle implements BlockTool {
   static readonly feature = {
     id: "DocLibDeleteStyle",
-    title: "Delete Style",
+    title: "DocLib Delete Style",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5db0bae6e43cec44"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="12,10 20,13 11,13 19,4 10,8 15,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Delete Style",
+      title: "DocLib Delete Style",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5db0bae6e43cec44"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="12,10 20,13 11,13 19,4 10,8 15,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDeleteStyle implements BlockTool {
   }
 
   readonly id = "DocLibDeleteStyle";
-  readonly title = "Delete Style";
+  readonly title = "DocLib Delete Style";
   readonly category = "format" as const;
   readonly mode = "DeleteStyle";
   readonly requiresSelection = false;

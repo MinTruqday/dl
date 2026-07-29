@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibContentControlRepeating implements BlockTool {
   static readonly feature = {
     id: "DocLibContentControlRepeating",
-    title: "Content Control Repeating",
+    title: "DocLib Content Control Repeating",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="adabcc8a534e7ea3"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,5 4,6 19,14 11,14 8,5 18,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Content Control Repeating",
+      title: "DocLib Content Control Repeating",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="adabcc8a534e7ea3"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,5 4,6 19,14 11,14 8,5 18,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibContentControlRepeating implements BlockTool {
   }
 
   readonly id = "DocLibContentControlRepeating";
-  readonly title = "Content Control Repeating";
+  readonly title = "DocLib Content Control Repeating";
   readonly category = "automation" as const;
   readonly mode = "ContentControlRepeating";
   readonly requiresSelection = false;

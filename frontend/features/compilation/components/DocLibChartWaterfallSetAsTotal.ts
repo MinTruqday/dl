@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartWaterfallSetAsTotal implements BlockTool {
   static readonly feature = {
     id: "DocLibChartWaterfallSetAsTotal",
-    title: "Chart Waterfall Set As Total",
+    title: "DocLib Chart Waterfall Set As Total",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="34c63748e4a6bd66"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,15 8,8 11,17 6,4 5,20 6,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Waterfall Set As Total",
+      title: "DocLib Chart Waterfall Set As Total",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="34c63748e4a6bd66"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,15 8,8 11,17 6,4 5,20 6,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartWaterfallSetAsTotal implements BlockTool {
   }
 
   readonly id = "DocLibChartWaterfallSetAsTotal";
-  readonly title = "Chart Waterfall Set As Total";
+  readonly title = "DocLib Chart Waterfall Set As Total";
   readonly category = "media" as const;
   readonly mode = "ChartWaterfallSetAsTotal";
   readonly requiresSelection = false;

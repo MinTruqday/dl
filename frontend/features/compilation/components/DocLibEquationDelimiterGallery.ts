@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibEquationDelimiterGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibEquationDelimiterGallery",
-    title: "Equation Delimiter Gallery",
+    title: "DocLib Equation Delimiter Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="855735433bb4bf57"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,6 6,20 12,14 8,6 6,17 13,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Equation Delimiter Gallery",
+      title: "DocLib Equation Delimiter Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="855735433bb4bf57"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,6 6,20 12,14 8,6 6,17 13,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibEquationDelimiterGallery implements BlockTool {
   }
 
   readonly id = "DocLibEquationDelimiterGallery";
-  readonly title = "Equation Delimiter Gallery";
+  readonly title = "DocLib Equation Delimiter Gallery";
   readonly category = "format" as const;
   readonly mode = "EquationDelimiterGallery";
   readonly requiresSelection = false;

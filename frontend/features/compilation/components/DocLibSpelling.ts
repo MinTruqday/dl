@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSpelling implements BlockTool {
   static readonly feature = {
     id: "DocLibSpelling",
-    title: "Spelling",
+    title: "DocLib Spelling",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="652ee65b9fb19320"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="20,16 13,10 10,11 15,19 14,9 7,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Spelling",
+      title: "DocLib Spelling",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="652ee65b9fb19320"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="20,16 13,10 10,11 15,19 14,9 7,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSpelling implements BlockTool {
   }
 
   readonly id = "DocLibSpelling";
-  readonly title = "Spelling";
+  readonly title = "DocLib Spelling";
   readonly category = "format" as const;
   readonly mode = "Spelling";
   readonly requiresSelection = false;

@@ -3,7 +3,7 @@ import { API, BlockTune } from "@editorjs/editorjs";
 export default class DocLibAnchor implements BlockTune {
   static readonly feature = {
     id: "DocLibAnchor",
-    title: "Anchor",
+    title: "DocLib Anchor",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9ddd899a066a4693"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="8,4 5,5 10,8 6,15 12,20 10,20"/></svg>',
     product: "doclib",
   } as const;

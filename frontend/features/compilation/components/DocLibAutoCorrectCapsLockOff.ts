@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAutoCorrectCapsLockOff implements BlockTool {
   static readonly feature = {
     id: "DocLibAutoCorrectCapsLockOff",
-    title: "Auto Correct Caps Lock Off",
+    title: "DocLib Auto Correct Caps Lock Off",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9b7c898efc329f56"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="6,9 5,10 18,20 10,5 17,4 5,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Auto Correct Caps Lock Off",
+      title: "DocLib Auto Correct Caps Lock Off",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9b7c898efc329f56"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="6,9 5,10 18,20 10,5 17,4 5,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibAutoCorrectCapsLockOff implements BlockTool {
   }
 
   readonly id = "DocLibAutoCorrectCapsLockOff";
-  readonly title = "Auto Correct Caps Lock Off";
+  readonly title = "DocLib Auto Correct Caps Lock Off";
   readonly category = "format" as const;
   readonly mode = "AutoCorrectCapsLockOff";
   readonly requiresSelection = false;

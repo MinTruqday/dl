@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLineSpacingDouble implements BlockTool {
   static readonly feature = {
     id: "DocLibLineSpacingDouble",
-    title: "Line Spacing Double",
+    title: "DocLib Line Spacing Double",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c98a94b2c6cd4447"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="18,6 16,12 15,5 4,7 7,6 4,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Line Spacing Double",
+      title: "DocLib Line Spacing Double",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c98a94b2c6cd4447"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="18,6 16,12 15,5 4,7 7,6 4,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibLineSpacingDouble implements BlockTool {
   }
 
   readonly id = "DocLibLineSpacingDouble";
-  readonly title = "Line Spacing Double";
+  readonly title = "DocLib Line Spacing Double";
   readonly category = "layout" as const;
   readonly mode = "LineSpacingDouble";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibXmlViewStructure implements BlockTool {
   static readonly feature = {
     id: "DocLibXmlViewStructure",
-    title: "XML View Structure",
+    title: "DocLib XML View Structure",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6cb3e1a4e8394bae"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,13 8,15 15,10 11,8 17,16 10,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "XML View Structure",
+      title: "DocLib XML View Structure",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6cb3e1a4e8394bae"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,13 8,15 15,10 11,8 17,16 10,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibXmlViewStructure implements BlockTool {
   }
 
   readonly id = "DocLibXmlViewStructure";
-  readonly title = "XML View Structure";
+  readonly title = "DocLib XML View Structure";
   readonly category = "format" as const;
   readonly mode = "XmlViewStructure";
   readonly requiresSelection = false;

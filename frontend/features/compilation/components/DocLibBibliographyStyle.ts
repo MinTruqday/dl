@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibBibliographyStyle implements BlockTool {
   static readonly feature = {
     id: "DocLibBibliographyStyle",
-    title: "Bibliography Style",
+    title: "DocLib Bibliography Style",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c74ceb44c9b71222"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="16,12 18,4 18,17 5,4 9,16 5,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Bibliography Style",
+      title: "DocLib Bibliography Style",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c74ceb44c9b71222"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="16,12 18,4 18,17 5,4 9,16 5,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibBibliographyStyle implements BlockTool {
   }
 
   readonly id = "DocLibBibliographyStyle";
-  readonly title = "Bibliography Style";
+  readonly title = "DocLib Bibliography Style";
   readonly category = "reference" as const;
   readonly mode = "BibliographyStyle";
   readonly requiresSelection = false;

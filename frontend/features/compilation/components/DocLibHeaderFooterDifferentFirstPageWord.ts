@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibHeaderFooterDifferentFirstPageWord implements BlockTool {
   static readonly feature = {
     id: "DocLibHeaderFooterDifferentFirstPageWord",
-    title: "Header Footer Different First Page Word",
+    title: "DocLib Header Footer Different First Page Word",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6bae2ab491b3b224"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,8 12,14 13,13 12,6 7,6 8,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Header Footer Different First Page Word",
+      title: "DocLib Header Footer Different First Page Word",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6bae2ab491b3b224"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,8 12,14 13,13 12,6 7,6 8,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibHeaderFooterDifferentFirstPageWord implements BlockTo
   }
 
   readonly id = "DocLibHeaderFooterDifferentFirstPageWord";
-  readonly title = "Header Footer Different First Page Word";
+  readonly title = "DocLib Header Footer Different First Page Word";
   readonly category = "format" as const;
   readonly mode = "HeaderFooterDifferentFirstPageWord";
   readonly requiresSelection = false;

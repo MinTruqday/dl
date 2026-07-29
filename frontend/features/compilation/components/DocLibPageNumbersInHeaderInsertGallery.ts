@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPageNumbersInHeaderInsertGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibPageNumbersInHeaderInsertGallery",
-    title: "Page Numbers In Header Insert Gallery",
+    title: "DocLib Page Numbers In Header Insert Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3d8df0ba6af86a95"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="14,9 6,20 8,14 8,17 13,18 10,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Page Numbers In Header Insert Gallery",
+      title: "DocLib Page Numbers In Header Insert Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3d8df0ba6af86a95"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="14,9 6,20 8,14 8,17 13,18 10,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPageNumbersInHeaderInsertGallery implements BlockTool
   }
 
   readonly id = "DocLibPageNumbersInHeaderInsertGallery";
-  readonly title = "Page Numbers In Header Insert Gallery";
+  readonly title = "DocLib Page Numbers In Header Insert Gallery";
   readonly category = "insert" as const;
   readonly mode = "PageNumbersInHeaderInsertGallery";
   readonly requiresSelection = false;

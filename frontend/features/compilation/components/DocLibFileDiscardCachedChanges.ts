@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFileDiscardCachedChanges implements BlockTool {
   static readonly feature = {
     id: "DocLibFileDiscardCachedChanges",
-    title: "File Discard Cached Changes",
+    title: "DocLib File Discard Cached Changes",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6ffeed082fc9955c"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="13,20 20,12 17,18 17,11 6,15 19,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "File Discard Cached Changes",
+      title: "DocLib File Discard Cached Changes",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6ffeed082fc9955c"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="13,20 20,12 17,18 17,11 6,15 19,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFileDiscardCachedChanges implements BlockTool {
   }
 
   readonly id = "DocLibFileDiscardCachedChanges";
-  readonly title = "File Discard Cached Changes";
+  readonly title = "DocLib File Discard Cached Changes";
   readonly category = "format" as const;
   readonly mode = "FileDiscardCachedChanges";
   readonly requiresSelection = false;

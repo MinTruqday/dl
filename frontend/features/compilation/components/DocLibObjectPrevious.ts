@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibObjectPrevious implements BlockTool {
   static readonly feature = {
     id: "DocLibObjectPrevious",
-    title: "Object Previous",
+    title: "DocLib Object Previous",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fdc229fac5dafcf7"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,11 11,16 14,18 18,13 6,9 15,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Object Previous",
+      title: "DocLib Object Previous",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fdc229fac5dafcf7"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,11 11,16 14,18 18,13 6,9 15,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibObjectPrevious implements BlockTool {
   }
 
   readonly id = "DocLibObjectPrevious";
-  readonly title = "Object Previous";
+  readonly title = "DocLib Object Previous";
   readonly category = "format" as const;
   readonly mode = "ObjectPrevious";
   readonly requiresSelection = false;

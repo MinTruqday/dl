@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibHyperlinkOpenDefaultSettingMenu implements BlockTool {
   static readonly feature = {
     id: "DocLibHyperlinkOpenDefaultSettingMenu",
-    title: "Hyperlink Open Default Setting Menu",
+    title: "DocLib Hyperlink Open Default Setting Menu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9e59fe1a3940f9ca"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="9,8 20,13 10,17 15,19 12,11 12,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Hyperlink Open Default Setting Menu",
+      title: "DocLib Hyperlink Open Default Setting Menu",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9e59fe1a3940f9ca"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="9,8 20,13 10,17 15,19 12,11 12,9"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibHyperlinkOpenDefaultSettingMenu implements BlockTool 
   }
 
   readonly id = "DocLibHyperlinkOpenDefaultSettingMenu";
-  readonly title = "Hyperlink Open Default Setting Menu";
+  readonly title = "DocLib Hyperlink Open Default Setting Menu";
   readonly category = "media" as const;
   readonly mode = "HyperlinkOpenDefaultSettingMenu";
   readonly requiresSelection = false;

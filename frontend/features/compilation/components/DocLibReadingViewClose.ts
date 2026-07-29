@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibReadingViewClose implements BlockTool {
   static readonly feature = {
     id: "DocLibReadingViewClose",
-    title: "Reading View Close",
+    title: "DocLib Reading View Close",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="653978ed9bbea620"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="20,10 5,20 6,7 17,19 5,6 11,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Reading View Close",
+      title: "DocLib Reading View Close",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="653978ed9bbea620"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="20,10 5,20 6,7 17,19 5,6 11,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibReadingViewClose implements BlockTool {
   }
 
   readonly id = "DocLibReadingViewClose";
-  readonly title = "Reading View Close";
+  readonly title = "DocLib Reading View Close";
   readonly category = "format" as const;
   readonly mode = "ReadingViewClose";
   readonly requiresSelection = false;

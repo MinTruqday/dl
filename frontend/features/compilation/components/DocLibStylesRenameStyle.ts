@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibStylesRenameStyle implements BlockTool {
   static readonly feature = {
     id: "DocLibStylesRenameStyle",
-    title: "Styles Rename Style",
+    title: "DocLib Styles Rename Style",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="75a716596a029470"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,18 9,8 8,6 16,14 9,15 5,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Styles Rename Style",
+      title: "DocLib Styles Rename Style",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="75a716596a029470"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,18 9,8 8,6 16,14 9,15 5,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibStylesRenameStyle implements BlockTool {
   }
 
   readonly id = "DocLibStylesRenameStyle";
-  readonly title = "Styles Rename Style";
+  readonly title = "DocLib Styles Rename Style";
   readonly category = "format" as const;
   readonly mode = "StylesRenameStyle";
   readonly requiresSelection = false;

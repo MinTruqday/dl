@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibGradientGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibGradientGallery",
-    title: "Gradient Gallery",
+    title: "DocLib Gradient Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="520331609604bc04"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,7 19,15 18,8 5,8 19,13 7,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Gradient Gallery",
+      title: "DocLib Gradient Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="520331609604bc04"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,7 19,15 18,8 5,8 19,13 7,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibGradientGallery implements BlockTool {
   }
 
   readonly id = "DocLibGradientGallery";
-  readonly title = "Gradient Gallery";
+  readonly title = "DocLib Gradient Gallery";
   readonly category = "format" as const;
   readonly mode = "GradientGallery";
   readonly requiresSelection = false;

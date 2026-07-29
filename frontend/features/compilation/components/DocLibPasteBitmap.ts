@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPasteBitmap implements BlockTool {
   static readonly feature = {
     id: "DocLibPasteBitmap",
-    title: "Paste Bitmap",
+    title: "DocLib Paste Bitmap",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7fb638824991c640"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="12,16 9,15 9,13 15,17 14,6 5,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Paste Bitmap",
+      title: "DocLib Paste Bitmap",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7fb638824991c640"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="12,16 9,15 9,13 15,17 14,6 5,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPasteBitmap implements BlockTool {
   }
 
   readonly id = "DocLibPasteBitmap";
-  readonly title = "Paste Bitmap";
+  readonly title = "DocLib Paste Bitmap";
   readonly category = "format" as const;
   readonly mode = "PasteBitmap";
   readonly requiresSelection = false;

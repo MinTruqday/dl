@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextEffectTransformGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibTextEffectTransformGallery",
-    title: "Text Effect Transform Gallery",
+    title: "DocLib Text Effect Transform Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e8ea6f34186a6799"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="15,17 13,5 11,8 5,4 6,19 15,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Text Effect Transform Gallery",
+      title: "DocLib Text Effect Transform Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e8ea6f34186a6799"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="15,17 13,5 11,8 5,4 6,19 15,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTextEffectTransformGallery implements BlockTool {
   }
 
   readonly id = "DocLibTextEffectTransformGallery";
-  readonly title = "Text Effect Transform Gallery";
+  readonly title = "DocLib Text Effect Transform Gallery";
   readonly category = "format" as const;
   readonly mode = "TextEffectTransformGallery";
   readonly requiresSelection = false;

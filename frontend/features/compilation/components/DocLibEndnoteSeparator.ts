@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibEndnoteSeparator implements BlockTool {
   static readonly feature = {
     id: "DocLibEndnoteSeparator",
-    title: "Endnote Separator",
+    title: "DocLib Endnote Separator",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d2c4a031ed83aa8d"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,13 11,19 20,16 4,9 4,16 18,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Endnote Separator",
+      title: "DocLib Endnote Separator",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d2c4a031ed83aa8d"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,13 11,19 20,16 4,9 4,16 18,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibEndnoteSeparator implements BlockTool {
   }
 
   readonly id = "DocLibEndnoteSeparator";
-  readonly title = "Endnote Separator";
+  readonly title = "DocLib Endnote Separator";
   readonly category = "format" as const;
   readonly mode = "EndnoteSeparator";
   readonly requiresSelection = false;

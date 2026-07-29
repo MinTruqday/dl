@@ -1,9 +1,11 @@
 import { API, BlockTool } from "@editorjs/editorjs";
+import { requestEditorInput } from "./editor-dialog";
+import { uploadEditorAssetAPI } from "@/features/compilation/services/editorjs.service";
 
 export default class DocLibFile implements BlockTool {
   static readonly feature = {
     id: "DocLibFile",
-    title: "File",
+    title: "DocLib File",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="211121415a48f55a"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="20,4 20,18 9,8 11,9 9,5 17,5"/></svg>',
     product: "doclib",
   } as const;
@@ -18,7 +20,7 @@ export default class DocLibFile implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "File",
+      title: "DocLib File",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="211121415a48f55a"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="20,4 20,18 9,8 11,9 9,5 17,5"/></svg>',
     };
   }
@@ -135,15 +137,12 @@ export default class DocLibFile implements BlockTool {
       fileInput.addEventListener("change", () => {
         if (fileInput.files && fileInput.files[0]) {
           const file = fileInput.files[0];
-          const formData = new FormData();
-          formData.append("file", file);
           const endpoint = this.config?.endpoints?.byFile || "/api/uploadFile";
 
           uploader.innerHTML =
       '<div style="padding: 20px; font-weight: 500;">Uploading</div>';
 
-          fetch(endpoint, { method: "POST", body: formData })
-            .then((res) => res.json())
+          uploadEditorAssetAPI(endpoint, file)
             .then((res) => {
               if (res.success === 1 && res.file && res.file.url) {
                 if (this.data.file) this.data.file.url = res.file.url;
@@ -186,9 +185,12 @@ export default class DocLibFile implements BlockTool {
 
       uploader.appendChild(fileInput);
 
-      uploader.addEventListener("contextmenu", (e) => {
+      uploader.addEventListener("contextmenu", async (e) => {
         e.preventDefault();
-        const url = prompt("Enter a direct file URL");
+        const url = await requestEditorInput({
+          title: "DocLib File",
+          label: "Liên kết tệp",
+        });
         if (url) {
           const fileName = url.split("/").pop() || url;
           if (this.data.file) this.data.file.url = url;

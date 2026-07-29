@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMacroSecurity implements BlockTool {
   static readonly feature = {
     id: "DocLibMacroSecurity",
-    title: "Macro Security",
+    title: "DocLib Macro Security",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8be8fb7c6ffff968"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="7,15 17,9 13,4 15,6 18,14 11,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Macro Security",
+      title: "DocLib Macro Security",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8be8fb7c6ffff968"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="7,15 17,9 13,4 15,6 18,14 11,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibMacroSecurity implements BlockTool {
   }
 
   readonly id = "DocLibMacroSecurity";
-  readonly title = "Macro Security";
+  readonly title = "DocLib Macro Security";
   readonly category = "automation" as const;
   readonly mode = "MacroSecurity";
   readonly requiresSelection = false;

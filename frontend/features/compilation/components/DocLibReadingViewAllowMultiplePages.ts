@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibReadingViewAllowMultiplePages implements BlockTool {
   static readonly feature = {
     id: "DocLibReadingViewAllowMultiplePages",
-    title: "Reading View Allow Multiple Pages",
+    title: "DocLib Reading View Allow Multiple Pages",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3a1cb4e3b90339e8"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="11,15 14,10 19,7 10,15 13,8 10,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Reading View Allow Multiple Pages",
+      title: "DocLib Reading View Allow Multiple Pages",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3a1cb4e3b90339e8"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="11,15 14,10 19,7 10,15 13,8 10,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibReadingViewAllowMultiplePages implements BlockTool {
   }
 
   readonly id = "DocLibReadingViewAllowMultiplePages";
-  readonly title = "Reading View Allow Multiple Pages";
+  readonly title = "DocLib Reading View Allow Multiple Pages";
   readonly category = "format" as const;
   readonly mode = "ReadingViewAllowMultiplePages";
   readonly requiresSelection = false;

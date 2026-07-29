@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibOfficeFeedbackIcon implements BlockTool {
   static readonly feature = {
     id: "DocLibOfficeFeedbackIcon",
-    title: "Office Feedback Icon",
+    title: "DocLib Office Feedback Icon",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="30f95d5ccc779c50"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="18,15 12,11 4,4 7,16 12,12 18,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Office Feedback Icon",
+      title: "DocLib Office Feedback Icon",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="30f95d5ccc779c50"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="18,15 12,11 4,4 7,16 12,12 18,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibOfficeFeedbackIcon implements BlockTool {
   }
 
   readonly id = "DocLibOfficeFeedbackIcon";
-  readonly title = "Office Feedback Icon";
+  readonly title = "DocLib Office Feedback Icon";
   readonly category = "format" as const;
   readonly mode = "OfficeFeedbackIcon";
   readonly requiresSelection = false;

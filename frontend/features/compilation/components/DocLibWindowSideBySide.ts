@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWindowSideBySide implements BlockTool {
   static readonly feature = {
     id: "DocLibWindowSideBySide",
-    title: "Window Side By Side",
+    title: "DocLib Window Side By Side",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ea83bf505a168b03"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,16 8,16 9,9 7,7 15,20 18,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Window Side By Side",
+      title: "DocLib Window Side By Side",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ea83bf505a168b03"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,16 8,16 9,9 7,7 15,20 18,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibWindowSideBySide implements BlockTool {
   }
 
   readonly id = "DocLibWindowSideBySide";
-  readonly title = "Window Side By Side";
+  readonly title = "DocLib Window Side By Side";
   readonly category = "view" as const;
   readonly mode = "WindowSideBySide";
   readonly requiresSelection = false;

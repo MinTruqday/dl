@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibCloseLearningTools implements BlockTool {
   static readonly feature = {
     id: "DocLibCloseLearningTools",
-    title: "Close Learning Tools",
+    title: "DocLib Close Learning Tools",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1695f7aed8902319"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="9,17 13,8 16,12 5,12 7,20 4,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Close Learning Tools",
+      title: "DocLib Close Learning Tools",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1695f7aed8902319"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="9,17 13,8 16,12 5,12 7,20 4,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibCloseLearningTools implements BlockTool {
   }
 
   readonly id = "DocLibCloseLearningTools";
-  readonly title = "Close Learning Tools";
+  readonly title = "DocLib Close Learning Tools";
   readonly category = "table" as const;
   readonly mode = "CloseLearningTools";
   readonly requiresSelection = false;

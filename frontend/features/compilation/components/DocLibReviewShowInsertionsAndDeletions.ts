@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibReviewShowInsertionsAndDeletions implements BlockTool {
   static readonly feature = {
     id: "DocLibReviewShowInsertionsAndDeletions",
-    title: "Review Show Insertions And Deletions",
+    title: "DocLib Review Show Insertions And Deletions",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ddbcae985dea0f6d"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="4,5 8,20 12,17 19,11 12,18 19,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Review Show Insertions And Deletions",
+      title: "DocLib Review Show Insertions And Deletions",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ddbcae985dea0f6d"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="4,5 8,20 12,17 19,11 12,18 19,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibReviewShowInsertionsAndDeletions implements BlockTool
   }
 
   readonly id = "DocLibReviewShowInsertionsAndDeletions";
-  readonly title = "Review Show Insertions And Deletions";
+  readonly title = "DocLib Review Show Insertions And Deletions";
   readonly category = "review" as const;
   readonly mode = "ReviewShowInsertionsAndDeletions";
   readonly requiresSelection = false;

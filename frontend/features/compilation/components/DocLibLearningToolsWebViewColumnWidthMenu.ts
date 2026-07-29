@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLearningToolsWebViewColumnWidthMenu implements BlockTool {
   static readonly feature = {
     id: "DocLibLearningToolsWebViewColumnWidthMenu",
-    title: "Learning Tools Web View Column Width Menu",
+    title: "DocLib Learning Tools Web View Column Width Menu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ec06dc42be98eb66"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="19,10 20,19 7,20 18,4 18,6 10,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Learning Tools Web View Column Width Menu",
+      title: "DocLib Learning Tools Web View Column Width Menu",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ec06dc42be98eb66"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="19,10 20,19 7,20 18,4 18,6 10,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibLearningToolsWebViewColumnWidthMenu implements BlockT
   }
 
   readonly id = "DocLibLearningToolsWebViewColumnWidthMenu";
-  readonly title = "Learning Tools Web View Column Width Menu";
+  readonly title = "DocLib Learning Tools Web View Column Width Menu";
   readonly category = "table" as const;
   readonly mode = "LearningToolsWebViewColumnWidthMenu";
   readonly requiresSelection = false;

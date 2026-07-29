@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibInsightsInDocSearch implements BlockTool {
   static readonly feature = {
     id: "DocLibInsightsInDocSearch",
-    title: "Insights In Doc Search",
+    title: "DocLib Insights In Doc Search",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="89f8324c3cee1837"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="5,14 20,12 13,4 11,8 9,18 12,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Insights In Doc Search",
+      title: "DocLib Insights In Doc Search",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="89f8324c3cee1837"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="5,14 20,12 13,4 11,8 9,18 12,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibInsightsInDocSearch implements BlockTool {
   }
 
   readonly id = "DocLibInsightsInDocSearch";
-  readonly title = "Insights In Doc Search";
+  readonly title = "DocLib Insights In Doc Search";
   readonly category = "format" as const;
   readonly mode = "InsightsInDocSearch";
   readonly requiresSelection = false;

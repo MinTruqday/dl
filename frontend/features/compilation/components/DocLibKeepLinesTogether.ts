@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibKeepLinesTogether implements BlockTool {
   static readonly feature = {
     id: "DocLibKeepLinesTogether",
-    title: "Keep Lines Together",
+    title: "DocLib Keep Lines Together",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9393c76fdebfe302"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,15 16,13 5,8 10,6 5,19 18,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Keep Lines Together",
+      title: "DocLib Keep Lines Together",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9393c76fdebfe302"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,15 16,13 5,8 10,6 5,19 18,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibKeepLinesTogether implements BlockTool {
   }
 
   readonly id = "DocLibKeepLinesTogether";
-  readonly title = "Keep Lines Together";
+  readonly title = "DocLib Keep Lines Together";
   readonly category = "layout" as const;
   readonly mode = "KeepLinesTogether";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibQuickStylesResetFromTemplate implements BlockTool {
   static readonly feature = {
     id: "DocLibQuickStylesResetFromTemplate",
-    title: "Quick Styles Reset From Template",
+    title: "DocLib Quick Styles Reset From Template",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="edf87e8460015674"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,14 11,17 15,5 5,18 6,5 9,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Quick Styles Reset From Template",
+      title: "DocLib Quick Styles Reset From Template",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="edf87e8460015674"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,14 11,17 15,5 5,18 6,5 9,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibQuickStylesResetFromTemplate implements BlockTool {
   }
 
   readonly id = "DocLibQuickStylesResetFromTemplate";
-  readonly title = "Quick Styles Reset From Template";
+  readonly title = "DocLib Quick Styles Reset From Template";
   readonly category = "format" as const;
   readonly mode = "QuickStylesResetFromTemplate";
   readonly requiresSelection = false;

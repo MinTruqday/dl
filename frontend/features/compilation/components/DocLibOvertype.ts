@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibOvertype implements BlockTool {
   static readonly feature = {
     id: "DocLibOvertype",
-    title: "Overtype",
+    title: "DocLib Overtype",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="434b6c8236cfc9c5"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,11 10,15 7,7 18,14 5,19 13,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Overtype",
+      title: "DocLib Overtype",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="434b6c8236cfc9c5"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,11 10,15 7,7 18,14 5,19 13,9"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibOvertype implements BlockTool {
   }
 
   readonly id = "DocLibOvertype";
-  readonly title = "Overtype";
+  readonly title = "DocLib Overtype";
   readonly category = "format" as const;
   readonly mode = "Overtype";
   readonly requiresSelection = false;

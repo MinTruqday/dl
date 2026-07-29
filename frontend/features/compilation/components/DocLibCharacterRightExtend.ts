@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibCharacterRightExtend implements BlockTool {
   static readonly feature = {
     id: "DocLibCharacterRightExtend",
-    title: "Character Right Extend",
+    title: "DocLib Character Right Extend",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1c5acf621af0477e"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="15,9 7,17 13,6 7,11 8,4 9,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Character Right Extend",
+      title: "DocLib Character Right Extend",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1c5acf621af0477e"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="15,9 7,17 13,6 7,11 8,4 9,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibCharacterRightExtend implements BlockTool {
   }
 
   readonly id = "DocLibCharacterRightExtend";
-  readonly title = "Character Right Extend";
+  readonly title = "DocLib Character Right Extend";
   readonly category = "format" as const;
   readonly mode = "CharacterRightExtend";
   readonly requiresSelection = false;

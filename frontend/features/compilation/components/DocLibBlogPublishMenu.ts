@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibBlogPublishMenu implements BlockTool {
   static readonly feature = {
     id: "DocLibBlogPublishMenu",
-    title: "Blog Publish Menu",
+    title: "DocLib Blog Publish Menu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e0ee024ca6407fab"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="7,4 6,12 17,17 12,5 12,19 7,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Blog Publish Menu",
+      title: "DocLib Blog Publish Menu",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e0ee024ca6407fab"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="7,4 6,12 17,17 12,5 12,19 7,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibBlogPublishMenu implements BlockTool {
   }
 
   readonly id = "DocLibBlogPublishMenu";
-  readonly title = "Blog Publish Menu";
+  readonly title = "DocLib Blog Publish Menu";
   readonly category = "format" as const;
   readonly mode = "BlogPublishMenu";
   readonly requiresSelection = false;

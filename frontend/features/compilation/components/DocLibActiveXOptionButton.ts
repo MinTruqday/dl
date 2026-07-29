@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibActiveXOptionButton implements BlockTool {
   static readonly feature = {
     id: "DocLibActiveXOptionButton",
-    title: "Active X Option Button",
+    title: "DocLib Active X Option Button",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="12061818ab7bab52"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="5,10 11,11 5,8 5,18 9,10 15,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Active X Option Button",
+      title: "DocLib Active X Option Button",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="12061818ab7bab52"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="5,10 11,11 5,8 5,18 9,10 15,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibActiveXOptionButton implements BlockTool {
   }
 
   readonly id = "DocLibActiveXOptionButton";
-  readonly title = "Active X Option Button";
+  readonly title = "DocLib Active X Option Button";
   readonly category = "automation" as const;
   readonly mode = "ActiveXOptionButton";
   readonly requiresSelection = false;

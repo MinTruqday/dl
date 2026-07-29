@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDigitalPrint implements BlockTool {
   static readonly feature = {
     id: "DocLibDigitalPrint",
-    title: "Digital Print",
+    title: "DocLib Digital Print",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="656fe046394b2175"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="20,13 7,6 10,11 20,19 4,15 6,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Digital Print",
+      title: "DocLib Digital Print",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="656fe046394b2175"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="20,13 7,6 10,11 20,19 4,15 6,9"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDigitalPrint implements BlockTool {
   }
 
   readonly id = "DocLibDigitalPrint";
-  readonly title = "Digital Print";
+  readonly title = "DocLib Digital Print";
   readonly category = "format" as const;
   readonly mode = "DigitalPrint";
   readonly requiresSelection = false;

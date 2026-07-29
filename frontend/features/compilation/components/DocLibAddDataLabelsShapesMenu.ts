@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAddDataLabelsShapesMenu implements BlockTool {
   static readonly feature = {
     id: "DocLibAddDataLabelsShapesMenu",
-    title: "Add Data Labels Shapes Menu",
+    title: "DocLib Add Data Labels Shapes Menu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cd5cec93ee072647"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="5,11 19,15 4,11 8,7 15,14 4,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Add Data Labels Shapes Menu",
+      title: "DocLib Add Data Labels Shapes Menu",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cd5cec93ee072647"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="5,11 19,15 4,11 8,7 15,14 4,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibAddDataLabelsShapesMenu implements BlockTool {
   }
 
   readonly id = "DocLibAddDataLabelsShapesMenu";
-  readonly title = "Add Data Labels Shapes Menu";
+  readonly title = "DocLib Add Data Labels Shapes Menu";
   readonly category = "media" as const;
   readonly mode = "AddDataLabelsShapesMenu";
   readonly requiresSelection = false;

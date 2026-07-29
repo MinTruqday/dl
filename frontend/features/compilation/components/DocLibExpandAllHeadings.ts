@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibExpandAllHeadings implements BlockTool {
   static readonly feature = {
     id: "DocLibExpandAllHeadings",
-    title: "Expand All Headings",
+    title: "DocLib Expand All Headings",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="16d354c2cc9fb2bc"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,11 20,11 4,10 12,5 8,14 10,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Expand All Headings",
+      title: "DocLib Expand All Headings",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="16d354c2cc9fb2bc"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,11 20,11 4,10 12,5 8,14 10,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibExpandAllHeadings implements BlockTool {
   }
 
   readonly id = "DocLibExpandAllHeadings";
-  readonly title = "Expand All Headings";
+  readonly title = "DocLib Expand All Headings";
   readonly category = "format" as const;
   readonly mode = "ExpandAllHeadings";
   readonly requiresSelection = false;

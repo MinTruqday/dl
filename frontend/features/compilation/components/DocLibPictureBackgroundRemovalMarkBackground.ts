@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPictureBackgroundRemovalMarkBackground implements BlockTool {
   static readonly feature = {
     id: "DocLibPictureBackgroundRemovalMarkBackground",
-    title: "Picture Background Removal Mark Background",
+    title: "DocLib Picture Background Removal Mark Background",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3f92aa48d85f6d8d"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="16,14 4,8 16,14 11,9 18,5 9,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Picture Background Removal Mark Background",
+      title: "DocLib Picture Background Removal Mark Background",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3f92aa48d85f6d8d"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="16,14 4,8 16,14 11,9 18,5 9,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPictureBackgroundRemovalMarkBackground implements Blo
   }
 
   readonly id = "DocLibPictureBackgroundRemovalMarkBackground";
-  readonly title = "Picture Background Removal Mark Background";
+  readonly title = "DocLib Picture Background Removal Mark Background";
   readonly category = "format" as const;
   readonly mode = "PictureBackgroundRemovalMarkBackground";
   readonly requiresSelection = false;

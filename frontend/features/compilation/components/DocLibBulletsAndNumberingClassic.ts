@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibBulletsAndNumberingClassic implements BlockTool {
   static readonly feature = {
     id: "DocLibBulletsAndNumberingClassic",
-    title: "Bullets And Numbering Classic",
+    title: "DocLib Bullets And Numbering Classic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8c490b8b3fd3a3fd"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="8,9 15,7 16,11 14,19 7,19 5,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Bullets And Numbering Classic",
+      title: "DocLib Bullets And Numbering Classic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8c490b8b3fd3a3fd"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="8,9 15,7 16,11 14,19 7,19 5,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibBulletsAndNumberingClassic implements BlockTool {
   }
 
   readonly id = "DocLibBulletsAndNumberingClassic";
-  readonly title = "Bullets And Numbering Classic";
+  readonly title = "DocLib Bullets And Numbering Classic";
   readonly category = "format" as const;
   readonly mode = "BulletsAndNumberingClassic";
   readonly requiresSelection = false;

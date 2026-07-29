@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSmartArtSmallerShape implements BlockTool {
   static readonly feature = {
     id: "DocLibSmartArtSmallerShape",
-    title: "Smart Art Smaller Shape",
+    title: "DocLib Smart Art Smaller Shape",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0fc2eb87dda16857"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="19,11 18,20 4,12 6,6 8,7 5,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Smart Art Smaller Shape",
+      title: "DocLib Smart Art Smaller Shape",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0fc2eb87dda16857"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="19,11 18,20 4,12 6,6 8,7 5,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSmartArtSmallerShape implements BlockTool {
   }
 
   readonly id = "DocLibSmartArtSmallerShape";
-  readonly title = "Smart Art Smaller Shape";
+  readonly title = "DocLib Smart Art Smaller Shape";
   readonly category = "format" as const;
   readonly mode = "SmartArtSmallerShape";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibOutlineLevelGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibOutlineLevelGallery",
-    title: "Outline Level Gallery",
+    title: "DocLib Outline Level Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="adad0a6f412df278"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="7,7 14,13 18,15 8,5 20,8 12,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Outline Level Gallery",
+      title: "DocLib Outline Level Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="adad0a6f412df278"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="7,7 14,13 18,15 8,5 20,8 12,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibOutlineLevelGallery implements BlockTool {
   }
 
   readonly id = "DocLibOutlineLevelGallery";
-  readonly title = "Outline Level Gallery";
+  readonly title = "DocLib Outline Level Gallery";
   readonly category = "format" as const;
   readonly mode = "OutlineLevelGallery";
   readonly requiresSelection = false;

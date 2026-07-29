@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibConflictsRejectAndMoveToNext implements BlockTool {
   static readonly feature = {
     id: "DocLibConflictsRejectAndMoveToNext",
-    title: "Conflicts Reject And Move To Next",
+    title: "DocLib Conflicts Reject And Move To Next",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="faaada1abeabf6b2"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="16,4 18,13 7,5 12,12 18,9 16,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Conflicts Reject And Move To Next",
+      title: "DocLib Conflicts Reject And Move To Next",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="faaada1abeabf6b2"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="16,4 18,13 7,5 12,12 18,9 16,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibConflictsRejectAndMoveToNext implements BlockTool {
   }
 
   readonly id = "DocLibConflictsRejectAndMoveToNext";
-  readonly title = "Conflicts Reject And Move To Next";
+  readonly title = "DocLib Conflicts Reject And Move To Next";
   readonly category = "format" as const;
   readonly mode = "ConflictsRejectAndMoveToNext";
   readonly requiresSelection = false;

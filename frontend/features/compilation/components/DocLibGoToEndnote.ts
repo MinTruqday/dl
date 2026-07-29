@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibGoToEndnote implements BlockTool {
   static readonly feature = {
     id: "DocLibGoToEndnote",
-    title: "Go To Endnote",
+    title: "DocLib Go To Endnote",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a28ad648a809d5f8"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="13,6 14,8 19,13 13,14 5,13 4,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Go To Endnote",
+      title: "DocLib Go To Endnote",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a28ad648a809d5f8"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="13,6 14,8 19,13 13,14 5,13 4,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibGoToEndnote implements BlockTool {
   }
 
   readonly id = "DocLibGoToEndnote";
-  readonly title = "Go To Endnote";
+  readonly title = "DocLib Go To Endnote";
   readonly category = "format" as const;
   readonly mode = "GoToEndnote";
   readonly requiresSelection = false;

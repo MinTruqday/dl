@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFormatPainter implements BlockTool {
   static readonly feature = {
     id: "DocLibFormatPainter",
-    title: "Format Painter",
+    title: "DocLib Format Painter",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ab16c9da68a124db"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="5,9 18,18 6,12 6,19 20,5 20,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Format Painter",
+      title: "DocLib Format Painter",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ab16c9da68a124db"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="5,9 18,18 6,12 6,19 20,5 20,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFormatPainter implements BlockTool {
   }
 
   readonly id = "DocLibFormatPainter";
-  readonly title = "Format Painter";
+  readonly title = "DocLib Format Painter";
   readonly category = "format" as const;
   readonly mode = "FormatPainter";
   readonly requiresSelection = true;

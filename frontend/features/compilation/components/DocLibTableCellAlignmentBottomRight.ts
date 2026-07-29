@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableCellAlignmentBottomRight implements BlockTool {
   static readonly feature = {
     id: "DocLibTableCellAlignmentBottomRight",
-    title: "Table Cell Alignment Bottom Right",
+    title: "DocLib Table Cell Alignment Bottom Right",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="babb7e3f8d688cce"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="20,4 11,16 9,6 8,6 16,8 6,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Table Cell Alignment Bottom Right",
+      title: "DocLib Table Cell Alignment Bottom Right",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="babb7e3f8d688cce"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="20,4 11,16 9,6 8,6 16,8 6,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTableCellAlignmentBottomRight implements BlockTool {
   }
 
   readonly id = "DocLibTableCellAlignmentBottomRight";
-  readonly title = "Table Cell Alignment Bottom Right";
+  readonly title = "DocLib Table Cell Alignment Bottom Right";
   readonly category = "table" as const;
   readonly mode = "TableCellAlignmentBottomRight";
   readonly requiresSelection = false;

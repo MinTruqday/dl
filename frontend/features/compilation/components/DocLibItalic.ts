@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibItalic implements BlockTool {
   static readonly feature = {
     id: "DocLibItalic",
-    title: "Italic",
+    title: "DocLib Italic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9d1d357897c3796d"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="8,16 6,5 19,12 6,11 19,4 19,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Italic",
+      title: "DocLib Italic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9d1d357897c3796d"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="8,16 6,5 19,12 6,11 19,4 19,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibItalic implements BlockTool {
   }
 
   readonly id = "DocLibItalic";
-  readonly title = "Italic";
+  readonly title = "DocLib Italic";
   readonly category = "format" as const;
   readonly mode = "Italic";
   readonly requiresSelection = false;

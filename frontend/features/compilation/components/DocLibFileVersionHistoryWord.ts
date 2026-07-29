@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFileVersionHistoryWord implements BlockTool {
   static readonly feature = {
     id: "DocLibFileVersionHistoryWord",
-    title: "File Version History Word",
+    title: "DocLib File Version History Word",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="78e8c8999fae974d"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="5,15 17,4 10,8 19,13 7,7 14,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "File Version History Word",
+      title: "DocLib File Version History Word",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="78e8c8999fae974d"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="5,15 17,4 10,8 19,13 7,7 14,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFileVersionHistoryWord implements BlockTool {
   }
 
   readonly id = "DocLibFileVersionHistoryWord";
-  readonly title = "File Version History Word";
+  readonly title = "DocLib File Version History Word";
   readonly category = "format" as const;
   readonly mode = "FileVersionHistoryWord";
   readonly requiresSelection = false;

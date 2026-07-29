@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibContentControlsUngroup implements BlockTool {
   static readonly feature = {
     id: "DocLibContentControlsUngroup",
-    title: "Content Controls Ungroup",
+    title: "DocLib Content Controls Ungroup",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f16fd381ff0af2b6"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,13 11,14 4,14 8,16 19,12 19,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Content Controls Ungroup",
+      title: "DocLib Content Controls Ungroup",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f16fd381ff0af2b6"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,13 11,14 4,14 8,16 19,12 19,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibContentControlsUngroup implements BlockTool {
   }
 
   readonly id = "DocLibContentControlsUngroup";
-  readonly title = "Content Controls Ungroup";
+  readonly title = "DocLib Content Controls Ungroup";
   readonly category = "automation" as const;
   readonly mode = "ContentControlsUngroup";
   readonly requiresSelection = false;

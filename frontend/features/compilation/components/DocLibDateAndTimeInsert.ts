@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDateAndTimeInsert implements BlockTool {
   static readonly feature = {
     id: "DocLibDateAndTimeInsert",
-    title: "Date And Time Insert",
+    title: "DocLib Date And Time Insert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="abf7d314c890ae08"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,13 11,7 17,12 8,12 5,15 9,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Date And Time Insert",
+      title: "DocLib Date And Time Insert",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="abf7d314c890ae08"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,13 11,7 17,12 8,12 5,15 9,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDateAndTimeInsert implements BlockTool {
   }
 
   readonly id = "DocLibDateAndTimeInsert";
-  readonly title = "Date And Time Insert";
+  readonly title = "DocLib Date And Time Insert";
   readonly category = "insert" as const;
   readonly mode = "DateAndTimeInsert";
   readonly requiresSelection = false;

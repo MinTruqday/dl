@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWatermarkCustomDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibWatermarkCustomDialog",
-    title: "Watermark Custom Dialog",
+    title: "DocLib Watermark Custom Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e1eec2915409d774"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,4 11,13 20,13 15,18 8,8 19,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Watermark Custom Dialog",
+      title: "DocLib Watermark Custom Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e1eec2915409d774"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,4 11,13 20,13 15,18 8,8 19,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibWatermarkCustomDialog implements BlockTool {
   }
 
   readonly id = "DocLibWatermarkCustomDialog";
-  readonly title = "Watermark Custom Dialog";
+  readonly title = "DocLib Watermark Custom Dialog";
   readonly category = "format" as const;
   readonly mode = "WatermarkCustomDialog";
   readonly requiresSelection = false;

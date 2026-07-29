@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibObjectEditShapeMenu implements BlockTool {
   static readonly feature = {
     id: "DocLibObjectEditShapeMenu",
-    title: "Object Edit Shape Menu",
+    title: "DocLib Object Edit Shape Menu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8c028f94e051b843"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="8,6 11,16 7,17 18,20 4,17 8,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Object Edit Shape Menu",
+      title: "DocLib Object Edit Shape Menu",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8c028f94e051b843"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="8,6 11,16 7,17 18,20 4,17 8,9"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibObjectEditShapeMenu implements BlockTool {
   }
 
   readonly id = "DocLibObjectEditShapeMenu";
-  readonly title = "Object Edit Shape Menu";
+  readonly title = "DocLib Object Edit Shape Menu";
   readonly category = "format" as const;
   readonly mode = "ObjectEditShapeMenu";
   readonly requiresSelection = false;

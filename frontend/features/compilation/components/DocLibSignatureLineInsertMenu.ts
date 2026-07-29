@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSignatureLineInsertMenu implements BlockTool {
   static readonly feature = {
     id: "DocLibSignatureLineInsertMenu",
-    title: "Signature Line Insert Menu",
+    title: "DocLib Signature Line Insert Menu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2d22ad48650da029"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="15,4 7,8 20,17 11,11 12,16 19,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Signature Line Insert Menu",
+      title: "DocLib Signature Line Insert Menu",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2d22ad48650da029"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="15,4 7,8 20,17 11,11 12,16 19,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSignatureLineInsertMenu implements BlockTool {
   }
 
   readonly id = "DocLibSignatureLineInsertMenu";
-  readonly title = "Signature Line Insert Menu";
+  readonly title = "DocLib Signature Line Insert Menu";
   readonly category = "insert" as const;
   readonly mode = "SignatureLineInsertMenu";
   readonly requiresSelection = false;

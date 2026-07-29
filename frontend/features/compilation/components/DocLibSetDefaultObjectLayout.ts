@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSetDefaultObjectLayout implements BlockTool {
   static readonly feature = {
     id: "DocLibSetDefaultObjectLayout",
-    title: "Set Default Object Layout",
+    title: "DocLib Set Default Object Layout",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fbfe30cc5da275f5"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,20 18,4 12,13 19,11 6,19 17,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Set Default Object Layout",
+      title: "DocLib Set Default Object Layout",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fbfe30cc5da275f5"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,20 18,4 12,13 19,11 6,19 17,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSetDefaultObjectLayout implements BlockTool {
   }
 
   readonly id = "DocLibSetDefaultObjectLayout";
-  readonly title = "Set Default Object Layout";
+  readonly title = "DocLib Set Default Object Layout";
   readonly category = "layout" as const;
   readonly mode = "SetDefaultObjectLayout";
   readonly requiresSelection = false;

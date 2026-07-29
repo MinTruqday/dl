@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibProofingOptions implements BlockTool {
   static readonly feature = {
     id: "DocLibProofingOptions",
-    title: "Proofing Options",
+    title: "DocLib Proofing Options",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ead6f1026dbcdd2e"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="17,14 7,6 11,5 4,16 16,17 13,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Proofing Options",
+      title: "DocLib Proofing Options",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ead6f1026dbcdd2e"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="17,14 7,6 11,5 4,16 16,17 13,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibProofingOptions implements BlockTool {
   }
 
   readonly id = "DocLibProofingOptions";
-  readonly title = "Proofing Options";
+  readonly title = "DocLib Proofing Options";
   readonly category = "format" as const;
   readonly mode = "ProofingOptions";
   readonly requiresSelection = false;

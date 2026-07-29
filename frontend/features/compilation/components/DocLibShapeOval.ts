@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibShapeOval implements BlockTool {
   static readonly feature = {
     id: "DocLibShapeOval",
-    title: "Shape Oval",
+    title: "DocLib Shape Oval",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="04461b4176dea2ef"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,6 14,18 20,5 13,5 8,4 6,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Shape Oval",
+      title: "DocLib Shape Oval",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="04461b4176dea2ef"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,6 14,18 20,5 13,5 8,4 6,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibShapeOval implements BlockTool {
   }
 
   readonly id = "DocLibShapeOval";
-  readonly title = "Shape Oval";
+  readonly title = "DocLib Shape Oval";
   readonly category = "format" as const;
   readonly mode = "ShapeOval";
   readonly requiresSelection = false;

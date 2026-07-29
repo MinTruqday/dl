@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDeleteAllResolvedComments implements BlockTool {
   static readonly feature = {
     id: "DocLibDeleteAllResolvedComments",
-    title: "Delete All Resolved Comments",
+    title: "DocLib Delete All Resolved Comments",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bf01ebea15328977"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="8,5 18,17 8,20 5,4 19,18 12,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Delete All Resolved Comments",
+      title: "DocLib Delete All Resolved Comments",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bf01ebea15328977"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="8,5 18,17 8,20 5,4 19,18 12,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDeleteAllResolvedComments implements BlockTool {
   }
 
   readonly id = "DocLibDeleteAllResolvedComments";
-  readonly title = "Delete All Resolved Comments";
+  readonly title = "DocLib Delete All Resolved Comments";
   readonly category = "review" as const;
   readonly mode = "DeleteAllResolvedComments";
   readonly requiresSelection = false;

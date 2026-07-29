@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAllCaps implements BlockTool {
   static readonly feature = {
     id: "DocLibAllCaps",
-    title: "All Caps",
+    title: "DocLib All Caps",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0f55e08701ec53e1"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,4 7,20 5,19 19,8 5,14 10,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "All Caps",
+      title: "DocLib All Caps",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0f55e08701ec53e1"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,4 7,20 5,19 19,8 5,14 10,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibAllCaps implements BlockTool {
   }
 
   readonly id = "DocLibAllCaps";
-  readonly title = "All Caps";
+  readonly title = "DocLib All Caps";
   readonly category = "format" as const;
   readonly mode = "AllCaps";
   readonly requiresSelection = true;

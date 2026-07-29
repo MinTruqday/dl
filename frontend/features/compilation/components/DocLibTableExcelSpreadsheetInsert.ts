@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableExcelSpreadsheetInsert implements BlockTool {
   static readonly feature = {
     id: "DocLibTableExcelSpreadsheetInsert",
-    title: "Table Excel Spreadsheet Insert",
+    title: "DocLib Table Excel Spreadsheet Insert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ba841e8220981b75"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="20,17 17,15 19,20 14,19 18,17 5,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Table Excel Spreadsheet Insert",
+      title: "DocLib Table Excel Spreadsheet Insert",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ba841e8220981b75"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="20,17 17,15 19,20 14,19 18,17 5,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTableExcelSpreadsheetInsert implements BlockTool {
   }
 
   readonly id = "DocLibTableExcelSpreadsheetInsert";
-  readonly title = "Table Excel Spreadsheet Insert";
+  readonly title = "DocLib Table Excel Spreadsheet Insert";
   readonly category = "table" as const;
   readonly mode = "TableExcelSpreadsheetInsert";
   readonly requiresSelection = false;

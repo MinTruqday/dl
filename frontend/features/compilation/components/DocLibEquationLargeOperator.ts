@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibEquationLargeOperator implements BlockTool {
   static readonly feature = {
     id: "DocLibEquationLargeOperator",
-    title: "Equation Large Operator",
+    title: "DocLib Equation Large Operator",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7a9ff6fbcac9cc9b"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="7,10 12,17 19,18 4,6 20,8 9,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Equation Large Operator",
+      title: "DocLib Equation Large Operator",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7a9ff6fbcac9cc9b"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="7,10 12,17 19,18 4,6 20,8 9,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibEquationLargeOperator implements BlockTool {
   }
 
   readonly id = "DocLibEquationLargeOperator";
-  readonly title = "Equation Large Operator";
+  readonly title = "DocLib Equation Large Operator";
   readonly category = "insert" as const;
   readonly mode = "EquationLargeOperator";
   readonly requiresSelection = false;

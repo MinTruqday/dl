@@ -56,7 +56,7 @@ export default function HomePage() {
       <section className="mx-auto grid min-h-[calc(100dvh-64px)] max-w-[1240px] items-center gap-12 px-5 py-16 sm:px-8 lg:grid-cols-[0.82fr_1.18fr] lg:gap-16 lg:py-20">
         <div className="max-w-[560px]">
           <h1 className="text-[clamp(3rem,6vw,5.6rem)] font-semibold leading-[0.98] tracking-[-0.055em]">
-            Không gian tài liệu
+            DocLib
           </h1>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link

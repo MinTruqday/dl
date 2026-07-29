@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartFormatAxis implements BlockTool {
   static readonly feature = {
     id: "DocLibChartFormatAxis",
-    title: "Chart Format Axis",
+    title: "DocLib Chart Format Axis",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a83f6f3f39d87c22"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,16 13,16 10,16 9,4 4,20 13,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Format Axis",
+      title: "DocLib Chart Format Axis",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a83f6f3f39d87c22"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,16 13,16 10,16 9,4 4,20 13,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartFormatAxis implements BlockTool {
   }
 
   readonly id = "DocLibChartFormatAxis";
-  readonly title = "Chart Format Axis";
+  readonly title = "DocLib Chart Format Axis";
   readonly category = "media" as const;
   readonly mode = "ChartFormatAxis";
   readonly requiresSelection = false;

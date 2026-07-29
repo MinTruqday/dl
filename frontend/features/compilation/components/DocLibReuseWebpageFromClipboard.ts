@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibReuseWebpageFromClipboard implements BlockTool {
   static readonly feature = {
     id: "DocLibReuseWebpageFromClipboard",
-    title: "Reuse Webpage From Clipboard",
+    title: "DocLib Reuse Webpage From Clipboard",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9363a12ad672ec3e"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="15,18 12,12 14,16 19,15 15,16 15,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Reuse Webpage From Clipboard",
+      title: "DocLib Reuse Webpage From Clipboard",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9363a12ad672ec3e"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="15,18 12,12 14,16 19,15 15,16 15,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibReuseWebpageFromClipboard implements BlockTool {
   }
 
   readonly id = "DocLibReuseWebpageFromClipboard";
-  readonly title = "Reuse Webpage From Clipboard";
+  readonly title = "DocLib Reuse Webpage From Clipboard";
   readonly category = "format" as const;
   readonly mode = "ReuseWebpageFromClipboard";
   readonly requiresSelection = false;

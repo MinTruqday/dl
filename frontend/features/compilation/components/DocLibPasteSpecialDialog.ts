@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPasteSpecialDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibPasteSpecialDialog",
-    title: "Paste Special Dialog",
+    title: "DocLib Paste Special Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b642ed0ced4cef58"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="16,19 20,16 20,12 5,7 11,8 10,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Paste Special Dialog",
+      title: "DocLib Paste Special Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b642ed0ced4cef58"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="16,19 20,16 20,12 5,7 11,8 10,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPasteSpecialDialog implements BlockTool {
   }
 
   readonly id = "DocLibPasteSpecialDialog";
-  readonly title = "Paste Special Dialog";
+  readonly title = "DocLib Paste Special Dialog";
   readonly category = "format" as const;
   readonly mode = "PasteSpecialDialog";
   readonly requiresSelection = false;

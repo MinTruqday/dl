@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibReopenFromServer implements BlockTool {
   static readonly feature = {
     id: "DocLibReopenFromServer",
-    title: "Reopen From Server",
+    title: "DocLib Reopen From Server",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="69fe8be034762e72"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="7,20 7,7 5,20 16,16 11,6 6,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Reopen From Server",
+      title: "DocLib Reopen From Server",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="69fe8be034762e72"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="7,20 7,7 5,20 16,16 11,6 6,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibReopenFromServer implements BlockTool {
   }
 
   readonly id = "DocLibReopenFromServer";
-  readonly title = "Reopen From Server";
+  readonly title = "DocLib Reopen From Server";
   readonly category = "format" as const;
   readonly mode = "ReopenFromServer";
   readonly requiresSelection = false;

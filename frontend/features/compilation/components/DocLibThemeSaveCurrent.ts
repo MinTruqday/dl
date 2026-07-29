@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibThemeSaveCurrent implements BlockTool {
   static readonly feature = {
     id: "DocLibThemeSaveCurrent",
-    title: "Theme Save Current",
+    title: "DocLib Theme Save Current",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bfc19f53d0c20882"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,10 10,19 8,11 12,15 11,5 9,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Theme Save Current",
+      title: "DocLib Theme Save Current",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bfc19f53d0c20882"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,10 10,19 8,11 12,15 11,5 9,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibThemeSaveCurrent implements BlockTool {
   }
 
   readonly id = "DocLibThemeSaveCurrent";
-  readonly title = "Theme Save Current";
+  readonly title = "DocLib Theme Save Current";
   readonly category = "format" as const;
   readonly mode = "ThemeSaveCurrent";
   readonly requiresSelection = false;

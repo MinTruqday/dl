@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFootnoteContinuationNotice implements BlockTool {
   static readonly feature = {
     id: "DocLibFootnoteContinuationNotice",
-    title: "Footnote Continuation Notice",
+    title: "DocLib Footnote Continuation Notice",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ab7633f30ac53fd1"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="5,20 4,9 14,14 16,9 4,15 4,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Footnote Continuation Notice",
+      title: "DocLib Footnote Continuation Notice",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ab7633f30ac53fd1"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="5,20 4,9 14,14 16,9 4,15 4,6"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFootnoteContinuationNotice implements BlockTool {
   }
 
   readonly id = "DocLibFootnoteContinuationNotice";
-  readonly title = "Footnote Continuation Notice";
+  readonly title = "DocLib Footnote Continuation Notice";
   readonly category = "format" as const;
   readonly mode = "FootnoteContinuationNotice";
   readonly requiresSelection = false;

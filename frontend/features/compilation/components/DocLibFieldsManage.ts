@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFieldsManage implements BlockTool {
   static readonly feature = {
     id: "DocLibFieldsManage",
-    title: "Fields Manage",
+    title: "DocLib Fields Manage",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="26333861c93cbb55"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,4 9,16 18,13 4,4 13,6 19,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Fields Manage",
+      title: "DocLib Fields Manage",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="26333861c93cbb55"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,4 9,16 18,13 4,4 13,6 19,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFieldsManage implements BlockTool {
   }
 
   readonly id = "DocLibFieldsManage";
-  readonly title = "Fields Manage";
+  readonly title = "DocLib Fields Manage";
   readonly category = "format" as const;
   readonly mode = "FieldsManage";
   readonly requiresSelection = false;

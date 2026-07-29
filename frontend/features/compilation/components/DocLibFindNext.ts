@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFindNext implements BlockTool {
   static readonly feature = {
     id: "DocLibFindNext",
-    title: "Find Next",
+    title: "DocLib Find Next",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3763ceffc85b7f30"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="8,18 6,4 17,10 12,18 16,7 4,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Find Next",
+      title: "DocLib Find Next",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3763ceffc85b7f30"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="8,18 6,4 17,10 12,18 16,7 4,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFindNext implements BlockTool {
   }
 
   readonly id = "DocLibFindNext";
-  readonly title = "Find Next";
+  readonly title = "DocLib Find Next";
   readonly category = "format" as const;
   readonly mode = "FindNext";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDropCapOptionsDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibDropCapOptionsDialog",
-    title: "Drop Cap Options Dialog",
+    title: "DocLib Drop Cap Options Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="02a390181d8a10a5"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="6,14 12,11 16,6 20,16 14,15 11,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Drop Cap Options Dialog",
+      title: "DocLib Drop Cap Options Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="02a390181d8a10a5"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="6,14 12,11 16,6 20,16 14,15 11,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDropCapOptionsDialog implements BlockTool {
   }
 
   readonly id = "DocLibDropCapOptionsDialog";
-  readonly title = "Drop Cap Options Dialog";
+  readonly title = "DocLib Drop Cap Options Dialog";
   readonly category = "insert" as const;
   readonly mode = "DropCapOptionsDialog";
   readonly requiresSelection = false;

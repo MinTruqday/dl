@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartPrimaryHorizontalGridlinesOptionsDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibChartPrimaryHorizontalGridlinesOptionsDialog",
-    title: "Chart Primary Horizontal Gridlines Options Dialog",
+    title: "DocLib Chart Primary Horizontal Gridlines Options Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5c87204a59333ef8"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="11,20 19,10 8,4 15,14 5,16 11,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Primary Horizontal Gridlines Options Dialog",
+      title: "DocLib Chart Primary Horizontal Gridlines Options Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5c87204a59333ef8"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="11,20 19,10 8,4 15,14 5,16 11,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartPrimaryHorizontalGridlinesOptionsDialog implemen
   }
 
   readonly id = "DocLibChartPrimaryHorizontalGridlinesOptionsDialog";
-  readonly title = "Chart Primary Horizontal Gridlines Options Dialog";
+  readonly title = "DocLib Chart Primary Horizontal Gridlines Options Dialog";
   readonly category = "layout" as const;
   readonly mode = "ChartPrimaryHorizontalGridlinesOptionsDialog";
   readonly requiresSelection = false;

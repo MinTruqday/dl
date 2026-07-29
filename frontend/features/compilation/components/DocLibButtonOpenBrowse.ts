@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibButtonOpenBrowse implements BlockTool {
   static readonly feature = {
     id: "DocLibButtonOpenBrowse",
-    title: "Button Open Browse",
+    title: "DocLib Button Open Browse",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f8f60901fe2e7b85"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="14,12 13,5 20,16 8,18 15,16 16,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Button Open Browse",
+      title: "DocLib Button Open Browse",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f8f60901fe2e7b85"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="14,12 13,5 20,16 8,18 15,16 16,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibButtonOpenBrowse implements BlockTool {
   }
 
   readonly id = "DocLibButtonOpenBrowse";
-  readonly title = "Button Open Browse";
+  readonly title = "DocLib Button Open Browse";
   readonly category = "format" as const;
   readonly mode = "ButtonOpenBrowse";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibShadowColorPickerClassic implements BlockTool {
   static readonly feature = {
     id: "DocLibShadowColorPickerClassic",
-    title: "Shadow Color Picker Classic",
+    title: "DocLib Shadow Color Picker Classic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fd13ac80c2135969"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,6 6,13 11,6 8,7 14,15 6,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Shadow Color Picker Classic",
+      title: "DocLib Shadow Color Picker Classic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fd13ac80c2135969"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,6 6,13 11,6 8,7 14,15 6,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibShadowColorPickerClassic implements BlockTool {
   }
 
   readonly id = "DocLibShadowColorPickerClassic";
-  readonly title = "Shadow Color Picker Classic";
+  readonly title = "DocLib Shadow Color Picker Classic";
   readonly category = "format" as const;
   readonly mode = "ShadowColorPickerClassic";
   readonly requiresSelection = false;

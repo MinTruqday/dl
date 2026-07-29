@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPasteByAppendingTable implements BlockTool {
   static readonly feature = {
     id: "DocLibPasteByAppendingTable",
-    title: "Paste By Appending Table",
+    title: "DocLib Paste By Appending Table",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="20dd2fac01b0a7e7"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,4 17,6 5,10 18,14 10,13 8,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Paste By Appending Table",
+      title: "DocLib Paste By Appending Table",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="20dd2fac01b0a7e7"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,4 17,6 5,10 18,14 10,13 8,9"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPasteByAppendingTable implements BlockTool {
   }
 
   readonly id = "DocLibPasteByAppendingTable";
-  readonly title = "Paste By Appending Table";
+  readonly title = "DocLib Paste By Appending Table";
   readonly category = "format" as const;
   readonly mode = "PasteByAppendingTable";
   readonly requiresSelection = false;

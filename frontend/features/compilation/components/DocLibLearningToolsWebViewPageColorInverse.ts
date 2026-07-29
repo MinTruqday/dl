@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLearningToolsWebViewPageColorInverse implements BlockTool {
   static readonly feature = {
     id: "DocLibLearningToolsWebViewPageColorInverse",
-    title: "Learning Tools Web View Page Color Inverse",
+    title: "DocLib Learning Tools Web View Page Color Inverse",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="29a9377fc2e7fc2e"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,20 8,12 11,14 18,16 5,12 8,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Learning Tools Web View Page Color Inverse",
+      title: "DocLib Learning Tools Web View Page Color Inverse",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="29a9377fc2e7fc2e"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,20 8,12 11,14 18,16 5,12 8,6"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibLearningToolsWebViewPageColorInverse implements Block
   }
 
   readonly id = "DocLibLearningToolsWebViewPageColorInverse";
-  readonly title = "Learning Tools Web View Page Color Inverse";
+  readonly title = "DocLib Learning Tools Web View Page Color Inverse";
   readonly category = "table" as const;
   readonly mode = "LearningToolsWebViewPageColorInverse";
   readonly requiresSelection = false;

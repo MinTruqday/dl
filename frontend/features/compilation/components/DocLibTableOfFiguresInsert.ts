@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableOfFiguresInsert implements BlockTool {
   static readonly feature = {
     id: "DocLibTableOfFiguresInsert",
-    title: "Table Of Figures Insert",
+    title: "DocLib Table Of Figures Insert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5fe61b025bc2dff2"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="14,13 14,6 10,11 6,8 14,15 7,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Table Of Figures Insert",
+      title: "DocLib Table Of Figures Insert",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5fe61b025bc2dff2"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="14,13 14,6 10,11 6,8 14,15 7,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTableOfFiguresInsert implements BlockTool {
   }
 
   readonly id = "DocLibTableOfFiguresInsert";
-  readonly title = "Table Of Figures Insert";
+  readonly title = "DocLib Table Of Figures Insert";
   readonly category = "reference" as const;
   readonly mode = "TableOfFiguresInsert";
   readonly requiresSelection = false;

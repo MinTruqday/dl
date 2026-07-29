@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPictureAttributionNavigateToSource implements BlockTool {
   static readonly feature = {
     id: "DocLibPictureAttributionNavigateToSource",
-    title: "Picture Attribution Navigate To Source",
+    title: "DocLib Picture Attribution Navigate To Source",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bf7498df9ea99775"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,18 20,6 9,20 19,19 8,19 17,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Picture Attribution Navigate To Source",
+      title: "DocLib Picture Attribution Navigate To Source",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bf7498df9ea99775"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,18 20,6 9,20 19,19 8,19 17,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPictureAttributionNavigateToSource implements BlockTo
   }
 
   readonly id = "DocLibPictureAttributionNavigateToSource";
-  readonly title = "Picture Attribution Navigate To Source";
+  readonly title = "DocLib Picture Attribution Navigate To Source";
   readonly category = "media" as const;
   readonly mode = "PictureAttributionNavigateToSource";
   readonly requiresSelection = false;

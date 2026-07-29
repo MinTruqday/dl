@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSaveSelectionToPageNumberMargin implements BlockTool {
   static readonly feature = {
     id: "DocLibSaveSelectionToPageNumberMargin",
-    title: "Save Selection To Page Number Margin",
+    title: "DocLib Save Selection To Page Number Margin",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d7157807cde43d6b"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="15,8 5,11 5,11 14,9 13,17 20,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Save Selection To Page Number Margin",
+      title: "DocLib Save Selection To Page Number Margin",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d7157807cde43d6b"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="15,8 5,11 5,11 14,9 13,17 20,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSaveSelectionToPageNumberMargin implements BlockTool 
   }
 
   readonly id = "DocLibSaveSelectionToPageNumberMargin";
-  readonly title = "Save Selection To Page Number Margin";
+  readonly title = "DocLib Save Selection To Page Number Margin";
   readonly category = "insert" as const;
   readonly mode = "SaveSelectionToPageNumberMargin";
   readonly requiresSelection = false;

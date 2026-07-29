@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibStartOfRow implements BlockTool {
   static readonly feature = {
     id: "DocLibStartOfRow",
-    title: "Start Of Row",
+    title: "DocLib Start Of Row",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b89a552423110027"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="18,5 4,6 5,4 4,9 13,6 8,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Start Of Row",
+      title: "DocLib Start Of Row",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b89a552423110027"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="18,5 4,6 5,4 4,9 13,6 8,9"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibStartOfRow implements BlockTool {
   }
 
   readonly id = "DocLibStartOfRow";
-  readonly title = "Start Of Row";
+  readonly title = "DocLib Start Of Row";
   readonly category = "format" as const;
   readonly mode = "StartOfRow";
   readonly requiresSelection = false;

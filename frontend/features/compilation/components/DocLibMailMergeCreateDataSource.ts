@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMailMergeCreateDataSource implements BlockTool {
   static readonly feature = {
     id: "DocLibMailMergeCreateDataSource",
-    title: "Mail Merge Create Data Source",
+    title: "DocLib Mail Merge Create Data Source",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d3b82b688a49c548"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,18 13,6 6,9 14,8 4,12 16,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Mail Merge Create Data Source",
+      title: "DocLib Mail Merge Create Data Source",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d3b82b688a49c548"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,18 13,6 6,9 14,8 4,12 16,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibMailMergeCreateDataSource implements BlockTool {
   }
 
   readonly id = "DocLibMailMergeCreateDataSource";
-  readonly title = "Mail Merge Create Data Source";
+  readonly title = "DocLib Mail Merge Create Data Source";
   readonly category = "format" as const;
   readonly mode = "MailMergeCreateDataSource";
   readonly requiresSelection = false;

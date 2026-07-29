@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTwoPageMode implements BlockTool {
   static readonly feature = {
     id: "DocLibTwoPageMode",
-    title: "Two Page Mode",
+    title: "DocLib Two Page Mode",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c7b97e5cbabede9e"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="16,19 11,11 20,7 5,9 20,8 11,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Two Page Mode",
+      title: "DocLib Two Page Mode",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c7b97e5cbabede9e"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="16,19 11,11 20,7 5,9 20,8 11,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTwoPageMode implements BlockTool {
   }
 
   readonly id = "DocLibTwoPageMode";
-  readonly title = "Two Page Mode";
+  readonly title = "DocLib Two Page Mode";
   readonly category = "view" as const;
   readonly mode = "TwoPageMode";
   readonly requiresSelection = false;

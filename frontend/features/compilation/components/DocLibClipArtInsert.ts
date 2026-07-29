@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibClipArtInsert implements BlockTool {
   static readonly feature = {
     id: "DocLibClipArtInsert",
-    title: "Clip Art Insert",
+    title: "DocLib Clip Art Insert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="976fd032aeac8b83"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="19,13 8,20 8,6 7,16 13,7 20,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Clip Art Insert",
+      title: "DocLib Clip Art Insert",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="976fd032aeac8b83"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="19,13 8,20 8,6 7,16 13,7 20,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibClipArtInsert implements BlockTool {
   }
 
   readonly id = "DocLibClipArtInsert";
-  readonly title = "Clip Art Insert";
+  readonly title = "DocLib Clip Art Insert";
   readonly category = "format" as const;
   readonly mode = "ClipArtInsert";
   readonly requiresSelection = false;

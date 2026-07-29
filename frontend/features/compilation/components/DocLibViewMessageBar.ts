@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibViewMessageBar implements BlockTool {
   static readonly feature = {
     id: "DocLibViewMessageBar",
-    title: "View Message Bar",
+    title: "DocLib View Message Bar",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6c1923ccf08e1c25"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,12 5,4 6,10 15,7 19,12 7,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "View Message Bar",
+      title: "DocLib View Message Bar",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6c1923ccf08e1c25"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,12 5,4 6,10 15,7 19,12 7,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibViewMessageBar implements BlockTool {
   }
 
   readonly id = "DocLibViewMessageBar";
-  readonly title = "View Message Bar";
+  readonly title = "DocLib View Message Bar";
   readonly category = "format" as const;
   readonly mode = "ViewMessageBar";
   readonly requiresSelection = false;

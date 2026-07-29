@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPasteLinkedExcelTableDestinationTableStyle implements BlockTool {
   static readonly feature = {
     id: "DocLibPasteLinkedExcelTableDestinationTableStyle",
-    title: "Paste Linked Excel Table Destination Table Style",
+    title: "DocLib Paste Linked Excel Table Destination Table Style",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="23579bc58e32301a"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,6 6,14 10,20 18,13 4,17 7,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Paste Linked Excel Table Destination Table Style",
+      title: "DocLib Paste Linked Excel Table Destination Table Style",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="23579bc58e32301a"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,6 6,14 10,20 18,13 4,17 7,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPasteLinkedExcelTableDestinationTableStyle implements
   }
 
   readonly id = "DocLibPasteLinkedExcelTableDestinationTableStyle";
-  readonly title = "Paste Linked Excel Table Destination Table Style";
+  readonly title = "DocLib Paste Linked Excel Table Destination Table Style";
   readonly category = "format" as const;
   readonly mode = "PasteLinkedExcelTableDestinationTableStyle";
   readonly requiresSelection = false;

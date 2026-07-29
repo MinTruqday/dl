@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibThemeFontsGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibThemeFontsGallery",
-    title: "Theme Fonts Gallery",
+    title: "DocLib Theme Fonts Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a6a5ff24ba2dcd9e"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="17,16 4,6 20,15 5,9 7,8 20,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Theme Fonts Gallery",
+      title: "DocLib Theme Fonts Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a6a5ff24ba2dcd9e"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="17,16 4,6 20,15 5,9 7,8 20,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibThemeFontsGallery implements BlockTool {
   }
 
   readonly id = "DocLibThemeFontsGallery";
-  readonly title = "Theme Fonts Gallery";
+  readonly title = "DocLib Theme Fonts Gallery";
   readonly category = "format" as const;
   readonly mode = "ThemeFontsGallery";
   readonly requiresSelection = false;

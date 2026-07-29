@@ -23,9 +23,6 @@ export default function ExplorePage() {
       <header className="flex flex-col gap-5 border-b border-[var(--border)] pb-7 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="page-heading">Khám phá</h1>
-          <p className="page-description mt-2">
-            Đọc tài liệu được chia sẻ bởi cộng đồng DocLib
-          </p>
         </div>
         <div className="flex rounded-[var(--radius-control)] bg-[var(--surface-quiet)] p-1">
           <button

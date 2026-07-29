@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextEffectsMoreShadowsDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibTextEffectsMoreShadowsDialog",
-    title: "Text Effects More Shadows Dialog",
+    title: "DocLib Text Effects More Shadows Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ea9fc7cd2f04deec"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,10 16,5 17,8 5,19 9,14 13,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Text Effects More Shadows Dialog",
+      title: "DocLib Text Effects More Shadows Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ea9fc7cd2f04deec"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,10 16,5 17,8 5,19 9,14 13,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTextEffectsMoreShadowsDialog implements BlockTool {
   }
 
   readonly id = "DocLibTextEffectsMoreShadowsDialog";
-  readonly title = "Text Effects More Shadows Dialog";
+  readonly title = "DocLib Text Effects More Shadows Dialog";
   readonly category = "format" as const;
   readonly mode = "TextEffectsMoreShadowsDialog";
   readonly requiresSelection = false;

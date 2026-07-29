@@ -4,7 +4,7 @@ import { IconMarker } from "@codexteam/icons";
 export default class DocLibMarker implements InlineTool {
   static readonly feature = {
     id: "DocLibMarker",
-    title: "Marker",
+    title: "DocLib Marker",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6623a16917824aab"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="4,5 12,7 10,15 10,5 16,20 20,11"/></svg>',
     product: "doclib",
   } as const;

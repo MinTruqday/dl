@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPictureBackgroundRemoval implements BlockTool {
   static readonly feature = {
     id: "DocLibPictureBackgroundRemoval",
-    title: "Picture Background Removal",
+    title: "DocLib Picture Background Removal",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="961550c60e60364c"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="18,8 16,15 18,15 7,12 16,15 19,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Picture Background Removal",
+      title: "DocLib Picture Background Removal",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="961550c60e60364c"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="18,8 16,15 18,15 7,12 16,15 19,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPictureBackgroundRemoval implements BlockTool {
   }
 
   readonly id = "DocLibPictureBackgroundRemoval";
-  readonly title = "Picture Background Removal";
+  readonly title = "DocLib Picture Background Removal";
   readonly category = "media" as const;
   readonly mode = "PictureBackgroundRemoval";
   readonly requiresSelection = false;

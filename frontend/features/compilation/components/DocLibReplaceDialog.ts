@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibReplaceDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibReplaceDialog",
-    title: "Replace Dialog",
+    title: "DocLib Replace Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5d0be5dfa97830be"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,15 12,6 20,5 18,7 20,20 8,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Replace Dialog",
+      title: "DocLib Replace Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5d0be5dfa97830be"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,15 12,6 20,5 18,7 20,20 8,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibReplaceDialog implements BlockTool {
   }
 
   readonly id = "DocLibReplaceDialog";
-  readonly title = "Replace Dialog";
+  readonly title = "DocLib Replace Dialog";
   readonly category = "format" as const;
   readonly mode = "ReplaceDialog";
   readonly requiresSelection = false;

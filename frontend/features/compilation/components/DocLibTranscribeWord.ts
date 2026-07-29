@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTranscribeWord implements BlockTool {
   static readonly feature = {
     id: "DocLibTranscribeWord",
-    title: "Transcribe Word",
+    title: "DocLib Transcribe Word",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="168a79de90c059a0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,6 6,5 12,9 8,11 16,13 16,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Transcribe Word",
+      title: "DocLib Transcribe Word",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="168a79de90c059a0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,6 6,5 12,9 8,11 16,13 16,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTranscribeWord implements BlockTool {
   }
 
   readonly id = "DocLibTranscribeWord";
-  readonly title = "Transcribe Word";
+  readonly title = "DocLib Transcribe Word";
   readonly category = "format" as const;
   readonly mode = "TranscribeWord";
   readonly requiresSelection = false;

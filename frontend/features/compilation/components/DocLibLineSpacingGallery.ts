@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLineSpacingGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibLineSpacingGallery",
-    title: "Line Spacing Gallery",
+    title: "DocLib Line Spacing Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="dbb5b14ffb5833c5"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,15 11,15 17,7 4,14 20,14 10,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Line Spacing Gallery",
+      title: "DocLib Line Spacing Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="dbb5b14ffb5833c5"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,15 11,15 17,7 4,14 20,14 10,9"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibLineSpacingGallery implements BlockTool {
   }
 
   readonly id = "DocLibLineSpacingGallery";
-  readonly title = "Line Spacing Gallery";
+  readonly title = "DocLib Line Spacing Gallery";
   readonly category = "format" as const;
   readonly mode = "LineSpacingGallery";
   readonly requiresSelection = false;

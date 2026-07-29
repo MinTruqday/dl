@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibInsert3DModelDefault implements BlockTool {
   static readonly feature = {
     id: "DocLibInsert3DModelDefault",
-    title: "Insert3D Model Default",
+    title: "DocLib Insert3D Model Default",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0da9f1c1b2e97b55"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,20 7,10 12,16 8,4 17,12 16,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Insert3D Model Default",
+      title: "DocLib Insert3D Model Default",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0da9f1c1b2e97b55"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,20 7,10 12,16 8,4 17,12 16,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibInsert3DModelDefault implements BlockTool {
   }
 
   readonly id = "DocLibInsert3DModelDefault";
-  readonly title = "Insert3D Model Default";
+  readonly title = "DocLib Insert3D Model Default";
   readonly category = "insert" as const;
   readonly mode = "Insert3DModelDefault";
   readonly requiresSelection = false;

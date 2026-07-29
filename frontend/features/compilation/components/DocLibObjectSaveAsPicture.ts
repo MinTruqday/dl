@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibObjectSaveAsPicture implements BlockTool {
   static readonly feature = {
     id: "DocLibObjectSaveAsPicture",
-    title: "Object Save As Picture",
+    title: "DocLib Object Save As Picture",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="90229878003fe175"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,4 20,5 4,16 8,19 15,15 9,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Object Save As Picture",
+      title: "DocLib Object Save As Picture",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="90229878003fe175"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,4 20,5 4,16 8,19 15,15 9,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibObjectSaveAsPicture implements BlockTool {
   }
 
   readonly id = "DocLibObjectSaveAsPicture";
-  readonly title = "Object Save As Picture";
+  readonly title = "DocLib Object Save As Picture";
   readonly category = "format" as const;
   readonly mode = "ObjectSaveAsPicture";
   readonly requiresSelection = false;

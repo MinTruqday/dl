@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDataFormSource implements BlockTool {
   static readonly feature = {
     id: "DocLibDataFormSource",
-    title: "Data Form Source",
+    title: "DocLib Data Form Source",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="dfb8185a2fddb461"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="6,18 11,9 17,4 14,16 4,6 18,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Data Form Source",
+      title: "DocLib Data Form Source",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="dfb8185a2fddb461"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="6,18 11,9 17,4 14,16 4,6 18,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDataFormSource implements BlockTool {
   }
 
   readonly id = "DocLibDataFormSource";
-  readonly title = "Data Form Source";
+  readonly title = "DocLib Data Form Source";
   readonly category = "format" as const;
   readonly mode = "DataFormSource";
   readonly requiresSelection = false;

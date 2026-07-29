@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFileStartWorkflow implements BlockTool {
   static readonly feature = {
     id: "DocLibFileStartWorkflow",
-    title: "File Start Workflow",
+    title: "DocLib File Start Workflow",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7b8d36ce38709983"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,9 7,6 9,14 4,16 8,19 16,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "File Start Workflow",
+      title: "DocLib File Start Workflow",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7b8d36ce38709983"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,9 7,6 9,14 4,16 8,19 16,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFileStartWorkflow implements BlockTool {
   }
 
   readonly id = "DocLibFileStartWorkflow";
-  readonly title = "File Start Workflow";
+  readonly title = "DocLib File Start Workflow";
   readonly category = "format" as const;
   readonly mode = "FileStartWorkflow";
   readonly requiresSelection = false;

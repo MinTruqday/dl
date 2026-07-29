@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWebPagePreview implements BlockTool {
   static readonly feature = {
     id: "DocLibWebPagePreview",
-    title: "Web Page Preview",
+    title: "DocLib Web Page Preview",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="78931d8b25ad8ca0"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="5,15 16,7 7,7 8,11 18,6 11,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Web Page Preview",
+      title: "DocLib Web Page Preview",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="78931d8b25ad8ca0"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="5,15 16,7 7,7 8,11 18,6 11,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibWebPagePreview implements BlockTool {
   }
 
   readonly id = "DocLibWebPagePreview";
-  readonly title = "Web Page Preview";
+  readonly title = "DocLib Web Page Preview";
   readonly category = "format" as const;
   readonly mode = "WebPagePreview";
   readonly requiresSelection = false;

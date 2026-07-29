@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPasteSingleCellExcelTableDestinationFormatting implements BlockTool {
   static readonly feature = {
     id: "DocLibPasteSingleCellExcelTableDestinationFormatting",
-    title: "Paste Single Cell Excel Table Destination Formatting",
+    title: "DocLib Paste Single Cell Excel Table Destination Formatting",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="97073efe285bb7ef"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,11 15,20 10,10 17,5 9,8 15,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Paste Single Cell Excel Table Destination Formatting",
+      title: "DocLib Paste Single Cell Excel Table Destination Formatting",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="97073efe285bb7ef"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,11 15,20 10,10 17,5 9,8 15,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPasteSingleCellExcelTableDestinationFormatting implem
   }
 
   readonly id = "DocLibPasteSingleCellExcelTableDestinationFormatting";
-  readonly title = "Paste Single Cell Excel Table Destination Formatting";
+  readonly title = "DocLib Paste Single Cell Excel Table Destination Formatting";
   readonly category = "format" as const;
   readonly mode = "PasteSingleCellExcelTableDestinationFormatting";
   readonly requiresSelection = false;

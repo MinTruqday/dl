@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibEnvelopeChineseDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibEnvelopeChineseDialog",
-    title: "Envelope Chinese Dialog",
+    title: "DocLib Envelope Chinese Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="eebc82d89b0706c5"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="4,5 15,16 6,11 10,14 8,15 14,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Envelope Chinese Dialog",
+      title: "DocLib Envelope Chinese Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="eebc82d89b0706c5"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="4,5 15,16 6,11 10,14 8,15 14,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibEnvelopeChineseDialog implements BlockTool {
   }
 
   readonly id = "DocLibEnvelopeChineseDialog";
-  readonly title = "Envelope Chinese Dialog";
+  readonly title = "DocLib Envelope Chinese Dialog";
   readonly category = "mailing" as const;
   readonly mode = "EnvelopeChineseDialog";
   readonly requiresSelection = false;

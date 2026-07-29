@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibListLevelGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibListLevelGallery",
-    title: "List Level Gallery",
+    title: "DocLib List Level Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="612570cbeefe22eb"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="16,7 14,20 4,20 4,18 17,12 10,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "List Level Gallery",
+      title: "DocLib List Level Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="612570cbeefe22eb"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="16,7 14,20 4,20 4,18 17,12 10,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibListLevelGallery implements BlockTool {
   }
 
   readonly id = "DocLibListLevelGallery";
-  readonly title = "List Level Gallery";
+  readonly title = "DocLib List Level Gallery";
   readonly category = "format" as const;
   readonly mode = "ListLevelGallery";
   readonly requiresSelection = false;

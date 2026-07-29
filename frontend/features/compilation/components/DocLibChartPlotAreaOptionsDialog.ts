@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartPlotAreaOptionsDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibChartPlotAreaOptionsDialog",
-    title: "Chart Plot Area Options Dialog",
+    title: "DocLib Chart Plot Area Options Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9c27cb8f09b892ad"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="7,9 20,11 13,18 14,7 13,10 10,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Plot Area Options Dialog",
+      title: "DocLib Chart Plot Area Options Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9c27cb8f09b892ad"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="7,9 20,11 13,18 14,7 13,10 10,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartPlotAreaOptionsDialog implements BlockTool {
   }
 
   readonly id = "DocLibChartPlotAreaOptionsDialog";
-  readonly title = "Chart Plot Area Options Dialog";
+  readonly title = "DocLib Chart Plot Area Options Dialog";
   readonly category = "layout" as const;
   readonly mode = "ChartPlotAreaOptionsDialog";
   readonly requiresSelection = false;

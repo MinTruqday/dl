@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibConflictViewEnter implements BlockTool {
   static readonly feature = {
     id: "DocLibConflictViewEnter",
-    title: "Conflict View Enter",
+    title: "DocLib Conflict View Enter",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="30448886883c2868"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="18,4 4,19 4,13 10,6 4,18 20,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Conflict View Enter",
+      title: "DocLib Conflict View Enter",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="30448886883c2868"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="18,4 4,19 4,13 10,6 4,18 20,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibConflictViewEnter implements BlockTool {
   }
 
   readonly id = "DocLibConflictViewEnter";
-  readonly title = "Conflict View Enter";
+  readonly title = "DocLib Conflict View Enter";
   readonly category = "format" as const;
   readonly mode = "ConflictViewEnter";
   readonly requiresSelection = false;

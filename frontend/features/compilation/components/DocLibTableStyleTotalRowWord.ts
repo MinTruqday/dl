@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableStyleTotalRowWord implements BlockTool {
   static readonly feature = {
     id: "DocLibTableStyleTotalRowWord",
-    title: "Table Style Total Row Word",
+    title: "DocLib Table Style Total Row Word",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ed75258ce6a777e3"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="20,19 7,8 13,18 4,10 6,12 6,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Table Style Total Row Word",
+      title: "DocLib Table Style Total Row Word",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ed75258ce6a777e3"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="20,19 7,8 13,18 4,10 6,12 6,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTableStyleTotalRowWord implements BlockTool {
   }
 
   readonly id = "DocLibTableStyleTotalRowWord";
-  readonly title = "Table Style Total Row Word";
+  readonly title = "DocLib Table Style Total Row Word";
   readonly category = "table" as const;
   readonly mode = "TableStyleTotalRowWord";
   readonly requiresSelection = false;

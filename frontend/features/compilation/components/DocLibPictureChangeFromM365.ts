@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPictureChangeFromM365 implements BlockTool {
   static readonly feature = {
     id: "DocLibPictureChangeFromM365",
-    title: "Picture Change From M365",
+    title: "DocLib Picture Change From M365",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="aaaf217254712dda"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,9 20,16 20,15 15,18 18,10 12,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Picture Change From M365",
+      title: "DocLib Picture Change From M365",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="aaaf217254712dda"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,9 20,16 20,15 15,18 18,10 12,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPictureChangeFromM365 implements BlockTool {
   }
 
   readonly id = "DocLibPictureChangeFromM365";
-  readonly title = "Picture Change From M365";
+  readonly title = "DocLib Picture Change From M365";
   readonly category = "media" as const;
   readonly mode = "PictureChangeFromM365";
   readonly requiresSelection = false;

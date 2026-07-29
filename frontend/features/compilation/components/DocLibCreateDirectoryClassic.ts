@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibCreateDirectoryClassic implements BlockTool {
   static readonly feature = {
     id: "DocLibCreateDirectoryClassic",
-    title: "Create Directory Classic",
+    title: "DocLib Create Directory Classic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a24f6dc6794ad7ae"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="13,15 11,15 6,10 15,8 10,14 10,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Create Directory Classic",
+      title: "DocLib Create Directory Classic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a24f6dc6794ad7ae"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="13,15 11,15 6,10 15,8 10,14 10,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibCreateDirectoryClassic implements BlockTool {
   }
 
   readonly id = "DocLibCreateDirectoryClassic";
-  readonly title = "Create Directory Classic";
+  readonly title = "DocLib Create Directory Classic";
   readonly category = "format" as const;
   readonly mode = "CreateDirectoryClassic";
   readonly requiresSelection = false;

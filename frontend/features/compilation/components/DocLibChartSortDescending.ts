@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartSortDescending implements BlockTool {
   static readonly feature = {
     id: "DocLibChartSortDescending",
-    title: "Chart Sort Descending",
+    title: "DocLib Chart Sort Descending",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="21c820bd3ba32981"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="20,17 19,6 12,14 11,14 20,18 8,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Sort Descending",
+      title: "DocLib Chart Sort Descending",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="21c820bd3ba32981"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="20,17 19,6 12,14 11,14 20,18 8,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartSortDescending implements BlockTool {
   }
 
   readonly id = "DocLibChartSortDescending";
-  readonly title = "Chart Sort Descending";
+  readonly title = "DocLib Chart Sort Descending";
   readonly category = "media" as const;
   readonly mode = "ChartSortDescending";
   readonly requiresSelection = false;

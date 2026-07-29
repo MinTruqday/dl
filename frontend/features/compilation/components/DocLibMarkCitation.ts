@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMarkCitation implements BlockTool {
   static readonly feature = {
     id: "DocLibMarkCitation",
-    title: "Mark Citation",
+    title: "DocLib Mark Citation",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b2fbe02d807602b1"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,17 7,15 13,20 6,11 11,4 7,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Mark Citation",
+      title: "DocLib Mark Citation",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b2fbe02d807602b1"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,17 7,15 13,20 6,11 11,4 7,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibMarkCitation implements BlockTool {
   }
 
   readonly id = "DocLibMarkCitation";
-  readonly title = "Mark Citation";
+  readonly title = "DocLib Mark Citation";
   readonly category = "reference" as const;
   readonly mode = "MarkCitation";
   readonly requiresSelection = false;

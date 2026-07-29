@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLineSpacingMenu implements BlockTool {
   static readonly feature = {
     id: "DocLibLineSpacingMenu",
-    title: "Line Spacing Menu",
+    title: "DocLib Line Spacing Menu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6d48e0f3532cd2c0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,8 7,9 19,14 10,9 5,13 7,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Line Spacing Menu",
+      title: "DocLib Line Spacing Menu",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6d48e0f3532cd2c0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,8 7,9 19,14 10,9 5,13 7,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibLineSpacingMenu implements BlockTool {
   }
 
   readonly id = "DocLibLineSpacingMenu";
-  readonly title = "Line Spacing Menu";
+  readonly title = "DocLib Line Spacing Menu";
   readonly category = "format" as const;
   readonly mode = "LineSpacingMenu";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMailMergeJapaneseGreetingClosingSentenceInsert implements BlockTool {
   static readonly feature = {
     id: "DocLibMailMergeJapaneseGreetingClosingSentenceInsert",
-    title: "Mail Merge Japanese Greeting Closing Sentence Insert",
+    title: "DocLib Mail Merge Japanese Greeting Closing Sentence Insert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5208970a8575aedf"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="18,12 19,14 18,19 8,6 13,5 19,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Mail Merge Japanese Greeting Closing Sentence Insert",
+      title: "DocLib Mail Merge Japanese Greeting Closing Sentence Insert",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5208970a8575aedf"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="18,12 19,14 18,19 8,6 13,5 19,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibMailMergeJapaneseGreetingClosingSentenceInsert implem
   }
 
   readonly id = "DocLibMailMergeJapaneseGreetingClosingSentenceInsert";
-  readonly title = "Mail Merge Japanese Greeting Closing Sentence Insert";
+  readonly title = "DocLib Mail Merge Japanese Greeting Closing Sentence Insert";
   readonly category = "insert" as const;
   readonly mode = "MailMergeJapaneseGreetingClosingSentenceInsert";
   readonly requiresSelection = false;

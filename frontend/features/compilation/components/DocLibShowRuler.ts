@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibShowRuler implements BlockTool {
   static readonly feature = {
     id: "DocLibShowRuler",
-    title: "Show Ruler",
+    title: "DocLib Show Ruler",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="73fa87f6c5bdc320"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,16 20,12 14,6 12,19 18,12 4,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Show Ruler",
+      title: "DocLib Show Ruler",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="73fa87f6c5bdc320"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,16 20,12 14,6 12,19 18,12 4,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibShowRuler implements BlockTool {
   }
 
   readonly id = "DocLibShowRuler";
-  readonly title = "Show Ruler";
+  readonly title = "DocLib Show Ruler";
   readonly category = "review" as const;
   readonly mode = "ShowRuler";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibBreaksGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibBreaksGallery",
-    title: "Breaks Gallery",
+    title: "DocLib Breaks Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a48b28e5ac9e337c"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="15,7 10,12 6,9 4,9 13,20 6,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Breaks Gallery",
+      title: "DocLib Breaks Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a48b28e5ac9e337c"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="15,7 10,12 6,9 4,9 13,20 6,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibBreaksGallery implements BlockTool {
   }
 
   readonly id = "DocLibBreaksGallery";
-  readonly title = "Breaks Gallery";
+  readonly title = "DocLib Breaks Gallery";
   readonly category = "layout" as const;
   readonly mode = "BreaksGallery";
   readonly requiresSelection = false;

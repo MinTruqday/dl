@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextWrapGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibTextWrapGallery",
-    title: "Text Wrap Gallery",
+    title: "DocLib Text Wrap Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1e9cd6bcc9e0cd8e"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="17,7 14,5 18,7 5,10 20,6 12,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Text Wrap Gallery",
+      title: "DocLib Text Wrap Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1e9cd6bcc9e0cd8e"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="17,7 14,5 18,7 5,10 20,6 12,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTextWrapGallery implements BlockTool {
   }
 
   readonly id = "DocLibTextWrapGallery";
-  readonly title = "Text Wrap Gallery";
+  readonly title = "DocLib Text Wrap Gallery";
   readonly category = "layout" as const;
   readonly mode = "TextWrapGallery";
   readonly requiresSelection = false;

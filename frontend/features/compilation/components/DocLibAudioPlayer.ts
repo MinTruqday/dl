@@ -1,9 +1,10 @@
 import { API, BlockTool } from "@editorjs/editorjs";
+import { requestEditorInput } from "./editor-dialog";
 
 export default class DocLibAudioPlayer implements BlockTool {
   static readonly feature = {
     id: "DocLibAudioPlayer",
-    title: "Audio Player",
+    title: "DocLib Audio Player",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d4edf687225bed1e"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,20 12,20 4,10 20,17 9,19 6,19"/></svg>',
     product: "doclib",
   } as const;
@@ -20,7 +21,7 @@ export default class DocLibAudioPlayer implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "Audio Player",
+      title: "DocLib Audio Player",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d4edf687225bed1e"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,20 12,20 4,10 20,17 9,19 6,19"/></svg>',
     };
   }
@@ -90,9 +91,13 @@ export default class DocLibAudioPlayer implements BlockTool {
       cover.src =
         this.data.coverUrl ||
         "https://ui-avatars.com/api/?name=Audio&background=f1f5f9&color=94a3b8&size=160";
-      cover.addEventListener("click", () => {
+      cover.addEventListener("click", async () => {
         if (this.readOnly) return;
-        const url = prompt("Enter Cover Art URL:", this.data.coverUrl);
+        const url = await requestEditorInput({
+          title: "DocLib Audio Player",
+          label: "Liên kết ảnh",
+          initialValue: this.data.coverUrl,
+        });
         if (url !== null) {
           this.data.coverUrl = url;
           this.buildUI();

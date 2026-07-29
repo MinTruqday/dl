@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFootnoteSeparatorReset implements BlockTool {
   static readonly feature = {
     id: "DocLibFootnoteSeparatorReset",
-    title: "Footnote Separator Reset",
+    title: "DocLib Footnote Separator Reset",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="52e037dc8f8863ee"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,7 8,20 11,4 18,4 7,14 9,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Footnote Separator Reset",
+      title: "DocLib Footnote Separator Reset",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="52e037dc8f8863ee"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,7 8,20 11,4 18,4 7,14 9,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFootnoteSeparatorReset implements BlockTool {
   }
 
   readonly id = "DocLibFootnoteSeparatorReset";
-  readonly title = "Footnote Separator Reset";
+  readonly title = "DocLib Footnote Separator Reset";
   readonly category = "format" as const;
   readonly mode = "FootnoteSeparatorReset";
   readonly requiresSelection = false;

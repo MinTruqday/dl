@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibViewGridlines implements BlockTool {
   static readonly feature = {
     id: "DocLibViewGridlines",
-    title: "View Gridlines",
+    title: "DocLib View Gridlines",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="eb096beaea81444c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="18,13 9,17 17,14 4,12 19,7 20,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "View Gridlines",
+      title: "DocLib View Gridlines",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="eb096beaea81444c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="18,13 9,17 17,14 4,12 19,7 20,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibViewGridlines implements BlockTool {
   }
 
   readonly id = "DocLibViewGridlines";
-  readonly title = "View Gridlines";
+  readonly title = "DocLib View Gridlines";
   readonly category = "view" as const;
   readonly mode = "ViewGridlines";
   readonly requiresSelection = false;

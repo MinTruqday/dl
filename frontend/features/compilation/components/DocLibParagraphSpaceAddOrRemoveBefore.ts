@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibParagraphSpaceAddOrRemoveBefore implements BlockTool {
   static readonly feature = {
     id: "DocLibParagraphSpaceAddOrRemoveBefore",
-    title: "Paragraph Space Add Or Remove Before",
+    title: "DocLib Paragraph Space Add Or Remove Before",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1960a6106b2c189a"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,15 17,20 9,14 11,5 5,9 16,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Paragraph Space Add Or Remove Before",
+      title: "DocLib Paragraph Space Add Or Remove Before",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1960a6106b2c189a"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,15 17,20 9,14 11,5 5,9 16,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibParagraphSpaceAddOrRemoveBefore implements BlockTool 
   }
 
   readonly id = "DocLibParagraphSpaceAddOrRemoveBefore";
-  readonly title = "Paragraph Space Add Or Remove Before";
+  readonly title = "DocLib Paragraph Space Add Or Remove Before";
   readonly category = "format" as const;
   readonly mode = "ParagraphSpaceAddOrRemoveBefore";
   readonly requiresSelection = false;

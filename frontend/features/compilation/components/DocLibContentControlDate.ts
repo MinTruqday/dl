@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibContentControlDate implements BlockTool {
   static readonly feature = {
     id: "DocLibContentControlDate",
-    title: "Content Control Date",
+    title: "DocLib Content Control Date",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="64044e780e445637"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,8 14,5 18,4 5,8 15,5 4,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Content Control Date",
+      title: "DocLib Content Control Date",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="64044e780e445637"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,8 14,5 18,4 5,8 15,5 4,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibContentControlDate implements BlockTool {
   }
 
   readonly id = "DocLibContentControlDate";
-  readonly title = "Content Control Date";
+  readonly title = "DocLib Content Control Date";
   readonly category = "automation" as const;
   readonly mode = "ContentControlDate";
   readonly requiresSelection = false;

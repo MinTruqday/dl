@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableColumnsInsertLeft implements BlockTool {
   static readonly feature = {
     id: "DocLibTableColumnsInsertLeft",
-    title: "Table Columns Insert Left",
+    title: "DocLib Table Columns Insert Left",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="26e6556bb4b48064"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="8,13 4,9 14,14 13,19 19,19 9,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Table Columns Insert Left",
+      title: "DocLib Table Columns Insert Left",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="26e6556bb4b48064"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="8,13 4,9 14,14 13,19 19,19 9,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTableColumnsInsertLeft implements BlockTool {
   }
 
   readonly id = "DocLibTableColumnsInsertLeft";
-  readonly title = "Table Columns Insert Left";
+  readonly title = "DocLib Table Columns Insert Left";
   readonly category = "table" as const;
   readonly mode = "TableColumnsInsertLeft";
   readonly requiresSelection = false;

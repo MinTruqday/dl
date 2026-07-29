@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPictureShapeGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibPictureShapeGallery",
-    title: "Picture Shape Gallery",
+    title: "DocLib Picture Shape Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8e9142102a57ad93"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,13 19,20 12,6 7,15 7,8 16,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Picture Shape Gallery",
+      title: "DocLib Picture Shape Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8e9142102a57ad93"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,13 19,20 12,6 7,15 7,8 16,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPictureShapeGallery implements BlockTool {
   }
 
   readonly id = "DocLibPictureShapeGallery";
-  readonly title = "Picture Shape Gallery";
+  readonly title = "DocLib Picture Shape Gallery";
   readonly category = "media" as const;
   readonly mode = "PictureShapeGallery";
   readonly requiresSelection = false;

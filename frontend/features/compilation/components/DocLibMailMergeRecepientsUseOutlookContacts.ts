@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMailMergeRecepientsUseOutlookContacts implements BlockTool {
   static readonly feature = {
     id: "DocLibMailMergeRecepientsUseOutlookContacts",
-    title: "Mail Merge Recepients Use Outlook Contacts",
+    title: "DocLib Mail Merge Recepients Use Outlook Contacts",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="caaafe67dba55acc"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="19,4 20,5 19,16 9,4 17,19 10,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Mail Merge Recepients Use Outlook Contacts",
+      title: "DocLib Mail Merge Recepients Use Outlook Contacts",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="caaafe67dba55acc"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="19,4 20,5 19,16 9,4 17,19 10,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibMailMergeRecepientsUseOutlookContacts implements Bloc
   }
 
   readonly id = "DocLibMailMergeRecepientsUseOutlookContacts";
-  readonly title = "Mail Merge Recepients Use Outlook Contacts";
+  readonly title = "DocLib Mail Merge Recepients Use Outlook Contacts";
   readonly category = "mailing" as const;
   readonly mode = "MailMergeRecepientsUseOutlookContacts";
   readonly requiresSelection = false;

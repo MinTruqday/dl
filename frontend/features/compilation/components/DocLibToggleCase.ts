@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibToggleCase implements BlockTool {
   static readonly feature = {
     id: "DocLibToggleCase",
-    title: "Toggle Case",
+    title: "DocLib Toggle Case",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="17166ac908cf2573"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="10,9 8,18 12,7 7,17 16,20 18,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Toggle Case",
+      title: "DocLib Toggle Case",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="17166ac908cf2573"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="10,9 8,18 12,7 7,17 16,20 18,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibToggleCase implements BlockTool {
   }
 
   readonly id = "DocLibToggleCase";
-  readonly title = "Toggle Case";
+  readonly title = "DocLib Toggle Case";
   readonly category = "format" as const;
   readonly mode = "ToggleCase";
   readonly requiresSelection = true;

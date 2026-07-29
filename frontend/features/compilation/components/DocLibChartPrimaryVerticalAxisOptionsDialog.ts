@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartPrimaryVerticalAxisOptionsDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibChartPrimaryVerticalAxisOptionsDialog",
-    title: "Chart Primary Vertical Axis Options Dialog",
+    title: "DocLib Chart Primary Vertical Axis Options Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4d3706455b082f5b"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="13,8 10,5 10,12 17,10 14,14 10,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Primary Vertical Axis Options Dialog",
+      title: "DocLib Chart Primary Vertical Axis Options Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4d3706455b082f5b"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="13,8 10,5 10,12 17,10 14,14 10,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartPrimaryVerticalAxisOptionsDialog implements Bloc
   }
 
   readonly id = "DocLibChartPrimaryVerticalAxisOptionsDialog";
-  readonly title = "Chart Primary Vertical Axis Options Dialog";
+  readonly title = "DocLib Chart Primary Vertical Axis Options Dialog";
   readonly category = "layout" as const;
   readonly mode = "ChartPrimaryVerticalAxisOptionsDialog";
   readonly requiresSelection = false;

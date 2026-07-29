@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibClosePane implements BlockTool {
   static readonly feature = {
     id: "DocLibClosePane",
-    title: "Close Pane",
+    title: "DocLib Close Pane",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bfe595186c4a9635"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,12 17,11 10,10 18,6 12,17 12,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Close Pane",
+      title: "DocLib Close Pane",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bfe595186c4a9635"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,12 17,11 10,10 18,6 12,17 12,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibClosePane implements BlockTool {
   }
 
   readonly id = "DocLibClosePane";
-  readonly title = "Close Pane";
+  readonly title = "DocLib Close Pane";
   readonly category = "format" as const;
   readonly mode = "ClosePane";
   readonly requiresSelection = false;

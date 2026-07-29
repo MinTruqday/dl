@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDatabaseInsert implements BlockTool {
   static readonly feature = {
     id: "DocLibDatabaseInsert",
-    title: "Database Insert",
+    title: "DocLib Database Insert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="256cd984587604db"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="7,10 17,17 7,20 8,19 8,10 14,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Database Insert",
+      title: "DocLib Database Insert",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="256cd984587604db"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="7,10 17,17 7,20 8,19 8,10 14,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDatabaseInsert implements BlockTool {
   }
 
   readonly id = "DocLibDatabaseInsert";
-  readonly title = "Database Insert";
+  readonly title = "DocLib Database Insert";
   readonly category = "format" as const;
   readonly mode = "DatabaseInsert";
   readonly requiresSelection = false;

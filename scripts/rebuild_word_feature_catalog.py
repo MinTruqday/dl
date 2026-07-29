@@ -212,7 +212,8 @@ def title_for(name):
         "Url": "URL",
         "Xml": "XML",
     }
-    return " ".join(acronyms.get(token, token) for token in title.split())
+    normalized = " ".join(acronyms.get(token, token) for token in title.split())
+    return f"DocLib {normalized}"
 
 
 def feature_record(name, row, origin, tool_key=None, mode=None):

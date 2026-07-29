@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibOfficeExtensionsAppStore implements BlockTool {
   static readonly feature = {
     id: "DocLibOfficeExtensionsAppStore",
-    title: "Office Extensions App Store",
+    title: "DocLib Office Extensions App Store",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="851cd434c58523ff"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,15 12,5 14,18 5,4 20,7 4,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Office Extensions App Store",
+      title: "DocLib Office Extensions App Store",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="851cd434c58523ff"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,15 12,5 14,18 5,4 20,7 4,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibOfficeExtensionsAppStore implements BlockTool {
   }
 
   readonly id = "DocLibOfficeExtensionsAppStore";
-  readonly title = "Office Extensions App Store";
+  readonly title = "DocLib Office Extensions App Store";
   readonly category = "insert" as const;
   readonly mode = "OfficeExtensionsAppStore";
   readonly requiresSelection = false;

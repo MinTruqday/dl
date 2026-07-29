@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableBordersOutside implements BlockTool {
   static readonly feature = {
     id: "DocLibTableBordersOutside",
-    title: "Table Borders Outside",
+    title: "DocLib Table Borders Outside",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6f247cb808dd3144"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="13,6 9,18 12,4 19,4 16,14 4,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Table Borders Outside",
+      title: "DocLib Table Borders Outside",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6f247cb808dd3144"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="13,6 9,18 12,4 19,4 16,14 4,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTableBordersOutside implements BlockTool {
   }
 
   readonly id = "DocLibTableBordersOutside";
-  readonly title = "Table Borders Outside";
+  readonly title = "DocLib Table Borders Outside";
   readonly category = "table" as const;
   readonly mode = "TableBordersOutside";
   readonly requiresSelection = false;

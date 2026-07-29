@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAsianLayoutHorizontalInVertical implements BlockTool {
   static readonly feature = {
     id: "DocLibAsianLayoutHorizontalInVertical",
-    title: "Asian Layout Horizontal In Vertical",
+    title: "DocLib Asian Layout Horizontal In Vertical",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="017861a224ef2de2"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="5,5 16,13 6,5 15,9 12,7 16,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Asian Layout Horizontal In Vertical",
+      title: "DocLib Asian Layout Horizontal In Vertical",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="017861a224ef2de2"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="5,5 16,13 6,5 15,9 12,7 16,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibAsianLayoutHorizontalInVertical implements BlockTool 
   }
 
   readonly id = "DocLibAsianLayoutHorizontalInVertical";
-  readonly title = "Asian Layout Horizontal In Vertical";
+  readonly title = "DocLib Asian Layout Horizontal In Vertical";
   readonly category = "format" as const;
   readonly mode = "AsianLayoutHorizontalInVertical";
   readonly requiresSelection = false;

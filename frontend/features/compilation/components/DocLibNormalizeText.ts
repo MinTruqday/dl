@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibNormalizeText implements BlockTool {
   static readonly feature = {
     id: "DocLibNormalizeText",
-    title: "Normalize Text",
+    title: "DocLib Normalize Text",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5ecb1db8f584b8b6"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="13,20 16,18 11,17 18,16 10,14 19,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Normalize Text",
+      title: "DocLib Normalize Text",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5ecb1db8f584b8b6"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="13,20 16,18 11,17 18,16 10,14 19,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibNormalizeText implements BlockTool {
   }
 
   readonly id = "DocLibNormalizeText";
-  readonly title = "Normalize Text";
+  readonly title = "DocLib Normalize Text";
   readonly category = "format" as const;
   readonly mode = "NormalizeText";
   readonly requiresSelection = false;

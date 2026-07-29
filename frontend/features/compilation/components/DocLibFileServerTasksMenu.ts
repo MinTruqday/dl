@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFileServerTasksMenu implements BlockTool {
   static readonly feature = {
     id: "DocLibFileServerTasksMenu",
-    title: "File Server Tasks Menu",
+    title: "DocLib File Server Tasks Menu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="62de9d393b94d051"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="17,5 8,10 12,16 8,17 8,16 14,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "File Server Tasks Menu",
+      title: "DocLib File Server Tasks Menu",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="62de9d393b94d051"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="17,5 8,10 12,16 8,17 8,16 14,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFileServerTasksMenu implements BlockTool {
   }
 
   readonly id = "DocLibFileServerTasksMenu";
-  readonly title = "File Server Tasks Menu";
+  readonly title = "DocLib File Server Tasks Menu";
   readonly category = "format" as const;
   readonly mode = "FileServerTasksMenu";
   readonly requiresSelection = false;

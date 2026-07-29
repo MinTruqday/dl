@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDiagramChangeToMenuClassic implements BlockTool {
   static readonly feature = {
     id: "DocLibDiagramChangeToMenuClassic",
-    title: "Diagram Change To Menu Classic",
+    title: "DocLib Diagram Change To Menu Classic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e27bd0e6b95a9d07"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,8 8,13 19,9 8,11 9,19 8,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Diagram Change To Menu Classic",
+      title: "DocLib Diagram Change To Menu Classic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e27bd0e6b95a9d07"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,8 8,13 19,9 8,11 9,19 8,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDiagramChangeToMenuClassic implements BlockTool {
   }
 
   readonly id = "DocLibDiagramChangeToMenuClassic";
-  readonly title = "Diagram Change To Menu Classic";
+  readonly title = "DocLib Diagram Change To Menu Classic";
   readonly category = "format" as const;
   readonly mode = "DiagramChangeToMenuClassic";
   readonly requiresSelection = false;

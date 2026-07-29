@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibParagraphWidowOrphanControl implements BlockTool {
   static readonly feature = {
     id: "DocLibParagraphWidowOrphanControl",
-    title: "Paragraph Widow Orphan Control",
+    title: "DocLib Paragraph Widow Orphan Control",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e10793f8c30beb6a"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,11 15,14 12,15 18,8 12,18 8,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Paragraph Widow Orphan Control",
+      title: "DocLib Paragraph Widow Orphan Control",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e10793f8c30beb6a"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,11 15,14 12,15 18,8 12,18 8,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibParagraphWidowOrphanControl implements BlockTool {
   }
 
   readonly id = "DocLibParagraphWidowOrphanControl";
-  readonly title = "Paragraph Widow Orphan Control";
+  readonly title = "DocLib Paragraph Widow Orphan Control";
   readonly category = "format" as const;
   readonly mode = "ParagraphWidowOrphanControl";
   readonly requiresSelection = false;

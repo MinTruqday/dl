@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibShadowSemitransparentClassic implements BlockTool {
   static readonly feature = {
     id: "DocLibShadowSemitransparentClassic",
-    title: "Shadow Semitransparent Classic",
+    title: "DocLib Shadow Semitransparent Classic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5a8a5759640845ee"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,6 6,8 19,12 5,4 16,5 10,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Shadow Semitransparent Classic",
+      title: "DocLib Shadow Semitransparent Classic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5a8a5759640845ee"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,6 6,8 19,12 5,4 16,5 10,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibShadowSemitransparentClassic implements BlockTool {
   }
 
   readonly id = "DocLibShadowSemitransparentClassic";
-  readonly title = "Shadow Semitransparent Classic";
+  readonly title = "DocLib Shadow Semitransparent Classic";
   readonly category = "format" as const;
   readonly mode = "ShadowSemitransparentClassic";
   readonly requiresSelection = false;

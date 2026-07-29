@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibScaleDrawingCanvas implements BlockTool {
   static readonly feature = {
     id: "DocLibScaleDrawingCanvas",
-    title: "Scale Drawing Canvas",
+    title: "DocLib Scale Drawing Canvas",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2a9c3e8c13b78aae"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,7 15,8 6,17 6,8 8,11 17,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Scale Drawing Canvas",
+      title: "DocLib Scale Drawing Canvas",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2a9c3e8c13b78aae"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,7 15,8 6,17 6,8 8,11 17,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibScaleDrawingCanvas implements BlockTool {
   }
 
   readonly id = "DocLibScaleDrawingCanvas";
-  readonly title = "Scale Drawing Canvas";
+  readonly title = "DocLib Scale Drawing Canvas";
   readonly category = "format" as const;
   readonly mode = "ScaleDrawingCanvas";
   readonly requiresSelection = false;

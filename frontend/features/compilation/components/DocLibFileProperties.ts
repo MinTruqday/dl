@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFileProperties implements BlockTool {
   static readonly feature = {
     id: "DocLibFileProperties",
-    title: "File Properties",
+    title: "DocLib File Properties",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f4b51c3dae92a742"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="10,15 15,14 8,14 18,19 12,15 20,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "File Properties",
+      title: "DocLib File Properties",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f4b51c3dae92a742"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="10,15 15,14 8,14 18,19 12,15 20,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFileProperties implements BlockTool {
   }
 
   readonly id = "DocLibFileProperties";
-  readonly title = "File Properties";
+  readonly title = "DocLib File Properties";
   readonly category = "format" as const;
   readonly mode = "FileProperties";
   readonly requiresSelection = false;

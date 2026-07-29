@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDiagramChangeToRadialClassic implements BlockTool {
   static readonly feature = {
     id: "DocLibDiagramChangeToRadialClassic",
-    title: "Diagram Change To Radial Classic",
+    title: "DocLib Diagram Change To Radial Classic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c0365f9b94e370cc"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="9,7 14,6 16,10 14,4 8,18 14,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Diagram Change To Radial Classic",
+      title: "DocLib Diagram Change To Radial Classic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c0365f9b94e370cc"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="9,7 14,6 16,10 14,4 8,18 14,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDiagramChangeToRadialClassic implements BlockTool {
   }
 
   readonly id = "DocLibDiagramChangeToRadialClassic";
-  readonly title = "Diagram Change To Radial Classic";
+  readonly title = "DocLib Diagram Change To Radial Classic";
   readonly category = "format" as const;
   readonly mode = "DiagramChangeToRadialClassic";
   readonly requiresSelection = false;

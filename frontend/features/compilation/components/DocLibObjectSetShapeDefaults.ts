@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibObjectSetShapeDefaults implements BlockTool {
   static readonly feature = {
     id: "DocLibObjectSetShapeDefaults",
-    title: "Object Set Shape Defaults",
+    title: "DocLib Object Set Shape Defaults",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ff80129787297116"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="4,13 5,19 20,11 15,9 9,18 12,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Object Set Shape Defaults",
+      title: "DocLib Object Set Shape Defaults",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ff80129787297116"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="4,13 5,19 20,11 15,9 9,18 12,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibObjectSetShapeDefaults implements BlockTool {
   }
 
   readonly id = "DocLibObjectSetShapeDefaults";
-  readonly title = "Object Set Shape Defaults";
+  readonly title = "DocLib Object Set Shape Defaults";
   readonly category = "format" as const;
   readonly mode = "ObjectSetShapeDefaults";
   readonly requiresSelection = false;

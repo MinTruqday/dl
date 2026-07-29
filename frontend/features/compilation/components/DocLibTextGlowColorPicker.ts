@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextGlowColorPicker implements BlockTool {
   static readonly feature = {
     id: "DocLibTextGlowColorPicker",
-    title: "Text Glow Color Picker",
+    title: "DocLib Text Glow Color Picker",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b77d71f54d7aa9b4"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="17,10 15,11 13,7 20,14 12,15 14,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Text Glow Color Picker",
+      title: "DocLib Text Glow Color Picker",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b77d71f54d7aa9b4"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="17,10 15,11 13,7 20,14 12,15 14,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTextGlowColorPicker implements BlockTool {
   }
 
   readonly id = "DocLibTextGlowColorPicker";
-  readonly title = "Text Glow Color Picker";
+  readonly title = "DocLib Text Glow Color Picker";
   readonly category = "format" as const;
   readonly mode = "TextGlowColorPicker";
   readonly requiresSelection = false;

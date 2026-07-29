@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextFillColorPicker implements BlockTool {
   static readonly feature = {
     id: "DocLibTextFillColorPicker",
-    title: "Text Fill Color Picker",
+    title: "DocLib Text Fill Color Picker",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="29a979818657df69"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="11,20 6,14 19,6 6,7 15,14 18,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Text Fill Color Picker",
+      title: "DocLib Text Fill Color Picker",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="29a979818657df69"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="11,20 6,14 19,6 6,7 15,14 18,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTextFillColorPicker implements BlockTool {
   }
 
   readonly id = "DocLibTextFillColorPicker";
-  readonly title = "Text Fill Color Picker";
+  readonly title = "DocLib Text Fill Color Picker";
   readonly category = "format" as const;
   readonly mode = "TextFillColorPicker";
   readonly requiresSelection = false;

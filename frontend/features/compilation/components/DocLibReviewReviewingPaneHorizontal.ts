@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibReviewReviewingPaneHorizontal implements BlockTool {
   static readonly feature = {
     id: "DocLibReviewReviewingPaneHorizontal",
-    title: "Review Reviewing Pane Horizontal",
+    title: "DocLib Review Reviewing Pane Horizontal",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d17200ca18e201fa"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="9,16 4,19 11,9 5,16 18,17 17,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Review Reviewing Pane Horizontal",
+      title: "DocLib Review Reviewing Pane Horizontal",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d17200ca18e201fa"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="9,16 4,19 11,9 5,16 18,17 17,6"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibReviewReviewingPaneHorizontal implements BlockTool {
   }
 
   readonly id = "DocLibReviewReviewingPaneHorizontal";
-  readonly title = "Review Reviewing Pane Horizontal";
+  readonly title = "DocLib Review Reviewing Pane Horizontal";
   readonly category = "review" as const;
   readonly mode = "ReviewReviewingPaneHorizontal";
   readonly requiresSelection = false;

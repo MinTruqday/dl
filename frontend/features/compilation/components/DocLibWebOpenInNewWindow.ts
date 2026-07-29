@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWebOpenInNewWindow implements BlockTool {
   static readonly feature = {
     id: "DocLibWebOpenInNewWindow",
-    title: "Web Open In New Window",
+    title: "DocLib Web Open In New Window",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9a453497575418c0"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,5 5,19 6,20 11,9 6,11 10,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Web Open In New Window",
+      title: "DocLib Web Open In New Window",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9a453497575418c0"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,5 5,19 6,20 11,9 6,11 10,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibWebOpenInNewWindow implements BlockTool {
   }
 
   readonly id = "DocLibWebOpenInNewWindow";
-  readonly title = "Web Open In New Window";
+  readonly title = "DocLib Web Open In New Window";
   readonly category = "format" as const;
   readonly mode = "WebOpenInNewWindow";
   readonly requiresSelection = false;

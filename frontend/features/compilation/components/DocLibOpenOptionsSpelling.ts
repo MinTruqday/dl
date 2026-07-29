@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibOpenOptionsSpelling implements BlockTool {
   static readonly feature = {
     id: "DocLibOpenOptionsSpelling",
-    title: "Open Options Spelling",
+    title: "DocLib Open Options Spelling",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="994607c686323395"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="4,6 11,15 19,20 4,17 18,16 14,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Open Options Spelling",
+      title: "DocLib Open Options Spelling",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="994607c686323395"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="4,6 11,15 19,20 4,17 18,16 14,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibOpenOptionsSpelling implements BlockTool {
   }
 
   readonly id = "DocLibOpenOptionsSpelling";
-  readonly title = "Open Options Spelling";
+  readonly title = "DocLib Open Options Spelling";
   readonly category = "format" as const;
   readonly mode = "OpenOptionsSpelling";
   readonly requiresSelection = false;

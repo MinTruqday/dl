@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartDepthAxisTitle implements BlockTool {
   static readonly feature = {
     id: "DocLibChartDepthAxisTitle",
-    title: "Chart Depth Axis Title",
+    title: "DocLib Chart Depth Axis Title",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="158049cf806d2e52"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="8,13 9,7 13,11 16,18 18,17 18,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Depth Axis Title",
+      title: "DocLib Chart Depth Axis Title",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="158049cf806d2e52"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="8,13 9,7 13,11 16,18 18,17 18,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartDepthAxisTitle implements BlockTool {
   }
 
   readonly id = "DocLibChartDepthAxisTitle";
-  readonly title = "Chart Depth Axis Title";
+  readonly title = "DocLib Chart Depth Axis Title";
   readonly category = "layout" as const;
   readonly mode = "ChartDepthAxisTitle";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibShapeStylesGalleryClassic implements BlockTool {
   static readonly feature = {
     id: "DocLibShapeStylesGalleryClassic",
-    title: "Shape Styles Gallery Classic",
+    title: "DocLib Shape Styles Gallery Classic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4a7c6b61addb87b6"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,9 9,16 7,19 20,16 15,19 18,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Shape Styles Gallery Classic",
+      title: "DocLib Shape Styles Gallery Classic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4a7c6b61addb87b6"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,9 9,16 7,19 20,16 15,19 18,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibShapeStylesGalleryClassic implements BlockTool {
   }
 
   readonly id = "DocLibShapeStylesGalleryClassic";
-  readonly title = "Shape Styles Gallery Classic";
+  readonly title = "DocLib Shape Styles Gallery Classic";
   readonly category = "format" as const;
   readonly mode = "ShapeStylesGalleryClassic";
   readonly requiresSelection = false;

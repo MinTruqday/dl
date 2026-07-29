@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPasteDontMergeList implements BlockTool {
   static readonly feature = {
     id: "DocLibPasteDontMergeList",
-    title: "Paste Dont Merge List",
+    title: "DocLib Paste Dont Merge List",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="73896d11d0dcc271"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,5 11,4 8,20 11,15 17,4 15,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Paste Dont Merge List",
+      title: "DocLib Paste Dont Merge List",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="73896d11d0dcc271"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,5 11,4 8,20 11,15 17,4 15,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPasteDontMergeList implements BlockTool {
   }
 
   readonly id = "DocLibPasteDontMergeList";
-  readonly title = "Paste Dont Merge List";
+  readonly title = "DocLib Paste Dont Merge List";
   readonly category = "format" as const;
   readonly mode = "PasteDontMergeList";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibContentControlsGroupMenu implements BlockTool {
   static readonly feature = {
     id: "DocLibContentControlsGroupMenu",
-    title: "Content Controls Group Menu",
+    title: "DocLib Content Controls Group Menu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="46c622f9b68a223f"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="6,15 4,15 16,6 4,16 17,5 13,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Content Controls Group Menu",
+      title: "DocLib Content Controls Group Menu",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="46c622f9b68a223f"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="6,15 4,15 16,6 4,16 17,5 13,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibContentControlsGroupMenu implements BlockTool {
   }
 
   readonly id = "DocLibContentControlsGroupMenu";
-  readonly title = "Content Controls Group Menu";
+  readonly title = "DocLib Content Controls Group Menu";
   readonly category = "automation" as const;
   readonly mode = "ContentControlsGroupMenu";
   readonly requiresSelection = false;

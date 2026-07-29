@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibBroadcastSlideShowGeneric implements BlockTool {
   static readonly feature = {
     id: "DocLibBroadcastSlideShowGeneric",
-    title: "Broadcast Slide Show Generic",
+    title: "DocLib Broadcast Slide Show Generic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d7cd2e2c2749372c"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="15,5 16,14 9,9 8,14 18,5 13,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Broadcast Slide Show Generic",
+      title: "DocLib Broadcast Slide Show Generic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d7cd2e2c2749372c"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="15,5 16,14 9,9 8,14 18,5 13,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibBroadcastSlideShowGeneric implements BlockTool {
   }
 
   readonly id = "DocLibBroadcastSlideShowGeneric";
-  readonly title = "Broadcast Slide Show Generic";
+  readonly title = "DocLib Broadcast Slide Show Generic";
   readonly category = "format" as const;
   readonly mode = "BroadcastSlideShowGeneric";
   readonly requiresSelection = false;

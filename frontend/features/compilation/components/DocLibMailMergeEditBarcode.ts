@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMailMergeEditBarcode implements BlockTool {
   static readonly feature = {
     id: "DocLibMailMergeEditBarcode",
-    title: "Mail Merge Edit Barcode",
+    title: "DocLib Mail Merge Edit Barcode",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="24cd268bf3c47133"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="6,5 8,7 9,13 15,4 10,7 19,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Mail Merge Edit Barcode",
+      title: "DocLib Mail Merge Edit Barcode",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="24cd268bf3c47133"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="6,5 8,7 9,13 15,4 10,7 19,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibMailMergeEditBarcode implements BlockTool {
   }
 
   readonly id = "DocLibMailMergeEditBarcode";
-  readonly title = "Mail Merge Edit Barcode";
+  readonly title = "DocLib Mail Merge Edit Barcode";
   readonly category = "format" as const;
   readonly mode = "MailMergeEditBarcode";
   readonly requiresSelection = false;

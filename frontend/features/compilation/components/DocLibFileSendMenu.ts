@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFileSendMenu implements BlockTool {
   static readonly feature = {
     id: "DocLibFileSendMenu",
-    title: "File Send Menu",
+    title: "DocLib File Send Menu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fb83b0398cdc53c7"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="17,16 10,10 8,20 19,16 13,16 20,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "File Send Menu",
+      title: "DocLib File Send Menu",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fb83b0398cdc53c7"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="17,16 10,10 8,20 19,16 13,16 20,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFileSendMenu implements BlockTool {
   }
 
   readonly id = "DocLibFileSendMenu";
-  readonly title = "File Send Menu";
+  readonly title = "DocLib File Send Menu";
   readonly category = "format" as const;
   readonly mode = "FileSendMenu";
   readonly requiresSelection = false;

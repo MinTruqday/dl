@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFileSaveAsHtml implements BlockTool {
   static readonly feature = {
     id: "DocLibFileSaveAsHtml",
-    title: "File Save As HTML",
+    title: "DocLib File Save As HTML",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8c2f11d8c951ea64"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="8,17 4,16 18,17 17,19 9,8 16,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "File Save As HTML",
+      title: "DocLib File Save As HTML",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8c2f11d8c951ea64"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="8,17 4,16 18,17 17,19 9,8 16,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFileSaveAsHtml implements BlockTool {
   }
 
   readonly id = "DocLibFileSaveAsHtml";
-  readonly title = "File Save As HTML";
+  readonly title = "DocLib File Save As HTML";
   readonly category = "format" as const;
   readonly mode = "FileSaveAsHtml";
   readonly requiresSelection = false;

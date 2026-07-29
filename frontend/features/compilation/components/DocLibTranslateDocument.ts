@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTranslateDocument implements BlockTool {
   static readonly feature = {
     id: "DocLibTranslateDocument",
-    title: "Translate Document",
+    title: "DocLib Translate Document",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a330875cfa590561"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="14,18 20,11 16,8 9,16 7,16 17,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Translate Document",
+      title: "DocLib Translate Document",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a330875cfa590561"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="14,18 20,11 16,8 9,16 7,16 17,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTranslateDocument implements BlockTool {
   }
 
   readonly id = "DocLibTranslateDocument";
-  readonly title = "Translate Document";
+  readonly title = "DocLib Translate Document";
   readonly category = "ai" as const;
   readonly mode = "TranslateDocument";
   readonly requiresSelection = false;

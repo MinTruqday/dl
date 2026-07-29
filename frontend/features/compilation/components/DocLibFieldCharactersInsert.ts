@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFieldCharactersInsert implements BlockTool {
   static readonly feature = {
     id: "DocLibFieldCharactersInsert",
-    title: "Field Characters Insert",
+    title: "DocLib Field Characters Insert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1d73444eea3c5b8a"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="16,17 4,14 17,13 10,6 20,20 16,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Field Characters Insert",
+      title: "DocLib Field Characters Insert",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1d73444eea3c5b8a"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="16,17 4,14 17,13 10,6 20,20 16,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFieldCharactersInsert implements BlockTool {
   }
 
   readonly id = "DocLibFieldCharactersInsert";
-  readonly title = "Field Characters Insert";
+  readonly title = "DocLib Field Characters Insert";
   readonly category = "format" as const;
   readonly mode = "FieldCharactersInsert";
   readonly requiresSelection = false;

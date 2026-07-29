@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibGlowsMoreOptions implements BlockTool {
   static readonly feature = {
     id: "DocLibGlowsMoreOptions",
-    title: "Glows More Options",
+    title: "DocLib Glows More Options",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="db0e1712568aef68"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,18 10,5 5,6 5,6 5,6 9,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Glows More Options",
+      title: "DocLib Glows More Options",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="db0e1712568aef68"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,18 10,5 5,6 5,6 5,6 9,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibGlowsMoreOptions implements BlockTool {
   }
 
   readonly id = "DocLibGlowsMoreOptions";
-  readonly title = "Glows More Options";
+  readonly title = "DocLib Glows More Options";
   readonly category = "format" as const;
   readonly mode = "GlowsMoreOptions";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDiagramAutoFormatClassic implements BlockTool {
   static readonly feature = {
     id: "DocLibDiagramAutoFormatClassic",
-    title: "Diagram Auto Format Classic",
+    title: "DocLib Diagram Auto Format Classic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="41c46615e0f15f67"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,13 4,8 7,7 14,5 5,9 12,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Diagram Auto Format Classic",
+      title: "DocLib Diagram Auto Format Classic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="41c46615e0f15f67"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,13 4,8 7,7 14,5 5,9 12,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDiagramAutoFormatClassic implements BlockTool {
   }
 
   readonly id = "DocLibDiagramAutoFormatClassic";
-  readonly title = "Diagram Auto Format Classic";
+  readonly title = "DocLib Diagram Auto Format Classic";
   readonly category = "format" as const;
   readonly mode = "DiagramAutoFormatClassic";
   readonly requiresSelection = false;

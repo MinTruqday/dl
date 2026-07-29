@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFilePermissionRestrictAs implements BlockTool {
   static readonly feature = {
     id: "DocLibFilePermissionRestrictAs",
-    title: "File Permission Restrict As",
+    title: "DocLib File Permission Restrict As",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e686b6718336499f"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="13,19 16,15 16,7 9,10 19,8 4,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "File Permission Restrict As",
+      title: "DocLib File Permission Restrict As",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e686b6718336499f"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="13,19 16,15 16,7 9,10 19,8 4,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFilePermissionRestrictAs implements BlockTool {
   }
 
   readonly id = "DocLibFilePermissionRestrictAs";
-  readonly title = "File Permission Restrict As";
+  readonly title = "DocLib File Permission Restrict As";
   readonly category = "format" as const;
   readonly mode = "FilePermissionRestrictAs";
   readonly requiresSelection = false;

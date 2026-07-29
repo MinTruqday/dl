@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDrawing1ColorPickerFillWordArt implements BlockTool {
   static readonly feature = {
     id: "DocLibDrawing1ColorPickerFillWordArt",
-    title: "Drawing1 Color Picker Fill Word Art",
+    title: "DocLib Drawing1 Color Picker Fill Word Art",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="04fe99102745709a"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="8,20 4,20 9,5 14,5 17,15 9,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Drawing1 Color Picker Fill Word Art",
+      title: "DocLib Drawing1 Color Picker Fill Word Art",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="04fe99102745709a"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="8,20 4,20 9,5 14,5 17,15 9,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDrawing1ColorPickerFillWordArt implements BlockTool {
   }
 
   readonly id = "DocLibDrawing1ColorPickerFillWordArt";
-  readonly title = "Drawing1 Color Picker Fill Word Art";
+  readonly title = "DocLib Drawing1 Color Picker Fill Word Art";
   readonly category = "format" as const;
   readonly mode = "Drawing1ColorPickerFillWordArt";
   readonly requiresSelection = false;

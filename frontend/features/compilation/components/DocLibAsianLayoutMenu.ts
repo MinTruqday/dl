@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAsianLayoutMenu implements BlockTool {
   static readonly feature = {
     id: "DocLibAsianLayoutMenu",
-    title: "Asian Layout Menu",
+    title: "DocLib Asian Layout Menu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ec951f5497059c8a"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="19,17 18,20 19,9 7,6 6,9 6,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Asian Layout Menu",
+      title: "DocLib Asian Layout Menu",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ec951f5497059c8a"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="19,17 18,20 19,9 7,6 6,9 6,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibAsianLayoutMenu implements BlockTool {
   }
 
   readonly id = "DocLibAsianLayoutMenu";
-  readonly title = "Asian Layout Menu";
+  readonly title = "DocLib Asian Layout Menu";
   readonly category = "format" as const;
   readonly mode = "AsianLayoutMenu";
   readonly requiresSelection = false;

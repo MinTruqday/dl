@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextBoxInsertVerticalWord implements BlockTool {
   static readonly feature = {
     id: "DocLibTextBoxInsertVerticalWord",
-    title: "Text Box Insert Vertical Word",
+    title: "DocLib Text Box Insert Vertical Word",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f22f0a53b20f623a"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,17 14,19 12,19 17,11 9,8 20,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Text Box Insert Vertical Word",
+      title: "DocLib Text Box Insert Vertical Word",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f22f0a53b20f623a"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,17 14,19 12,19 17,11 9,8 20,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTextBoxInsertVerticalWord implements BlockTool {
   }
 
   readonly id = "DocLibTextBoxInsertVerticalWord";
-  readonly title = "Text Box Insert Vertical Word";
+  readonly title = "DocLib Text Box Insert Vertical Word";
   readonly category = "insert" as const;
   readonly mode = "TextBoxInsertVerticalWord";
   readonly requiresSelection = false;

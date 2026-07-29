@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAsianLayoutPhoneticGuide implements BlockTool {
   static readonly feature = {
     id: "DocLibAsianLayoutPhoneticGuide",
-    title: "Asian Layout Phonetic Guide",
+    title: "DocLib Asian Layout Phonetic Guide",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="be761033228363e8"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="7,20 20,4 4,16 18,15 19,6 10,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Asian Layout Phonetic Guide",
+      title: "DocLib Asian Layout Phonetic Guide",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="be761033228363e8"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="7,20 20,4 4,16 18,15 19,6 10,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibAsianLayoutPhoneticGuide implements BlockTool {
   }
 
   readonly id = "DocLibAsianLayoutPhoneticGuide";
-  readonly title = "Asian Layout Phonetic Guide";
+  readonly title = "DocLib Asian Layout Phonetic Guide";
   readonly category = "format" as const;
   readonly mode = "AsianLayoutPhoneticGuide";
   readonly requiresSelection = false;

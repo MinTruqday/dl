@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibXmlToggleTagView implements BlockTool {
   static readonly feature = {
     id: "DocLibXmlToggleTagView",
-    title: "XML Toggle Tag View",
+    title: "DocLib XML Toggle Tag View",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fc8b212816b984ba"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="18,7 20,10 9,19 17,20 6,13 20,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "XML Toggle Tag View",
+      title: "DocLib XML Toggle Tag View",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fc8b212816b984ba"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="18,7 20,10 9,19 17,20 6,13 20,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibXmlToggleTagView implements BlockTool {
   }
 
   readonly id = "DocLibXmlToggleTagView";
-  readonly title = "XML Toggle Tag View";
+  readonly title = "DocLib XML Toggle Tag View";
   readonly category = "format" as const;
   readonly mode = "XmlToggleTagView";
   readonly requiresSelection = false;

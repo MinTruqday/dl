@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibObjectBorderOutlineColorMoreColorsDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibObjectBorderOutlineColorMoreColorsDialog",
-    title: "Object Border Outline Color More Colors Dialog",
+    title: "DocLib Object Border Outline Color More Colors Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4cef2bec51d9da2a"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="12,5 13,19 17,17 18,12 13,13 14,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Object Border Outline Color More Colors Dialog",
+      title: "DocLib Object Border Outline Color More Colors Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4cef2bec51d9da2a"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="12,5 13,19 17,17 18,12 13,13 14,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibObjectBorderOutlineColorMoreColorsDialog implements B
   }
 
   readonly id = "DocLibObjectBorderOutlineColorMoreColorsDialog";
-  readonly title = "Object Border Outline Color More Colors Dialog";
+  readonly title = "DocLib Object Border Outline Color More Colors Dialog";
   readonly category = "format" as const;
   readonly mode = "ObjectBorderOutlineColorMoreColorsDialog";
   readonly requiresSelection = false;

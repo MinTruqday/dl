@@ -1,9 +1,10 @@
 import { API, BlockTool } from "@editorjs/editorjs";
+import { requestEditorInput } from "./editor-dialog";
 
 export default class DocLibKanban implements BlockTool {
   static readonly feature = {
     id: "DocLibKanban",
-    title: "Kanban",
+    title: "DocLib Kanban",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bba3a666a78199af"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="4,14 17,4 18,14 4,9 6,20 20,20"/></svg>',
     product: "doclib",
   } as const;
@@ -22,7 +23,7 @@ export default class DocLibKanban implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "Kanban",
+      title: "DocLib Kanban",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bba3a666a78199af"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="4,14 17,4 18,14 4,9 6,20 20,20"/></svg>',
     };
   }
@@ -108,11 +109,12 @@ export default class DocLibKanban implements BlockTool {
 
       if (!this.readOnly) {
         dot.style.cursor = "pointer";
-        dot.addEventListener("click", () => {
-          const newColor = prompt(
-            "Enter color code (Hex/Name) for this column:",
-            col.color,
-          );
+        dot.addEventListener("click", async () => {
+          const newColor = await requestEditorInput({
+            title: "DocLib Kanban",
+            label: "Mã màu",
+            initialValue: col.color,
+          });
           if (newColor) {
             col.color = newColor;
             dot.style.backgroundColor = newColor;
@@ -219,7 +221,7 @@ export default class DocLibKanban implements BlockTool {
       addColBtn.addEventListener("click", () => {
         this.data.columns.push({
           id: Date.now().toString(),
-          title: "Kanban",
+          title: "DocLib Kanban",
           color: "#94a3b8",
           tasks: [],
         });

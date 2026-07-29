@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSelectionToMathConvert implements BlockTool {
   static readonly feature = {
     id: "DocLibSelectionToMathConvert",
-    title: "Selection To Math Convert",
+    title: "DocLib Selection To Math Convert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8a707a2f8a7f398b"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="6,14 7,17 6,12 10,7 4,17 16,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Selection To Math Convert",
+      title: "DocLib Selection To Math Convert",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8a707a2f8a7f398b"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="6,14 7,17 6,12 10,7 4,17 16,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSelectionToMathConvert implements BlockTool {
   }
 
   readonly id = "DocLibSelectionToMathConvert";
-  readonly title = "Selection To Math Convert";
+  readonly title = "DocLib Selection To Math Convert";
   readonly category = "format" as const;
   readonly mode = "SelectionToMathConvert";
   readonly requiresSelection = false;

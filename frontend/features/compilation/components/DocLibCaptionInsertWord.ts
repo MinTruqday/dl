@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibCaptionInsertWord implements BlockTool {
   static readonly feature = {
     id: "DocLibCaptionInsertWord",
-    title: "Caption Insert Word",
+    title: "DocLib Caption Insert Word",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e5979009fe516ba4"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="12,19 12,13 20,17 9,15 8,12 17,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Caption Insert Word",
+      title: "DocLib Caption Insert Word",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e5979009fe516ba4"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="12,19 12,13 20,17 9,15 8,12 17,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibCaptionInsertWord implements BlockTool {
   }
 
   readonly id = "DocLibCaptionInsertWord";
-  readonly title = "Caption Insert Word";
+  readonly title = "DocLib Caption Insert Word";
   readonly category = "format" as const;
   readonly mode = "CaptionInsertWord";
   readonly requiresSelection = false;

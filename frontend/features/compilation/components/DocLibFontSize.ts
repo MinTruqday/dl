@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFontSize implements BlockTool {
   static readonly feature = {
     id: "DocLibFontSize",
-    title: "Font Size",
+    title: "DocLib Font Size",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7c1fa14f71632499"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="9,18 12,15 15,18 6,4 6,9 11,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Font Size",
+      title: "DocLib Font Size",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7c1fa14f71632499"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="9,18 12,15 15,18 6,4 6,9 11,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFontSize implements BlockTool {
   }
 
   readonly id = "DocLibFontSize";
-  readonly title = "Font Size";
+  readonly title = "DocLib Font Size";
   readonly category = "format" as const;
   readonly mode = "FontSize";
   readonly requiresSelection = false;

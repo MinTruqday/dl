@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartSecondaryHorizontalAxisOption implements BlockTool {
   static readonly feature = {
     id: "DocLibChartSecondaryHorizontalAxisOption",
-    title: "Chart Secondary Horizontal Axis Option",
+    title: "DocLib Chart Secondary Horizontal Axis Option",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="83960d7127d116b8"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="16,18 17,15 9,9 9,18 4,4 15,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Secondary Horizontal Axis Option",
+      title: "DocLib Chart Secondary Horizontal Axis Option",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="83960d7127d116b8"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="16,18 17,15 9,9 9,18 4,4 15,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartSecondaryHorizontalAxisOption implements BlockTo
   }
 
   readonly id = "DocLibChartSecondaryHorizontalAxisOption";
-  readonly title = "Chart Secondary Horizontal Axis Option";
+  readonly title = "DocLib Chart Secondary Horizontal Axis Option";
   readonly category = "layout" as const;
   readonly mode = "ChartSecondaryHorizontalAxisOption";
   readonly requiresSelection = false;

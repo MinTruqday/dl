@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAlignJustifyWithMixedLanguages implements BlockTool {
   static readonly feature = {
     id: "DocLibAlignJustifyWithMixedLanguages",
-    title: "Align Justify With Mixed Languages",
+    title: "DocLib Align Justify With Mixed Languages",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e50d81b4aeb0a9b4"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,17 14,14 8,10 20,14 8,16 10,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Align Justify With Mixed Languages",
+      title: "DocLib Align Justify With Mixed Languages",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e50d81b4aeb0a9b4"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,17 14,14 8,10 20,14 8,16 10,6"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibAlignJustifyWithMixedLanguages implements BlockTool {
   }
 
   readonly id = "DocLibAlignJustifyWithMixedLanguages";
-  readonly title = "Align Justify With Mixed Languages";
+  readonly title = "DocLib Align Justify With Mixed Languages";
   readonly category = "format" as const;
   readonly mode = "AlignJustifyWithMixedLanguages";
   readonly requiresSelection = false;

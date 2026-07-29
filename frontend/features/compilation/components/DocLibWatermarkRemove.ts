@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWatermarkRemove implements BlockTool {
   static readonly feature = {
     id: "DocLibWatermarkRemove",
-    title: "Watermark Remove",
+    title: "DocLib Watermark Remove",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="16205d17730af2e5"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,19 12,10 17,14 8,12 15,17 10,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Watermark Remove",
+      title: "DocLib Watermark Remove",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="16205d17730af2e5"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,19 12,10 17,14 8,12 15,17 10,9"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibWatermarkRemove implements BlockTool {
   }
 
   readonly id = "DocLibWatermarkRemove";
-  readonly title = "Watermark Remove";
+  readonly title = "DocLib Watermark Remove";
   readonly category = "format" as const;
   readonly mode = "WatermarkRemove";
   readonly requiresSelection = false;

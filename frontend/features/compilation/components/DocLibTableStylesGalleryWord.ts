@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableStylesGalleryWord implements BlockTool {
   static readonly feature = {
     id: "DocLibTableStylesGalleryWord",
-    title: "Table Styles Gallery Word",
+    title: "DocLib Table Styles Gallery Word",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d5ef02d9b635b1da"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="13,5 6,17 16,6 11,18 19,9 15,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Table Styles Gallery Word",
+      title: "DocLib Table Styles Gallery Word",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d5ef02d9b635b1da"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="13,5 6,17 16,6 11,18 19,9 15,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTableStylesGalleryWord implements BlockTool {
   }
 
   readonly id = "DocLibTableStylesGalleryWord";
-  readonly title = "Table Styles Gallery Word";
+  readonly title = "DocLib Table Styles Gallery Word";
   readonly category = "table" as const;
   readonly mode = "TableStylesGalleryWord";
   readonly requiresSelection = false;

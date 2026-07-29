@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibQuickCheckAll implements BlockTool {
   static readonly feature = {
     id: "DocLibQuickCheckAll",
-    title: "Quick Check All",
+    title: "DocLib Quick Check All",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3e5d3b72ec7108a0"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="15,12 12,16 19,15 12,11 17,7 13,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Quick Check All",
+      title: "DocLib Quick Check All",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3e5d3b72ec7108a0"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="15,12 12,16 19,15 12,11 17,7 13,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibQuickCheckAll implements BlockTool {
   }
 
   readonly id = "DocLibQuickCheckAll";
-  readonly title = "Quick Check All";
+  readonly title = "DocLib Quick Check All";
   readonly category = "review" as const;
   readonly mode = "QuickCheckAll";
   readonly requiresSelection = false;

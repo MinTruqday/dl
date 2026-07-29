@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDottedUnderline implements BlockTool {
   static readonly feature = {
     id: "DocLibDottedUnderline",
-    title: "Dotted Underline",
+    title: "DocLib Dotted Underline",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d23a3d5915f164bb"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,11 14,8 8,7 19,4 19,4 20,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Dotted Underline",
+      title: "DocLib Dotted Underline",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d23a3d5915f164bb"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,11 14,8 8,7 19,4 19,4 20,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDottedUnderline implements BlockTool {
   }
 
   readonly id = "DocLibDottedUnderline";
-  readonly title = "Dotted Underline";
+  readonly title = "DocLib Dotted Underline";
   readonly category = "format" as const;
   readonly mode = "DottedUnderline";
   readonly requiresSelection = true;

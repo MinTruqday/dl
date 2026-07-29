@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDataFormDeleteRecord implements BlockTool {
   static readonly feature = {
     id: "DocLibDataFormDeleteRecord",
-    title: "Data Form Delete Record",
+    title: "DocLib Data Form Delete Record",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d2e681f62e47ef76"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="10,13 14,12 16,7 5,20 4,4 19,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Data Form Delete Record",
+      title: "DocLib Data Form Delete Record",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d2e681f62e47ef76"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="10,13 14,12 16,7 5,20 4,4 19,6"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDataFormDeleteRecord implements BlockTool {
   }
 
   readonly id = "DocLibDataFormDeleteRecord";
-  readonly title = "Data Form Delete Record";
+  readonly title = "DocLib Data Form Delete Record";
   readonly category = "format" as const;
   readonly mode = "DataFormDeleteRecord";
   readonly requiresSelection = false;

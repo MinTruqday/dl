@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSaveACopyButton implements BlockTool {
   static readonly feature = {
     id: "DocLibSaveACopyButton",
-    title: "Save A Copy Button",
+    title: "DocLib Save A Copy Button",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="46de3564e5962816"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="6,5 6,19 12,18 10,9 17,11 18,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Save A Copy Button",
+      title: "DocLib Save A Copy Button",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="46de3564e5962816"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="6,5 6,19 12,18 10,9 17,11 18,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSaveACopyButton implements BlockTool {
   }
 
   readonly id = "DocLibSaveACopyButton";
-  readonly title = "Save A Copy Button";
+  readonly title = "DocLib Save A Copy Button";
   readonly category = "format" as const;
   readonly mode = "SaveACopyButton";
   readonly requiresSelection = false;

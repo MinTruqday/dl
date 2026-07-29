@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibContrastMore implements BlockTool {
   static readonly feature = {
     id: "DocLibContrastMore",
-    title: "Contrast More",
+    title: "DocLib Contrast More",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6e56e711334f5bab"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,5 14,4 4,15 10,5 15,18 9,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Contrast More",
+      title: "DocLib Contrast More",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6e56e711334f5bab"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,5 14,4 4,15 10,5 15,18 9,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibContrastMore implements BlockTool {
   }
 
   readonly id = "DocLibContrastMore";
-  readonly title = "Contrast More";
+  readonly title = "DocLib Contrast More";
   readonly category = "format" as const;
   readonly mode = "ContrastMore";
   readonly requiresSelection = false;

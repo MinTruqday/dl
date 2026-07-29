@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAddressFontsFormat implements BlockTool {
   static readonly feature = {
     id: "DocLibAddressFontsFormat",
-    title: "Address Fonts Format",
+    title: "DocLib Address Fonts Format",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0a0f61bcd761ffff"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="14,19 16,5 15,16 4,4 12,10 17,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Address Fonts Format",
+      title: "DocLib Address Fonts Format",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0a0f61bcd761ffff"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="14,19 16,5 15,16 4,4 12,10 17,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibAddressFontsFormat implements BlockTool {
   }
 
   readonly id = "DocLibAddressFontsFormat";
-  readonly title = "Address Fonts Format";
+  readonly title = "DocLib Address Fonts Format";
   readonly category = "format" as const;
   readonly mode = "AddressFontsFormat";
   readonly requiresSelection = false;

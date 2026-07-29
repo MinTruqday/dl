@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibGoToAnnotationScope implements BlockTool {
   static readonly feature = {
     id: "DocLibGoToAnnotationScope",
-    title: "Go To Annotation Scope",
+    title: "DocLib Go To Annotation Scope",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="36087e7093e1efc6"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="7,12 11,14 15,8 5,15 18,10 15,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Go To Annotation Scope",
+      title: "DocLib Go To Annotation Scope",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="36087e7093e1efc6"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="7,12 11,14 15,8 5,15 18,10 15,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibGoToAnnotationScope implements BlockTool {
   }
 
   readonly id = "DocLibGoToAnnotationScope";
-  readonly title = "Go To Annotation Scope";
+  readonly title = "DocLib Go To Annotation Scope";
   readonly category = "format" as const;
   readonly mode = "GoToAnnotationScope";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibClipArtInsertDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibClipArtInsertDialog",
-    title: "Clip Art Insert Dialog",
+    title: "DocLib Clip Art Insert Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5b8c46304833f057"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="10,8 6,18 8,4 6,6 7,14 4,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Clip Art Insert Dialog",
+      title: "DocLib Clip Art Insert Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5b8c46304833f057"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="10,8 6,18 8,4 6,6 7,14 4,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibClipArtInsertDialog implements BlockTool {
   }
 
   readonly id = "DocLibClipArtInsertDialog";
-  readonly title = "Clip Art Insert Dialog";
+  readonly title = "DocLib Clip Art Insert Dialog";
   readonly category = "insert" as const;
   readonly mode = "ClipArtInsertDialog";
   readonly requiresSelection = false;

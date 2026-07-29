@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibReviewShowRevisionsInBalloons implements BlockTool {
   static readonly feature = {
     id: "DocLibReviewShowRevisionsInBalloons",
-    title: "Review Show Revisions In Balloons",
+    title: "DocLib Review Show Revisions In Balloons",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="73d28137230529af"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="17,10 14,8 5,9 11,9 13,8 9,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Review Show Revisions In Balloons",
+      title: "DocLib Review Show Revisions In Balloons",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="73d28137230529af"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="17,10 14,8 5,9 11,9 13,8 9,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibReviewShowRevisionsInBalloons implements BlockTool {
   }
 
   readonly id = "DocLibReviewShowRevisionsInBalloons";
-  readonly title = "Review Show Revisions In Balloons";
+  readonly title = "DocLib Review Show Revisions In Balloons";
   readonly category = "review" as const;
   readonly mode = "ReviewShowRevisionsInBalloons";
   readonly requiresSelection = false;

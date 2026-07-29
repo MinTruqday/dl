@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibConnectToNetworkDrive implements BlockTool {
   static readonly feature = {
     id: "DocLibConnectToNetworkDrive",
-    title: "Connect To Network Drive",
+    title: "DocLib Connect To Network Drive",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="14e9f51560d331ee"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="7,16 11,8 15,11 19,4 10,12 5,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Connect To Network Drive",
+      title: "DocLib Connect To Network Drive",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="14e9f51560d331ee"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="7,16 11,8 15,11 19,4 10,12 5,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibConnectToNetworkDrive implements BlockTool {
   }
 
   readonly id = "DocLibConnectToNetworkDrive";
-  readonly title = "Connect To Network Drive";
+  readonly title = "DocLib Connect To Network Drive";
   readonly category = "format" as const;
   readonly mode = "ConnectToNetworkDrive";
   readonly requiresSelection = false;

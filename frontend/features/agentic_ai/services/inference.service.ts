@@ -49,3 +49,14 @@ export async function generateCodeAPI(prompt: string) {
   if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Code generation inference failed");
   return data;
 }
+
+export async function generateTextAPI(prompt: string) {
+  const res = await fetch(`${API_URL}/suy-luan/tao-noi-dung`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt, max_tokens: 500, temperature: 0.3 }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tạo nội dung");
+  return data;
+}

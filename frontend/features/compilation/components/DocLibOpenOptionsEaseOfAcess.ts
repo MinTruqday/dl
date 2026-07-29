@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibOpenOptionsEaseOfAcess implements BlockTool {
   static readonly feature = {
     id: "DocLibOpenOptionsEaseOfAcess",
-    title: "Open Options Ease Of Acess",
+    title: "DocLib Open Options Ease Of Acess",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a737b6119772c41d"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="18,8 16,4 19,16 13,16 19,7 19,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Open Options Ease Of Acess",
+      title: "DocLib Open Options Ease Of Acess",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a737b6119772c41d"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="18,8 16,4 19,16 13,16 19,7 19,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibOpenOptionsEaseOfAcess implements BlockTool {
   }
 
   readonly id = "DocLibOpenOptionsEaseOfAcess";
-  readonly title = "Open Options Ease Of Acess";
+  readonly title = "DocLib Open Options Ease Of Acess";
   readonly category = "review" as const;
   readonly mode = "OpenOptionsEaseOfAcess";
   readonly requiresSelection = false;

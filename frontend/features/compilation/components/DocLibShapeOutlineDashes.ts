@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibShapeOutlineDashes implements BlockTool {
   static readonly feature = {
     id: "DocLibShapeOutlineDashes",
-    title: "Shape Outline Dashes",
+    title: "DocLib Shape Outline Dashes",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="834c47f8294adf54"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="16,12 7,14 11,10 6,20 17,19 8,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Shape Outline Dashes",
+      title: "DocLib Shape Outline Dashes",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="834c47f8294adf54"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="16,12 7,14 11,10 6,20 17,19 8,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibShapeOutlineDashes implements BlockTool {
   }
 
   readonly id = "DocLibShapeOutlineDashes";
-  readonly title = "Shape Outline Dashes";
+  readonly title = "DocLib Shape Outline Dashes";
   readonly category = "media" as const;
   readonly mode = "ShapeOutlineDashes";
   readonly requiresSelection = false;

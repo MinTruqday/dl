@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibParagraphSpaceBeforeNone implements BlockTool {
   static readonly feature = {
     id: "DocLibParagraphSpaceBeforeNone",
-    title: "Paragraph Space Before None",
+    title: "DocLib Paragraph Space Before None",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d11f7366eb215564"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,18 17,4 18,20 4,19 8,7 8,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Paragraph Space Before None",
+      title: "DocLib Paragraph Space Before None",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d11f7366eb215564"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,18 17,4 18,20 4,19 8,7 8,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibParagraphSpaceBeforeNone implements BlockTool {
   }
 
   readonly id = "DocLibParagraphSpaceBeforeNone";
-  readonly title = "Paragraph Space Before None";
+  readonly title = "DocLib Paragraph Space Before None";
   readonly category = "format" as const;
   readonly mode = "ParagraphSpaceBeforeNone";
   readonly requiresSelection = false;

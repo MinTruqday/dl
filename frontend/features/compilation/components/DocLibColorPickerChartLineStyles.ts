@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibColorPickerChartLineStyles implements BlockTool {
   static readonly feature = {
     id: "DocLibColorPickerChartLineStyles",
-    title: "Color Picker Chart Line Styles",
+    title: "DocLib Color Picker Chart Line Styles",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ca20e4c33450190a"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="19,19 11,12 5,16 12,14 19,15 17,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Color Picker Chart Line Styles",
+      title: "DocLib Color Picker Chart Line Styles",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ca20e4c33450190a"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="19,19 11,12 5,16 12,14 19,15 17,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibColorPickerChartLineStyles implements BlockTool {
   }
 
   readonly id = "DocLibColorPickerChartLineStyles";
-  readonly title = "Color Picker Chart Line Styles";
+  readonly title = "DocLib Color Picker Chart Line Styles";
   readonly category = "media" as const;
   readonly mode = "ColorPickerChartLineStyles";
   readonly requiresSelection = false;

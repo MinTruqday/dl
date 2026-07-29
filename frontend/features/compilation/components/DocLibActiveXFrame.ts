@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibActiveXFrame implements BlockTool {
   static readonly feature = {
     id: "DocLibActiveXFrame",
-    title: "Active X Frame",
+    title: "DocLib Active X Frame",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c64535e73aaf7d76"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="15,5 6,14 11,9 10,20 17,13 17,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Active X Frame",
+      title: "DocLib Active X Frame",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c64535e73aaf7d76"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="15,5 6,14 11,9 10,20 17,13 17,9"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibActiveXFrame implements BlockTool {
   }
 
   readonly id = "DocLibActiveXFrame";
-  readonly title = "Active X Frame";
+  readonly title = "DocLib Active X Frame";
   readonly category = "format" as const;
   readonly mode = "ActiveXFrame";
   readonly requiresSelection = false;

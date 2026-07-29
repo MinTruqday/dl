@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibRevisionsTrackMine implements BlockTool {
   static readonly feature = {
     id: "DocLibRevisionsTrackMine",
-    title: "Revisions Track Mine",
+    title: "DocLib Revisions Track Mine",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fdbab5d2a98d577e"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="19,20 15,10 20,9 6,11 17,19 11,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Revisions Track Mine",
+      title: "DocLib Revisions Track Mine",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fdbab5d2a98d577e"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="19,20 15,10 20,9 6,11 17,19 11,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibRevisionsTrackMine implements BlockTool {
   }
 
   readonly id = "DocLibRevisionsTrackMine";
-  readonly title = "Revisions Track Mine";
+  readonly title = "DocLib Revisions Track Mine";
   readonly category = "review" as const;
   readonly mode = "RevisionsTrackMine";
   readonly requiresSelection = false;

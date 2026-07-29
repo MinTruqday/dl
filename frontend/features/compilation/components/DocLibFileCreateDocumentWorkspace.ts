@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFileCreateDocumentWorkspace implements BlockTool {
   static readonly feature = {
     id: "DocLibFileCreateDocumentWorkspace",
-    title: "File Create Document Workspace",
+    title: "DocLib File Create Document Workspace",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="abbfe27eb4be9920"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="5,8 9,11 14,7 4,19 16,6 9,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "File Create Document Workspace",
+      title: "DocLib File Create Document Workspace",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="abbfe27eb4be9920"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="5,8 9,11 14,7 4,19 16,6 9,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFileCreateDocumentWorkspace implements BlockTool {
   }
 
   readonly id = "DocLibFileCreateDocumentWorkspace";
-  readonly title = "File Create Document Workspace";
+  readonly title = "DocLib File Create Document Workspace";
   readonly category = "format" as const;
   readonly mode = "FileCreateDocumentWorkspace";
   readonly requiresSelection = false;

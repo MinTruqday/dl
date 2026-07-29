@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSymbolFont implements BlockTool {
   static readonly feature = {
     id: "DocLibSymbolFont",
-    title: "Symbol Font",
+    title: "DocLib Symbol Font",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ab44e93e9987d8f7"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,4 16,15 4,20 16,13 19,18 13,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Symbol Font",
+      title: "DocLib Symbol Font",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ab44e93e9987d8f7"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,4 16,15 4,20 16,13 19,18 13,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSymbolFont implements BlockTool {
   }
 
   readonly id = "DocLibSymbolFont";
-  readonly title = "Symbol Font";
+  readonly title = "DocLib Symbol Font";
   readonly category = "format" as const;
   readonly mode = "SymbolFont";
   readonly requiresSelection = false;

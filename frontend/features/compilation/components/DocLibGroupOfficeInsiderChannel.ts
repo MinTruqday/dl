@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibGroupOfficeInsiderChannel implements BlockTool {
   static readonly feature = {
     id: "DocLibGroupOfficeInsiderChannel",
-    title: "Group Office Insider Channel",
+    title: "DocLib Group Office Insider Channel",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e4fe3803cbc96eea"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="11,20 9,7 20,18 12,17 16,18 15,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Group Office Insider Channel",
+      title: "DocLib Group Office Insider Channel",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e4fe3803cbc96eea"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="11,20 9,7 20,18 12,17 16,18 15,6"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibGroupOfficeInsiderChannel implements BlockTool {
   }
 
   readonly id = "DocLibGroupOfficeInsiderChannel";
-  readonly title = "Group Office Insider Channel";
+  readonly title = "DocLib Group Office Insider Channel";
   readonly category = "format" as const;
   readonly mode = "GroupOfficeInsiderChannel";
   readonly requiresSelection = false;

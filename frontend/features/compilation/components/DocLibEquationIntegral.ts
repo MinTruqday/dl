@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibEquationIntegral implements BlockTool {
   static readonly feature = {
     id: "DocLibEquationIntegral",
-    title: "Equation Integral",
+    title: "DocLib Equation Integral",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a4aefa8f5fd0bdfa"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="15,8 16,11 14,8 6,16 19,5 15,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Equation Integral",
+      title: "DocLib Equation Integral",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a4aefa8f5fd0bdfa"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="15,8 16,11 14,8 6,16 19,5 15,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibEquationIntegral implements BlockTool {
   }
 
   readonly id = "DocLibEquationIntegral";
-  readonly title = "Equation Integral";
+  readonly title = "DocLib Equation Integral";
   readonly category = "insert" as const;
   readonly mode = "EquationIntegral";
   readonly requiresSelection = false;

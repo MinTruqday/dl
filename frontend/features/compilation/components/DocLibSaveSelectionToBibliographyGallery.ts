@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSaveSelectionToBibliographyGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibSaveSelectionToBibliographyGallery",
-    title: "Save Selection To Bibliography Gallery",
+    title: "DocLib Save Selection To Bibliography Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fcdbf06b1aead3c9"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="18,19 6,9 13,17 11,18 11,19 8,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Save Selection To Bibliography Gallery",
+      title: "DocLib Save Selection To Bibliography Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fcdbf06b1aead3c9"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="18,19 6,9 13,17 11,18 11,19 8,9"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSaveSelectionToBibliographyGallery implements BlockTo
   }
 
   readonly id = "DocLibSaveSelectionToBibliographyGallery";
-  readonly title = "Save Selection To Bibliography Gallery";
+  readonly title = "DocLib Save Selection To Bibliography Gallery";
   readonly category = "reference" as const;
   readonly mode = "SaveSelectionToBibliographyGallery";
   readonly requiresSelection = false;

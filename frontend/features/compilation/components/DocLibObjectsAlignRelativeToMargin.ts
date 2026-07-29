@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibObjectsAlignRelativeToMargin implements BlockTool {
   static readonly feature = {
     id: "DocLibObjectsAlignRelativeToMargin",
-    title: "Objects Align Relative To Margin",
+    title: "DocLib Objects Align Relative To Margin",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ba99a05ed0cec315"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,4 11,13 8,6 12,8 7,11 13,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Objects Align Relative To Margin",
+      title: "DocLib Objects Align Relative To Margin",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ba99a05ed0cec315"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,4 11,13 8,6 12,8 7,11 13,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibObjectsAlignRelativeToMargin implements BlockTool {
   }
 
   readonly id = "DocLibObjectsAlignRelativeToMargin";
-  readonly title = "Objects Align Relative To Margin";
+  readonly title = "DocLib Objects Align Relative To Margin";
   readonly category = "layout" as const;
   readonly mode = "ObjectsAlignRelativeToMargin";
   readonly requiresSelection = false;

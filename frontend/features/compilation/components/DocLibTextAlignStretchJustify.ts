@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextAlignStretchJustify implements BlockTool {
   static readonly feature = {
     id: "DocLibTextAlignStretchJustify",
-    title: "Text Align Stretch Justify",
+    title: "DocLib Text Align Stretch Justify",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="51a1fc5dcfc88bb6"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="17,12 18,12 7,17 7,16 7,18 8,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Text Align Stretch Justify",
+      title: "DocLib Text Align Stretch Justify",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="51a1fc5dcfc88bb6"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="17,12 18,12 7,17 7,16 7,18 8,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTextAlignStretchJustify implements BlockTool {
   }
 
   readonly id = "DocLibTextAlignStretchJustify";
-  readonly title = "Text Align Stretch Justify";
+  readonly title = "DocLib Text Align Stretch Justify";
   readonly category = "format" as const;
   readonly mode = "TextAlignStretchJustify";
   readonly requiresSelection = false;

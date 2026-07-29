@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibRecolorColorPicker implements BlockTool {
   static readonly feature = {
     id: "DocLibRecolorColorPicker",
-    title: "Recolor Color Picker",
+    title: "DocLib Recolor Color Picker",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="937ff43dc65bb02c"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="15,12 10,14 15,10 10,14 4,8 17,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Recolor Color Picker",
+      title: "DocLib Recolor Color Picker",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="937ff43dc65bb02c"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="15,12 10,14 15,10 10,14 4,8 17,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibRecolorColorPicker implements BlockTool {
   }
 
   readonly id = "DocLibRecolorColorPicker";
-  readonly title = "Recolor Color Picker";
+  readonly title = "DocLib Recolor Color Picker";
   readonly category = "media" as const;
   readonly mode = "RecolorColorPicker";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSymbolInsertGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibSymbolInsertGallery",
-    title: "Symbol Insert Gallery",
+    title: "DocLib Symbol Insert Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2e50d2690836f541"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="16,16 10,7 12,7 11,18 9,6 13,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Symbol Insert Gallery",
+      title: "DocLib Symbol Insert Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2e50d2690836f541"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="16,16 10,7 12,7 11,18 9,6 13,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSymbolInsertGallery implements BlockTool {
   }
 
   readonly id = "DocLibSymbolInsertGallery";
-  readonly title = "Symbol Insert Gallery";
+  readonly title = "DocLib Symbol Insert Gallery";
   readonly category = "insert" as const;
   readonly mode = "SymbolInsertGallery";
   readonly requiresSelection = false;

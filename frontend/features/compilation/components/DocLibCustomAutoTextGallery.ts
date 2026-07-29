@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibCustomAutoTextGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibCustomAutoTextGallery",
-    title: "Custom Auto Text Gallery",
+    title: "DocLib Custom Auto Text Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b328bdc71147b7b0"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="13,10 6,16 4,7 17,10 7,9 7,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Custom Auto Text Gallery",
+      title: "DocLib Custom Auto Text Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b328bdc71147b7b0"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="13,10 6,16 4,7 17,10 7,9 7,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibCustomAutoTextGallery implements BlockTool {
   }
 
   readonly id = "DocLibCustomAutoTextGallery";
-  readonly title = "Custom Auto Text Gallery";
+  readonly title = "DocLib Custom Auto Text Gallery";
   readonly category = "format" as const;
   readonly mode = "CustomAutoTextGallery";
   readonly requiresSelection = false;

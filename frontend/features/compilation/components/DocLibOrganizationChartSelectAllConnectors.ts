@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibOrganizationChartSelectAllConnectors implements BlockTool {
   static readonly feature = {
     id: "DocLibOrganizationChartSelectAllConnectors",
-    title: "Organization Chart Select All Connectors",
+    title: "DocLib Organization Chart Select All Connectors",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ddc579575c89ba40"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,14 6,6 11,5 20,17 13,15 15,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Organization Chart Select All Connectors",
+      title: "DocLib Organization Chart Select All Connectors",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ddc579575c89ba40"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,14 6,6 11,5 20,17 13,15 15,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibOrganizationChartSelectAllConnectors implements Block
   }
 
   readonly id = "DocLibOrganizationChartSelectAllConnectors";
-  readonly title = "Organization Chart Select All Connectors";
+  readonly title = "DocLib Organization Chart Select All Connectors";
   readonly category = "media" as const;
   readonly mode = "OrganizationChartSelectAllConnectors";
   readonly requiresSelection = false;

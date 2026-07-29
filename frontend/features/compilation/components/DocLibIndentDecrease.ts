@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibIndentDecrease implements BlockTool {
   static readonly feature = {
     id: "DocLibIndentDecrease",
-    title: "Indent Decrease",
+    title: "DocLib Indent Decrease",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a89816b42d52a3e4"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,20 9,14 15,18 14,11 8,12 14,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Indent Decrease",
+      title: "DocLib Indent Decrease",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a89816b42d52a3e4"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,20 9,14 15,18 14,11 8,12 14,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibIndentDecrease implements BlockTool {
   }
 
   readonly id = "DocLibIndentDecrease";
-  readonly title = "Indent Decrease";
+  readonly title = "DocLib Indent Decrease";
   readonly category = "format" as const;
   readonly mode = "IndentDecrease";
   readonly requiresSelection = false;

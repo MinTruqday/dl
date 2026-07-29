@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibXMLMappingPane implements BlockTool {
   static readonly feature = {
     id: "DocLibXMLMappingPane",
-    title: "XML Mapping Pane",
+    title: "DocLib XML Mapping Pane",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="53089f2b5d0fef2e"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,12 10,13 12,19 5,16 12,9 15,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "XML Mapping Pane",
+      title: "DocLib XML Mapping Pane",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="53089f2b5d0fef2e"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,12 10,13 12,19 5,16 12,9 15,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibXMLMappingPane implements BlockTool {
   }
 
   readonly id = "DocLibXMLMappingPane";
-  readonly title = "XML Mapping Pane";
+  readonly title = "DocLib XML Mapping Pane";
   readonly category = "automation" as const;
   readonly mode = "XMLMappingPane";
   readonly requiresSelection = false;

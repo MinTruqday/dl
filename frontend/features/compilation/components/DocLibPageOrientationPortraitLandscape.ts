@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPageOrientationPortraitLandscape implements BlockTool {
   static readonly feature = {
     id: "DocLibPageOrientationPortraitLandscape",
-    title: "Page Orientation Portrait Landscape",
+    title: "DocLib Page Orientation Portrait Landscape",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cdd2af5651ccc391"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,10 9,5 17,4 12,13 8,17 13,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Page Orientation Portrait Landscape",
+      title: "DocLib Page Orientation Portrait Landscape",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cdd2af5651ccc391"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,10 9,5 17,4 12,13 8,17 13,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPageOrientationPortraitLandscape implements BlockTool
   }
 
   readonly id = "DocLibPageOrientationPortraitLandscape";
-  readonly title = "Page Orientation Portrait Landscape";
+  readonly title = "DocLib Page Orientation Portrait Landscape";
   readonly category = "format" as const;
   readonly mode = "PageOrientationPortraitLandscape";
   readonly requiresSelection = false;

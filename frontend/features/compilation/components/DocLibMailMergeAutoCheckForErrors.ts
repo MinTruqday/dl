@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMailMergeAutoCheckForErrors implements BlockTool {
   static readonly feature = {
     id: "DocLibMailMergeAutoCheckForErrors",
-    title: "Mail Merge Auto Check For Errors",
+    title: "DocLib Mail Merge Auto Check For Errors",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7e3d80eeb3f1e326"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="11,14 13,4 13,7 10,8 7,20 16,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Mail Merge Auto Check For Errors",
+      title: "DocLib Mail Merge Auto Check For Errors",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7e3d80eeb3f1e326"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="11,14 13,4 13,7 10,8 7,20 16,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibMailMergeAutoCheckForErrors implements BlockTool {
   }
 
   readonly id = "DocLibMailMergeAutoCheckForErrors";
-  readonly title = "Mail Merge Auto Check For Errors";
+  readonly title = "DocLib Mail Merge Auto Check For Errors";
   readonly category = "review" as const;
   readonly mode = "MailMergeAutoCheckForErrors";
   readonly requiresSelection = false;

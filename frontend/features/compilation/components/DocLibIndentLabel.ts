@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibIndentLabel implements BlockTool {
   static readonly feature = {
     id: "DocLibIndentLabel",
-    title: "Indent Label",
+    title: "DocLib Indent Label",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c610256a67d6ae87"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,20 7,8 5,14 8,20 15,6 20,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Indent Label",
+      title: "DocLib Indent Label",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c610256a67d6ae87"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,20 7,8 5,14 8,20 15,6 20,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibIndentLabel implements BlockTool {
   }
 
   readonly id = "DocLibIndentLabel";
-  readonly title = "Indent Label";
+  readonly title = "DocLib Indent Label";
   readonly category = "layout" as const;
   readonly mode = "IndentLabel";
   readonly requiresSelection = false;

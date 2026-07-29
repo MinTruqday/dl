@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibEquationNormalText implements BlockTool {
   static readonly feature = {
     id: "DocLibEquationNormalText",
-    title: "Equation Normal Text",
+    title: "DocLib Equation Normal Text",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1555f1143852bc60"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,4 7,7 9,18 5,15 13,20 14,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Equation Normal Text",
+      title: "DocLib Equation Normal Text",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1555f1143852bc60"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,4 7,7 9,18 5,15 13,20 14,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibEquationNormalText implements BlockTool {
   }
 
   readonly id = "DocLibEquationNormalText";
-  readonly title = "Equation Normal Text";
+  readonly title = "DocLib Equation Normal Text";
   readonly category = "format" as const;
   readonly mode = "EquationNormalText";
   readonly requiresSelection = false;

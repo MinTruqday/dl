@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPrintOptionsMenuWord implements BlockTool {
   static readonly feature = {
     id: "DocLibPrintOptionsMenuWord",
-    title: "Print Options Menu Word",
+    title: "DocLib Print Options Menu Word",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3db7cff8ac0a8ce0"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="14,17 7,14 6,14 8,7 11,9 17,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Print Options Menu Word",
+      title: "DocLib Print Options Menu Word",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3db7cff8ac0a8ce0"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="14,17 7,14 6,14 8,7 11,9 17,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPrintOptionsMenuWord implements BlockTool {
   }
 
   readonly id = "DocLibPrintOptionsMenuWord";
-  readonly title = "Print Options Menu Word";
+  readonly title = "DocLib Print Options Menu Word";
   readonly category = "review" as const;
   readonly mode = "PrintOptionsMenuWord";
   readonly requiresSelection = false;

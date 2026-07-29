@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFileSaveAsMenu implements BlockTool {
   static readonly feature = {
     id: "DocLibFileSaveAsMenu",
-    title: "File Save As Menu",
+    title: "DocLib File Save As Menu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="df85d8faefb2eef0"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="6,18 16,16 5,12 4,6 20,8 5,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "File Save As Menu",
+      title: "DocLib File Save As Menu",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="df85d8faefb2eef0"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="6,18 16,16 5,12 4,6 20,8 5,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFileSaveAsMenu implements BlockTool {
   }
 
   readonly id = "DocLibFileSaveAsMenu";
-  readonly title = "File Save As Menu";
+  readonly title = "DocLib File Save As Menu";
   readonly category = "format" as const;
   readonly mode = "FileSaveAsMenu";
   readonly requiresSelection = false;

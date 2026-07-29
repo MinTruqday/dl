@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSVGEdit implements BlockTool {
   static readonly feature = {
     id: "DocLibSVGEdit",
-    title: "SVG Edit",
+    title: "DocLib SVG Edit",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b6618f850ad544cc"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="16,16 11,18 14,13 4,4 15,14 18,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "SVG Edit",
+      title: "DocLib SVG Edit",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b6618f850ad544cc"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="16,16 11,18 14,13 4,4 15,14 18,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSVGEdit implements BlockTool {
   }
 
   readonly id = "DocLibSVGEdit";
-  readonly title = "SVG Edit";
+  readonly title = "DocLib SVG Edit";
   readonly category = "format" as const;
   readonly mode = "SVGEdit";
   readonly requiresSelection = false;

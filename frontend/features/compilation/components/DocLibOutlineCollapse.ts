@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibOutlineCollapse implements BlockTool {
   static readonly feature = {
     id: "DocLibOutlineCollapse",
-    title: "Outline Collapse",
+    title: "DocLib Outline Collapse",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="04401f9653772778"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,17 18,18 19,4 9,5 9,18 17,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Outline Collapse",
+      title: "DocLib Outline Collapse",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="04401f9653772778"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,17 18,18 19,4 9,5 9,18 17,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibOutlineCollapse implements BlockTool {
   }
 
   readonly id = "DocLibOutlineCollapse";
-  readonly title = "Outline Collapse";
+  readonly title = "DocLib Outline Collapse";
   readonly category = "format" as const;
   readonly mode = "OutlineCollapse";
   readonly requiresSelection = false;

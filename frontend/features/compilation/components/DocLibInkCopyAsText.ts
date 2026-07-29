@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibInkCopyAsText implements BlockTool {
   static readonly feature = {
     id: "DocLibInkCopyAsText",
-    title: "Ink Copy As Text",
+    title: "DocLib Ink Copy As Text",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="69b617dc7c4c8792"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,16 10,20 9,12 20,14 10,18 10,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Ink Copy As Text",
+      title: "DocLib Ink Copy As Text",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="69b617dc7c4c8792"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,16 10,20 9,12 20,14 10,18 10,9"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibInkCopyAsText implements BlockTool {
   }
 
   readonly id = "DocLibInkCopyAsText";
-  readonly title = "Ink Copy As Text";
+  readonly title = "DocLib Ink Copy As Text";
   readonly category = "format" as const;
   readonly mode = "InkCopyAsText";
   readonly requiresSelection = false;

@@ -3,7 +3,7 @@ import { BlockTool, API, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPageBorder implements BlockTool {
   static readonly feature = {
     id: "DocLibPageBorder",
-    title: "Page Border",
+    title: "DocLib Page Border",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8d80b670326098a9"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="9,13 16,14 20,15 20,20 6,18 14,19"/></svg>',
     product: "doclib",
   } as const;
@@ -15,7 +15,7 @@ export default class DocLibPageBorder implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "Page Border",
+      title: "DocLib Page Border",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8d80b670326098a9"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="9,13 16,14 20,15 20,20 6,18 14,19"/></svg>',
     };
   }

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSecondCorrectionAlternative implements BlockTool {
   static readonly feature = {
     id: "DocLibSecondCorrectionAlternative",
-    title: "Second Correction Alternative",
+    title: "DocLib Second Correction Alternative",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f877d74da55aaf41"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="14,4 15,13 16,9 9,18 8,7 5,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Second Correction Alternative",
+      title: "DocLib Second Correction Alternative",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f877d74da55aaf41"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="14,4 15,13 16,9 9,18 8,7 5,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSecondCorrectionAlternative implements BlockTool {
   }
 
   readonly id = "DocLibSecondCorrectionAlternative";
-  readonly title = "Second Correction Alternative";
+  readonly title = "DocLib Second Correction Alternative";
   readonly category = "format" as const;
   readonly mode = "SecondCorrectionAlternative";
   readonly requiresSelection = false;

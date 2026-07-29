@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartTitleOptionsDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibChartTitleOptionsDialog",
-    title: "Chart Title Options Dialog",
+    title: "DocLib Chart Title Options Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f3218df9e82dde56"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="9,20 9,15 15,15 5,5 6,17 14,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Title Options Dialog",
+      title: "DocLib Chart Title Options Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f3218df9e82dde56"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="9,20 9,15 15,15 5,5 6,17 14,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartTitleOptionsDialog implements BlockTool {
   }
 
   readonly id = "DocLibChartTitleOptionsDialog";
-  readonly title = "Chart Title Options Dialog";
+  readonly title = "DocLib Chart Title Options Dialog";
   readonly category = "layout" as const;
   readonly mode = "ChartTitleOptionsDialog";
   readonly requiresSelection = false;

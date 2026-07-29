@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPictureSetTransparentColor implements BlockTool {
   static readonly feature = {
     id: "DocLibPictureSetTransparentColor",
-    title: "Picture Set Transparent Color",
+    title: "DocLib Picture Set Transparent Color",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5f3cff0f1b61699d"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="14,13 4,19 14,16 7,8 19,7 19,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Picture Set Transparent Color",
+      title: "DocLib Picture Set Transparent Color",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5f3cff0f1b61699d"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="14,13 4,19 14,16 7,8 19,7 19,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPictureSetTransparentColor implements BlockTool {
   }
 
   readonly id = "DocLibPictureSetTransparentColor";
-  readonly title = "Picture Set Transparent Color";
+  readonly title = "DocLib Picture Set Transparent Color";
   readonly category = "media" as const;
   readonly mode = "PictureSetTransparentColor";
   readonly requiresSelection = false;

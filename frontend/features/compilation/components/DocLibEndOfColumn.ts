@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibEndOfColumn implements BlockTool {
   static readonly feature = {
     id: "DocLibEndOfColumn",
-    title: "End Of Column",
+    title: "DocLib End Of Column",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="03907c72c8a062de"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="7,12 9,16 17,11 17,5 13,14 13,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "End Of Column",
+      title: "DocLib End Of Column",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="03907c72c8a062de"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="7,12 9,16 17,11 17,5 13,14 13,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibEndOfColumn implements BlockTool {
   }
 
   readonly id = "DocLibEndOfColumn";
-  readonly title = "End Of Column";
+  readonly title = "DocLib End Of Column";
   readonly category = "format" as const;
   readonly mode = "EndOfColumn";
   readonly requiresSelection = false;

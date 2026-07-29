@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibExpandCollapse implements BlockTool {
   static readonly feature = {
     id: "DocLibExpandCollapse",
-    title: "Expand Collapse",
+    title: "DocLib Expand Collapse",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6a469c9bb649b933"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="8,6 7,6 16,9 19,4 13,8 16,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Expand Collapse",
+      title: "DocLib Expand Collapse",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6a469c9bb649b933"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="8,6 7,6 16,9 19,4 13,8 16,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibExpandCollapse implements BlockTool {
   }
 
   readonly id = "DocLibExpandCollapse";
-  readonly title = "Expand Collapse";
+  readonly title = "DocLib Expand Collapse";
   readonly category = "format" as const;
   readonly mode = "ExpandCollapse";
   readonly requiresSelection = false;

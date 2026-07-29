@@ -1,9 +1,11 @@
 import { API, BlockTool } from "@editorjs/editorjs";
+import { requestEditorInput } from "./editor-dialog";
+import { uploadEditorAssetAPI } from "@/features/compilation/services/editorjs.service";
 
 export default class DocLibImage implements BlockTool {
   static readonly feature = {
     id: "DocLibImage",
-    title: "Image",
+    title: "DocLib Image",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6c43fb870f979be0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,20 17,20 19,19 6,7 8,14 8,11"/></svg>',
     product: "doclib",
   } as const;
@@ -21,7 +23,7 @@ export default class DocLibImage implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "Image",
+      title: "DocLib Image",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6c43fb870f979be0"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,20 17,20 19,19 6,7 8,14 8,11"/></svg>',
     };
   }
@@ -153,19 +155,12 @@ export default class DocLibImage implements BlockTool {
       input.addEventListener("change", () => {
         if (input.files && input.files[0]) {
           const file = input.files[0];
-          const formData = new FormData();
-          formData.append("file", file);
-
           const endpoint = this.config.endpoints?.byFile || "/api/uploadFile";
 
           uploader.innerHTML =
       '<div style="padding: 20px; font-weight: 500;">Uploading</div>';
 
-          fetch(endpoint, {
-            method: "POST",
-            body: formData,
-          })
-            .then((res) => res.json())
+          uploadEditorAssetAPI(endpoint, file)
             .then((res) => {
               if (res.success === 1 && res.file && res.file.url) {
                 if (this.data.file) this.data.file.url = res.file.url;
@@ -188,9 +183,12 @@ export default class DocLibImage implements BlockTool {
       uploader.appendChild(input);
       outer.appendChild(uploader);
 
-      uploader.addEventListener("contextmenu", (e) => {
+      uploader.addEventListener("contextmenu", async (e) => {
         e.preventDefault();
-        const url = prompt("Enter a direct image URL");
+        const url = await requestEditorInput({
+          title: "DocLib Image",
+          label: "Liên kết ảnh",
+        });
         if (url) {
           if (this.data.file) this.data.file.url = url;
           this.buildUI();

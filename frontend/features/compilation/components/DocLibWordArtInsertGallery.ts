@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWordArtInsertGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibWordArtInsertGallery",
-    title: "Word Art Insert Gallery",
+    title: "DocLib Word Art Insert Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="decd613ec6ae0315"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,5 16,15 15,8 7,8 15,18 9,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Word Art Insert Gallery",
+      title: "DocLib Word Art Insert Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="decd613ec6ae0315"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,5 16,15 15,8 7,8 15,18 9,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibWordArtInsertGallery implements BlockTool {
   }
 
   readonly id = "DocLibWordArtInsertGallery";
-  readonly title = "Word Art Insert Gallery";
+  readonly title = "DocLib Word Art Insert Gallery";
   readonly category = "insert" as const;
   readonly mode = "WordArtInsertGallery";
   readonly requiresSelection = false;

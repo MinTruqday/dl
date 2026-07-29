@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSaveSelectionToWaterMarkGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibSaveSelectionToWaterMarkGallery",
-    title: "Save Selection To Water Mark Gallery",
+    title: "DocLib Save Selection To Water Mark Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="38e83f490740e0f1"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,15 16,9 11,17 7,7 15,19 16,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Save Selection To Water Mark Gallery",
+      title: "DocLib Save Selection To Water Mark Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="38e83f490740e0f1"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,15 16,9 11,17 7,7 15,19 16,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSaveSelectionToWaterMarkGallery implements BlockTool 
   }
 
   readonly id = "DocLibSaveSelectionToWaterMarkGallery";
-  readonly title = "Save Selection To Water Mark Gallery";
+  readonly title = "DocLib Save Selection To Water Mark Gallery";
   readonly category = "format" as const;
   readonly mode = "SaveSelectionToWaterMarkGallery";
   readonly requiresSelection = false;

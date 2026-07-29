@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibParagraphUp implements BlockTool {
   static readonly feature = {
     id: "DocLibParagraphUp",
-    title: "Paragraph Up",
+    title: "DocLib Paragraph Up",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d981efbabb302239"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="17,14 5,20 4,18 4,10 14,15 5,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Paragraph Up",
+      title: "DocLib Paragraph Up",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d981efbabb302239"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="17,14 5,20 4,18 4,10 14,15 5,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibParagraphUp implements BlockTool {
   }
 
   readonly id = "DocLibParagraphUp";
-  readonly title = "Paragraph Up";
+  readonly title = "DocLib Paragraph Up";
   readonly category = "format" as const;
   readonly mode = "ParagraphUp";
   readonly requiresSelection = false;

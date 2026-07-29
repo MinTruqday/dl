@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAutoText implements BlockTool {
   static readonly feature = {
     id: "DocLibAutoText",
-    title: "Auto Text",
+    title: "DocLib Auto Text",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="28dd77c29a58b7ef"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,4 4,11 5,7 17,5 6,6 9,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Auto Text",
+      title: "DocLib Auto Text",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="28dd77c29a58b7ef"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,4 4,11 5,7 17,5 6,6 9,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibAutoText implements BlockTool {
   }
 
   readonly id = "DocLibAutoText";
-  readonly title = "Auto Text";
+  readonly title = "DocLib Auto Text";
   readonly category = "automation" as const;
   readonly mode = "AutoText";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSignaturesStationeryDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibSignaturesStationeryDialog",
-    title: "Signatures Stationery Dialog",
+    title: "DocLib Signatures Stationery Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="85b6702c7cc2e944"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,16 14,14 9,11 16,4 15,19 4,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Signatures Stationery Dialog",
+      title: "DocLib Signatures Stationery Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="85b6702c7cc2e944"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,16 14,14 9,11 16,4 15,19 4,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSignaturesStationeryDialog implements BlockTool {
   }
 
   readonly id = "DocLibSignaturesStationeryDialog";
-  readonly title = "Signatures Stationery Dialog";
+  readonly title = "DocLib Signatures Stationery Dialog";
   readonly category = "format" as const;
   readonly mode = "SignaturesStationeryDialog";
   readonly requiresSelection = false;

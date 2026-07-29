@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibColorPickerLearningToolsWebView implements BlockTool {
   static readonly feature = {
     id: "DocLibColorPickerLearningToolsWebView",
-    title: "Color Picker Learning Tools Web View",
+    title: "DocLib Color Picker Learning Tools Web View",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d0f0cc54ccb1a6bc"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="8,6 4,20 4,11 17,5 20,4 20,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Color Picker Learning Tools Web View",
+      title: "DocLib Color Picker Learning Tools Web View",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d0f0cc54ccb1a6bc"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="8,6 4,20 4,11 17,5 20,4 20,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibColorPickerLearningToolsWebView implements BlockTool 
   }
 
   readonly id = "DocLibColorPickerLearningToolsWebView";
-  readonly title = "Color Picker Learning Tools Web View";
+  readonly title = "DocLib Color Picker Learning Tools Web View";
   readonly category = "table" as const;
   readonly mode = "ColorPickerLearningToolsWebView";
   readonly requiresSelection = false;

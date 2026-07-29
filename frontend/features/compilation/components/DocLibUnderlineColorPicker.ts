@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibUnderlineColorPicker implements BlockTool {
   static readonly feature = {
     id: "DocLibUnderlineColorPicker",
-    title: "Underline Color Picker",
+    title: "DocLib Underline Color Picker",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0c581e36e01f2ed7"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="16,7 17,7 7,18 16,15 11,20 11,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Underline Color Picker",
+      title: "DocLib Underline Color Picker",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0c581e36e01f2ed7"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="16,7 17,7 7,18 16,15 11,20 11,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibUnderlineColorPicker implements BlockTool {
   }
 
   readonly id = "DocLibUnderlineColorPicker";
-  readonly title = "Underline Color Picker";
+  readonly title = "DocLib Underline Color Picker";
   readonly category = "format" as const;
   readonly mode = "UnderlineColorPicker";
   readonly requiresSelection = false;

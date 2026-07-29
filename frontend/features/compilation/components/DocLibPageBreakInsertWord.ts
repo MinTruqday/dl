@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPageBreakInsertWord implements BlockTool {
   static readonly feature = {
     id: "DocLibPageBreakInsertWord",
-    title: "Page Break Insert Word",
+    title: "DocLib Page Break Insert Word",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="30e93b9b5cdf8e9d"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="18,16 12,6 11,6 10,8 11,8 19,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Page Break Insert Word",
+      title: "DocLib Page Break Insert Word",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="30e93b9b5cdf8e9d"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="18,16 12,6 11,6 10,8 11,8 19,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPageBreakInsertWord implements BlockTool {
   }
 
   readonly id = "DocLibPageBreakInsertWord";
-  readonly title = "Page Break Insert Word";
+  readonly title = "DocLib Page Break Insert Word";
   readonly category = "insert" as const;
   readonly mode = "PageBreakInsertWord";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPictureBrightnessAndContrastDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibPictureBrightnessAndContrastDialog",
-    title: "Picture Brightness And Contrast Dialog",
+    title: "DocLib Picture Brightness And Contrast Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2503a8490527c810"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="7,7 19,9 9,9 17,20 7,14 12,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Picture Brightness And Contrast Dialog",
+      title: "DocLib Picture Brightness And Contrast Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2503a8490527c810"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="7,7 19,9 9,9 17,20 7,14 12,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPictureBrightnessAndContrastDialog implements BlockTo
   }
 
   readonly id = "DocLibPictureBrightnessAndContrastDialog";
-  readonly title = "Picture Brightness And Contrast Dialog";
+  readonly title = "DocLib Picture Brightness And Contrast Dialog";
   readonly category = "media" as const;
   readonly mode = "PictureBrightnessAndContrastDialog";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibOfficeExtensionsGetAddinsButtonOnBackstageBelowOpenDivider implements BlockTool {
   static readonly feature = {
     id: "DocLibOfficeExtensionsGetAddinsButtonOnBackstageBelowOpenDivider",
-    title: "Office Extensions Get Addins Button On Backstage Below Open Divider",
+    title: "DocLib Office Extensions Get Addins Button On Backstage Below Open Divider",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="feda1072cdbf2a65"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,18 20,16 5,8 12,20 9,5 9,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Office Extensions Get Addins Button On Backstage Below Open Divider",
+      title: "DocLib Office Extensions Get Addins Button On Backstage Below Open Divider",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="feda1072cdbf2a65"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,18 20,16 5,8 12,20 9,5 9,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibOfficeExtensionsGetAddinsButtonOnBackstageBelowOpenDi
   }
 
   readonly id = "DocLibOfficeExtensionsGetAddinsButtonOnBackstageBelowOpenDivider";
-  readonly title = "Office Extensions Get Addins Button On Backstage Below Open Divider";
+  readonly title = "DocLib Office Extensions Get Addins Button On Backstage Below Open Divider";
   readonly category = "format" as const;
   readonly mode = "OfficeExtensionsGetAddinsButtonOnBackstageBelowOpenDivider";
   readonly requiresSelection = false;

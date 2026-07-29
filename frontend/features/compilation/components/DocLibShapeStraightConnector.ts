@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibShapeStraightConnector implements BlockTool {
   static readonly feature = {
     id: "DocLibShapeStraightConnector",
-    title: "Shape Straight Connector",
+    title: "DocLib Shape Straight Connector",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="80d074654c3430fb"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="13,8 18,20 12,5 18,17 9,10 20,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Shape Straight Connector",
+      title: "DocLib Shape Straight Connector",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="80d074654c3430fb"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="13,8 18,20 12,5 18,17 9,10 20,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibShapeStraightConnector implements BlockTool {
   }
 
   readonly id = "DocLibShapeStraightConnector";
-  readonly title = "Shape Straight Connector";
+  readonly title = "DocLib Shape Straight Connector";
   readonly category = "format" as const;
   readonly mode = "ShapeStraightConnector";
   readonly requiresSelection = false;

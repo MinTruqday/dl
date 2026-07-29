@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartShowDataGrid implements BlockTool {
   static readonly feature = {
     id: "DocLibChartShowDataGrid",
-    title: "Chart Show Data Grid",
+    title: "DocLib Chart Show Data Grid",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f118d34cb5f47e28"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="7,11 11,12 15,10 11,10 14,19 14,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Show Data Grid",
+      title: "DocLib Chart Show Data Grid",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f118d34cb5f47e28"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="7,11 11,12 15,10 11,10 14,19 14,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartShowDataGrid implements BlockTool {
   }
 
   readonly id = "DocLibChartShowDataGrid";
-  readonly title = "Chart Show Data Grid";
+  readonly title = "DocLib Chart Show Data Grid";
   readonly category = "format" as const;
   readonly mode = "ChartShowDataGrid";
   readonly requiresSelection = false;

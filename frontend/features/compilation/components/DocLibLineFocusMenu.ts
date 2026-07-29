@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLineFocusMenu implements BlockTool {
   static readonly feature = {
     id: "DocLibLineFocusMenu",
-    title: "Line Focus Menu",
+    title: "DocLib Line Focus Menu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="695bb3a5c97313a1"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="7,10 13,16 18,17 6,12 9,9 10,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Line Focus Menu",
+      title: "DocLib Line Focus Menu",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="695bb3a5c97313a1"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="7,10 13,16 18,17 6,12 9,9 10,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibLineFocusMenu implements BlockTool {
   }
 
   readonly id = "DocLibLineFocusMenu";
-  readonly title = "Line Focus Menu";
+  readonly title = "DocLib Line Focus Menu";
   readonly category = "table" as const;
   readonly mode = "LineFocusMenu";
   readonly requiresSelection = false;

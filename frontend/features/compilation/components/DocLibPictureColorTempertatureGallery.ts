@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPictureColorTempertatureGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibPictureColorTempertatureGallery",
-    title: "Picture Color Tempertature Gallery",
+    title: "DocLib Picture Color Tempertature Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6ae111003d3454ae"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="8,8 4,4 14,5 20,8 13,19 6,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Picture Color Tempertature Gallery",
+      title: "DocLib Picture Color Tempertature Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6ae111003d3454ae"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="8,8 4,4 14,5 20,8 13,19 6,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPictureColorTempertatureGallery implements BlockTool 
   }
 
   readonly id = "DocLibPictureColorTempertatureGallery";
-  readonly title = "Picture Color Tempertature Gallery";
+  readonly title = "DocLib Picture Color Tempertature Gallery";
   readonly category = "media" as const;
   readonly mode = "PictureColorTempertatureGallery";
   readonly requiresSelection = false;

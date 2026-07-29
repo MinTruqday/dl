@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAutoAlternativeText implements BlockTool {
   static readonly feature = {
     id: "DocLibAutoAlternativeText",
-    title: "Auto Alternative Text",
+    title: "DocLib Auto Alternative Text",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="73cb7c1ac6b33b42"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,20 9,13 15,13 12,19 11,12 8,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Auto Alternative Text",
+      title: "DocLib Auto Alternative Text",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="73cb7c1ac6b33b42"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,20 9,13 15,13 12,19 11,12 8,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibAutoAlternativeText implements BlockTool {
   }
 
   readonly id = "DocLibAutoAlternativeText";
-  readonly title = "Auto Alternative Text";
+  readonly title = "DocLib Auto Alternative Text";
   readonly category = "media" as const;
   readonly mode = "AutoAlternativeText";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibColumnsLeft implements BlockTool {
   static readonly feature = {
     id: "DocLibColumnsLeft",
-    title: "Columns Left",
+    title: "DocLib Columns Left",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e2dd2fbd04422b60"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,4 17,6 8,19 13,15 19,19 12,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Columns Left",
+      title: "DocLib Columns Left",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e2dd2fbd04422b60"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="9,4 17,6 8,19 13,15 19,19 12,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibColumnsLeft implements BlockTool {
   }
 
   readonly id = "DocLibColumnsLeft";
-  readonly title = "Columns Left";
+  readonly title = "DocLib Columns Left";
   readonly category = "layout" as const;
   readonly mode = "ColumnsLeft";
   readonly requiresSelection = false;

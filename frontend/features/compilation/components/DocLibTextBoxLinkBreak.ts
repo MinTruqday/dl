@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextBoxLinkBreak implements BlockTool {
   static readonly feature = {
     id: "DocLibTextBoxLinkBreak",
-    title: "Text Box Link Break",
+    title: "DocLib Text Box Link Break",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3903d812bd119a1f"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,7 16,5 6,4 5,18 17,12 13,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Text Box Link Break",
+      title: "DocLib Text Box Link Break",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3903d812bd119a1f"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,7 16,5 6,4 5,18 17,12 13,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTextBoxLinkBreak implements BlockTool {
   }
 
   readonly id = "DocLibTextBoxLinkBreak";
-  readonly title = "Text Box Link Break";
+  readonly title = "DocLib Text Box Link Break";
   readonly category = "format" as const;
   readonly mode = "TextBoxLinkBreak";
   readonly requiresSelection = false;

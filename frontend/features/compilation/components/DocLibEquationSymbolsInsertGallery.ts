@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibEquationSymbolsInsertGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibEquationSymbolsInsertGallery",
-    title: "Equation Symbols Insert Gallery",
+    title: "DocLib Equation Symbols Insert Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bd2951c1ff12b46b"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="6,11 17,10 4,5 14,9 13,6 11,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Equation Symbols Insert Gallery",
+      title: "DocLib Equation Symbols Insert Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bd2951c1ff12b46b"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="6,11 17,10 4,5 14,9 13,6 11,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibEquationSymbolsInsertGallery implements BlockTool {
   }
 
   readonly id = "DocLibEquationSymbolsInsertGallery";
-  readonly title = "Equation Symbols Insert Gallery";
+  readonly title = "DocLib Equation Symbols Insert Gallery";
   readonly category = "format" as const;
   readonly mode = "EquationSymbolsInsertGallery";
   readonly requiresSelection = false;

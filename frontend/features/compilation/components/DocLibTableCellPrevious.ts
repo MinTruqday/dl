@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableCellPrevious implements BlockTool {
   static readonly feature = {
     id: "DocLibTableCellPrevious",
-    title: "Table Cell Previous",
+    title: "DocLib Table Cell Previous",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5c69d90dd7753166"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="11,7 17,17 15,19 19,4 5,17 15,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Table Cell Previous",
+      title: "DocLib Table Cell Previous",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5c69d90dd7753166"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="11,7 17,17 15,19 19,4 5,17 15,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTableCellPrevious implements BlockTool {
   }
 
   readonly id = "DocLibTableCellPrevious";
-  readonly title = "Table Cell Previous";
+  readonly title = "DocLib Table Cell Previous";
   readonly category = "format" as const;
   readonly mode = "TableCellPrevious";
   readonly requiresSelection = false;

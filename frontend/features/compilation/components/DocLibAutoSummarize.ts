@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAutoSummarize implements BlockTool {
   static readonly feature = {
     id: "DocLibAutoSummarize",
-    title: "Auto Summarize",
+    title: "DocLib Auto Summarize",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="99e7ecfd16e894d9"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="4,14 19,19 9,15 16,17 20,12 19,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Auto Summarize",
+      title: "DocLib Auto Summarize",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="99e7ecfd16e894d9"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="4,14 19,19 9,15 16,17 20,12 19,9"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibAutoSummarize implements BlockTool {
   }
 
   readonly id = "DocLibAutoSummarize";
-  readonly title = "Auto Summarize";
+  readonly title = "DocLib Auto Summarize";
   readonly category = "format" as const;
   readonly mode = "AutoSummarize";
   readonly requiresSelection = false;

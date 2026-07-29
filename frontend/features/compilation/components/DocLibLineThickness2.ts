@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLineThickness2 implements BlockTool {
   static readonly feature = {
     id: "DocLibLineThickness2",
-    title: "Line Thickness2",
+    title: "DocLib Line Thickness2",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="05662393bc75290e"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="9,4 5,15 5,19 11,18 20,16 15,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Line Thickness2",
+      title: "DocLib Line Thickness2",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="05662393bc75290e"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="9,4 5,15 5,19 11,18 20,16 15,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibLineThickness2 implements BlockTool {
   }
 
   readonly id = "DocLibLineThickness2";
-  readonly title = "Line Thickness2";
+  readonly title = "DocLib Line Thickness2";
   readonly category = "format" as const;
   readonly mode = "LineThickness2";
   readonly requiresSelection = false;

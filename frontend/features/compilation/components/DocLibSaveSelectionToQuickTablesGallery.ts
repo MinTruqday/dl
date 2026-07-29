@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSaveSelectionToQuickTablesGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibSaveSelectionToQuickTablesGallery",
-    title: "Save Selection To Quick Tables Gallery",
+    title: "DocLib Save Selection To Quick Tables Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7e007a5aca6c80e1"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="11,4 7,9 19,10 13,8 18,19 4,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Save Selection To Quick Tables Gallery",
+      title: "DocLib Save Selection To Quick Tables Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7e007a5aca6c80e1"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="11,4 7,9 19,10 13,8 18,19 4,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSaveSelectionToQuickTablesGallery implements BlockToo
   }
 
   readonly id = "DocLibSaveSelectionToQuickTablesGallery";
-  readonly title = "Save Selection To Quick Tables Gallery";
+  readonly title = "DocLib Save Selection To Quick Tables Gallery";
   readonly category = "table" as const;
   readonly mode = "SaveSelectionToQuickTablesGallery";
   readonly requiresSelection = false;

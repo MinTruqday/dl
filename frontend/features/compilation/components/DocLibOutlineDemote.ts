@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibOutlineDemote implements BlockTool {
   static readonly feature = {
     id: "DocLibOutlineDemote",
-    title: "Outline Demote",
+    title: "DocLib Outline Demote",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ff180a1d9b08372a"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="4,11 14,16 6,12 8,12 16,15 13,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Outline Demote",
+      title: "DocLib Outline Demote",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ff180a1d9b08372a"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="4,11 14,16 6,12 8,12 16,15 13,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibOutlineDemote implements BlockTool {
   }
 
   readonly id = "DocLibOutlineDemote";
-  readonly title = "Outline Demote";
+  readonly title = "DocLib Outline Demote";
   readonly category = "format" as const;
   readonly mode = "OutlineDemote";
   readonly requiresSelection = false;

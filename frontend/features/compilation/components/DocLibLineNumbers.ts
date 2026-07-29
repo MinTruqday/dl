@@ -3,7 +3,7 @@ import { BlockTool, API, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLineNumbers implements BlockTool {
   static readonly feature = {
     id: "DocLibLineNumbers",
-    title: "Line Numbers",
+    title: "DocLib Line Numbers",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b32985390069eb6c"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="13,11 18,10 4,7 18,10 6,19 19,6"/></svg>',
     product: "doclib",
   } as const;
@@ -15,7 +15,7 @@ export default class DocLibLineNumbers implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "Line Numbers",
+      title: "DocLib Line Numbers",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b32985390069eb6c"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="13,11 18,10 4,7 18,10 6,19 19,6"/></svg>',
     };
   }

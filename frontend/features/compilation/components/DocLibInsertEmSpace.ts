@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibInsertEmSpace implements BlockTool {
   static readonly feature = {
     id: "DocLibInsertEmSpace",
-    title: "Insert Em Space",
+    title: "DocLib Insert Em Space",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3710fc90adca1b76"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,20 18,12 7,19 14,20 20,8 4,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Insert Em Space",
+      title: "DocLib Insert Em Space",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3710fc90adca1b76"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,20 18,12 7,19 14,20 20,8 4,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibInsertEmSpace implements BlockTool {
   }
 
   readonly id = "DocLibInsertEmSpace";
-  readonly title = "Insert Em Space";
+  readonly title = "DocLib Insert Em Space";
   readonly category = "format" as const;
   readonly mode = "InsertEmSpace";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSaveSelectionToPageNumberBottom implements BlockTool {
   static readonly feature = {
     id: "DocLibSaveSelectionToPageNumberBottom",
-    title: "Save Selection To Page Number Bottom",
+    title: "DocLib Save Selection To Page Number Bottom",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="903b8564cafb200c"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="12,12 18,19 19,17 19,16 18,19 16,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Save Selection To Page Number Bottom",
+      title: "DocLib Save Selection To Page Number Bottom",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="903b8564cafb200c"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="12,12 18,19 19,17 19,16 18,19 16,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSaveSelectionToPageNumberBottom implements BlockTool 
   }
 
   readonly id = "DocLibSaveSelectionToPageNumberBottom";
-  readonly title = "Save Selection To Page Number Bottom";
+  readonly title = "DocLib Save Selection To Page Number Bottom";
   readonly category = "insert" as const;
   readonly mode = "SaveSelectionToPageNumberBottom";
   readonly requiresSelection = false;

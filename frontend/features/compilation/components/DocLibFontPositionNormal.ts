@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFontPositionNormal implements BlockTool {
   static readonly feature = {
     id: "DocLibFontPositionNormal",
-    title: "Font Position Normal",
+    title: "DocLib Font Position Normal",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="436070c94626799b"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,15 14,18 6,8 6,6 5,4 18,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Font Position Normal",
+      title: "DocLib Font Position Normal",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="436070c94626799b"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,15 14,18 6,8 6,6 5,4 18,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFontPositionNormal implements BlockTool {
   }
 
   readonly id = "DocLibFontPositionNormal";
-  readonly title = "Font Position Normal";
+  readonly title = "DocLib Font Position Normal";
   readonly category = "format" as const;
   readonly mode = "FontPositionNormal";
   readonly requiresSelection = false;

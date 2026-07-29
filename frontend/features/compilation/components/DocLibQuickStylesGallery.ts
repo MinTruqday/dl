@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibQuickStylesGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibQuickStylesGallery",
-    title: "Quick Styles Gallery",
+    title: "DocLib Quick Styles Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="efb6ad6ed845e6ae"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="5,16 7,12 16,5 13,8 8,7 11,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Quick Styles Gallery",
+      title: "DocLib Quick Styles Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="efb6ad6ed845e6ae"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="5,16 7,12 16,5 13,8 8,7 11,6"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibQuickStylesGallery implements BlockTool {
   }
 
   readonly id = "DocLibQuickStylesGallery";
-  readonly title = "Quick Styles Gallery";
+  readonly title = "DocLib Quick Styles Gallery";
   readonly category = "format" as const;
   readonly mode = "QuickStylesGallery";
   readonly requiresSelection = false;

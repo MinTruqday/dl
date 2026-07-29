@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPageSizeMorePaperSizesDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibPageSizeMorePaperSizesDialog",
-    title: "Page Size More Paper Sizes Dialog",
+    title: "DocLib Page Size More Paper Sizes Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d8c6bcd8f0425868"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="16,15 5,16 6,19 7,6 4,13 19,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Page Size More Paper Sizes Dialog",
+      title: "DocLib Page Size More Paper Sizes Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d8c6bcd8f0425868"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="16,15 5,16 6,19 7,6 4,13 19,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPageSizeMorePaperSizesDialog implements BlockTool {
   }
 
   readonly id = "DocLibPageSizeMorePaperSizesDialog";
-  readonly title = "Page Size More Paper Sizes Dialog";
+  readonly title = "DocLib Page Size More Paper Sizes Dialog";
   readonly category = "layout" as const;
   readonly mode = "PageSizeMorePaperSizesDialog";
   readonly requiresSelection = false;

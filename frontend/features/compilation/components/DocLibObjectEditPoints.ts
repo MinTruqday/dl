@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibObjectEditPoints implements BlockTool {
   static readonly feature = {
     id: "DocLibObjectEditPoints",
-    title: "Object Edit Points",
+    title: "DocLib Object Edit Points",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e600e0bf1e10df45"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="13,4 7,8 17,20 6,5 7,18 14,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Object Edit Points",
+      title: "DocLib Object Edit Points",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e600e0bf1e10df45"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="13,4 7,8 17,20 6,5 7,18 14,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibObjectEditPoints implements BlockTool {
   }
 
   readonly id = "DocLibObjectEditPoints";
-  readonly title = "Object Edit Points";
+  readonly title = "DocLib Object Edit Points";
   readonly category = "format" as const;
   readonly mode = "ObjectEditPoints";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibObjectSizeDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibObjectSizeDialog",
-    title: "Object Size Dialog",
+    title: "DocLib Object Size Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f2125b4ab0ee3a58"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,5 10,10 10,4 11,7 14,5 8,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Object Size Dialog",
+      title: "DocLib Object Size Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f2125b4ab0ee3a58"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,5 10,10 10,4 11,7 14,5 8,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibObjectSizeDialog implements BlockTool {
   }
 
   readonly id = "DocLibObjectSizeDialog";
-  readonly title = "Object Size Dialog";
+  readonly title = "DocLib Object Size Dialog";
   readonly category = "format" as const;
   readonly mode = "ObjectSizeDialog";
   readonly requiresSelection = false;

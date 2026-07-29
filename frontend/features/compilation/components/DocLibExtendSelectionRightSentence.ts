@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibExtendSelectionRightSentence implements BlockTool {
   static readonly feature = {
     id: "DocLibExtendSelectionRightSentence",
-    title: "Extend Selection Right Sentence",
+    title: "DocLib Extend Selection Right Sentence",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="99996382d741c772"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,4 18,15 15,18 16,16 7,8 4,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Extend Selection Right Sentence",
+      title: "DocLib Extend Selection Right Sentence",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="99996382d741c772"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,4 18,15 15,18 16,16 7,8 4,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibExtendSelectionRightSentence implements BlockTool {
   }
 
   readonly id = "DocLibExtendSelectionRightSentence";
-  readonly title = "Extend Selection Right Sentence";
+  readonly title = "DocLib Extend Selection Right Sentence";
   readonly category = "format" as const;
   readonly mode = "ExtendSelectionRightSentence";
   readonly requiresSelection = false;

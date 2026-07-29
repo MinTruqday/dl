@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibShowCommentsPane implements BlockTool {
   static readonly feature = {
     id: "DocLibShowCommentsPane",
-    title: "Show Comments Pane",
+    title: "DocLib Show Comments Pane",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="97a9dabf6dcb35be"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="19,20 18,8 11,20 6,7 14,6 4,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Show Comments Pane",
+      title: "DocLib Show Comments Pane",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="97a9dabf6dcb35be"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="19,20 18,8 11,20 6,7 14,6 4,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibShowCommentsPane implements BlockTool {
   }
 
   readonly id = "DocLibShowCommentsPane";
-  readonly title = "Show Comments Pane";
+  readonly title = "DocLib Show Comments Pane";
   readonly category = "review" as const;
   readonly mode = "ShowCommentsPane";
   readonly requiresSelection = false;

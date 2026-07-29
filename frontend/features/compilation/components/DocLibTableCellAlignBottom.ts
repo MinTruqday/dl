@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableCellAlignBottom implements BlockTool {
   static readonly feature = {
     id: "DocLibTableCellAlignBottom",
-    title: "Table Cell Align Bottom",
+    title: "DocLib Table Cell Align Bottom",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3f115ae4669e729b"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="16,4 9,11 4,9 16,6 18,4 12,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Table Cell Align Bottom",
+      title: "DocLib Table Cell Align Bottom",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3f115ae4669e729b"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="16,4 9,11 4,9 16,6 18,4 12,6"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTableCellAlignBottom implements BlockTool {
   }
 
   readonly id = "DocLibTableCellAlignBottom";
-  readonly title = "Table Cell Align Bottom";
+  readonly title = "DocLib Table Cell Align Bottom";
   readonly category = "format" as const;
   readonly mode = "TableCellAlignBottom";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibHyphenationMenu implements BlockTool {
   static readonly feature = {
     id: "DocLibHyphenationMenu",
-    title: "Hyphenation Menu",
+    title: "DocLib Hyphenation Menu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d494824f76c26385"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="12,16 15,15 20,11 18,18 7,4 20,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Hyphenation Menu",
+      title: "DocLib Hyphenation Menu",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d494824f76c26385"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="12,16 15,15 20,11 18,18 7,4 20,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibHyphenationMenu implements BlockTool {
   }
 
   readonly id = "DocLibHyphenationMenu";
-  readonly title = "Hyphenation Menu";
+  readonly title = "DocLib Hyphenation Menu";
   readonly category = "layout" as const;
   readonly mode = "HyphenationMenu";
   readonly requiresSelection = false;

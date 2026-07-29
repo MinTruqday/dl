@@ -1,9 +1,10 @@
 import { API, BlockTool } from "@editorjs/editorjs";
+import { showEditorNotice } from "./editor-dialog";
 
 export default class DocLibButton implements BlockTool {
   static readonly feature = {
     id: "DocLibButton",
-    title: "Button",
+    title: "DocLib Button",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="085088b8d1ea9900"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,16 4,18 9,17 4,4 10,11 18,18"/></svg>',
     product: "doclib",
   } as const;
@@ -41,7 +42,7 @@ export default class DocLibButton implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "Button",
+      title: "DocLib Button",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="085088b8d1ea9900"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="12,16 4,18 9,17 4,4 10,11 18,18"/></svg>',
     };
   }
@@ -138,7 +139,7 @@ export default class DocLibButton implements BlockTool {
 
     this.registButton.addEventListener("click", () => {
       if (!this.linkInput?.textContent || !this.textInput?.textContent) {
-        alert("A label and URL are required");
+        showEditorNotice("Thiếu thông tin", "Nhập nhãn và liên kết cho nút");
         return;
       }
       this.data = {

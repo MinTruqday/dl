@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWordArtVerticalText implements BlockTool {
   static readonly feature = {
     id: "DocLibWordArtVerticalText",
-    title: "Word Art Vertical Text",
+    title: "DocLib Word Art Vertical Text",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b1569d8808833fcf"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="11,5 8,4 12,16 16,7 4,10 9,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Word Art Vertical Text",
+      title: "DocLib Word Art Vertical Text",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b1569d8808833fcf"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="11,5 8,4 12,16 16,7 4,10 9,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibWordArtVerticalText implements BlockTool {
   }
 
   readonly id = "DocLibWordArtVerticalText";
-  readonly title = "Word Art Vertical Text";
+  readonly title = "DocLib Word Art Vertical Text";
   readonly category = "format" as const;
   readonly mode = "WordArtVerticalText";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMasterDocumentMergeSubdocuments implements BlockTool {
   static readonly feature = {
     id: "DocLibMasterDocumentMergeSubdocuments",
-    title: "Master Document Merge Subdocuments",
+    title: "DocLib Master Document Merge Subdocuments",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6bfe03b47fdb7dc5"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="9,20 7,14 12,19 10,14 20,20 12,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Master Document Merge Subdocuments",
+      title: "DocLib Master Document Merge Subdocuments",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6bfe03b47fdb7dc5"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="9,20 7,14 12,19 10,14 20,20 12,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibMasterDocumentMergeSubdocuments implements BlockTool 
   }
 
   readonly id = "DocLibMasterDocumentMergeSubdocuments";
-  readonly title = "Master Document Merge Subdocuments";
+  readonly title = "DocLib Master Document Merge Subdocuments";
   readonly category = "format" as const;
   readonly mode = "MasterDocumentMergeSubdocuments";
   readonly requiresSelection = false;

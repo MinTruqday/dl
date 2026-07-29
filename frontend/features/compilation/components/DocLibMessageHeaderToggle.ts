@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMessageHeaderToggle implements BlockTool {
   static readonly feature = {
     id: "DocLibMessageHeaderToggle",
-    title: "Message Header Toggle",
+    title: "DocLib Message Header Toggle",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d59b5e6dce56e767"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="13,6 13,11 6,5 14,5 19,11 12,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Message Header Toggle",
+      title: "DocLib Message Header Toggle",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d59b5e6dce56e767"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="13,6 13,11 6,5 14,5 19,11 12,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibMessageHeaderToggle implements BlockTool {
   }
 
   readonly id = "DocLibMessageHeaderToggle";
-  readonly title = "Message Header Toggle";
+  readonly title = "DocLib Message Header Toggle";
   readonly category = "format" as const;
   readonly mode = "MessageHeaderToggle";
   readonly requiresSelection = false;

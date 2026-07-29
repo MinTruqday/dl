@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLoopQA implements BlockTool {
   static readonly feature = {
     id: "DocLibLoopQA",
-    title: "Loop QA",
+    title: "DocLib Loop QA",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d25d13d1155b41e4"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,12 6,9 8,10 18,11 7,17 10,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Loop QA",
+      title: "DocLib Loop QA",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d25d13d1155b41e4"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,12 6,9 8,10 18,11 7,17 10,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibLoopQA implements BlockTool {
   }
 
   readonly id = "DocLibLoopQA";
-  readonly title = "Loop QA";
+  readonly title = "DocLib Loop QA";
   readonly category = "insert" as const;
   readonly mode = "LoopQA";
   readonly requiresSelection = false;

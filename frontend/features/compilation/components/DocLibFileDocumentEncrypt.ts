@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFileDocumentEncrypt implements BlockTool {
   static readonly feature = {
     id: "DocLibFileDocumentEncrypt",
-    title: "File Document Encrypt",
+    title: "DocLib File Document Encrypt",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f0876ad92188e36b"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="6,20 8,17 20,4 10,9 9,11 7,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "File Document Encrypt",
+      title: "DocLib File Document Encrypt",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f0876ad92188e36b"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="6,20 8,17 20,4 10,9 9,11 7,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFileDocumentEncrypt implements BlockTool {
   }
 
   readonly id = "DocLibFileDocumentEncrypt";
-  readonly title = "File Document Encrypt";
+  readonly title = "DocLib File Document Encrypt";
   readonly category = "format" as const;
   readonly mode = "FileDocumentEncrypt";
   readonly requiresSelection = false;

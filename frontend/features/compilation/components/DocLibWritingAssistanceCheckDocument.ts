@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWritingAssistanceCheckDocument implements BlockTool {
   static readonly feature = {
     id: "DocLibWritingAssistanceCheckDocument",
-    title: "Writing Assistance Check Document",
+    title: "DocLib Writing Assistance Check Document",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ee3310587092caa9"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="4,4 20,7 14,14 19,20 17,13 17,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Writing Assistance Check Document",
+      title: "DocLib Writing Assistance Check Document",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ee3310587092caa9"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="4,4 20,7 14,14 19,20 17,13 17,6"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibWritingAssistanceCheckDocument implements BlockTool {
   }
 
   readonly id = "DocLibWritingAssistanceCheckDocument";
-  readonly title = "Writing Assistance Check Document";
+  readonly title = "DocLib Writing Assistance Check Document";
   readonly category = "format" as const;
   readonly mode = "WritingAssistanceCheckDocument";
   readonly requiresSelection = false;

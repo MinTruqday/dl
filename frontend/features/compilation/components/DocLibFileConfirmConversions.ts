@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFileConfirmConversions implements BlockTool {
   static readonly feature = {
     id: "DocLibFileConfirmConversions",
-    title: "File Confirm Conversions",
+    title: "DocLib File Confirm Conversions",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f484216c30ec6d9d"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,17 20,10 18,19 11,8 16,18 6,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "File Confirm Conversions",
+      title: "DocLib File Confirm Conversions",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f484216c30ec6d9d"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,17 20,10 18,19 11,8 16,18 6,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFileConfirmConversions implements BlockTool {
   }
 
   readonly id = "DocLibFileConfirmConversions";
-  readonly title = "File Confirm Conversions";
+  readonly title = "DocLib File Confirm Conversions";
   readonly category = "format" as const;
   readonly mode = "FileConfirmConversions";
   readonly requiresSelection = false;

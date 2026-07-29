@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLineNumbersMenu implements BlockTool {
   static readonly feature = {
     id: "DocLibLineNumbersMenu",
-    title: "Line Numbers Menu",
+    title: "DocLib Line Numbers Menu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a8ccbed8e9585610"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="19,4 7,16 16,7 5,20 10,6 7,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Line Numbers Menu",
+      title: "DocLib Line Numbers Menu",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a8ccbed8e9585610"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="19,4 7,16 16,7 5,20 10,6 7,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibLineNumbersMenu implements BlockTool {
   }
 
   readonly id = "DocLibLineNumbersMenu";
-  readonly title = "Line Numbers Menu";
+  readonly title = "DocLib Line Numbers Menu";
   readonly category = "layout" as const;
   readonly mode = "LineNumbersMenu";
   readonly requiresSelection = false;

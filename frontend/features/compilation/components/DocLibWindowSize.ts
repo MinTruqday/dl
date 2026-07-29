@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWindowSize implements BlockTool {
   static readonly feature = {
     id: "DocLibWindowSize",
-    title: "Window Size",
+    title: "DocLib Window Size",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8edcb067189fb52c"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,20 10,5 11,10 15,14 12,18 11,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Window Size",
+      title: "DocLib Window Size",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8edcb067189fb52c"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,20 10,5 11,10 15,14 12,18 11,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibWindowSize implements BlockTool {
   }
 
   readonly id = "DocLibWindowSize";
-  readonly title = "Window Size";
+  readonly title = "DocLib Window Size";
   readonly category = "format" as const;
   readonly mode = "WindowSize";
   readonly requiresSelection = false;

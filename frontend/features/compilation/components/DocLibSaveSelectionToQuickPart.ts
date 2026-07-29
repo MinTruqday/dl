@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSaveSelectionToQuickPart implements BlockTool {
   static readonly feature = {
     id: "DocLibSaveSelectionToQuickPart",
-    title: "Save Selection To Quick Part",
+    title: "DocLib Save Selection To Quick Part",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c6f7602586a9373e"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,13 15,7 19,20 8,15 8,13 18,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Save Selection To Quick Part",
+      title: "DocLib Save Selection To Quick Part",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c6f7602586a9373e"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,13 15,7 19,20 8,15 8,13 18,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSaveSelectionToQuickPart implements BlockTool {
   }
 
   readonly id = "DocLibSaveSelectionToQuickPart";
-  readonly title = "Save Selection To Quick Part";
+  readonly title = "DocLib Save Selection To Quick Part";
   readonly category = "automation" as const;
   readonly mode = "SaveSelectionToQuickPart";
   readonly requiresSelection = true;

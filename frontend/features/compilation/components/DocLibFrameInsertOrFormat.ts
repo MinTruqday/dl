@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFrameInsertOrFormat implements BlockTool {
   static readonly feature = {
     id: "DocLibFrameInsertOrFormat",
-    title: "Frame Insert Or Format",
+    title: "DocLib Frame Insert Or Format",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6a19bda246239aab"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="8,12 6,13 6,5 5,5 7,8 14,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Frame Insert Or Format",
+      title: "DocLib Frame Insert Or Format",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6a19bda246239aab"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="8,12 6,13 6,5 5,5 7,8 14,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFrameInsertOrFormat implements BlockTool {
   }
 
   readonly id = "DocLibFrameInsertOrFormat";
-  readonly title = "Frame Insert Or Format";
+  readonly title = "DocLib Frame Insert Or Format";
   readonly category = "format" as const;
   readonly mode = "FrameInsertOrFormat";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibParagraphDistributed implements BlockTool {
   static readonly feature = {
     id: "DocLibParagraphDistributed",
-    title: "Paragraph Distributed",
+    title: "DocLib Paragraph Distributed",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e5d7e0e498f6c27f"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,15 7,11 20,12 11,12 16,18 5,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Paragraph Distributed",
+      title: "DocLib Paragraph Distributed",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e5d7e0e498f6c27f"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="12,15 7,11 20,12 11,12 16,18 5,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibParagraphDistributed implements BlockTool {
   }
 
   readonly id = "DocLibParagraphDistributed";
-  readonly title = "Paragraph Distributed";
+  readonly title = "DocLib Paragraph Distributed";
   readonly category = "format" as const;
   readonly mode = "ParagraphDistributed";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPictureRecolorMoreColorsDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibPictureRecolorMoreColorsDialog",
-    title: "Picture Recolor More Colors Dialog",
+    title: "DocLib Picture Recolor More Colors Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0df567812f4e6a76"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,11 5,14 17,14 8,20 16,8 10,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Picture Recolor More Colors Dialog",
+      title: "DocLib Picture Recolor More Colors Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0df567812f4e6a76"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,11 5,14 17,14 8,20 16,8 10,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPictureRecolorMoreColorsDialog implements BlockTool {
   }
 
   readonly id = "DocLibPictureRecolorMoreColorsDialog";
-  readonly title = "Picture Recolor More Colors Dialog";
+  readonly title = "DocLib Picture Recolor More Colors Dialog";
   readonly category = "media" as const;
   readonly mode = "PictureRecolorMoreColorsDialog";
   readonly requiresSelection = false;

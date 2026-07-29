@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPasteAsNestedTable implements BlockTool {
   static readonly feature = {
     id: "DocLibPasteAsNestedTable",
-    title: "Paste As Nested Table",
+    title: "DocLib Paste As Nested Table",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="17ba21e5efaff214"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,20 20,12 5,9 8,7 4,19 4,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Paste As Nested Table",
+      title: "DocLib Paste As Nested Table",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="17ba21e5efaff214"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,20 20,12 5,9 8,7 4,19 4,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPasteAsNestedTable implements BlockTool {
   }
 
   readonly id = "DocLibPasteAsNestedTable";
-  readonly title = "Paste As Nested Table";
+  readonly title = "DocLib Paste As Nested Table";
   readonly category = "format" as const;
   readonly mode = "PasteAsNestedTable";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFootnoteContinuationSeparator implements BlockTool {
   static readonly feature = {
     id: "DocLibFootnoteContinuationSeparator",
-    title: "Footnote Continuation Separator",
+    title: "DocLib Footnote Continuation Separator",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fc9256f7fdecbf07"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,14 5,13 19,19 8,11 5,20 16,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Footnote Continuation Separator",
+      title: "DocLib Footnote Continuation Separator",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fc9256f7fdecbf07"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,14 5,13 19,19 8,11 5,20 16,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFootnoteContinuationSeparator implements BlockTool {
   }
 
   readonly id = "DocLibFootnoteContinuationSeparator";
-  readonly title = "Footnote Continuation Separator";
+  readonly title = "DocLib Footnote Continuation Separator";
   readonly category = "format" as const;
   readonly mode = "FootnoteContinuationSeparator";
   readonly requiresSelection = false;

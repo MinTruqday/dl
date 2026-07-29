@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLearningToolsWebViewPageColorSepia implements BlockTool {
   static readonly feature = {
     id: "DocLibLearningToolsWebViewPageColorSepia",
-    title: "Learning Tools Web View Page Color Sepia",
+    title: "DocLib Learning Tools Web View Page Color Sepia",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ba70eb37778412fe"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="20,14 18,8 4,17 5,20 14,18 10,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Learning Tools Web View Page Color Sepia",
+      title: "DocLib Learning Tools Web View Page Color Sepia",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ba70eb37778412fe"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="20,14 18,8 4,17 5,20 14,18 10,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibLearningToolsWebViewPageColorSepia implements BlockTo
   }
 
   readonly id = "DocLibLearningToolsWebViewPageColorSepia";
-  readonly title = "Learning Tools Web View Page Color Sepia";
+  readonly title = "DocLib Learning Tools Web View Page Color Sepia";
   readonly category = "table" as const;
   readonly mode = "LearningToolsWebViewPageColorSepia";
   readonly requiresSelection = false;

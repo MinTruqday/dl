@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibEquationArray implements BlockTool {
   static readonly feature = {
     id: "DocLibEquationArray",
-    title: "Equation Array",
+    title: "DocLib Equation Array",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="11e7c3b765e78075"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,14 12,17 20,14 13,19 7,10 9,8"/></svg>',
     product: "doclib",
   } as const;
@@ -15,7 +15,7 @@ export default class DocLibEquationArray implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "Equation Array",
+      title: "DocLib Equation Array",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="11e7c3b765e78075"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,14 12,17 20,14 13,19 7,10 9,8"/></svg>',
     };
   }

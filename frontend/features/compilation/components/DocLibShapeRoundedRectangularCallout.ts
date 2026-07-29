@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibShapeRoundedRectangularCallout implements BlockTool {
   static readonly feature = {
     id: "DocLibShapeRoundedRectangularCallout",
-    title: "Shape Rounded Rectangular Callout",
+    title: "DocLib Shape Rounded Rectangular Callout",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="244de14c6924ddcd"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="6,13 8,12 7,6 4,5 7,16 10,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Shape Rounded Rectangular Callout",
+      title: "DocLib Shape Rounded Rectangular Callout",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="244de14c6924ddcd"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="6,13 8,12 7,6 4,5 7,16 10,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibShapeRoundedRectangularCallout implements BlockTool {
   }
 
   readonly id = "DocLibShapeRoundedRectangularCallout";
-  readonly title = "Shape Rounded Rectangular Callout";
+  readonly title = "DocLib Shape Rounded Rectangular Callout";
   readonly category = "format" as const;
   readonly mode = "ShapeRoundedRectangularCallout";
   readonly requiresSelection = false;

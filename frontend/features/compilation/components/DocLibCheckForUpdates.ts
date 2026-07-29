@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibCheckForUpdates implements BlockTool {
   static readonly feature = {
     id: "DocLibCheckForUpdates",
-    title: "Check For Updates",
+    title: "DocLib Check For Updates",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3553cd1dcb0d81b2"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="6,19 5,16 20,17 14,12 16,10 6,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Check For Updates",
+      title: "DocLib Check For Updates",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3553cd1dcb0d81b2"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="6,19 5,16 20,17 14,12 16,10 6,6"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibCheckForUpdates implements BlockTool {
   }
 
   readonly id = "DocLibCheckForUpdates";
-  readonly title = "Check For Updates";
+  readonly title = "DocLib Check For Updates";
   readonly category = "format" as const;
   readonly mode = "CheckForUpdates";
   readonly requiresSelection = false;

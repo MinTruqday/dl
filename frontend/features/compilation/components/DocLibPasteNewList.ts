@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPasteNewList implements BlockTool {
   static readonly feature = {
     id: "DocLibPasteNewList",
-    title: "Paste New List",
+    title: "DocLib Paste New List",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e45009ee5b292093"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,16 13,4 10,11 19,15 4,10 20,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Paste New List",
+      title: "DocLib Paste New List",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e45009ee5b292093"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,16 13,4 10,11 19,15 4,10 20,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPasteNewList implements BlockTool {
   }
 
   readonly id = "DocLibPasteNewList";
-  readonly title = "Paste New List";
+  readonly title = "DocLib Paste New List";
   readonly category = "format" as const;
   readonly mode = "PasteNewList";
   readonly requiresSelection = false;

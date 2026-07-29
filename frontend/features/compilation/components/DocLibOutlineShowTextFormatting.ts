@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibOutlineShowTextFormatting implements BlockTool {
   static readonly feature = {
     id: "DocLibOutlineShowTextFormatting",
-    title: "Outline Show Text Formatting",
+    title: "DocLib Outline Show Text Formatting",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b59f0c8a9dc6ac46"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="15,10 16,6 8,15 6,6 7,19 17,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Outline Show Text Formatting",
+      title: "DocLib Outline Show Text Formatting",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b59f0c8a9dc6ac46"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="15,10 16,6 8,15 6,6 7,19 17,6"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibOutlineShowTextFormatting implements BlockTool {
   }
 
   readonly id = "DocLibOutlineShowTextFormatting";
-  readonly title = "Outline Show Text Formatting";
+  readonly title = "DocLib Outline Show Text Formatting";
   readonly category = "format" as const;
   readonly mode = "OutlineShowTextFormatting";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibViewMasterDocumentViewClassic implements BlockTool {
   static readonly feature = {
     id: "DocLibViewMasterDocumentViewClassic",
-    title: "View Master Document View Classic",
+    title: "DocLib View Master Document View Classic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3617b47b24ca6671"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="7,10 14,8 6,19 4,15 13,11 6,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "View Master Document View Classic",
+      title: "DocLib View Master Document View Classic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3617b47b24ca6671"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="7,10 14,8 6,19 4,15 13,11 6,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibViewMasterDocumentViewClassic implements BlockTool {
   }
 
   readonly id = "DocLibViewMasterDocumentViewClassic";
-  readonly title = "View Master Document View Classic";
+  readonly title = "DocLib View Master Document View Classic";
   readonly category = "format" as const;
   readonly mode = "ViewMasterDocumentViewClassic";
   readonly requiresSelection = false;

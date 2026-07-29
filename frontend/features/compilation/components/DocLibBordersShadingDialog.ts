@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibBordersShadingDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibBordersShadingDialog",
-    title: "Borders Shading Dialog",
+    title: "DocLib Borders Shading Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c47df6ba733fcedc"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="13,10 12,20 17,16 6,20 19,18 12,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Borders Shading Dialog",
+      title: "DocLib Borders Shading Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c47df6ba733fcedc"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="13,10 12,20 17,16 6,20 19,18 12,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibBordersShadingDialog implements BlockTool {
   }
 
   readonly id = "DocLibBordersShadingDialog";
-  readonly title = "Borders Shading Dialog";
+  readonly title = "DocLib Borders Shading Dialog";
   readonly category = "format" as const;
   readonly mode = "BordersShadingDialog";
   readonly requiresSelection = false;

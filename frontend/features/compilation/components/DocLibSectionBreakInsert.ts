@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSectionBreakInsert implements BlockTool {
   static readonly feature = {
     id: "DocLibSectionBreakInsert",
-    title: "Section Break Insert",
+    title: "DocLib Section Break Insert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e3ba877188928693"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,20 20,15 4,14 19,15 8,5 18,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Section Break Insert",
+      title: "DocLib Section Break Insert",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e3ba877188928693"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,20 20,15 4,14 19,15 8,5 18,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSectionBreakInsert implements BlockTool {
   }
 
   readonly id = "DocLibSectionBreakInsert";
-  readonly title = "Section Break Insert";
+  readonly title = "DocLib Section Break Insert";
   readonly category = "format" as const;
   readonly mode = "SectionBreakInsert";
   readonly requiresSelection = false;

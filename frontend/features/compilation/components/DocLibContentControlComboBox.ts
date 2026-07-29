@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibContentControlComboBox implements BlockTool {
   static readonly feature = {
     id: "DocLibContentControlComboBox",
-    title: "Content Control Combo Box",
+    title: "DocLib Content Control Combo Box",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9b3441887473a735"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="6,5 18,4 18,17 18,6 14,17 4,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Content Control Combo Box",
+      title: "DocLib Content Control Combo Box",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9b3441887473a735"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="6,5 18,4 18,17 18,6 14,17 4,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibContentControlComboBox implements BlockTool {
   }
 
   readonly id = "DocLibContentControlComboBox";
-  readonly title = "Content Control Combo Box";
+  readonly title = "DocLib Content Control Combo Box";
   readonly category = "automation" as const;
   readonly mode = "ContentControlComboBox";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMenuAccessibility implements BlockTool {
   static readonly feature = {
     id: "DocLibMenuAccessibility",
-    title: "Menu Accessibility",
+    title: "DocLib Menu Accessibility",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b01246d219d7cab9"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,5 6,10 12,15 19,19 10,19 8,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Menu Accessibility",
+      title: "DocLib Menu Accessibility",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b01246d219d7cab9"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,5 6,10 12,15 19,19 10,19 8,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibMenuAccessibility implements BlockTool {
   }
 
   readonly id = "DocLibMenuAccessibility";
-  readonly title = "Menu Accessibility";
+  readonly title = "DocLib Menu Accessibility";
   readonly category = "review" as const;
   readonly mode = "MenuAccessibility";
   readonly requiresSelection = false;

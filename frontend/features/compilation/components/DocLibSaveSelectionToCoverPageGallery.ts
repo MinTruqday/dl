@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSaveSelectionToCoverPageGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibSaveSelectionToCoverPageGallery",
-    title: "Save Selection To Cover Page Gallery",
+    title: "DocLib Save Selection To Cover Page Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f315f282de2b99cd"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="9,8 8,15 5,13 4,5 6,10 5,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Save Selection To Cover Page Gallery",
+      title: "DocLib Save Selection To Cover Page Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f315f282de2b99cd"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="9,8 8,15 5,13 4,5 6,10 5,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSaveSelectionToCoverPageGallery implements BlockTool 
   }
 
   readonly id = "DocLibSaveSelectionToCoverPageGallery";
-  readonly title = "Save Selection To Cover Page Gallery";
+  readonly title = "DocLib Save Selection To Cover Page Gallery";
   readonly category = "insert" as const;
   readonly mode = "SaveSelectionToCoverPageGallery";
   readonly requiresSelection = false;

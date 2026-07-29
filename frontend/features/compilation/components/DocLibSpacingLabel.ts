@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSpacingLabel implements BlockTool {
   static readonly feature = {
     id: "DocLibSpacingLabel",
-    title: "Spacing Label",
+    title: "DocLib Spacing Label",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8ebc7aadcfdd081e"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,5 7,7 7,4 12,17 18,19 16,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Spacing Label",
+      title: "DocLib Spacing Label",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8ebc7aadcfdd081e"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,5 7,7 7,4 12,17 18,19 16,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSpacingLabel implements BlockTool {
   }
 
   readonly id = "DocLibSpacingLabel";
-  readonly title = "Spacing Label";
+  readonly title = "DocLib Spacing Label";
   readonly category = "layout" as const;
   readonly mode = "SpacingLabel";
   readonly requiresSelection = false;

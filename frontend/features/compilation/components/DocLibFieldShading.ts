@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFieldShading implements BlockTool {
   static readonly feature = {
     id: "DocLibFieldShading",
-    title: "Field Shading",
+    title: "DocLib Field Shading",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="060ba584699e9464"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="10,15 16,17 7,9 16,19 7,13 16,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Field Shading",
+      title: "DocLib Field Shading",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="060ba584699e9464"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="10,15 16,17 7,9 16,19 7,13 16,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFieldShading implements BlockTool {
   }
 
   readonly id = "DocLibFieldShading";
-  readonly title = "Field Shading";
+  readonly title = "DocLib Field Shading";
   readonly category = "format" as const;
   readonly mode = "FieldShading";
   readonly requiresSelection = false;

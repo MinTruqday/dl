@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibThemeSearchOfficeOnline implements BlockTool {
   static readonly feature = {
     id: "DocLibThemeSearchOfficeOnline",
-    title: "Theme Search Office Online",
+    title: "DocLib Theme Search Office Online",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8d5886e8fd954e5d"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="9,7 19,15 19,17 14,12 15,14 5,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Theme Search Office Online",
+      title: "DocLib Theme Search Office Online",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8d5886e8fd954e5d"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="9,7 19,15 19,17 14,12 15,14 5,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibThemeSearchOfficeOnline implements BlockTool {
   }
 
   readonly id = "DocLibThemeSearchOfficeOnline";
-  readonly title = "Theme Search Office Online";
+  readonly title = "DocLib Theme Search Office Online";
   readonly category = "insert" as const;
   readonly mode = "ThemeSearchOfficeOnline";
   readonly requiresSelection = false;

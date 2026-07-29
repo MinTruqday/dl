@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFrameCreateLeft implements BlockTool {
   static readonly feature = {
     id: "DocLibFrameCreateLeft",
-    title: "Frame Create Left",
+    title: "DocLib Frame Create Left",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a963752772e9d003"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,18 19,9 16,16 8,7 12,17 20,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Frame Create Left",
+      title: "DocLib Frame Create Left",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a963752772e9d003"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,18 19,9 16,16 8,7 12,17 20,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFrameCreateLeft implements BlockTool {
   }
 
   readonly id = "DocLibFrameCreateLeft";
-  readonly title = "Frame Create Left";
+  readonly title = "DocLib Frame Create Left";
   readonly category = "format" as const;
   readonly mode = "FrameCreateLeft";
   readonly requiresSelection = false;

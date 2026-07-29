@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibEndnoteInsertWord implements BlockTool {
   static readonly feature = {
     id: "DocLibEndnoteInsertWord",
-    title: "Endnote Insert Word",
+    title: "DocLib Endnote Insert Word",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ac527a69f832375a"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="6,18 7,7 14,20 8,9 4,4 10,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Endnote Insert Word",
+      title: "DocLib Endnote Insert Word",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ac527a69f832375a"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="6,18 7,7 14,20 8,9 4,4 10,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibEndnoteInsertWord implements BlockTool {
   }
 
   readonly id = "DocLibEndnoteInsertWord";
-  readonly title = "Endnote Insert Word";
+  readonly title = "DocLib Endnote Insert Word";
   readonly category = "reference" as const;
   readonly mode = "EndnoteInsertWord";
   readonly requiresSelection = false;

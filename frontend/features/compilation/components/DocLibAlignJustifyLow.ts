@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAlignJustifyLow implements BlockTool {
   static readonly feature = {
     id: "DocLibAlignJustifyLow",
-    title: "Align Justify Low",
+    title: "DocLib Align Justify Low",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b40d3bd887c568b4"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="14,17 12,16 20,14 6,14 9,8 7,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Align Justify Low",
+      title: "DocLib Align Justify Low",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b40d3bd887c568b4"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="14,17 12,16 20,14 6,14 9,8 7,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibAlignJustifyLow implements BlockTool {
   }
 
   readonly id = "DocLibAlignJustifyLow";
-  readonly title = "Align Justify Low";
+  readonly title = "DocLib Align Justify Low";
   readonly category = "format" as const;
   readonly mode = "AlignJustifyLow";
   readonly requiresSelection = false;

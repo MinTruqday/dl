@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDropCapInMargin implements BlockTool {
   static readonly feature = {
     id: "DocLibDropCapInMargin",
-    title: "Drop Cap In Margin",
+    title: "DocLib Drop Cap In Margin",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="42862ca1cc6a5567"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="19,19 14,12 4,8 4,5 20,20 16,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Drop Cap In Margin",
+      title: "DocLib Drop Cap In Margin",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="42862ca1cc6a5567"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="19,19 14,12 4,8 4,5 20,20 16,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDropCapInMargin implements BlockTool {
   }
 
   readonly id = "DocLibDropCapInMargin";
-  readonly title = "Drop Cap In Margin";
+  readonly title = "DocLib Drop Cap In Margin";
   readonly category = "layout" as const;
   readonly mode = "DropCapInMargin";
   readonly requiresSelection = false;

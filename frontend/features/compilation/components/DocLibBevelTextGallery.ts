@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibBevelTextGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibBevelTextGallery",
-    title: "Bevel Text Gallery",
+    title: "DocLib Bevel Text Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8d23ec793a477014"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="9,5 19,6 11,7 14,7 13,9 9,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Bevel Text Gallery",
+      title: "DocLib Bevel Text Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8d23ec793a477014"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="9,5 19,6 11,7 14,7 13,9 9,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibBevelTextGallery implements BlockTool {
   }
 
   readonly id = "DocLibBevelTextGallery";
-  readonly title = "Bevel Text Gallery";
+  readonly title = "DocLib Bevel Text Gallery";
   readonly category = "format" as const;
   readonly mode = "BevelTextGallery";
   readonly requiresSelection = false;

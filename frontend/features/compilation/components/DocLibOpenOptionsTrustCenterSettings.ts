@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibOpenOptionsTrustCenterSettings implements BlockTool {
   static readonly feature = {
     id: "DocLibOpenOptionsTrustCenterSettings",
-    title: "Open Options Trust Center Settings",
+    title: "DocLib Open Options Trust Center Settings",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7b9720afbe641443"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,19 19,9 7,19 7,20 14,7 15,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Open Options Trust Center Settings",
+      title: "DocLib Open Options Trust Center Settings",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7b9720afbe641443"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,19 19,9 7,19 7,20 14,7 15,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibOpenOptionsTrustCenterSettings implements BlockTool {
   }
 
   readonly id = "DocLibOpenOptionsTrustCenterSettings";
-  readonly title = "Open Options Trust Center Settings";
+  readonly title = "DocLib Open Options Trust Center Settings";
   readonly category = "format" as const;
   readonly mode = "OpenOptionsTrustCenterSettings";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibCellsInsertDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibCellsInsertDialog",
-    title: "Cells Insert Dialog",
+    title: "DocLib Cells Insert Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e3b3519a47d9a82f"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,13 17,5 7,17 19,17 18,14 4,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Cells Insert Dialog",
+      title: "DocLib Cells Insert Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e3b3519a47d9a82f"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,13 17,5 7,17 19,17 18,14 4,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibCellsInsertDialog implements BlockTool {
   }
 
   readonly id = "DocLibCellsInsertDialog";
-  readonly title = "Cells Insert Dialog";
+  readonly title = "DocLib Cells Insert Dialog";
   readonly category = "format" as const;
   readonly mode = "CellsInsertDialog";
   readonly requiresSelection = false;

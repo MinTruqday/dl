@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartChangeType implements BlockTool {
   static readonly feature = {
     id: "DocLibChartChangeType",
-    title: "Chart Change Type",
+    title: "DocLib Chart Change Type",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a607146a9e0041f4"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,11 7,8 9,4 18,10 6,13 6,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Change Type",
+      title: "DocLib Chart Change Type",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a607146a9e0041f4"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,11 7,8 9,4 18,10 6,13 6,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartChangeType implements BlockTool {
   }
 
   readonly id = "DocLibChartChangeType";
-  readonly title = "Chart Change Type";
+  readonly title = "DocLib Chart Change Type";
   readonly category = "format" as const;
   readonly mode = "ChartChangeType";
   readonly requiresSelection = false;

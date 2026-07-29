@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPicturesConvertToSmartArt implements BlockTool {
   static readonly feature = {
     id: "DocLibPicturesConvertToSmartArt",
-    title: "Pictures Convert To Smart Art",
+    title: "DocLib Pictures Convert To Smart Art",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="571aef9a17462e5e"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="6,13 5,5 10,6 16,13 8,12 8,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Pictures Convert To Smart Art",
+      title: "DocLib Pictures Convert To Smart Art",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="571aef9a17462e5e"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="6,13 5,5 10,6 16,13 8,12 8,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPicturesConvertToSmartArt implements BlockTool {
   }
 
   readonly id = "DocLibPicturesConvertToSmartArt";
-  readonly title = "Pictures Convert To Smart Art";
+  readonly title = "DocLib Pictures Convert To Smart Art";
   readonly category = "media" as const;
   readonly mode = "PicturesConvertToSmartArt";
   readonly requiresSelection = false;

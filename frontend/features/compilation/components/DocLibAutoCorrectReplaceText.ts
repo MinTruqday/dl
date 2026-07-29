@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAutoCorrectReplaceText implements BlockTool {
   static readonly feature = {
     id: "DocLibAutoCorrectReplaceText",
-    title: "Auto Correct Replace Text",
+    title: "DocLib Auto Correct Replace Text",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1fc808bc432e0f2d"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,17 12,5 20,16 19,15 12,6 18,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Auto Correct Replace Text",
+      title: "DocLib Auto Correct Replace Text",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1fc808bc432e0f2d"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,17 12,5 20,16 19,15 12,6 18,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibAutoCorrectReplaceText implements BlockTool {
   }
 
   readonly id = "DocLibAutoCorrectReplaceText";
-  readonly title = "Auto Correct Replace Text";
+  readonly title = "DocLib Auto Correct Replace Text";
   readonly category = "format" as const;
   readonly mode = "AutoCorrectReplaceText";
   readonly requiresSelection = false;

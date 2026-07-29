@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAlignDistributeVertically implements BlockTool {
   static readonly feature = {
     id: "DocLibAlignDistributeVertically",
-    title: "Align Distribute Vertically",
+    title: "DocLib Align Distribute Vertically",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="16cb06800a67dffc"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="9,20 10,13 14,5 6,18 6,6 12,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Align Distribute Vertically",
+      title: "DocLib Align Distribute Vertically",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="16cb06800a67dffc"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="9,20 10,13 14,5 6,18 6,6 12,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibAlignDistributeVertically implements BlockTool {
   }
 
   readonly id = "DocLibAlignDistributeVertically";
-  readonly title = "Align Distribute Vertically";
+  readonly title = "DocLib Align Distribute Vertically";
   readonly category = "layout" as const;
   readonly mode = "AlignDistributeVertically";
   readonly requiresSelection = false;

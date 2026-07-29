@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibColumnWidth implements BlockTool {
   static readonly feature = {
     id: "DocLibColumnWidth",
-    title: "Column Width",
+    title: "DocLib Column Width",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3383dc5fef3ecc51"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,16 20,14 5,15 4,17 10,6 16,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Column Width",
+      title: "DocLib Column Width",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3383dc5fef3ecc51"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,16 20,14 5,15 4,17 10,6 16,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibColumnWidth implements BlockTool {
   }
 
   readonly id = "DocLibColumnWidth";
-  readonly title = "Column Width";
+  readonly title = "DocLib Column Width";
   readonly category = "format" as const;
   readonly mode = "ColumnWidth";
   readonly requiresSelection = false;

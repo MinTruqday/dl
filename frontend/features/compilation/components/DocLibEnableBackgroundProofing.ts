@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibEnableBackgroundProofing implements BlockTool {
   static readonly feature = {
     id: "DocLibEnableBackgroundProofing",
-    title: "Enable Background Proofing",
+    title: "DocLib Enable Background Proofing",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="de268afbdf1cb38f"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,8 6,17 6,15 13,11 20,13 10,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Enable Background Proofing",
+      title: "DocLib Enable Background Proofing",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="de268afbdf1cb38f"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,8 6,17 6,15 13,11 20,13 10,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibEnableBackgroundProofing implements BlockTool {
   }
 
   readonly id = "DocLibEnableBackgroundProofing";
-  readonly title = "Enable Background Proofing";
+  readonly title = "DocLib Enable Background Proofing";
   readonly category = "format" as const;
   readonly mode = "EnableBackgroundProofing";
   readonly requiresSelection = false;

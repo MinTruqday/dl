@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartResetToMatchStyle implements BlockTool {
   static readonly feature = {
     id: "DocLibChartResetToMatchStyle",
-    title: "Chart Reset To Match Style",
+    title: "DocLib Chart Reset To Match Style",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4762e15ff03ca298"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="7,17 8,14 6,13 13,20 13,15 8,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Reset To Match Style",
+      title: "DocLib Chart Reset To Match Style",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4762e15ff03ca298"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="7,17 8,14 6,13 13,20 13,15 8,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartResetToMatchStyle implements BlockTool {
   }
 
   readonly id = "DocLibChartResetToMatchStyle";
-  readonly title = "Chart Reset To Match Style";
+  readonly title = "DocLib Chart Reset To Match Style";
   readonly category = "media" as const;
   readonly mode = "ChartResetToMatchStyle";
   readonly requiresSelection = false;

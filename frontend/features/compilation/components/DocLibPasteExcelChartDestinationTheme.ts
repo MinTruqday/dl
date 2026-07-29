@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPasteExcelChartDestinationTheme implements BlockTool {
   static readonly feature = {
     id: "DocLibPasteExcelChartDestinationTheme",
-    title: "Paste Excel Chart Destination Theme",
+    title: "DocLib Paste Excel Chart Destination Theme",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="791014885b8814b3"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="6,20 7,4 10,4 7,13 16,11 8,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Paste Excel Chart Destination Theme",
+      title: "DocLib Paste Excel Chart Destination Theme",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="791014885b8814b3"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="6,20 7,4 10,4 7,13 16,11 8,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPasteExcelChartDestinationTheme implements BlockTool 
   }
 
   readonly id = "DocLibPasteExcelChartDestinationTheme";
-  readonly title = "Paste Excel Chart Destination Theme";
+  readonly title = "DocLib Paste Excel Chart Destination Theme";
   readonly category = "format" as const;
   readonly mode = "PasteExcelChartDestinationTheme";
   readonly requiresSelection = false;

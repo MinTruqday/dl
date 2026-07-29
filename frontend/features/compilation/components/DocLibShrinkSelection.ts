@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibShrinkSelection implements BlockTool {
   static readonly feature = {
     id: "DocLibShrinkSelection",
-    title: "Shrink Selection",
+    title: "DocLib Shrink Selection",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="674c6c07b9486b0b"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,12 10,11 19,8 9,15 20,13 19,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Shrink Selection",
+      title: "DocLib Shrink Selection",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="674c6c07b9486b0b"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,12 10,11 19,8 9,15 20,13 19,9"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibShrinkSelection implements BlockTool {
   }
 
   readonly id = "DocLibShrinkSelection";
-  readonly title = "Shrink Selection";
+  readonly title = "DocLib Shrink Selection";
   readonly category = "format" as const;
   readonly mode = "ShrinkSelection";
   readonly requiresSelection = false;

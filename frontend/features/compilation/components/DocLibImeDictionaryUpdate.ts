@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibImeDictionaryUpdate implements BlockTool {
   static readonly feature = {
     id: "DocLibImeDictionaryUpdate",
-    title: "Ime Dictionary Update",
+    title: "DocLib Ime Dictionary Update",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4da0a9de06229bcd"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="13,11 20,5 10,4 6,5 4,10 8,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Ime Dictionary Update",
+      title: "DocLib Ime Dictionary Update",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4da0a9de06229bcd"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="13,11 20,5 10,4 6,5 4,10 8,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibImeDictionaryUpdate implements BlockTool {
   }
 
   readonly id = "DocLibImeDictionaryUpdate";
-  readonly title = "Ime Dictionary Update";
+  readonly title = "DocLib Ime Dictionary Update";
   readonly category = "review" as const;
   readonly mode = "ImeDictionaryUpdate";
   readonly requiresSelection = false;

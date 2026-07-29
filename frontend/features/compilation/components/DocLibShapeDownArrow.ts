@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibShapeDownArrow implements BlockTool {
   static readonly feature = {
     id: "DocLibShapeDownArrow",
-    title: "Shape Down Arrow",
+    title: "DocLib Shape Down Arrow",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cb903330996e9ccc"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="20,12 4,18 4,12 7,4 17,11 6,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Shape Down Arrow",
+      title: "DocLib Shape Down Arrow",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cb903330996e9ccc"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="20,12 4,18 4,12 7,4 17,11 6,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibShapeDownArrow implements BlockTool {
   }
 
   readonly id = "DocLibShapeDownArrow";
-  readonly title = "Shape Down Arrow";
+  readonly title = "DocLib Shape Down Arrow";
   readonly category = "format" as const;
   readonly mode = "ShapeDownArrow";
   readonly requiresSelection = false;

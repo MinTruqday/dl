@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibActiveXRadioButton implements BlockTool {
   static readonly feature = {
     id: "DocLibActiveXRadioButton",
-    title: "Active X Radio Button",
+    title: "DocLib Active X Radio Button",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9b9802b916f4d81e"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="6,20 6,19 9,10 16,17 16,7 18,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Active X Radio Button",
+      title: "DocLib Active X Radio Button",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9b9802b916f4d81e"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="6,20 6,19 9,10 16,17 16,7 18,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibActiveXRadioButton implements BlockTool {
   }
 
   readonly id = "DocLibActiveXRadioButton";
-  readonly title = "Active X Radio Button";
+  readonly title = "DocLib Active X Radio Button";
   readonly category = "format" as const;
   readonly mode = "ActiveXRadioButton";
   readonly requiresSelection = false;

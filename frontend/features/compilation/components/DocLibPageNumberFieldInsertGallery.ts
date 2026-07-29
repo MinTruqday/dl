@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPageNumberFieldInsertGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibPageNumberFieldInsertGallery",
-    title: "Page Number Field Insert Gallery",
+    title: "DocLib Page Number Field Insert Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b9e5f181c66a38bc"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="19,12 7,14 15,8 9,5 8,19 10,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Page Number Field Insert Gallery",
+      title: "DocLib Page Number Field Insert Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b9e5f181c66a38bc"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="19,12 7,14 15,8 9,5 8,19 10,6"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPageNumberFieldInsertGallery implements BlockTool {
   }
 
   readonly id = "DocLibPageNumberFieldInsertGallery";
-  readonly title = "Page Number Field Insert Gallery";
+  readonly title = "DocLib Page Number Field Insert Gallery";
   readonly category = "insert" as const;
   readonly mode = "PageNumberFieldInsertGallery";
   readonly requiresSelection = false;

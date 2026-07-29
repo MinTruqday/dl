@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibInsertBuildingBlocksEquationsGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibInsertBuildingBlocksEquationsGallery",
-    title: "Insert Building Blocks Equations Gallery",
+    title: "DocLib Insert Building Blocks Equations Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8f997db2f29a6046"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="11,4 10,12 8,5 15,6 20,11 8,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Insert Building Blocks Equations Gallery",
+      title: "DocLib Insert Building Blocks Equations Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8f997db2f29a6046"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="11,4 10,12 8,5 15,6 20,11 8,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibInsertBuildingBlocksEquationsGallery implements Block
   }
 
   readonly id = "DocLibInsertBuildingBlocksEquationsGallery";
-  readonly title = "Insert Building Blocks Equations Gallery";
+  readonly title = "DocLib Insert Building Blocks Equations Gallery";
   readonly category = "insert" as const;
   readonly mode = "InsertBuildingBlocksEquationsGallery";
   readonly requiresSelection = false;

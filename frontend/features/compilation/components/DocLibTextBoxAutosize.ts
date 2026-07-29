@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextBoxAutosize implements BlockTool {
   static readonly feature = {
     id: "DocLibTextBoxAutosize",
-    title: "Text Box Autosize",
+    title: "DocLib Text Box Autosize",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1efdf40983b6bc8b"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,19 10,13 16,16 5,7 16,4 17,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Text Box Autosize",
+      title: "DocLib Text Box Autosize",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1efdf40983b6bc8b"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,19 10,13 16,16 5,7 16,4 17,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTextBoxAutosize implements BlockTool {
   }
 
   readonly id = "DocLibTextBoxAutosize";
-  readonly title = "Text Box Autosize";
+  readonly title = "DocLib Text Box Autosize";
   readonly category = "format" as const;
   readonly mode = "TextBoxAutosize";
   readonly requiresSelection = false;

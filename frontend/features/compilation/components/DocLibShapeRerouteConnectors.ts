@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibShapeRerouteConnectors implements BlockTool {
   static readonly feature = {
     id: "DocLibShapeRerouteConnectors",
-    title: "Shape Reroute Connectors",
+    title: "DocLib Shape Reroute Connectors",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1c112680a7ad7037"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="15,4 8,13 18,7 14,8 9,20 4,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Shape Reroute Connectors",
+      title: "DocLib Shape Reroute Connectors",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1c112680a7ad7037"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="15,4 8,13 18,7 14,8 9,20 4,9"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibShapeRerouteConnectors implements BlockTool {
   }
 
   readonly id = "DocLibShapeRerouteConnectors";
-  readonly title = "Shape Reroute Connectors";
+  readonly title = "DocLib Shape Reroute Connectors";
   readonly category = "format" as const;
   readonly mode = "ShapeRerouteConnectors";
   readonly requiresSelection = false;

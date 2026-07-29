@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartPlotArea implements BlockTool {
   static readonly feature = {
     id: "DocLibChartPlotArea",
-    title: "Chart Plot Area",
+    title: "DocLib Chart Plot Area",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0adb9916090996d4"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="14,19 4,9 13,13 18,12 4,6 20,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Plot Area",
+      title: "DocLib Chart Plot Area",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0adb9916090996d4"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="14,19 4,9 13,13 18,12 4,6 20,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartPlotArea implements BlockTool {
   }
 
   readonly id = "DocLibChartPlotArea";
-  readonly title = "Chart Plot Area";
+  readonly title = "DocLib Chart Plot Area";
   readonly category = "layout" as const;
   readonly mode = "ChartPlotArea";
   readonly requiresSelection = false;

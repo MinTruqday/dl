@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibCustomHeaderGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibCustomHeaderGallery",
-    title: "Custom Header Gallery",
+    title: "DocLib Custom Header Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b7e7c45102272d6e"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="17,14 13,17 6,9 15,12 20,8 17,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Custom Header Gallery",
+      title: "DocLib Custom Header Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b7e7c45102272d6e"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="17,14 13,17 6,9 15,12 20,8 17,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibCustomHeaderGallery implements BlockTool {
   }
 
   readonly id = "DocLibCustomHeaderGallery";
-  readonly title = "Custom Header Gallery";
+  readonly title = "DocLib Custom Header Gallery";
   readonly category = "format" as const;
   readonly mode = "CustomHeaderGallery";
   readonly requiresSelection = false;

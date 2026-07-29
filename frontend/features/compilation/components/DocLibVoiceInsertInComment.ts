@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibVoiceInsertInComment implements BlockTool {
   static readonly feature = {
     id: "DocLibVoiceInsertInComment",
-    title: "Voice Insert In Comment",
+    title: "DocLib Voice Insert In Comment",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1a64a118e42cae99"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="13,19 12,11 11,14 8,4 8,20 10,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Voice Insert In Comment",
+      title: "DocLib Voice Insert In Comment",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1a64a118e42cae99"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="13,19 12,11 11,14 8,4 8,20 10,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibVoiceInsertInComment implements BlockTool {
   }
 
   readonly id = "DocLibVoiceInsertInComment";
-  readonly title = "Voice Insert In Comment";
+  readonly title = "DocLib Voice Insert In Comment";
   readonly category = "format" as const;
   readonly mode = "VoiceInsertInComment";
   readonly requiresSelection = false;

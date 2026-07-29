@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibNumberListDefault implements BlockTool {
   static readonly feature = {
     id: "DocLibNumberListDefault",
-    title: "Number List Default",
+    title: "DocLib Number List Default",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="340e7277602f362f"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="5,18 16,4 15,17 7,17 11,20 7,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Number List Default",
+      title: "DocLib Number List Default",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="340e7277602f362f"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="5,18 16,4 15,17 7,17 11,20 7,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibNumberListDefault implements BlockTool {
   }
 
   readonly id = "DocLibNumberListDefault";
-  readonly title = "Number List Default";
+  readonly title = "DocLib Number List Default";
   readonly category = "format" as const;
   readonly mode = "NumberListDefault";
   readonly requiresSelection = false;

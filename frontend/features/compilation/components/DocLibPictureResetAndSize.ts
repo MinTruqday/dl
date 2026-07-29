@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPictureResetAndSize implements BlockTool {
   static readonly feature = {
     id: "DocLibPictureResetAndSize",
-    title: "Picture Reset And Size",
+    title: "DocLib Picture Reset And Size",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="dbea33b0cae882eb"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,17 4,10 19,15 15,18 11,5 4,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Picture Reset And Size",
+      title: "DocLib Picture Reset And Size",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="dbea33b0cae882eb"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,17 4,10 19,15 15,18 11,5 4,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPictureResetAndSize implements BlockTool {
   }
 
   readonly id = "DocLibPictureResetAndSize";
-  readonly title = "Picture Reset And Size";
+  readonly title = "DocLib Picture Reset And Size";
   readonly category = "media" as const;
   readonly mode = "PictureResetAndSize";
   readonly requiresSelection = false;

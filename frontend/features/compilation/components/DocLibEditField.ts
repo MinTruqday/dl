@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibEditField implements BlockTool {
   static readonly feature = {
     id: "DocLibEditField",
-    title: "Edit Field",
+    title: "DocLib Edit Field",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="93b62cde6e7d5f1c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="15,16 14,5 12,10 14,15 17,10 20,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Edit Field",
+      title: "DocLib Edit Field",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="93b62cde6e7d5f1c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="15,16 14,5 12,10 14,15 17,10 20,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibEditField implements BlockTool {
   }
 
   readonly id = "DocLibEditField";
-  readonly title = "Edit Field";
+  readonly title = "DocLib Edit Field";
   readonly category = "format" as const;
   readonly mode = "EditField";
   readonly requiresSelection = false;

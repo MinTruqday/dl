@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWordArtChangeShapeGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibWordArtChangeShapeGallery",
-    title: "Word Art Change Shape Gallery",
+    title: "DocLib Word Art Change Shape Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="774363d15fd1d204"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="4,20 18,9 14,9 10,8 14,9 9,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Word Art Change Shape Gallery",
+      title: "DocLib Word Art Change Shape Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="774363d15fd1d204"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="4,20 18,9 14,9 10,8 14,9 9,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibWordArtChangeShapeGallery implements BlockTool {
   }
 
   readonly id = "DocLibWordArtChangeShapeGallery";
-  readonly title = "Word Art Change Shape Gallery";
+  readonly title = "DocLib Word Art Change Shape Gallery";
   readonly category = "format" as const;
   readonly mode = "WordArtChangeShapeGallery";
   readonly requiresSelection = false;

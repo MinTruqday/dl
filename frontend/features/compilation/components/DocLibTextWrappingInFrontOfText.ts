@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextWrappingInFrontOfText implements BlockTool {
   static readonly feature = {
     id: "DocLibTextWrappingInFrontOfText",
-    title: "Text Wrapping In Front Of Text",
+    title: "DocLib Text Wrapping In Front Of Text",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="aa2dbbef8542c31f"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="4,15 4,5 18,19 12,18 6,17 12,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Text Wrapping In Front Of Text",
+      title: "DocLib Text Wrapping In Front Of Text",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="aa2dbbef8542c31f"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="4,15 4,5 18,19 12,18 6,17 12,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTextWrappingInFrontOfText implements BlockTool {
   }
 
   readonly id = "DocLibTextWrappingInFrontOfText";
-  readonly title = "Text Wrapping In Front Of Text";
+  readonly title = "DocLib Text Wrapping In Front Of Text";
   readonly category = "format" as const;
   readonly mode = "TextWrappingInFrontOfText";
   readonly requiresSelection = false;

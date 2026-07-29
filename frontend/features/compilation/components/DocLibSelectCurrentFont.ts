@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSelectCurrentFont implements BlockTool {
   static readonly feature = {
     id: "DocLibSelectCurrentFont",
-    title: "Select Current Font",
+    title: "DocLib Select Current Font",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="014245eedadacab0"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="5,19 5,4 18,18 19,10 13,9 10,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Select Current Font",
+      title: "DocLib Select Current Font",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="014245eedadacab0"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="5,19 5,4 18,18 19,10 13,9 10,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSelectCurrentFont implements BlockTool {
   }
 
   readonly id = "DocLibSelectCurrentFont";
-  readonly title = "Select Current Font";
+  readonly title = "DocLib Select Current Font";
   readonly category = "format" as const;
   readonly mode = "SelectCurrentFont";
   readonly requiresSelection = false;

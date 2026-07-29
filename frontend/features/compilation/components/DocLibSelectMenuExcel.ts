@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSelectMenuExcel implements BlockTool {
   static readonly feature = {
     id: "DocLibSelectMenuExcel",
-    title: "Select Menu Excel",
+    title: "DocLib Select Menu Excel",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3a64bcb1248db3e6"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="11,19 5,11 6,9 13,13 15,16 4,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Select Menu Excel",
+      title: "DocLib Select Menu Excel",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3a64bcb1248db3e6"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="11,19 5,11 6,9 13,13 15,16 4,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSelectMenuExcel implements BlockTool {
   }
 
   readonly id = "DocLibSelectMenuExcel";
-  readonly title = "Select Menu Excel";
+  readonly title = "DocLib Select Menu Excel";
   readonly category = "format" as const;
   readonly mode = "SelectMenuExcel";
   readonly requiresSelection = false;

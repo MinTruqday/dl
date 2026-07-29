@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibBroadcastEdit implements BlockTool {
   static readonly feature = {
     id: "DocLibBroadcastEdit",
-    title: "Broadcast Edit",
+    title: "DocLib Broadcast Edit",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2d1265d2e300b0ca"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="15,5 20,10 10,4 10,19 6,20 10,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Broadcast Edit",
+      title: "DocLib Broadcast Edit",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2d1265d2e300b0ca"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="15,5 20,10 10,4 10,19 6,20 10,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibBroadcastEdit implements BlockTool {
   }
 
   readonly id = "DocLibBroadcastEdit";
-  readonly title = "Broadcast Edit";
+  readonly title = "DocLib Broadcast Edit";
   readonly category = "format" as const;
   readonly mode = "BroadcastEdit";
   readonly requiresSelection = false;

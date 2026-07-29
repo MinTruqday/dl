@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibCombineCharacters implements BlockTool {
   static readonly feature = {
     id: "DocLibCombineCharacters",
-    title: "Combine Characters",
+    title: "DocLib Combine Characters",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f71630131d9f9fe3"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="13,9 18,6 16,10 10,10 6,18 7,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Combine Characters",
+      title: "DocLib Combine Characters",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f71630131d9f9fe3"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="13,9 18,6 16,10 10,10 6,18 7,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibCombineCharacters implements BlockTool {
   }
 
   readonly id = "DocLibCombineCharacters";
-  readonly title = "Combine Characters";
+  readonly title = "DocLib Combine Characters";
   readonly category = "format" as const;
   readonly mode = "CombineCharacters";
   readonly requiresSelection = true;

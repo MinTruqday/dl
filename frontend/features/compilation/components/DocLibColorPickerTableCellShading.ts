@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibColorPickerTableCellShading implements BlockTool {
   static readonly feature = {
     id: "DocLibColorPickerTableCellShading",
-    title: "Color Picker Table Cell Shading",
+    title: "DocLib Color Picker Table Cell Shading",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f70d883d3fda996d"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="13,17 4,14 16,18 4,11 9,9 7,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Color Picker Table Cell Shading",
+      title: "DocLib Color Picker Table Cell Shading",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f70d883d3fda996d"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="13,17 4,14 16,18 4,11 9,9 7,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibColorPickerTableCellShading implements BlockTool {
   }
 
   readonly id = "DocLibColorPickerTableCellShading";
-  readonly title = "Color Picker Table Cell Shading";
+  readonly title = "DocLib Color Picker Table Cell Shading";
   readonly category = "format" as const;
   readonly mode = "ColorPickerTableCellShading";
   readonly requiresSelection = false;

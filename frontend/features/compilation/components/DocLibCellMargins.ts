@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibCellMargins implements BlockTool {
   static readonly feature = {
     id: "DocLibCellMargins",
-    title: "Cell Margins",
+    title: "DocLib Cell Margins",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7780cf1aaf380d20"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="4,13 7,13 9,9 17,19 11,4 12,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Cell Margins",
+      title: "DocLib Cell Margins",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7780cf1aaf380d20"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="4,13 7,13 9,9 17,19 11,4 12,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibCellMargins implements BlockTool {
   }
 
   readonly id = "DocLibCellMargins";
-  readonly title = "Cell Margins";
+  readonly title = "DocLib Cell Margins";
   readonly category = "table" as const;
   readonly mode = "CellMargins";
   readonly requiresSelection = false;

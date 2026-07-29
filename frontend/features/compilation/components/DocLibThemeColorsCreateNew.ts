@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibThemeColorsCreateNew implements BlockTool {
   static readonly feature = {
     id: "DocLibThemeColorsCreateNew",
-    title: "Theme Colors Create New",
+    title: "DocLib Theme Colors Create New",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d0fe94dc61272c58"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,20 16,20 16,9 14,7 7,12 11,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Theme Colors Create New",
+      title: "DocLib Theme Colors Create New",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d0fe94dc61272c58"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,20 16,20 16,9 14,7 7,12 11,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibThemeColorsCreateNew implements BlockTool {
   }
 
   readonly id = "DocLibThemeColorsCreateNew";
-  readonly title = "Theme Colors Create New";
+  readonly title = "DocLib Theme Colors Create New";
   readonly category = "format" as const;
   readonly mode = "ThemeColorsCreateNew";
   readonly requiresSelection = false;

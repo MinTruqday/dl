@@ -24,7 +24,7 @@ export const MENU_GROUPS: MenuGroup[] = [
       { id: "explore", label: "Khám phá", href: "/kham-pha" },
       {
         id: "chat",
-        label: "Metis",
+        label: "Trò chuyện",
         href: "/tro-chuyen",
         requireAuth: true,
       },
@@ -43,7 +43,7 @@ export const MENU_GROUPS: MenuGroup[] = [
     ],
   },
   {
-    label: "Tài liệu",
+    label: "Công việc",
     items: [
       {
         id: "editor",

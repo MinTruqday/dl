@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibEndOfWindowExtend implements BlockTool {
   static readonly feature = {
     id: "DocLibEndOfWindowExtend",
-    title: "End Of Window Extend",
+    title: "DocLib End Of Window Extend",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5feb392739558ec8"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="14,18 10,9 10,4 10,17 12,14 4,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "End Of Window Extend",
+      title: "DocLib End Of Window Extend",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5feb392739558ec8"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="14,18 10,9 10,4 10,17 12,14 4,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibEndOfWindowExtend implements BlockTool {
   }
 
   readonly id = "DocLibEndOfWindowExtend";
-  readonly title = "End Of Window Extend";
+  readonly title = "DocLib End Of Window Extend";
   readonly category = "format" as const;
   readonly mode = "EndOfWindowExtend";
   readonly requiresSelection = false;

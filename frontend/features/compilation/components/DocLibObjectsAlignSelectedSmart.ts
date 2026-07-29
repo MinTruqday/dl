@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibObjectsAlignSelectedSmart implements BlockTool {
   static readonly feature = {
     id: "DocLibObjectsAlignSelectedSmart",
-    title: "Objects Align Selected Smart",
+    title: "DocLib Objects Align Selected Smart",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d55e76bbf6d3bfea"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="13,13 20,4 12,11 8,17 13,8 17,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Objects Align Selected Smart",
+      title: "DocLib Objects Align Selected Smart",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d55e76bbf6d3bfea"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="13,13 20,4 12,11 8,17 13,8 17,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibObjectsAlignSelectedSmart implements BlockTool {
   }
 
   readonly id = "DocLibObjectsAlignSelectedSmart";
-  readonly title = "Objects Align Selected Smart";
+  readonly title = "DocLib Objects Align Selected Smart";
   readonly category = "layout" as const;
   readonly mode = "ObjectsAlignSelectedSmart";
   readonly requiresSelection = false;

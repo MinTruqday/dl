@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFlyoutAnchorInsertPictures implements BlockTool {
   static readonly feature = {
     id: "DocLibFlyoutAnchorInsertPictures",
-    title: "Flyout Anchor Insert Pictures",
+    title: "DocLib Flyout Anchor Insert Pictures",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e57bd96a2aa1ce3d"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="12,8 17,8 12,12 6,14 10,5 8,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Flyout Anchor Insert Pictures",
+      title: "DocLib Flyout Anchor Insert Pictures",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e57bd96a2aa1ce3d"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="12,8 17,8 12,12 6,14 10,5 8,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFlyoutAnchorInsertPictures implements BlockTool {
   }
 
   readonly id = "DocLibFlyoutAnchorInsertPictures";
-  readonly title = "Flyout Anchor Insert Pictures";
+  readonly title = "DocLib Flyout Anchor Insert Pictures";
   readonly category = "insert" as const;
   readonly mode = "FlyoutAnchorInsertPictures";
   readonly requiresSelection = false;

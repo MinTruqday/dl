@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibOleConvert implements BlockTool {
   static readonly feature = {
     id: "DocLibOleConvert",
-    title: "Ole Convert",
+    title: "DocLib Ole Convert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="11f006287c875f47"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,6 10,10 9,20 14,7 15,16 14,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Ole Convert",
+      title: "DocLib Ole Convert",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="11f006287c875f47"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,6 10,10 9,20 14,7 15,16 14,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibOleConvert implements BlockTool {
   }
 
   readonly id = "DocLibOleConvert";
-  readonly title = "Ole Convert";
+  readonly title = "DocLib Ole Convert";
   readonly category = "format" as const;
   readonly mode = "OleConvert";
   readonly requiresSelection = false;

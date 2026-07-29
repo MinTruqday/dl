@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableAutoFitFixedColumnWidth implements BlockTool {
   static readonly feature = {
     id: "DocLibTableAutoFitFixedColumnWidth",
-    title: "Table Auto Fit Fixed Column Width",
+    title: "DocLib Table Auto Fit Fixed Column Width",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d15e3327194bb638"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,13 4,9 12,11 16,9 11,17 10,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Table Auto Fit Fixed Column Width",
+      title: "DocLib Table Auto Fit Fixed Column Width",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d15e3327194bb638"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,13 4,9 12,11 16,9 11,17 10,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTableAutoFitFixedColumnWidth implements BlockTool {
   }
 
   readonly id = "DocLibTableAutoFitFixedColumnWidth";
-  readonly title = "Table Auto Fit Fixed Column Width";
+  readonly title = "DocLib Table Auto Fit Fixed Column Width";
   readonly category = "table" as const;
   readonly mode = "TableAutoFitFixedColumnWidth";
   readonly requiresSelection = false;

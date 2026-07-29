@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibBlankPageInsert implements BlockTool {
   static readonly feature = {
     id: "DocLibBlankPageInsert",
-    title: "Blank Page Insert",
+    title: "DocLib Blank Page Insert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="09fbd9ac176c02b7"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="13,17 17,6 10,10 6,17 7,15 10,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Blank Page Insert",
+      title: "DocLib Blank Page Insert",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="09fbd9ac176c02b7"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="13,17 17,6 10,10 6,17 7,15 10,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibBlankPageInsert implements BlockTool {
   }
 
   readonly id = "DocLibBlankPageInsert";
-  readonly title = "Blank Page Insert";
+  readonly title = "DocLib Blank Page Insert";
   readonly category = "insert" as const;
   readonly mode = "BlankPageInsert";
   readonly requiresSelection = false;

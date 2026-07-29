@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAlignTextMenu implements BlockTool {
   static readonly feature = {
     id: "DocLibAlignTextMenu",
-    title: "Align Text Menu",
+    title: "DocLib Align Text Menu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b1900a36f809189c"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="11,12 14,7 14,13 11,7 10,19 10,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Align Text Menu",
+      title: "DocLib Align Text Menu",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b1900a36f809189c"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="11,12 14,7 14,13 11,7 10,19 10,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibAlignTextMenu implements BlockTool {
   }
 
   readonly id = "DocLibAlignTextMenu";
-  readonly title = "Align Text Menu";
+  readonly title = "DocLib Align Text Menu";
   readonly category = "format" as const;
   readonly mode = "AlignTextMenu";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFileFind implements BlockTool {
   static readonly feature = {
     id: "DocLibFileFind",
-    title: "File Find",
+    title: "DocLib File Find",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="62fed2b65b0fcefd"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,20 10,16 10,19 6,19 7,5 18,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "File Find",
+      title: "DocLib File Find",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="62fed2b65b0fcefd"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,20 10,16 10,19 6,19 7,5 18,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFileFind implements BlockTool {
   }
 
   readonly id = "DocLibFileFind";
-  readonly title = "File Find";
+  readonly title = "DocLib File Find";
   readonly category = "format" as const;
   readonly mode = "FileFind";
   readonly requiresSelection = false;

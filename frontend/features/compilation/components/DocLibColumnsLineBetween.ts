@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibColumnsLineBetween implements BlockTool {
   static readonly feature = {
     id: "DocLibColumnsLineBetween",
-    title: "Columns Line Between",
+    title: "DocLib Columns Line Between",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b22e45805a627269"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="12,16 5,13 9,17 16,7 12,14 19,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Columns Line Between",
+      title: "DocLib Columns Line Between",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b22e45805a627269"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="12,16 5,13 9,17 16,7 12,14 19,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibColumnsLineBetween implements BlockTool {
   }
 
   readonly id = "DocLibColumnsLineBetween";
-  readonly title = "Columns Line Between";
+  readonly title = "DocLib Columns Line Between";
   readonly category = "layout" as const;
   readonly mode = "ColumnsLineBetween";
   readonly requiresSelection = false;

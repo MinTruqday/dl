@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMailMergeAddressBlockInsert implements BlockTool {
   static readonly feature = {
     id: "DocLibMailMergeAddressBlockInsert",
-    title: "Mail Merge Address Block Insert",
+    title: "DocLib Mail Merge Address Block Insert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="133bc842de3e6373"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="6,12 17,19 5,15 18,17 10,17 9,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Mail Merge Address Block Insert",
+      title: "DocLib Mail Merge Address Block Insert",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="133bc842de3e6373"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="6,12 17,19 5,15 18,17 10,17 9,6"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibMailMergeAddressBlockInsert implements BlockTool {
   }
 
   readonly id = "DocLibMailMergeAddressBlockInsert";
-  readonly title = "Mail Merge Address Block Insert";
+  readonly title = "DocLib Mail Merge Address Block Insert";
   readonly category = "mailing" as const;
   readonly mode = "MailMergeAddressBlockInsert";
   readonly requiresSelection = false;

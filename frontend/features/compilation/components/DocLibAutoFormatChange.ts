@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAutoFormatChange implements BlockTool {
   static readonly feature = {
     id: "DocLibAutoFormatChange",
-    title: "Auto Format Change",
+    title: "DocLib Auto Format Change",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e7ca6b1486c4b184"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="14,19 9,7 19,13 11,17 17,7 11,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Auto Format Change",
+      title: "DocLib Auto Format Change",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e7ca6b1486c4b184"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="14,19 9,7 19,13 11,17 17,7 11,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibAutoFormatChange implements BlockTool {
   }
 
   readonly id = "DocLibAutoFormatChange";
-  readonly title = "Auto Format Change";
+  readonly title = "DocLib Auto Format Change";
   readonly category = "format" as const;
   readonly mode = "AutoFormatChange";
   readonly requiresSelection = false;

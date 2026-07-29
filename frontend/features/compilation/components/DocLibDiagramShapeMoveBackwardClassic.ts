@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDiagramShapeMoveBackwardClassic implements BlockTool {
   static readonly feature = {
     id: "DocLibDiagramShapeMoveBackwardClassic",
-    title: "Diagram Shape Move Backward Classic",
+    title: "DocLib Diagram Shape Move Backward Classic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5e33709211bcf728"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="13,4 14,14 4,5 13,10 12,14 8,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Diagram Shape Move Backward Classic",
+      title: "DocLib Diagram Shape Move Backward Classic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5e33709211bcf728"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="13,4 14,14 4,5 13,10 12,14 8,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDiagramShapeMoveBackwardClassic implements BlockTool 
   }
 
   readonly id = "DocLibDiagramShapeMoveBackwardClassic";
-  readonly title = "Diagram Shape Move Backward Classic";
+  readonly title = "DocLib Diagram Shape Move Backward Classic";
   readonly category = "layout" as const;
   readonly mode = "DiagramShapeMoveBackwardClassic";
   readonly requiresSelection = false;

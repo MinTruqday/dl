@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibShareDocument implements BlockTool {
   static readonly feature = {
     id: "DocLibShareDocument",
-    title: "Share Document",
+    title: "DocLib Share Document",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4f6f866491d8cda9"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="15,13 19,19 13,16 5,20 11,6 19,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Share Document",
+      title: "DocLib Share Document",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4f6f866491d8cda9"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="15,13 19,19 13,16 5,20 11,6 19,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibShareDocument implements BlockTool {
   }
 
   readonly id = "DocLibShareDocument";
-  readonly title = "Share Document";
+  readonly title = "DocLib Share Document";
   readonly category = "format" as const;
   readonly mode = "ShareDocument";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibBarcodeInsert implements BlockTool {
   static readonly feature = {
     id: "DocLibBarcodeInsert",
-    title: "Barcode Insert",
+    title: "DocLib Barcode Insert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9b7a7065c739cf20"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="6,7 14,20 16,10 7,19 9,12 5,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Barcode Insert",
+      title: "DocLib Barcode Insert",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9b7a7065c739cf20"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="6,7 14,20 16,10 7,19 9,12 5,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibBarcodeInsert implements BlockTool {
   }
 
   readonly id = "DocLibBarcodeInsert";
-  readonly title = "Barcode Insert";
+  readonly title = "DocLib Barcode Insert";
   readonly category = "insert" as const;
   readonly mode = "BarcodeInsert";
   readonly requiresSelection = false;

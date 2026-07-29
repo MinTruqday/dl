@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPointerModeOptions implements BlockTool {
   static readonly feature = {
     id: "DocLibPointerModeOptions",
-    title: "Pointer Mode Options",
+    title: "DocLib Pointer Mode Options",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="97d70918988537dc"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="19,15 13,11 20,18 8,20 9,9 19,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Pointer Mode Options",
+      title: "DocLib Pointer Mode Options",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="97d70918988537dc"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="19,15 13,11 20,18 8,20 9,9 19,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPointerModeOptions implements BlockTool {
   }
 
   readonly id = "DocLibPointerModeOptions";
-  readonly title = "Pointer Mode Options";
+  readonly title = "DocLib Pointer Mode Options";
   readonly category = "format" as const;
   readonly mode = "PointerModeOptions";
   readonly requiresSelection = false;

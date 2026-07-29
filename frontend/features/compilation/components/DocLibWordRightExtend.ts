@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWordRightExtend implements BlockTool {
   static readonly feature = {
     id: "DocLibWordRightExtend",
-    title: "Word Right Extend",
+    title: "DocLib Word Right Extend",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="635412464b572426"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="18,20 5,6 11,6 6,8 18,18 6,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Word Right Extend",
+      title: "DocLib Word Right Extend",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="635412464b572426"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="18,20 5,6 11,6 6,8 18,18 6,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibWordRightExtend implements BlockTool {
   }
 
   readonly id = "DocLibWordRightExtend";
-  readonly title = "Word Right Extend";
+  readonly title = "DocLib Word Right Extend";
   readonly category = "format" as const;
   readonly mode = "WordRightExtend";
   readonly requiresSelection = false;

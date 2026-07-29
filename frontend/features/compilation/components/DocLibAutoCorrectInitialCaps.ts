@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAutoCorrectInitialCaps implements BlockTool {
   static readonly feature = {
     id: "DocLibAutoCorrectInitialCaps",
-    title: "Auto Correct Initial Caps",
+    title: "DocLib Auto Correct Initial Caps",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4227ba2aa9bbd9c3"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,9 20,12 20,4 17,12 12,8 6,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Auto Correct Initial Caps",
+      title: "DocLib Auto Correct Initial Caps",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4227ba2aa9bbd9c3"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,9 20,12 20,4 17,12 12,8 6,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibAutoCorrectInitialCaps implements BlockTool {
   }
 
   readonly id = "DocLibAutoCorrectInitialCaps";
-  readonly title = "Auto Correct Initial Caps";
+  readonly title = "DocLib Auto Correct Initial Caps";
   readonly category = "format" as const;
   readonly mode = "AutoCorrectInitialCaps";
   readonly requiresSelection = false;

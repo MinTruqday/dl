@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibObjectsAlignCenterHorizontalSmart implements BlockTool {
   static readonly feature = {
     id: "DocLibObjectsAlignCenterHorizontalSmart",
-    title: "Objects Align Center Horizontal Smart",
+    title: "DocLib Objects Align Center Horizontal Smart",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1f7f980da1b8dc71"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,12 20,17 12,18 20,15 8,19 5,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Objects Align Center Horizontal Smart",
+      title: "DocLib Objects Align Center Horizontal Smart",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1f7f980da1b8dc71"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,12 20,17 12,18 20,15 8,19 5,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibObjectsAlignCenterHorizontalSmart implements BlockToo
   }
 
   readonly id = "DocLibObjectsAlignCenterHorizontalSmart";
-  readonly title = "Objects Align Center Horizontal Smart";
+  readonly title = "DocLib Objects Align Center Horizontal Smart";
   readonly category = "layout" as const;
   readonly mode = "ObjectsAlignCenterHorizontalSmart";
   readonly requiresSelection = false;

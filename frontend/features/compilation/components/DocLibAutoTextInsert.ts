@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAutoTextInsert implements BlockTool {
   static readonly feature = {
     id: "DocLibAutoTextInsert",
-    title: "Auto Text Insert",
+    title: "DocLib Auto Text Insert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="37fa52300b24ab98"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,16 18,18 15,6 5,20 9,20 17,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Auto Text Insert",
+      title: "DocLib Auto Text Insert",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="37fa52300b24ab98"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,16 18,18 15,6 5,20 9,20 17,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibAutoTextInsert implements BlockTool {
   }
 
   readonly id = "DocLibAutoTextInsert";
-  readonly title = "Auto Text Insert";
+  readonly title = "DocLib Auto Text Insert";
   readonly category = "format" as const;
   readonly mode = "AutoTextInsert";
   readonly requiresSelection = false;

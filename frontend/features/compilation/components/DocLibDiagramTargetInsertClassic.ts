@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDiagramTargetInsertClassic implements BlockTool {
   static readonly feature = {
     id: "DocLibDiagramTargetInsertClassic",
-    title: "Diagram Target Insert Classic",
+    title: "DocLib Diagram Target Insert Classic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6cc10ae21daffb6b"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,10 14,9 16,9 17,9 16,15 15,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Diagram Target Insert Classic",
+      title: "DocLib Diagram Target Insert Classic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6cc10ae21daffb6b"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,10 14,9 16,9 17,9 16,15 15,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDiagramTargetInsertClassic implements BlockTool {
   }
 
   readonly id = "DocLibDiagramTargetInsertClassic";
-  readonly title = "Diagram Target Insert Classic";
+  readonly title = "DocLib Diagram Target Insert Classic";
   readonly category = "format" as const;
   readonly mode = "DiagramTargetInsertClassic";
   readonly requiresSelection = false;

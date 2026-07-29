@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPasteLinkedExcelChartSourceFormatting implements BlockTool {
   static readonly feature = {
     id: "DocLibPasteLinkedExcelChartSourceFormatting",
-    title: "Paste Linked Excel Chart Source Formatting",
+    title: "DocLib Paste Linked Excel Chart Source Formatting",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="be99bf9deb206e97"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="7,4 8,8 18,19 12,19 16,9 6,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Paste Linked Excel Chart Source Formatting",
+      title: "DocLib Paste Linked Excel Chart Source Formatting",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="be99bf9deb206e97"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="7,4 8,8 18,19 12,19 16,9 6,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPasteLinkedExcelChartSourceFormatting implements Bloc
   }
 
   readonly id = "DocLibPasteLinkedExcelChartSourceFormatting";
-  readonly title = "Paste Linked Excel Chart Source Formatting";
+  readonly title = "DocLib Paste Linked Excel Chart Source Formatting";
   readonly category = "format" as const;
   readonly mode = "PasteLinkedExcelChartSourceFormatting";
   readonly requiresSelection = false;

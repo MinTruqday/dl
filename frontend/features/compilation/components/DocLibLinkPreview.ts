@@ -1,9 +1,10 @@
 import { API, BlockTool } from "@editorjs/editorjs";
+import { requestEditorInput } from "./editor-dialog";
 
 export default class DocLibLinkPreview implements BlockTool {
   static readonly feature = {
     id: "DocLibLinkPreview",
-    title: "Link Preview",
+    title: "DocLib Link Preview",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="79a2f43c0a4ba89d"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="6,13 10,13 14,11 19,8 20,16 18,5"/></svg>',
     product: "doclib",
   } as const;
@@ -22,7 +23,7 @@ export default class DocLibLinkPreview implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "Link Preview",
+      title: "DocLib Link Preview",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="79a2f43c0a4ba89d"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="6,13 10,13 14,11 19,8 20,16 18,5"/></svg>',
     };
   }
@@ -128,12 +129,13 @@ export default class DocLibLinkPreview implements BlockTool {
         img.style.backgroundImage = `url(${this.data.meta.image.url})`;
       }
 
-      img.addEventListener("click", (e) => {
+      img.addEventListener("click", async (e) => {
         e.preventDefault();
-        const newUrl = prompt(
-          "Enter cover image URL for this link card:",
-          this.data.meta.image.url,
-        );
+        const newUrl = await requestEditorInput({
+          title: "DocLib Link Preview",
+          label: "Liên kết ảnh",
+          initialValue: this.data.meta.image.url,
+        });
         if (newUrl !== null) {
           this.data.meta.image.url = newUrl;
           img.style.backgroundImage = `url(${newUrl})`;

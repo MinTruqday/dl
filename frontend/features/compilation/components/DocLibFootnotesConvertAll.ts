@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFootnotesConvertAll implements BlockTool {
   static readonly feature = {
     id: "DocLibFootnotesConvertAll",
-    title: "Footnotes Convert All",
+    title: "DocLib Footnotes Convert All",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e982adbd1f45d4e6"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="16,15 7,6 18,5 12,13 19,10 20,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Footnotes Convert All",
+      title: "DocLib Footnotes Convert All",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e982adbd1f45d4e6"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="16,15 7,6 18,5 12,13 19,10 20,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFootnotesConvertAll implements BlockTool {
   }
 
   readonly id = "DocLibFootnotesConvertAll";
-  readonly title = "Footnotes Convert All";
+  readonly title = "DocLib Footnotes Convert All";
   readonly category = "format" as const;
   readonly mode = "FootnotesConvertAll";
   readonly requiresSelection = false;

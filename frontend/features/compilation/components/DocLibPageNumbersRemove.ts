@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPageNumbersRemove implements BlockTool {
   static readonly feature = {
     id: "DocLibPageNumbersRemove",
-    title: "Page Numbers Remove",
+    title: "DocLib Page Numbers Remove",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="38a757b13a43b7c7"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="9,18 6,11 11,20 17,16 4,11 14,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Page Numbers Remove",
+      title: "DocLib Page Numbers Remove",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="38a757b13a43b7c7"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="9,18 6,11 11,20 17,16 4,11 14,6"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPageNumbersRemove implements BlockTool {
   }
 
   readonly id = "DocLibPageNumbersRemove";
-  readonly title = "Page Numbers Remove";
+  readonly title = "DocLib Page Numbers Remove";
   readonly category = "insert" as const;
   readonly mode = "PageNumbersRemove";
   readonly requiresSelection = false;

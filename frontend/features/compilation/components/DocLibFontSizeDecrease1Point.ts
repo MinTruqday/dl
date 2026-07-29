@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFontSizeDecrease1Point implements BlockTool {
   static readonly feature = {
     id: "DocLibFontSizeDecrease1Point",
-    title: "Font Size Decrease1 Point",
+    title: "DocLib Font Size Decrease1 Point",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="35b655ebb9a117cd"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="6,16 4,18 19,12 10,5 15,15 5,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Font Size Decrease1 Point",
+      title: "DocLib Font Size Decrease1 Point",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="35b655ebb9a117cd"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="6,16 4,18 19,12 10,5 15,15 5,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFontSizeDecrease1Point implements BlockTool {
   }
 
   readonly id = "DocLibFontSizeDecrease1Point";
-  readonly title = "Font Size Decrease1 Point";
+  readonly title = "DocLib Font Size Decrease1 Point";
   readonly category = "format" as const;
   readonly mode = "FontSizeDecrease1Point";
   readonly requiresSelection = false;

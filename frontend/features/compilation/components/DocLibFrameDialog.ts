@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFrameDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibFrameDialog",
-    title: "Frame Dialog",
+    title: "DocLib Frame Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f99f3cce72009916"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="15,10 13,6 16,4 4,9 11,19 15,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Frame Dialog",
+      title: "DocLib Frame Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f99f3cce72009916"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="15,10 13,6 16,4 4,9 11,19 15,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFrameDialog implements BlockTool {
   }
 
   readonly id = "DocLibFrameDialog";
-  readonly title = "Frame Dialog";
+  readonly title = "DocLib Frame Dialog";
   readonly category = "format" as const;
   readonly mode = "FrameDialog";
   readonly requiresSelection = false;

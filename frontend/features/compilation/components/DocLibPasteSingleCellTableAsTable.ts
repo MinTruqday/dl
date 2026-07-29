@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPasteSingleCellTableAsTable implements BlockTool {
   static readonly feature = {
     id: "DocLibPasteSingleCellTableAsTable",
-    title: "Paste Single Cell Table As Table",
+    title: "DocLib Paste Single Cell Table As Table",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="59be939ef694c89f"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,7 15,9 12,16 17,10 9,16 10,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Paste Single Cell Table As Table",
+      title: "DocLib Paste Single Cell Table As Table",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="59be939ef694c89f"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,7 15,9 12,16 17,10 9,16 10,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPasteSingleCellTableAsTable implements BlockTool {
   }
 
   readonly id = "DocLibPasteSingleCellTableAsTable";
-  readonly title = "Paste Single Cell Table As Table";
+  readonly title = "DocLib Paste Single Cell Table As Table";
   readonly category = "format" as const;
   readonly mode = "PasteSingleCellTableAsTable";
   readonly requiresSelection = false;

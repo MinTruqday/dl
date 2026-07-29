@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSyntexSnippets implements BlockTool {
   static readonly feature = {
     id: "DocLibSyntexSnippets",
-    title: "Syntex Snippets",
+    title: "DocLib Syntex Snippets",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a35878d283e1d741"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="14,7 5,10 16,8 15,18 20,11 15,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Syntex Snippets",
+      title: "DocLib Syntex Snippets",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a35878d283e1d741"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="14,7 5,10 16,8 15,18 20,11 15,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSyntexSnippets implements BlockTool {
   }
 
   readonly id = "DocLibSyntexSnippets";
-  readonly title = "Syntex Snippets";
+  readonly title = "DocLib Syntex Snippets";
   readonly category = "format" as const;
   readonly mode = "SyntexSnippets";
   readonly requiresSelection = false;

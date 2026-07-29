@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibIndexInsert implements BlockTool {
   static readonly feature = {
     id: "DocLibIndexInsert",
-    title: "Index Insert",
+    title: "DocLib Index Insert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c06ee9c246d523f0"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="9,12 16,11 6,13 5,6 14,17 14,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Index Insert",
+      title: "DocLib Index Insert",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c06ee9c246d523f0"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="9,12 16,11 6,13 5,6 14,17 14,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibIndexInsert implements BlockTool {
   }
 
   readonly id = "DocLibIndexInsert";
-  readonly title = "Index Insert";
+  readonly title = "DocLib Index Insert";
   readonly category = "reference" as const;
   readonly mode = "IndexInsert";
   readonly requiresSelection = false;

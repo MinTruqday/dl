@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibRibbonCustomization implements BlockTool {
   static readonly feature = {
     id: "DocLibRibbonCustomization",
-    title: "Ribbon Customization",
+    title: "DocLib Ribbon Customization",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c421009c22d979a7"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="13,20 4,7 4,17 6,18 18,12 6,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Ribbon Customization",
+      title: "DocLib Ribbon Customization",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c421009c22d979a7"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="13,20 4,7 4,17 6,18 18,12 6,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibRibbonCustomization implements BlockTool {
   }
 
   readonly id = "DocLibRibbonCustomization";
-  readonly title = "Ribbon Customization";
+  readonly title = "DocLib Ribbon Customization";
   readonly category = "format" as const;
   readonly mode = "RibbonCustomization";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibHideInkSplitButton implements BlockTool {
   static readonly feature = {
     id: "DocLibHideInkSplitButton",
-    title: "Hide Ink Split Button",
+    title: "DocLib Hide Ink Split Button",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fa61bf1b224931f4"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="16,16 8,14 4,9 19,10 4,11 12,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Hide Ink Split Button",
+      title: "DocLib Hide Ink Split Button",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fa61bf1b224931f4"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="16,16 8,14 4,9 19,10 4,11 12,9"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibHideInkSplitButton implements BlockTool {
   }
 
   readonly id = "DocLibHideInkSplitButton";
-  readonly title = "Hide Ink Split Button";
+  readonly title = "DocLib Hide Ink Split Button";
   readonly category = "review" as const;
   readonly mode = "HideInkSplitButton";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableCellAlignmentCenterLeft implements BlockTool {
   static readonly feature = {
     id: "DocLibTableCellAlignmentCenterLeft",
-    title: "Table Cell Alignment Center Left",
+    title: "DocLib Table Cell Alignment Center Left",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="116de0241347cd55"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="4,11 7,6 6,7 5,4 11,15 18,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Table Cell Alignment Center Left",
+      title: "DocLib Table Cell Alignment Center Left",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="116de0241347cd55"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="4,11 7,6 6,7 5,4 11,15 18,9"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTableCellAlignmentCenterLeft implements BlockTool {
   }
 
   readonly id = "DocLibTableCellAlignmentCenterLeft";
-  readonly title = "Table Cell Alignment Center Left";
+  readonly title = "DocLib Table Cell Alignment Center Left";
   readonly category = "table" as const;
   readonly mode = "TableCellAlignmentCenterLeft";
   readonly requiresSelection = false;

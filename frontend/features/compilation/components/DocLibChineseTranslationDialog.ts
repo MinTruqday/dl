@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChineseTranslationDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibChineseTranslationDialog",
-    title: "Chinese Translation Dialog",
+    title: "DocLib Chinese Translation Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4a89e09dfe70f311"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,5 7,8 20,14 9,4 18,13 12,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chinese Translation Dialog",
+      title: "DocLib Chinese Translation Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4a89e09dfe70f311"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,5 7,8 20,14 9,4 18,13 12,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChineseTranslationDialog implements BlockTool {
   }
 
   readonly id = "DocLibChineseTranslationDialog";
-  readonly title = "Chinese Translation Dialog";
+  readonly title = "DocLib Chinese Translation Dialog";
   readonly category = "review" as const;
   readonly mode = "ChineseTranslationDialog";
   readonly requiresSelection = false;

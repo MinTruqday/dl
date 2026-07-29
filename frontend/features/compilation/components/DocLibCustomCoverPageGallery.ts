@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibCustomCoverPageGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibCustomCoverPageGallery",
-    title: "Custom Cover Page Gallery",
+    title: "DocLib Custom Cover Page Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a8deb394f3696be0"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,5 13,16 9,7 9,7 6,16 16,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Custom Cover Page Gallery",
+      title: "DocLib Custom Cover Page Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a8deb394f3696be0"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="19,5 13,16 9,7 9,7 6,16 16,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibCustomCoverPageGallery implements BlockTool {
   }
 
   readonly id = "DocLibCustomCoverPageGallery";
-  readonly title = "Custom Cover Page Gallery";
+  readonly title = "DocLib Custom Cover Page Gallery";
   readonly category = "format" as const;
   readonly mode = "CustomCoverPageGallery";
   readonly requiresSelection = false;

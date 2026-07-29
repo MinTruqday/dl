@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDrawingNewClassic implements BlockTool {
   static readonly feature = {
     id: "DocLibDrawingNewClassic",
-    title: "Drawing New Classic",
+    title: "DocLib Drawing New Classic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="530207184f62f41e"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,6 11,11 15,17 10,17 11,16 17,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Drawing New Classic",
+      title: "DocLib Drawing New Classic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="530207184f62f41e"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,6 11,11 15,17 10,17 11,16 17,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDrawingNewClassic implements BlockTool {
   }
 
   readonly id = "DocLibDrawingNewClassic";
-  readonly title = "Drawing New Classic";
+  readonly title = "DocLib Drawing New Classic";
   readonly category = "format" as const;
   readonly mode = "DrawingNewClassic";
   readonly requiresSelection = false;

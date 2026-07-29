@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibCustomQuickPartsGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibCustomQuickPartsGallery",
-    title: "Custom Quick Parts Gallery",
+    title: "DocLib Custom Quick Parts Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cfc3853daac1abeb"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="7,12 18,14 4,10 5,18 19,20 18,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Custom Quick Parts Gallery",
+      title: "DocLib Custom Quick Parts Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cfc3853daac1abeb"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="7,12 18,14 4,10 5,18 19,20 18,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibCustomQuickPartsGallery implements BlockTool {
   }
 
   readonly id = "DocLibCustomQuickPartsGallery";
-  readonly title = "Custom Quick Parts Gallery";
+  readonly title = "DocLib Custom Quick Parts Gallery";
   readonly category = "format" as const;
   readonly mode = "CustomQuickPartsGallery";
   readonly requiresSelection = false;

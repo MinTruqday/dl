@@ -3,7 +3,7 @@ import { API } from "@editorjs/editorjs";
 export default class DocLibTextEffects {
   static readonly feature = {
     id: "DocLibTextEffects",
-    title: "Text Effects",
+    title: "DocLib Text Effects",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a5bf2b8323445c6a"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="16,8 13,16 5,4 11,8 4,18 8,13"/></svg>',
     product: "doclib",
   } as const;

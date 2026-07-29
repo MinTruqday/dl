@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibNormalViewHeaderArea implements BlockTool {
   static readonly feature = {
     id: "DocLibNormalViewHeaderArea",
-    title: "Normal View Header Area",
+    title: "DocLib Normal View Header Area",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fb4a8dae75dcc75b"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,10 9,8 19,20 16,10 10,6 12,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Normal View Header Area",
+      title: "DocLib Normal View Header Area",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fb4a8dae75dcc75b"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,10 9,8 19,20 16,10 10,6 12,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibNormalViewHeaderArea implements BlockTool {
   }
 
   readonly id = "DocLibNormalViewHeaderArea";
-  readonly title = "Normal View Header Area";
+  readonly title = "DocLib Normal View Header Area";
   readonly category = "format" as const;
   readonly mode = "NormalViewHeaderArea";
   readonly requiresSelection = false;

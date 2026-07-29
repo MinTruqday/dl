@@ -3,7 +3,7 @@ import { API, BlockTool } from "@editorjs/editorjs";
 export default class DocLibTimeline implements BlockTool {
   static readonly feature = {
     id: "DocLibTimeline",
-    title: "Timeline",
+    title: "DocLib Timeline",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4187bedb46182280"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,20 7,19 6,11 4,13 11,4 15,10"/></svg>',
     product: "doclib",
   } as const;
@@ -15,7 +15,7 @@ export default class DocLibTimeline implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "Timeline",
+      title: "DocLib Timeline",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4187bedb46182280"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,20 7,19 6,11 4,13 11,4 15,10"/></svg>',
     };
   }
@@ -41,7 +41,7 @@ export default class DocLibTimeline implements BlockTool {
           ? data.items
           : [
               {
-                title: "Timeline",
+                title: "DocLib Timeline",
                 date: "Jan 2024",
                 desc: "Kickoff and detailed planning.",
               },

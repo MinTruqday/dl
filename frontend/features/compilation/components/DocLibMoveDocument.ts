@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMoveDocument implements BlockTool {
   static readonly feature = {
     id: "DocLibMoveDocument",
-    title: "Move Document",
+    title: "DocLib Move Document",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="13d92bdc6e4f6f0c"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="6,17 13,20 12,15 13,16 6,15 4,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Move Document",
+      title: "DocLib Move Document",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="13d92bdc6e4f6f0c"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="6,17 13,20 12,15 13,16 6,15 4,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibMoveDocument implements BlockTool {
   }
 
   readonly id = "DocLibMoveDocument";
-  readonly title = "Move Document";
+  readonly title = "DocLib Move Document";
   readonly category = "format" as const;
   readonly mode = "MoveDocument";
   readonly requiresSelection = false;

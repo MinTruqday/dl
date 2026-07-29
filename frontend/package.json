@@ -4,9 +4,7 @@
   "private": true,
   "packageManager": "pnpm@9.15.4",
   "scripts": {
-    "predev": "pnpm install",
     "dev": "next dev",
-    "prebuild": "pnpm install",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

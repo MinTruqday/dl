@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMasterDocumentUnlinkSubdocument implements BlockTool {
   static readonly feature = {
     id: "DocLibMasterDocumentUnlinkSubdocument",
-    title: "Master Document Unlink Subdocument",
+    title: "DocLib Master Document Unlink Subdocument",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="aefef29fe8abfb3c"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,20 8,10 15,5 17,13 15,10 8,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Master Document Unlink Subdocument",
+      title: "DocLib Master Document Unlink Subdocument",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="aefef29fe8abfb3c"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,20 8,10 15,5 17,13 15,10 8,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibMasterDocumentUnlinkSubdocument implements BlockTool 
   }
 
   readonly id = "DocLibMasterDocumentUnlinkSubdocument";
-  readonly title = "Master Document Unlink Subdocument";
+  readonly title = "DocLib Master Document Unlink Subdocument";
   readonly category = "format" as const;
   readonly mode = "MasterDocumentUnlinkSubdocument";
   readonly requiresSelection = false;

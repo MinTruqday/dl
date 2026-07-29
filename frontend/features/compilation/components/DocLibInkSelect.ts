@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibInkSelect implements BlockTool {
   static readonly feature = {
     id: "DocLibInkSelect",
-    title: "Ink Select",
+    title: "DocLib Ink Select",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="11d3b23d0acbce6f"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="4,11 12,14 14,20 6,13 7,13 7,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Ink Select",
+      title: "DocLib Ink Select",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="11d3b23d0acbce6f"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="4,11 12,14 14,20 6,13 7,13 7,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibInkSelect implements BlockTool {
   }
 
   readonly id = "DocLibInkSelect";
-  readonly title = "Ink Select";
+  readonly title = "DocLib Ink Select";
   readonly category = "format" as const;
   readonly mode = "InkSelect";
   readonly requiresSelection = false;

@@ -619,7 +619,7 @@ export default function DocumentsPage() {
                             </div>
                           </td>
                           <td className="py-3 px-6 text-center hidden md:table-cell">
-                            <span className="text-[13px] text-[var(--ink-muted)]">{doc.category || "Tài liệu"}</span>
+                            <span className="text-[13px] text-[var(--ink-muted)]">{doc.category || "Không phân loại"}</span>
                           </td>
                           <td className="py-3 px-6 text-center hidden md:table-cell">
                             {doc.is_protected ? (

@@ -507,7 +507,7 @@ def scan_compilation_registry(issues):
             )
         )
     if any(
-        not isinstance(title, str) or not title or title.startswith("DocLib ")
+        not isinstance(title, str) or not title or not title.startswith("DocLib ")
         for title in record_titles
     ):
         issues.append(

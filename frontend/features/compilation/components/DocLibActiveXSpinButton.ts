@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibActiveXSpinButton implements BlockTool {
   static readonly feature = {
     id: "DocLibActiveXSpinButton",
-    title: "Active X Spin Button",
+    title: "DocLib Active X Spin Button",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f8dbb6d90f0b723f"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="14,19 16,17 19,15 16,16 15,11 5,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Active X Spin Button",
+      title: "DocLib Active X Spin Button",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f8dbb6d90f0b723f"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="14,19 16,17 19,15 16,16 15,11 5,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibActiveXSpinButton implements BlockTool {
   }
 
   readonly id = "DocLibActiveXSpinButton";
-  readonly title = "Active X Spin Button";
+  readonly title = "DocLib Active X Spin Button";
   readonly category = "automation" as const;
   readonly mode = "ActiveXSpinButton";
   readonly requiresSelection = false;

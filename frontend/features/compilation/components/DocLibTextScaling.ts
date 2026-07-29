@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextScaling implements BlockTool {
   static readonly feature = {
     id: "DocLibTextScaling",
-    title: "Text Scaling",
+    title: "DocLib Text Scaling",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ed24e0a691de4bfb"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="20,6 7,17 13,5 11,17 8,13 8,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Text Scaling",
+      title: "DocLib Text Scaling",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ed24e0a691de4bfb"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="20,6 7,17 13,5 11,17 8,13 8,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTextScaling implements BlockTool {
   }
 
   readonly id = "DocLibTextScaling";
-  readonly title = "Text Scaling";
+  readonly title = "DocLib Text Scaling";
   readonly category = "format" as const;
   readonly mode = "TextScaling";
   readonly requiresSelection = true;

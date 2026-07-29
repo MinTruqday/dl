@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibHideRibbon implements BlockTool {
   static readonly feature = {
     id: "DocLibHideRibbon",
-    title: "Hide Ribbon",
+    title: "DocLib Hide Ribbon",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f336b09626a107fa"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="9,7 10,18 8,12 11,16 11,19 13,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Hide Ribbon",
+      title: "DocLib Hide Ribbon",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f336b09626a107fa"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="9,7 10,18 8,12 11,16 11,19 13,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibHideRibbon implements BlockTool {
   }
 
   readonly id = "DocLibHideRibbon";
-  readonly title = "Hide Ribbon";
+  readonly title = "DocLib Hide Ribbon";
   readonly category = "format" as const;
   readonly mode = "HideRibbon";
   readonly requiresSelection = false;

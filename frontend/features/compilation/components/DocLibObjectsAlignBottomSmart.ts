@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibObjectsAlignBottomSmart implements BlockTool {
   static readonly feature = {
     id: "DocLibObjectsAlignBottomSmart",
-    title: "Objects Align Bottom Smart",
+    title: "DocLib Objects Align Bottom Smart",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d9bf869784dc532c"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,8 19,19 17,20 19,14 6,17 17,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Objects Align Bottom Smart",
+      title: "DocLib Objects Align Bottom Smart",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d9bf869784dc532c"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,8 19,19 17,20 19,14 6,17 17,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibObjectsAlignBottomSmart implements BlockTool {
   }
 
   readonly id = "DocLibObjectsAlignBottomSmart";
-  readonly title = "Objects Align Bottom Smart";
+  readonly title = "DocLib Objects Align Bottom Smart";
   readonly category = "layout" as const;
   readonly mode = "ObjectsAlignBottomSmart";
   readonly requiresSelection = false;

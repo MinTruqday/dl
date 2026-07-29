@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPrintPreview implements BlockTool {
   static readonly feature = {
     id: "DocLibPrintPreview",
-    title: "Print Preview",
+    title: "DocLib Print Preview",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="af50107b948d0df5"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="9,16 20,8 16,9 17,11 8,16 15,4"/></svg>',
     product: "doclib",
   } as const;
@@ -15,7 +15,7 @@ export default class DocLibPrintPreview implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "Print Preview",
+      title: "DocLib Print Preview",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="af50107b948d0df5"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="9,16 20,8 16,9 17,11 8,16 15,4"/></svg>',
     };
   }

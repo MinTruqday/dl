@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextBoxNextLinked implements BlockTool {
   static readonly feature = {
     id: "DocLibTextBoxNextLinked",
-    title: "Text Box Next Linked",
+    title: "DocLib Text Box Next Linked",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a21d93295253e0be"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="13,16 15,11 18,19 7,7 15,8 18,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Text Box Next Linked",
+      title: "DocLib Text Box Next Linked",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a21d93295253e0be"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="13,16 15,11 18,19 7,7 15,8 18,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTextBoxNextLinked implements BlockTool {
   }
 
   readonly id = "DocLibTextBoxNextLinked";
-  readonly title = "Text Box Next Linked";
+  readonly title = "DocLib Text Box Next Linked";
   readonly category = "format" as const;
   readonly mode = "TextBoxNextLinked";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibEquationUnicodeFormat implements BlockTool {
   static readonly feature = {
     id: "DocLibEquationUnicodeFormat",
-    title: "Equation Unicode Format",
+    title: "DocLib Equation Unicode Format",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6d828cb49afc25d2"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="11,15 8,14 5,18 7,10 7,17 19,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Equation Unicode Format",
+      title: "DocLib Equation Unicode Format",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6d828cb49afc25d2"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="11,15 8,14 5,18 7,10 7,17 19,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibEquationUnicodeFormat implements BlockTool {
   }
 
   readonly id = "DocLibEquationUnicodeFormat";
-  readonly title = "Equation Unicode Format";
+  readonly title = "DocLib Equation Unicode Format";
   readonly category = "format" as const;
   readonly mode = "EquationUnicodeFormat";
   readonly requiresSelection = false;

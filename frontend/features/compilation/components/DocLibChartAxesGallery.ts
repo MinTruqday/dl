@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartAxesGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibChartAxesGallery",
-    title: "Chart Axes Gallery",
+    title: "DocLib Chart Axes Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e3b41425d7b9ba20"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,14 7,7 15,19 20,19 19,11 5,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Axes Gallery",
+      title: "DocLib Chart Axes Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e3b41425d7b9ba20"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="10,14 7,7 15,19 20,19 19,11 5,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartAxesGallery implements BlockTool {
   }
 
   readonly id = "DocLibChartAxesGallery";
-  readonly title = "Chart Axes Gallery";
+  readonly title = "DocLib Chart Axes Gallery";
   readonly category = "layout" as const;
   readonly mode = "ChartAxesGallery";
   readonly requiresSelection = false;

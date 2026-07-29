@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibCellsDelete implements BlockTool {
   static readonly feature = {
     id: "DocLibCellsDelete",
-    title: "Cells Delete",
+    title: "DocLib Cells Delete",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4ac2ad1de4dcba24"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,11 7,16 11,20 20,6 8,15 8,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Cells Delete",
+      title: "DocLib Cells Delete",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4ac2ad1de4dcba24"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,11 7,16 11,20 20,6 8,15 8,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibCellsDelete implements BlockTool {
   }
 
   readonly id = "DocLibCellsDelete";
-  readonly title = "Cells Delete";
+  readonly title = "DocLib Cells Delete";
   readonly category = "table" as const;
   readonly mode = "CellsDelete";
   readonly requiresSelection = false;

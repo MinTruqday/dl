@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPageNumberCurrentPosition implements BlockTool {
   static readonly feature = {
     id: "DocLibPageNumberCurrentPosition",
-    title: "Page Number Current Position",
+    title: "DocLib Page Number Current Position",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f3e0f86c4c412038"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="9,7 14,10 12,18 19,9 16,9 14,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Page Number Current Position",
+      title: "DocLib Page Number Current Position",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f3e0f86c4c412038"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="9,7 14,10 12,18 19,9 16,9 14,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPageNumberCurrentPosition implements BlockTool {
   }
 
   readonly id = "DocLibPageNumberCurrentPosition";
-  readonly title = "Page Number Current Position";
+  readonly title = "DocLib Page Number Current Position";
   readonly category = "layout" as const;
   readonly mode = "PageNumberCurrentPosition";
   readonly requiresSelection = false;

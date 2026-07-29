@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPlainTextContentControl implements BlockTool {
   static readonly feature = {
     id: "DocLibPlainTextContentControl",
-    title: "Plain Text Content Control",
+    title: "DocLib Plain Text Content Control",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f7b700bebd1847df"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="13,17 4,7 6,11 7,6 6,12 19,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Plain Text Content Control",
+      title: "DocLib Plain Text Content Control",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f7b700bebd1847df"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="13,17 4,7 6,11 7,6 6,12 19,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPlainTextContentControl implements BlockTool {
   }
 
   readonly id = "DocLibPlainTextContentControl";
-  readonly title = "Plain Text Content Control";
+  readonly title = "DocLib Plain Text Content Control";
   readonly category = "automation" as const;
   readonly mode = "PlainTextContentControl";
   readonly requiresSelection = false;

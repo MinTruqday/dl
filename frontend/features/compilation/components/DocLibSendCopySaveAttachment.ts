@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSendCopySaveAttachment implements BlockTool {
   static readonly feature = {
     id: "DocLibSendCopySaveAttachment",
-    title: "Send Copy Save Attachment",
+    title: "DocLib Send Copy Save Attachment",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6b4b36f0db7f459c"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="9,11 7,6 19,12 5,7 19,14 6,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Send Copy Save Attachment",
+      title: "DocLib Send Copy Save Attachment",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6b4b36f0db7f459c"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="9,11 7,6 19,12 5,7 19,14 6,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSendCopySaveAttachment implements BlockTool {
   }
 
   readonly id = "DocLibSendCopySaveAttachment";
-  readonly title = "Send Copy Save Attachment";
+  readonly title = "DocLib Send Copy Save Attachment";
   readonly category = "format" as const;
   readonly mode = "SendCopySaveAttachment";
   readonly requiresSelection = false;

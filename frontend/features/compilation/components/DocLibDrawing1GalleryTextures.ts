@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDrawing1GalleryTextures implements BlockTool {
   static readonly feature = {
     id: "DocLibDrawing1GalleryTextures",
-    title: "Drawing1 Gallery Textures",
+    title: "DocLib Drawing1 Gallery Textures",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d33c6ded676bfa8c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,13 11,20 5,9 16,8 14,18 11,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Drawing1 Gallery Textures",
+      title: "DocLib Drawing1 Gallery Textures",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d33c6ded676bfa8c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,13 11,20 5,9 16,8 14,18 11,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDrawing1GalleryTextures implements BlockTool {
   }
 
   readonly id = "DocLibDrawing1GalleryTextures";
-  readonly title = "Drawing1 Gallery Textures";
+  readonly title = "DocLib Drawing1 Gallery Textures";
   readonly category = "format" as const;
   readonly mode = "Drawing1GalleryTextures";
   readonly requiresSelection = false;

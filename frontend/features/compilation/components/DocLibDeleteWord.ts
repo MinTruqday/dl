@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDeleteWord implements BlockTool {
   static readonly feature = {
     id: "DocLibDeleteWord",
-    title: "Delete Word",
+    title: "DocLib Delete Word",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4117a6d038e1f962"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,10 17,8 9,8 15,17 18,5 5,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Delete Word",
+      title: "DocLib Delete Word",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4117a6d038e1f962"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="18,10 17,8 9,8 15,17 18,5 5,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDeleteWord implements BlockTool {
   }
 
   readonly id = "DocLibDeleteWord";
-  readonly title = "Delete Word";
+  readonly title = "DocLib Delete Word";
   readonly category = "format" as const;
   readonly mode = "DeleteWord";
   readonly requiresSelection = false;

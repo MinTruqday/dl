@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableDeleteRowsAndColumnsMenuWord implements BlockTool {
   static readonly feature = {
     id: "DocLibTableDeleteRowsAndColumnsMenuWord",
-    title: "Table Delete Rows And Columns Menu Word",
+    title: "DocLib Table Delete Rows And Columns Menu Word",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4fa9c7160eba2f5f"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,20 16,9 18,20 17,14 15,10 8,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Table Delete Rows And Columns Menu Word",
+      title: "DocLib Table Delete Rows And Columns Menu Word",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4fa9c7160eba2f5f"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="15,20 16,9 18,20 17,14 15,10 8,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTableDeleteRowsAndColumnsMenuWord implements BlockToo
   }
 
   readonly id = "DocLibTableDeleteRowsAndColumnsMenuWord";
-  readonly title = "Table Delete Rows And Columns Menu Word";
+  readonly title = "DocLib Table Delete Rows And Columns Menu Word";
   readonly category = "table" as const;
   readonly mode = "TableDeleteRowsAndColumnsMenuWord";
   readonly requiresSelection = false;

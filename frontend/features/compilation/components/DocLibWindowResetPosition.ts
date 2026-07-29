@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWindowResetPosition implements BlockTool {
   static readonly feature = {
     id: "DocLibWindowResetPosition",
-    title: "Window Reset Position",
+    title: "DocLib Window Reset Position",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b223a3bc9427c5c6"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="12,5 14,5 16,9 14,15 8,8 18,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Window Reset Position",
+      title: "DocLib Window Reset Position",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b223a3bc9427c5c6"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="12,5 14,5 16,9 14,15 8,8 18,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibWindowResetPosition implements BlockTool {
   }
 
   readonly id = "DocLibWindowResetPosition";
-  readonly title = "Window Reset Position";
+  readonly title = "DocLib Window Reset Position";
   readonly category = "view" as const;
   readonly mode = "WindowResetPosition";
   readonly requiresSelection = false;

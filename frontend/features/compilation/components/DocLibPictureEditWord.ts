@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPictureEditWord implements BlockTool {
   static readonly feature = {
     id: "DocLibPictureEditWord",
-    title: "Picture Edit Word",
+    title: "DocLib Picture Edit Word",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="aaf9b87e8179578e"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,15 18,11 14,6 6,10 5,7 20,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Picture Edit Word",
+      title: "DocLib Picture Edit Word",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="aaf9b87e8179578e"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,15 18,11 14,6 6,10 5,7 20,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPictureEditWord implements BlockTool {
   }
 
   readonly id = "DocLibPictureEditWord";
-  readonly title = "Picture Edit Word";
+  readonly title = "DocLib Picture Edit Word";
   readonly category = "format" as const;
   readonly mode = "PictureEditWord";
   readonly requiresSelection = false;

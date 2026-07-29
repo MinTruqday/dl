@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibShowNavigationPaneHeadingsView implements BlockTool {
   static readonly feature = {
     id: "DocLibShowNavigationPaneHeadingsView",
-    title: "Show Navigation Pane Headings View",
+    title: "DocLib Show Navigation Pane Headings View",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c1ccf6b6284b7a6d"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="10,4 12,16 10,11 7,11 9,13 6,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Show Navigation Pane Headings View",
+      title: "DocLib Show Navigation Pane Headings View",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c1ccf6b6284b7a6d"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="10,4 12,16 10,11 7,11 9,13 6,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibShowNavigationPaneHeadingsView implements BlockTool {
   }
 
   readonly id = "DocLibShowNavigationPaneHeadingsView";
-  readonly title = "Show Navigation Pane Headings View";
+  readonly title = "DocLib Show Navigation Pane Headings View";
   readonly category = "format" as const;
   readonly mode = "ShowNavigationPaneHeadingsView";
   readonly requiresSelection = false;

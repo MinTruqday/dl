@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextOutlineWeightGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibTextOutlineWeightGallery",
-    title: "Text Outline Weight Gallery",
+    title: "DocLib Text Outline Weight Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f66b02be24109a24"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="12,9 6,7 6,20 5,6 11,6 4,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Text Outline Weight Gallery",
+      title: "DocLib Text Outline Weight Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f66b02be24109a24"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="12,9 6,7 6,20 5,6 11,6 4,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTextOutlineWeightGallery implements BlockTool {
   }
 
   readonly id = "DocLibTextOutlineWeightGallery";
-  readonly title = "Text Outline Weight Gallery";
+  readonly title = "DocLib Text Outline Weight Gallery";
   readonly category = "format" as const;
   readonly mode = "TextOutlineWeightGallery";
   readonly requiresSelection = false;

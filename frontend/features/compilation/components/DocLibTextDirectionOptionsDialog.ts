@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextDirectionOptionsDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibTextDirectionOptionsDialog",
-    title: "Text Direction Options Dialog",
+    title: "DocLib Text Direction Options Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0d0fc65bb749f228"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,19 15,10 17,9 8,10 13,16 17,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Text Direction Options Dialog",
+      title: "DocLib Text Direction Options Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0d0fc65bb749f228"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,19 15,10 17,9 8,10 13,16 17,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTextDirectionOptionsDialog implements BlockTool {
   }
 
   readonly id = "DocLibTextDirectionOptionsDialog";
-  readonly title = "Text Direction Options Dialog";
+  readonly title = "DocLib Text Direction Options Dialog";
   readonly category = "layout" as const;
   readonly mode = "TextDirectionOptionsDialog";
   readonly requiresSelection = false;

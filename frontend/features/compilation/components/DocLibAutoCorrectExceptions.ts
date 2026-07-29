@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAutoCorrectExceptions implements BlockTool {
   static readonly feature = {
     id: "DocLibAutoCorrectExceptions",
-    title: "Auto Correct Exceptions",
+    title: "DocLib Auto Correct Exceptions",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b06424d01468f33d"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,19 6,8 7,6 9,14 14,8 13,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Auto Correct Exceptions",
+      title: "DocLib Auto Correct Exceptions",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b06424d01468f33d"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="10,19 6,8 7,6 9,14 14,8 13,6"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibAutoCorrectExceptions implements BlockTool {
   }
 
   readonly id = "DocLibAutoCorrectExceptions";
-  readonly title = "Auto Correct Exceptions";
+  readonly title = "DocLib Auto Correct Exceptions";
   readonly category = "format" as const;
   readonly mode = "AutoCorrectExceptions";
   readonly requiresSelection = false;

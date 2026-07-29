@@ -33,28 +33,6 @@ import {
   addTaskCommentAPI,
   getTaskCommentsAPI,
 } from "@/features/content/services/collaboration.service";
-import {
-  Users,
-  Mail,
-  Check,
-  Loader2,
-  Shield,
-  Trash2,
-  Activity,
-  MessageSquare,
-  Globe,
-  Lock,
-  X,
-  TrendingUp,
-  Camera,
-  Key,
-  QrCode,
-  CheckSquare,
-  Square,
-  MessageCircle,
-  FileText,
-  ChevronRight,
-} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/shared/contexts/ToastContext";
 import {
@@ -117,7 +95,7 @@ export default function StudioCollabPage() {
       setDocuments(docsData.data || docsData || []);
       setInvites(invitesData.data || invitesData || []);
     } catch (err) {
-      showToast("Lỗi trích xuất bộ sưu tập tài liệu", "error");
+      showToast("Không thể tải tài liệu", "error");
     } finally {
       setLoading(false);
     }
@@ -150,7 +128,7 @@ export default function StudioCollabPage() {
       setLockStatus(lock.data || lock || { is_locked: false });
       setTasks(tasksRes.data || tasksRes || []);
     } catch (err) {
-      showToast("Lỗi trích xuất cấu hình cộng tác", "error");
+      showToast("Không thể tải thông tin cộng tác", "error");
     }
   }, [selectedDocumentId, showToast]);
 
@@ -209,12 +187,12 @@ export default function StudioCollabPage() {
     setActionLoading(true);
     try {
       await inviteCollaboratorAPI(selectedDocumentId, collaboratorEmail, role);
-      showToast("Khởi tạo yêu cầu cấp quyền cộng tác hoàn tất", "success");
+      showToast("Đã gửi lời mời", "success");
       setCollaboratorEmail("");
       loadData();
       fetchCollaboratorDetails();
     } catch (err) {
-      showToast("Lỗi khởi tạo yêu cầu cấp quyền cộng tác", "error");
+      showToast("Không thể gửi lời mời", "error");
     } finally {
       setActionLoading(false);
     }
@@ -225,13 +203,13 @@ export default function StudioCollabPage() {
     try {
       await respondToInviteAPI(inviteId, status);
       showToast(
-        status === "ACCEPTED" ? "Xác thực phản hồi chấp thuận hoàn tất" : "Xác thực phản hồi từ chối hoàn tất",
+        status === "ACCEPTED" ? "Đã chấp nhận lời mời" : "Đã từ chối lời mời",
         "success",
       );
       loadData();
       if (selectedDocumentId) fetchCollaboratorDetails();
     } catch (err) {
-      showToast("Lỗi xác thực phản hồi yêu cầu", "error");
+      showToast("Không thể phản hồi lời mời", "error");
     } finally {
       setActionLoading(false);
     }
@@ -241,10 +219,10 @@ export default function StudioCollabPage() {
     setActionLoading(true);
     try {
       await removeCollaboratorAPI(collabId);
-      showToast("Thu hồi quyền truy cập cộng tác hoàn tất", "success");
+      showToast("Đã xoá cộng tác viên", "success");
       fetchCollaboratorDetails();
     } catch (err) {
-      showToast("Lỗi thu hồi quyền truy cập cộng tác", "error");
+      showToast("Không thể xoá cộng tác viên", "error");
     } finally {
       setActionLoading(false);
     }
@@ -255,13 +233,13 @@ export default function StudioCollabPage() {
     setActionLoading(true);
     try {
       await transferOwnershipAPI(selectedDocumentId, transferId);
-      showToast(`Chuyển giao quyền sở hữu cho ${transferName} hoàn tất`, "success");
+      showToast(`Đã chuyển quyền sở hữu cho ${transferName}`, "success");
       setTransferId(null);
       setTransferName("");
       loadData();
       setSelectedDocumentId("");
     } catch (err) {
-      showToast("Lỗi chuyển giao quyền sở hữu tài liệu", "error");
+      showToast("Không thể chuyển quyền sở hữu", "error");
     } finally {
       setActionLoading(false);
     }
@@ -270,10 +248,10 @@ export default function StudioCollabPage() {
   const handleUpdateRole = async (collabId: string, newRole: string) => {
     try {
       await updateCollaboratorRoleAPI(collabId, newRole);
-      showToast("Cập nhật phân quyền truy cập hoàn tất", "success");
+      showToast("Đã cập nhật vai trò", "success");
       fetchCollaboratorDetails();
     } catch (err) {
-      showToast("Lỗi cập nhật phân quyền truy cập", "error");
+      showToast("Không thể cập nhật vai trò", "error");
     }
   };
 
@@ -284,7 +262,7 @@ export default function StudioCollabPage() {
       setNewMemo("");
       fetchCollaboratorDetails();
     } catch (err) {
-      showToast("Lỗi truyền tải dữ liệu ghi chú", "error");
+      showToast("Không thể gửi ghi chú", "error");
     }
   };
 
@@ -293,20 +271,20 @@ export default function StudioCollabPage() {
     try {
       await updateCollabAccessAPI(selectedDocumentId, level);
       setAccessLevel(level);
-      showToast("Cập nhật cấu hình bảo mật hoàn tất", "success");
+      showToast("Đã cập nhật quyền truy cập", "success");
       fetchCollaboratorDetails();
     } catch (err) {
-      showToast("Lỗi cập nhật cấu hình bảo mật", "error");
+      showToast("Không thể cập nhật quyền truy cập", "error");
     }
   };
 
   const handleRevokeInvite = async (inviteId: string) => {
     try {
       await revokeInviteAPI(inviteId);
-      showToast("Hủy bỏ yêu cầu cấp quyền hoàn tất", "success");
+      showToast("Đã thu hồi lời mời", "success");
       fetchCollaboratorDetails();
     } catch (err) {
-      showToast("Lỗi hủy bỏ yêu cầu cấp quyền", "error");
+      showToast("Không thể thu hồi lời mời", "error");
     }
   };
 
@@ -314,11 +292,11 @@ export default function StudioCollabPage() {
     if (!selectedDocumentId || !newSnapshotName.trim()) return;
     try {
       await createSnapshotAPI(selectedDocumentId, newSnapshotName.trim());
-      showToast("Khởi tạo bản sao lưu dữ liệu hoàn tất", "success");
+      showToast("Đã tạo bản chụp", "success");
       setNewSnapshotName("");
       fetchCollaboratorDetails();
     } catch (err) {
-      showToast("Lỗi khởi tạo bản sao lưu dữ liệu", "error");
+      showToast("Không thể tạo bản chụp", "error");
     }
   };
 
@@ -326,10 +304,10 @@ export default function StudioCollabPage() {
     if (!selectedDocumentId) return;
     try {
       await acquireLockAPI(selectedDocumentId);
-      showToast("Cấp phát khóa phiên độc quyền hoàn tất", "success");
+      showToast("Đã khoá phiên", "success");
       fetchCollaboratorDetails();
     } catch (err) {
-      showToast("Lỗi cấp phát khóa phiên độc quyền", "error");
+      showToast("Không thể khoá phiên", "error");
     }
   };
 
@@ -337,10 +315,10 @@ export default function StudioCollabPage() {
     if (!selectedDocumentId) return;
     try {
       await releaseLockAPI(selectedDocumentId);
-      showToast("Giải phóng khóa phiên độc quyền hoàn tất", "success");
+      showToast("Đã mở khoá phiên", "success");
       fetchCollaboratorDetails();
     } catch (err) {
-      showToast("Lỗi giải phóng khóa phiên độc quyền", "error");
+      showToast("Không thể mở khoá phiên", "error");
     }
   };
 
@@ -349,9 +327,9 @@ export default function StudioCollabPage() {
     try {
       const res = await generateInviteCodeAPI(selectedDocumentId);
       setInviteCode(res.data?.invite_code || res.invite_code || "");
-      showToast("Khởi tạo mã phiên truy cập hoàn tất", "success");
+      showToast("Đã tạo mã mời", "success");
     } catch (err) {
-      showToast("Lỗi khởi tạo mã phiên truy cập", "error");
+      showToast("Không thể tạo mã mời", "error");
     }
   };
 
@@ -359,11 +337,11 @@ export default function StudioCollabPage() {
     if (!joinCodeInput.trim()) return;
     try {
       await joinViaInviteCodeAPI(joinCodeInput.trim());
-      showToast("Xác thực mã phiên tham gia hoàn tất", "success");
+      showToast("Đã tham gia phiên", "success");
       setJoinCodeInput("");
       loadData();
     } catch (err) {
-      showToast("Lỗi xác thực mã phiên tham gia", "error");
+      showToast("Mã mời không hợp lệ", "error");
     }
   };
 
@@ -378,9 +356,9 @@ export default function StudioCollabPage() {
       setNewTaskDesc("");
       setNewTaskAssigned("");
       fetchCollaboratorDetails();
-      showToast("Khởi tạo bản ghi nhiệm vụ hoàn tất", "success");
+      showToast("Đã thêm nhiệm vụ", "success");
     } catch (err) {
-      showToast("Lỗi khởi tạo bản ghi nhiệm vụ", "error");
+      showToast("Không thể thêm nhiệm vụ", "error");
     }
   };
 
@@ -389,7 +367,7 @@ export default function StudioCollabPage() {
       await updateCollabTaskAPI(taskId, !currentStatus);
       fetchCollaboratorDetails();
     } catch (err) {
-      showToast("Lỗi cập nhật trạng thái nhiệm vụ", "error");
+      showToast("Không thể cập nhật nhiệm vụ", "error");
     }
   };
 
@@ -400,7 +378,7 @@ export default function StudioCollabPage() {
       const cRes = await getTaskCommentsAPI(taskId);
       setActiveTaskComments(cRes.data || cRes || []);
     } catch (err) {
-      showToast("Lỗi trích xuất bộ sưu tập phản hồi", "error");
+      showToast("Không thể tải thảo luận", "error");
     }
   };
 
@@ -412,7 +390,7 @@ export default function StudioCollabPage() {
       const cRes = await getTaskCommentsAPI(activeTaskId);
       setActiveTaskComments(cRes.data || cRes || []);
     } catch (err) {
-      showToast("Lỗi truyền tải dữ liệu phản hồi", "error");
+      showToast("Không thể gửi phản hồi", "error");
     }
   };
 
@@ -446,9 +424,9 @@ export default function StudioCollabPage() {
   return (
     <div className="app-page gap-6">
       <PageHeader title="Cộng tác" />
-      <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-0">
-        <aside className="w-full md:w-[320px] shrink-0 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
-          <div className="bg-[var(--surface-quiet)] md:bg-transparent rounded-[var(--radius-panel)] md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
+      <div className="grid min-h-0 flex-1 gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
+        <aside className="flex min-w-0 flex-col gap-4">
+          <div className="surface p-5 space-y-4">
             <p className="text-[13px] font-medium text-[var(--ink-muted)] mb-4">
               Gia nhập phiên
             </p>
@@ -458,17 +436,17 @@ export default function StudioCollabPage() {
                 placeholder=""
                 value={joinCodeInput}
                 onChange={(e) => setJoinCodeInput(e.target.value)}
-                className="apple-input w-full"
+                className="field-control w-full"
               />
               <button
                 onClick={handleJoinWithCode}
-                className="pill-button w-full xl:w-auto shrink-0"
+                className="button-primary w-full xl:w-auto shrink-0"
               >
                 Gia nhập
               </button>
             </div>
           </div>
-          <div className="bg-[var(--surface-quiet)] md:bg-transparent rounded-[var(--radius-panel)] md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
+          <div className="surface p-5 space-y-4">
             <p className="text-[13px] font-medium text-[var(--ink-muted)] mb-4">
               Tài liệu hoạt động
             </p>
@@ -476,7 +454,7 @@ export default function StudioCollabPage() {
               <select
                 value={selectedDocumentId}
                 onChange={(e) => setSelectedDocumentId(e.target.value)}
-                className="w-full h-[44px] bg-white  px-4 text-[15px] focus:outline-none focus:border-[var(--brand)] appearance-none rounded-[var(--radius-control)]"
+                className="field-control w-full"
               >
                 <option value="">Chọn tài liệu biên tập</option>
                 {documents.map((doc) => (
@@ -485,7 +463,6 @@ export default function StudioCollabPage() {
                   </option>
                 ))}
               </select>
-              <ChevronRight className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none rotate-90 text-[var(--ink-muted)]" />
             </div>
 
             {selectedDocumentId && isOwnerOfSelected() && (
@@ -512,12 +489,12 @@ export default function StudioCollabPage() {
           </div>
 
           {selectedDocumentId && (
-            <div className="bg-[var(--surface-quiet)] md:bg-transparent rounded-[var(--radius-panel)] md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
+            <div className="surface p-5 space-y-4">
               <p className="text-[13px] font-medium text-[var(--ink-muted)] mb-4">
                 Khóa phiên
               </p>
               {lockStatus.is_locked ? (
-                <div className="p-4 bg-[#FFF0F0] text-[var(--danger)] text-[14px] rounded-[var(--radius-control)]">
+                <div className="rounded-[var(--radius-control)] bg-[var(--danger-soft)] p-4 text-[14px] text-[var(--danger)]">
                   Khóa bởi:{" "}
                   <strong className="font-semibold">
                     {lockStatus.user_name}
@@ -534,7 +511,7 @@ export default function StudioCollabPage() {
               ) : (
                 <button
                   onClick={handleAcquireLock}
-                  className="w-full py-3 bg-[var(--brand)] text-white text-[14px] font-medium rounded-[var(--radius-control)] hover:bg-[#005bb5] transition-colors"
+                  className="button-primary w-full"
                 >
                   Yêu cầu khóa độc quyền
                 </button>
@@ -543,7 +520,7 @@ export default function StudioCollabPage() {
           )}
 
           {selectedDocumentId && (
-            <div className="bg-[var(--surface-quiet)] md:bg-transparent rounded-[var(--radius-panel)] md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
+            <div className="surface p-5 space-y-4">
               <p className="text-[13px] font-medium text-[var(--ink-muted)] mb-4">
                 Mời cộng tác
               </p>
@@ -552,18 +529,18 @@ export default function StudioCollabPage() {
                 placeholder=""
                 value={collaboratorEmail}
                 onChange={(e) => setCollaboratorEmail(e.target.value)}
-                className="apple-input w-full"
+                className="field-control w-full"
               />
               <div className="flex gap-2">
                 <button
                   onClick={() => setRole("editor")}
-                  className={`flex-1 py-2 text-[13px] font-medium rounded-[var(--radius-control)] transition-colors ${role === "editor" ? "bg-black text-white" : "bg-white text-[var(--brand)] font-medium"}`}
+                  className={`flex-1 rounded-[var(--radius-control)] py-2 text-[13px] font-medium transition-colors ${role === "editor" ? "bg-[var(--brand)] text-white" : "bg-[var(--surface)] text-[var(--ink-muted)]"}`}
                 >
                   Biên tập
                 </button>
                 <button
                   onClick={() => setRole("viewer")}
-                  className={`flex-1 py-2 text-[13px] font-medium rounded-[var(--radius-control)] transition-colors ${role === "viewer" ? "bg-black text-white" : "bg-white text-[var(--brand)] font-medium"}`}
+                  className={`flex-1 rounded-[var(--radius-control)] py-2 text-[13px] font-medium transition-colors ${role === "viewer" ? "bg-[var(--brand)] text-white" : "bg-[var(--surface)] text-[var(--ink-muted)]"}`}
                 >
                   Người xem
                 </button>
@@ -571,19 +548,15 @@ export default function StudioCollabPage() {
               <button
                 onClick={handleInvite}
                 disabled={actionLoading || !collaboratorEmail}
-                className="w-full py-3 bg-[var(--brand)] text-white text-[14px] font-medium rounded-[var(--radius-control)] disabled:opacity-50"
+                className="button-primary w-full"
               >
-                {actionLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin mx-auto" />
-                ) : (
-                  "Gửi lời mời"
-                )}
+                {actionLoading ? "Đang gửi" : "Gửi lời mời"}
               </button>
             </div>
           )}
 
           {selectedDocumentId && isOwnerOfSelected() && (
-            <div className="bg-[var(--surface-quiet)] md:bg-transparent rounded-[var(--radius-panel)] md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
+            <div className="surface p-5 space-y-4">
               <p className="text-[13px] font-medium text-[var(--ink-muted)] mb-4">
                 Mã mời nhanh
               </p>
@@ -595,11 +568,11 @@ export default function StudioCollabPage() {
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(inviteCode);
-                      showToast("Sao chép mã phiên truy cập vào bộ nhớ tạm hoàn tất", "success");
+                      showToast("Đã sao chép mã mời", "success");
                     }}
                     className="text-[13px] font-medium text-[var(--brand)]"
                   >
-                    Copy
+                    Sao chép
                   </button>
                 </div>
               ) : (
@@ -614,7 +587,7 @@ export default function StudioCollabPage() {
           )}
 
           {selectedDocumentId && sentPendingInvites.length > 0 && (
-            <div className="bg-[var(--surface-quiet)] md:bg-transparent rounded-[var(--radius-panel)] md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
+            <div className="surface p-5 space-y-4">
               <p className="text-[13px] font-medium text-[var(--ink-muted)] mb-4">
                 Lời mời đã gửi (chờ)
               </p>
@@ -643,7 +616,7 @@ export default function StudioCollabPage() {
           )}
 
           {selectedDocumentId && (
-            <div className="bg-[var(--surface-quiet)] md:bg-transparent rounded-[var(--radius-panel)] md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
+            <div className="surface p-5 space-y-4">
               <div className="flex justify-between items-center">
                 <h2 className="text-[20px] font-semibold text-[var(--ink)] mb-4">
                   Cộng tác viên
@@ -727,8 +700,8 @@ export default function StudioCollabPage() {
           )}
         </aside>
 
-        <main className="flex-1 min-w-0 space-y-6 overflow-y-auto no-scrollbar pb-6">
-          <div className="bg-[var(--surface-quiet)] md:bg-transparent rounded-[var(--radius-panel)] md:rounded-none p-6 md:p-0 md:pt-6 space-y-6">
+        <main className="min-w-0 space-y-6 pb-6">
+          <div className="surface p-5 space-y-6">
             <h2 className="text-[20px] font-semibold text-[var(--ink)] mb-4">
               Thư mời cộng tác
             </h2>
@@ -780,9 +753,9 @@ export default function StudioCollabPage() {
 
           {selectedDocumentId && (
             <>
-              <div className="bg-[var(--surface-quiet)] md:bg-transparent rounded-[var(--radius-panel)] md:rounded-none p-6 md:p-0 md:pt-6 space-y-6">
-                <h2 className="text-[20px] font-semibold text-[var(--ink)] flex items-center gap-2">
-                  <CheckSquare className="w-5 h-5" /> Nhiệm vụ & Checklist
+              <div className="surface p-5 space-y-6">
+                <h2 className="text-[20px] font-semibold text-[var(--ink)]">
+                  Nhiệm vụ
                 </h2>
                 <div className="flex gap-2">
                   <input
@@ -790,18 +763,18 @@ export default function StudioCollabPage() {
                     placeholder=""
                     value={newTaskDesc}
                     onChange={(e) => setNewTaskDesc(e.target.value)}
-                    className="apple-input flex-1"
+                    className="field-control flex-1"
                   />
                   <input
                     type="text"
                     placeholder=""
                     value={newTaskAssigned}
                     onChange={(e) => setNewTaskAssigned(e.target.value)}
-                    className="apple-input w-32"
+                    className="field-control w-32"
                   />
                   <button
                     onClick={handleCreateTask}
-                    className="pill-button px-6"
+                    className="button-primary px-6"
                   >
                     Thêm
                   </button>
@@ -817,13 +790,20 @@ export default function StudioCollabPage() {
                           onClick={() =>
                             handleToggleTask(task.id, task.is_done)
                           }
-                          className="mt-1"
+                          className="mt-1 flex size-5 items-center justify-center"
+                          aria-label={
+                            task.is_done
+                              ? "Đánh dấu chưa hoàn thành"
+                              : "Đánh dấu hoàn thành"
+                          }
                         >
-                          {task.is_done ? (
-                            <CheckSquare className="w-5 h-5 text-[var(--success)]" />
-                          ) : (
-                            <Square className="w-5 h-5 text-[var(--ink-muted)]" />
-                          )}
+                          <span
+                            className={`size-4 rounded-[4px] border ${
+                              task.is_done
+                                ? "border-[var(--brand)] bg-[var(--brand)]"
+                                : "border-[var(--border-strong)] bg-[var(--surface)]"
+                            }`}
+                          />
                         </button>
                         <div>
                           <p
@@ -847,9 +827,9 @@ export default function StudioCollabPage() {
                 </div>
               </div>
 
-              <div className="bg-[var(--surface-quiet)] md:bg-transparent rounded-[var(--radius-panel)] md:rounded-none p-6 md:p-0 md:pt-6 space-y-6">
-                <h2 className="text-[20px] font-semibold text-[var(--ink)] flex items-center gap-2">
-                  <MessageSquare className="w-5 h-5" /> Bảng ghim & Trao đổi
+              <div className="surface p-5 space-y-6">
+                <h2 className="text-[20px] font-semibold text-[var(--ink)]">
+                  Trao đổi
                 </h2>
                 <div className="h-64 bg-[var(--surface-quiet)] rounded-[var(--radius-panel)] border-[var(--border)] p-4 overflow-y-auto space-y-4 no-scrollbar">
                   {memos.length > 0 ? (
@@ -884,9 +864,9 @@ export default function StudioCollabPage() {
                     value={newMemo}
                     onChange={(e) => setNewMemo(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSendMemo()}
-                    className="apple-input flex-1"
+                    className="field-control flex-1"
                   />
-                  <button onClick={handleSendMemo} className="pill-button px-6">
+                  <button onClick={handleSendMemo} className="button-primary px-6">
                     Gửi
                   </button>
                 </div>
@@ -919,7 +899,7 @@ export default function StudioCollabPage() {
           >
             Hủy
           </button>
-          <button onClick={handleTransferOwnership} className="pill-button">
+          <button onClick={handleTransferOwnership} className="button-primary">
             Xác nhận
           </button>
         </ModalFooter>
@@ -965,11 +945,11 @@ export default function StudioCollabPage() {
               value={activeTaskCommentText}
               onChange={(e) => setActiveTaskCommentText(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSendTaskComment()}
-              className="apple-input flex-1"
+              className="field-control flex-1"
             />
             <button
               onClick={handleSendTaskComment}
-              className="pill-button px-6"
+              className="button-primary px-6"
             >
               Gửi
             </button>

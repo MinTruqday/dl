@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPictureBrightnessAndContrastGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibPictureBrightnessAndContrastGallery",
-    title: "Picture Brightness And Contrast Gallery",
+    title: "DocLib Picture Brightness And Contrast Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3023781167a48577"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,5 5,4 5,15 18,4 9,4 19,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Picture Brightness And Contrast Gallery",
+      title: "DocLib Picture Brightness And Contrast Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3023781167a48577"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="18,5 5,4 5,15 18,4 9,4 19,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPictureBrightnessAndContrastGallery implements BlockT
   }
 
   readonly id = "DocLibPictureBrightnessAndContrastGallery";
-  readonly title = "Picture Brightness And Contrast Gallery";
+  readonly title = "DocLib Picture Brightness And Contrast Gallery";
   readonly category = "media" as const;
   readonly mode = "PictureBrightnessAndContrastGallery";
   readonly requiresSelection = false;

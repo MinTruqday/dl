@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDiagramShapeInsertClassic implements BlockTool {
   static readonly feature = {
     id: "DocLibDiagramShapeInsertClassic",
-    title: "Diagram Shape Insert Classic",
+    title: "DocLib Diagram Shape Insert Classic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="858711667e2d78a7"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="18,20 4,4 11,15 5,18 5,7 5,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Diagram Shape Insert Classic",
+      title: "DocLib Diagram Shape Insert Classic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="858711667e2d78a7"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="18,20 4,4 11,15 5,18 5,7 5,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDiagramShapeInsertClassic implements BlockTool {
   }
 
   readonly id = "DocLibDiagramShapeInsertClassic";
-  readonly title = "Diagram Shape Insert Classic";
+  readonly title = "DocLib Diagram Shape Insert Classic";
   readonly category = "layout" as const;
   readonly mode = "DiagramShapeInsertClassic";
   readonly requiresSelection = false;

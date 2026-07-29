@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartSwitchRowColumn implements BlockTool {
   static readonly feature = {
     id: "DocLibChartSwitchRowColumn",
-    title: "Chart Switch Row Column",
+    title: "DocLib Chart Switch Row Column",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="071e248716ab0235"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,17 6,20 9,5 6,6 11,19 18,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Switch Row Column",
+      title: "DocLib Chart Switch Row Column",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="071e248716ab0235"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="11,17 6,20 9,5 6,6 11,19 18,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartSwitchRowColumn implements BlockTool {
   }
 
   readonly id = "DocLibChartSwitchRowColumn";
-  readonly title = "Chart Switch Row Column";
+  readonly title = "DocLib Chart Switch Row Column";
   readonly category = "format" as const;
   readonly mode = "ChartSwitchRowColumn";
   readonly requiresSelection = false;

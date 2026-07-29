@@ -1,9 +1,11 @@
 import { API, BlockTool } from "@editorjs/editorjs";
+import { requestEditorInput } from "./editor-dialog";
+import { uploadEditorAssetAPI } from "@/features/compilation/services/editorjs.service";
 
 export default class DocLibAudio implements BlockTool {
   static readonly feature = {
     id: "DocLibAudio",
-    title: "Audio",
+    title: "DocLib Audio",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="af7d00642b0c4241"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="9,10 4,19 13,16 19,18 20,12 19,14"/></svg>',
     product: "doclib",
   } as const;
@@ -15,7 +17,7 @@ export default class DocLibAudio implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "Audio",
+      title: "DocLib Audio",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="af7d00642b0c4241"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="9,10 4,19 13,16 19,18 20,12 19,14"/></svg>',
     };
   }
@@ -102,15 +104,12 @@ export default class DocLibAudio implements BlockTool {
       fileInput.addEventListener("change", () => {
         if (fileInput.files && fileInput.files[0]) {
           const file = fileInput.files[0];
-          const formData = new FormData();
-          formData.append("file", file);
           const endpoint = this.config?.endpoints?.byFile || "/api/uploadFile";
 
           uploader.innerHTML =
       '<div style="padding: 20px; font-weight: 500;">Uploading</div>';
 
-          fetch(endpoint, { method: "POST", body: formData })
-            .then((res) => res.json())
+          uploadEditorAssetAPI(endpoint, file)
             .then((res) => {
               if (res.success === 1 && res.file && res.file.url) {
                 this.data.url = res.file.url;
@@ -131,9 +130,12 @@ export default class DocLibAudio implements BlockTool {
 
       uploader.appendChild(fileInput);
 
-      uploader.addEventListener("contextmenu", (e) => {
+      uploader.addEventListener("contextmenu", async (e) => {
         e.preventDefault();
-        const url = prompt("Enter a direct audio URL");
+        const url = await requestEditorInput({
+          title: "DocLib Audio",
+          label: "Liên kết âm thanh",
+        });
         if (url) {
           this.data.url = url;
 

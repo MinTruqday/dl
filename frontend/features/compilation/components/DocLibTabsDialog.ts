@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTabsDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibTabsDialog",
-    title: "Tabs Dialog",
+    title: "DocLib Tabs Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="05158af5483e7457"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="9,8 6,11 8,15 18,6 14,17 4,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Tabs Dialog",
+      title: "DocLib Tabs Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="05158af5483e7457"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="9,8 6,11 8,15 18,6 14,17 4,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTabsDialog implements BlockTool {
   }
 
   readonly id = "DocLibTabsDialog";
-  readonly title = "Tabs Dialog";
+  readonly title = "DocLib Tabs Dialog";
   readonly category = "format" as const;
   readonly mode = "TabsDialog";
   readonly requiresSelection = false;

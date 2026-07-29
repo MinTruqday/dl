@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibJapanesePostcardCreateAddressSide implements BlockTool {
   static readonly feature = {
     id: "DocLibJapanesePostcardCreateAddressSide",
-    title: "Japanese Postcard Create Address Side",
+    title: "DocLib Japanese Postcard Create Address Side",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="26bdb570f7143824"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="8,6 15,14 13,7 9,6 6,5 4,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Japanese Postcard Create Address Side",
+      title: "DocLib Japanese Postcard Create Address Side",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="26bdb570f7143824"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="8,6 15,14 13,7 9,6 6,5 4,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibJapanesePostcardCreateAddressSide implements BlockToo
   }
 
   readonly id = "DocLibJapanesePostcardCreateAddressSide";
-  readonly title = "Japanese Postcard Create Address Side";
+  readonly title = "DocLib Japanese Postcard Create Address Side";
   readonly category = "mailing" as const;
   readonly mode = "JapanesePostcardCreateAddressSide";
   readonly requiresSelection = false;

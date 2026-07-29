@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWidowOrphanControl implements BlockTool {
   static readonly feature = {
     id: "DocLibWidowOrphanControl",
-    title: "Widow Orphan Control",
+    title: "DocLib Widow Orphan Control",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="598ff3f28eff0d49"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="8,11 9,8 10,4 17,9 6,10 18,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Widow Orphan Control",
+      title: "DocLib Widow Orphan Control",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="598ff3f28eff0d49"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="8,11 9,8 10,4 17,9 6,10 18,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibWidowOrphanControl implements BlockTool {
   }
 
   readonly id = "DocLibWidowOrphanControl";
-  readonly title = "Widow Orphan Control";
+  readonly title = "DocLib Widow Orphan Control";
   readonly category = "layout" as const;
   readonly mode = "WidowOrphanControl";
   readonly requiresSelection = false;

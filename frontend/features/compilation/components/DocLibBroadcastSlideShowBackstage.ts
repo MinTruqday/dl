@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibBroadcastSlideShowBackstage implements BlockTool {
   static readonly feature = {
     id: "DocLibBroadcastSlideShowBackstage",
-    title: "Broadcast Slide Show Backstage",
+    title: "DocLib Broadcast Slide Show Backstage",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="25663155a94dca52"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,4 19,4 20,13 19,18 11,17 8,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Broadcast Slide Show Backstage",
+      title: "DocLib Broadcast Slide Show Backstage",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="25663155a94dca52"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,4 19,4 20,13 19,18 11,17 8,9"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibBroadcastSlideShowBackstage implements BlockTool {
   }
 
   readonly id = "DocLibBroadcastSlideShowBackstage";
-  readonly title = "Broadcast Slide Show Backstage";
+  readonly title = "DocLib Broadcast Slide Show Backstage";
   readonly category = "format" as const;
   readonly mode = "BroadcastSlideShowBackstage";
   readonly requiresSelection = false;

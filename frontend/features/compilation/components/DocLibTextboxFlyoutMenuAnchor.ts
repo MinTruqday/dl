@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextboxFlyoutMenuAnchor implements BlockTool {
   static readonly feature = {
     id: "DocLibTextboxFlyoutMenuAnchor",
-    title: "Textbox Flyout Menu Anchor",
+    title: "DocLib Textbox Flyout Menu Anchor",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b480a9d4869abc2b"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="14,13 20,12 19,5 5,13 10,13 19,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Textbox Flyout Menu Anchor",
+      title: "DocLib Textbox Flyout Menu Anchor",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b480a9d4869abc2b"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="14,13 20,12 19,5 5,13 10,13 19,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTextboxFlyoutMenuAnchor implements BlockTool {
   }
 
   readonly id = "DocLibTextboxFlyoutMenuAnchor";
-  readonly title = "Textbox Flyout Menu Anchor";
+  readonly title = "DocLib Textbox Flyout Menu Anchor";
   readonly category = "format" as const;
   readonly mode = "TextboxFlyoutMenuAnchor";
   readonly requiresSelection = false;

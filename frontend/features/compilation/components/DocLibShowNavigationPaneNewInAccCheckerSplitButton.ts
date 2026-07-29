@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibShowNavigationPaneNewInAccCheckerSplitButton implements BlockTool {
   static readonly feature = {
     id: "DocLibShowNavigationPaneNewInAccCheckerSplitButton",
-    title: "Show Navigation Pane New In Acc Checker Split Button",
+    title: "DocLib Show Navigation Pane New In Acc Checker Split Button",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="86280a0d72b950e0"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="19,10 14,17 16,19 16,7 16,9 5,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Show Navigation Pane New In Acc Checker Split Button",
+      title: "DocLib Show Navigation Pane New In Acc Checker Split Button",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="86280a0d72b950e0"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="19,10 14,17 16,19 16,7 16,9 5,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibShowNavigationPaneNewInAccCheckerSplitButton implemen
   }
 
   readonly id = "DocLibShowNavigationPaneNewInAccCheckerSplitButton";
-  readonly title = "Show Navigation Pane New In Acc Checker Split Button";
+  readonly title = "DocLib Show Navigation Pane New In Acc Checker Split Button";
   readonly category = "review" as const;
   readonly mode = "ShowNavigationPaneNewInAccCheckerSplitButton";
   readonly requiresSelection = false;

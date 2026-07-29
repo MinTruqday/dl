@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibHeaderFooterShowDocumentText implements BlockTool {
   static readonly feature = {
     id: "DocLibHeaderFooterShowDocumentText",
-    title: "Header Footer Show Document Text",
+    title: "DocLib Header Footer Show Document Text",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="89552ceb0c99215d"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="5,4 14,18 16,4 20,12 8,15 14,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Header Footer Show Document Text",
+      title: "DocLib Header Footer Show Document Text",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="89552ceb0c99215d"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="5,4 14,18 16,4 20,12 8,15 14,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibHeaderFooterShowDocumentText implements BlockTool {
   }
 
   readonly id = "DocLibHeaderFooterShowDocumentText";
-  readonly title = "Header Footer Show Document Text";
+  readonly title = "DocLib Header Footer Show Document Text";
   readonly category = "format" as const;
   readonly mode = "HeaderFooterShowDocumentText";
   readonly requiresSelection = false;

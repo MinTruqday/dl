@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPhoneticGuide implements BlockTool {
   static readonly feature = {
     id: "DocLibPhoneticGuide",
-    title: "Phonetic Guide",
+    title: "DocLib Phonetic Guide",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0988702a3c8d94f8"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="13,4 14,12 13,9 16,14 9,7 13,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Phonetic Guide",
+      title: "DocLib Phonetic Guide",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0988702a3c8d94f8"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="13,4 14,12 13,9 16,14 9,7 13,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPhoneticGuide implements BlockTool {
   }
 
   readonly id = "DocLibPhoneticGuide";
-  readonly title = "Phonetic Guide";
+  readonly title = "DocLib Phonetic Guide";
   readonly category = "format" as const;
   readonly mode = "PhoneticGuide";
   readonly requiresSelection = true;

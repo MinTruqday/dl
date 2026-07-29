@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibInsertNewComment implements BlockTool {
   static readonly feature = {
     id: "DocLibInsertNewComment",
-    title: "Insert New Comment",
+    title: "DocLib Insert New Comment",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9a223025ffc6ad00"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="5,4 18,7 4,15 7,4 4,6 12,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Insert New Comment",
+      title: "DocLib Insert New Comment",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9a223025ffc6ad00"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="5,4 18,7 4,15 7,4 4,6 12,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibInsertNewComment implements BlockTool {
   }
 
   readonly id = "DocLibInsertNewComment";
-  readonly title = "Insert New Comment";
+  readonly title = "DocLib Insert New Comment";
   readonly category = "insert" as const;
   readonly mode = "InsertNewComment";
   readonly requiresSelection = false;

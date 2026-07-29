@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAutoScroll implements BlockTool {
   static readonly feature = {
     id: "DocLibAutoScroll",
-    title: "Auto Scroll",
+    title: "DocLib Auto Scroll",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b378efd99b15f897"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="13,5 5,17 6,8 14,19 18,6 11,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Auto Scroll",
+      title: "DocLib Auto Scroll",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b378efd99b15f897"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="13,5 5,17 6,8 14,19 18,6 11,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibAutoScroll implements BlockTool {
   }
 
   readonly id = "DocLibAutoScroll";
-  readonly title = "Auto Scroll";
+  readonly title = "DocLib Auto Scroll";
   readonly category = "format" as const;
   readonly mode = "AutoScroll";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibReviewRejectChangeAndMoveToNext implements BlockTool {
   static readonly feature = {
     id: "DocLibReviewRejectChangeAndMoveToNext",
-    title: "Review Reject Change And Move To Next",
+    title: "DocLib Review Reject Change And Move To Next",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fb372ad7d47a32f1"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="17,8 12,15 12,7 20,7 4,20 5,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Review Reject Change And Move To Next",
+      title: "DocLib Review Reject Change And Move To Next",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fb372ad7d47a32f1"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="17,8 12,15 12,7 20,7 4,20 5,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibReviewRejectChangeAndMoveToNext implements BlockTool 
   }
 
   readonly id = "DocLibReviewRejectChangeAndMoveToNext";
-  readonly title = "Review Reject Change And Move To Next";
+  readonly title = "DocLib Review Reject Change And Move To Next";
   readonly category = "review" as const;
   readonly mode = "ReviewRejectChangeAndMoveToNext";
   readonly requiresSelection = false;

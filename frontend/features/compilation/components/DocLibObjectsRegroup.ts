@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibObjectsRegroup implements BlockTool {
   static readonly feature = {
     id: "DocLibObjectsRegroup",
-    title: "Objects Regroup",
+    title: "DocLib Objects Regroup",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5103042b63b0bb31"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,7 8,13 18,10 4,19 5,11 5,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Objects Regroup",
+      title: "DocLib Objects Regroup",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5103042b63b0bb31"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,7 8,13 18,10 4,19 5,11 5,9"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibObjectsRegroup implements BlockTool {
   }
 
   readonly id = "DocLibObjectsRegroup";
-  readonly title = "Objects Regroup";
+  readonly title = "DocLib Objects Regroup";
   readonly category = "layout" as const;
   readonly mode = "ObjectsRegroup";
   readonly requiresSelection = false;

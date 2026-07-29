@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWindowSwitchWindowsMenuWord implements BlockTool {
   static readonly feature = {
     id: "DocLibWindowSwitchWindowsMenuWord",
-    title: "Window Switch Windows Menu Word",
+    title: "DocLib Window Switch Windows Menu Word",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4fa610d28546f63a"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="15,17 20,10 18,6 12,11 10,4 16,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Window Switch Windows Menu Word",
+      title: "DocLib Window Switch Windows Menu Word",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4fa610d28546f63a"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="15,17 20,10 18,6 12,11 10,4 16,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibWindowSwitchWindowsMenuWord implements BlockTool {
   }
 
   readonly id = "DocLibWindowSwitchWindowsMenuWord";
-  readonly title = "Window Switch Windows Menu Word";
+  readonly title = "DocLib Window Switch Windows Menu Word";
   readonly category = "view" as const;
   readonly mode = "WindowSwitchWindowsMenuWord";
   readonly requiresSelection = false;

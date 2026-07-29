@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableOfAuthoritiesEditCategory implements BlockTool {
   static readonly feature = {
     id: "DocLibTableOfAuthoritiesEditCategory",
-    title: "Table Of Authorities Edit Category",
+    title: "DocLib Table Of Authorities Edit Category",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="de9d029f200aad5a"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="5,8 6,10 19,14 7,9 12,10 7,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Table Of Authorities Edit Category",
+      title: "DocLib Table Of Authorities Edit Category",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="de9d029f200aad5a"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="5,8 6,10 19,14 7,9 12,10 7,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTableOfAuthoritiesEditCategory implements BlockTool {
   }
 
   readonly id = "DocLibTableOfAuthoritiesEditCategory";
-  readonly title = "Table Of Authorities Edit Category";
+  readonly title = "DocLib Table Of Authorities Edit Category";
   readonly category = "format" as const;
   readonly mode = "TableOfAuthoritiesEditCategory";
   readonly requiresSelection = false;

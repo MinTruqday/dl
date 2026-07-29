@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMailMergeGotToLastRecord implements BlockTool {
   static readonly feature = {
     id: "DocLibMailMergeGotToLastRecord",
-    title: "Mail Merge Got To Last Record",
+    title: "DocLib Mail Merge Got To Last Record",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e42bbd61413cda93"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="11,13 6,16 18,13 18,15 4,11 19,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Mail Merge Got To Last Record",
+      title: "DocLib Mail Merge Got To Last Record",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e42bbd61413cda93"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="11,13 6,16 18,13 18,15 4,11 19,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibMailMergeGotToLastRecord implements BlockTool {
   }
 
   readonly id = "DocLibMailMergeGotToLastRecord";
-  readonly title = "Mail Merge Got To Last Record";
+  readonly title = "DocLib Mail Merge Got To Last Record";
   readonly category = "review" as const;
   readonly mode = "MailMergeGotToLastRecord";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMailMergeRuleMergeSequenceNumber implements BlockTool {
   static readonly feature = {
     id: "DocLibMailMergeRuleMergeSequenceNumber",
-    title: "Mail Merge Rule Merge Sequence Number",
+    title: "DocLib Mail Merge Rule Merge Sequence Number",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="82804333e85fc2e6"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="15,13 20,4 15,14 11,13 16,11 15,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Mail Merge Rule Merge Sequence Number",
+      title: "DocLib Mail Merge Rule Merge Sequence Number",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="82804333e85fc2e6"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="15,13 20,4 15,14 11,13 16,11 15,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibMailMergeRuleMergeSequenceNumber implements BlockTool
   }
 
   readonly id = "DocLibMailMergeRuleMergeSequenceNumber";
-  readonly title = "Mail Merge Rule Merge Sequence Number";
+  readonly title = "DocLib Mail Merge Rule Merge Sequence Number";
   readonly category = "format" as const;
   readonly mode = "MailMergeRuleMergeSequenceNumber";
   readonly requiresSelection = false;

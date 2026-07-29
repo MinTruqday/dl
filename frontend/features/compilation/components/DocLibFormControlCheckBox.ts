@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFormControlCheckBox implements BlockTool {
   static readonly feature = {
     id: "DocLibFormControlCheckBox",
-    title: "Form Control Check Box",
+    title: "DocLib Form Control Check Box",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a9c0ed155cd6b30c"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="20,9 20,8 11,14 13,16 9,18 16,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Form Control Check Box",
+      title: "DocLib Form Control Check Box",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a9c0ed155cd6b30c"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="20,9 20,8 11,14 13,16 9,18 16,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFormControlCheckBox implements BlockTool {
   }
 
   readonly id = "DocLibFormControlCheckBox";
-  readonly title = "Form Control Check Box";
+  readonly title = "DocLib Form Control Check Box";
   readonly category = "format" as const;
   readonly mode = "FormControlCheckBox";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartSecondaryVerticalAxis implements BlockTool {
   static readonly feature = {
     id: "DocLibChartSecondaryVerticalAxis",
-    title: "Chart Secondary Vertical Axis",
+    title: "DocLib Chart Secondary Vertical Axis",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3371808caee49ade"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,15 13,8 8,11 5,5 19,18 14,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Secondary Vertical Axis",
+      title: "DocLib Chart Secondary Vertical Axis",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3371808caee49ade"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="4,15 13,8 8,11 5,5 19,18 14,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartSecondaryVerticalAxis implements BlockTool {
   }
 
   readonly id = "DocLibChartSecondaryVerticalAxis";
-  readonly title = "Chart Secondary Vertical Axis";
+  readonly title = "DocLib Chart Secondary Vertical Axis";
   readonly category = "layout" as const;
   readonly mode = "ChartSecondaryVerticalAxis";
   readonly requiresSelection = false;

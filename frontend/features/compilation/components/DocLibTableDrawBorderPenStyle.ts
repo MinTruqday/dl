@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableDrawBorderPenStyle implements BlockTool {
   static readonly feature = {
     id: "DocLibTableDrawBorderPenStyle",
-    title: "Table Draw Border Pen Style",
+    title: "DocLib Table Draw Border Pen Style",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="58347a8f907e7943"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,5 7,11 12,11 6,20 4,7 11,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Table Draw Border Pen Style",
+      title: "DocLib Table Draw Border Pen Style",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="58347a8f907e7943"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,5 7,11 12,11 6,20 4,7 11,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTableDrawBorderPenStyle implements BlockTool {
   }
 
   readonly id = "DocLibTableDrawBorderPenStyle";
-  readonly title = "Table Draw Border Pen Style";
+  readonly title = "DocLib Table Draw Border Pen Style";
   readonly category = "table" as const;
   readonly mode = "TableDrawBorderPenStyle";
   readonly requiresSelection = false;

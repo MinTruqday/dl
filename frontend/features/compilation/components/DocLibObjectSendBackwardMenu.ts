@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibObjectSendBackwardMenu implements BlockTool {
   static readonly feature = {
     id: "DocLibObjectSendBackwardMenu",
-    title: "Object Send Backward Menu",
+    title: "DocLib Object Send Backward Menu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="12cb6b7144cdfe4b"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="5,20 9,15 4,5 20,11 18,18 10,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Object Send Backward Menu",
+      title: "DocLib Object Send Backward Menu",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="12cb6b7144cdfe4b"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="5,20 9,15 4,5 20,11 18,18 10,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibObjectSendBackwardMenu implements BlockTool {
   }
 
   readonly id = "DocLibObjectSendBackwardMenu";
-  readonly title = "Object Send Backward Menu";
+  readonly title = "DocLib Object Send Backward Menu";
   readonly category = "layout" as const;
   readonly mode = "ObjectSendBackwardMenu";
   readonly requiresSelection = false;

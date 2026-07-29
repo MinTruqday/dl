@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWordArtSpacingLoose implements BlockTool {
   static readonly feature = {
     id: "DocLibWordArtSpacingLoose",
-    title: "Word Art Spacing Loose",
+    title: "DocLib Word Art Spacing Loose",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="38ca72e6820b952c"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="9,19 16,13 15,15 17,14 6,18 9,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Word Art Spacing Loose",
+      title: "DocLib Word Art Spacing Loose",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="38ca72e6820b952c"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="9,19 16,13 15,15 17,14 6,18 9,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibWordArtSpacingLoose implements BlockTool {
   }
 
   readonly id = "DocLibWordArtSpacingLoose";
-  readonly title = "Word Art Spacing Loose";
+  readonly title = "DocLib Word Art Spacing Loose";
   readonly category = "format" as const;
   readonly mode = "WordArtSpacingLoose";
   readonly requiresSelection = false;

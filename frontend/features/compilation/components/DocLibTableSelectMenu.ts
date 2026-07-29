@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableSelectMenu implements BlockTool {
   static readonly feature = {
     id: "DocLibTableSelectMenu",
-    title: "Table Select Menu",
+    title: "DocLib Table Select Menu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9c68fffa326bed8b"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="7,6 4,16 20,9 20,7 6,14 8,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Table Select Menu",
+      title: "DocLib Table Select Menu",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9c68fffa326bed8b"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="7,6 4,16 20,9 20,7 6,14 8,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTableSelectMenu implements BlockTool {
   }
 
   readonly id = "DocLibTableSelectMenu";
-  readonly title = "Table Select Menu";
+  readonly title = "DocLib Table Select Menu";
   readonly category = "table" as const;
   readonly mode = "TableSelectMenu";
   readonly requiresSelection = false;

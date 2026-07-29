@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibOrganizationChartSelectLevel implements BlockTool {
   static readonly feature = {
     id: "DocLibOrganizationChartSelectLevel",
-    title: "Organization Chart Select Level",
+    title: "DocLib Organization Chart Select Level",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="12e20807d61de059"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,9 12,11 14,16 7,8 8,8 18,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Organization Chart Select Level",
+      title: "DocLib Organization Chart Select Level",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="12e20807d61de059"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,9 12,11 14,16 7,8 8,8 18,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibOrganizationChartSelectLevel implements BlockTool {
   }
 
   readonly id = "DocLibOrganizationChartSelectLevel";
-  readonly title = "Organization Chart Select Level";
+  readonly title = "DocLib Organization Chart Select Level";
   readonly category = "media" as const;
   readonly mode = "OrganizationChartSelectLevel";
   readonly requiresSelection = false;

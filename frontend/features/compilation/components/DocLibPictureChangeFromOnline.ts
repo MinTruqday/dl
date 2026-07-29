@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPictureChangeFromOnline implements BlockTool {
   static readonly feature = {
     id: "DocLibPictureChangeFromOnline",
-    title: "Picture Change From Online",
+    title: "DocLib Picture Change From Online",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fd87ccb390b82100"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,20 4,13 12,18 20,4 8,19 8,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Picture Change From Online",
+      title: "DocLib Picture Change From Online",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fd87ccb390b82100"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,20 4,13 12,18 20,4 8,19 8,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPictureChangeFromOnline implements BlockTool {
   }
 
   readonly id = "DocLibPictureChangeFromOnline";
-  readonly title = "Picture Change From Online";
+  readonly title = "DocLib Picture Change From Online";
   readonly category = "media" as const;
   readonly mode = "PictureChangeFromOnline";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDiagrammingOnline implements BlockTool {
   static readonly feature = {
     id: "DocLibDiagrammingOnline",
-    title: "Diagramming Online",
+    title: "DocLib Diagramming Online",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b02098529cf464b0"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="10,19 20,18 7,10 19,10 14,5 19,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Diagramming Online",
+      title: "DocLib Diagramming Online",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="b02098529cf464b0"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="10,19 20,18 7,10 19,10 14,5 19,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDiagrammingOnline implements BlockTool {
   }
 
   readonly id = "DocLibDiagrammingOnline";
-  readonly title = "Diagramming Online";
+  readonly title = "DocLib Diagramming Online";
   readonly category = "format" as const;
   readonly mode = "DiagrammingOnline";
   readonly requiresSelection = false;

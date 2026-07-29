@@ -117,7 +117,7 @@ services:
     ports:
       - 3000:3000
     working_dir: /app
-    command: pnpm run dev
+    command: pnpm exec next dev --hostname 0.0.0.0
     volumes:
       - ./frontend:/app
       - /app/node_modules

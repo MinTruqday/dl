@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibStylesStyleVisibility implements BlockTool {
   static readonly feature = {
     id: "DocLibStylesStyleVisibility",
-    title: "Styles Style Visibility",
+    title: "DocLib Styles Style Visibility",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="543232a751a52d1b"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="20,20 20,18 17,16 15,14 19,10 7,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Styles Style Visibility",
+      title: "DocLib Styles Style Visibility",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="543232a751a52d1b"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="20,20 20,18 17,16 15,14 19,10 7,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibStylesStyleVisibility implements BlockTool {
   }
 
   readonly id = "DocLibStylesStyleVisibility";
-  readonly title = "Styles Style Visibility";
+  readonly title = "DocLib Styles Style Visibility";
   readonly category = "format" as const;
   readonly mode = "StylesStyleVisibility";
   readonly requiresSelection = false;

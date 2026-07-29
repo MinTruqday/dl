@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartDepthGridlinesOptionsDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibChartDepthGridlinesOptionsDialog",
-    title: "Chart Depth Gridlines Options Dialog",
+    title: "DocLib Chart Depth Gridlines Options Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="768430f324b02954"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="20,17 18,9 6,10 11,20 18,10 18,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Depth Gridlines Options Dialog",
+      title: "DocLib Chart Depth Gridlines Options Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="768430f324b02954"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="20,17 18,9 6,10 11,20 18,10 18,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartDepthGridlinesOptionsDialog implements BlockTool
   }
 
   readonly id = "DocLibChartDepthGridlinesOptionsDialog";
-  readonly title = "Chart Depth Gridlines Options Dialog";
+  readonly title = "DocLib Chart Depth Gridlines Options Dialog";
   readonly category = "layout" as const;
   readonly mode = "ChartDepthGridlinesOptionsDialog";
   readonly requiresSelection = false;

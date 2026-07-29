@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTablePropertiesDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibTablePropertiesDialog",
-    title: "Table Properties Dialog",
+    title: "DocLib Table Properties Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="31f92af693fab13a"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="19,15 12,12 15,16 11,11 12,15 7,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Table Properties Dialog",
+      title: "DocLib Table Properties Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="31f92af693fab13a"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="19,15 12,12 15,16 11,11 12,15 7,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTablePropertiesDialog implements BlockTool {
   }
 
   readonly id = "DocLibTablePropertiesDialog";
-  readonly title = "Table Properties Dialog";
+  readonly title = "DocLib Table Properties Dialog";
   readonly category = "table" as const;
   readonly mode = "TablePropertiesDialog";
   readonly requiresSelection = false;

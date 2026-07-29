@@ -82,10 +82,10 @@ export default function LoginPage() {
       const verify = await passkeyLoginFinishAPI(inputEmail, credentialJSON);
 
       await loginState(verify.access_token || verify);
-      showToast("Xác thực chứng thư số Passkey hợp lệ", "success");
+      showToast("Đăng nhập bằng Passkey thành công", "success");
       router.push("/kham-pha");
     } catch (err: any) {
-      showToast(err.message || "Lỗi xác thực định danh chứng thư số", "error");
+      showToast(err.message || "Không thể đăng nhập bằng Passkey", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -103,11 +103,11 @@ export default function LoginPage() {
         setIsSubmitting(false);
       } else {
         await loginState(res.access_token || res);
-        showToast("Xác thực thông tin đăng nhập hợp lệ", "success");
+        showToast("Đăng nhập thành công", "success");
         router.push("/kham-pha");
       }
     } catch (err: any) {
-      showToast(err.message || "Lỗi sai lệch thông tin định danh hệ thống", "error");
+      showToast(err.message || "Email hoặc mật khẩu không đúng", "error");
       setIsSubmitting(false);
     }
   };
@@ -218,10 +218,7 @@ export default function LoginPage() {
                 type="button"
                 onClick={async () => {
                   if (!email) {
-                    showToast(
-                      "Lỗi thiếu hụt trường địa chỉ email cho định danh chứng thư số",
-                      "error",
-                    );
+                    showToast("Nhập email để dùng Passkey", "error");
                     return;
                   }
                   await completePasskeyLogin(email);
@@ -237,7 +234,7 @@ export default function LoginPage() {
                     const url = await getGoogleLoginUrlAPI();
                     window.location.href = url;
                   } catch (err: any) {
-                    showToast("Lỗi kết nối điểm cuối định danh Google", "error");
+                    showToast("Không thể kết nối với Google", "error");
                   }
                 }}
                 className="button-secondary w-full"

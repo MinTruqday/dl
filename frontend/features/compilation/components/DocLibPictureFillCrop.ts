@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPictureFillCrop implements BlockTool {
   static readonly feature = {
     id: "DocLibPictureFillCrop",
-    title: "Picture Fill Crop",
+    title: "DocLib Picture Fill Crop",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0d6d5cc435b495ec"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="17,11 11,13 6,14 17,19 20,18 12,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Picture Fill Crop",
+      title: "DocLib Picture Fill Crop",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0d6d5cc435b495ec"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="17,11 11,13 6,14 17,19 20,18 12,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPictureFillCrop implements BlockTool {
   }
 
   readonly id = "DocLibPictureFillCrop";
-  readonly title = "Picture Fill Crop";
+  readonly title = "DocLib Picture Fill Crop";
   readonly category = "media" as const;
   readonly mode = "PictureFillCrop";
   readonly requiresSelection = false;

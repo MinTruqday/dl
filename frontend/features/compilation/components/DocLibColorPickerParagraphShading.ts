@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibColorPickerParagraphShading implements BlockTool {
   static readonly feature = {
     id: "DocLibColorPickerParagraphShading",
-    title: "Color Picker Paragraph Shading",
+    title: "DocLib Color Picker Paragraph Shading",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8995af72201022d9"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="5,17 9,16 19,20 4,17 19,18 9,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Color Picker Paragraph Shading",
+      title: "DocLib Color Picker Paragraph Shading",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8995af72201022d9"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="5,17 9,16 19,20 4,17 19,18 9,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibColorPickerParagraphShading implements BlockTool {
   }
 
   readonly id = "DocLibColorPickerParagraphShading";
-  readonly title = "Color Picker Paragraph Shading";
+  readonly title = "DocLib Color Picker Paragraph Shading";
   readonly category = "format" as const;
   readonly mode = "ColorPickerParagraphShading";
   readonly requiresSelection = false;

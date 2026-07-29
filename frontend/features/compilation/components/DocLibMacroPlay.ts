@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMacroPlay implements BlockTool {
   static readonly feature = {
     id: "DocLibMacroPlay",
-    title: "Macro Play",
+    title: "DocLib Macro Play",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5ec737e8bc818ead"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="13,16 8,15 5,14 10,7 4,15 18,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Macro Play",
+      title: "DocLib Macro Play",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5ec737e8bc818ead"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="13,16 8,15 5,14 10,7 4,15 18,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibMacroPlay implements BlockTool {
   }
 
   readonly id = "DocLibMacroPlay";
-  readonly title = "Macro Play";
+  readonly title = "DocLib Macro Play";
   readonly category = "automation" as const;
   readonly mode = "MacroPlay";
   readonly requiresSelection = false;

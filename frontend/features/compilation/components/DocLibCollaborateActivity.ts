@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibCollaborateActivity implements BlockTool {
   static readonly feature = {
     id: "DocLibCollaborateActivity",
-    title: "Collaborate Activity",
+    title: "DocLib Collaborate Activity",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4c8df6c29d5c5bf6"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="12,9 12,11 8,11 10,12 13,16 18,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Collaborate Activity",
+      title: "DocLib Collaborate Activity",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4c8df6c29d5c5bf6"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="12,9 12,11 8,11 10,12 13,16 18,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibCollaborateActivity implements BlockTool {
   }
 
   readonly id = "DocLibCollaborateActivity";
-  readonly title = "Collaborate Activity";
+  readonly title = "DocLib Collaborate Activity";
   readonly category = "format" as const;
   readonly mode = "CollaborateActivity";
   readonly requiresSelection = false;

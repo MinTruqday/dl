@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibEquationFractionGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibEquationFractionGallery",
-    title: "Equation Fraction Gallery",
+    title: "DocLib Equation Fraction Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cfdf0ac1a2c56e75"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="7,6 14,10 13,14 12,19 17,5 20,4"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Equation Fraction Gallery",
+      title: "DocLib Equation Fraction Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cfdf0ac1a2c56e75"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="7,6 14,10 13,14 12,19 17,5 20,4"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibEquationFractionGallery implements BlockTool {
   }
 
   readonly id = "DocLibEquationFractionGallery";
-  readonly title = "Equation Fraction Gallery";
+  readonly title = "DocLib Equation Fraction Gallery";
   readonly category = "format" as const;
   readonly mode = "EquationFractionGallery";
   readonly requiresSelection = false;

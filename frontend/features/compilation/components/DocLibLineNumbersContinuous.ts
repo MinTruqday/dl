@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLineNumbersContinuous implements BlockTool {
   static readonly feature = {
     id: "DocLibLineNumbersContinuous",
-    title: "Line Numbers Continuous",
+    title: "DocLib Line Numbers Continuous",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6d42b8395b100be5"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="11,19 18,10 10,20 15,12 5,10 12,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Line Numbers Continuous",
+      title: "DocLib Line Numbers Continuous",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6d42b8395b100be5"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="11,19 18,10 10,20 15,12 5,10 12,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibLineNumbersContinuous implements BlockTool {
   }
 
   readonly id = "DocLibLineNumbersContinuous";
-  readonly title = "Line Numbers Continuous";
+  readonly title = "DocLib Line Numbers Continuous";
   readonly category = "layout" as const;
   readonly mode = "LineNumbersContinuous";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDefineNewNumberFormat implements BlockTool {
   static readonly feature = {
     id: "DocLibDefineNewNumberFormat",
-    title: "Define New Number Format",
+    title: "DocLib Define New Number Format",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5d4afc913a5f1b77"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="12,10 18,13 11,14 14,4 8,10 19,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Define New Number Format",
+      title: "DocLib Define New Number Format",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5d4afc913a5f1b77"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="12,10 18,13 11,14 14,4 8,10 19,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDefineNewNumberFormat implements BlockTool {
   }
 
   readonly id = "DocLibDefineNewNumberFormat";
-  readonly title = "Define New Number Format";
+  readonly title = "DocLib Define New Number Format";
   readonly category = "format" as const;
   readonly mode = "DefineNewNumberFormat";
   readonly requiresSelection = false;

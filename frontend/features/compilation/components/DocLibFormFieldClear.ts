@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFormFieldClear implements BlockTool {
   static readonly feature = {
     id: "DocLibFormFieldClear",
-    title: "Form Field Clear",
+    title: "DocLib Form Field Clear",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="86f35e0d98a04195"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,9 13,17 20,11 18,17 4,6 9,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Form Field Clear",
+      title: "DocLib Form Field Clear",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="86f35e0d98a04195"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="19,9 13,17 20,11 18,17 4,6 9,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFormFieldClear implements BlockTool {
   }
 
   readonly id = "DocLibFormFieldClear";
-  readonly title = "Form Field Clear";
+  readonly title = "DocLib Form Field Clear";
   readonly category = "format" as const;
   readonly mode = "FormFieldClear";
   readonly requiresSelection = false;

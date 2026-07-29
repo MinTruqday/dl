@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibBorderTopWord implements BlockTool {
   static readonly feature = {
     id: "DocLibBorderTopWord",
-    title: "Border Top Word",
+    title: "DocLib Border Top Word",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="690b452ee49b27c7"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="7,15 5,16 11,6 9,16 19,19 13,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Border Top Word",
+      title: "DocLib Border Top Word",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="690b452ee49b27c7"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="7,15 5,16 11,6 9,16 19,19 13,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibBorderTopWord implements BlockTool {
   }
 
   readonly id = "DocLibBorderTopWord";
-  readonly title = "Border Top Word";
+  readonly title = "DocLib Border Top Word";
   readonly category = "format" as const;
   readonly mode = "BorderTopWord";
   readonly requiresSelection = false;

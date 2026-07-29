@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMasterDocumentExpandOrCollapseSubdocuments implements BlockTool {
   static readonly feature = {
     id: "DocLibMasterDocumentExpandOrCollapseSubdocuments",
-    title: "Master Document Expand Or Collapse Subdocuments",
+    title: "DocLib Master Document Expand Or Collapse Subdocuments",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fb62b99445650dac"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,17 19,16 5,20 17,6 16,11 19,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Master Document Expand Or Collapse Subdocuments",
+      title: "DocLib Master Document Expand Or Collapse Subdocuments",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fb62b99445650dac"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,17 19,16 5,20 17,6 16,11 19,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibMasterDocumentExpandOrCollapseSubdocuments implements
   }
 
   readonly id = "DocLibMasterDocumentExpandOrCollapseSubdocuments";
-  readonly title = "Master Document Expand Or Collapse Subdocuments";
+  readonly title = "DocLib Master Document Expand Or Collapse Subdocuments";
   readonly category = "format" as const;
   readonly mode = "MasterDocumentExpandOrCollapseSubdocuments";
   readonly requiresSelection = false;

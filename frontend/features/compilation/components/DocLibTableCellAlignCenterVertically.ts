@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTableCellAlignCenterVertically implements BlockTool {
   static readonly feature = {
     id: "DocLibTableCellAlignCenterVertically",
-    title: "Table Cell Align Center Vertically",
+    title: "DocLib Table Cell Align Center Vertically",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="23fd902e29c25221"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,19 12,16 11,11 18,20 8,13 4,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Table Cell Align Center Vertically",
+      title: "DocLib Table Cell Align Center Vertically",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="23fd902e29c25221"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,19 12,16 11,11 18,20 8,13 4,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTableCellAlignCenterVertically implements BlockTool {
   }
 
   readonly id = "DocLibTableCellAlignCenterVertically";
-  readonly title = "Table Cell Align Center Vertically";
+  readonly title = "DocLib Table Cell Align Center Vertically";
   readonly category = "format" as const;
   readonly mode = "TableCellAlignCenterVertically";
   readonly requiresSelection = false;

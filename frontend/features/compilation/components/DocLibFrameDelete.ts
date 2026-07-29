@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFrameDelete implements BlockTool {
   static readonly feature = {
     id: "DocLibFrameDelete",
-    title: "Frame Delete",
+    title: "DocLib Frame Delete",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="af645f06f67155d0"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="9,19 14,10 12,15 4,8 18,18 12,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Frame Delete",
+      title: "DocLib Frame Delete",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="af645f06f67155d0"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="9,19 14,10 12,15 4,8 18,18 12,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFrameDelete implements BlockTool {
   }
 
   readonly id = "DocLibFrameDelete";
-  readonly title = "Frame Delete";
+  readonly title = "DocLib Frame Delete";
   readonly category = "format" as const;
   readonly mode = "FrameDelete";
   readonly requiresSelection = false;

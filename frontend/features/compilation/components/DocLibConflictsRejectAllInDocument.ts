@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibConflictsRejectAllInDocument implements BlockTool {
   static readonly feature = {
     id: "DocLibConflictsRejectAllInDocument",
-    title: "Conflicts Reject All In Document",
+    title: "DocLib Conflicts Reject All In Document",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="94378cf75ef939fd"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="16,8 8,13 13,15 10,19 5,10 17,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Conflicts Reject All In Document",
+      title: "DocLib Conflicts Reject All In Document",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="94378cf75ef939fd"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="16,8 8,13 13,15 10,19 5,10 17,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibConflictsRejectAllInDocument implements BlockTool {
   }
 
   readonly id = "DocLibConflictsRejectAllInDocument";
-  readonly title = "Conflicts Reject All In Document";
+  readonly title = "DocLib Conflicts Reject All In Document";
   readonly category = "format" as const;
   readonly mode = "ConflictsRejectAllInDocument";
   readonly requiresSelection = false;

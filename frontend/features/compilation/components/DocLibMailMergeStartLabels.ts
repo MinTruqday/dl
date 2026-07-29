@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMailMergeStartLabels implements BlockTool {
   static readonly feature = {
     id: "DocLibMailMergeStartLabels",
-    title: "Mail Merge Start Labels",
+    title: "DocLib Mail Merge Start Labels",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3d659a7d2d56929b"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="14,20 5,10 15,5 14,6 5,4 16,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Mail Merge Start Labels",
+      title: "DocLib Mail Merge Start Labels",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3d659a7d2d56929b"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="14,20 5,10 15,5 14,6 5,4 16,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibMailMergeStartLabels implements BlockTool {
   }
 
   readonly id = "DocLibMailMergeStartLabels";
-  readonly title = "Mail Merge Start Labels";
+  readonly title = "DocLib Mail Merge Start Labels";
   readonly category = "mailing" as const;
   readonly mode = "MailMergeStartLabels";
   readonly requiresSelection = false;

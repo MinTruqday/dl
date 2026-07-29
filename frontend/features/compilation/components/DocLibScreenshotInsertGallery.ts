@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibScreenshotInsertGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibScreenshotInsertGallery",
-    title: "Screenshot Insert Gallery",
+    title: "DocLib Screenshot Insert Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7d003c08fc7d7ea0"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="10,4 13,12 18,10 11,11 15,20 6,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Screenshot Insert Gallery",
+      title: "DocLib Screenshot Insert Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7d003c08fc7d7ea0"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="10,4 13,12 18,10 11,11 15,20 6,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibScreenshotInsertGallery implements BlockTool {
   }
 
   readonly id = "DocLibScreenshotInsertGallery";
-  readonly title = "Screenshot Insert Gallery";
+  readonly title = "DocLib Screenshot Insert Gallery";
   readonly category = "insert" as const;
   readonly mode = "ScreenshotInsertGallery";
   readonly requiresSelection = false;

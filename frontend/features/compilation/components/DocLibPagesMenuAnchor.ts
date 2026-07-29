@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPagesMenuAnchor implements BlockTool {
   static readonly feature = {
     id: "DocLibPagesMenuAnchor",
-    title: "Pages Menu Anchor",
+    title: "DocLib Pages Menu Anchor",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9be7f6218c7e2a2e"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="6,14 12,20 8,11 12,16 18,10 18,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Pages Menu Anchor",
+      title: "DocLib Pages Menu Anchor",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9be7f6218c7e2a2e"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="6,14 12,20 8,11 12,16 18,10 18,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPagesMenuAnchor implements BlockTool {
   }
 
   readonly id = "DocLibPagesMenuAnchor";
-  readonly title = "Pages Menu Anchor";
+  readonly title = "DocLib Pages Menu Anchor";
   readonly category = "insert" as const;
   readonly mode = "PagesMenuAnchor";
   readonly requiresSelection = false;

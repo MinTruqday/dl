@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartEditDataMenu implements BlockTool {
   static readonly feature = {
     id: "DocLibChartEditDataMenu",
-    title: "Chart Edit Data Menu",
+    title: "DocLib Chart Edit Data Menu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fbd48f1a9f2ed57a"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,12 11,13 10,16 13,7 19,19 11,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Edit Data Menu",
+      title: "DocLib Chart Edit Data Menu",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="fbd48f1a9f2ed57a"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,12 11,13 10,16 13,7 19,19 11,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartEditDataMenu implements BlockTool {
   }
 
   readonly id = "DocLibChartEditDataMenu";
-  readonly title = "Chart Edit Data Menu";
+  readonly title = "DocLib Chart Edit Data Menu";
   readonly category = "format" as const;
   readonly mode = "ChartEditDataMenu";
   readonly requiresSelection = false;

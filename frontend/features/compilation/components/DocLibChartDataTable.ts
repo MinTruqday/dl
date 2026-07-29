@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartDataTable implements BlockTool {
   static readonly feature = {
     id: "DocLibChartDataTable",
-    title: "Chart Data Table",
+    title: "DocLib Chart Data Table",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0ddbbc009ba41350"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,19 5,4 6,15 6,16 13,16 19,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Data Table",
+      title: "DocLib Chart Data Table",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0ddbbc009ba41350"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,19 5,4 6,15 6,16 13,16 19,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartDataTable implements BlockTool {
   }
 
   readonly id = "DocLibChartDataTable";
-  readonly title = "Chart Data Table";
+  readonly title = "DocLib Chart Data Table";
   readonly category = "layout" as const;
   readonly mode = "ChartDataTable";
   readonly requiresSelection = false;

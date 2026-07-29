@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPasteSetDefault implements BlockTool {
   static readonly feature = {
     id: "DocLibPasteSetDefault",
-    title: "Paste Set Default",
+    title: "DocLib Paste Set Default",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d0070484c834b5b0"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,11 8,17 17,5 15,10 13,5 13,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Paste Set Default",
+      title: "DocLib Paste Set Default",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d0070484c834b5b0"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,11 8,17 17,5 15,10 13,5 13,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPasteSetDefault implements BlockTool {
   }
 
   readonly id = "DocLibPasteSetDefault";
-  readonly title = "Paste Set Default";
+  readonly title = "DocLib Paste Set Default";
   readonly category = "format" as const;
   readonly mode = "PasteSetDefault";
   readonly requiresSelection = false;

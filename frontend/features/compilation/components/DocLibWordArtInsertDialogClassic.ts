@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibWordArtInsertDialogClassic implements BlockTool {
   static readonly feature = {
     id: "DocLibWordArtInsertDialogClassic",
-    title: "Word Art Insert Dialog Classic",
+    title: "DocLib Word Art Insert Dialog Classic",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3c6969b943802882"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="13,7 7,19 20,13 10,15 9,9 19,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Word Art Insert Dialog Classic",
+      title: "DocLib Word Art Insert Dialog Classic",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3c6969b943802882"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="13,7 7,19 20,13 10,15 9,9 19,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibWordArtInsertDialogClassic implements BlockTool {
   }
 
   readonly id = "DocLibWordArtInsertDialogClassic";
-  readonly title = "Word Art Insert Dialog Classic";
+  readonly title = "DocLib Word Art Insert Dialog Classic";
   readonly category = "format" as const;
   readonly mode = "WordArtInsertDialogClassic";
   readonly requiresSelection = false;

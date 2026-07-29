@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLineNumbersSuppress implements BlockTool {
   static readonly feature = {
     id: "DocLibLineNumbersSuppress",
-    title: "Line Numbers Suppress",
+    title: "DocLib Line Numbers Suppress",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="65d0212d994bc622"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,8 20,15 4,11 15,4 7,10 17,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Line Numbers Suppress",
+      title: "DocLib Line Numbers Suppress",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="65d0212d994bc622"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,8 20,15 4,11 15,4 7,10 17,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibLineNumbersSuppress implements BlockTool {
   }
 
   readonly id = "DocLibLineNumbersSuppress";
-  readonly title = "Line Numbers Suppress";
+  readonly title = "DocLib Line Numbers Suppress";
   readonly category = "layout" as const;
   readonly mode = "LineNumbersSuppress";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibHyperlinkEdit implements BlockTool {
   static readonly feature = {
     id: "DocLibHyperlinkEdit",
-    title: "Hyperlink Edit",
+    title: "DocLib Hyperlink Edit",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="47c348865508d8fb"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,12 8,19 4,12 16,17 18,14 7,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Hyperlink Edit",
+      title: "DocLib Hyperlink Edit",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="47c348865508d8fb"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="7,12 8,19 4,12 16,17 18,14 7,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibHyperlinkEdit implements BlockTool {
   }
 
   readonly id = "DocLibHyperlinkEdit";
-  readonly title = "Hyperlink Edit";
+  readonly title = "DocLib Hyperlink Edit";
   readonly category = "format" as const;
   readonly mode = "HyperlinkEdit";
   readonly requiresSelection = false;

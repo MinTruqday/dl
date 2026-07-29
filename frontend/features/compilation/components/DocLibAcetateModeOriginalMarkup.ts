@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibAcetateModeOriginalMarkup implements BlockTool {
   static readonly feature = {
     id: "DocLibAcetateModeOriginalMarkup",
-    title: "Acetate Mode Original Markup",
+    title: "DocLib Acetate Mode Original Markup",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="071fa6fb6ab5a006"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="11,18 17,17 8,15 11,10 14,9 20,15"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Acetate Mode Original Markup",
+      title: "DocLib Acetate Mode Original Markup",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="071fa6fb6ab5a006"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="11,18 17,17 8,15 11,10 14,9 20,15"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibAcetateModeOriginalMarkup implements BlockTool {
   }
 
   readonly id = "DocLibAcetateModeOriginalMarkup";
-  readonly title = "Acetate Mode Original Markup";
+  readonly title = "DocLib Acetate Mode Original Markup";
   readonly category = "format" as const;
   readonly mode = "AcetateModeOriginalMarkup";
   readonly requiresSelection = false;

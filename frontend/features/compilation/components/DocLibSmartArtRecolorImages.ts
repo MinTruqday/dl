@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSmartArtRecolorImages implements BlockTool {
   static readonly feature = {
     id: "DocLibSmartArtRecolorImages",
-    title: "Smart Art Recolor Images",
+    title: "DocLib Smart Art Recolor Images",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="caf71810fd96f122"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="19,13 11,20 19,18 7,4 16,16 6,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Smart Art Recolor Images",
+      title: "DocLib Smart Art Recolor Images",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="caf71810fd96f122"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="19,13 11,20 19,18 7,4 16,16 6,9"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSmartArtRecolorImages implements BlockTool {
   }
 
   readonly id = "DocLibSmartArtRecolorImages";
-  readonly title = "Smart Art Recolor Images";
+  readonly title = "DocLib Smart Art Recolor Images";
   readonly category = "format" as const;
   readonly mode = "SmartArtRecolorImages";
   readonly requiresSelection = false;

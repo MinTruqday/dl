@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibDrawingCanvasInsert implements BlockTool {
   static readonly feature = {
     id: "DocLibDrawingCanvasInsert",
-    title: "Drawing Canvas Insert",
+    title: "DocLib Drawing Canvas Insert",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="92f812608a1f0b51"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="14,14 5,15 6,18 15,17 17,5 15,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Drawing Canvas Insert",
+      title: "DocLib Drawing Canvas Insert",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="92f812608a1f0b51"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="14,14 5,15 6,18 15,17 17,5 15,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibDrawingCanvasInsert implements BlockTool {
   }
 
   readonly id = "DocLibDrawingCanvasInsert";
-  readonly title = "Drawing Canvas Insert";
+  readonly title = "DocLib Drawing Canvas Insert";
   readonly category = "insert" as const;
   readonly mode = "DrawingCanvasInsert";
   readonly requiresSelection = false;

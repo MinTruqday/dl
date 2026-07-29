@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibObjectsArrangeMenu implements BlockTool {
   static readonly feature = {
     id: "DocLibObjectsArrangeMenu",
-    title: "Objects Arrange Menu",
+    title: "DocLib Objects Arrange Menu",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="41f29a8894dbf47a"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="18,8 5,4 16,19 10,7 18,18 19,14"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Objects Arrange Menu",
+      title: "DocLib Objects Arrange Menu",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="41f29a8894dbf47a"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="18,8 5,4 16,19 10,7 18,18 19,14"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibObjectsArrangeMenu implements BlockTool {
   }
 
   readonly id = "DocLibObjectsArrangeMenu";
-  readonly title = "Objects Arrange Menu";
+  readonly title = "DocLib Objects Arrange Menu";
   readonly category = "layout" as const;
   readonly mode = "ObjectsArrangeMenu";
   readonly requiresSelection = false;

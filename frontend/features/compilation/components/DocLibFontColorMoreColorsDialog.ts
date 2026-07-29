@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFontColorMoreColorsDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibFontColorMoreColorsDialog",
-    title: "Font Color More Colors Dialog",
+    title: "DocLib Font Color More Colors Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9a26827c54f1dd97"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="5,8 15,9 20,7 4,19 17,7 17,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Font Color More Colors Dialog",
+      title: "DocLib Font Color More Colors Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="9a26827c54f1dd97"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="5,8 15,9 20,7 4,19 17,7 17,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFontColorMoreColorsDialog implements BlockTool {
   }
 
   readonly id = "DocLibFontColorMoreColorsDialog";
-  readonly title = "Font Color More Colors Dialog";
+  readonly title = "DocLib Font Color More Colors Dialog";
   readonly category = "format" as const;
   readonly mode = "FontColorMoreColorsDialog";
   readonly requiresSelection = false;

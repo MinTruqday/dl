@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibParagraphUpExtend implements BlockTool {
   static readonly feature = {
     id: "DocLibParagraphUpExtend",
-    title: "Paragraph Up Extend",
+    title: "DocLib Paragraph Up Extend",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5fa7cbee6650c782"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="14,18 20,4 4,16 16,15 18,12 16,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Paragraph Up Extend",
+      title: "DocLib Paragraph Up Extend",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5fa7cbee6650c782"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="14,18 20,4 4,16 16,15 18,12 16,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibParagraphUpExtend implements BlockTool {
   }
 
   readonly id = "DocLibParagraphUpExtend";
-  readonly title = "Paragraph Up Extend";
+  readonly title = "DocLib Paragraph Up Extend";
   readonly category = "format" as const;
   readonly mode = "ParagraphUpExtend";
   readonly requiresSelection = false;

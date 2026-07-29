@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMacroRecord implements BlockTool {
   static readonly feature = {
     id: "DocLibMacroRecord",
-    title: "Macro Record",
+    title: "DocLib Macro Record",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="92ab058c815e33f8"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="14,5 9,8 14,13 4,14 6,5 20,19"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Macro Record",
+      title: "DocLib Macro Record",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="92ab058c815e33f8"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="14,5 9,8 14,13 4,14 6,5 20,19"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibMacroRecord implements BlockTool {
   }
 
   readonly id = "DocLibMacroRecord";
-  readonly title = "Macro Record";
+  readonly title = "DocLib Macro Record";
   readonly category = "format" as const;
   readonly mode = "MacroRecord";
   readonly requiresSelection = false;

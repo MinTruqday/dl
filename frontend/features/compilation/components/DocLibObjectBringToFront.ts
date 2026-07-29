@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibObjectBringToFront implements BlockTool {
   static readonly feature = {
     id: "DocLibObjectBringToFront",
-    title: "Object Bring To Front",
+    title: "DocLib Object Bring To Front",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="16ffc38dd880548b"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,4 12,9 16,13 20,7 7,16 20,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Object Bring To Front",
+      title: "DocLib Object Bring To Front",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="16ffc38dd880548b"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,4 12,9 16,13 20,7 7,16 20,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibObjectBringToFront implements BlockTool {
   }
 
   readonly id = "DocLibObjectBringToFront";
-  readonly title = "Object Bring To Front";
+  readonly title = "DocLib Object Bring To Front";
   readonly category = "layout" as const;
   readonly mode = "ObjectBringToFront";
   readonly requiresSelection = false;

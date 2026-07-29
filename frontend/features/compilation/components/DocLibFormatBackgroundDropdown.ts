@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFormatBackgroundDropdown implements BlockTool {
   static readonly feature = {
     id: "DocLibFormatBackgroundDropdown",
-    title: "Format Background Dropdown",
+    title: "DocLib Format Background Dropdown",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3ed9bec65c04d423"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="15,17 7,15 11,8 12,5 17,15 15,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Format Background Dropdown",
+      title: "DocLib Format Background Dropdown",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3ed9bec65c04d423"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="15,17 7,15 11,8 12,5 17,15 15,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFormatBackgroundDropdown implements BlockTool {
   }
 
   readonly id = "DocLibFormatBackgroundDropdown";
-  readonly title = "Format Background Dropdown";
+  readonly title = "DocLib Format Background Dropdown";
   readonly category = "format" as const;
   readonly mode = "FormatBackgroundDropdown";
   readonly requiresSelection = false;

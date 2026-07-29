@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibCopyPasteSettings implements BlockTool {
   static readonly feature = {
     id: "DocLibCopyPasteSettings",
-    title: "Copy Paste Settings",
+    title: "DocLib Copy Paste Settings",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4d28b185d536a708"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="13,10 11,18 13,7 18,12 6,9 6,12"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Copy Paste Settings",
+      title: "DocLib Copy Paste Settings",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4d28b185d536a708"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="13,10 11,18 13,7 18,12 6,9 6,12"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibCopyPasteSettings implements BlockTool {
   }
 
   readonly id = "DocLibCopyPasteSettings";
-  readonly title = "Copy Paste Settings";
+  readonly title = "DocLib Copy Paste Settings";
   readonly category = "format" as const;
   readonly mode = "CopyPasteSettings";
   readonly requiresSelection = false;

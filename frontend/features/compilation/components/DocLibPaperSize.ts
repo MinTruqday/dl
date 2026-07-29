@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPaperSize implements BlockTool {
   static readonly feature = {
     id: "DocLibPaperSize",
-    title: "Paper Size",
+    title: "DocLib Paper Size",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f7aa5678b304d211"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="13,4 5,5 13,8 10,4 5,11 8,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Paper Size",
+      title: "DocLib Paper Size",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="f7aa5678b304d211"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="13,4 5,5 13,8 10,4 5,11 8,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPaperSize implements BlockTool {
   }
 
   readonly id = "DocLibPaperSize";
-  readonly title = "Paper Size";
+  readonly title = "DocLib Paper Size";
   readonly category = "layout" as const;
   readonly mode = "PaperSize";
   readonly requiresSelection = false;

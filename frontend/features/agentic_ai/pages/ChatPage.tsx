@@ -25,19 +25,13 @@ import "highlight.js/styles/github.css";
 
 import {
   X,
-  Send,
-  Zap,
-  Paperclip,
   Image as ImageIcon,
   FileText,
   Loader2,
   Maximize2,
-  Edit2,
-  Trash2,
   Plus as PlusIcon,
   MoreVertical,
   ArrowRight,
-  Activity,
   Folder,
   ChevronDown,
 } from "lucide-react";
@@ -151,7 +145,6 @@ function InteractiveMindmapCanvas({ payloadStr }: { payloadStr: string }) {
       >
         <div className="flex items-center justify-between border-b border-[var(--border)] pb-3 mb-4">
           <div className="flex items-center gap-2 font-semibold text-[15px] text-[var(--ink)]">
-            <Activity className="w-4.5 h-4.5 text-[var(--brand)]" />
             <span>{tree.title || "Sơ đồ tư duy"}</span>
           </div>
           <div className="flex items-center gap-2">
@@ -396,7 +389,6 @@ function QuotaIndicator() {
   return (
     <div className="flex flex-col gap-3 p-4 bg-[var(--surface-quiet)]  rounded-[var(--radius-panel)]">
       <div className="flex items-center gap-2">
-        <Activity className="w-4 h-4 text-[var(--brand)]" />
         <span className="text-[12px] font-semibold text-[var(--ink)]">
           Hạn mức sử dụng ngày
         </span>
@@ -929,10 +921,9 @@ export default function TroChuyenPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowInstructionsModal(true)}
-                className="p-2 bg-[var(--surface-quiet)] text-[var(--ink)] hover:bg-[var(--border)] rounded-full transition-colors"
-                title="Tùy chỉnh chỉ dẫn cá nhân"
+                className="button-secondary min-h-9 px-3 py-1 text-[13px]"
               >
-                <Edit2 className="w-4 h-4 text-[var(--brand)]" />
+                Chỉ dẫn
               </button>
               <button
                 onClick={() => (window.location.href = "/nang-cap")}
@@ -1059,7 +1050,7 @@ export default function TroChuyenPage() {
                                   setEditingTitleValue(s.title);
                                 }}
                               >
-                                <Edit2 className="w-3.5 h-3.5" /> Đổi tên
+                                Đổi tên
                               </button>
                               <button
                                 onClick={async (e) => {
@@ -1078,7 +1069,7 @@ export default function TroChuyenPage() {
                                 }}
                                 className="w-full text-left px-3 py-2 text-[13px] text-[var(--danger)] hover:bg-[#FFEBEB] rounded-[var(--radius-control)] transition-colors flex items-center gap-2"
                               >
-                                <Trash2 className="w-3.5 h-3.5" /> Xóa
+                                Xóa
                               </button>
                             </div>
                           </>
@@ -1093,7 +1084,7 @@ export default function TroChuyenPage() {
           </div>
         </aside>
 
-        <main className="flex-1 flex flex-col min-w-0 h-full bg-[var(--surface-quiet)] md:bg-transparent rounded-[var(--radius-workspace)] md:rounded-none relative overflow-hidden">
+        <main className="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden rounded-[var(--radius-workspace)] border border-[var(--border)] bg-[var(--surface)]">
           <div
             ref={scrollRef}
             className="flex-1 overflow-y-auto flex flex-col min-h-0 custom-scrollbar relative"
@@ -1101,10 +1092,7 @@ export default function TroChuyenPage() {
             {messages.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
                 <p className="text-[24px] font-semibold text-[var(--ink)]">
-                  Xin chào, {user.full_name}
-                </p>
-                <p className="text-[15px] text-[var(--ink-muted)] mt-2 leading-relaxed max-w-sm">
-                  Tôi có thể giúp gì cho bạn hôm nay?
+                  Cuộc trò chuyện mới
                 </p>
               </div>
             ) : (
@@ -1160,7 +1148,6 @@ export default function TroChuyenPage() {
                               <details className="group/details bg-[var(--surface-quiet)] rounded-[var(--radius-panel)] overflow-hidden border border-[var(--border)]" open={isSending && idx === messages.length - 1}>
                                 <summary className="flex items-center gap-2 px-4 py-2.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden border-b border-transparent group-open/details:border-[var(--border)] transition-colors">
                                   <div className="flex-1 flex items-center gap-2">
-                                    <Activity className="w-4 h-4 text-[var(--brand)]" />
                                     <span className="text-[14px] font-semibold text-[var(--ink)]">
                                       Quá trình xử lý
                                     </span>
@@ -1193,7 +1180,6 @@ export default function TroChuyenPage() {
                                   <details className="group/details bg-[var(--surface-quiet)] rounded-[var(--radius-panel)] overflow-hidden border border-[var(--border)]" open={isSending && idx === messages.length - 1 && sIdx === segments.length - 1}>
                                     <summary className="flex items-center gap-2 px-4 py-2.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden border-b border-transparent group-open/details:border-[var(--border)] transition-colors">
                                       <div className="flex-1 flex items-center gap-2">
-                                        <Activity className="w-4 h-4 text-[var(--brand)]" />
                                         <span className="text-[14px] font-semibold text-[var(--ink)]">
                                           <ThoughtTimer isRunning={isSending && idx === messages.length - 1 && sIdx === segments.length - 1} />
                                         </span>
@@ -1544,8 +1530,8 @@ export default function TroChuyenPage() {
               </form>
             </div>
             <div className="mt-1 text-center mb-1">
-              <span className="text-[12px] italic text-[var(--ink-muted)]">
-                * DocLib Metis là trí tuệ nhân tạo và có thể mắc sai lầm
+              <span className="text-[12px] text-[var(--ink-muted)]">
+                Nội dung do AI tạo có thể chưa chính xác
               </span>
             </div>
           </div>

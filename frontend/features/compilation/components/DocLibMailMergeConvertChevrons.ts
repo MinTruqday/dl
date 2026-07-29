@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMailMergeConvertChevrons implements BlockTool {
   static readonly feature = {
     id: "DocLibMailMergeConvertChevrons",
-    title: "Mail Merge Convert Chevrons",
+    title: "DocLib Mail Merge Convert Chevrons",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2adfdc6ee0ead278"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="12,6 20,12 7,17 10,5 13,5 11,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Mail Merge Convert Chevrons",
+      title: "DocLib Mail Merge Convert Chevrons",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2adfdc6ee0ead278"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="12,6 20,12 7,17 10,5 13,5 11,6"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibMailMergeConvertChevrons implements BlockTool {
   }
 
   readonly id = "DocLibMailMergeConvertChevrons";
-  readonly title = "Mail Merge Convert Chevrons";
+  readonly title = "DocLib Mail Merge Convert Chevrons";
   readonly category = "format" as const;
   readonly mode = "MailMergeConvertChevrons";
   readonly requiresSelection = false;

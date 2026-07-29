@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibStylisticSetsMenuWord implements BlockTool {
   static readonly feature = {
     id: "DocLibStylisticSetsMenuWord",
-    title: "Stylistic Sets Menu Word",
+    title: "DocLib Stylistic Sets Menu Word",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cae37bb8d2d4bcba"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,10 8,18 10,12 5,20 20,20 18,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Stylistic Sets Menu Word",
+      title: "DocLib Stylistic Sets Menu Word",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cae37bb8d2d4bcba"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="19,10 8,18 10,12 5,20 20,20 18,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibStylisticSetsMenuWord implements BlockTool {
   }
 
   readonly id = "DocLibStylisticSetsMenuWord";
-  readonly title = "Stylistic Sets Menu Word";
+  readonly title = "DocLib Stylistic Sets Menu Word";
   readonly category = "format" as const;
   readonly mode = "StylisticSetsMenuWord";
   readonly requiresSelection = false;

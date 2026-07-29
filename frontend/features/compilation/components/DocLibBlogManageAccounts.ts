@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibBlogManageAccounts implements BlockTool {
   static readonly feature = {
     id: "DocLibBlogManageAccounts",
-    title: "Blog Manage Accounts",
+    title: "DocLib Blog Manage Accounts",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="aed79a56c3a64d2a"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="8,15 5,5 12,17 13,12 7,16 13,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Blog Manage Accounts",
+      title: "DocLib Blog Manage Accounts",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="aed79a56c3a64d2a"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="8,15 5,5 12,17 13,12 7,16 13,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibBlogManageAccounts implements BlockTool {
   }
 
   readonly id = "DocLibBlogManageAccounts";
-  readonly title = "Blog Manage Accounts";
+  readonly title = "DocLib Blog Manage Accounts";
   readonly category = "format" as const;
   readonly mode = "BlogManageAccounts";
   readonly requiresSelection = false;

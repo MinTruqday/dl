@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibGrammarSettingsDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibGrammarSettingsDialog",
-    title: "Grammar Settings Dialog",
+    title: "DocLib Grammar Settings Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="383094e64c43f2d3"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,18 16,13 12,20 8,11 12,16 13,10"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Grammar Settings Dialog",
+      title: "DocLib Grammar Settings Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="383094e64c43f2d3"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,18 16,13 12,20 8,11 12,16 13,10"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibGrammarSettingsDialog implements BlockTool {
   }
 
   readonly id = "DocLibGrammarSettingsDialog";
-  readonly title = "Grammar Settings Dialog";
+  readonly title = "DocLib Grammar Settings Dialog";
   readonly category = "format" as const;
   readonly mode = "GrammarSettingsDialog";
   readonly requiresSelection = false;

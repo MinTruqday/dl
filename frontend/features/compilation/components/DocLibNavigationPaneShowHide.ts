@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibNavigationPaneShowHide implements BlockTool {
   static readonly feature = {
     id: "DocLibNavigationPaneShowHide",
-    title: "Navigation Pane Show Hide",
+    title: "DocLib Navigation Pane Show Hide",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0918f0e027d7f50f"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="13,11 6,7 9,15 11,19 19,7 13,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Navigation Pane Show Hide",
+      title: "DocLib Navigation Pane Show Hide",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0918f0e027d7f50f"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="13,11 6,7 9,15 11,19 19,7 13,9"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibNavigationPaneShowHide implements BlockTool {
   }
 
   readonly id = "DocLibNavigationPaneShowHide";
-  readonly title = "Navigation Pane Show Hide";
+  readonly title = "DocLib Navigation Pane Show Hide";
   readonly category = "view" as const;
   readonly mode = "NavigationPaneShowHide";
   readonly requiresSelection = false;

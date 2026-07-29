@@ -29,7 +29,7 @@ def capability_manifest():
             or feature_id in ids
             or not isinstance(title, str)
             or not title
-            or title.startswith("DocLib ")
+            or not title.startswith("DocLib ")
             or not isinstance(icon, str)
             or icon in icons
             or product != "doclib"

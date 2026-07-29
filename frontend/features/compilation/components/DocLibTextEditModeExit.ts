@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextEditModeExit implements BlockTool {
   static readonly feature = {
     id: "DocLibTextEditModeExit",
-    title: "Text Edit Mode Exit",
+    title: "DocLib Text Edit Mode Exit",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cdb1d6bb7148e97b"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="5,11 14,4 15,8 16,8 8,14 13,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Text Edit Mode Exit",
+      title: "DocLib Text Edit Mode Exit",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cdb1d6bb7148e97b"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="5,11 14,4 15,8 16,8 8,14 13,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTextEditModeExit implements BlockTool {
   }
 
   readonly id = "DocLibTextEditModeExit";
-  readonly title = "Text Edit Mode Exit";
+  readonly title = "DocLib Text Edit Mode Exit";
   readonly category = "format" as const;
   readonly mode = "TextEditModeExit";
   readonly requiresSelection = false;

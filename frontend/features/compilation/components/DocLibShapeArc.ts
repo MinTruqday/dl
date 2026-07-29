@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibShapeArc implements BlockTool {
   static readonly feature = {
     id: "DocLibShapeArc",
-    title: "Shape Arc",
+    title: "DocLib Shape Arc",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bc4a8ed1b8e330ac"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="5,10 10,9 18,10 18,6 20,19 7,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Shape Arc",
+      title: "DocLib Shape Arc",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bc4a8ed1b8e330ac"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="5,10 10,9 18,10 18,6 20,19 7,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibShapeArc implements BlockTool {
   }
 
   readonly id = "DocLibShapeArc";
-  readonly title = "Shape Arc";
+  readonly title = "DocLib Shape Arc";
   readonly category = "format" as const;
   readonly mode = "ShapeArc";
   readonly requiresSelection = false;

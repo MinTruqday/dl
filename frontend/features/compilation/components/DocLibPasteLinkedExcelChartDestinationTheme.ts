@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPasteLinkedExcelChartDestinationTheme implements BlockTool {
   static readonly feature = {
     id: "DocLibPasteLinkedExcelChartDestinationTheme",
-    title: "Paste Linked Excel Chart Destination Theme",
+    title: "DocLib Paste Linked Excel Chart Destination Theme",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7fe3229143d4386e"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="12,10 4,13 20,12 9,12 17,4 14,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Paste Linked Excel Chart Destination Theme",
+      title: "DocLib Paste Linked Excel Chart Destination Theme",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7fe3229143d4386e"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="12,10 4,13 20,12 9,12 17,4 14,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPasteLinkedExcelChartDestinationTheme implements Bloc
   }
 
   readonly id = "DocLibPasteLinkedExcelChartDestinationTheme";
-  readonly title = "Paste Linked Excel Chart Destination Theme";
+  readonly title = "DocLib Paste Linked Excel Chart Destination Theme";
   readonly category = "format" as const;
   readonly mode = "PasteLinkedExcelChartDestinationTheme";
   readonly requiresSelection = false;

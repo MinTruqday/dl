@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibParagraphSpacingSet implements BlockTool {
   static readonly feature = {
     id: "DocLibParagraphSpacingSet",
-    title: "Paragraph Spacing Set",
+    title: "DocLib Paragraph Spacing Set",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="062d06bfb00c60ed"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="10,15 10,8 10,16 15,20 6,13 9,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Paragraph Spacing Set",
+      title: "DocLib Paragraph Spacing Set",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="062d06bfb00c60ed"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="10,15 10,8 10,16 15,20 6,13 9,6"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibParagraphSpacingSet implements BlockTool {
   }
 
   readonly id = "DocLibParagraphSpacingSet";
-  readonly title = "Paragraph Spacing Set";
+  readonly title = "DocLib Paragraph Spacing Set";
   readonly category = "layout" as const;
   readonly mode = "ParagraphSpacingSet";
   readonly requiresSelection = false;

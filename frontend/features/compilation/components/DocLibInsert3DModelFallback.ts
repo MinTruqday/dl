@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibInsert3DModelFallback implements BlockTool {
   static readonly feature = {
     id: "DocLibInsert3DModelFallback",
-    title: "Insert3D Model Fallback",
+    title: "DocLib Insert3D Model Fallback",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5172af389571eb6d"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,16 9,9 17,15 18,11 17,17 18,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Insert3D Model Fallback",
+      title: "DocLib Insert3D Model Fallback",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5172af389571eb6d"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,16 9,9 17,15 18,11 17,17 18,6"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibInsert3DModelFallback implements BlockTool {
   }
 
   readonly id = "DocLibInsert3DModelFallback";
-  readonly title = "Insert3D Model Fallback";
+  readonly title = "DocLib Insert3D Model Fallback";
   readonly category = "insert" as const;
   readonly mode = "Insert3DModelFallback";
   readonly requiresSelection = false;

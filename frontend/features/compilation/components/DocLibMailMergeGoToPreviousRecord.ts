@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMailMergeGoToPreviousRecord implements BlockTool {
   static readonly feature = {
     id: "DocLibMailMergeGoToPreviousRecord",
-    title: "Mail Merge Go To Previous Record",
+    title: "DocLib Mail Merge Go To Previous Record",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cfafd95ab2aac7d6"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="7,9 17,9 12,4 16,14 5,18 12,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Mail Merge Go To Previous Record",
+      title: "DocLib Mail Merge Go To Previous Record",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="cfafd95ab2aac7d6"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="7,9 17,9 12,4 16,14 5,18 12,9"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibMailMergeGoToPreviousRecord implements BlockTool {
   }
 
   readonly id = "DocLibMailMergeGoToPreviousRecord";
-  readonly title = "Mail Merge Go To Previous Record";
+  readonly title = "DocLib Mail Merge Go To Previous Record";
   readonly category = "review" as const;
   readonly mode = "MailMergeGoToPreviousRecord";
   readonly requiresSelection = false;

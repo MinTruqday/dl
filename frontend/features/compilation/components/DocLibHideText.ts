@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibHideText implements BlockTool {
   static readonly feature = {
     id: "DocLibHideText",
-    title: "Hide Text",
+    title: "DocLib Hide Text",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c7a7a72a3b44cd0a"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="16,18 18,12 12,4 5,14 19,7 6,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Hide Text",
+      title: "DocLib Hide Text",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c7a7a72a3b44cd0a"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="16,18 18,12 12,4 5,14 19,7 6,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibHideText implements BlockTool {
   }
 
   readonly id = "DocLibHideText";
-  readonly title = "Hide Text";
+  readonly title = "DocLib Hide Text";
   readonly category = "format" as const;
   readonly mode = "HideText";
   readonly requiresSelection = false;

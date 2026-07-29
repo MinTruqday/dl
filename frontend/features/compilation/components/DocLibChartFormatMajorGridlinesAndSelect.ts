@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibChartFormatMajorGridlinesAndSelect implements BlockTool {
   static readonly feature = {
     id: "DocLibChartFormatMajorGridlinesAndSelect",
-    title: "Chart Format Major Gridlines And Select",
+    title: "DocLib Chart Format Major Gridlines And Select",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0b4cfd2f9c5db8b7"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="15,12 19,17 7,12 18,17 13,10 15,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Chart Format Major Gridlines And Select",
+      title: "DocLib Chart Format Major Gridlines And Select",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="0b4cfd2f9c5db8b7"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="15,12 19,17 7,12 18,17 13,10 15,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibChartFormatMajorGridlinesAndSelect implements BlockTo
   }
 
   readonly id = "DocLibChartFormatMajorGridlinesAndSelect";
-  readonly title = "Chart Format Major Gridlines And Select";
+  readonly title = "DocLib Chart Format Major Gridlines And Select";
   readonly category = "media" as const;
   readonly mode = "ChartFormatMajorGridlinesAndSelect";
   readonly requiresSelection = false;

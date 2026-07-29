@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibXmlSchema implements BlockTool {
   static readonly feature = {
     id: "DocLibXmlSchema",
-    title: "XML Schema",
+    title: "DocLib XML Schema",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e7b7f640a9979aa6"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="14,17 12,17 20,19 5,17 14,6 4,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "XML Schema",
+      title: "DocLib XML Schema",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e7b7f640a9979aa6"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="14,17 12,17 20,19 5,17 14,6 4,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibXmlSchema implements BlockTool {
   }
 
   readonly id = "DocLibXmlSchema";
-  readonly title = "XML Schema";
+  readonly title = "DocLib XML Schema";
   readonly category = "format" as const;
   readonly mode = "XmlSchema";
   readonly requiresSelection = false;

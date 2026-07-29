@@ -3,7 +3,7 @@ import { API, InlineTool } from "@editorjs/editorjs";
 export default class DocLibHiddenText implements InlineTool {
   static readonly feature = {
     id: "DocLibHiddenText",
-    title: "Hidden Text",
+    title: "DocLib Hidden Text",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8775ac1ebab1e9a9"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="20,19 6,17 20,11 16,20 11,13 12,5"/></svg>',
     product: "doclib",
   } as const;

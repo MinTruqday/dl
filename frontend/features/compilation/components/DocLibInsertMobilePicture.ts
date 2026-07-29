@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibInsertMobilePicture implements BlockTool {
   static readonly feature = {
     id: "DocLibInsertMobilePicture",
-    title: "Insert Mobile Picture",
+    title: "DocLib Insert Mobile Picture",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="898832cb40120c36"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,4 20,20 17,5 16,7 12,12 12,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Insert Mobile Picture",
+      title: "DocLib Insert Mobile Picture",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="898832cb40120c36"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="5,4 20,20 17,5 16,7 12,12 12,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibInsertMobilePicture implements BlockTool {
   }
 
   readonly id = "DocLibInsertMobilePicture";
-  readonly title = "Insert Mobile Picture";
+  readonly title = "DocLib Insert Mobile Picture";
   readonly category = "insert" as const;
   readonly mode = "InsertMobilePicture";
   readonly requiresSelection = false;

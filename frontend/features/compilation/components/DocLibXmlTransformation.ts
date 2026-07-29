@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibXmlTransformation implements BlockTool {
   static readonly feature = {
     id: "DocLibXmlTransformation",
-    title: "XML Transformation",
+    title: "DocLib XML Transformation",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2658e6d6e95e94bf"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,7 13,14 16,13 16,8 5,16 8,17"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "XML Transformation",
+      title: "DocLib XML Transformation",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2658e6d6e95e94bf"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,7 13,14 16,13 16,8 5,16 8,17"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibXmlTransformation implements BlockTool {
   }
 
   readonly id = "DocLibXmlTransformation";
-  readonly title = "XML Transformation";
+  readonly title = "DocLib XML Transformation";
   readonly category = "format" as const;
   readonly mode = "XmlTransformation";
   readonly requiresSelection = false;

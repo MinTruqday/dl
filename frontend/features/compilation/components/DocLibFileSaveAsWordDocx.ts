@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFileSaveAsWordDocx implements BlockTool {
   static readonly feature = {
     id: "DocLibFileSaveAsWordDocx",
-    title: "File Save As Word Docx",
+    title: "DocLib File Save As Word Docx",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ca7c7522e65e4805"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="19,9 19,4 13,13 8,9 10,9 8,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "File Save As Word Docx",
+      title: "DocLib File Save As Word Docx",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="ca7c7522e65e4805"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="19,9 19,4 13,13 8,9 10,9 8,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFileSaveAsWordDocx implements BlockTool {
   }
 
   readonly id = "DocLibFileSaveAsWordDocx";
-  readonly title = "File Save As Word Docx";
+  readonly title = "DocLib File Save As Word Docx";
   readonly category = "format" as const;
   readonly mode = "FileSaveAsWordDocx";
   readonly requiresSelection = false;

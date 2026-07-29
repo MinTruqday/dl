@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPictureEffectsShadowGallery implements BlockTool {
   static readonly feature = {
     id: "DocLibPictureEffectsShadowGallery",
-    title: "Picture Effects Shadow Gallery",
+    title: "DocLib Picture Effects Shadow Gallery",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="de4f9dfc6e3066d6"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,15 8,18 12,18 4,14 5,13 10,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Picture Effects Shadow Gallery",
+      title: "DocLib Picture Effects Shadow Gallery",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="de4f9dfc6e3066d6"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="5,15 8,18 12,18 4,14 5,13 10,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPictureEffectsShadowGallery implements BlockTool {
   }
 
   readonly id = "DocLibPictureEffectsShadowGallery";
-  readonly title = "Picture Effects Shadow Gallery";
+  readonly title = "DocLib Picture Effects Shadow Gallery";
   readonly category = "media" as const;
   readonly mode = "PictureEffectsShadowGallery";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSyntexEsign implements BlockTool {
   static readonly feature = {
     id: "DocLibSyntexEsign",
-    title: "Syntex Esign",
+    title: "DocLib Syntex Esign",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bfbcf5c3ffe25dd3"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,5 11,12 4,9 12,11 5,14 4,5"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Syntex Esign",
+      title: "DocLib Syntex Esign",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bfbcf5c3ffe25dd3"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="8,5 11,12 4,9 12,11 5,14 4,5"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSyntexEsign implements BlockTool {
   }
 
   readonly id = "DocLibSyntexEsign";
-  readonly title = "Syntex Esign";
+  readonly title = "DocLib Syntex Esign";
   readonly category = "format" as const;
   readonly mode = "SyntexEsign";
   readonly requiresSelection = false;

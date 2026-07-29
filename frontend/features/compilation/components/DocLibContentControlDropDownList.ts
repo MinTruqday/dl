@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibContentControlDropDownList implements BlockTool {
   static readonly feature = {
     id: "DocLibContentControlDropDownList",
-    title: "Content Control Drop Down List",
+    title: "DocLib Content Control Drop Down List",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bb49d8699fe506e1"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="4,9 16,7 10,12 10,8 6,16 15,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Content Control Drop Down List",
+      title: "DocLib Content Control Drop Down List",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bb49d8699fe506e1"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="4,9 16,7 10,12 10,8 6,16 15,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibContentControlDropDownList implements BlockTool {
   }
 
   readonly id = "DocLibContentControlDropDownList";
-  readonly title = "Content Control Drop Down List";
+  readonly title = "DocLib Content Control Drop Down List";
   readonly category = "automation" as const;
   readonly mode = "ContentControlDropDownList";
   readonly requiresSelection = false;

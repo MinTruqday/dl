@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLoopTaskList implements BlockTool {
   static readonly feature = {
     id: "DocLibLoopTaskList",
-    title: "Loop Task List",
+    title: "DocLib Loop Task List",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="15453d3a40ae9a1e"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,5 14,11 17,8 5,17 5,12 12,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Loop Task List",
+      title: "DocLib Loop Task List",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="15453d3a40ae9a1e"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="8,5 14,11 17,8 5,17 5,12 12,6"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibLoopTaskList implements BlockTool {
   }
 
   readonly id = "DocLibLoopTaskList";
-  readonly title = "Loop Task List";
+  readonly title = "DocLib Loop Task List";
   readonly category = "insert" as const;
   readonly mode = "LoopTaskList";
   readonly requiresSelection = false;

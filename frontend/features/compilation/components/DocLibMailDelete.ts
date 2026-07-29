@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibMailDelete implements BlockTool {
   static readonly feature = {
     id: "DocLibMailDelete",
-    title: "Mail Delete",
+    title: "DocLib Mail Delete",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="178d2c623515d1df"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,9 14,17 6,8 9,6 9,9 7,13"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Mail Delete",
+      title: "DocLib Mail Delete",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="178d2c623515d1df"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="10,9 14,17 6,8 9,6 9,9 7,13"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibMailDelete implements BlockTool {
   }
 
   readonly id = "DocLibMailDelete";
-  readonly title = "Mail Delete";
+  readonly title = "DocLib Mail Delete";
   readonly category = "format" as const;
   readonly mode = "MailDelete";
   readonly requiresSelection = false;

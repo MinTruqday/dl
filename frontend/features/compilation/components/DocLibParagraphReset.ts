@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibParagraphReset implements BlockTool {
   static readonly feature = {
     id: "DocLibParagraphReset",
-    title: "Paragraph Reset",
+    title: "DocLib Paragraph Reset",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1683271ffb9e21c2"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="9,16 9,18 17,9 20,11 10,11 12,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Paragraph Reset",
+      title: "DocLib Paragraph Reset",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1683271ffb9e21c2"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="9,16 9,18 17,9 20,11 10,11 12,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibParagraphReset implements BlockTool {
   }
 
   readonly id = "DocLibParagraphReset";
-  readonly title = "Paragraph Reset";
+  readonly title = "DocLib Paragraph Reset";
   readonly category = "format" as const;
   readonly mode = "ParagraphReset";
   readonly requiresSelection = false;

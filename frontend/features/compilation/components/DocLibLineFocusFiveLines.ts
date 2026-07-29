@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibLineFocusFiveLines implements BlockTool {
   static readonly feature = {
     id: "DocLibLineFocusFiveLines",
-    title: "Line Focus Five Lines",
+    title: "DocLib Line Focus Five Lines",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5116e1bf76fcf48c"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,9 8,8 20,18 10,8 18,14 9,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Line Focus Five Lines",
+      title: "DocLib Line Focus Five Lines",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="5116e1bf76fcf48c"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,9 8,8 20,18 10,8 18,14 9,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibLineFocusFiveLines implements BlockTool {
   }
 
   readonly id = "DocLibLineFocusFiveLines";
-  readonly title = "Line Focus Five Lines";
+  readonly title = "DocLib Line Focus Five Lines";
   readonly category = "table" as const;
   readonly mode = "LineFocusFiveLines";
   readonly requiresSelection = false;

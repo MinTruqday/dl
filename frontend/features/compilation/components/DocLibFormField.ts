@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFormField implements BlockTool {
   static readonly feature = {
     id: "DocLibFormField",
-    title: "Form Field",
+    title: "DocLib Form Field",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="73044be28d02fb19"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,8 11,9 9,6 17,12 4,13 4,8"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Form Field",
+      title: "DocLib Form Field",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="73044be28d02fb19"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="17,8 11,9 9,6 17,12 4,13 4,8"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibFormField implements BlockTool {
   }
 
   readonly id = "DocLibFormField";
-  readonly title = "Form Field";
+  readonly title = "DocLib Form Field";
   readonly category = "format" as const;
   readonly mode = "FormField";
   readonly requiresSelection = false;

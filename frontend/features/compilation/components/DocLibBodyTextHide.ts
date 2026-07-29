@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibBodyTextHide implements BlockTool {
   static readonly feature = {
     id: "DocLibBodyTextHide",
-    title: "Body Text Hide",
+    title: "DocLib Body Text Hide",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e5fa114fcc570b96"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="12,16 4,15 4,6 15,18 9,13 20,11"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Body Text Hide",
+      title: "DocLib Body Text Hide",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="e5fa114fcc570b96"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="12,16 4,15 4,6 15,18 9,13 20,11"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibBodyTextHide implements BlockTool {
   }
 
   readonly id = "DocLibBodyTextHide";
-  readonly title = "Body Text Hide";
+  readonly title = "DocLib Body Text Hide";
   readonly category = "format" as const;
   readonly mode = "BodyTextHide";
   readonly requiresSelection = false;

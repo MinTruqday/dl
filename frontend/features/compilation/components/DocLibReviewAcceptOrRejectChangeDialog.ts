@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibReviewAcceptOrRejectChangeDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibReviewAcceptOrRejectChangeDialog",
-    title: "Review Accept Or Reject Change Dialog",
+    title: "DocLib Review Accept Or Reject Change Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3ca5fde794744496"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="13,16 19,14 16,18 4,18 14,9 11,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Review Accept Or Reject Change Dialog",
+      title: "DocLib Review Accept Or Reject Change Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="3ca5fde794744496"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="13,16 19,14 16,18 4,18 14,9 11,6"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibReviewAcceptOrRejectChangeDialog implements BlockTool
   }
 
   readonly id = "DocLibReviewAcceptOrRejectChangeDialog";
-  readonly title = "Review Accept Or Reject Change Dialog";
+  readonly title = "DocLib Review Accept Or Reject Change Dialog";
   readonly category = "format" as const;
   readonly mode = "ReviewAcceptOrRejectChangeDialog";
   readonly requiresSelection = false;

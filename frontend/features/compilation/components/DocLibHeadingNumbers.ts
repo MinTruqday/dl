@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibHeadingNumbers implements BlockTool {
   static readonly feature = {
     id: "DocLibHeadingNumbers",
-    title: "Heading Numbers",
+    title: "DocLib Heading Numbers",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="02df4dde926ffbcc"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="6,6 13,5 14,13 17,4 9,4 16,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Heading Numbers",
+      title: "DocLib Heading Numbers",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="02df4dde926ffbcc"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="6,6 13,5 14,13 17,4 9,4 16,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibHeadingNumbers implements BlockTool {
   }
 
   readonly id = "DocLibHeadingNumbers";
-  readonly title = "Heading Numbers";
+  readonly title = "DocLib Heading Numbers";
   readonly category = "format" as const;
   readonly mode = "HeadingNumbers";
   readonly requiresSelection = false;

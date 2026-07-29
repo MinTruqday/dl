@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibHyperlinkOpenInWeb implements BlockTool {
   static readonly feature = {
     id: "DocLibHyperlinkOpenInWeb",
-    title: "Hyperlink Open In Web",
+    title: "DocLib Hyperlink Open In Web",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1824335f6cec761f"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="11,6 4,14 10,19 20,18 9,4 11,20"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Hyperlink Open In Web",
+      title: "DocLib Hyperlink Open In Web",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="1824335f6cec761f"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="11,6 4,14 10,19 20,18 9,4 11,20"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibHyperlinkOpenInWeb implements BlockTool {
   }
 
   readonly id = "DocLibHyperlinkOpenInWeb";
-  readonly title = "Hyperlink Open In Web";
+  readonly title = "DocLib Hyperlink Open In Web";
   readonly category = "media" as const;
   readonly mode = "HyperlinkOpenInWeb";
   readonly requiresSelection = false;

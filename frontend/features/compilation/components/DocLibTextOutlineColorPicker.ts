@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibTextOutlineColorPicker implements BlockTool {
   static readonly feature = {
     id: "DocLibTextOutlineColorPicker",
-    title: "Text Outline Color Picker",
+    title: "DocLib Text Outline Color Picker",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8000ae5a8e83f4c0"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="13,4 8,9 10,16 10,9 12,17 15,16"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Text Outline Color Picker",
+      title: "DocLib Text Outline Color Picker",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="8000ae5a8e83f4c0"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="13,4 8,9 10,16 10,9 12,17 15,16"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibTextOutlineColorPicker implements BlockTool {
   }
 
   readonly id = "DocLibTextOutlineColorPicker";
-  readonly title = "Text Outline Color Picker";
+  readonly title = "DocLib Text Outline Color Picker";
   readonly category = "format" as const;
   readonly mode = "TextOutlineColorPicker";
   readonly requiresSelection = false;

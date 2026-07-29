@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibCharacterCodeToggle implements BlockTool {
   static readonly feature = {
     id: "DocLibCharacterCodeToggle",
-    title: "Character Code Toggle",
+    title: "DocLib Character Code Toggle",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4e971b9685c12f33"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="14,19 14,18 18,10 17,4 9,12 18,7"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Character Code Toggle",
+      title: "DocLib Character Code Toggle",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="4e971b9685c12f33"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="14,19 14,18 18,10 17,4 9,12 18,7"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibCharacterCodeToggle implements BlockTool {
   }
 
   readonly id = "DocLibCharacterCodeToggle";
-  readonly title = "Character Code Toggle";
+  readonly title = "DocLib Character Code Toggle";
   readonly category = "format" as const;
   readonly mode = "CharacterCodeToggle";
   readonly requiresSelection = false;

@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibSyntexDocGen implements BlockTool {
   static readonly feature = {
     id: "DocLibSyntexDocGen",
-    title: "Syntex Doc Gen",
+    title: "DocLib Syntex Doc Gen",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6ccc31ed2a4f79b5"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="10,4 19,20 12,15 6,15 12,11 11,9"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Syntex Doc Gen",
+      title: "DocLib Syntex Doc Gen",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="6ccc31ed2a4f79b5"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="10,4 19,20 12,15 6,15 12,11 11,9"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibSyntexDocGen implements BlockTool {
   }
 
   readonly id = "DocLibSyntexDocGen";
-  readonly title = "Syntex Doc Gen";
+  readonly title = "DocLib Syntex Doc Gen";
   readonly category = "format" as const;
   readonly mode = "SyntexDocGen";
   readonly requiresSelection = false;

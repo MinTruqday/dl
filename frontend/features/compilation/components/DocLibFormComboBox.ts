@@ -3,7 +3,7 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibFormComboBox implements BlockTool {
   static readonly feature = {
     id: "DocLibFormComboBox",
-    title: "Form Combo Box",
+    title: "DocLib Form Combo Box",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="850922ec8ab006e5"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="18,13 4,19 6,10 10,12 8,14 16,4"/></svg>',
     product: "doclib",
   } as const;
@@ -15,7 +15,7 @@ export default class DocLibFormComboBox implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "Form Combo Box",
+      title: "DocLib Form Combo Box",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="850922ec8ab006e5"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="18,13 4,19 6,10 10,12 8,14 16,4"/></svg>',
     };
   }

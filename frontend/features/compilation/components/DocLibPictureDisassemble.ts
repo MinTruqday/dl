@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibPictureDisassemble implements BlockTool {
   static readonly feature = {
     id: "DocLibPictureDisassemble",
-    title: "Picture Disassemble",
+    title: "DocLib Picture Disassemble",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="676fc9e54ab98648"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="5,13 18,12 10,19 19,8 18,15 13,18"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Picture Disassemble",
+      title: "DocLib Picture Disassemble",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="676fc9e54ab98648"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="5,13 18,12 10,19 19,8 18,15 13,18"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibPictureDisassemble implements BlockTool {
   }
 
   readonly id = "DocLibPictureDisassemble";
-  readonly title = "Picture Disassemble";
+  readonly title = "DocLib Picture Disassemble";
   readonly category = "format" as const;
   readonly mode = "PictureDisassemble";
   readonly requiresSelection = false;

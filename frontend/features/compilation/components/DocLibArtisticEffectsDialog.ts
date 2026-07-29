@@ -3,14 +3,14 @@ import { API, BlockTool, BlockToolData } from "@editorjs/editorjs";
 export default class DocLibArtisticEffectsDialog implements BlockTool {
   static readonly feature = {
     id: "DocLibArtisticEffectsDialog",
-    title: "Artistic Effects Dialog",
+    title: "DocLib Artistic Effects Dialog",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c55067e7e22ae936"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="14,16 5,14 9,12 16,7 13,19 6,6"/></svg>',
     product: "doclib",
   } as const;
 
   static get toolbox() {
     return {
-      title: "Artistic Effects Dialog",
+      title: "DocLib Artistic Effects Dialog",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="c55067e7e22ae936"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="14,16 5,14 9,12 16,7 13,19 6,6"/></svg>',
     };
   }
@@ -20,7 +20,7 @@ export default class DocLibArtisticEffectsDialog implements BlockTool {
   }
 
   readonly id = "DocLibArtisticEffectsDialog";
-  readonly title = "Artistic Effects Dialog";
+  readonly title = "DocLib Artistic Effects Dialog";
   readonly category = "media" as const;
   readonly mode = "ArtisticEffectsDialog";
   readonly requiresSelection = false;
