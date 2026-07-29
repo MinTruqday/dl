@@ -474,11 +474,6 @@ def scan_compilation_registry(issues):
     record_ids = [record.get("id") for record in records]
     record_titles = [record.get("title") for record in records]
     record_icons = [record.get("icon") for record in records]
-    official_records = [
-        record
-        for record in records
-        if record.get("microsoftControlId")
-    ]
     command_records = [
         record
         for record in records
@@ -530,15 +525,23 @@ def scan_compilation_registry(issues):
                 "word_feature_product_mismatch",
             )
         )
-    if len(official_records) != 2009 or any(
-        not record.get("microsoftControlId") or not record.get("source")
-        for record in official_records
+    legacy_fields = {
+        "microsoftControlId",
+        "microsoftInteractiveControlCount",
+        "controlType",
+        "tab",
+        "group",
+        "source",
+        "sourceSha256",
+    }
+    if legacy_fields.intersection(manifest) or any(
+        legacy_fields.intersection(record) for record in records
     ):
         issues.append(
             (
                 manifest_path.relative_to(ROOT),
                 1,
-                f"word_feature_official_mapping:{len(official_records)}",
+                "word_feature_legacy_metadata",
             )
         )
     if (

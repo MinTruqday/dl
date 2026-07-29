@@ -24,8 +24,6 @@ export default class DocLibReviewRejectAllChangesInDocument implements BlockTool
   readonly category = "review" as const;
   readonly mode = "ReviewRejectAllChangesInDocument";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "ReviewRejectAllChangesInDocument";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibReviewRejectAllChangesInDocument implements BlockTool
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-editor-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.id}`);
     }
   }
 }

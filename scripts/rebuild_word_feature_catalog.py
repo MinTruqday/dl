@@ -20,7 +20,6 @@ BACKEND_MANIFEST = (
     / "resources"
     / "word-feature-manifest.json"
 )
-WORD_SOURCE = "https://github.com/OfficeDev/office-fluent-ui-command-identifiers/blob/master/Microsoft%20365/Current%20Channel/wordcontrols.xlsx"
 INTERACTIVE_TYPES = {
     "button",
     "checkBox",
@@ -201,35 +200,14 @@ def title_for(name):
 
 
 def feature_record(name, row, origin, tool_key=None, mode=None):
-    if origin == "microsoft-word":
-        location = " ".join(
-            value
-            for value in (
-                row.get("Tab", ""),
-                row.get("Group/Context Menu Name", ""),
-            )
-            if value
-        )
-        description = (
-            f"DocLib feature mapped to Microsoft Word {row.get('Control Type', 'control')} {location}"
-        ).strip()
-    elif origin == "word-compatible":
-        description = "DocLib editing feature"
-    else:
-        description = "DocLib EditorJS feature"
     return {
         "id": "DocLib" + name,
         "title": title_for(name),
         "icon": icon_for("DocLib" + name),
         "product": "doclib",
-        "description": description,
-        "microsoftControlId": name if origin == "microsoft-word" else None,
-        "controlType": row.get("Control Type") if row else None,
-        "tab": row.get("Tab") if row else None,
-        "group": row.get("Group/Context Menu Name") if row else None,
+        "description": "DocLib editing command",
         "toolKey": tool_key,
         "mode": mode,
-        "source": WORD_SOURCE if origin == "microsoft-word" else None,
     }
 
 
@@ -290,8 +268,7 @@ def new_feature_source(record, row):
     title = record["title"]
     icon = record["icon"]
     category = category_for(row)
-    control_id = record["microsoftControlId"]
-    control_type = record["controlType"]
+    mode = record["mode"]
     return f'''import {{ API, BlockTool, BlockToolData }} from "@editorjs/editorjs";
 
 export default class {identifier} implements BlockTool {{
@@ -316,10 +293,8 @@ export default class {identifier} implements BlockTool {{
   readonly id = "{identifier}";
   readonly title = "{title}";
   readonly category = "{category}" as const;
-  readonly mode = "{control_id}";
+  readonly mode = "{mode}";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "{control_id}";
-  readonly controlType = "{control_type}";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -376,18 +351,17 @@ export default class {identifier} implements BlockTool {{
   }}
 
   async execute(editor: any) {{
-    const event = new CustomEvent("doclib-microsoft-word-control", {{
+    const event = new CustomEvent("doclib-editor-command", {{
       cancelable: true,
       detail: {{
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       }},
     }});
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {{
-      throw new Error(`No handler registered for ${{this.microsoftControlId}}`);
+      throw new Error(`No handler registered for ${{this.id}}`);
     }}
   }}
 }}
@@ -504,21 +478,6 @@ def main():
         json.dumps(
             {
                 "schemaVersion": 1,
-                "source": WORD_SOURCE,
-                "sourceSha256": hashlib.sha256(
-                    spreadsheet_path.read_bytes()
-                ).hexdigest(),
-                "microsoftInteractiveControlCount": len(
-                    [
-                        row
-                        for row in controls.values()
-                        if row.get("Control Type") in INTERACTIVE_TYPES
-                        and re.fullmatch(
-                            r"[A-Za-z][A-Za-z0-9]*",
-                            row.get("Control Name", ""),
-                        )
-                    ]
-                ),
                 "features": records,
             },
             ensure_ascii=True,
@@ -536,7 +495,7 @@ def main():
                 "features": len(records),
                 "legacy": len(legacy),
                 "commands": len(commands),
-                "newMicrosoftControls": len(selected),
+                "newCommands": len(selected),
             }
         )
     )

@@ -24,8 +24,6 @@ export default class DocLibPastePng implements BlockTool {
   readonly category = "format" as const;
   readonly mode = "PastePng";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "PastePng";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibPastePng implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-editor-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.id}`);
     }
   }
 }

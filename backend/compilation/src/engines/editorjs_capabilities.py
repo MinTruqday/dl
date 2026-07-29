@@ -78,7 +78,8 @@ def capability_page(
             or normalized in feature["id"].lower()
             or normalized in feature["title"].lower()
             or normalized
-            in str(feature.get("microsoftControlId") or "").lower()
+            in str(feature.get("description") or "").lower()
+            or normalized in str(feature.get("mode") or "").lower()
         )
     ]
     page = selected[offset:offset + limit]
@@ -96,8 +97,6 @@ def capability_page(
         "offset": offset,
         "limit": limit,
         "items": page,
-        "source": capability_manifest()["source"],
-        "sourceSha256": capability_manifest()["sourceSha256"],
     }
 
 

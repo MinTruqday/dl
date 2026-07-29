@@ -24,8 +24,6 @@ export default class DocLibContentControlRepeating implements BlockTool {
   readonly category = "automation" as const;
   readonly mode = "ContentControlRepeating";
   readonly requiresSelection = false;
-  readonly microsoftControlId = "ContentControlRepeating";
-  readonly controlType = "button";
   private api?: API;
   private data: BlockToolData;
   private wrapper: HTMLElement | null = null;
@@ -82,18 +80,17 @@ export default class DocLibContentControlRepeating implements BlockTool {
   }
 
   async execute(editor: any) {
-    const event = new CustomEvent("doclib-microsoft-word-control", {
+    const event = new CustomEvent("doclib-editor-command", {
       cancelable: true,
       detail: {
         command: this.id,
-        controlId: this.microsoftControlId,
-        controlType: this.controlType,
+        mode: this.mode,
         editor,
       },
     });
     window.dispatchEvent(event);
     if (!event.defaultPrevented) {
-      throw new Error(`No handler registered for ${this.microsoftControlId}`);
+      throw new Error(`No handler registered for ${this.id}`);
     }
   }
 }
