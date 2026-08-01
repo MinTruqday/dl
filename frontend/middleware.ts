@@ -16,11 +16,7 @@ export function middleware(request: NextRequest) {
   const isPublicRoute =
     pathname === "/" ||
     pathname.startsWith("/kham-pha") ||
-    pathname.startsWith("/discovery") ||
-    pathname.startsWith("/search") ||
-    pathname.startsWith("/document") ||
-    pathname.startsWith("/tac-gia") ||
-    pathname.startsWith("/xem-truoc") ||
+    pathname.startsWith("/tai-lieu/") ||
     pathname.startsWith("/auth/google/callback");
 
   if (!token && !isAuthRoute && !isPublicRoute) {
@@ -29,10 +25,16 @@ export function middleware(request: NextRequest) {
 
   if (role === "reader") {
     if (
-      pathname.startsWith("/compose") ||
-      pathname.startsWith("/operation") ||
-      pathname.startsWith("/tac-gia-tiem-nang") ||
-      pathname.startsWith("/admin")
+      pathname.startsWith("/soan-thao") ||
+      pathname === "/tai-lieu" ||
+      pathname.startsWith("/cong-tac") ||
+      pathname.startsWith("/luu-tru") ||
+      pathname.startsWith("/phan-tich") ||
+      pathname.startsWith("/kiem-toan") ||
+      pathname.startsWith("/thu-thap") ||
+      pathname.startsWith("/nguoi-dung") ||
+      pathname.startsWith("/bao-cao") ||
+      pathname.startsWith("/van-hanh")
     ) {
       return NextResponse.redirect(new URL("/", request.url));
     }
@@ -40,15 +42,15 @@ export function middleware(request: NextRequest) {
 
   if (role === "author") {
     if (
-      pathname.startsWith("/operation") ||
-      pathname.startsWith("/tac-gia-tiem-nang") ||
-      pathname.startsWith("/admin")
+      pathname.startsWith("/kiem-toan") ||
+      pathname.startsWith("/thu-thap") ||
+      pathname.startsWith("/nguoi-dung") ||
+      pathname.startsWith("/bao-cao") ||
+      pathname.startsWith("/van-hanh")
     ) {
-      return NextResponse.redirect(new URL("/compose", request.url));
+      return NextResponse.redirect(new URL("/soan-thao", request.url));
     }
   }
-
-
 
   return NextResponse.next();
 }

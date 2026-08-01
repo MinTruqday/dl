@@ -34,8 +34,8 @@ export default class DocLibFootnote implements InlineTool {
       const style = document.createElement("style");
       style.id = "doclib-footnote-styles";
       style.innerHTML = `
-            sup[data-footnote] { color: #3b82f6; cursor: pointer; padding: 0 2px; text-decoration: underline dotted; font-weight: 600; }
-            sup[data-footnote]:hover::after { content: attr(data-footnote); position: absolute; background: #1e293b; color: #fff; padding: 6px 10px; border-radius: 6px; font-size: 12px; white-space: nowrap; z-index: 50; margin-top: -34px; margin-left: 10px; font-weight: normal; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+            sup[data-footnote] { color: hsl(var(--brand)); cursor: pointer; padding: 0 2px; text-decoration: underline dotted; font-weight: 600; }
+            sup[data-footnote]:hover::after { content: attr(data-footnote); position: absolute; background: hsl(var(--ink)); color: hsl(var(--surface)); padding: 6px 10px; border-radius: 6px; font-size: 12px; white-space: nowrap; z-index: 50; margin-top: -34px; margin-left: 10px; font-weight: normal; text-decoration: none; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
         `;
       document.head.appendChild(style);
     }

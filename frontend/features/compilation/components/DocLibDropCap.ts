@@ -48,11 +48,11 @@ export default class DocLibDropCap implements BlockTool {
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-dropcap { display: flex; gap: 8px; margin: 16px 0; }
-      .doclib-dropcap-letter { font-size: 64px; font-weight: 700; line-height: 0.8; color: #1e293b; float: left; margin-right: 8px; margin-bottom: -8px; margin-top: 8px; font-family: Georgia, serif; min-width: 48px; text-align: center; }
-      .doclib-dropcap-text { font-size: 16px; line-height: 1.6; color: #334155; flex: 1; }
-      .doclib-dropcap-input-letter { width: 64px; font-size: 48px; text-align: center; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px; outline: none; }
-      .doclib-dropcap-input-text { flex: 1; min-height: 120px; border: 1px solid #cbd5e1; border-radius: 4px; padding: 12px; font-size: 15px; outline: none; resize: vertical; }
-      .doclib-dropcap-edit { display: flex; gap: 16px; align-items: flex-start; background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px dashed #cbd5e1; }
+      .doclib-dropcap-letter { font-size: 64px; font-weight: 700; line-height: 0.8; color: hsl(var(--ink)); float: left; margin-right: 8px; margin-bottom: -8px; margin-top: 8px; font-family: Georgia, serif; min-width: 48px; text-align: center; }
+      .doclib-dropcap-text { font-size: 16px; line-height: 1.6; color: hsl(var(--ink)); flex: 1; }
+      .doclib-dropcap-input-letter { width: 64px; font-size: 48px; text-align: center; border: 1px solid hsl(var(--border)); border-radius: 4px; padding: 4px; outline: none; }
+      .doclib-dropcap-input-text { flex: 1; min-height: 120px; border: 1px solid hsl(var(--border)); border-radius: 4px; padding: 12px; font-size: 15px; outline: none; resize: vertical; }
+      .doclib-dropcap-edit { display: flex; gap: 16px; align-items: flex-start; background: hsl(var(--surface-raised)); padding: 16px; border-radius: 8px; border: 1px dashed hsl(var(--border)); }
     `;
     this.wrapper.appendChild(style);
 

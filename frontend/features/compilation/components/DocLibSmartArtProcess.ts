@@ -49,15 +49,15 @@ export default class DocLibSmartArtProcess implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-sap { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 16px; padding: 24px; background: #f8fafc; border-radius: 8px; margin: 16px 0; }
+      .doclib-sap { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 16px; padding: 24px; background: hsl(var(--surface-raised)); border-radius: 8px; margin: 16px 0; }
       .doclib-sap-item { display: flex; align-items: center; gap: 16px; }
-      .doclib-sap-box { background: #3b82f6; color: #fff; padding: 12px 24px; border-radius: 4px; font-weight: bold; font-family: sans-serif; min-width: 120px; text-align: center; outline: none; position: relative; }
-      .doclib-sap-box:empty:before { content: "DocLib Process Step"; color: #bfdbfe; font-weight: normal; }
-      .doclib-sap-arrow { color: #94a3b8; font-size: 24px; font-weight: bold; }
-      .doclib-sap-del { position: absolute; top: -8px; right: -8px; width: 20px; height: 20px; background: #ef4444; color: #fff; border-radius: 50%; font-size: 10px; display: none; align-items: center; justify-content: center; cursor: pointer; border: none; }
+      .doclib-sap-box { background: hsl(var(--brand)); color: hsl(var(--surface)); padding: 12px 24px; border-radius: 4px; font-weight: bold; font-family: sans-serif; min-width: 120px; text-align: center; outline: none; position: relative; }
+      .doclib-sap-box:empty:before { content: "DocLib Process Step"; color: hsl(var(--brand-soft)); font-weight: normal; }
+      .doclib-sap-arrow { color: hsl(var(--ink-faint)); font-size: 24px; font-weight: bold; }
+      .doclib-sap-del { position: absolute; top: -8px; right: -8px; width: 20px; height: 20px; background: hsl(var(--danger)); color: hsl(var(--surface)); border-radius: 50%; font-size: 10px; display: none; align-items: center; justify-content: center; cursor: pointer; border: none; }
       .doclib-sap-box:hover .doclib-sap-del { display: flex; }
-      .doclib-sap-add { width: 40px; height: 40px; border-radius: 50%; border: 2px dashed #94a3b8; color: #94a3b8; background: transparent; font-size: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-      .doclib-sap-add:hover { border-color: #3b82f6; color: #3b82f6; }
+      .doclib-sap-add { width: 40px; height: 40px; border-radius: 50%; border: 2px dashed hsl(var(--ink-faint)); color: hsl(var(--ink-faint)); background: transparent; font-size: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+      .doclib-sap-add:hover { border-color: hsl(var(--brand)); color: hsl(var(--brand)); }
     `;
     this.wrapper.appendChild(style);
 

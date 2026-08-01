@@ -25,7 +25,7 @@ export async function saveDocumentDraftAPI(
   });
 
   const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || "Lỗi lưu trữ dữ liệu bản thảo");
+  if (!res.ok) throw new Error(data.detail || "Không thể lưu dữ liệu bản thảo");
   return data;
 }
 
@@ -41,8 +41,33 @@ export async function getDocumentDraftAPI(documentId: string) {
   });
 
   const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || "Lỗi trích xuất dữ liệu bản thảo");
+  if (!res.ok) throw new Error(data.detail || "Không thể tải dữ liệu bản thảo");
   return data;
+}
+
+export async function getDocumentWithPasswordAPI(documentId: string, password?: string) {
+  const token = getToken();
+  const headers: Record<string, string> = token
+    ? { Authorization: `Bearer ${token}` }
+    : {};
+  if (password) headers["x-document-password"] = password;
+  const res = await fetch(`${API_URL}/tai-lieu/${documentId}`, { headers });
+  if (res.status === 401 || res.status === 403) {
+    return { status: res.status, data: null };
+  }
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải tài liệu");
+  return { status: res.status, data: data.data || data };
+}
+
+export async function getDocumentDecryptionKeyAPI(documentId: string) {
+  const token = getToken();
+  const res = await fetch(`${API_URL}/tai-lieu/${documentId}/khoa-giai-ma`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể xác thực tài liệu");
+  return data.data?.key || data.key;
 }
 
 export async function getDocumentsAPI(
@@ -89,7 +114,7 @@ export async function getDocumentsAPI(
 
 export async function getDocumentBySlugAPI(slug: string) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/tai-lieu/d/${slug}`, {
+  const res = await fetch(`${API_URL}/tai-lieu/tai-lieu/${slug}`, {
     method: "GET",
     headers: token
       ? {
@@ -100,7 +125,7 @@ export async function getDocumentBySlugAPI(slug: string) {
 
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.detail || "Lỗi trích xuất thông tin siêu dữ liệu tài liệu");
+    throw new Error(data.detail || "Không thể tải thông tin siêu dữ liệu tài liệu");
   return data;
 }
 
@@ -123,7 +148,7 @@ export async function getMyDocumentsAPI(
 
   const json = await res.json();
   if (!res.ok)
-    throw new Error(json.message || "Lỗi trích xuất danh sách tài liệu cá nhân");
+    throw new Error(json.message || "Không thể tải danh sách tài liệu cá nhân");
   return json.data || json;
 }
 
@@ -140,7 +165,7 @@ export async function createDocumentAPI(data: any) {
   });
   const result = await res.json();
   if (!res.ok)
-    throw new Error(result.message || "Lỗi khởi tạo cấu trúc tài liệu mới");
+    throw new Error(result.message || "Không thể tạo cấu trúc tài liệu mới");
   return result;
 }
 
@@ -156,7 +181,7 @@ export async function updateDocumentAPI(id: string, data: any) {
     body: JSON.stringify(data),
   });
   const result = await res.json();
-  if (!res.ok) throw new Error(result.message || "Lỗi cập nhật siêu dữ liệu tài liệu");
+  if (!res.ok) throw new Error(result.message || "Không thể cập nhật siêu dữ liệu tài liệu");
   return result;
 }
 
@@ -168,7 +193,7 @@ export async function deleteAuthorDocumentAPI(docId: string) {
     headers: { Authorization: `Bearer ${token}` },
   });
   const result = await res.json();
-  if (!res.ok) throw new Error(result.message || "Lỗi xóa bỏ bản ghi tài liệu");
+  if (!res.ok) throw new Error(result.message || "Không thể xóa bản ghi tài liệu");
   return result;
 }
 
@@ -181,7 +206,7 @@ export async function deleteAdminDocumentAPI(docId: string) {
   });
   const result = await res.json();
   if (!res.ok)
-    throw new Error(result.message || "Lỗi xóa bỏ bản ghi tài liệu cấp hệ thống");
+    throw new Error(result.message || "Không thể xóa bản ghi tài liệu cấp hệ thống");
   return result;
 }
 
@@ -191,7 +216,7 @@ export async function getTrashAPI() {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi trích xuất danh sách thùng rác");
+  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách thùng rác");
   return data;
 }
 
@@ -202,7 +227,7 @@ export async function restoreDocumentAPI(documentId: string) {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi phục hồi bản ghi tài liệu");
+  if (!res.ok) throw new Error(data.message || "Không thể khôi phục bản ghi tài liệu");
   return data;
 }
 
@@ -213,7 +238,7 @@ export async function softDeleteDocumentAPI(documentId: string) {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi lưu trữ bản ghi tài liệu vào thùng rác");
+  if (!res.ok) throw new Error(data.message || "Không thể lưu bản ghi tài liệu vào thùng rác");
   return data;
 }
 
@@ -228,7 +253,7 @@ export const getFoldersAPI = async (parent_id?: string) => {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi trích xuất cây cấu trúc thư mục");
+    throw new Error(data.message || "Không thể tải cây cấu trúc thư mục");
   return data;
 };
 
@@ -246,7 +271,7 @@ export const createFolderAPI = async (
     body: JSON.stringify({ name, parent_id }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi khởi tạo cấu trúc thư mục mới");
+  if (!res.ok) throw new Error(data.message || "Không thể tạo cấu trúc thư mục mới");
   return data;
 };
 
@@ -257,24 +282,24 @@ export const deleteFolderAPI = async (id: string) => {
     headers: { Authorization: "Bearer " + token },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi xóa bỏ cấu trúc thư mục");
+  if (!res.ok) throw new Error(data.message || "Không thể xóa cấu trúc thư mục");
   return data;
 };
 
 export const toggleStarDocumentAPI = async (id: string) => {
   const token = getToken();
-  const res = await fetch(`${API_URL}/tai-lieu/${id}/star`, {
-    method: "PUT",
+  const res = await fetch(`${API_URL}/tai-lieu/${id}/danh-dau`, {
+    method: "POST",
     headers: { Authorization: "Bearer " + token },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || "Lỗi cập nhật trạng thái lưu trữ");
+  if (!res.ok) throw new Error(data.detail || "Không thể cập nhật trạng thái lưu trữ");
   return data;
 };
 
 export const lockDocumentAPI = async (id: string, password: string) => {
   const token = getToken();
-  const res = await fetch(`${API_URL}/tai-lieu/${id}/protect`, {
+  const res = await fetch(`${API_URL}/tai-lieu/${id}/bao-ve`, {
     method: "POST",
     headers: {
       Authorization: "Bearer " + token,
@@ -283,7 +308,7 @@ export const lockDocumentAPI = async (id: string, password: string) => {
     body: JSON.stringify({ password }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || "Lỗi cấu hình mật mã bảo vệ");
+  if (!res.ok) throw new Error(data.detail || "Không thể cấu hình mật mã bảo vệ");
   return data;
 };
 
@@ -320,7 +345,7 @@ export async function transferDocumentAPI(id: string, newOwnerId: string) {
 export async function getAuditLogsAPI(id: string) {
   if (!id || id === "undefined") return [];
   const token = getToken();
-  const res = await fetch(`${API_URL}/tai-lieu/${id}/activity-log`, {
+  const res = await fetch(`${API_URL}/tai-lieu/${id}/nhat-ky-hoat-dong`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) return [];
@@ -329,7 +354,7 @@ export async function getAuditLogsAPI(id: string) {
 
 export async function getDocumentAnalyticsAPI(id: string) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/tai-lieu/${id}/phan-tich`, {
+  const res = await fetch(`${API_URL}/tai-lieu/${id}/thong-ke`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return res.ok ? res.json() : null;
@@ -340,46 +365,27 @@ export async function getAcademicMetricsAPI(id: string) {
   return res.ok ? res.json() : null;
 }
 
-export async function updateAuthorNoteAPI(
-  documentId: string,
-  chapterIndex: number,
-  note: string,
-) {
-  const token = getToken();
-  const res = await fetch(`${API_URL}/tai-lieu/${documentId}/ghi-chu-tac-gia`, {
-    method: "PUT",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ chapter_index: chapterIndex, note }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || "Lỗi lưu trữ nội dung ghi chú");
-  return data;
-}
-
 export async function updateDRMSettingsAPI(
   documentId: string,
   settings: { disable_copy: boolean; hide_from_search: boolean },
 ) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/tai-lieu/${documentId}/drm`, {
+  const res = await fetch(`${API_URL}/tai-lieu/${documentId}`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(settings),
+    body: JSON.stringify({ drm_settings: settings }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || "Lỗi cấu hình cơ chế bảo mật DRM");
+  if (!res.ok) throw new Error(data.detail || "Không thể cấu hình cơ chế bảo mật DRM");
   return data;
 }
 
 export async function updateTagsAPI(documentId: string, tags: string[]) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/tai-lieu/${documentId}/tags`, {
+  const res = await fetch(`${API_URL}/tai-lieu/${documentId}/the`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -388,7 +394,7 @@ export async function updateTagsAPI(documentId: string, tags: string[]) {
     body: JSON.stringify({ tags }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || "Lỗi cập nhật danh sách thẻ phân loại");
+  if (!res.ok) throw new Error(data.detail || "Không thể cập nhật danh sách thẻ phân loại");
   return data;
 }
 
@@ -406,46 +412,13 @@ export async function schedulePublishAPI(
     body: JSON.stringify({ publish_at: publishAt }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || "Lỗi cấu hình lịch trình xuất bản");
-  return data;
-}
-
-export async function updateChapterPaywallAPI(
-  documentId: string,
-  chapterIndex: number,
-  isPremium: boolean,
-) {
-  const token = getToken();
-  const res = await fetch(
-    `${API_URL}/tai-lieu/${documentId}/chuong/${chapterIndex}/tra-phi`,
-    {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ is_premium: isPremium }),
-    },
-  );
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || "Lỗi cấu hình mô hình thu phí");
-  return data;
-}
-
-export async function compileDocumentAPI(documentId: string) {
-  const token = getToken();
-  const res = await fetch(`${API_URL}/tai-lieu/${documentId}/bien-dich`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || "Lỗi khởi chạy tiến trình biên dịch");
+  if (!res.ok) throw new Error(data.detail || "Không thể cấu hình lịch trình xuất bản");
   return data;
 }
 
 export async function publishDocumentAPI(documentId: string) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/tai-lieu/${documentId}/xuat-ban`, {
+  const res = await fetch(`${API_URL}/xuat-ban/${documentId}`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
   });

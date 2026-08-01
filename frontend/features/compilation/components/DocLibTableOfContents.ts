@@ -43,8 +43,8 @@ export default class DocLibTableOfContents implements BlockTool {
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-toc {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
+        background: hsl(var(--surface-raised));
+        border: 1px solid hsl(var(--border));
         border-radius: 8px;
         padding: 24px;
         margin: 16px 0;
@@ -52,7 +52,7 @@ export default class DocLibTableOfContents implements BlockTool {
       .doclib-toc-title {
         font-size: 16px;
         font-weight: 700;
-        color: #0f172a;
+        color: hsl(var(--ink));
         margin-bottom: 16px;
         text-transform: uppercase;
         letter-spacing: 0.05em;
@@ -66,20 +66,20 @@ export default class DocLibTableOfContents implements BlockTool {
         margin: 8px 0;
       }
       .doclib-toc-link {
-        color: #334155;
+        color: hsl(var(--ink));
         text-decoration: none;
         font-size: 14px;
         transition: color 0.2s;
       }
       .doclib-toc-link:hover {
-        color: #2563eb;
+        color: hsl(var(--brand));
       }
       .doclib-toc-level-1 { margin-left: 0; font-weight: 600; }
       .doclib-toc-level-2 { margin-left: 16px; }
-      .doclib-toc-level-3 { margin-left: 32px; font-size: 13px; color: #64748b; }
+      .doclib-toc-level-3 { margin-left: 32px; font-size: 13px; color: hsl(var(--ink-muted)); }
       .doclib-toc-empty {
         font-size: 13px;
-        color: #94a3b8;
+        color: hsl(var(--ink-faint));
         font-style: italic;
       }
     `;

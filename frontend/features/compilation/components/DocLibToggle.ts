@@ -40,17 +40,17 @@ export default class DocLibToggle implements BlockTool {
       const style = document.createElement("style");
       style.id = "doclib-toggle-styles";
       style.innerHTML = `
-            .doclib-toggle-wrapper { margin: 12px 0; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; }
+            .doclib-toggle-wrapper { margin: 12px 0; border: 1px solid hsl(var(--border)); border-radius: 8px; background: hsl(var(--surface)); }
             .doclib-toggle-details { width: 100%; }
             .doclib-toggle-summary { padding: 12px 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; outline: none; border-bottom: 1px solid transparent; transition: border-bottom 0.2s; }
-            .doclib-toggle-details[open] .doclib-toggle-summary { border-bottom: 1px solid #e2e8f0; }
+            .doclib-toggle-details[open] .doclib-toggle-summary { border-bottom: 1px solid hsl(var(--border)); }
             .doclib-toggle-summary::-webkit-details-marker { display: none; }
             .doclib-toggle-icon { margin-right: 8px; transition: transform 0.2s; display: flex; align-items: center; justify-content: center; }
             .doclib-toggle-details[open] .doclib-toggle-icon { transform: rotate(90deg); }
             .doclib-toggle-title { flex-grow: 1; outline: none; }
-            .doclib-toggle-title:empty::before { content: 'DocLib Title'; color: #94a3b8; pointer-events: none; }
+            .doclib-toggle-title:empty::before { content: 'DocLib Title'; color: hsl(var(--ink-faint)); pointer-events: none; }
             .doclib-toggle-content { padding: 16px; min-height: 80px; outline: none; line-height: 1.6; }
-            .doclib-toggle-content:empty::before { content: 'DocLib Input'; color: #94a3b8; pointer-events: none; }
+            .doclib-toggle-content:empty::before { content: 'DocLib Input'; color: hsl(var(--ink-faint)); pointer-events: none; }
         `;
       document.head.appendChild(style);
     }

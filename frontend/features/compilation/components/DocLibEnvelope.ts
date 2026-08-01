@@ -47,12 +47,12 @@ export default class DocLibEnvelope implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-env { width: 100%; max-width: 600px; height: 300px; background: #fdfdfd; border: 1px solid #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin: 24px auto; position: relative; font-family: Arial, sans-serif; }
-      .doclib-env-return { position: absolute; top: 24px; left: 24px; width: 200px; min-height: 50px; font-size: 12px; color: #475569; outline: none; line-height: 1.4; }
-      .doclib-env-return:empty:before { content: "DocLib Return Address"; color: #94a3b8; }
-      .doclib-env-delivery { position: absolute; top: 120px; left: 200px; right: 40px; min-height: 100px; font-size: 16px; color: #0f172a; outline: none; line-height: 1.5; }
-      .doclib-env-delivery:empty:before { content: "DocLib Delivery Address"; color: #94a3b8; }
-      .doclib-env-stamp { position: absolute; top: 24px; right: 24px; width: 40px; height: 50px; border: 1px dashed #94a3b8; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #94a3b8; }
+      .doclib-env { width: 100%; max-width: 600px; height: 300px; background: #fdfdfd; border: 1px solid hsl(var(--border)); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin: 24px auto; position: relative; font-family: Arial, sans-serif; }
+      .doclib-env-return { position: absolute; top: 24px; left: 24px; width: 200px; min-height: 50px; font-size: 12px; color: hsl(var(--ink-muted)); outline: none; line-height: 1.4; }
+      .doclib-env-return:empty:before { content: "DocLib Return Address"; color: hsl(var(--ink-faint)); }
+      .doclib-env-delivery { position: absolute; top: 120px; left: 200px; right: 40px; min-height: 100px; font-size: 16px; color: hsl(var(--ink)); outline: none; line-height: 1.5; }
+      .doclib-env-delivery:empty:before { content: "DocLib Delivery Address"; color: hsl(var(--ink-faint)); }
+      .doclib-env-stamp { position: absolute; top: 24px; right: 24px; width: 40px; height: 50px; border: 1px dashed hsl(var(--ink-faint)); display: flex; align-items: center; justify-content: center; font-size: 10px; color: hsl(var(--ink-faint)); }
     `;
     this.wrapper.appendChild(style);
 

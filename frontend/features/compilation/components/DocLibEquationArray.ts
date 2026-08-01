@@ -49,16 +49,16 @@ export default class DocLibEquationArray implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-eqarray { font-family: "Cambria Math", "Times New Roman", serif; font-size: 18px; padding: 24px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fdfdfd; margin: 16px auto; max-width: 500px; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+      .doclib-eqarray { font-family: "Cambria Math", "Times New Roman", serif; font-size: 18px; padding: 24px; border: 1px solid hsl(var(--border)); border-radius: 8px; background: #fdfdfd; margin: 16px auto; max-width: 500px; display: flex; flex-direction: column; gap: 8px; align-items: center; }
       .doclib-eqarray-row { display: flex; align-items: center; gap: 12px; width: 100%; justify-content: center; position: relative; }
       .doclib-eqarray-text { outline: none; min-width: 100px; text-align: center; font-style: italic; border-bottom: 1px dashed transparent; transition: 0.3s; }
-      .doclib-eqarray-text:focus { border-bottom-color: #3b82f6; }
-      .doclib-eqarray-text:empty:before { content: "DocLib Equation"; color: #94a3b8; font-style: normal; font-family: sans-serif; font-size: 14px; }
-      .doclib-eqarray-del { position: absolute; right: 0; color: #ef4444; font-size: 12px; border: none; background: transparent; cursor: pointer; display: none; font-family: sans-serif; }
+      .doclib-eqarray-text:focus { border-bottom-color: hsl(var(--brand)); }
+      .doclib-eqarray-text:empty:before { content: "DocLib Equation"; color: hsl(var(--ink-faint)); font-style: normal; font-family: sans-serif; font-size: 14px; }
+      .doclib-eqarray-del { position: absolute; right: 0; color: hsl(var(--danger)); font-size: 12px; border: none; background: transparent; cursor: pointer; display: none; font-family: sans-serif; }
       .doclib-eqarray-row:hover .doclib-eqarray-del { display: block; }
-      .doclib-eqarray-add { font-family: sans-serif; font-size: 12px; color: #3b82f6; border: 1px dashed #3b82f6; background: transparent; border-radius: 4px; padding: 6px 12px; cursor: pointer; margin-top: 16px; }
-      .doclib-eqarray-add:hover { background: #eff6ff; }
-      .doclib-eqarray-bracket { font-size: 40px; font-weight: 100; color: #1e293b; display: flex; align-items: center; }
+      .doclib-eqarray-add { font-family: sans-serif; font-size: 12px; color: hsl(var(--brand)); border: 1px dashed hsl(var(--brand)); background: transparent; border-radius: 4px; padding: 6px 12px; cursor: pointer; margin-top: 16px; }
+      .doclib-eqarray-add:hover { background: hsl(var(--brand-soft)); }
+      .doclib-eqarray-bracket { font-size: 40px; font-weight: 100; color: hsl(var(--ink)); display: flex; align-items: center; }
     `;
     this.wrapper.appendChild(style);
 

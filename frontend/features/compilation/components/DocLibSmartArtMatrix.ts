@@ -50,14 +50,14 @@ export default class DocLibSmartArtMatrix implements BlockTool {
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-matrix { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; max-width: 400px; margin: 16px auto; font-family: sans-serif; position: relative; }
-      .doclib-matrix::before { content: ""; position: absolute; top: 50%; left: 0; right: 0; height: 4px; background: #fff; transform: translateY(-50%); z-index: 1; }
-      .doclib-matrix::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 4px; background: #fff; transform: translateX(-50%); z-index: 1; }
-      .doclib-matrix-cell { aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; text-align: center; padding: 16px; font-weight: bold; font-size: 18px; color: #fff; outline: none; }
+      .doclib-matrix::before { content: ""; position: absolute; top: 50%; left: 0; right: 0; height: 4px; background: hsl(var(--surface)); transform: translateY(-50%); z-index: 1; }
+      .doclib-matrix::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 4px; background: hsl(var(--surface)); transform: translateX(-50%); z-index: 1; }
+      .doclib-matrix-cell { aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; text-align: center; padding: 16px; font-weight: bold; font-size: 18px; color: hsl(var(--surface)); outline: none; }
       .doclib-matrix-cell:empty:before { content: "DocLib Cell"; color: rgba(255,255,255,0.7); font-weight: normal; }
-      .doclib-matrix-tl { background: #3b82f6; border-radius: 16px 0 0 0; }
-      .doclib-matrix-tr { background: #10b981; border-radius: 0 16px 0 0; }
-      .doclib-matrix-bl { background: #f59e0b; border-radius: 0 0 0 16px; }
-      .doclib-matrix-br { background: #ef4444; border-radius: 0 0 16px 0; }
+      .doclib-matrix-tl { background: hsl(var(--brand)); border-radius: 16px 0 0 0; }
+      .doclib-matrix-tr { background: hsl(var(--brand)); border-radius: 0 16px 0 0; }
+      .doclib-matrix-bl { background: hsl(var(--warning)); border-radius: 0 0 0 16px; }
+      .doclib-matrix-br { background: hsl(var(--danger)); border-radius: 0 0 16px 0; }
     `;
     this.wrapper.appendChild(style);
 

@@ -58,7 +58,7 @@ export default class DocLibLatex implements BlockTool {
     this.editor.style.backgroundColor = "#f4f4f5";
     this.editor.style.padding = "12px";
     this.editor.style.borderRadius = "6px";
-    this.editor.style.border = "1px solid #e4e4e7";
+    this.editor.style.border = "1px solid hsl(var(--border))";
     this.editor.style.lineHeight = "1.6";
     this.editor.style.wordWrap = "break-word";
 

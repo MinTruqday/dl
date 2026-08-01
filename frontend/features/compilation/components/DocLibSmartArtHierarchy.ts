@@ -51,19 +51,19 @@ export default class DocLibSmartArtHierarchy implements BlockTool {
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-hier { display: flex; flex-direction: column; align-items: center; margin: 32px 0; font-family: sans-serif; }
-      .doclib-hier-root { padding: 16px 32px; background: #2563eb; color: #fff; font-weight: bold; border-radius: 8px; position: relative; outline: none; }
-      .doclib-hier-line-v { width: 2px; height: 32px; background: #94a3b8; }
-      .doclib-hier-line-h { height: 2px; background: #94a3b8; width: 100%; transition: width 0.3s; }
+      .doclib-hier-root { padding: 16px 32px; background: hsl(var(--brand)); color: hsl(var(--surface)); font-weight: bold; border-radius: 8px; position: relative; outline: none; }
+      .doclib-hier-line-v { width: 2px; height: 32px; background: hsl(var(--ink-faint)); }
+      .doclib-hier-line-h { height: 2px; background: hsl(var(--ink-faint)); width: 100%; transition: width 0.3s; }
       .doclib-hier-children-wrap { display: flex; flex-direction: column; align-items: center; width: 100%; }
       .doclib-hier-children { display: flex; justify-content: space-between; width: 100%; position: relative; }
       .doclib-hier-child-col { display: flex; flex-direction: column; align-items: center; flex: 1; }
-      .doclib-hier-child-line-v { width: 2px; height: 16px; background: #94a3b8; }
-      .doclib-hier-child { padding: 12px 16px; background: #f8fafc; border: 2px solid #2563eb; border-radius: 8px; color: #1e293b; font-weight: 500; outline: none; text-align: center; }
+      .doclib-hier-child-line-v { width: 2px; height: 16px; background: hsl(var(--ink-faint)); }
+      .doclib-hier-child { padding: 12px 16px; background: hsl(var(--surface-raised)); border: 2px solid hsl(var(--brand)); border-radius: 8px; color: hsl(var(--ink)); font-weight: 500; outline: none; text-align: center; }
       
-      .doclib-hier-edit { display: flex; gap: 8px; margin-top: 24px; background: #f8fafc; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; flex-wrap: wrap; justify-content: center; width: 100%; }
-      .doclib-hier-input { padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; flex: 1; min-width: 120px; }
-      .doclib-hier-btn { padding: 6px 12px; background: #ef4444; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
-      .doclib-hier-add { padding: 6px 16px; background: #10b981; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+      .doclib-hier-edit { display: flex; gap: 8px; margin-top: 24px; background: hsl(var(--surface-raised)); padding: 12px; border: 1px solid hsl(var(--border)); border-radius: 8px; flex-wrap: wrap; justify-content: center; width: 100%; }
+      .doclib-hier-input { padding: 6px; border: 1px solid hsl(var(--border)); border-radius: 4px; outline: none; flex: 1; min-width: 120px; }
+      .doclib-hier-btn { padding: 6px 12px; background: hsl(var(--danger)); color: hsl(var(--surface)); border: none; border-radius: 4px; cursor: pointer; }
+      .doclib-hier-add { padding: 6px 16px; background: hsl(var(--brand)); color: hsl(var(--surface)); border: none; border-radius: 4px; cursor: pointer; }
     `;
     this.wrapper.appendChild(style);
 

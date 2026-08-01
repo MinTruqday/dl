@@ -48,10 +48,10 @@ export default class DocLibDatePicker implements BlockTool {
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-dp { font-family: sans-serif; display: flex; flex-direction: column; gap: 8px; margin: 16px 0; max-width: 300px; }
-      .doclib-dp-label { font-size: 14px; font-weight: bold; color: #1e293b; outline: none; }
-      .doclib-dp-label:empty:before { content: "DocLib Date Label"; color: #94a3b8; font-weight: normal; }
-      .doclib-dp-input { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 14px; color: #0f172a; outline: none; background: #fff; cursor: pointer; }
-      .doclib-dp-input:focus { border-color: #3b82f6; }
+      .doclib-dp-label { font-size: 14px; font-weight: bold; color: hsl(var(--ink)); outline: none; }
+      .doclib-dp-label:empty:before { content: "DocLib Date Label"; color: hsl(var(--ink-faint)); font-weight: normal; }
+      .doclib-dp-input { width: 100%; padding: 10px 12px; border: 1px solid hsl(var(--border)); border-radius: 4px; font-size: 14px; color: hsl(var(--ink)); outline: none; background: hsl(var(--surface)); cursor: pointer; }
+      .doclib-dp-input:focus { border-color: hsl(var(--brand)); }
     `;
     this.wrapper.appendChild(style);
 

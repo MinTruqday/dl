@@ -49,14 +49,14 @@ export default class DocLibTranslation implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-trans { display: flex; flex-direction: column; gap: 16px; padding: 16px; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; margin: 16px 0; font-family: sans-serif; }
+      .doclib-trans { display: flex; flex-direction: column; gap: 16px; padding: 16px; border: 1px solid hsl(var(--border)); border-radius: 8px; background: hsl(var(--surface-raised)); margin: 16px 0; font-family: sans-serif; }
       .doclib-trans-row { display: flex; gap: 16px; }
       .doclib-trans-col { flex: 1; display: flex; flex-direction: column; gap: 8px; }
-      .doclib-trans-lang { font-size: 12px; font-weight: bold; color: #64748b; text-transform: uppercase; outline: none; }
-      .doclib-trans-lang:empty:before { content: "DocLib Lang"; color: #cbd5e1; }
-      .doclib-trans-text { background: #fff; border: 1px solid #e2e8f0; border-radius: 4px; padding: 12px; min-height: 80px; font-size: 14px; outline: none; line-height: 1.5; color: #1e293b; }
-      .doclib-trans-text:empty:before { content: attr(data-placeholder); color: #94a3b8; font-style: italic; }
-      .doclib-trans-arrow { display: flex; align-items: center; justify-content: center; font-size: 24px; color: #94a3b8; padding-top: 24px; }
+      .doclib-trans-lang { font-size: 12px; font-weight: bold; color: hsl(var(--ink-muted)); text-transform: uppercase; outline: none; }
+      .doclib-trans-lang:empty:before { content: "DocLib Lang"; color: hsl(var(--border)); }
+      .doclib-trans-text { background: hsl(var(--surface)); border: 1px solid hsl(var(--border)); border-radius: 4px; padding: 12px; min-height: 80px; font-size: 14px; outline: none; line-height: 1.5; color: hsl(var(--ink)); }
+      .doclib-trans-text:empty:before { content: attr(data-placeholder); color: hsl(var(--ink-faint)); font-style: italic; }
+      .doclib-trans-arrow { display: flex; align-items: center; justify-content: center; font-size: 24px; color: hsl(var(--ink-faint)); padding-top: 24px; }
     `;
     this.wrapper.appendChild(style);
 

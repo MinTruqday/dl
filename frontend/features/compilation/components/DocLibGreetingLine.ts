@@ -49,9 +49,9 @@ export default class DocLibGreetingLine implements BlockTool {
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-gl { font-family: "Times New Roman", serif; font-size: 16px; margin: 16px 0; }
-      .doclib-gl-editor { display: flex; gap: 8px; padding: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; font-family: sans-serif; font-size: 14px; margin-bottom: 8px; }
-      .doclib-gl-select { padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; background: #fff; }
-      .doclib-gl-preview { font-style: italic; color: #475569; }
+      .doclib-gl-editor { display: flex; gap: 8px; padding: 12px; background: hsl(var(--surface-raised)); border: 1px solid hsl(var(--border)); border-radius: 4px; font-family: sans-serif; font-size: 14px; margin-bottom: 8px; }
+      .doclib-gl-select { padding: 6px; border: 1px solid hsl(var(--border)); border-radius: 4px; outline: none; background: hsl(var(--surface)); }
+      .doclib-gl-preview { font-style: italic; color: hsl(var(--ink-muted)); }
     `;
     this.wrapper.appendChild(style);
 

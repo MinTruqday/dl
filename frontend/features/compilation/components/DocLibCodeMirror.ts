@@ -49,14 +49,14 @@ export default class DocLibCodeMirror implements BlockTool {
       const style = document.createElement("style");
       style.id = "doclib-codemirror-styles";
       style.innerHTML = `
-            .doclib-cm-wrapper { background: #1e293b; border-radius: 8px; padding: 16px; margin: 16px 0; display: flex; flex-direction: column; gap: 8px; }
-            .doclib-cm-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 8px; }
+            .doclib-cm-wrapper { background: hsl(var(--ink)); border-radius: 8px; padding: 16px; margin: 16px 0; display: flex; flex-direction: column; gap: 8px; }
+            .doclib-cm-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid hsl(var(--ink)); padding-bottom: 8px; }
             .doclib-cm-dots { display: flex; gap: 6px; }
             .doclib-cm-dot { width: 12px; height: 12px; border-radius: 50%; }
-            .doclib-cm-lang { color: #94a3b8; font-size: 12px; font-family: monospace; text-transform: uppercase; outline: none; }
+            .doclib-cm-lang { color: hsl(var(--ink-faint)); font-size: 12px; font-family: monospace; text-transform: uppercase; outline: none; }
             .doclib-cm-lang:empty::before { content: 'LANGUAGE'; }
-            .doclib-cm-editor { color: #e2e8f0; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 14px; line-height: 1.5; outline: none; min-height: 100px; white-space: pre-wrap; word-break: break-all; }
-            .doclib-cm-editor:empty::before { content: 'Enter source code here'; color: #475569; }
+            .doclib-cm-editor { color: hsl(var(--border)); font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 14px; line-height: 1.5; outline: none; min-height: 100px; white-space: pre-wrap; word-break: break-all; }
+            .doclib-cm-editor:empty::before { content: 'Enter source code here'; color: hsl(var(--ink-muted)); }
         `;
       document.head.appendChild(style);
     }
@@ -77,7 +77,7 @@ export default class DocLibCodeMirror implements BlockTool {
 
     const dots = document.createElement("div");
     dots.classList.add("doclib-cm-dots");
-    ["#ef4444", "#f59e0b", "#10b981"].forEach((c) => {
+    ["hsl(var(--danger))", "hsl(var(--warning))", "hsl(var(--brand))"].forEach((c) => {
       const dot = document.createElement("div");
       dot.classList.add("doclib-cm-dot");
       dot.style.backgroundColor = c;

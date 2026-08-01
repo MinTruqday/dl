@@ -59,20 +59,20 @@ export default class DocLibKanbanBoard implements BlockTool {
       style.id = "doclib-kanban-styles";
       style.innerHTML = `
         .doclib-kanban-wrapper { display: flex; gap: 16px; overflow-x: auto; padding: 12px 0; margin: 12px 0; align-items: flex-start; }
-        .doclib-kanban-col { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; width: 280px; min-width: 280px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
-        .doclib-kanban-header { display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 700; color: #0f172a; }
-        .doclib-kanban-title-input { font-size: 14px; font-weight: 700; border: none; background: transparent; outline: none; width: 100%; color: #0f172a; }
-        .doclib-kanban-del-col { background: none; border: none; color: #94a3b8; cursor: pointer; padding: 0; font-size: 16px; }
+        .doclib-kanban-col { background: hsl(var(--surface-raised)); border: 1px solid hsl(var(--border)); border-radius: 8px; width: 280px; min-width: 280px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+        .doclib-kanban-header { display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 700; color: hsl(var(--ink)); }
+        .doclib-kanban-title-input { font-size: 14px; font-weight: 700; border: none; background: transparent; outline: none; width: 100%; color: hsl(var(--ink)); }
+        .doclib-kanban-del-col { background: none; border: none; color: hsl(var(--ink-faint)); cursor: pointer; padding: 0; font-size: 16px; }
         .doclib-kanban-tasks { display: flex; flex-direction: column; gap: 8px; min-height: 20px; }
-        .doclib-kanban-task { padding: 10px 12px; background: #fff; border: 1px solid #e2e8f0; border-left: 4px solid #cbd5e1; border-radius: 6px; font-size: 13px; color: #334155; box-shadow: 0 1px 2px rgba(0,0,0,0.05); cursor: grab; position: relative; }
+        .doclib-kanban-task { padding: 10px 12px; background: hsl(var(--surface)); border: 1px solid hsl(var(--border)); border-left: 4px solid hsl(var(--border)); border-radius: 6px; font-size: 13px; color: hsl(var(--ink)); box-shadow: 0 1px 2px rgba(0,0,0,0.05); cursor: grab; position: relative; }
         .doclib-kanban-task:active { cursor: grabbing; }
-        .doclib-kanban-task-input { width: 100%; border: none; outline: none; resize: none; font-family: inherit; font-size: 13px; color: #334155; background: transparent; padding: 0; margin: 0; }
-        .doclib-kanban-task-del { position: absolute; top: 6px; right: 6px; font-size: 12px; color: #94a3b8; background: #fff; border: none; cursor: pointer; display: none; border-radius: 4px; }
+        .doclib-kanban-task-input { width: 100%; border: none; outline: none; resize: none; font-family: inherit; font-size: 13px; color: hsl(var(--ink)); background: transparent; padding: 0; margin: 0; }
+        .doclib-kanban-task-del { position: absolute; top: 6px; right: 6px; font-size: 12px; color: hsl(var(--ink-faint)); background: hsl(var(--surface)); border: none; cursor: pointer; display: none; border-radius: 4px; }
         .doclib-kanban-task:hover .doclib-kanban-task-del { display: block; }
-        .doclib-kanban-add-task { background: transparent; border: 1px dashed #cbd5e1; color: #64748b; padding: 8px; border-radius: 6px; font-size: 12px; cursor: pointer; text-align: left; }
-        .doclib-kanban-add-task:hover { background: #f1f5f9; color: #0f172a; }
-        .doclib-kanban-add-col { background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; width: 280px; min-width: 280px; padding: 12px; font-size: 14px; font-weight: 600; color: #64748b; cursor: pointer; text-align: center; }
-        .doclib-kanban-add-col:hover { background: #f1f5f9; color: #0f172a; }
+        .doclib-kanban-add-task { background: transparent; border: 1px dashed hsl(var(--border)); color: hsl(var(--ink-muted)); padding: 8px; border-radius: 6px; font-size: 12px; cursor: pointer; text-align: left; }
+        .doclib-kanban-add-task:hover { background: hsl(var(--surface-quiet)); color: hsl(var(--ink)); }
+        .doclib-kanban-add-col { background: hsl(var(--surface-raised)); border: 1px dashed hsl(var(--border)); border-radius: 8px; width: 280px; min-width: 280px; padding: 12px; font-size: 14px; font-weight: 600; color: hsl(var(--ink-muted)); cursor: pointer; text-align: center; }
+        .doclib-kanban-add-col:hover { background: hsl(var(--surface-quiet)); color: hsl(var(--ink)); }
       `;
       document.head.appendChild(style);
     }
@@ -190,7 +190,7 @@ export default class DocLibKanbanBoard implements BlockTool {
           col.tasks.push({
             id: this.mkId(),
             text: "New task",
-            color: ["#e2e8f0", "#fef08a", "#bbf7d0", "#bfdbfe", "#fbcfe8"][
+            color: ["hsl(var(--border))", "hsl(var(--warning-soft))", "hsl(var(--brand-soft))", "hsl(var(--brand-soft))", "#fbcfe8"][
               Math.floor(Math.random() * 5)
             ],
           });

@@ -7,7 +7,7 @@ export const getTagsCategoriesAPI = async () => {
   const res = await fetch(`${API_URL}/kham-pha/the-loai`);
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi trích xuất cây cấu trúc thẻ và danh mục");
+    throw new Error(data.message || "Không thể tải cây cấu trúc thẻ và danh mục");
   return data;
 };
 
@@ -17,7 +17,7 @@ export const smartSearchAPI = async (query: string, limit: number = 10) => {
     { headers: getAuthHeaders() },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi thực thi truy vấn tìm kiếm ngữ nghĩa");
+  if (!res.ok) throw new Error(data.message || "Không thể thực hiện truy vấn tìm kiếm ngữ nghĩa");
   return data;
 };
 
@@ -27,6 +27,6 @@ export const getPersonalizedRecommendationsAPI = async (limit: number = 10) => {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi truy xuất bộ dữ liệu khuyến nghị cá nhân hóa");
+    throw new Error(data.message || "Không thể tải bộ dữ liệu khuyến nghị cá nhân hóa");
   return data;
 };

@@ -51,19 +51,19 @@ export default class DocLibFormRadioButton implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-radio { font-family: sans-serif; padding: 16px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; margin: 16px 0; max-width: 500px; }
-      .doclib-radio-q { font-size: 16px; font-weight: bold; color: #0f172a; margin-bottom: 12px; outline: none; }
-      .doclib-radio-q:empty:before { content: "DocLib Question"; color: #94a3b8; font-weight: normal; }
+      .doclib-radio { font-family: sans-serif; padding: 16px; border: 1px solid hsl(var(--border)); border-radius: 8px; background: hsl(var(--surface)); margin: 16px 0; max-width: 500px; }
+      .doclib-radio-q { font-size: 16px; font-weight: bold; color: hsl(var(--ink)); margin-bottom: 12px; outline: none; }
+      .doclib-radio-q:empty:before { content: "DocLib Question"; color: hsl(var(--ink-faint)); font-weight: normal; }
       .doclib-radio-opts { display: flex; flex-direction: column; gap: 8px; }
       .doclib-radio-opt { display: flex; align-items: center; gap: 8px; position: relative; }
-      .doclib-radio-circle { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
-      .doclib-radio-circle.selected { border-color: #3b82f6; }
-      .doclib-radio-circle.selected::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #3b82f6; }
-      .doclib-radio-text { flex: 1; font-size: 14px; color: #334155; outline: none; }
-      .doclib-radio-text:empty:before { content: attr(data-placeholder); color: #94a3b8; }
-      .doclib-radio-del { background: none; border: none; color: #ef4444; font-size: 12px; cursor: pointer; display: none; }
+      .doclib-radio-circle { width: 16px; height: 16px; border-radius: 50%; border: 2px solid hsl(var(--border)); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+      .doclib-radio-circle.selected { border-color: hsl(var(--brand)); }
+      .doclib-radio-circle.selected::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: hsl(var(--brand)); }
+      .doclib-radio-text { flex: 1; font-size: 14px; color: hsl(var(--ink)); outline: none; }
+      .doclib-radio-text:empty:before { content: attr(data-placeholder); color: hsl(var(--ink-faint)); }
+      .doclib-radio-del { background: none; border: none; color: hsl(var(--danger)); font-size: 12px; cursor: pointer; display: none; }
       .doclib-radio-opt:hover .doclib-radio-del { display: block; }
-      .doclib-radio-add { margin-top: 12px; padding: 6px 12px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 4px; font-size: 13px; color: #64748b; cursor: pointer; display: inline-block; }
+      .doclib-radio-add { margin-top: 12px; padding: 6px 12px; background: hsl(var(--surface-raised)); border: 1px dashed hsl(var(--border)); border-radius: 4px; font-size: 13px; color: hsl(var(--ink-muted)); cursor: pointer; display: inline-block; }
     `;
     this.wrapper.appendChild(style);
 

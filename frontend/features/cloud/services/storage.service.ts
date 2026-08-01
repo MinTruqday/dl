@@ -51,7 +51,7 @@ export const createFolderAPI = async (name: string, parent_id?: string) => {
     body: JSON.stringify({ name, parent_id }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi khởi tạo cấu trúc thư mục lưu trữ");
+  if (!res.ok) throw new Error(data.message || "Không thể tạo cấu trúc thư mục lưu trữ");
   return mapItem(data.data);
 };
 
@@ -71,7 +71,7 @@ export const listStorageItemsAPI = async (
     },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi trích xuất danh sách thực thể lưu trữ");
+  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách thực thể lưu trữ");
   return data.data.map(mapItem) as StorageItem[];
 };
 
@@ -89,7 +89,7 @@ export const updateStorageItemAPI = async (
     body: JSON.stringify(updates),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi cập nhật siêu dữ liệu thực thể lưu trữ");
+  if (!res.ok) throw new Error(data.message || "Không thể cập nhật siêu dữ liệu thực thể lưu trữ");
   return mapItem(data.data);
 };
 
@@ -108,7 +108,7 @@ export const deleteStorageItemAPI = async (
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi xóa bỏ thực thể lưu trữ");
+  if (!res.ok) throw new Error(data.message || "Không thể xóa thực thể lưu trữ");
   return data.data;
 };
 
@@ -163,7 +163,7 @@ export const searchStorageItemsAPI = async (q: string, type?: string) => {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi thực thi truy vấn tìm kiếm thực thể");
+  if (!res.ok) throw new Error(data.message || "Không thể thực hiện truy vấn tìm kiếm thực thể");
   return data.data.map(mapItem) as StorageItem[];
 };
 
@@ -174,8 +174,28 @@ export const getRecentStorageItemsAPI = async (limit: number = 20) => {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi trích xuất danh sách truy cập gần đây");
+  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách truy cập gần đây");
   return data.data.map(mapItem) as StorageItem[];
+};
+
+export const getArchiveTreeAPI = async (fileUrl: string) => {
+  const res = await fetch(
+    `${API_URL}/doc-hieu/luu-tru/cay-thu-muc?file_url=${encodeURIComponent(fileUrl)}`,
+    { headers: { Authorization: `Bearer ${getAuthToken()}` } },
+  );
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể đọc cấu trúc tệp nén");
+  return data.data || [];
+};
+
+export const getArchiveContentAPI = async (fileUrl: string, path: string) => {
+  const res = await fetch(
+    `${API_URL}/doc-hieu/luu-tru/noi-dung?file_url=${encodeURIComponent(fileUrl)}&path=${encodeURIComponent(path)}`,
+    { headers: { Authorization: `Bearer ${getAuthToken()}` } },
+  );
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể đọc tệp trong kho lưu trữ");
+  return data.data || data;
 };
 
 export const copyStorageItemAPI = async (
@@ -225,7 +245,7 @@ export const uploadFileVersionAPI = async (id: string, file: File) => {
 
   const versionData = await versionRes.json();
   if (!versionRes.ok)
-    throw new Error(versionData.message || "Lỗi khởi tạo siêu dữ liệu phiên bản mới");
+    throw new Error(versionData.message || "Không thể tạo siêu dữ liệu phiên bản mới");
   return versionData.data;
 };
 
@@ -255,7 +275,7 @@ export const getStorageQuotaAPI = async () => {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi trích xuất thông số dung lượng khả dụng");
+  if (!res.ok) throw new Error(data.message || "Không thể tải thông số dung lượng khả dụng");
   return data.data as { used: number; limit: number };
 };
 
@@ -273,7 +293,7 @@ export const createShortcutAPI = async (
     body: JSON.stringify({ target_parent_id }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi khởi tạo liên kết tham chiếu (Shortcut)");
+  if (!res.ok) throw new Error(data.message || "Không thể tạo liên kết tham chiếu (Shortcut)");
   return mapItem(data.data) as StorageItem;
 };
 
@@ -303,51 +323,13 @@ export const downloadZipAPI = async (ids: string[]) => {
   window.URL.revokeObjectURL(downloadUrl);
 };
 
-export const translateStorageDocumentAPI = async (
-  id: string,
-  target_lang: string = "vi",
-) => {
-  const token = getAuthToken();
-  const res = await fetch(
-    `${API_URL}/suy-luan/phan-tich-tai-lieu/${id}/dich-thuat`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ target_lang }),
-    },
-  );
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi gọi API dịch thuật văn bản");
-  return data.data;
-};
-
-export const getRelatedStorageItemsAPI = async (id: string) => {
-  const token = getAuthToken();
-  const res = await fetch(
-    `${API_URL}/suy-luan/phan-tich-tai-lieu/${id}/lien-quan`,
-    {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    },
-  );
-  const data = await res.json();
-  if (!res.ok)
-    throw new Error(data.message || "Lỗi truy xuất bộ dữ liệu tài liệu liên quan");
-  return data.data.map(mapItem) as StorageItem[];
-};
-
 export const getFileVersionsAPI = async (id: string) => {
   const token = getAuthToken();
   const res = await fetch(`${API_URL}/luu-tru/phien-ban/${id}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi trích xuất lịch sử phiên bản tệp");
+  if (!res.ok) throw new Error(data.message || "Không thể tải lịch sử phiên bản tệp");
   return data.data;
 };
 
@@ -417,7 +399,7 @@ export const toggleStarItemAPI = async (id: string) => {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi cập nhật trạng thái gắn sao");
+  if (!res.ok) throw new Error(data.message || "Không thể cập nhật trạng thái gắn sao");
   return data.data;
 };
 
@@ -427,7 +409,7 @@ export const getStarredItemsAPI = async () => {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi trích xuất danh sách gắn sao");
+  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách gắn sao");
   return data.data.map(mapItem) as StorageItem[];
 };
 
@@ -437,7 +419,7 @@ export const analyzeStorageQuotaAPI = async () => {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi trích xuất phân tích dung lượng");
+  if (!res.ok) throw new Error(data.message || "Không thể tải phân tích dung lượng");
   return data.data;
 };
 
@@ -463,7 +445,7 @@ export const setFolderColorAPI = async (folder_id: string, color_hex: string) =>
     body: JSON.stringify({ color_hex }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi cập nhật màu sắc thư mục");
+  if (!res.ok) throw new Error(data.message || "Không thể cập nhật màu sắc thư mục");
   return data.data;
 };
 
@@ -478,7 +460,7 @@ export const updateItemTagsAPI = async (item_id: string, tags: string[]) => {
     body: JSON.stringify({ tags }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi cập nhật thẻ nhãn tệp");
+  if (!res.ok) throw new Error(data.message || "Không thể cập nhật thẻ nhãn tệp");
   return data.data;
 };
 
@@ -488,7 +470,6 @@ export const getPreviewPayloadAPI = async (item_id: string) => {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi trích xuất dữ liệu xem trước");
+  if (!res.ok) throw new Error(data.message || "Không thể tải dữ liệu xem trước");
   return data.data;
 };
-

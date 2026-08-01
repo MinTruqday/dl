@@ -46,9 +46,9 @@ export default class DocLibTextDirection implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-vertical { writing-mode: vertical-rl; text-orientation: mixed; padding: 24px; min-height: 200px; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 16px; line-height: 2; margin: 16px 0; background: #fff; outline: none; display: flex; align-items: flex-start; justify-content: flex-start; }
-      .doclib-vertical[contenteditable="true"]:focus { border-color: #3b82f6; }
-      .doclib-vertical:empty::before { content: "DocLib Text"; color: #94a3b8; pointer-events: none; }
+      .doclib-vertical { writing-mode: vertical-rl; text-orientation: mixed; padding: 24px; min-height: 200px; border: 1px dashed hsl(var(--border)); border-radius: 8px; font-size: 16px; line-height: 2; margin: 16px 0; background: hsl(var(--surface)); outline: none; display: flex; align-items: flex-start; justify-content: flex-start; }
+      .doclib-vertical[contenteditable="true"]:focus { border-color: hsl(var(--brand)); }
+      .doclib-vertical:empty::before { content: "DocLib Text"; color: hsl(var(--ink-faint)); pointer-events: none; }
     `;
     this.wrapper.appendChild(style);
 

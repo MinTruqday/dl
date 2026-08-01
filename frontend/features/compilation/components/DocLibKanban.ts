@@ -56,21 +56,21 @@ export default class DocLibKanban implements BlockTool {
       style.id = "doclib-kanban-styles";
       style.innerHTML = `
             .doclib-kb-wrapper { display: flex; gap: 16px; margin: 16px 0; overflow-x: auto; padding-bottom: 12px; }
-            .doclib-kb-col { flex: 0 0 250px; background: #f1f5f9; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+            .doclib-kb-col { flex: 0 0 250px; background: hsl(var(--surface-quiet)); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
             .doclib-kb-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
             .doclib-kb-dot { width: 12px; height: 12px; border-radius: 50%; }
-            .doclib-kb-title { font-weight: 700; color: #1e293b; outline: none; flex-grow: 1; }
-            .doclib-kb-task { background: #fff; padding: 12px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; gap: 8px; align-items: flex-start; }
-            .doclib-kb-task-text { flex-grow: 1; outline: none; font-size: 14px; color: #334155; line-height: 1.4; }
-            .doclib-kb-task-text:empty::before { content: 'Enter task name'; color: #94a3b8; }
-            .doclib-kb-btn-rm { background: transparent; border: none; color: #cbd5e1; cursor: pointer; padding: 0; display: flex; opacity: 0; }
+            .doclib-kb-title { font-weight: 700; color: hsl(var(--ink)); outline: none; flex-grow: 1; }
+            .doclib-kb-task { background: hsl(var(--surface)); padding: 12px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; gap: 8px; align-items: flex-start; }
+            .doclib-kb-task-text { flex-grow: 1; outline: none; font-size: 14px; color: hsl(var(--ink)); line-height: 1.4; }
+            .doclib-kb-task-text:empty::before { content: 'Enter task name'; color: hsl(var(--ink-faint)); }
+            .doclib-kb-btn-rm { background: transparent; border: none; color: hsl(var(--border)); cursor: pointer; padding: 0; display: flex; opacity: 0; }
             .doclib-kb-task:hover .doclib-kb-btn-rm { opacity: 1; }
-            .doclib-kb-btn-rm:hover { color: #ef4444; }
-            .doclib-kb-add { margin-top: 8px; padding: 8px; background: transparent; border: 1px dashed #cbd5e1; border-radius: 6px; color: #64748b; font-weight: 500; cursor: pointer; transition: background 0.2s; }
-            .doclib-kb-add:hover { background: #e2e8f0; }
+            .doclib-kb-btn-rm:hover { color: hsl(var(--danger)); }
+            .doclib-kb-add { margin-top: 8px; padding: 8px; background: transparent; border: 1px dashed hsl(var(--border)); border-radius: 6px; color: hsl(var(--ink-muted)); font-weight: 500; cursor: pointer; transition: background 0.2s; }
+            .doclib-kb-add:hover { background: hsl(var(--border)); }
             .doclib-kb-nav { display: flex; gap: 4px; flex-direction: column; }
-            .doclib-kb-nav-btn { background: transparent; border: none; cursor: pointer; font-size: 10px; color: #94a3b8; padding: 2px; }
-            .doclib-kb-nav-btn:hover { color: #0f172a; }
+            .doclib-kb-nav-btn { background: transparent; border: none; cursor: pointer; font-size: 10px; color: hsl(var(--ink-faint)); padding: 2px; }
+            .doclib-kb-nav-btn:hover { color: hsl(var(--ink)); }
         `;
       document.head.appendChild(style);
     }
@@ -210,17 +210,17 @@ export default class DocLibKanban implements BlockTool {
       addColBtn.style.display = "flex";
       addColBtn.style.alignItems = "center";
       addColBtn.style.justifyContent = "center";
-      addColBtn.style.border = "2px dashed #cbd5e1";
+      addColBtn.style.border = "2px dashed hsl(var(--border))";
       addColBtn.style.borderRadius = "8px";
       addColBtn.style.cursor = "pointer";
-      addColBtn.style.color = "#94a3b8";
+      addColBtn.style.color = "hsl(var(--ink-faint))";
       addColBtn.innerHTML =
         '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="bba3a666a78199af"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="4,14 17,4 18,14 4,9 6,20 20,20"/></svg>';
       addColBtn.addEventListener("click", () => {
         this.data.columns.push({
           id: Date.now().toString(),
           title: "DocLib New Column",
-          color: "#94a3b8",
+          color: "hsl(var(--ink-faint))",
           tasks: [],
         });
         this.buildUI();

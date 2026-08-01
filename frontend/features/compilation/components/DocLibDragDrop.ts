@@ -25,7 +25,7 @@ export default class DocLibDragDrop {
             .ce-toolbar__settings-btn--drag { cursor: grab !important; }
             .ce-toolbar__settings-btn--drag:active { cursor: grabbing !important; }
             .ce-block--dragging { opacity: 0.4; }
-            .doclib-drag-placeholder { height: 4px; background: #3b82f6; border-radius: 2px; margin: 4px 0; transition: all 0.2s; }
+            .doclib-drag-placeholder { height: 4px; background: hsl(var(--brand)); border-radius: 2px; margin: 4px 0; transition: all 0.2s; }
         `;
       document.head.appendChild(style);
     }

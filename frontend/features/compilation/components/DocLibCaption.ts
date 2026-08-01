@@ -48,10 +48,10 @@ export default class DocLibCaption implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-caption { font-family: "Times New Roman", serif; font-size: 14px; color: #475569; text-align: center; margin: 8px 0 16px 0; font-style: italic; }
-      .doclib-caption-label { font-weight: bold; color: #1e293b; outline: none; }
+      .doclib-caption { font-family: "Times New Roman", serif; font-size: 14px; color: hsl(var(--ink-muted)); text-align: center; margin: 8px 0 16px 0; font-style: italic; }
+      .doclib-caption-label { font-weight: bold; color: hsl(var(--ink)); outline: none; }
       .doclib-caption-text { outline: none; }
-      .doclib-caption-text:empty:before { content: "DocLib Enter caption text"; color: #94a3b8; }
+      .doclib-caption-text:empty:before { content: "DocLib Enter caption text"; color: hsl(var(--ink-faint)); }
     `;
     this.wrapper.appendChild(style);
 

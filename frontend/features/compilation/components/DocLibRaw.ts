@@ -45,7 +45,7 @@ export default class DocLibRaw implements BlockTool {
 
     this.textarea.style.minHeight = "150px";
     this.textarea.style.fontFamily = "monospace";
-    this.textarea.style.backgroundColor = "#f8f9fa";
+    this.textarea.style.backgroundColor = "hsl(var(--surface-quiet))";
     this.textarea.style.resize = "none";
     this.textarea.style.overflow = "hidden";
     this.textarea.style.padding = "10px";

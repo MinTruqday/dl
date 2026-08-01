@@ -84,7 +84,7 @@ export default function ConfigPage() {
       setFolders((foldersData as any).data || foldersData || []);
       if (list.length > 0) setSelectedDocumentId(list[0]._id || list[0].id);
     } catch {
-      showToast("Lỗi trích xuất bộ sưu tập tài liệu", "error");
+      showToast("Không thể tải bộ sưu tập tài liệu", "error");
     } finally {
       setLoadingDocs(false);
       requestAnimationFrame(() => setVisible(true));
@@ -129,7 +129,7 @@ export default function ConfigPage() {
           setNewTagInput("");
           fetchInitData();
         } catch {
-          showToast("Lỗi cập nhật danh sách thẻ phân loại", "error");
+          showToast("Không thể cập nhật danh sách thẻ phân loại", "error");
         }
       }
     }
@@ -158,7 +158,7 @@ export default function ConfigPage() {
       showToast("Cập nhật cấu hình bảo vệ bản quyền (DRM) hoàn tất", "success");
       fetchInitData();
     } catch {
-      showToast("Lỗi cập nhật cấu hình bảo vệ bản quyền (DRM)", "error");
+      showToast("Không thể cập nhật cấu hình bảo vệ bản quyền (DRM)", "error");
     } finally {
       setSavingDrm(false);
     }
@@ -185,7 +185,7 @@ export default function ConfigPage() {
       setInviteEmail("");
       fetchCollaborators();
     } catch {
-      showToast("Lỗi khởi tạo yêu cầu cấp quyền cộng tác", "error");
+      showToast("Không thể tạo yêu cầu cấp quyền cộng tác", "error");
     }
   };
 
@@ -220,29 +220,29 @@ export default function ConfigPage() {
   return (
     <div className="flex flex-col h-full font-sans">
       <div
-        className={`bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:px-0 md:pt-6 flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-6 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}
+        className={`bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:px-0 md:pt-6 flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-6 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}
         style={{ transitionDelay: "100ms" }}
       >
-        <div className="bg-white p-6 rounded-[18px] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
+        <div className="bg-white p-6 rounded-panel flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-white rounded-[10px] flex items-center justify-center shrink-0">
-              <Settings className="w-6 h-6 text-[#1D1D1F]" />
+            <div className="w-12 h-12 bg-white rounded-control flex items-center justify-center shrink-0">
+              <Settings className="w-6 h-6 text-ink" />
             </div>
             <div>
-              <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
+              <p className="text-[13px] font-medium text-ink-muted mb-4">
                 Chọn tác phẩm
               </p>
-              <p className="text-[13px] text-[#6E6E73]">
+              <p className="text-[13px] text-ink-muted">
                 Tác phẩm cần thiết lập
               </p>
             </div>
           </div>
           <div className="relative w-full sm:w-[320px]">
-            <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6E6E73]" />
+            <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-ink-muted" />
             <select
               value={selectedDocumentId}
               onChange={(e) => setSelectedDocumentId(e.target.value)}
-              className="w-full h-[48px] pl-12 pr-10 text-[15px] font-medium text-[#1D1D1F] focus:outline-none focus:border-[#0071E3] bg-white rounded-[10px] appearance-none transition-colors cursor-pointer"
+              className="w-full h-[48px] pl-12 pr-10 text-[15px] font-medium text-ink focus:outline-none focus:border-brand bg-white rounded-control appearance-none transition-colors cursor-pointer"
             >
               {documents.length === 0 && (
                 <option value="" disabled>
@@ -255,69 +255,69 @@ export default function ConfigPage() {
                 </option>
               ))}
             </select>
-            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6E6E73] pointer-events-none" />
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted pointer-events-none" />
           </div>
         </div>
 
         {selectedDocumentId ? (
           <div className="flex-1 min-h-0 pb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-6">
-              <div className="bg-white border border-[#E8E8ED] p-6 rounded-[18px]">
+              <div className="bg-white border border-border p-6 rounded-panel">
                 <div className="flex items-center gap-2 mb-4">
-                  <Hash className="w-5 h-5 text-[#1D1D1F]" />
-                  <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
+                  <Hash className="w-5 h-5 text-ink" />
+                  <p className="text-[13px] font-medium text-ink-muted mb-4">
                     Phân loại & Thẻ
                   </p>
                 </div>
-                <p className="text-[13px] text-[#6E6E73] mb-4">
+                <p className="text-[13px] text-ink-muted mb-4">
                   Sử dụng thẻ để phân loại tác phẩm.
                 </p>
                 <div className="flex flex-wrap gap-2 mb-4 min-h-[32px]">
                   {docTags.map((tag) => (
                     <span
                       key={tag}
-                      className="flex items-center gap-1 bg-[#F5F5F7] px-3 py-1.5 text-[13px] font-medium text-[#1D1D1F] rounded-[10px] group"
+                      className="flex items-center gap-1 bg-surface-quiet px-3 py-1.5 text-[13px] font-medium text-ink rounded-control group"
                     >
                       {tag}{" "}
                       <button
                         onClick={() => handleRemoveTag(tag)}
-                        className="text-[#6E6E73] hover:text-[#FF3B30] transition-colors"
+                        className="text-ink-muted hover:text-danger transition-colors"
                       >
                         <X className="w-4 h-4" />
                       </button>
                     </span>
                   ))}
                   {docTags.length === 0 && (
-                    <span className="text-[13px] text-[#C7C7CC]">
+                    <span className="text-[13px] text-ink-faint">
                       Chưa có thẻ nào
                     </span>
                   )}
                 </div>
                 <div className="relative">
-                  <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6E6E73]" />
+                  <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-ink-muted" />
                   <input
                     type="text"
                     value={newTagInput}
                     onChange={(e) => setNewTagInput(e.target.value)}
                     onKeyDown={handleAddTag}
                     placeholder=""
-                    className="w-full h-[48px] pl-12 pr-4 text-[15px] rounded-[10px] outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors"
+                    className="w-full h-[48px] pl-12 pr-4 text-[15px] rounded-control outline-none focus:border-brand bg-surface-quiet focus:bg-white transition-colors"
                   />
                 </div>
               </div>
 
-              <div className="bg-white border border-[#E8E8ED] p-6 rounded-[18px]">
+              <div className="bg-white border border-border p-6 rounded-panel">
                 <div className="flex items-center gap-2 mb-4">
-                  <Folder className="w-5 h-5 text-[#1D1D1F]" />
-                  <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
+                  <Folder className="w-5 h-5 text-ink" />
+                  <p className="text-[13px] font-medium text-ink-muted mb-4">
                     Thư mục làm việc
                   </p>
                 </div>
-                <p className="text-[13px] text-[#6E6E73] mb-4">
+                <p className="text-[13px] text-ink-muted mb-4">
                   Di chuyển tác phẩm này vào thư mục.
                 </p>
                 <div className="relative">
-                  <Folder className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6E6E73]" />
+                  <Folder className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-ink-muted" />
                   <select
                     value={selectedDocument?.folder_id || ""}
                     onChange={async (e) => {
@@ -328,10 +328,10 @@ export default function ConfigPage() {
                         showToast("Cập nhật liên kết thư mục hoàn tất", "success");
                         fetchInitData();
                       } catch {
-                        showToast("Lỗi cập nhật liên kết thư mục", "error");
+                        showToast("Không thể cập nhật liên kết thư mục", "error");
                       }
                     }}
-                    className="w-full h-[48px] pl-12 pr-10 text-[15px] font-medium rounded-[10px] outline-none bg-[#F5F5F7] focus:bg-white focus:border-[#0071E3] appearance-none transition-colors cursor-pointer"
+                    className="w-full h-[48px] pl-12 pr-10 text-[15px] font-medium rounded-control outline-none bg-surface-quiet focus:bg-white focus:border-brand appearance-none transition-colors cursor-pointer"
                   >
                     <option value="">(Thư mục gốc)</option>
                     {folders.map((f) => (
@@ -340,22 +340,22 @@ export default function ConfigPage() {
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6E6E73] pointer-events-none" />
+                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted pointer-events-none" />
                 </div>
               </div>
 
-              <div className="bg-white border border-[#E8E8ED] p-6 rounded-[18px]">
+              <div className="bg-white border border-border p-6 rounded-panel">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <Shield className="w-5 h-5 text-[#1D1D1F]" />
-                    <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
+                    <Shield className="w-5 h-5 text-ink" />
+                    <p className="text-[13px] font-medium text-ink-muted mb-4">
                       Bảo vệ bản quyền
                     </p>
                   </div>
                   <button
                     onClick={handleSaveDRM}
                     disabled={savingDrm || !selectedDocumentId}
-                    className="h-[36px] px-4 bg-[#0071E3] text-white text-[13px] font-medium rounded-full disabled:opacity-50 transition-colors hover:bg-[#0077ED]"
+                    className="h-[36px] px-4 bg-brand text-white text-[13px] font-medium rounded-full disabled:opacity-50 transition-colors hover:bg-brand"
                   >
                     {savingDrm ? (
                       <Loader2 className="w-4 h-4 animate-spin mx-auto" />
@@ -364,13 +364,13 @@ export default function ConfigPage() {
                     )}
                   </button>
                 </div>
-                <div className="space-y-4 bg-[#F5F5F7] p-4 rounded-[18px]">
+                <div className="space-y-4 bg-surface-quiet p-4 rounded-panel">
                   <label className="flex items-center justify-between cursor-pointer group">
-                    <span className="text-[13px] font-medium text-[#1D1D1F]">
+                    <span className="text-[13px] font-medium text-ink">
                       Chống bôi đen & Copy
                     </span>
                     <div
-                      className={`w-[48px] h-[28px] rounded-full flex items-center p-1 transition-colors ${drmCopy ? "bg-[#34C759] border-[#34C759]" : "bg-[#E8E8ED] border-[#D2D2D7]"}`}
+                      className={`w-[48px] h-[28px] rounded-full flex items-center p-1 transition-colors ${drmCopy ? "bg-brand border-brand" : "bg-border border-border"}`}
                     >
                       <div
                         className={`w-5 h-5 bg-white rounded-full transition-transform ${drmCopy ? "translate-x-[20px]" : "translate-x-0"}`}
@@ -383,13 +383,13 @@ export default function ConfigPage() {
                       onChange={(e) => setDrmCopy(e.target.checked)}
                     />
                   </label>
-                  <div className="h-px bg-[#E8E8ED]" />
+                  <div className="h-px bg-border" />
                   <label className="flex items-center justify-between cursor-pointer group">
-                    <span className="text-[13px] font-medium text-[#1D1D1F]">
+                    <span className="text-[13px] font-medium text-ink">
                       Ẩn khỏi tìm kiếm (SEO)
                     </span>
                     <div
-                      className={`w-[48px] h-[28px] rounded-full flex items-center p-1 transition-colors ${drmSearch ? "bg-[#34C759] border-[#34C759]" : "bg-[#E8E8ED] border-[#D2D2D7]"}`}
+                      className={`w-[48px] h-[28px] rounded-full flex items-center p-1 transition-colors ${drmSearch ? "bg-brand border-brand" : "bg-border border-border"}`}
                     >
                       <div
                         className={`w-5 h-5 bg-white rounded-full transition-transform ${drmSearch ? "translate-x-[20px]" : "translate-x-0"}`}
@@ -407,23 +407,23 @@ export default function ConfigPage() {
             </div>
 
             <div className="space-y-6">
-              <div className="bg-white border border-[#E8E8ED] p-6 rounded-[18px] relative overflow-hidden">
+              <div className="bg-white border border-border p-6 rounded-panel relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
                   <Brain className="w-24 h-24" />
                 </div>
                 <div className="flex items-center gap-2 mb-4 relative z-10">
-                  <Brain className="w-5 h-5 text-[#1D1D1F]" />
-                  <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
+                  <Brain className="w-5 h-5 text-ink" />
+                  <p className="text-[13px] font-medium text-ink-muted mb-4">
                     Trí tuệ nhân tạo
                   </p>
                 </div>
-                <p className="text-[13px] text-[#6E6E73] mb-4 relative z-10">
+                <p className="text-[13px] text-ink-muted mb-4 relative z-10">
                   Đồng bộ nội dung với hệ thống RAG để AI hỗ trợ độc giả.
                 </p>
                 <button
                   onClick={handleIngestAI}
                   disabled={isIngesting || !selectedDocumentId}
-                  className="w-full h-[48px] bg-[#1D1D1F] text-white text-[15px] font-medium flex items-center justify-center gap-2 rounded-full disabled:opacity-50 transition-colors hover:bg-[#333336] relative z-10"
+                  className="w-full h-[48px] bg-ink text-white text-[15px] font-medium flex items-center justify-center gap-2 rounded-full disabled:opacity-50 transition-colors hover:bg-ink relative z-10"
                 >
                   {isIngesting ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -434,10 +434,10 @@ export default function ConfigPage() {
                 </button>
               </div>
 
-              <div className="bg-white border border-[#E8E8ED] p-6 rounded-[18px]">
+              <div className="bg-white border border-border p-6 rounded-panel">
                 <div className="flex items-center gap-2 mb-4">
-                  <Users className="w-5 h-5 text-[#1D1D1F]" />
-                  <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">
+                  <Users className="w-5 h-5 text-ink" />
+                  <h2 className="text-[20px] font-semibold text-ink mb-4">
                     Cộng tác viên
                   </h2>
                 </div>
@@ -447,39 +447,39 @@ export default function ConfigPage() {
                     value={inviteEmail}
                     onChange={(e) => setInviteEmail(e.target.value)}
                     placeholder=""
-                    className="flex-1 h-[48px] pl-4 pr-4 text-[15px] rounded-[10px] outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors"
+                    className="flex-1 h-[48px] pl-4 pr-4 text-[15px] rounded-control outline-none focus:border-brand bg-surface-quiet focus:bg-white transition-colors"
                   />
                   <button
                     onClick={handleInviteCollab}
                     disabled={!inviteEmail.trim()}
-                    className="h-[48px] px-6 bg-[#0071E3] text-white text-[15px] font-medium rounded-[10px] disabled:opacity-50 flex items-center gap-2 hover:bg-[#0077ED] transition-colors"
+                    className="h-[48px] px-6 bg-brand text-white text-[15px] font-medium rounded-control disabled:opacity-50 flex items-center gap-2 hover:bg-brand transition-colors"
                   >
                     Mời <Send className="w-4 h-4" />
                   </button>
                 </div>
-                <div className="bg-[#F5F5F7] rounded-[18px] p-4 max-h-[160px] overflow-y-auto custom-scrollbar">
+                <div className="bg-surface-quiet rounded-panel p-4 max-h-[160px] overflow-y-auto custom-scrollbar">
                   {loadingCollabs ? (
                     <div className="flex justify-center p-4">
-                      <Loader2 className="w-6 h-6 animate-spin text-[#0071E3]" />
+                      <Loader2 className="w-6 h-6 animate-spin text-brand" />
                     </div>
                   ) : collaborators.length > 0 ? (
                     <ul className="space-y-2">
                       {collaborators.map((c: any) => (
                         <li
                           key={c.id}
-                          className="flex justify-between items-center bg-white p-3 rounded-[10px]"
+                          className="flex justify-between items-center bg-white p-3 rounded-control"
                         >
                           <div className="flex flex-col">
-                            <span className="text-[15px] font-semibold text-[#1D1D1F]">
+                            <span className="text-[15px] font-semibold text-ink">
                               {c.email || c.user_id}
                             </span>
-                            <span className="text-[13px] text-[#6E6E73] capitalize">
+                            <span className="text-[13px] text-ink-muted capitalize">
                               {c.role}
                             </span>
                           </div>
                           <button
                             onClick={() => handleRemoveCollab(c.id)}
-                            className="w-8 h-8 flex items-center justify-center text-[#6E6E73] hover:text-[#FF3B30] hover:bg-[#FFEBEB] rounded-full transition-colors"
+                            className="w-8 h-8 flex items-center justify-center text-ink-muted hover:text-danger hover:bg-danger-soft rounded-full transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -492,12 +492,12 @@ export default function ConfigPage() {
                 </div>
               </div>
 
-              <div className="bg-[#FF3B30]/10 border-[#FF3B30]/20 p-6 rounded-[18px]">
-                <div className="flex items-center gap-2 mb-2 text-[#FF3B30]">
+              <div className="bg-danger/10 border-danger/20 p-6 rounded-panel">
+                <div className="flex items-center gap-2 mb-2 text-danger">
                   <ArrowRightLeft className="w-5 h-5" />
                   <h3 className="text-[17px] font-medium">Bàn giao tác phẩm</h3>
                 </div>
-                <p className="text-[13px] text-[#FF3B30] mb-4">
+                <p className="text-[13px] text-danger mb-4">
                   Bạn sẽ mất toàn quyền kiểm soát sau khi chuyển.
                 </p>
                 <div className="flex gap-2">
@@ -506,7 +506,7 @@ export default function ConfigPage() {
                     value={transferUserId}
                     onChange={(e) => setTransferUserId(e.target.value)}
                     placeholder=""
-                    className="flex-1 h-[48px] pl-4 pr-4 border-[#FF3B30]/30 text-[15px] rounded-[10px] outline-none focus:border-[#FF3B30] bg-white transition-colors"
+                    className="flex-1 h-[48px] pl-4 pr-4 border-danger/30 text-[15px] rounded-control outline-none focus:border-danger bg-white transition-colors"
                   />
                   <button
                     onClick={() => setConfirmTransfer(true)}
@@ -515,7 +515,7 @@ export default function ConfigPage() {
                       !selectedDocumentId ||
                       !transferUserId.trim()
                     }
-                    className="h-[48px] px-6 bg-[#FF3B30] text-white text-[15px] font-medium rounded-[10px] disabled:opacity-50 hover:bg-[#E0332A] transition-colors"
+                    className="h-[48px] px-6 bg-danger text-white text-[15px] font-medium rounded-control disabled:opacity-50 hover:bg-danger transition-colors"
                   >
                     Chuyển
                   </button>
@@ -524,11 +524,11 @@ export default function ConfigPage() {
             </div>
           </div>
         ) : (
-          <div className="flex-1 bg-white rounded-[18px] p-12 flex flex-col items-center justify-center gap-4 text-center">
-            <div className="w-16 h-16 bg-[#F5F5F7] border-[#E8E8ED] flex items-center justify-center rounded-[18px] mb-2">
-              <Settings className="w-8 h-8 text-[#C7C7CC]" />
+          <div className="flex-1 bg-white rounded-panel p-12 flex flex-col items-center justify-center gap-4 text-center">
+            <div className="w-16 h-16 bg-surface-quiet border-border flex items-center justify-center rounded-panel mb-2">
+              <Settings className="w-8 h-8 text-ink-faint" />
             </div>
-            <p className="text-[15px] text-[#6E6E73] max-w-sm">
+            <p className="text-[15px] text-ink-muted max-w-sm">
               Vui lòng chọn một tác phẩm từ danh sách để định cấu hình
             </p>
           </div>
@@ -539,36 +539,33 @@ export default function ConfigPage() {
         isOpen={confirmTransfer}
         onClose={() => setConfirmTransfer(false)}
       >
-        <ModalHeader className="bg-[#FF3B30]/10">
-          <ModalTitle className="text-[#FF3B30] flex items-center gap-2">
+        <ModalHeader className="bg-danger/10">
+          <ModalTitle className="text-danger flex items-center gap-2">
             <ArrowRightLeft className="w-5 h-5" /> Xác nhận chuyển nhượng
           </ModalTitle>
-          <ModalDescription className="text-[#FF3B30] ml-7">
-            Hành động nguy hiểm
-          </ModalDescription>
         </ModalHeader>
         <ModalContent>
-          <p className="text-[15px] font-medium text-[#1D1D1F] leading-relaxed bg-[#F5F5F7] p-4 rounded-[10px]">
-            Bạn có chắc chắn muốn chuyển nhượng tác phẩm này cho ID{" "}
-            <span className="font-semibold">{transferUserId}</span>? <br />
+          <p className="text-[15px] font-medium text-ink leading-relaxed bg-surface-quiet p-4 rounded-control">
+            Chuyển nhượng tác phẩm cho ID{" "}
+            <span className="font-semibold">{transferUserId}</span>
             <br />
-            <span className="text-[#FF3B30] font-semibold">
+            <span className="text-danger font-semibold">
               Hành động này không thể hoàn tác và bạn sẽ mất toàn quyền truy
-              cập.
+              cập
             </span>
           </p>
         </ModalContent>
         <ModalFooter>
           <button
             onClick={() => setConfirmTransfer(false)}
-            className="flex-1 h-[44px] bg-white text-[15px] font-medium text-[#1D1D1F] rounded-full hover:bg-[#E8E8ED] transition-colors"
+            className="flex-1 h-[44px] bg-white text-[15px] font-medium text-ink rounded-full hover:bg-border transition-colors"
           >
             Hủy bỏ
           </button>
           <button
             onClick={executeTransfer}
             disabled={isTransferring}
-            className="flex-1 h-[44px] bg-[#FF3B30] text-white text-[15px] font-medium rounded-full flex items-center justify-center disabled:opacity-50 hover:bg-[#E0332A] transition-colors gap-2"
+            className="flex-1 h-[44px] bg-danger text-white text-[15px] font-medium rounded-full flex items-center justify-center disabled:opacity-50 hover:bg-danger transition-colors gap-2"
           >
             {isTransferring && <Loader2 className="w-5 h-5 animate-spin" />} Xác
             nhận chuyển

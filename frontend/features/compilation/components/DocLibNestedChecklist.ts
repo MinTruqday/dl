@@ -40,10 +40,10 @@ export default class DocLibNestedChecklist implements BlockTool {
       style.innerHTML = `
             .doclib-ncl-wrapper { margin: 8px 0; }
             .doclib-ncl-item { display: flex; align-items: flex-start; gap: 8px; margin: 4px 0; }
-            .doclib-ncl-checkbox { width: 18px; height: 18px; cursor: pointer; accent-color: #3b82f6; margin-top: 4px; }
+            .doclib-ncl-checkbox { width: 18px; height: 18px; cursor: pointer; accent-color: hsl(var(--brand)); margin-top: 4px; }
             .doclib-ncl-text { flex-grow: 1; outline: none; line-height: 1.6; padding: 2px 0; }
-            .doclib-ncl-text:empty::before { content: 'DocLib Input'; color: #94a3b8; pointer-events: none; }
-            .doclib-ncl-item.checked .doclib-ncl-text { text-decoration: line-through; color: #94a3b8; }
+            .doclib-ncl-text:empty::before { content: 'DocLib Input'; color: hsl(var(--ink-faint)); pointer-events: none; }
+            .doclib-ncl-item.checked .doclib-ncl-text { text-decoration: line-through; color: hsl(var(--ink-faint)); }
         `;
       document.head.appendChild(style);
     }

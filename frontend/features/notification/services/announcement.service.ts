@@ -11,7 +11,7 @@ export const getAnnouncementsAPI = async () => {
     headers: { Authorization: `Bearer ${token}` },
   });
   const resultData = await res.json();
-  if (!res.ok) throw new Error(resultData.message || "Lỗi trích xuất dữ liệu thông báo");
+  if (!res.ok) throw new Error(resultData.message || "Không thể tải dữ liệu thông báo");
   return resultData;
 };
 
@@ -22,7 +22,7 @@ export const markAnnouncementReadAPI = async (id: string) => {
   });
   const resultData = await res.json();
   if (!res.ok)
-    throw new Error(resultData.message || "Lỗi cập nhật trạng thái thông báo");
+    throw new Error(resultData.message || "Không thể cập nhật trạng thái thông báo");
   return resultData;
 };
 
@@ -34,7 +34,7 @@ export const markAllAnnouncementsReadAPI = async () => {
   const resultData = await res.json();
   if (!res.ok)
     throw new Error(
-      resultData.message || "Lỗi cập nhật trạng thái hàng loạt",
+      resultData.message || "Không thể cập nhật trạng thái hàng loạt",
     );
   return resultData;
 };
@@ -44,7 +44,7 @@ export const getAnnouncementSettingsAPI = async () => {
   const res = await fetch(`${API_URL}/thong-bao/cai-dat`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) throw new Error("Lỗi trích xuất cấu hình hệ thống thông báo");
+  if (!res.ok) throw new Error("Không thể tải cấu hình hệ thống thông báo");
   return await res.json();
 };
 
@@ -58,6 +58,6 @@ export const updateAnnouncementSettingsAPI = async (settings: any) => {
     },
     body: JSON.stringify(settings),
   });
-  if (!res.ok) throw new Error("Lỗi lưu trữ cấu hình hệ thống thông báo");
+  if (!res.ok) throw new Error("Không thể lưu cấu hình hệ thống thông báo");
   return await res.json();
 };

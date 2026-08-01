@@ -51,17 +51,17 @@ export default class DocLibBookmark implements BlockTool {
       const style = document.createElement("style");
       style.id = "doclib-bookmark-styles";
       style.innerHTML = `
-            .doclib-bm-wrapper { display: flex; border: 1px solid #e2e8f0; border-radius: 8px; margin: 16px 0; overflow: hidden; background: #fff; cursor: pointer; text-decoration: none; color: inherit; transition: background 0.2s; height: 120px; }
-            .doclib-bm-wrapper:hover { background: #f8fafc; }
+            .doclib-bm-wrapper { display: flex; border: 1px solid hsl(var(--border)); border-radius: 8px; margin: 16px 0; overflow: hidden; background: hsl(var(--surface)); cursor: pointer; text-decoration: none; color: inherit; transition: background 0.2s; height: 120px; }
+            .doclib-bm-wrapper:hover { background: hsl(var(--surface-raised)); }
             .doclib-bm-content { flex: 1; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; }
-            .doclib-bm-title { font-weight: 600; font-size: 15px; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; outline: none; }
-            .doclib-bm-title:empty::before { content: 'Web page title'; color: #94a3b8; }
-            .doclib-bm-desc { font-size: 13px; color: #475569; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; outline: none; line-height: 1.4; }
-            .doclib-bm-desc:empty::before { content: 'Short description'; color: #94a3b8; }
-            .doclib-bm-url { font-size: 12px; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 8px; }
-            .doclib-bm-img-box { width: 30%; min-width: 120px; border-left: 1px solid #e2e8f0; position: relative; background: #f1f5f9; }
+            .doclib-bm-title { font-weight: 600; font-size: 15px; color: hsl(var(--ink)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; outline: none; }
+            .doclib-bm-title:empty::before { content: 'Web page title'; color: hsl(var(--ink-faint)); }
+            .doclib-bm-desc { font-size: 13px; color: hsl(var(--ink-muted)); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; outline: none; line-height: 1.4; }
+            .doclib-bm-desc:empty::before { content: 'Short description'; color: hsl(var(--ink-faint)); }
+            .doclib-bm-url { font-size: 12px; color: hsl(var(--ink-faint)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 8px; }
+            .doclib-bm-img-box { width: 30%; min-width: 120px; border-left: 1px solid hsl(var(--border)); position: relative; background: hsl(var(--surface-quiet)); }
             .doclib-bm-img { width: 100%; height: 100%; object-fit: cover; }
-            .doclib-bm-input-wrapper { display: flex; gap: 8px; padding: 16px; border: 1px dashed #cbd5e1; border-radius: 8px; background: #f8fafc; }
+            .doclib-bm-input-wrapper { display: flex; gap: 8px; padding: 16px; border: 1px dashed hsl(var(--border)); border-radius: 8px; background: hsl(var(--surface-raised)); }
         `;
       document.head.appendChild(style);
     }

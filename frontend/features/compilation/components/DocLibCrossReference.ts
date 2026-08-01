@@ -47,10 +47,10 @@ export default class DocLibCrossReference implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-xref { display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; background: #f1f5f9; border-radius: 4px; cursor: pointer; color: #2563eb; font-weight: 500; font-size: 14px; text-decoration: none; transition: background 0.2s; }
-      .doclib-xref:hover { background: #e2e8f0; text-decoration: underline; }
-      .doclib-xref-edit { display: flex; gap: 8px; background: #fff; border: 1px solid #cbd5e1; padding: 12px; border-radius: 6px; }
-      .doclib-xref-input { flex: 1; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; font-size: 14px; }
+      .doclib-xref { display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; background: hsl(var(--surface-quiet)); border-radius: 4px; cursor: pointer; color: hsl(var(--brand)); font-weight: 500; font-size: 14px; text-decoration: none; transition: background 0.2s; }
+      .doclib-xref:hover { background: hsl(var(--border)); text-decoration: underline; }
+      .doclib-xref-edit { display: flex; gap: 8px; background: hsl(var(--surface)); border: 1px solid hsl(var(--border)); padding: 12px; border-radius: 6px; }
+      .doclib-xref-input { flex: 1; padding: 8px; border: 1px solid hsl(var(--border)); border-radius: 4px; outline: none; font-size: 14px; }
     `;
     this.wrapper.appendChild(style);
 
@@ -65,7 +65,7 @@ export default class DocLibCrossReference implements BlockTool {
         if (target) {
           target.scrollIntoView({ behavior: "smooth", block: "center" });
           target.style.transition = "background 0.5s";
-          target.style.background = "#fef08a";
+          target.style.background = "hsl(var(--warning-soft))";
           setTimeout(() => {
             target.style.background = "transparent";
           }, 1500);

@@ -84,6 +84,6 @@ export default class DocLibHighlightColorGreen implements BlockTool {
     const anchor = selection?.anchorNode;
     const element =
       anchor instanceof HTMLElement ? anchor : anchor?.parentElement || null;
-    document.execCommand("backColor", false, "#bbf7d0");
+    document.execCommand("backColor", false, "hsl(var(--brand-soft))");
   }
 }

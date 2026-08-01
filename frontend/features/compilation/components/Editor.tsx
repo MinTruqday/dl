@@ -12,8 +12,6 @@ import {
   globalFindReplaceAPI,
   addInlineCommentAPI,
   getVersionDiffAPI,
-  getAiSuggestionsAPI,
-  summarizeDocumentAPI,
 } from "@/features/compilation/services/editorjs.service";
 import {
   grammarCheckAPI,
@@ -350,22 +348,17 @@ ${latexCode}
       const text = data.blocks.map((b) => b.data?.text || "").join(" ");
       const contextText = text.length > 3000 ? text.slice(-3000) : text;
       const res = await fetch(
-        `${API_URL}/soan-thao/${documentId}/kiem-tra-logic`,
+        `${API_URL}/suy-luan/hanh-dong`,
         {
           method: "POST",
           headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-          body: JSON.stringify({ content: contextText }),
+          body: JSON.stringify({ action: "check_logic", text: contextText, context: "" }),
         },
       );
       const result = await res.json();
-      const conflicts = result.data?.conflicts || [];
-      if (conflicts.length > 0) {
-        showToast(`Content consistency conflict: ${conflicts[0]}`, "error");
-      } else {
-        showToast("Content consistency check passed", "success");
-      }
+      showToast(result.result || "Đã kiểm tra tính nhất quán", "success");
     } catch (err: any) {
-      showToast("Content consistency check failed", "error");
+      showToast("Không thể kiểm tra tính nhất quán", "error");
     } finally {
       setIsSuggesting(false);
     }
@@ -451,7 +444,7 @@ ${latexCode}
       className={`flex flex-col w-full h-full bg-white relative font-sans ${isZenMode ? "fixed inset-0 z-50" : ""}`}
     >
       {!isZenMode && (
-        <div className="flex justify-between items-center border-b border-zinc-200 p-3 gap-4">
+        <div className="flex justify-between items-center border-b border-border p-3 gap-4">
           <div className="flex flex-1 overflow-x-auto no-scrollbar gap-2 items-center">
             {contentFormat !== "latex" && (
               <WordCommandPalette
@@ -463,30 +456,30 @@ ${latexCode}
             <button
               onClick={handleSynonyms}
               disabled={isSuggesting}
-              className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] whitespace-nowrap shrink-0 rounded-lg hover:bg-zinc-50"
+              className="px-4 py-1.5 border border-border text-ink-muted text-xs font-bold active:scale-[0.98] whitespace-nowrap shrink-0 rounded-lg hover:bg-surface-raised"
             >
-              Synonyms
+              Từ đồng nghĩa
             </button>
 
             <button
               onClick={handleConsistencyCheck}
               disabled={isSuggesting}
-              className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] whitespace-nowrap shrink-0 rounded-lg hover:bg-zinc-50 flex items-center gap-1.5"
+              className="px-4 py-1.5 border border-border text-ink-muted text-xs font-bold active:scale-[0.98] whitespace-nowrap shrink-0 rounded-lg hover:bg-surface-raised flex items-center gap-1.5"
             >
               <Network className="w-3.5 h-3.5" />
-              Check consistency
+              Kiểm tra logic
             </button>
             <button
               onClick={handleGrammarCheck}
-              className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] whitespace-nowrap shrink-0 rounded-lg hover:bg-zinc-50 flex items-center gap-1.5"
+              className="px-4 py-1.5 border border-border text-ink-muted text-xs font-bold active:scale-[0.98] whitespace-nowrap shrink-0 rounded-lg hover:bg-surface-raised flex items-center gap-1.5"
             >
               <CheckCheck className="w-3.5 h-3.5" />
-              Check grammar
+              Kiểm tra ngữ pháp
             </button>
             <button
               onClick={handleCompilePreview}
               disabled={isCompiling}
-              className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg hover:bg-zinc-50"
+              className="px-4 py-1.5 border border-border text-ink-muted text-xs font-bold active:scale-[0.98] flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg hover:bg-surface-raised"
             >
               {isCompiling ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -498,13 +491,13 @@ ${latexCode}
 
             <button
               onClick={() => setShowFindReplace(!showFindReplace)}
-              className={`px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg hover:bg-zinc-50 ${showFindReplace ? "bg-black text-white border-black hover:bg-zinc-800" : ""}`}
+              className={`px-4 py-1.5 border border-border text-ink-muted text-xs font-bold active:scale-[0.98] flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg hover:bg-surface-raised ${showFindReplace ? "bg-ink text-white border-ink hover:bg-ink/90" : ""}`}
             >
               <Search className="w-3.5 h-3.5" />
               Find and replace
             </button>
 
-            <div className="w-px h-6 bg-zinc-200 mx-1 shrink-0" />
+            <div className="w-px h-6 bg-border mx-1 shrink-0" />
 
             <button
               onClick={() =>
@@ -513,7 +506,7 @@ ${latexCode}
                   : setShowTranslateModal(true)
               }
               disabled={isTranslating}
-              className={`px-4 py-1.5 border border-zinc-200 text-xs font-bold active:scale-[0.98] flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg hover:bg-zinc-50 ${originalContentForUndo ? "bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100" : "text-zinc-600"}`}
+              className={`px-4 py-1.5 border border-border text-xs font-bold active:scale-[0.98] flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg hover:bg-surface-raised ${originalContentForUndo ? "bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100" : "text-ink-muted"}`}
             >
               {isTranslating ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -526,7 +519,7 @@ ${latexCode}
           <div className="flex gap-2 shrink-0">
             <button
               onClick={() => setIsPreview(!isPreview)}
-              className={`p-1.5 border ${isPreview ? "bg-black text-white border-black" : "border-zinc-200 text-zinc-600"}  `}
+              className={`p-1.5 border ${isPreview ? "bg-ink text-white border-ink" : "border-border text-ink-muted"}  `}
               title="Toggle PDF preview"
             >
               <FileText className="w-4 h-4" />
@@ -537,7 +530,7 @@ ${latexCode}
                   activeSidebar === "comments" ? "none" : "comments",
                 )
               }
-              className={`p-1.5 border ${activeSidebar === "comments" ? "bg-black text-white border-black" : "border-zinc-200 text-zinc-600"}  `}
+              className={`p-1.5 border ${activeSidebar === "comments" ? "bg-ink text-white border-ink" : "border-border text-ink-muted"}  `}
             >
               <MessageSquare className="w-4 h-4" />
             </button>
@@ -545,7 +538,7 @@ ${latexCode}
               onClick={() =>
                 setActiveSidebar(activeSidebar === "toc" ? "none" : "toc")
               }
-              className={`p-1.5 border ${activeSidebar === "toc" ? "bg-black text-white border-black" : "border-zinc-200 text-zinc-600"}`}
+              className={`p-1.5 border ${activeSidebar === "toc" ? "bg-ink text-white border-ink" : "border-border text-ink-muted"}`}
               title="Table of contents"
             >
               <List className="w-4 h-4" />
@@ -556,14 +549,14 @@ ${latexCode}
                   activeSidebar === "history" ? "none" : "history",
                 )
               }
-              className={`p-1.5 border ${activeSidebar === "history" ? "bg-black text-white border-black" : "border-zinc-200 text-zinc-600"}`}
+              className={`p-1.5 border ${activeSidebar === "history" ? "bg-ink text-white border-ink" : "border-border text-ink-muted"}`}
               title="Version history"
             >
               <History className="w-4 h-4" />
             </button>
             <button
               onClick={() => setIsZenMode(true)}
-              className="p-1.5 border border-zinc-200 text-zinc-600   "
+              className="p-1.5 border border-border text-ink-muted   "
             >
               <Maximize2 className="w-4 h-4" />
             </button>
@@ -574,7 +567,7 @@ ${latexCode}
       {isZenMode && (
         <button
           onClick={() => setIsZenMode(false)}
-          className="fixed top-4 right-4 p-2 bg-white/80 backdrop-blur border border-zinc-200 text-zinc-400  z-[60] rounded-md  "
+          className="fixed top-4 right-4 p-2 bg-white/80 backdrop-blur border border-border text-ink-faint  z-[60] rounded-md  "
         >
           <Minimize2 className="w-5 h-5" />
         </button>
@@ -582,7 +575,7 @@ ${latexCode}
 
       <div className="flex-1 w-full flex overflow-hidden relative bg-white">
         {showFindReplace && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 bg-white border border-zinc-200 p-4">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 bg-white border border-border p-4">
             <div className="flex flex-col gap-3">
               <div className="flex justify-between items-center">
                 <span className="text-xs font-bold uppercase tracking-tight">
@@ -590,7 +583,7 @@ ${latexCode}
                 </span>
                 <button
                   onClick={() => setShowFindReplace(false)}
-                  className="text-zinc-400 p-1"
+                  className="text-ink-faint p-1"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -599,22 +592,22 @@ ${latexCode}
                 <input
                   type="text"
                   placeholder=""
-                  className="px-3 py-1.5 text-xs border border-zinc-200 focus:outline-none"
+                  className="px-3 py-1.5 text-xs border border-border focus:outline-none"
                   value={findText}
                   onChange={(e) => setFindText(e.target.value)}
                 />
-                <span className="text-xs text-zinc-400">{"->"}</span>
+                <span className="text-xs text-ink-faint">{"->"}</span>
                 <input
                   type="text"
                   placeholder=""
-                  className="px-3 py-1.5 text-xs border border-zinc-200 focus:outline-none"
+                  className="px-3 py-1.5 text-xs border border-border focus:outline-none"
                   value={replaceText}
                   onChange={(e) => setReplaceText(e.target.value)}
                 />
                 <button
                   onClick={executeFindReplace}
                   disabled={isFinding || !findText}
-                  className="px-4 py-1.5 bg-black text-white text-xs font-bold"
+                  className="px-4 py-1.5 bg-ink text-white text-xs font-bold"
                 >
                   {isFinding ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -628,7 +621,7 @@ ${latexCode}
         )}
 
         {showTranslateModal && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 bg-white border border-zinc-200 p-4 shadow-xl rounded-lg">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 bg-white border border-border p-4 shadow-xl rounded-lg">
             <div className="flex flex-col gap-3">
               <div className="flex justify-between items-center">
                 <span className="text-xs font-bold uppercase tracking-tight">
@@ -636,15 +629,15 @@ ${latexCode}
                 </span>
                 <button
                   onClick={() => setShowTranslateModal(false)}
-                  className="text-zinc-400 p-1 hover:bg-zinc-100 rounded"
+                  className="text-ink-faint p-1 hover:bg-surface-quiet rounded"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
               <div className="flex gap-2 items-center">
-                <span className="text-xs text-zinc-600 font-medium">To</span>
+                <span className="text-xs text-ink-muted font-medium">To</span>
                 <select
-                  className="px-3 py-1.5 text-xs border border-zinc-200 rounded focus:outline-none bg-white"
+                  className="px-3 py-1.5 text-xs border border-border rounded focus:outline-none bg-white"
                   value={targetLang}
                   onChange={(e) => setTargetLang(e.target.value)}
                 >
@@ -658,7 +651,7 @@ ${latexCode}
                 <button
                   onClick={handleTranslate}
                   disabled={isTranslating}
-                  className="px-4 py-1.5 bg-black text-white text-xs font-bold rounded-md hover:bg-zinc-800"
+                  className="px-4 py-1.5 bg-ink text-white text-xs font-bold rounded-md hover:bg-ink/90"
                 >
                   Translate
                 </button>
@@ -668,7 +661,7 @@ ${latexCode}
         )}
 
         <div
-          className={`h-full overflow-y-auto flex justify-center bg-white ${isPreview ? "w-1/2 border-r border-zinc-200" : activeSidebar !== "none" ? "w-2/3" : "w-full"}`}
+          className={`h-full overflow-y-auto flex justify-center bg-white ${isPreview ? "w-1/2 border-r border-border" : activeSidebar !== "none" ? "w-2/3" : "w-full"}`}
         >
           {contentFormat === "latex" ? (
             <LatexEditor
@@ -701,8 +694,8 @@ ${latexCode}
         </div>
 
         {activeSidebar !== "none" && (
-          <div className="w-1/3 h-full border-l border-zinc-200 bg-zinc-50 flex flex-col">
-            <div className="p-4 border-b border-zinc-200 flex justify-between items-center bg-white">
+          <div className="w-1/3 h-full border-l border-border bg-surface-raised flex flex-col">
+            <div className="p-4 border-b border-border flex justify-between items-center bg-white">
               <span className="text-xs font-bold uppercase tracking-tight">
                 {activeSidebar === "comments"
                   ? "Inline comments"
@@ -712,7 +705,7 @@ ${latexCode}
               </span>
               <button
                 onClick={() => setActiveSidebar("none")}
-                className="p-1 text-zinc-400 "
+                className="p-1 text-ink-faint "
               >
                 <X className="w-4 h-4" />
               </button>
@@ -721,18 +714,18 @@ ${latexCode}
               <div className="flex flex-col gap-3">
                 {loadingSidebar ? (
                   <div className="py-12 flex justify-center">
-                    <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
+                    <Loader2 className="w-6 h-6 animate-spin text-ink-faint" />
                   </div>
                 ) : activeSidebar === "toc" ? (
                   tocData.length === 0 ? (
-                    <div className="p-8 border border-zinc-200 bg-white text-xs text-zinc-400 text-center italic">
+                    <div className="p-8 border border-border bg-white text-xs text-ink-faint text-center italic">
                       No headings found
                     </div>
                   ) : (
                     tocData.map((item, idx) => (
                       <div
                         key={item.id || `toc-${idx}`}
-                        className="p-2 border border-zinc-200 bg-white text-xs text-black font-medium cursor-pointer"
+                        className="p-2 border border-border bg-white text-xs text-ink font-medium cursor-pointer"
                         style={{ marginLeft: `${(item.level - 1) * 16}px` }}
                         onClick={() => {
                           const elements =
@@ -753,24 +746,24 @@ ${latexCode}
                     ))
                   )
                 ) : sidebarData.length === 0 ? (
-                  <div className="p-8 border border-zinc-200 bg-white text-xs text-zinc-400 text-center italic">
+                  <div className="p-8 border border-border bg-white text-xs text-ink-faint text-center italic">
                     No data available
                   </div>
                 ) : activeSidebar === "history" ? (
                   sidebarData.map((v, idx) => (
                     <div
                       key={v.id || `history-${idx}`}
-                      className="p-4 border border-zinc-200 bg-white space-y-2"
+                      className="p-4 border border-border bg-white space-y-2"
                     >
                       <div className="flex justify-between items-start">
-                        <span className="text-[10px] font-bold text-zinc-400 uppercase">
+                        <span className="text-[10px] font-bold text-ink-faint uppercase">
                           {v.created_at
                             ? new Date(v.created_at).toLocaleString("vi-VN")
                             : ""}
                         </span>
-                        <Clock className="w-3 h-3 text-zinc-300" />
+                        <Clock className="w-3 h-3 text-ink-faint" />
                       </div>
-                      <p className="text-xs font-medium text-black">
+                      <p className="text-xs font-medium text-ink">
                         Saved by {v.author_name || "System"}
                       </p>
                     </div>
@@ -779,7 +772,7 @@ ${latexCode}
                   sidebarData.map((c, idx) => (
                     <div
                       key={c.id || `comment-${idx}`}
-                      className="p-4 border border-zinc-200 bg-white space-y-2 cursor-pointer  "
+                      className="p-4 border border-border bg-white space-y-2 cursor-pointer  "
                       onClick={() => {
                         if (c.selected_text || c.content) {
                           const searchText = c.selected_text || c.content;
@@ -791,10 +784,10 @@ ${latexCode}
                                 behavior: "smooth",
                                 block: "center",
                               });
-                              elements[i].classList.add("bg-zinc-100", "", "");
+                              elements[i].classList.add("bg-surface-quiet", "", "");
                               setTimeout(
                                 () =>
-                                  elements[i].classList.remove("bg-zinc-100"),
+                                  elements[i].classList.remove("bg-surface-quiet"),
                                 2000,
                               );
                               break;
@@ -804,21 +797,21 @@ ${latexCode}
                       }}
                     >
                       <div className="flex justify-between items-start">
-                        <span className="text-[10px] font-bold text-zinc-400 uppercase">
+                        <span className="text-[10px] font-bold text-ink-faint uppercase">
                           {c.created_at
                             ? new Date(c.created_at).toLocaleString("vi-VN")
                             : ""}
                         </span>
-                        <MessageSquare className="w-3 h-3 text-zinc-300" />
+                        <MessageSquare className="w-3 h-3 text-ink-faint" />
                       </div>
-                      <p className="text-xs font-bold text-black border-b border-zinc-100 pb-1">
+                      <p className="text-xs font-bold text-ink border-b border-border pb-1">
                         {c.user_name || "Guest"}
                       </p>
-                      <p className="text-xs font-medium text-black">
+                      <p className="text-xs font-medium text-ink">
                         {c.text || c.content}
                       </p>
                       <div className="pt-2 flex justify-end">
-                        <button className="text-[10px] font-bold text-zinc-400  uppercase">
+                        <button className="text-[10px] font-bold text-ink-faint  uppercase">
                           Resolve
                         </button>
                       </div>
@@ -831,57 +824,57 @@ ${latexCode}
         )}
 
         {isPreview && previewPdfUrl && (
-          <div className="w-1/2 h-full border-l border-zinc-200 overflow-hidden bg-white flex flex-col relative">
-            <div className="px-4 py-3 bg-black text-white text-xs flex justify-between items-center">
+          <div className="w-1/2 h-full border-l border-border overflow-hidden bg-white flex flex-col relative">
+            <div className="px-4 py-3 bg-ink text-white text-xs flex justify-between items-center">
               <span className="font-bold uppercase tracking-tight">
                 PDF preview
               </span>
               <a
                 href={previewPdfUrl}
                 download="doclib-preview.pdf"
-                className="p-1.5 text-zinc-300 "
+                className="p-1.5 text-ink-faint "
               >
                 <Download className="w-4 h-4" />
               </a>
             </div>
-            <div className="flex-1 bg-zinc-100 p-4">
+            <div className="flex-1 bg-surface-quiet p-4">
               <iframe
                 src={previewPdfUrl}
-                className="w-full h-full bg-white border border-zinc-200"
+                className="w-full h-full bg-white border border-border"
               />
             </div>
           </div>
         )}
       </div>
 
-      <div className="h-10 border-t border-[#D2D2D7] bg-white px-6 flex items-center justify-between shrink-0 z-30">
+      <div className="h-10 border-t border-border bg-white px-6 flex items-center justify-between shrink-0 z-30">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
-            <span className="text-[13px] text-[#6E6E73]">Speed</span>
-            <span className="text-[13px] font-medium text-[#1D1D1F]">
+            <span className="text-[13px] text-ink-muted">Speed</span>
+            <span className="text-[13px] font-medium text-ink">
               {stats.wpm} WPM
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[13px] text-[#6E6E73]">Characters</span>
-            <span className="text-[13px] font-medium text-[#1D1D1F]">
+            <span className="text-[13px] text-ink-muted">Characters</span>
+            <span className="text-[13px] font-medium text-ink">
               {stats.charCount}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[13px] text-[#6E6E73]">Reading time</span>
-            <span className="text-[13px] font-medium text-[#1D1D1F]">
+            <span className="text-[13px] text-ink-muted">Reading time</span>
+            <span className="text-[13px] font-medium text-ink">
               {readingTime} minutes
             </span>
           </div>
           {tags.length > 0 && (
             <div className="flex items-center gap-2">
-              <span className="text-[13px] text-[#6E6E73]">Tags</span>
+              <span className="text-[13px] text-ink-muted">Tags</span>
               <div className="flex gap-1.5">
                 {tags.map((t, idx) => (
                   <span
                     key={idx}
-                    className="px-2 py-0.5 bg-[#F5F5F7] rounded-md text-[13px] text-[#6E6E73] font-medium"
+                    className="px-2 py-0.5 bg-surface-quiet rounded-md text-[13px] text-ink-muted font-medium"
                   >
                     #{t}
                   </span>
@@ -893,30 +886,30 @@ ${latexCode}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <span
-              className={`w-2 h-2 rounded-full ${onlineUsers > 1 ? "bg-[#34C759]" : "bg-[#D2D2D7]"}`}
+              className={`w-2 h-2 rounded-full ${onlineUsers > 1 ? "bg-brand" : "bg-border"}`}
             ></span>
-            <span className="text-[13px] text-[#6E6E73]">Collaboration</span>
-            <span className="text-[13px] font-medium text-[#1D1D1F]">
+            <span className="text-[13px] text-ink-muted">Collaboration</span>
+            <span className="text-[13px] font-medium text-ink">
               {onlineUsers > 1
                 ? `${onlineUsers} online`
                 : "Online"}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[13px] text-[#6E6E73]">Status</span>
-            <span className="text-[13px] font-medium text-[#1D1D1F]">
+            <span className="text-[13px] text-ink-muted">Status</span>
+            <span className="text-[13px] font-medium text-ink">
               {saveStatus}
             </span>
           </div>
-          <div className="w-32 h-1.5 bg-[#E8E8ED] rounded-full relative overflow-hidden">
+          <div className="w-32 h-1.5 bg-border rounded-full relative overflow-hidden">
             <div
-              className="absolute top-0 left-0 h-full bg-[#0071E3] transition-all duration-300"
+              className="absolute top-0 left-0 h-full bg-brand transition-all duration-300"
               style={{
                 width: `${Math.min(100, (stats.charCount / parseInt(typeof window !== "undefined" ? localStorage.getItem("doclib_daily_goal") || "5000" : "5000")) * 100)}%`,
               }}
             />
           </div>
-          <span className="text-[13px] text-[#6E6E73]">Daily goal</span>
+          <span className="text-[13px] text-ink-muted">Daily goal</span>
         </div>
       </div>
     </div>

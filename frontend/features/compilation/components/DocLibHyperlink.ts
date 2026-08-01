@@ -89,7 +89,7 @@ export default class DocLibHyperlink implements InlineTool {
     this.tooltipInput.style.width = "100%";
     this.tooltipInput.style.boxSizing = "border-box";
     this.tooltipInput.style.padding = "5px 10px";
-    this.tooltipInput.style.border = "1px solid #e1e1e1";
+    this.tooltipInput.style.border = "1px solid hsl(var(--border))";
     this.tooltipInput.style.marginTop = "5px";
 
     if (this.spanTooltip && this.spanTooltip.getAttribute("href")) {

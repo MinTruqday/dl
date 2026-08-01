@@ -52,8 +52,8 @@ export default class DocLibEmbed implements BlockTool {
       style.innerHTML = `
             .doclib-embed-wrapper { text-align: center; }
             .doclib-embed-iframe { max-width: 100%; border: none; border-radius: 8px; margin-bottom: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-            .doclib-embed-caption { outline: none; text-align: center; color: #64748b; font-size: 0.9em; padding: 4px; }
-            .doclib-embed-caption:empty::before { content: 'DocLib Input'; color: #94a3b8; pointer-events: none; }
+            .doclib-embed-caption { outline: none; text-align: center; color: hsl(var(--ink-muted)); font-size: 0.9em; padding: 4px; }
+            .doclib-embed-caption:empty::before { content: 'DocLib Input'; color: hsl(var(--ink-faint)); pointer-events: none; }
             .doclib-embed-input-container { display: flex; align-items: center; }
             .doclib-embed-input { flex-grow: 1; margin-right: 12px; }
         `;

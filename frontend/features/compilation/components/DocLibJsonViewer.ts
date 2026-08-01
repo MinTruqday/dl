@@ -51,10 +51,10 @@ export default class DocLibJsonViewer implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-json { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; font-family: monospace; font-size: 13px; color: #0f172a; position: relative; }
-      .doclib-json-textarea { width: 100%; min-height: 150px; background: transparent; border: none; font-family: inherit; font-size: inherit; resize: vertical; outline: none; line-height: 1.5; color: #0f172a; }
-      .doclib-json-label { position: absolute; top: -10px; right: 16px; background: #f59e0b; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-family: sans-serif; font-weight: bold; }
-      .doclib-json-error { color: #ef4444; font-size: 11px; margin-top: 8px; font-family: sans-serif; }
+      .doclib-json { background: hsl(var(--surface-raised)); border: 1px solid hsl(var(--border)); border-radius: 8px; padding: 16px; font-family: monospace; font-size: 13px; color: hsl(var(--ink)); position: relative; }
+      .doclib-json-textarea { width: 100%; min-height: 150px; background: transparent; border: none; font-family: inherit; font-size: inherit; resize: vertical; outline: none; line-height: 1.5; color: hsl(var(--ink)); }
+      .doclib-json-label { position: absolute; top: -10px; right: 16px; background: hsl(var(--warning)); color: hsl(var(--surface)); padding: 2px 8px; border-radius: 12px; font-size: 10px; font-family: sans-serif; font-weight: bold; }
+      .doclib-json-error { color: hsl(var(--danger)); font-size: 11px; margin-top: 8px; font-family: sans-serif; }
     `;
     this.wrapper.appendChild(style);
 

@@ -59,14 +59,14 @@ export default class DocLibImageCrop implements BlockTool {
       style.id = "doclib-image-crop-styles";
       style.innerHTML = `
             .doclib-ic-wrapper { margin: 16px 0; text-align: center; }
-            .doclib-ic-container { position: relative; width: 100%; aspect-ratio: 16/9; overflow: hidden; border-radius: 12px; background: #f1f5f9; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+            .doclib-ic-container { position: relative; width: 100%; aspect-ratio: 16/9; overflow: hidden; border-radius: 12px; background: hsl(var(--surface-quiet)); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
             .doclib-ic-img { width: 100%; height: 100%; object-fit: cover; }
-            .doclib-ic-controls { padding: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-top: 12px; display: grid; gap: 12px; grid-template-columns: 1fr 1fr 1fr; }
+            .doclib-ic-controls { padding: 16px; background: hsl(var(--surface-raised)); border: 1px solid hsl(var(--border)); border-radius: 8px; margin-top: 12px; display: grid; gap: 12px; grid-template-columns: 1fr 1fr 1fr; }
             .doclib-ic-control-group { display: flex; flex-direction: column; gap: 4px; text-align: left; }
-            .doclib-ic-label { font-size: 12px; font-weight: 600; color: #475569; text-transform: uppercase; }
-            .doclib-ic-slider { width: 100%; accent-color: #3b82f6; }
-            .doclib-ic-caption { outline: none; margin-top: 8px; color: #64748b; font-size: 0.9em; }
-            .doclib-ic-caption:empty::before { content: 'Enter image caption'; color: #cbd5e1; }
+            .doclib-ic-label { font-size: 12px; font-weight: 600; color: hsl(var(--ink-muted)); text-transform: uppercase; }
+            .doclib-ic-slider { width: 100%; accent-color: hsl(var(--brand)); }
+            .doclib-ic-caption { outline: none; margin-top: 8px; color: hsl(var(--ink-muted)); font-size: 0.9em; }
+            .doclib-ic-caption:empty::before { content: 'Enter image caption'; color: hsl(var(--border)); }
         `;
       document.head.appendChild(style);
     }
@@ -171,8 +171,8 @@ export default class DocLibImageCrop implements BlockTool {
     } else {
       const uploader = document.createElement("div");
       uploader.style.padding = "32px";
-      uploader.style.background = "#f8fafc";
-      uploader.style.border = "2px dashed #cbd5e1";
+      uploader.style.background = "hsl(var(--surface-raised))";
+      uploader.style.border = "2px dashed hsl(var(--border))";
       uploader.style.borderRadius = "8px";
       uploader.style.display = "flex";
       uploader.style.flexDirection = "column";

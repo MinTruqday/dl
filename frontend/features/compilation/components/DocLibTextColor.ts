@@ -51,7 +51,7 @@ export default class DocLibColorPicker implements InlineTool {
       "#9C27B0",
       "#673AB7",
       "#3F51B5",
-      "#0070FF",
+      "hsl(var(--brand))",
       "#03A9F4",
       "#00BCD4",
       "#4CAF50",

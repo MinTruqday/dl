@@ -47,7 +47,7 @@ export default class DocLibAnnotation implements InlineTool {
       style.id = "doclib-annotation-styles";
       style.innerHTML = `
             .cdx-annotation { background-color: rgba(255, 212, 0, 0.4); border-bottom: 2px solid #ffd400; padding: 2px 0; border-radius: 2px; position: relative; }
-            .cdx-annotation:hover::after { content: attr(data-text); position: absolute; left: 0; background: #333; color: #fff; padding: 5px 10px; border-radius: 4px; font-size: 12px; z-index: 100; top: 100%; margin-top: 5px; white-space: nowrap; pointer-events: none; }
+            .cdx-annotation:hover::after { content: attr(data-text); position: absolute; left: 0; background: #333; color: hsl(var(--surface)); padding: 5px 10px; border-radius: 4px; font-size: 12px; z-index: 100; top: 100%; margin-top: 5px; white-space: nowrap; pointer-events: none; }
         `;
       document.head.appendChild(style);
     }
@@ -105,7 +105,7 @@ export default class DocLibAnnotation implements InlineTool {
     this.tooltipInput.style.width = "100%";
     this.tooltipInput.style.boxSizing = "border-box";
     this.tooltipInput.style.padding = "5px 10px";
-    this.tooltipInput.style.border = "1px solid #e1e1e1";
+    this.tooltipInput.style.border = "1px solid hsl(var(--border))";
     this.tooltipInput.style.marginTop = "5px";
 
     if (this.spanTooltip && this.spanTooltip.dataset.text) {

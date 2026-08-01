@@ -21,23 +21,23 @@ export function Button({
   ...props
 }: ButtonProps) {
   const vClass = {
-    primary: "bg-black text-white border-black ",
-    secondary: "bg-white text-black border-zinc-200 ",
-    outline: "bg-transparent text-black border-zinc-200 ",
-    ghost: "bg-transparent text-black border-transparent ",
-    danger: "bg-white text-black border-zinc-200 ",
+    primary: "border-brand bg-brand text-white hover:border-brand-hover hover:bg-brand-hover",
+    secondary: "border-border-strong bg-surface text-ink hover:bg-surface-quiet",
+    outline: "border-border-strong bg-transparent text-ink hover:bg-surface-quiet",
+    ghost: "border-transparent bg-transparent text-ink hover:bg-surface-quiet",
+    danger: "border-danger bg-danger text-white hover:bg-danger/90",
   };
 
   const sClass = {
-    sm: "px-3 py-1.5 text-[11px] font-bold border",
-    md: "px-5 py-2.5 text-xs font-bold border",
-    lg: "px-8 py-3.5 text-sm font-bold border",
-    icon: "p-2 border border-zinc-200 ",
+    sm: "min-h-9 px-3 py-1.5 text-[13px] border",
+    md: "min-h-11 px-4 py-2.5 text-[14px] border",
+    lg: "min-h-12 px-5 py-3 text-[15px] border",
+    icon: "h-11 w-11 border p-2",
   };
 
   return (
     <button
-      className={`inline-flex items-center justify-center font-sans disabled:opacity-50 disabled:cursor-not-allowed rounded-none ${vClass[variant]} ${sClass[size]} ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-control font-semibold transition duration-150 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50 ${vClass[variant]} ${sClass[size]} ${className}`}
       {...props}
     >
       {icon && <span className={children ? "mr-2" : ""}>{icon}</span>}

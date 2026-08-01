@@ -97,38 +97,38 @@ function SearchResultsContent() {
   }, [loadResults, query, saveToHistory]);
 
   return (
-    <div className="w-full h-full font-sans text-[#1D1D1F]">
+    <div className="w-full h-full font-sans text-ink">
       <div className="flex flex-col md:flex-row gap-6">
         <aside className="w-full md:w-[320px] shrink-0 space-y-6">
-          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
-            <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
+          <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
+            <p className="text-[13px] font-medium text-ink-muted mb-4">
               Giao diện
             </p>
-            <div className="flex bg-[#E8E8ED] p-0.5 rounded-full shrink-0">
+            <div className="flex bg-border p-0.5 rounded-full shrink-0">
               <button
                 onClick={() => setViewMode("grid")}
-                className={`p-1.5 rounded-full transition-colors ${viewMode === "grid" ? "bg-white text-[#0071E3] font-medium" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}
+                className={`p-1.5 rounded-full transition-colors ${viewMode === "grid" ? "bg-white text-brand font-medium" : "text-ink-muted hover:text-ink"}`}
               >
                 <LayoutGrid className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setViewMode("list")}
-                className={`p-1.5 rounded-full transition-colors ${viewMode === "list" ? "bg-white text-[#0071E3] font-medium" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}
+                className={`p-1.5 rounded-full transition-colors ${viewMode === "list" ? "bg-white text-brand font-medium" : "text-ink-muted hover:text-ink"}`}
               >
                 <List className="w-4 h-4" />
               </button>
             </div>
           </div>
-          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6">
+          <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6">
             <div className="flex items-center justify-between mb-6">
-              <span className="text-[15px] font-semibold text-[#1D1D1F]">
+              <span className="text-[15px] font-semibold text-ink">
                 Bộ lọc nâng cao
               </span>
             </div>
 
             <div className="space-y-6">
               <div className="space-y-2">
-                <label className="text-[13px] font-medium text-[#6E6E73] block mb-2">
+                <label className="text-[13px] font-medium text-ink-muted block mb-2">
                   Sắp xếp theo
                 </label>
                 <div className="flex flex-col gap-1">
@@ -139,7 +139,7 @@ function SearchResultsContent() {
                     <button
                       key={s.id}
                       onClick={() => setFilters({ ...filters, sort: s.id })}
-                      className={`flex items-center justify-between px-3 py-2 text-[14px] rounded-[10px] transition-colors ${filters.sort === s.id ? "bg-white text-[#0071E3] font-medium" : "text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}
+                      className={`flex items-center justify-between px-3 py-2 text-[14px] rounded-control transition-colors ${filters.sort === s.id ? "bg-white text-brand font-medium" : "text-ink hover:bg-border"}`}
                     >
                       <span>{s.label}</span>
                     </button>
@@ -148,7 +148,7 @@ function SearchResultsContent() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[13px] font-medium text-[#6E6E73] block mb-2">
+                <label className="text-[13px] font-medium text-ink-muted block mb-2">
                   Thời gian xuất bản
                 </label>
                 <div className="flex flex-col gap-1">
@@ -161,7 +161,7 @@ function SearchResultsContent() {
                     <button
                       key={t.id}
                       onClick={() => setFilters({ ...filters, time: t.id })}
-                      className={`flex items-center justify-between px-3 py-2 text-[14px] rounded-[10px] transition-colors ${filters.time === t.id ? "bg-white text-[#0071E3] font-medium" : "text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}
+                      className={`flex items-center justify-between px-3 py-2 text-[14px] rounded-control transition-colors ${filters.time === t.id ? "bg-white text-brand font-medium" : "text-ink hover:bg-border"}`}
                     >
                       <span>{t.label}</span>
                     </button>
@@ -170,7 +170,7 @@ function SearchResultsContent() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[13px] font-medium text-[#6E6E73] block mb-2">
+                <label className="text-[13px] font-medium text-ink-muted block mb-2">
                   Giá tài liệu
                 </label>
                 <div className="flex flex-col gap-1">
@@ -182,7 +182,7 @@ function SearchResultsContent() {
                     <button
                       key={p.id}
                       onClick={() => setFilters({ ...filters, price: p.id })}
-                      className={`flex items-center justify-between px-3 py-2 text-[14px] rounded-[10px] transition-colors ${filters.price === p.id ? "bg-white text-[#0071E3] font-medium" : "text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}
+                      className={`flex items-center justify-between px-3 py-2 text-[14px] rounded-control transition-colors ${filters.price === p.id ? "bg-white text-brand font-medium" : "text-ink hover:bg-border"}`}
                     >
                       <span>{p.label}</span>
                     </button>
@@ -193,14 +193,14 @@ function SearchResultsContent() {
           </div>
 
           {history.length > 0 && (
-            <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6">
+            <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-[15px] font-semibold text-[#1D1D1F]">
+                <span className="text-[15px] font-semibold text-ink">
                   Tìm kiếm gần đây
                 </span>
                 <button
                   onClick={clearHistory}
-                  className="text-[13px] text-[#0071E3] hover:underline font-medium"
+                  className="text-[13px] text-brand hover:underline font-medium"
                 >
                   Xóa lịch sử
                 </button>
@@ -210,7 +210,7 @@ function SearchResultsContent() {
                   <div key={h} className="group relative">
                     <Link
                       href={`/tim-kiem?q=${h}`}
-                      className="block text-[13px] font-medium px-4 py-2 bg-[#F5F5F7] text-[#1D1D1F] rounded-full pr-8 hover:bg-[#E8E8ED] transition-colors"
+                      className="block text-[13px] font-medium px-4 py-2 bg-surface-quiet text-ink rounded-full pr-8 hover:bg-border transition-colors"
                     >
                       {h}
                     </Link>
@@ -224,7 +224,7 @@ function SearchResultsContent() {
                           JSON.stringify(newHistory),
                         );
                       }}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-[#6E6E73] opacity-0 group-hover:opacity-100 hover:text-[#FF3B30] transition-opacity"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-ink-muted opacity-0 group-hover:opacity-100 hover:text-danger transition-opacity"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -243,17 +243,17 @@ function SearchResultsContent() {
               {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
                 <div
                   key={i}
-                  className={`flex ${viewMode === "grid" ? "flex-col" : "flex-row gap-6 p-4"} bg-[#F5F5F7] rounded-[18px] overflow-hidden animate-pulse`}
+                  className={`flex ${viewMode === "grid" ? "flex-col" : "flex-row gap-6 p-4"} bg-surface-quiet rounded-panel overflow-hidden animate-pulse`}
                 >
                   <div
-                    className={`bg-[#E8E8ED] ${viewMode === "grid" ? "aspect-[3/4] w-full" : "w-24 h-32 shrink-0 rounded-[10px]"}`}
+                    className={`bg-border ${viewMode === "grid" ? "aspect-[3/4] w-full" : "w-24 h-32 shrink-0 rounded-control"}`}
                   />
                   <div
                     className={`${viewMode === "grid" ? "p-4" : "flex-1"} space-y-3`}
                   >
-                    <div className="h-3 w-1/3 bg-[#E8E8ED] rounded-full" />
-                    <div className="h-4 w-full bg-[#E8E8ED] rounded-full" />
-                    <div className="h-4 w-2/3 bg-[#E8E8ED] rounded-full" />
+                    <div className="h-3 w-1/3 bg-border rounded-full" />
+                    <div className="h-4 w-full bg-border rounded-full" />
+                    <div className="h-4 w-2/3 bg-border rounded-full" />
                   </div>
                 </div>
               ))}
@@ -266,10 +266,10 @@ function SearchResultsContent() {
                 <Link
                   key={`doc-${document._id || i}`}
                   href={`/tai-lieu/${document.slug}`}
-                  className={`flex ${viewMode === "grid" ? "flex-col" : "flex-row gap-6 p-4 items-center"} bg-[#F5F5F7] rounded-[18px] overflow-hidden transition-transform hover:scale-[1.02]`}
+                  className={`flex ${viewMode === "grid" ? "flex-col" : "flex-row gap-6 p-4 items-center"} bg-surface-quiet rounded-panel overflow-hidden transition-transform hover:scale-[1.02]`}
                 >
                   <div
-                    className={`${viewMode === "grid" ? "aspect-[4/3] w-full" : "w-[120px] h-[120px] shrink-0 rounded-[10px]"} bg-white relative overflow-hidden`}
+                    className={`${viewMode === "grid" ? "aspect-[4/3] w-full" : "w-[120px] h-[120px] shrink-0 rounded-control"} bg-white relative overflow-hidden`}
                   >
                     {document.cover_url ? (
                       <img
@@ -291,7 +291,7 @@ function SearchResultsContent() {
                           .map((tag: string, idx: number) => (
                             <span
                               key={idx}
-                              className="text-[12px] font-medium text-[#0071E3]"
+                              className="text-[12px] font-medium text-brand"
                             >
                               {tag}
                             </span>
@@ -299,11 +299,11 @@ function SearchResultsContent() {
                       </div>
                     )}
                     <h3
-                      className={`${viewMode === "grid" ? "text-[17px]" : "text-[17px]"} font-medium text-[#1D1D1F] line-clamp-2 leading-snug`}
+                      className={`${viewMode === "grid" ? "text-[17px]" : "text-[17px]"} font-medium text-ink line-clamp-2 leading-snug`}
                     >
                       {document.title}
                     </h3>
-                    <div className="text-[13px] text-[#6E6E73] flex items-center gap-2">
+                    <div className="text-[13px] text-ink-muted flex items-center gap-2">
                       <span className="truncate">
                         {document.author_name ||
                           document.author?.full_name ||
@@ -319,7 +319,7 @@ function SearchResultsContent() {
                           : "Gần đây"}
                       </span>
                     </div>
-                    <div className="flex items-center gap-4 text-[13px] text-[#6E6E73] mt-1">
+                    <div className="flex items-center gap-4 text-[13px] text-ink-muted mt-1">
                       <span className="flex items-center gap-1.5">
                         <Eye className="w-3.5 h-3.5" />{" "}
                         {document.views_count?.toLocaleString("vi-VN") ||
@@ -328,12 +328,12 @@ function SearchResultsContent() {
                       </span>
                     </div>
                     <div className="mt-4 pt-4 flex items-center justify-between">
-                      <span className="text-[15px] font-medium text-[#1D1D1F]">
+                      <span className="text-[15px] font-medium text-ink">
                         {document.price_dl > 0
                           ? `${document.price_dl} dl`
                           : "Miễn phí"}
                       </span>
-                      <span className="text-[15px] text-[#0071E3] font-medium">
+                      <span className="text-[15px] text-brand font-medium">
                         Xem chi tiết
                       </span>
                     </div>
@@ -342,14 +342,14 @@ function SearchResultsContent() {
               ))}
             </div>
           ) : (
-            <div className="py-32 flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[18px]">
+            <div className="py-32 flex flex-col items-center justify-center bg-surface-quiet rounded-panel">
               <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4">
-                <BookOpen className="w-8 h-8 text-[#C7C7CC]" />
+                <BookOpen className="w-8 h-8 text-ink-faint" />
               </div>
-              <p className="text-[13px] font-medium text-[#6E6E73] mb-4 mb-2">
+              <p className="text-[13px] font-medium text-ink-muted mb-2">
                 Chưa có kết quả
               </p>
-              <p className="text-[17px] text-[#6E6E73]">
+              <p className="text-[17px] text-ink-muted">
                 Thử thay đổi từ khóa hoặc bộ lọc để tìm kiếm lại.
               </p>
             </div>

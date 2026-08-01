@@ -35,10 +35,10 @@ export default class DocLibTemplate implements InlineTool {
       const style = document.createElement("style");
       style.id = "doclib-template-styles";
       style.innerHTML = `
-            span.doclib-template-var { background: #f1f5f9; color: #3b82f6; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 0.9em; font-weight: 500; display: inline-block; border: 1px solid #cbd5e1; }
-            .doclib-tpl-picker { position: absolute; top: 100%; left: 0; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); z-index: 100; margin-top: 8px; width: 200px; }
-            .doclib-tpl-btn { background: transparent; border: none; text-align: left; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; color: #475569; transition: background 0.2s, color 0.2s; }
-            .doclib-tpl-btn:hover { background: #f1f5f9; color: #0f172a; }
+            span.doclib-template-var { background: hsl(var(--surface-quiet)); color: hsl(var(--brand)); padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 0.9em; font-weight: 500; display: inline-block; border: 1px solid hsl(var(--border)); }
+            .doclib-tpl-picker { position: absolute; top: 100%; left: 0; background: hsl(var(--surface)); border: 1px solid hsl(var(--border)); border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); z-index: 100; margin-top: 8px; width: 200px; }
+            .doclib-tpl-btn { background: transparent; border: none; text-align: left; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; color: hsl(var(--ink-muted)); transition: background 0.2s, color 0.2s; }
+            .doclib-tpl-btn:hover { background: hsl(var(--surface-quiet)); color: hsl(var(--ink)); }
         `;
       document.head.appendChild(style);
     }

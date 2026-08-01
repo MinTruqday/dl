@@ -54,7 +54,7 @@ export default class DocLibHeader implements BlockTool {
             h4.doclib-header { font-size: 1.25em; }
             h5.doclib-header { font-size: 1.1em; }
             h6.doclib-header { font-size: 1em; }
-            .doclib-header[data-placeholder]:empty::before { content: attr(data-placeholder); color: #94a3b8; pointer-events: none; font-weight: normal; }
+            .doclib-header[data-placeholder]:empty::before { content: attr(data-placeholder); color: hsl(var(--ink-faint)); pointer-events: none; font-weight: normal; }
         `;
       document.head.appendChild(style);
     }

@@ -48,10 +48,10 @@ export default class DocLibMath implements BlockTool {
       const style = document.createElement("style");
       style.id = "doclib-math-styles";
       style.innerHTML = `
-            .doclib-math-wrapper { margin: 16px 0; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; background: #f8fafc; text-align: center; }
+            .doclib-math-wrapper { margin: 16px 0; border: 1px solid hsl(var(--border)); border-radius: 8px; padding: 16px; background: hsl(var(--surface-raised)); text-align: center; }
             .doclib-math-display { font-size: 1.5em; min-height: 40px; display: flex; align-items: center; justify-content: center; overflow-x: auto; padding: 12px 0; }
-            .doclib-math-input { width: 100%; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 12px; font-family: monospace; outline: none; margin-top: 16px; font-size: 14px; background: #fff; }
-            .doclib-math-input:focus { border-color: #3b82f6; }
+            .doclib-math-input { width: 100%; border: 1px solid hsl(var(--border)); border-radius: 6px; padding: 8px 12px; font-family: monospace; outline: none; margin-top: 16px; font-size: 14px; background: hsl(var(--surface)); }
+            .doclib-math-input:focus { border-color: hsl(var(--brand)); }
         `;
       document.head.appendChild(style);
     }

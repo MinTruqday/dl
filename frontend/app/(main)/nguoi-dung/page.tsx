@@ -89,7 +89,7 @@ export default function UsersManagementPage() {
       setNewUserForm({ email: "", full_name: "", password: "", role: "reader" });
       fetchData();
     } catch (e: any) {
-      showToast(e.message || "Lỗi khởi tạo tài khoản hệ thống", "error");
+      showToast(e.message || "Không thể tạo tài khoản hệ thống", "error");
     } finally {
       setIsCreating(false);
     }
@@ -101,7 +101,7 @@ export default function UsersManagementPage() {
       const data = await getUsersAPI(100, 0);
       setUsers(data.data || data || []);
     } catch (err: any) {
-      showToast("Lỗi trích xuất bộ sưu tập tài khoản", "error");
+      showToast("Không thể tải bộ sưu tập tài khoản", "error");
     } finally {
       setIsRefreshing(false);
       setIsLoading(false);
@@ -123,7 +123,7 @@ export default function UsersManagementPage() {
       fetchData();
       setConfirmModal(null);
     } catch (err: any) {
-      showToast(err.message || "Lỗi cập nhật phân quyền truy cập", "error");
+      showToast(err.message || "Không thể cập nhật phân quyền truy cập", "error");
     } finally {
       setIsUpdating(false);
     }
@@ -143,7 +143,7 @@ export default function UsersManagementPage() {
       fetchData();
       setConfirmModal(null);
     } catch (err: any) {
-      showToast(err.message || "Lỗi cập nhật trạng thái tài khoản", "error");
+      showToast(err.message || "Không thể cập nhật trạng thái tài khoản", "error");
     } finally {
       setIsUpdating(false);
     }
@@ -173,14 +173,14 @@ export default function UsersManagementPage() {
   if (user?.role !== "admin")
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-56px)] gap-6 font-sans text-center">
-        <div className="w-24 h-24 bg-[#F5F5F7] flex items-center justify-center rounded-[18px]">
-          <AlertTriangle className="w-10 h-10 text-[#FF9500]" />
+        <div className="w-24 h-24 bg-surface-quiet flex items-center justify-center rounded-panel">
+          <AlertTriangle className="w-10 h-10 text-warning" />
         </div>
         <div className="space-y-2 max-w-[300px]">
-          <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
+          <p className="text-[13px] font-medium text-ink-muted mb-4">
             Truy cập bị hạn chế
           </p>
-          <p className="text-[15px] text-[#6E6E73]">
+          <p className="text-[15px] text-ink-muted">
             Bạn không có quyền quản trị để truy cập trang này.
           </p>
         </div>
@@ -188,7 +188,7 @@ export default function UsersManagementPage() {
     );
 
   return (
-    <div className="w-full h-full font-sans text-[#1D1D1F]">
+    <div className="w-full h-full font-sans text-ink">
       <div className="flex flex-col">
         <main className="flex-1 min-w-0 space-y-8 pt-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -198,14 +198,14 @@ export default function UsersManagementPage() {
                   <select
                     value={viewMode}
                     onChange={(e) => setViewMode(e.target.value as any)}
-                    className="w-full bg-transparent h-10 pr-8 text-[20px] font-semibold text-[#1D1D1F] focus:outline-none appearance-none cursor-pointer"
+                    className="w-full bg-transparent h-10 pr-8 text-[20px] font-semibold text-ink focus:outline-none appearance-none cursor-pointer"
                   >
                     <option value="all">Tất cả</option>
                     <option value="reader">Độc giả</option>
                     <option value="author">Tác giả</option>
                     <option value="admin">Quản trị viên</option>
                   </select>
-                  <ChevronRight className="absolute right-0 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6E6E73] pointer-events-none rotate-90" />
+                  <ChevronRight className="absolute right-0 top-1/2 -translate-y-1/2 w-5 h-5 text-ink-muted pointer-events-none rotate-90" />
                 </div>
               ) : (
                 <div className="relative w-full max-w-md">
@@ -215,14 +215,14 @@ export default function UsersManagementPage() {
               placeholder="Tìm kiếm email, tên"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-[#F5F5F7] h-10 px-4 pr-10 text-[15px] rounded-full focus:outline-none focus:ring-2 focus:ring-[#0071E3]/20 transition-all border border-transparent focus:border-[#0071E3]/20"
+                    className="w-full bg-surface-quiet h-10 px-4 pr-10 text-[15px] rounded-full focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all border border-transparent focus:border-brand/20"
                   />
                   <button
                     onClick={() => {
                       setShowSearch(false);
                       setSearchQuery("");
                     }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-[#6E6E73] hover:text-[#1D1D1F] rounded-full transition-colors"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-ink-muted hover:text-ink rounded-full transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -234,7 +234,7 @@ export default function UsersManagementPage() {
               {!showSearch && (
                 <button
                   onClick={() => setShowSearch(true)}
-                  className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors"
+                  className="p-2 bg-surface-quiet text-ink hover:bg-border rounded-full transition-colors"
                   title="Tìm kiếm"
                 >
                   <Search className="w-4 h-4" />
@@ -243,14 +243,14 @@ export default function UsersManagementPage() {
               <button
                 onClick={fetchData}
                 disabled={isRefreshing}
-                className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors disabled:opacity-50"
+                className="p-2 bg-surface-quiet text-ink hover:bg-border rounded-full transition-colors disabled:opacity-50"
                 title="Làm mới"
               >
                 <RefreshCcw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
               </button>
               <button
                 onClick={() => setCreateModalOpen(true)}
-                className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors"
+                className="p-2 bg-surface-quiet text-ink hover:bg-border rounded-full transition-colors"
                 title="Thêm mới"
               >
                 <UserPlus className="w-4 h-4" />
@@ -261,7 +261,7 @@ export default function UsersManagementPage() {
           <div className="w-full overflow-x-auto min-h-[400px] transition-colors">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="text-[13px] text-[#6E6E73] border-b border-[#E8E8ED]">
+                <tr className="text-[13px] text-ink-muted border-b border-border">
                   <th className="py-3 px-6 font-medium whitespace-nowrap text-center">Tên tài khoản</th>
                   <th className="py-3 px-6 font-medium whitespace-nowrap text-center">Email</th>
                   <th className="py-3 px-6 font-medium whitespace-nowrap text-center">Tên hiển thị</th>
@@ -275,8 +275,8 @@ export default function UsersManagementPage() {
                 {filteredUsers.length === 0 ? (
                   <tr>
                     <td colSpan={7}>
-                      <div className="py-24 flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[18px] w-full text-center my-4">
-                        <p className="text-[17px] text-[#6E6E73]">Chưa có dữ liệu</p>
+                      <div className="py-24 flex flex-col items-center justify-center bg-surface-quiet rounded-panel w-full text-center my-4">
+                        <p className="text-[17px] text-ink-muted">Chưa có dữ liệu</p>
                       </div>
                     </td>
                   </tr>
@@ -284,18 +284,18 @@ export default function UsersManagementPage() {
                   filteredUsers.map((u) => (
                     <tr
                       key={u._id}
-                      className="hover:bg-[#E8E8ED]/60 transition-colors group cursor-default"
+                      className="hover:bg-border/60 transition-colors group cursor-default"
                     >
                       <td className="py-3 px-6 text-center">
-                        <span className="font-medium text-[14px] text-[#1D1D1F]">@{u.slug || u._id?.substring(0,8)}</span>
+                        <span className="font-medium text-[14px] text-ink">@{u.slug || u._id?.substring(0,8)}</span>
                       </td>
                       <td className="py-3 px-6 text-center">
-                        <span className="text-[14px] text-[#6E6E73]">
+                        <span className="text-[14px] text-ink-muted">
                           {u.email}
                         </span>
                       </td>
                       <td className="py-3 px-6 text-center">
-                        <span className="font-medium text-[14px] text-[#1D1D1F] truncate max-w-[200px] inline-block">
+                        <span className="font-medium text-[14px] text-ink truncate max-w-[200px] inline-block">
                           {u.full_name || "Thành viên DocLib"}
                         </span>
                       </td>
@@ -310,24 +310,24 @@ export default function UsersManagementPage() {
                                 value: e.target.value,
                               })
                             }
-                            className={`w-full bg-transparent h-[32px] px-2 text-[13px] font-medium rounded-md focus:outline-none appearance-none transition-colors hover:bg-[#D2D2D7]/50 ${u.role === "admin" ? "text-[#0071E3]" : "text-[#1D1D1F]"}`}
+                            className={`w-full bg-transparent h-[32px] px-2 text-[13px] font-medium rounded-md focus:outline-none appearance-none transition-colors hover:bg-border/50 ${u.role === "admin" ? "text-brand" : "text-ink"}`}
                           >
                             <option value="reader">Độc giả</option>
                             <option value="author">Tác giả</option>
 
                             <option value="admin">Quản trị</option>
                           </select>
-                          <ChevronRight className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#6E6E73] pointer-events-none" />
+                          <ChevronRight className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ink-muted pointer-events-none" />
                         </div>
                       </td>
-                      <td className="py-3 px-6 text-[#6E6E73] text-[13px] hidden md:table-cell text-center">
+                      <td className="py-3 px-6 text-ink-muted text-[13px] hidden md:table-cell text-center">
                         {u.created_at
                           ? new Date(u.created_at).toLocaleDateString("vi-VN")
                           : "---"}
                       </td>
                       <td className="py-3 px-6 hidden md:table-cell text-center">
                         <div
-                          className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-[12px] font-medium whitespace-nowrap ${u.is_active ? "bg-[#E8F5E9] text-[#34C759]" : "bg-[#FF3B30]/10 text-[#FF3B30]"}`}
+                          className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-[12px] font-medium whitespace-nowrap ${u.is_active ? "bg-brand-soft text-brand" : "bg-danger/10 text-danger"}`}
                         >
                           {u.is_active ? "Hoạt động" : "Tạm khóa"}
                         </div>
@@ -340,7 +340,7 @@ export default function UsersManagementPage() {
                               openDropdownId === u._id ? null : u._id,
                             );
                           }}
-                          className="p-2 text-[#6E6E73] hover:text-[#1D1D1F] hover:bg-[#D2D2D7]/50 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                          className="p-2 text-ink-muted hover:text-ink hover:bg-border/50 rounded-full transition-colors opacity-0 group-hover:opacity-100"
                         >
                           <MoreVertical className="w-4 h-4" />
                         </button>
@@ -350,7 +350,7 @@ export default function UsersManagementPage() {
                               className="fixed inset-0 z-40"
                               onClick={() => setOpenDropdownId(null)}
                             />
-                            <div className="absolute right-6 top-10 mt-1 w-44 bg-white shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-[#E8E8ED] rounded-[10px] z-50 overflow-hidden py-1">
+                            <div className="absolute right-6 top-10 mt-1 w-44 bg-white shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-border rounded-control z-50 overflow-hidden py-1">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -361,23 +361,23 @@ export default function UsersManagementPage() {
                                     value: !u.is_active,
                                   });
                                 }}
-                                className="w-full text-left px-4 py-2 text-[14px] text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors flex items-center gap-2"
+                                className="w-full text-left px-4 py-2 text-[14px] text-ink hover:bg-surface-quiet transition-colors flex items-center gap-2"
                               >
                                 {u.is_active ? (
-                                  <Lock className="w-4 h-4 text-[#6E6E73]" />
+                                  <Lock className="w-4 h-4 text-ink-muted" />
                                 ) : (
-                                  <Unlock className="w-4 h-4 text-[#6E6E73]" />
+                                  <Unlock className="w-4 h-4 text-ink-muted" />
                                 )}{" "}
                                 {u.is_active ? "Khóa tài khoản" : "Kích hoạt"}
                               </button>
-                              <div className="w-full h-[1px] bg-[#E8E8ED] my-1"></div>
+                              <div className="w-full h-[1px] bg-border my-1"></div>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setOpenDropdownId(null);
                                   handleDeleteUser(u);
                                 }}
-                                className="w-full text-left px-4 py-2 text-[14px] text-[#FF3B30] hover:bg-[#FF3B30]/10 transition-colors flex items-center gap-2"
+                                className="w-full text-left px-4 py-2 text-[14px] text-danger hover:bg-danger/10 transition-colors flex items-center gap-2"
                               >
                                 <Trash2 className="w-4 h-4" /> Xóa dữ liệu
                               </button>
@@ -402,7 +402,7 @@ export default function UsersManagementPage() {
           <ModalTitle>Xác nhận thay đổi</ModalTitle>
         </ModalHeader>
         <ModalContent>
-          <p className="text-[15px] text-[#6E6E73] leading-relaxed">
+          <p className="text-[15px] text-ink-muted leading-relaxed">
             {confirmModal?.type === "role"
               ? `Thay đổi quyền hạn của "${confirmModal.user.full_name || confirmModal.user.email}" thành "${confirmModal.value === "reader" ? "Độc giả" : confirmModal.value === "author" ? "Tác giả" : "Quản trị viên"}"?`
               : `Bạn có chắc chắn muốn ${confirmModal?.value ? "kích hoạt" : "vô hiệu hóa"} tài khoản của "${confirmModal?.user.full_name || confirmModal?.user.email}"?`}
@@ -412,7 +412,7 @@ export default function UsersManagementPage() {
           <button
             onClick={() => setConfirmModal(null)}
             disabled={isUpdating}
-            className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full disabled:opacity-50"
+            className="px-5 py-2 text-brand font-medium hover:bg-surface-quiet rounded-full disabled:opacity-50"
           >
             Hủy
           </button>
@@ -437,51 +437,51 @@ export default function UsersManagementPage() {
           <ModalTitle>Thêm người dùng mới</ModalTitle>
         </ModalHeader>
         <ModalContent>
-          <div className="space-y-4 text-[#1D1D1F]">
+          <div className="space-y-4 text-ink">
             <div>
-              <label className="block text-[13px] font-medium text-[#6E6E73] mb-1">Họ và tên</label>
+              <label className="block text-[13px] font-medium text-ink-muted mb-1">Họ và tên</label>
               <input
                 type="text"
                 placeholder="Nhập họ và tên"
                 value={newUserForm.full_name}
                 onChange={(e) => setNewUserForm({ ...newUserForm, full_name: e.target.value })}
-                className="w-full bg-[#F5F5F7] h-10 px-4 text-[15px] rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#0071E3]/20 transition-all border border-transparent focus:border-[#0071E3]/20"
+                className="w-full bg-surface-quiet h-10 px-4 text-[15px] rounded-control focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all border border-transparent focus:border-brand/20"
               />
             </div>
             <div>
-              <label className="block text-[13px] font-medium text-[#6E6E73] mb-1">Email đăng nhập</label>
+              <label className="block text-[13px] font-medium text-ink-muted mb-1">Email đăng nhập</label>
               <input
                 type="email"
                 placeholder="example@doclib.com"
                 value={newUserForm.email}
                 onChange={(e) => setNewUserForm({ ...newUserForm, email: e.target.value })}
-                className="w-full bg-[#F5F5F7] h-10 px-4 text-[15px] rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#0071E3]/20 transition-all border border-transparent focus:border-[#0071E3]/20"
+                className="w-full bg-surface-quiet h-10 px-4 text-[15px] rounded-control focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all border border-transparent focus:border-brand/20"
               />
             </div>
             <div>
-              <label className="block text-[13px] font-medium text-[#6E6E73] mb-1">Mật khẩu</label>
+              <label className="block text-[13px] font-medium text-ink-muted mb-1">Mật khẩu</label>
               <input
                 type="password"
                 placeholder="Mật khẩu ít nhất 6 ký tự"
                 value={newUserForm.password}
                 onChange={(e) => setNewUserForm({ ...newUserForm, password: e.target.value })}
-                className="w-full bg-[#F5F5F7] h-10 px-4 text-[15px] rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#0071E3]/20 transition-all border border-transparent focus:border-[#0071E3]/20"
+                className="w-full bg-surface-quiet h-10 px-4 text-[15px] rounded-control focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all border border-transparent focus:border-brand/20"
               />
             </div>
             <div>
-              <label className="block text-[13px] font-medium text-[#6E6E73] mb-1">Quyền hạn</label>
+              <label className="block text-[13px] font-medium text-ink-muted mb-1">Quyền hạn</label>
               <div className="relative inline-block w-full">
                 <select
                   value={newUserForm.role}
                   onChange={(e) => setNewUserForm({ ...newUserForm, role: e.target.value })}
-                  className="w-full bg-[#F5F5F7] h-10 px-4 pr-10 text-[15px] rounded-[10px] focus:outline-none appearance-none transition-all border border-transparent focus:border-[#0071E3]/20"
+                  className="w-full bg-surface-quiet h-10 px-4 pr-10 text-[15px] rounded-control focus:outline-none appearance-none transition-all border border-transparent focus:border-brand/20"
                 >
                   <option value="reader">Độc giả</option>
                   <option value="author">Tác giả</option>
 
                   <option value="admin">Quản trị viên</option>
                 </select>
-                <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6E6E73] pointer-events-none" />
+                <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted pointer-events-none" />
               </div>
             </div>
           </div>
@@ -490,7 +490,7 @@ export default function UsersManagementPage() {
           <button
             onClick={() => setCreateModalOpen(false)}
             disabled={isCreating}
-            className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full disabled:opacity-50"
+            className="px-5 py-2 text-brand font-medium hover:bg-surface-quiet rounded-full disabled:opacity-50"
           >
             Hủy
           </button>

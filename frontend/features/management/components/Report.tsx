@@ -8,9 +8,7 @@ import {
   Modal,
   ModalHeader,
   ModalTitle,
-  ModalDescription,
   ModalContent,
-  ModalFooter,
 } from "@/shared/components/ui/Modal";
 
 interface ReportProps {
@@ -27,7 +25,7 @@ export default function Report({ itemId, itemType, onClose }: ReportProps) {
 
   const handleSubmit = async () => {
     if (!reason.trim()) {
-      showToast("Lỗi thiếu hụt nguyên nhân vi phạm", "error");
+      showToast("Chọn lý do báo cáo", "error");
       return;
     }
 
@@ -40,10 +38,10 @@ export default function Report({ itemId, itemType, onClose }: ReportProps) {
         description: detail,
       });
 
-      showToast("Đồng bộ báo cáo tới hệ thống điều hành hoàn tất", "success");
-      setTimeout(onClose, 2000);
+      showToast("Đã gửi báo cáo", "success");
+      onClose();
     } catch (err: any) {
-      showToast(err.message || "Lỗi đồng bộ báo cáo hệ thống", "error");
+      showToast(err.message || "Không thể gửi báo cáo", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -52,27 +50,24 @@ export default function Report({ itemId, itemType, onClose }: ReportProps) {
   return (
     <Modal isOpen={true} onClose={onClose}>
       <ModalHeader>
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-black flex items-center justify-center rounded-sm">
-            <ShieldAlert className="w-6 h-6 text-white" />
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-control bg-danger-soft">
+            <ShieldAlert className="h-5 w-5 text-danger" />
           </div>
           <div>
             <ModalTitle>Báo cáo vi phạm</ModalTitle>
-            <ModalDescription>
-              Duy trì tiêu chuẩn nội dung của hệ thống
-            </ModalDescription>
           </div>
         </div>
       </ModalHeader>
 
       <ModalContent>
         <div className="space-y-3">
-          <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">
+          <label className="text-[14px] font-medium text-ink">
             Lý do chính
           </label>
           <input
             type="text"
-            className="w-full h-14 px-6 bg-white border border-zinc-100 text-sm font-medium focus:outline-none focus:border-black rounded-sm"
+            className="apple-input"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             disabled={isSubmitting}
@@ -80,39 +75,34 @@ export default function Report({ itemId, itemType, onClose }: ReportProps) {
         </div>
 
         <div className="space-y-3">
-          <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">
+          <label className="text-[14px] font-medium text-ink">
             Chi tiết bổ sung
           </label>
           <textarea
-            className="w-full p-6 bg-white border border-zinc-100 text-sm font-medium h-32 resize-none focus:outline-none focus:border-black rounded-sm"
+            className="min-h-28 w-full resize-y rounded-control border border-border bg-surface px-3 py-3 text-[15px] text-ink outline-none focus:border-brand focus:ring-2 focus:ring-brand-soft"
             value={detail}
             onChange={(e) => setDetail(e.target.value)}
             disabled={isSubmitting}
           />
         </div>
 
-        <div className="pt-4">
+        <div className="flex justify-end gap-2 pt-4">
+          <button onClick={onClose} disabled={isSubmitting} className="secondary-button">Hủy</button>
           <button
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="w-full h-16 bg-black text-white text-[11px] font-bold uppercase tracking-[0.4em] active:scale-95 flex items-center justify-center gap-4 rounded-sm disabled:opacity-50 "
+            className="pill-button gap-2 disabled:opacity-50"
           >
             {isSubmitting ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <Send className="w-4 h-4" />
             )}
-            Gửi báo cáo hệ thống
+            Gửi báo cáo
           </button>
         </div>
       </ModalContent>
 
-      <ModalFooter>
-        <p className="text-[9px] text-zinc-300 font-bold uppercase tracking-widest">
-          Hành động này sẽ được ghi nhận và xem xét bởi đội ngũ điều hành trong
-          vòng 24 giờ làm việc
-        </p>
-      </ModalFooter>
     </Modal>
   );
 }

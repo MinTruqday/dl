@@ -48,10 +48,10 @@ export default class DocLibFormCheckBox implements BlockTool {
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-form-cb { display: flex; align-items: center; gap: 12px; margin: 12px 0; padding: 8px 12px; border: 1px solid transparent; border-radius: 4px; transition: background 0.2s; }
-      .doclib-form-cb:hover { background: #f8fafc; border-color: #e2e8f0; }
-      .doclib-form-cb-input { width: 20px; height: 20px; cursor: pointer; accent-color: #2563eb; margin: 0; }
-      .doclib-form-cb-label { flex: 1; font-size: 15px; color: #1e293b; outline: none; }
-      .doclib-form-cb-label:empty::before { content: "DocLib Text"; color: #94a3b8; pointer-events: none; }
+      .doclib-form-cb:hover { background: hsl(var(--surface-raised)); border-color: hsl(var(--border)); }
+      .doclib-form-cb-input { width: 20px; height: 20px; cursor: pointer; accent-color: hsl(var(--brand)); margin: 0; }
+      .doclib-form-cb-label { flex: 1; font-size: 15px; color: hsl(var(--ink)); outline: none; }
+      .doclib-form-cb-label:empty::before { content: "DocLib Text"; color: hsl(var(--ink-faint)); pointer-events: none; }
     `;
     this.wrapper.appendChild(style);
 

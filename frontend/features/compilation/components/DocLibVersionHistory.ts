@@ -52,20 +52,20 @@ export default class DocLibVersionHistory implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-vh { font-family: sans-serif; display: flex; flex-direction: column; gap: 0; margin: 16px 0; max-width: 500px; border-left: 2px solid #cbd5e1; padding-left: 16px; margin-left: 8px; }
-      .doclib-vh-item { position: relative; padding: 12px 0 12px 16px; display: flex; flex-direction: column; gap: 4px; border-bottom: 1px dashed #e2e8f0; }
+      .doclib-vh { font-family: sans-serif; display: flex; flex-direction: column; gap: 0; margin: 16px 0; max-width: 500px; border-left: 2px solid hsl(var(--border)); padding-left: 16px; margin-left: 8px; }
+      .doclib-vh-item { position: relative; padding: 12px 0 12px 16px; display: flex; flex-direction: column; gap: 4px; border-bottom: 1px dashed hsl(var(--border)); }
       .doclib-vh-item:last-child { border-bottom: none; }
-      .doclib-vh-item::before { content: ""; position: absolute; left: -22px; top: 16px; width: 10px; height: 10px; background: #3b82f6; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px #cbd5e1; }
+      .doclib-vh-item::before { content: ""; position: absolute; left: -22px; top: 16px; width: 10px; height: 10px; background: hsl(var(--brand)); border-radius: 50%; border: 2px solid hsl(var(--surface)); box-shadow: 0 0 0 1px hsl(var(--border)); }
       .doclib-vh-head { display: flex; align-items: center; justify-content: space-between; }
-      .doclib-vh-v { font-weight: bold; color: #1e293b; font-size: 14px; outline: none; }
-      .doclib-vh-v:empty:before { content: "v?.?"; color: #94a3b8; }
-      .doclib-vh-date { font-size: 12px; color: #64748b; outline: none; }
-      .doclib-vh-date:empty:before { content: "YYYY-MM-DD"; color: #cbd5e1; }
-      .doclib-vh-desc { font-size: 13px; color: #475569; outline: none; line-height: 1.4; }
-      .doclib-vh-desc:empty:before { content: "DocLib Description"; color: #94a3b8; font-style: italic; }
-      .doclib-vh-del { position: absolute; top: 12px; right: 0; color: #ef4444; font-size: 10px; border: none; background: transparent; cursor: pointer; display: none; }
+      .doclib-vh-v { font-weight: bold; color: hsl(var(--ink)); font-size: 14px; outline: none; }
+      .doclib-vh-v:empty:before { content: "v?.?"; color: hsl(var(--ink-faint)); }
+      .doclib-vh-date { font-size: 12px; color: hsl(var(--ink-muted)); outline: none; }
+      .doclib-vh-date:empty:before { content: "YYYY-MM-DD"; color: hsl(var(--border)); }
+      .doclib-vh-desc { font-size: 13px; color: hsl(var(--ink-muted)); outline: none; line-height: 1.4; }
+      .doclib-vh-desc:empty:before { content: "DocLib Description"; color: hsl(var(--ink-faint)); font-style: italic; }
+      .doclib-vh-del { position: absolute; top: 12px; right: 0; color: hsl(var(--danger)); font-size: 10px; border: none; background: transparent; cursor: pointer; display: none; }
       .doclib-vh-item:hover .doclib-vh-del { display: block; }
-      .doclib-vh-add { margin-top: 16px; padding: 8px; border: 1px dashed #cbd5e1; border-radius: 4px; text-align: center; color: #3b82f6; cursor: pointer; font-size: 13px; font-weight: bold; background: #f8fafc; }
+      .doclib-vh-add { margin-top: 16px; padding: 8px; border: 1px dashed hsl(var(--border)); border-radius: 4px; text-align: center; color: hsl(var(--brand)); cursor: pointer; font-size: 13px; font-weight: bold; background: hsl(var(--surface-raised)); }
     `;
     this.wrapper.appendChild(style);
 

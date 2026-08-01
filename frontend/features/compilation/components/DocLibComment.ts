@@ -35,15 +35,15 @@ export default class DocLibComment implements InlineTool {
       const style = document.createElement("style");
       style.id = "doclib-comment-styles";
       style.innerHTML = `
-            mark.doclib-comment-mark { background-color: rgba(250, 204, 21, 0.3); border-bottom: 2px solid #eab308; padding: 0 2px; cursor: help; position: relative; color: inherit; }
-            mark.doclib-comment-mark:hover::after { content: attr(title); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 6px 12px; border-radius: 6px; font-size: 13px; white-space: nowrap; z-index: 100; pointer-events: none; margin-bottom: 4px; font-weight: 500; font-family: sans-serif; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-            .doclib-comment-input-wrapper { position: absolute; top: 100%; left: 0; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; display: flex; gap: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); z-index: 100; margin-top: 8px; width: 300px; }
-            .doclib-comment-input { flex-grow: 1; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 12px; font-size: 14px; outline: none; transition: border 0.2s; }
-            .doclib-comment-input:focus { border-color: #3b82f6; }
-            .doclib-comment-btn { background: #3b82f6; color: white; border: none; border-radius: 6px; padding: 6px 12px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.2s; }
-            .doclib-comment-btn:hover { background: #2563eb; }
-            .doclib-comment-rm { background: #ef4444; color: white; border: none; border-radius: 6px; padding: 6px 12px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.2s; }
-            .doclib-comment-rm:hover { background: #dc2626; }
+            mark.doclib-comment-mark { background-color: rgba(250, 204, 21, 0.3); border-bottom: 2px solid hsl(var(--warning)); padding: 0 2px; cursor: help; position: relative; color: inherit; }
+            mark.doclib-comment-mark:hover::after { content: attr(title); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: hsl(var(--ink)); color: white; padding: 6px 12px; border-radius: 6px; font-size: 13px; white-space: nowrap; z-index: 100; pointer-events: none; margin-bottom: 4px; font-weight: 500; font-family: sans-serif; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+            .doclib-comment-input-wrapper { position: absolute; top: 100%; left: 0; background: hsl(var(--surface)); border: 1px solid hsl(var(--border)); border-radius: 8px; padding: 12px; display: flex; gap: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); z-index: 100; margin-top: 8px; width: 300px; }
+            .doclib-comment-input { flex-grow: 1; border: 1px solid hsl(var(--border)); border-radius: 6px; padding: 6px 12px; font-size: 14px; outline: none; transition: border 0.2s; }
+            .doclib-comment-input:focus { border-color: hsl(var(--brand)); }
+            .doclib-comment-btn { background: hsl(var(--brand)); color: white; border: none; border-radius: 6px; padding: 6px 12px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.2s; }
+            .doclib-comment-btn:hover { background: hsl(var(--brand)); }
+            .doclib-comment-rm { background: hsl(var(--danger)); color: white; border: none; border-radius: 6px; padding: 6px 12px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.2s; }
+            .doclib-comment-rm:hover { background: hsl(var(--danger)); }
         `;
       document.head.appendChild(style);
     }

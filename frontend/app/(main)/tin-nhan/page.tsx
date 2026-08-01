@@ -61,14 +61,14 @@ import {
   getGroupActivityLogAPI,
   setQuietHoursAPI,
   setAutoTranslateAPI,
+  updateGroupInfoAPI,
+  updateGroupSettingsAPI,
+  removeGroupMemberAPI,
 } from "@/features/messaging/services/thread.service";
+import { uploadChatAttachmentAPI } from "@/features/cloud/services/upload.service";
 import { searchUsersAPI } from "@/features/management/services/profile.service";
 import { getMyDocumentsAPI } from "@/features/content/services/document.service";
-import {
-  API_URL,
-  WS_URL,
-  getToken,
-} from "@/features/authentication/services/session.service";
+import { API_URL, WS_URL, getToken } from "@/features/authentication/services/session.service";
 import { useToast } from "@/shared/contexts/ToastContext";
 import {
   Modal,
@@ -161,7 +161,7 @@ function ForwardModal({ messageId, conversations, user, onClose, onForward }: Fo
   });
 
   const toggleSelect = (id: string) => {
-    setSelectedIds(prev => 
+    setSelectedIds(prev =>
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
   };
@@ -185,11 +185,11 @@ function ForwardModal({ messageId, conversations, user, onClose, onForward }: Fo
       <ModalHeader>
         <ModalTitle>Chuyển tiếp tin nhắn</ModalTitle>
       </ModalHeader>
-      
-      <div className="px-6 py-4 border-b border-[#E8E8ED]">
+
+      <div className="px-6 py-4 border-b border-border">
         <div className="relative">
-          <Search className="w-4 h-4 text-[#6E6E73] absolute left-3 top-1/2 -translate-y-1/2" />
-          <input 
+          <Search className="w-4 h-4 text-ink-muted absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
             type="text"
             placeholder=""
             value={search}
@@ -205,50 +205,50 @@ function ForwardModal({ messageId, conversations, user, onClose, onForward }: Fo
           const targetId = isGroup ? c._id : c.participants.find((p: any) => p._id !== user?._id)?._id;
           const name = isGroup ? c.group_name : c.participants.find((p: any) => p._id !== user?._id)?.full_name;
           const avatar = isGroup ? c.avatar_url : c.participants.find((p: any) => p._id !== user?._id)?.avatar_url;
-          
+
           return (
-            <div 
+            <div
               key={c._id}
               onClick={() => toggleSelect(targetId)}
-              className="flex items-center gap-3 p-2 rounded-[10px] hover:bg-[#F5F5F7] cursor-pointer transition-colors"
+              className="flex items-center gap-3 p-2 rounded-control hover:bg-surface-quiet cursor-pointer transition-colors"
             >
-              <input 
-                type="checkbox" 
+              <input
+                type="checkbox"
                 checked={selectedIds.includes(targetId)}
                 readOnly
-                className="w-4 h-4 rounded-full border-[#D2D2D7] text-[#0071E3] focus:ring-[#0071E3]"
+                className="w-4 h-4 rounded-full border-border text-brand focus:ring-brand"
               />
               {avatar ? (
-                <img 
-                  src={avatar} 
-                  alt="" 
-                  className="w-10 h-10 rounded-full object-cover border border-[#E8E8ED]" 
+                <img
+                  src={avatar}
+                  alt=""
+                  className="w-10 h-10 rounded-full object-cover border border-border"
                 />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-[#E8E8ED] flex items-center justify-center border border-[#E8E8ED]">
-                  <User className="w-5 h-5 text-[#6E6E73]" />
+                <div className="w-10 h-10 rounded-full bg-border flex items-center justify-center border border-border">
+                  <User className="w-5 h-5 text-ink-muted" />
                 </div>
               )}
-              <span className="text-[15px] text-[#1D1D1F] font-medium truncate">{name || "Người dùng"}</span>
+              <span className="text-[15px] text-ink font-medium truncate">{name || "Người dùng"}</span>
             </div>
           );
         })}
         {filtered.length === 0 && (
-          <div className="p-4 text-center text-[#6E6E73] text-[15px]">Không tìm thấy cuộc trò chuyện nào</div>
+          <div className="p-4 text-center text-ink-muted text-[15px]">Không tìm thấy cuộc trò chuyện nào</div>
         )}
       </div>
 
-      <div className="flex justify-end gap-3 px-6 py-4 border-t border-[#E8E8ED]">
+      <div className="flex justify-end gap-3 px-6 py-4 border-t border-border">
         <button
           onClick={onClose}
-          className="px-4 py-2 text-[14px] font-medium text-[#1D1D1F] bg-[#E8E8ED] hover:bg-[#D2D2D7] rounded-full transition-colors"
+          className="px-4 py-2 text-[14px] font-medium text-ink bg-border hover:bg-border rounded-full transition-colors"
         >
           Hủy
         </button>
         <button
           onClick={handleForward}
           disabled={selectedIds.length === 0 || isSubmitting}
-          className="px-4 py-2 text-[14px] font-medium text-white bg-[#0071E3] hover:opacity-80 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="px-4 py-2 text-[14px] font-medium text-white bg-brand hover:opacity-80 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           <Send className="w-4 h-4" />
           Gửi ({selectedIds.length})
@@ -290,14 +290,14 @@ function ScheduleModal({ isOpen, onClose, onSchedule }: ScheduleModalProps) {
       <ModalContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-[#1D1D1F] mb-1">Ngày gửi</label>
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required className="w-full bg-[#E8E8ED] text-[#1D1D1F] px-4 py-2 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#0071E3]" />
+            <label className="block text-sm font-medium text-ink mb-1">Ngày gửi</label>
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required className="w-full bg-border text-ink px-4 py-2 rounded-control focus:outline-none focus:ring-2 focus:ring-brand" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-[#1D1D1F] mb-1">Giờ gửi</label>
-            <input type="time" value={time} onChange={(e) => setTime(e.target.value)} required className="w-full bg-[#E8E8ED] text-[#1D1D1F] px-4 py-2 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#0071E3]" />
+            <label className="block text-sm font-medium text-ink mb-1">Giờ gửi</label>
+            <input type="time" value={time} onChange={(e) => setTime(e.target.value)} required className="w-full bg-border text-ink px-4 py-2 rounded-control focus:outline-none focus:ring-2 focus:ring-brand" />
           </div>
-          <button type="submit" className="w-full bg-[#0071E3] text-white rounded-[10px] py-2 font-medium hover:bg-[#0077ED] transition-colors">
+          <button type="submit" className="w-full bg-brand text-white rounded-control py-2 font-medium hover:bg-brand transition-colors">
             Hẹn giờ
           </button>
         </form>
@@ -368,9 +368,9 @@ function CreatePollModal({ onClose, onSubmit }: CreatePollModalProps) {
       <ModalContent>
         <div className="space-y-4 max-h-[50vh] overflow-y-auto hide-scrollbar">
           <div>
-            <label className="block text-[13px] font-medium text-[#6E6E73] mb-1">Câu hỏi</label>
-            <input 
-              type="text" 
+            <label className="block text-[13px] font-medium text-ink-muted mb-1">Câu hỏi</label>
+            <input
+              type="text"
               value={question}
               onChange={e => setQuestion(e.target.value)}
               placeholder=""
@@ -379,43 +379,43 @@ function CreatePollModal({ onClose, onSubmit }: CreatePollModalProps) {
           </div>
 
           <div className="space-y-2">
-            <label className="block text-[13px] font-medium text-[#6E6E73] mb-1">Các lựa chọn</label>
+            <label className="block text-[13px] font-medium text-ink-muted mb-1">Các lựa chọn</label>
             {options.map((opt, idx) => (
               <div key={idx} className="flex items-center gap-2">
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={opt}
                   onChange={e => handleChangeOption(idx, e.target.value)}
                   placeholder=""
                   className="apple-input flex-1"
                 />
                 {options.length > 2 && (
-                  <button onClick={() => handleRemoveOption(idx)} className="p-2 text-[#6E6E73] hover:text-red-500 rounded-full hover:bg-[#FFF5F5] transition-colors">
+                  <button onClick={() => handleRemoveOption(idx)} className="p-2 text-ink-muted hover:text-danger rounded-full hover:bg-danger-soft transition-colors">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 )}
               </div>
             ))}
-            <button 
+            <button
               onClick={handleAddOption}
-              className="flex items-center gap-2 text-[#0071E3] text-[14px] font-medium mt-2 hover:opacity-80 transition-opacity p-1"
+              className="flex items-center gap-2 text-brand text-[14px] font-medium mt-2 hover:opacity-80 transition-opacity p-1"
             >
               <Plus className="w-4 h-4" /> Thêm lựa chọn
             </button>
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-[#E8E8ED]">
+        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-[14px] font-medium text-[#1D1D1F] bg-[#E8E8ED] hover:bg-[#D2D2D7] rounded-full transition-colors"
+            className="px-4 py-2 text-[14px] font-medium text-ink bg-border hover:bg-border rounded-full transition-colors"
           >
             Hủy
           </button>
           <button
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="px-4 py-2 text-[14px] font-medium text-white bg-[#0071E3] hover:opacity-80 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-[14px] font-medium text-white bg-brand hover:opacity-80 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Tạo bình chọn
           </button>
@@ -466,12 +466,12 @@ function PollMessage({ messageId, pollData, currentUserId, onVote }: PollMessage
   };
 
   return (
-    <div className="w-full min-w-[260px] max-w-[320px] bg-white rounded-[18px] border border-[#E8E8ED] overflow-hidden shadow-sm flex flex-col">
-      <div className="p-4 border-b border-[#E8E8ED] bg-[#F5F5F7]">
-        <h4 className="font-semibold text-[#1D1D1F] text-[15px] leading-snug">
+    <div className="w-full min-w-[260px] max-w-[320px] bg-white rounded-panel border border-border overflow-hidden shadow-sm flex flex-col">
+      <div className="p-4 border-b border-border bg-surface-quiet">
+        <h4 className="font-semibold text-ink text-[15px] leading-snug">
           {pollData.question}
         </h4>
-        <span className="text-[12px] text-[#6E6E73] mt-1 block">Bình chọn • {totalVotes} lượt vote</span>
+        <span className="text-[12px] text-ink-muted mt-1 block">Bình chọn • {totalVotes} lượt vote</span>
       </div>
       <div className="p-2 space-y-1">
         {pollData.options.map((opt) => {
@@ -480,27 +480,27 @@ function PollMessage({ messageId, pollData, currentUserId, onVote }: PollMessage
           const hasVoted = opt.votes?.includes(currentUserId);
 
           return (
-            <div 
+            <div
               key={opt.id}
               onClick={() => handleVote(opt.id)}
-              className="relative rounded-[10px] overflow-hidden cursor-pointer group/pollopt transition-colors border border-transparent hover:border-[#E8E8ED]"
+              className="relative rounded-control overflow-hidden cursor-pointer group/pollopt transition-colors border border-transparent hover:border-border"
             >
 
-              <div 
-                className={`absolute inset-y-0 left-0 transition-all duration-500 ease-out ${hasVoted ? "bg-[#0071E3]/15" : "bg-[#F5F5F7]"}`}
+              <div
+                className={`absolute inset-y-0 left-0 transition-all duration-500 ease-out ${hasVoted ? "bg-brand/15" : "bg-surface-quiet"}`}
                 style={{ width: `${percentage}%` }}
               />
 
-              <div className="absolute inset-0 bg-black/[0.03] opacity-0 group-hover/pollopt:opacity-100 transition-opacity" />
-              
+              <div className="absolute inset-0 bg-ink/[0.03] opacity-0 group-hover/pollopt:opacity-100 transition-opacity" />
+
               <div className="relative flex items-center justify-between p-3 z-10">
                 <div className="flex items-center gap-3">
                   {hasVoted ? (
-                    <CheckCircle2 className="w-[18px] h-[18px] text-[#0071E3] shrink-0" />
+                    <CheckCircle2 className="w-[18px] h-[18px] text-brand shrink-0" />
                   ) : (
-                    <Circle className="w-[18px] h-[18px] text-[#6E6E73] shrink-0" />
+                    <Circle className="w-[18px] h-[18px] text-ink-muted shrink-0" />
                   )}
-                  <span className={`text-[15px] font-medium ${hasVoted ? "text-[#0071E3]" : "text-[#1D1D1F]"}`}>
+                  <span className={`text-[15px] font-medium ${hasVoted ? "text-brand" : "text-ink"}`}>
                     {opt.text}
                   </span>
                 </div>
@@ -508,7 +508,7 @@ function PollMessage({ messageId, pollData, currentUserId, onVote }: PollMessage
                   {voteCount > 0 && (
                      <div className="flex -space-x-1.5 mr-1">
 
-                        <div className="w-5 h-5 rounded-full bg-white border border-[#D2D2D7] flex items-center justify-center text-[9px] font-bold text-[#6E6E73]">
+                        <div className="w-5 h-5 rounded-full bg-white border border-border flex items-center justify-center text-[9px] font-bold text-ink-muted">
                           {voteCount}
                         </div>
                      </div>
@@ -532,19 +532,19 @@ function ReplyBlock({ replyingTo, onCancel }: ReplyBlockProps) {
   if (!replyingTo) return null;
 
   return (
-    <div className="absolute bottom-full left-0 w-full bg-white/95 backdrop-blur-md border-t border-[#E8E8ED] px-4 py-2.5 flex items-center justify-between z-10 animate-in slide-in-from-bottom-2 fade-in duration-200">
-      <div className="flex flex-col flex-1 overflow-hidden pr-4 border-l-2 border-[#0071E3] pl-3">
-        <div className="flex items-center gap-1.5 text-[13px] font-semibold text-[#0071E3] mb-0.5">
+    <div className="absolute bottom-full left-0 w-full bg-white/95 backdrop-blur-md border-t border-border px-4 py-2.5 flex items-center justify-between z-10 animate-in slide-in-from-bottom-2 fade-in duration-200">
+      <div className="flex flex-col flex-1 overflow-hidden pr-4 border-l-2 border-brand pl-3">
+        <div className="flex items-center gap-1.5 text-[13px] font-semibold text-brand mb-0.5">
           <Reply className="w-3.5 h-3.5" />
           <span>Đang trả lời tin nhắn</span>
         </div>
-        <p className="text-[14px] text-[#6E6E73] truncate">
+        <p className="text-[14px] text-ink-muted truncate">
           {replyingTo.content || (replyingTo.image_url ? "[Hình ảnh]" : replyingTo.poll_data ? "[Bình chọn]" : "[Đính kèm]")}
         </p>
       </div>
-      <button 
+      <button
         onClick={onCancel}
-        className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-[#F5F5F7] text-[#6E6E73] transition-colors shrink-0"
+        className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-surface-quiet text-ink-muted transition-colors shrink-0"
       >
         <X className="w-4 h-4" />
       </button>
@@ -586,7 +586,7 @@ const CustomAudioPlayer = ({
     <div className="flex items-center gap-3 w-full py-1 min-w-[200px]">
       <button
         onClick={togglePlay}
-        className={`flex shrink-0 items-center justify-center w-6 h-6 rounded-full ${isSender ? "bg-white text-[#0071E3]" : "bg-[#0071E3] text-white"}`}
+        className={`flex shrink-0 items-center justify-center w-6 h-6 rounded-full ${isSender ? "bg-white text-brand" : "bg-brand text-white"}`}
       >
         {isPlaying ? (
           <Pause size={14} className="fill-current" />
@@ -607,7 +607,7 @@ const CustomAudioPlayer = ({
             className="absolute top-0 left-0 h-full rounded-full transition-all duration-100"
             style={{
               width: `${progress}%`,
-              background: isSender ? "white" : "#0071E3",
+              background: isSender ? "white" : "hsl(var(--brand))",
             }}
           ></div>
         </div>
@@ -633,13 +633,13 @@ const CustomAudioPlayer = ({
 function SmartQuickReplies({ replies, onSelect }: { replies: string[], onSelect: (r: string) => void }) {
   if (!replies || replies.length === 0) return null;
   return (
-    <div className="flex items-center gap-2 px-4 py-2 bg-white border-t border-[#E8E8ED] overflow-x-auto no-scrollbar">
-      <Sparkles className="w-4 h-4 text-[#0071E3] shrink-0" />
+    <div className="flex items-center gap-2 px-4 py-2 bg-white border-t border-border overflow-x-auto no-scrollbar">
+      <Sparkles className="w-4 h-4 text-brand shrink-0" />
       {replies.map((reply, idx) => (
         <button
           key={idx}
           onClick={() => onSelect(reply)}
-          className="whitespace-nowrap px-4 py-1.5 bg-[#F5F5F7] hover:bg-[#E8E8ED] text-[#1D1D1F] text-[14px] font-medium rounded-[980px] transition-colors"
+          className="whitespace-nowrap px-4 py-1.5 bg-surface-quiet hover:bg-border text-ink text-[14px] font-medium rounded-control transition-colors"
         >
           {reply}
         </button>
@@ -672,16 +672,16 @@ export default function MessagesPage() {
     const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
     const timeStr = date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
     if (now.toDateString() === date.toDateString()) return `${timeStr} Hôm nay`;
-    
+
     const yesterday = new Date(now);
     yesterday.setDate(now.getDate() - 1);
     if (yesterday.toDateString() === date.toDateString()) return `${timeStr} Hôm qua`;
-    
+
     if (diffDays < 7) {
       const days = ["Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật"];
       return `${timeStr} ${days[date.getDay()]}`;
     }
-    
+
     return `${timeStr} ${date.toLocaleDateString("vi-VN")}`;
   };
   const router = useRouter();
@@ -764,19 +764,19 @@ export default function MessagesPage() {
 
   const getThemeBgClass = (theme: string) => {
     switch(theme) {
-      case "red": return "bg-red-500";
-      case "green": return "bg-green-500";
-      case "purple": return "bg-purple-500";
-      default: return "bg-[#0071E3]";
+      case "red": return "bg-danger-soft0";
+      case "green": return "bg-brand-soft0";
+      case "purple": return "bg-brand-soft0";
+      default: return "bg-brand";
     }
   };
 
   const getThemeTextClass = (theme: string) => {
     switch(theme) {
-      case "red": return "text-red-500";
-      case "green": return "text-green-500";
-      case "purple": return "text-purple-500";
-      default: return "text-[#0071E3]";
+      case "red": return "text-danger";
+      case "green": return "text-brand";
+      case "purple": return "text-brand";
+      default: return "text-brand";
     }
   };
 
@@ -821,7 +821,7 @@ export default function MessagesPage() {
           }
       }
     } catch (err: any) {
-      showToast("Lỗi đồng bộ danh sách phiên hội thoại", "error");
+      showToast("Không thể đồng bộ danh sách phiên hội thoại", "error");
     } finally {
       setLoadingConv(false);
     }
@@ -1033,7 +1033,7 @@ export default function MessagesPage() {
         ),
       );
     } catch (err: any) {
-      showToast("Lỗi trích xuất lịch sử phiên hội thoại", "error");
+      showToast("Không thể tải lịch sử phiên hội thoại", "error");
     } finally {
       setLoadingMsgs(false);
     }
@@ -1082,7 +1082,7 @@ export default function MessagesPage() {
         setEditingMsg(null);
         setNewMessage("");
       } catch (err: any) {
-        showToast("Lỗi cập nhật nội dung tin nhắn", "error");
+        showToast("Không thể cập nhật nội dung tin nhắn", "error");
       } finally {
         setSending(false);
       }
@@ -1093,14 +1093,7 @@ export default function MessagesPage() {
       if (imageFiles.length > 0) {
         setUploadingImage(true);
         for (let i = 0; i < imageFiles.length; i++) {
-          const formData = new FormData();
-          formData.append("file", imageFiles[i]);
-          const resUpload = await fetch(`${API_URL}/tai-len/tap-tin`, {
-            method: "POST",
-            headers: { Authorization: `Bearer ${getToken()}` },
-            body: formData,
-          });
-          const uploadData = await resUpload.json();
+          const uploadData = await uploadChatAttachmentAPI(imageFiles[i]);
           const filename = imageFiles[i].name || uploadData.data?.url || "";
           const ext = filename.split(".").pop()?.toLowerCase() || "";
           const isImage = ["png", "jpg", "jpeg", "gif", "webp"].includes(ext);
@@ -1149,7 +1142,7 @@ export default function MessagesPage() {
       setImageFiles([]);
       await saveDraftAPI(selectedConv.other_user_id, "");
     } catch (err: any) {
-      showToast("Lỗi truyền tải dữ liệu tin nhắn", "error");
+      showToast("Không thể truyền dữ liệu tin nhắn", "error");
     } finally {
       setSending(false);
       setUploadingImage(false);
@@ -1160,18 +1153,11 @@ export default function MessagesPage() {
     if (!newMessage.trim() && imageFiles.length === 0) return;
     try {
       showToast("Đang lên lịch gửi tin nhắn", "info");
-      
+
       if (imageFiles.length > 0) {
         for (let i = 0; i < imageFiles.length; i++) {
           const file = imageFiles[i];
-          const formData = new FormData();
-          formData.append("file", file);
-          const resUpload = await fetch(`${API_URL}/tai-len/tap-tin`, {
-            method: "POST",
-            headers: { Authorization: `Bearer ${getToken()}` },
-            body: formData,
-          });
-          const uploadData = await resUpload.json();
+          const uploadData = await uploadChatAttachmentAPI(file);
           await sendMessageAPI(
             selectedConvRef.current!.other_user_id,
             i === 0 ? newMessage.trim() : "",
@@ -1199,7 +1185,7 @@ export default function MessagesPage() {
           scheduledAt.toISOString()
         );
       }
-      
+
       showToast("Đã lên lịch gửi tin nhắn", "success");
       setNewMessage("");
       setImageFiles([]);
@@ -1239,14 +1225,7 @@ export default function MessagesPage() {
           const mimeType = recorder.mimeType || "audio/webm";
           const blob = new Blob(chunks, { type: mimeType });
           const file = new File([blob], `voice.webm`, { type: mimeType });
-          const formData = new FormData();
-          formData.append("file", file);
-          const resUpload = await fetch(`${API_URL}/tai-len/tap-tin`, {
-            method: "POST",
-            headers: { Authorization: `Bearer ${getToken()}` },
-            body: formData,
-          });
-          const uploadData = await resUpload.json();
+          const uploadData = await uploadChatAttachmentAPI(file);
           const res = await sendMessageAPI(
             selectedConv.other_user_id,
             "Tin nhắn thoại",
@@ -1259,7 +1238,7 @@ export default function MessagesPage() {
           setMessages((prev) => [...prev, msg]);
           updateConversationInPlace(selectedConv.other_user_id, msg);
         } catch (err) {
-          showToast("Lỗi thực thi luồng dữ liệu âm thanh", "error");
+          showToast("Không thể thực hiện luồng dữ liệu âm thanh", "error");
         } finally {
           setSending(false);
         }
@@ -1302,8 +1281,8 @@ export default function MessagesPage() {
     const el = messageRefs.current[id];
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "center" });
-      el.classList.add("bg-[#F5F5F7]");
-      setTimeout(() => el.classList.remove("bg-[#F5F5F7]"), 2000);
+      el.classList.add("bg-surface-quiet");
+      setTimeout(() => el.classList.remove("bg-surface-quiet"), 2000);
     }
   };
 
@@ -1322,7 +1301,7 @@ export default function MessagesPage() {
         return newMsgs;
       });
     } catch (err: any) {
-      showToast("Lỗi cập nhật trạng thái ghim tin nhắn", "error");
+      showToast("Không thể cập nhật trạng thái ghim tin nhắn", "error");
     }
   };
 
@@ -1338,7 +1317,7 @@ export default function MessagesPage() {
       );
       showToast("Thu hồi tin nhắn hoàn tất", "success");
     } catch (err: any) {
-      showToast("Lỗi thực thi yêu cầu thu hồi tin nhắn", "error");
+      showToast("Không thể thực hiện yêu cầu thu hồi tin nhắn", "error");
     }
   };
 
@@ -1365,7 +1344,7 @@ export default function MessagesPage() {
     );
   };
 
-  
+
   const handleForward = async (messageId: string, receiverIds: string[]) => {
     await forwardMessageAPI(messageId, receiverIds);
   };
@@ -1407,7 +1386,7 @@ export default function MessagesPage() {
         ),
       );
     } catch (err: any) {
-      showToast("Lỗi thực thi thao tác phản hồi", "error");
+      showToast("Không thể thực hiện thao tác phản hồi", "error");
     }
   };
 
@@ -1431,7 +1410,7 @@ export default function MessagesPage() {
       showToast("Chia sẻ tài liệu hoàn tất", "success");
       updateConversationInPlace(selectedConv.other_user_id, newMsg);
     } catch (err: any) {
-      showToast("Lỗi khởi tạo liên kết chia sẻ tài liệu", "error");
+      showToast("Không thể tạo liên kết chia sẻ tài liệu", "error");
     }
   };
 
@@ -1440,23 +1419,9 @@ export default function MessagesPage() {
     if (!file || !selectedConv) return;
     try {
       showToast("Đang tải ảnh lên", "info");
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch(`${API_URL}/tai-len/tap-tin`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        body: fd
-      });
-      const data = await res.json();
+      const data = await uploadChatAttachmentAPI(file);
       if (data.data?.url) {
-        await fetch(`${API_URL}/chat/nhom/${selectedConv.other_user_id}/thong-tin`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`
-          },
-          body: JSON.stringify({ avatar_url: data.data.url })
-        });
+        await updateGroupInfoAPI(selectedConv._id || selectedConv.id, selectedConv.group_name || selectedConv.name || "", data.data.url);
         showToast("Đã cập nhật ảnh đại diện nhóm", "success");
         setSelectedConv({
           ...selectedConv,
@@ -1483,7 +1448,7 @@ export default function MessagesPage() {
         showToast("Chặn người dùng hoàn tất", "success");
       }
     } catch (err: any) {
-      showToast("Lỗi cập nhật trạng thái kết nối người dùng", "error");
+      showToast("Không thể cập nhật trạng thái kết nối người dùng", "error");
     }
   };
 
@@ -1494,7 +1459,7 @@ export default function MessagesPage() {
       showToast(status.is_pinned ? "Ghim phiên hội thoại hoàn tất" : "Bỏ ghim phiên hội thoại hoàn tất", "success");
       setActiveConvMenuId(null);
     } catch (err: any) {
-      showToast("Lỗi cấu hình ghim phiên hội thoại", "error");
+      showToast("Không thể cấu hình ghim phiên hội thoại", "error");
     }
   };
 
@@ -1508,12 +1473,12 @@ export default function MessagesPage() {
       );
       setActiveConvMenuId(null);
     } catch (err) {
-      showToast("Lỗi cập nhật trạng thái hiển thị", "error");
+      showToast("Không thể cập nhật trạng thái hiển thị", "error");
     }
   };
 
   const handleDeleteConv = async (otherUserId: string) => {
-    if (!confirm("Bạn có chắc chắn muốn xóa?")) return;
+    if (!confirm("Xác nhận xóa")) return;
     try {
       await deleteConversationAPI(otherUserId);
       if (selectedConv?.other_user_id === otherUserId) setSelectedConv(null);
@@ -1539,7 +1504,7 @@ export default function MessagesPage() {
       );
       showToast("Dịch ngôn ngữ hoàn tất", "success");
     } catch (err: any) {
-      showToast("Lỗi thực thi luồng dịch thuật tự động", "error");
+      showToast("Không thể thực hiện luồng dịch thuật tự động", "error");
     }
   };
 
@@ -1553,7 +1518,7 @@ export default function MessagesPage() {
         "success",
       );
     } catch (err: any) {
-      showToast("Lỗi thiết lập trạng thái âm thanh", "error");
+      showToast("Không thể thiết lập trạng thái âm thanh", "error");
     }
   };
 
@@ -1568,7 +1533,7 @@ export default function MessagesPage() {
         "success",
       );
     } catch (err: any) {
-      showToast("Lỗi cập nhật cấu hình tự hủy", "error");
+      showToast("Không thể cập nhật cấu hình tự hủy", "error");
     }
   };
 
@@ -1605,7 +1570,7 @@ export default function MessagesPage() {
         unread_count: 0,
       });
     } catch (err: any) {
-      showToast("Lỗi thiết lập nhóm trò chuyện mới", "error");
+      showToast("Không thể thiết lập nhóm trò chuyện mới", "error");
     }
   };
 
@@ -1617,7 +1582,7 @@ export default function MessagesPage() {
       const res = await searchUsersAPI(q);
       setSearchResults(res.data || res || []);
     } catch (err: any) {
-      showToast("Lỗi trích xuất thông tin người dùng", "error");
+      showToast("Không thể tải thông tin người dùng", "error");
     } finally {
       setSearching(false);
     }
@@ -1734,7 +1699,7 @@ export default function MessagesPage() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col font-sans text-[#1D1D1F]">
+    <div className="w-full h-full flex flex-col font-sans text-ink">
       <Modal
         isOpen={showNewChatModal}
         onClose={() => setShowNewChatModal(false)}
@@ -1747,28 +1712,28 @@ export default function MessagesPage() {
         </ModalHeader>
         <ModalContent>
           <div className="relative mb-4">
-            <Search className="w-4 h-4 text-[#A1A1A6] absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-ink-faint absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               value={searchQuery}
               onChange={(e) => handleSearchUsers(e.target.value)}
               placeholder=""
-              className="w-full bg-[#E8E8ED] text-[#1D1D1F] placeholder:text-[#A1A1A6] pl-9 pr-4 py-2 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#0071E3] transition-all text-[15px]"
+              className="w-full bg-border text-ink placeholder:text-ink-faint pl-9 pr-4 py-2 rounded-control focus:outline-none focus:ring-2 focus:ring-brand transition-all text-[15px]"
             />
           </div>
           <div className="max-h-[300px] overflow-y-auto space-y-2">
             {searching ? (
               <div className="py-12 flex justify-center">
-                <Loader2 className="w-4 h-4 animate-spin text-[#6E6E73]" />
+                <Loader2 className="w-4 h-4 animate-spin text-ink-muted" />
               </div>
             ) : searchResults.length > 0 ? (
               searchResults.map((u) => (
                 <div
                   key={u._id || u.id}
                   onClick={() => startNewChat(u)}
-                  className="flex items-center justify-between p-4 bg-white rounded-[10px] cursor-pointer hover:bg-[#F5F5F7]"
+                  className="flex items-center justify-between p-4 bg-white rounded-control cursor-pointer hover:bg-surface-quiet"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-6 h-6 bg-[#F5F5F7] rounded-full overflow-hidden flex items-center justify-center">
+                    <div className="w-6 h-6 bg-surface-quiet rounded-full overflow-hidden flex items-center justify-center">
                       {u.avatar_url ? (
                         <img
                           src={u.avatar_url}
@@ -1776,25 +1741,25 @@ export default function MessagesPage() {
                           alt=""
                         />
                       ) : (
-                        <div className="w-full h-full bg-[#0071E3] text-white flex items-center justify-center text-[9px] font-semibold uppercase">
+                        <div className="w-full h-full bg-brand text-white flex items-center justify-center text-[9px] font-semibold uppercase">
                           {(u.full_name || u.username || "U").charAt(0)}
                         </div>
                       )}
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-[15px] font-medium text-[#1D1D1F]">
+                      <span className="text-[15px] font-medium text-ink">
                         {u.full_name || u.username}
                       </span>
-                      <span className="text-[13px] text-[#6E6E73]">
+                      <span className="text-[13px] text-ink-muted">
                         ID: {u.slug || u.username}
                       </span>
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-[#6E6E73]" />
+                  <ChevronRight className="w-4 h-4 text-ink-muted" />
                 </div>
               ))
             ) : (
-              <p className="text-center text-[13px] text-[#6E6E73] py-12">
+              <p className="text-center text-[13px] text-ink-muted py-12">
                 Không tìm thấy kết quả
               </p>
             )}
@@ -1819,16 +1784,16 @@ export default function MessagesPage() {
             onChange={(e) => setGroupName(e.target.value)}
             className="apple-input w-full"
           />
-          <div className="max-h-48 overflow-y-auto space-y-2 bg-white rounded-[10px] p-2 border border-[#D2D2D7]">
+          <div className="max-h-48 overflow-y-auto space-y-2 bg-white rounded-control p-2 border border-border">
             {loadingGroupUsers ? (
               <div className="py-6 flex justify-center">
-                <Loader2 className="w-4 h-4 animate-spin text-[#6E6E73]" />
+                <Loader2 className="w-4 h-4 animate-spin text-ink-muted" />
               </div>
             ) : (
               allUsersForGroup.map((u) => (
                 <div
                   key={u._id || u.id}
-                  className="flex items-center gap-3 p-2 hover:bg-[#F5F5F7] rounded-[8px]"
+                  className="flex items-center gap-3 p-2 hover:bg-surface-quiet rounded-control"
                 >
                   <input
                     type="checkbox"
@@ -1843,9 +1808,9 @@ export default function MessagesPage() {
                           ),
                         );
                     }}
-                    className="w-6 h-6 rounded text-[#0071E3] focus:ring-[#0071E3]"
+                    className="w-6 h-6 rounded text-brand focus:ring-brand"
                   />
-                  <span className="text-[15px] text-[#1D1D1F]">
+                  <span className="text-[15px] text-ink">
                     {u.full_name || u.username}
                   </span>
                 </div>
@@ -1871,28 +1836,28 @@ export default function MessagesPage() {
         <ModalContent className="max-h-[350px] overflow-y-auto">
           {loadingShareDocs ? (
             <div className="py-12 flex justify-center">
-              <Loader2 className="w-4 h-4 animate-spin text-[#6E6E73]" />
+              <Loader2 className="w-4 h-4 animate-spin text-ink-muted" />
             </div>
           ) : myDocsForShare.length > 0 ? (
             myDocsForShare.map((doc) => (
               <div
                 key={doc._id || doc.id}
                 onClick={() => handleShareDoc(doc._id || doc.id)}
-                className="p-4 bg-white rounded-[10px] cursor-pointer hover:flex justify-between items-center"
+                className="p-4 bg-white rounded-control cursor-pointer hover:flex justify-between items-center"
               >
                 <div className="flex flex-col">
-                  <span className="text-[15px] font-medium text-[#1D1D1F]">
+                  <span className="text-[15px] font-medium text-ink">
                     {doc.title}
                   </span>
-                  <span className="text-[13px] text-[#6E6E73]">
+                  <span className="text-[13px] text-ink-muted">
                     Định dạng: {doc.format || "TXT"}
                   </span>
                 </div>
-                <Share2 className="w-4 h-4 text-[#0071E3]" />
+                <Share2 className="w-4 h-4 text-brand" />
               </div>
             ))
           ) : (
-            <p className="text-center text-[13px] text-[#6E6E73] py-6">
+            <p className="text-center text-[13px] text-ink-muted py-6">
               Không có tài liệu
             </p>
           )}
@@ -1907,48 +1872,39 @@ export default function MessagesPage() {
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <div className="flex flex-col">
-                <span className="text-[15px] font-medium text-[#1D1D1F]">Hạn chế nhắn tin</span>
-                <span className="text-[13px] text-[#6E6E73]">Chỉ trưởng nhóm và phó nhóm được gửi tin</span>
+                <span className="text-[15px] font-medium text-ink">Hạn chế nhắn tin</span>
+                <span className="text-[13px] text-ink-muted">Chỉ trưởng nhóm và phó nhóm được gửi tin</span>
               </div>
               <input
                 type="checkbox"
                 checked={tempGroupSettings.messaging_restricted}
                 onChange={(e) => setTempGroupSettings(prev => ({...prev, messaging_restricted: e.target.checked}))}
-                className="w-5 h-5 rounded border-[#D2D2D7] text-[#0071E3] focus:ring-[#0071E3]"
+                className="w-5 h-5 rounded border-border text-brand focus:ring-brand"
               />
             </div>
             <div className="flex items-center justify-between">
               <div className="flex flex-col">
-                <span className="text-[15px] font-medium text-[#1D1D1F]">Yêu cầu phê duyệt</span>
-                <span className="text-[13px] text-[#6E6E73]">Người mới dùng link tham gia cần được duyệt</span>
+                <span className="text-[15px] font-medium text-ink">Yêu cầu phê duyệt</span>
+                <span className="text-[13px] text-ink-muted">Người mới dùng link tham gia cần được duyệt</span>
               </div>
               <input
                 type="checkbox"
                 checked={tempGroupSettings.requires_approval}
                 onChange={(e) => setTempGroupSettings(prev => ({...prev, requires_approval: e.target.checked}))}
-                className="w-5 h-5 rounded border-[#D2D2D7] text-[#0071E3] focus:ring-[#0071E3]"
+                className="w-5 h-5 rounded border-border text-brand focus:ring-brand"
               />
             </div>
             <button
               onClick={async () => {
                 try {
-                  const res = await fetch(`${API_URL}/tin-nhan/nhom/${selectedConv._id || selectedConv.id}/cai-dat`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${getToken()}` },
-                    body: JSON.stringify(tempGroupSettings)
-                  });
-                  const data = await res.json();
-                  if (res.ok) {
-                    showToast(data.message, "success");
-                    setShowGroupSettingsModal(false);
-                  } else {
-                    showToast(data.message || "Có lỗi xảy ra", "error");
-                  }
+                  const data = await updateGroupSettingsAPI(selectedConv._id || selectedConv.id, tempGroupSettings);
+                  showToast(data.message || "Đã lưu thiết lập nhóm", "success");
+                  setShowGroupSettingsModal(false);
                 } catch(e) {
                   showToast("Lỗi kết nối", "error");
                 }
               }}
-              className="w-full mt-4 bg-[#0071E3] text-white font-medium py-3 rounded-[980px] hover:bg-[#0055C6] transition-colors"
+              className="w-full mt-4 bg-brand text-white font-medium py-3 rounded-control hover:bg-brand-hover transition-colors"
             >
               Lưu thay đổi
             </button>
@@ -1959,43 +1915,33 @@ export default function MessagesPage() {
       <Modal isOpen={showLeaveGroupModal} onClose={() => setShowLeaveGroupModal(false)}>
         <ModalHeader>
           <ModalTitle>Rời khỏi nhóm</ModalTitle>
-          <ModalDescription>Bạn có muốn rời khỏi nhóm này không?</ModalDescription>
+          <ModalDescription>Rời nhóm và ngừng nhận tin nhắn mới</ModalDescription>
         </ModalHeader>
         <ModalContent>
           <div className="flex flex-col gap-3">
             <button
               onClick={async () => {
                 try {
-                  const res = await fetch(`${API_URL}/tin-nhan/nhom/${selectedConv._id || selectedConv.id}/thanh-vien/${user?._id || (user as any)?.id}?silent=false`, {
-                    method: "DELETE",
-                    headers: { "Authorization": `Bearer ${getToken()}` }
-                  });
-                  if (res.ok) {
+                  await removeGroupMemberAPI(selectedConv._id || selectedConv.id, user?._id || (user as any)?.id, false);
                     showToast("Đã rời nhóm", "success");
                     setShowLeaveGroupModal(false);
                     setSelectedConv(null);
-                  }
                 } catch(e) {}
               }}
-              className="w-full bg-red-500 text-white font-medium py-3 rounded-[980px] hover:bg-red-600 transition-colors"
+              className="w-full bg-danger-soft0 text-white font-medium py-3 rounded-control hover:bg-danger transition-colors"
             >
               Rời nhóm
             </button>
             <button
               onClick={async () => {
                 try {
-                  const res = await fetch(`${API_URL}/tin-nhan/nhom/${selectedConv._id || selectedConv.id}/thanh-vien/${user?._id || (user as any)?.id}?silent=true`, {
-                    method: "DELETE",
-                    headers: { "Authorization": `Bearer ${getToken()}` }
-                  });
-                  if (res.ok) {
+                  await removeGroupMemberAPI(selectedConv._id || selectedConv.id, user?._id || (user as any)?.id, true);
                     showToast("Đã rời nhóm trong im lặng", "success");
                     setShowLeaveGroupModal(false);
                     setSelectedConv(null);
-                  }
                 } catch(e) {}
               }}
-              className="w-full bg-[#F5F5F7] text-[#1D1D1F] font-medium py-3 rounded-[980px] hover:bg-[#E8E8ED] transition-colors"
+              className="w-full bg-surface-quiet text-ink font-medium py-3 rounded-control hover:bg-border transition-colors"
             >
               Rời nhóm trong im lặng
             </button>
@@ -2005,31 +1951,31 @@ export default function MessagesPage() {
 
       <div className="flex flex-1 min-h-0 gap-6">
         <div
-          className={`w-full md:w-[320px] bg-[#F5F5F7] rounded-[18px] flex flex-col overflow-hidden shrink-0 ${selectedConv ? "hidden md:flex" : "flex"}`}
+          className={`w-full md:w-[320px] bg-surface-quiet rounded-panel flex flex-col overflow-hidden shrink-0 ${selectedConv ? "hidden md:flex" : "flex"}`}
         >
           <div className="p-6 md:px-0 pb-4 md:pt-6 flex flex-col gap-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-[20px] font-semibold text-[#1D1D1F]">
+              <h2 className="text-[20px] font-semibold text-ink">
                 Tất cả tin nhắn
               </h2>
               <div className="flex gap-2">
                 <button
                   onClick={() => setShowGlobalSearch(!showGlobalSearch)}
-                  className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors"
+                  className="p-2 bg-surface-quiet text-ink hover:bg-border rounded-full transition-colors"
                   title="Tìm kiếm"
                 >
                   <Search className="w-4 h-4" />
                 </button>
                 <button
                   onClick={openGroupModal}
-                  className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors"
+                  className="p-2 bg-surface-quiet text-ink hover:bg-border rounded-full transition-colors"
                   title="Tạo nhóm"
                 >
                   <Users className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setShowNewChatModal(true)}
-                  className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors"
+                  className="p-2 bg-surface-quiet text-ink hover:bg-border rounded-full transition-colors"
                   title="Tin nhắn mới"
                 >
                   <Plus className="w-4 h-4" />
@@ -2038,12 +1984,12 @@ export default function MessagesPage() {
             </div>
             {showGlobalSearch && (
               <div className="relative">
-                <Search className="w-4 h-4 text-[#A1A1A6] absolute left-3 top-1/2 -translate-y-1/2" />
+                <Search className="w-4 h-4 text-ink-faint absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   value={globalSearchQuery}
                   onChange={(e) => handleGlobalSearch(e.target.value)}
                   placeholder="Tìm tin nhắn"
-                  className="w-full bg-[#E8E8ED] text-[#1D1D1F] placeholder:text-[#A1A1A6] pl-9 pr-4 py-2 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#0071E3] transition-all text-[15px]"
+                  className="w-full bg-border text-ink placeholder:text-ink-faint pl-9 pr-4 py-2 rounded-control focus:outline-none focus:ring-2 focus:ring-brand transition-all text-[15px]"
                 />
               </div>
             )}
@@ -2051,7 +1997,7 @@ export default function MessagesPage() {
           <div className="flex-1 overflow-y-auto px-6 md:px-0 pb-4 space-y-2 hide-scrollbar">
             {isGlobalSearching ? (
               <div className="py-12 flex justify-center">
-                <Loader2 className="w-4 h-4 animate-spin text-[#6E6E73]" />
+                <Loader2 className="w-4 h-4 animate-spin text-ink-muted" />
               </div>
             ) : globalSearchQuery.length >= 2 ? (
               globalSearchResults.length > 0 ? (
@@ -2063,25 +2009,25 @@ export default function MessagesPage() {
                       const c = conversations.find(c => c.other_user_id === otherId);
                       if (c) setSelectedConv(c);
                     }}
-                    className="p-4 bg-white rounded-[14px] cursor-pointer hover:bg-[#F5F5F7] border border-transparent hover:border-[#E8E8ED] transition-all"
+                    className="p-4 bg-white rounded-panel cursor-pointer hover:bg-surface-quiet border border-transparent hover:border-border transition-all"
                   >
-                    <div className="text-[13px] text-[#6E6E73] mb-1">{formatRelativeTime(parseUTC(msg.created_at))}</div>
-                    <div className="text-[15px] text-[#1D1D1F] line-clamp-2">{msg.content}</div>
+                    <div className="text-[13px] text-ink-muted mb-1">{formatRelativeTime(parseUTC(msg.created_at))}</div>
+                    <div className="text-[15px] text-ink line-clamp-2">{msg.content}</div>
                   </div>
                 ))
               ) : (
-                <p className="text-center text-[13px] text-[#6E6E73] py-12">
+                <p className="text-center text-[13px] text-ink-muted py-12">
                   Không tìm thấy kết quả
                 </p>
               )
             ) : loadingConv ? (
               <div className="space-y-2">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <div key={i} className="p-4 rounded-[14px] flex items-center gap-4 animate-pulse bg-white/50 border border-transparent">
-                    <div className="w-[48px] h-[48px] bg-[#E8E8ED] rounded-full shrink-0" />
+                  <div key={i} className="p-4 rounded-panel flex items-center gap-4 animate-pulse bg-white/50 border border-transparent">
+                    <div className="w-[48px] h-[48px] bg-border rounded-full shrink-0" />
                     <div className="flex-1 space-y-2.5">
-                      <div className="h-3.5 bg-[#E8E8ED] rounded-full w-[40%]" />
-                      <div className="h-2.5 bg-[#E8E8ED] rounded-full w-[70%]" />
+                      <div className="h-3.5 bg-border rounded-full w-[40%]" />
+                      <div className="h-2.5 bg-border rounded-full w-[70%]" />
                     </div>
                   </div>
                 ))}
@@ -2097,7 +2043,7 @@ export default function MessagesPage() {
                   <div
                     key={conv.other_user_id}
                     onClick={() => selectConversation(conv)}
-                    className={`p-4 rounded-[14px] cursor-pointer flex items-center gap-4 transition-colors group/conv relative ${active ? "bg-white" : "hover:bg-white/50"}`}
+                    className={`p-4 rounded-panel cursor-pointer flex items-center gap-4 transition-colors group/conv relative ${active ? "bg-white" : "hover:bg-white/50"}`}
                   >
                     <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
                       {conv.other_user?.avatar_url ? (
@@ -2107,18 +2053,18 @@ export default function MessagesPage() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full bg-[#0071E3] text-white flex items-center justify-center text-[16px] font-semibold uppercase">
+                        <div className="w-full h-full bg-brand text-white flex items-center justify-center text-[16px] font-semibold uppercase">
                           {(aliases[conv.other_user_id] || conv.other_user?.full_name || conv.other_user?.username || "U").charAt(0)}
                         </div>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-center mb-1">
-                        <span className="text-[15px] font-medium text-[#1D1D1F] truncate pr-2">
+                        <span className="text-[15px] font-medium text-ink truncate pr-2">
                           {aliases[conv.other_user_id] || conv.other_user?.full_name ||
                             conv.other_user?.username}
                         </span>
-                        <span className="text-[12px] text-[#6E6E73] shrink-0">
+                        <span className="text-[12px] text-ink-muted shrink-0">
                           {conv.last_message?.created_at
                             ? parseUTC(
                                 conv.last_message.created_at,
@@ -2131,40 +2077,40 @@ export default function MessagesPage() {
                       </div>
                       <div className="flex justify-between items-center relative group-hover/conv:pr-6">
                         <p
-                          className={`text-[13px] truncate transition-all duration-300 ${conv.unread_count > 0 ? "font-semibold text-[#1D1D1F]" : "text-[#6E6E73]"}`}
+                          className={`text-[13px] truncate transition-all duration-300 ${conv.unread_count > 0 ? "font-semibold text-ink" : "text-ink-muted"}`}
                         >
                           {conv.last_message ? (conv.last_message.is_recalled ? "Tin nhắn đã thu hồi" : conv.last_message.content?.startsWith("Shared document preview and link to access") ? "[Tài liệu]" : (conv.last_message.content || (conv.last_message.image_url ? "[Hình ảnh]" : conv.last_message.poll_data ? "[Bình chọn]" : "[Đính kèm]"))) : "Chưa có tin nhắn"}
                         </p>
                         {conv.unread_count > 0 && (
-                          <div className="w-2.5 h-2.5 bg-[#0071E3] rounded-full shrink-0 ml-2" />
+                          <div className="w-2.5 h-2.5 bg-brand rounded-full shrink-0 ml-2" />
                         )}
                         <div className="absolute right-0 top-1/2 -translate-y-1/2 opacity-0 group-hover/conv:opacity-100 transition-opacity">
                           <button
                             onClick={(e) => { e.stopPropagation(); setActiveConvMenuId(activeConvMenuId === conv.other_user_id ? null : conv.other_user_id); }}
-                            className="p-1 text-[#6E6E73] hover:text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full bg-[#F5F5F7] md:bg-white shadow-sm"
+                            className="p-1 text-ink-muted hover:text-ink hover:bg-border rounded-full bg-surface-quiet md:bg-white shadow-sm"
                           >
                             <MoreHorizontal className="w-4 h-4" />
                           </button>
                           {activeConvMenuId === conv.other_user_id && (
-                            <div className="absolute z-50 w-48 bg-white/90 backdrop-blur-md rounded-[14px] shadow-[0_8px_32px_rgba(0,0,0,0.15)] border border-[#E8E8ED] py-1.5 flex flex-col right-0 top-full mt-1">
-                              <button 
+                            <div className="absolute z-50 w-48 bg-white/90 backdrop-blur-md rounded-panel shadow-[0_8px_32px_rgba(0,0,0,0.15)] border border-border py-1.5 flex flex-col right-0 top-full mt-1">
+                              <button
                                 onClick={(e) => { e.stopPropagation(); handleTogglePinConv(conv.other_user_id); }}
-                                className="flex items-center gap-3 px-4 py-2.5 text-[13px] hover:bg-[#F5F5F7] text-[#1D1D1F] text-left rounded-t-[10px] transition-colors"
+                                className="flex items-center gap-3 px-4 py-2.5 text-[13px] hover:bg-surface-quiet text-ink text-left rounded-t-[10px] transition-colors"
                               >
-                                <Pin className="w-3.5 h-3.5 text-[#6E6E73]" />
+                                <Pin className="w-3.5 h-3.5 text-ink-muted" />
                                 {isPinned ? "Bỏ ghim" : "Ghim"}
                               </button>
-                              <button 
+                              <button
                                 onClick={(e) => { e.stopPropagation(); handleMarkAsRead(conv.other_user_id); }}
-                                className="flex items-center gap-3 px-4 py-2.5 text-[13px] hover:bg-[#F5F5F7] text-[#1D1D1F] text-left transition-colors"
+                                className="flex items-center gap-3 px-4 py-2.5 text-[13px] hover:bg-surface-quiet text-ink text-left transition-colors"
                               >
-                                <CheckCheck className="w-3.5 h-3.5 text-[#6E6E73]" />
+                                <CheckCheck className="w-3.5 h-3.5 text-ink-muted" />
                                 Đánh dấu đã đọc
                               </button>
-                              <div className="h-px bg-[#F2F2F7] mx-3 my-1" />
-                              <button 
+                              <div className="h-px bg-surface-quiet mx-3 my-1" />
+                              <button
                                 onClick={(e) => { e.stopPropagation(); handleDeleteConv(conv.other_user_id); setActiveConvMenuId(null); }}
-                                className="flex items-center gap-3 px-4 py-2.5 text-[13px] hover:bg-[#FFF5F5] text-red-500 text-left rounded-b-[10px] transition-colors"
+                                className="flex items-center gap-3 px-4 py-2.5 text-[13px] hover:bg-danger-soft text-danger text-left rounded-b-[10px] transition-colors"
                               >
                                 <Trash2 className="w-3.5 h-3.5" /> Xóa hội thoại
                               </button>
@@ -2178,43 +2124,43 @@ export default function MessagesPage() {
               })
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center h-full min-h-[300px] text-center">
-                <p className="text-[17px] text-[#6E6E73]">Chưa có dữ liệu</p>
+                <p className="text-[17px] text-ink-muted">Chưa có dữ liệu</p>
               </div>
             )}
           </div>
         </div>
 
         <div
-          className={`flex-1 flex min-w-0 rounded-[18px] overflow-hidden ${!selectedConv ? "hidden md:flex items-center justify-center bg-[#F5F5F7]" : ""}`}
+          className={`flex-1 flex min-w-0 rounded-panel overflow-hidden ${!selectedConv ? "hidden md:flex items-center justify-center bg-surface-quiet" : ""}`}
         >
           {selectedConv ? (
             <>
-              <div className="flex-1 flex flex-col min-w-0 bg-[#F5F5F7] relative">
+              <div className="flex-1 flex flex-col min-w-0 bg-surface-quiet relative">
               <div className="h-[64px] px-6 md:px-0 flex items-center justify-between bg-transparent">
                 <div className="flex items-center gap-4">
                   {activeThreadParentId ? (
-                    <button onClick={() => setActiveThreadParentId(null)} className="text-[#0071E3] flex items-center gap-1 hover:bg-[#F5F5F7] p-1.5 rounded-full transition-colors">
+                    <button onClick={() => setActiveThreadParentId(null)} className="text-brand flex items-center gap-1 hover:bg-surface-quiet p-1.5 rounded-full transition-colors">
                       <ArrowLeft className="w-4 h-4" />
                       <span className="text-[14px] font-medium hidden sm:inline">Quay lại</span>
                     </button>
                   ) : (
                     <button
                       onClick={() => setSelectedConv(null)}
-                      className="md:hidden text-[#0071E3]"
+                      className="md:hidden text-brand"
                     >
                       <ArrowLeft className="w-4 h-4" />
                     </button>
                   )}
-                  <button 
+                  <button
                     onClick={() => setShowSharedSidebar(!showSharedSidebar)}
-                    className="flex items-center gap-3 text-left hover:bg-[#E8E8ED] p-1 -ml-1 rounded-[12px] transition-colors"
+                    className="flex items-center gap-3 text-left hover:bg-border p-1 -ml-1 rounded-panel transition-colors"
                   >
                     <div className="w-10 h-10 rounded-full overflow-hidden relative">
                       {isGroupConv ? (
                         selectedConv.group_avatar ? (
                           <img src={selectedConv.group_avatar} className="w-full h-full object-cover" alt="" />
                         ) : (
-                          <div className="w-full h-full bg-[#0071E3] text-white flex items-center justify-center text-[18px] font-semibold uppercase">
+                          <div className="w-full h-full bg-brand text-white flex items-center justify-center text-[18px] font-semibold uppercase">
                             {(selectedConv.group_name || selectedConv.other_user?.full_name || "G").charAt(0)}
                           </div>
                         )
@@ -2222,22 +2168,22 @@ export default function MessagesPage() {
                         selectedConv.other_user?.avatar_url ? (
                           <img src={selectedConv.other_user.avatar_url} className="w-full h-full object-cover" alt="" />
                         ) : (
-                          <div className="w-full h-full bg-[#0071E3] text-white flex items-center justify-center text-[18px] font-semibold uppercase">
+                          <div className="w-full h-full bg-brand text-white flex items-center justify-center text-[18px] font-semibold uppercase">
                             {(aliases[selectedConv.other_user_id] || selectedConv.other_user?.full_name || selectedConv.other_user?.username || "U").charAt(0)}
                           </div>
                         )
                       )}
                       {!isGroupConv && onlineUsers[selectedConv.other_user_id] === true && (
-                        <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+                        <span className="absolute bottom-0 right-0 w-3 h-3 bg-brand-soft0 border-2 border-white rounded-full"></span>
                       )}
                     </div>
                     <div>
-                      <h3 className="text-[16px] font-semibold text-[#1D1D1F]">
-                        {isGroupConv 
-                          ? (selectedConv.group_name || selectedConv.other_user?.full_name || "Nhóm trò chuyện") 
+                      <h3 className="text-[16px] font-semibold text-ink">
+                        {isGroupConv
+                          ? (selectedConv.group_name || selectedConv.other_user?.full_name || "Nhóm trò chuyện")
                           : (aliases[selectedConv.other_user_id] || selectedConv.other_user?.full_name || selectedConv.other_user?.username)}
                       </h3>
-                      <p className="text-[13px] text-[#6E6E73]">
+                      <p className="text-[13px] text-ink-muted">
                         {renderOnlineStatus(selectedConv.other_user_id, isGroupConv, selectedConv.participant_ids?.length)}
                       </p>
                     </div>
@@ -2246,14 +2192,14 @@ export default function MessagesPage() {
                 <div className="relative flex items-center gap-1 sm:gap-2">
                   <button
                     onClick={() => setShowSharedSidebar(!showSharedSidebar)}
-                    className={`p-2 rounded-full transition-colors ${showSharedSidebar ? "bg-[#E8E8ED] text-[#1D1D1F]" : "text-[#0071E3] hover:bg-[#F5F5F7] "}`}
+                    className={`p-2 rounded-full transition-colors ${showSharedSidebar ? "bg-border text-ink" : "text-brand hover:bg-surface-quiet "}`}
                     title="Thông tin đoạn chat"
                   >
                     <Info className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => setShowSearchMsgBar(!showSearchMsgBar)}
-                    className={`p-2 rounded-full transition-colors hidden sm:block ${showSearchMsgBar ? "bg-[#E8E8ED] text-[#1D1D1F]" : "text-[#0071E3] hover:bg-[#F5F5F7]"}`}
+                    className={`p-2 rounded-full transition-colors hidden sm:block ${showSearchMsgBar ? "bg-border text-ink" : "text-brand hover:bg-surface-quiet"}`}
                     title="Tìm kiếm"
                   >
                     <Search className="w-4 h-4" />
@@ -2264,19 +2210,19 @@ export default function MessagesPage() {
 
 
               {showSearchMsgBar && (
-                <div className="px-6 md:px-0 py-3 bg-[#F5F5F7]">
+                <div className="px-6 md:px-0 py-3 bg-surface-quiet">
                   <div className="relative">
-                    <Search className="w-4 h-4 text-[#6E6E73] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Search className="w-4 h-4 text-ink-muted absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="text"
                       value={searchMsgQuery}
                       onChange={(e) => handleSearchMessages(e.target.value)}
-                      className="w-full bg-white border border-[#D2D2D7] text-[#1D1D1F] pl-9 pr-8 py-2 rounded-[10px] text-[15px] focus:outline-none focus:border-[#0071E3] transition-colors"
+                      className="w-full bg-white border border-border text-ink pl-9 pr-8 py-2 rounded-control text-[15px] focus:outline-none focus:border-brand transition-colors"
                     />
                     {searchMsgQuery && (
                       <button
                         onClick={() => { setSearchMsgQuery(""); setSearchedMsgResults([]); }}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#A1A1A6] hover:text-[#6E6E73] transition-colors"
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-faint hover:text-ink-muted transition-colors"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -2288,10 +2234,10 @@ export default function MessagesPage() {
                         <div
                           key={m._id || m.id}
                           onClick={() => { scrollToMessage(m._id || m.id); setShowSearchMsgBar(false); setSearchMsgQuery(""); setSearchedMsgResults([]); }}
-                          className="px-3 py-2 bg-white rounded-[10px] cursor-pointer hover:bg-[#F5F5F7] transition-colors"
+                          className="px-3 py-2 bg-white rounded-control cursor-pointer hover:bg-surface-quiet transition-colors"
                         >
-                          <p className="text-[13px] text-[#1D1D1F] truncate">{m.content}</p>
-                          <p className="text-[11px] text-[#6E6E73] mt-0.5">
+                          <p className="text-[13px] text-ink truncate">{m.content}</p>
+                          <p className="text-[11px] text-ink-muted mt-0.5">
                             {new Date(parseUTC(m.created_at)).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
                           </p>
                         </div>
@@ -2299,7 +2245,7 @@ export default function MessagesPage() {
                     </div>
                   )}
                   {searchMsgQuery.length > 0 && searchedMsgResults.length === 0 && (
-                    <p className="text-[12px] text-[#A1A1A6] mt-2 text-center">Không tìm thấy kết quả</p>
+                    <p className="text-[12px] text-ink-faint mt-2 text-center">Không tìm thấy kết quả</p>
                   )}
                 </div>
               )}
@@ -2309,8 +2255,8 @@ export default function MessagesPage() {
                 if (pinnedMsgs.length === 0) return null;
                 return (
                   <div className="z-10 sticky top-0 bg-transparent flex flex-col w-full transition-all duration-300">
-                    <div 
-                      className="flex items-center justify-between px-6 py-2.5 cursor-pointer hover:bg-black/5 transition-colors relative z-20" 
+                    <div
+                      className="flex items-center justify-between px-6 py-2.5 cursor-pointer hover:bg-ink/5 transition-colors relative z-20"
                       onClick={() => {
                         if (pinnedMsgs.length > 1) {
                           setIsPinnedExpanded(!isPinnedExpanded);
@@ -2323,13 +2269,13 @@ export default function MessagesPage() {
                       }}
                     >
                       <div className="flex items-center gap-2 overflow-hidden">
-                        <Pin className="w-3.5 h-3.5 text-[#0071E3] shrink-0" />
-                        <span className="text-[13px] text-[#1D1D1F] opacity-90 truncate">
+                        <Pin className="w-3.5 h-3.5 text-brand shrink-0" />
+                        <span className="text-[13px] text-ink opacity-90 truncate">
                           {pinnedMsgs[pinnedMsgs.length - 1].content || "Đính kèm"}
                         </span>
                       </div>
                       {pinnedMsgs.length > 1 && (
-                        <div className="text-[#6E6E73] flex items-center gap-1 shrink-0 ml-4">
+                        <div className="text-ink-muted flex items-center gap-1 shrink-0 ml-4">
                           <span className="text-[12px] font-medium">{pinnedMsgs.length}</span>
                           <svg className={`w-3.5 h-3.5 transition-transform duration-300 ${isPinnedExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -2338,11 +2284,11 @@ export default function MessagesPage() {
                       )}
                     </div>
                     {isPinnedExpanded && pinnedMsgs.length > 1 && (
-                      <div className="absolute top-full left-0 w-full bg-[#F5F5F7] flex flex-col z-50">
+                      <div className="absolute top-full left-0 w-full bg-surface-quiet flex flex-col z-50">
                         {pinnedMsgs.slice(0, -1).reverse().map((pinned) => (
-                          <div 
-                            key={pinned._id || pinned.id} 
-                            className="flex items-center gap-2 px-6 py-2.5 cursor-pointer hover:bg-black/5 transition-colors"
+                          <div
+                            key={pinned._id || pinned.id}
+                            className="flex items-center gap-2 px-6 py-2.5 cursor-pointer hover:bg-ink/5 transition-colors"
                             onClick={() => {
                               if (messageRefs.current[pinned._id || pinned.id]) {
                                 messageRefs.current[pinned._id || pinned.id]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -2351,7 +2297,7 @@ export default function MessagesPage() {
                             }}
                           >
                             <div className="w-3.5 h-3.5 shrink-0" />
-                            <span className="text-[13px] text-[#1D1D1F] opacity-90 truncate">
+                            <span className="text-[13px] text-ink opacity-90 truncate">
                               {pinned.content || "Đính kèm"}
                             </span>
                           </div>
@@ -2367,7 +2313,7 @@ export default function MessagesPage() {
                   <div className="space-y-4 flex flex-col h-full justify-end pb-4">
                     {[1, 2, 3].map((i) => (
                       <div key={i} className={`flex ${i % 2 === 0 ? "justify-end" : "justify-start"} animate-pulse`}>
-                        <div className={`w-48 h-10 rounded-[18px] ${i % 2 === 0 ? "bg-[#D2D2D7]" : "bg-[#E8E8ED]"}`} />
+                        <div className={`w-48 h-10 rounded-panel ${i % 2 === 0 ? "bg-border" : "bg-border"}`} />
                       </div>
                     ))}
                   </div>
@@ -2382,14 +2328,14 @@ export default function MessagesPage() {
                         <div className="flex flex-col mb-4 w-full">
                           <div className={`flex flex-col w-full ${isSender ? "items-end" : "items-start"}`}>
                             <div className={`group relative max-w-[85%] flex flex-col ${isSender ? "items-end" : "items-start"}`}>
-                              <div className="text-[12px] font-semibold text-[#6E6E73] mb-1 px-1">Bản tin gốc</div>
-                              <div className={`rounded-[18px] p-4 ${isSender ? `${getThemeBgClass(conversationTheme)} text-white` : "bg-[#E8E8ED] text-[#1D1D1F]"} opacity-90`}>
+                              <div className="text-[12px] font-semibold text-ink-muted mb-1 px-1">Bản tin gốc</div>
+                              <div className={`rounded-panel p-4 ${isSender ? `${getThemeBgClass(conversationTheme)} text-white` : "bg-border text-ink"} opacity-90`}>
                                 <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{parentMessage.content || "[Đính kèm]"}</p>
                               </div>
                             </div>
                           </div>
-                          <div className="w-full h-[1px] bg-[#E8E8ED] my-6 relative">
-                            <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-[#F5F5F7] px-4 text-[12px] font-medium text-[#6E6E73]">
+                          <div className="w-full h-[1px] bg-border my-6 relative">
+                            <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-surface-quiet px-4 text-[12px] font-medium text-ink-muted">
                               {threadMessages.length} phản hồi
                             </span>
                           </div>
@@ -2398,7 +2344,7 @@ export default function MessagesPage() {
                     })()}
                     {activeThreadParentId && loadingThread ? (
                       <div className="flex justify-center p-4">
-                        <Circle className="w-6 h-6 animate-spin text-[#0071E3]" />
+                        <Circle className="w-6 h-6 animate-spin text-brand" />
                       </div>
                     ) : (activeThreadParentId ? threadMessages : messages).map((msg, i) => {
                       const currentUserId = user?._id || (user as any)?.id;
@@ -2408,7 +2354,7 @@ export default function MessagesPage() {
                       if (msg.is_system) {
                         return (
                           <div key={msg._id || msg.id || i} className="flex justify-center w-full my-4">
-                            <span className="bg-[#E8E8ED] text-[#1D1D1F] px-4 py-1.5 rounded-full text-[13px] font-medium">
+                            <span className="bg-border text-ink px-4 py-1.5 rounded-full text-[13px] font-medium">
                               {msg.content}
                             </span>
                           </div>
@@ -2425,12 +2371,12 @@ export default function MessagesPage() {
                         >
                           {showTime && (
                             <div className="flex justify-center w-full my-3">
-                              <span className="text-[11px] font-medium text-[#6E6E73]">
+                              <span className="text-[11px] font-medium text-ink-muted">
                                 {formatRelativeTime(parseUTC(msg.created_at))}
                               </span>
                             </div>
                           )}
-                          <div 
+                          <div
                             className={`group relative flex flex-col ${msg.poll_data ? "w-full items-center" : `max-w-[85%] ${isSender ? "items-end" : "items-start"}`}`}
                             onDoubleClick={(e) => {
                               e.stopPropagation();
@@ -2449,18 +2395,18 @@ export default function MessagesPage() {
                             }}
                           >
                             <div
-                              className={`rounded-[18px] flex flex-col gap-2 ${
+                              className={`rounded-panel flex flex-col gap-2 ${
                                 msg.is_recalled
-                                  ? "bg-transparent border border-dashed border-[#D2D2D7] text-[#6E6E73] min-h-[38px] p-4 justify-center"
+                                  ? "bg-transparent border border-dashed border-border text-ink-muted min-h-[38px] p-4 justify-center"
                                   : msg.poll_data || (msg.content && msg.content.startsWith("Shared document preview and link to access"))
                                   ? "bg-transparent p-0"
                                   : isSender
                                   ? `${getThemeBgClass(conversationTheme)} text-white p-4`
-                                  : "bg-[#E8E8ED] text-[#1D1D1F] p-4"
+                                  : "bg-border text-ink p-4"
                               } relative cursor-pointer select-none`}
                             >
                               {msg.reply_to && !msg.is_recalled && (
-                                <div 
+                                <div
                                   onClick={() => {
                                     const replyId = typeof msg.reply_to === 'object' ? msg.reply_to._id || msg.reply_to.id : msg.reply_to;
                                     if (replyId && messageRefs.current[replyId]) {
@@ -2471,7 +2417,7 @@ export default function MessagesPage() {
                                       }, 1500);
                                     }
                                   }}
-                                  className={`text-[12px] px-2 py-1.5 rounded-[10px] truncate max-w-[250px] opacity-80 cursor-pointer hover:opacity-100 transition-opacity ${isSender ? "bg-[#0055C6] text-white" : "bg-[#E8E8ED] text-[#6E6E73]"}`}
+                                  className={`text-[12px] px-2 py-1.5 rounded-control truncate max-w-[250px] opacity-80 cursor-pointer hover:opacity-100 transition-opacity ${isSender ? "bg-brand-hover text-white" : "bg-border text-ink-muted"}`}
                                 >
                                   <span className="font-semibold block mb-0.5">Trích dẫn:</span>
                                   {typeof msg.reply_to === 'object' ? msg.reply_to.content : "Tin nhắn"}
@@ -2479,15 +2425,15 @@ export default function MessagesPage() {
                               )}
                               {msg.image_url && !msg.is_recalled && (
                                 <img
-                                  src={msg.image_url.startsWith("http") ? msg.image_url : `${API_URL}/storage/${msg.image_url}`}
+                                  src={msg.image_url.startsWith("http") ? msg.image_url : `${API_URL}/tai-len/luu-tru/${msg.image_url}`}
                                   alt=""
-                                  className="rounded-[10px] max-h-[300px] object-cover"
+                                  className="rounded-control max-h-[300px] object-cover"
                                 />
                               )}
                               {msg.attachments && msg.attachments.length > 0 && !msg.is_recalled && (
                                 <div className="space-y-2">
                                   {msg.attachments.map((att: any, idx: number) => (
-                                    <a key={idx} href={att.url && att.url.startsWith("http") ? att.url : `${API_URL}/storage/${att.url}`} target="_blank" rel="noreferrer" className={`flex items-center gap-2 p-2 rounded-[10px] ${isSender ? "bg-[#0055C6] text-white" : "bg-[#E8E8ED] text-[#1D1D1F]"}`}>
+                                    <a key={idx} href={att.url && att.url.startsWith("http") ? att.url : `${API_URL}/tai-len/luu-tru/${att.url}`} target="_blank" rel="noreferrer" className={`flex items-center gap-2 p-2 rounded-control ${isSender ? "bg-brand-hover text-white" : "bg-border text-ink"}`}>
                                       <FileText className="w-5 h-5 shrink-0" />
                                       <span className="text-[13px] truncate">{att.name || "Tài liệu đính kèm"}</span>
                                     </a>
@@ -2496,13 +2442,13 @@ export default function MessagesPage() {
                               )}
                               {msg.audio_url && !msg.is_recalled && (
                                 <CustomAudioPlayer
-                                  src={msg.audio_url.startsWith("http") ? msg.audio_url : `${API_URL}/storage/${msg.audio_url}`}
+                                  src={msg.audio_url.startsWith("http") ? msg.audio_url : `${API_URL}/tai-len/luu-tru/${msg.audio_url}`}
                                   isSender={isSender}
                                 />
                               )}
-                              
+
                               {msg.poll_data && (
-                                <PollMessage 
+                                <PollMessage
                                   messageId={msg._id || msg.id}
                                   pollData={msg.poll_data}
                                   currentUserId={user?._id}
@@ -2516,17 +2462,17 @@ export default function MessagesPage() {
                                     const match = msg.content.match(/access ([\s\S]+) at internal reference ([\s\S]+)/);
                                     if (match) {
                                       return (
-                                        <a href={`/tai-lieu/${match[2]}`} target="_blank" rel="noreferrer" className={`flex flex-col gap-2 p-3 rounded-[16px] border shadow-sm ${isSender ? "bg-[#0071E3] border-white/20 text-white" : "bg-white border-[#D2D2D7] text-[#1D1D1F]"} transition-all hover:opacity-90 w-full min-w-[240px] max-w-[280px]`}>
+                                        <a href={`/tai-lieu/${match[2]}`} target="_blank" rel="noreferrer" className={`flex flex-col gap-2 p-3 rounded-panel border shadow-sm ${isSender ? "bg-brand border-white/20 text-white" : "bg-white border-border text-ink"} transition-all hover:opacity-90 w-full min-w-[240px] max-w-[280px]`}>
                                           <div className="flex items-center gap-3">
-                                            <div className={`w-10 h-10 shrink-0 rounded-[10px] flex items-center justify-center ${isSender ? "bg-white/20" : "bg-[#F5F5F7]"}`}>
-                                              <FileText className={`w-5 h-5 ${isSender ? "text-white" : "text-[#0071E3]"}`} />
+                                            <div className={`w-10 h-10 shrink-0 rounded-control flex items-center justify-center ${isSender ? "bg-white/20" : "bg-surface-quiet"}`}>
+                                              <FileText className={`w-5 h-5 ${isSender ? "text-white" : "text-brand"}`} />
                                             </div>
                                             <div className="flex flex-col overflow-hidden">
                                               <span className="text-[14px] font-semibold truncate leading-tight">{match[1]}</span>
-                                              <span className={`text-[12px] mt-0.5 ${isSender ? "text-white/80" : "text-[#6E6E73]"}`}>Tài liệu DocLib</span>
+                                              <span className={`text-[12px] mt-0.5 ${isSender ? "text-white/80" : "text-ink-muted"}`}>Tài liệu DocLib</span>
                                             </div>
                                           </div>
-                                          <div className={`text-[12px] px-3 py-1.5 rounded-full text-center font-medium mt-1 ${isSender ? "bg-white/10 text-white" : "bg-[#F5F5F7] text-[#0071E3]"}`}>
+                                          <div className={`text-[12px] px-3 py-1.5 rounded-full text-center font-medium mt-1 ${isSender ? "bg-white/10 text-white" : "bg-surface-quiet text-brand"}`}>
                                             Xem chi tiết
                                           </div>
                                         </a>
@@ -2544,18 +2490,18 @@ export default function MessagesPage() {
                             </div>
                             {!msg.poll_data && (
                               <div className={`flex items-center gap-2 mt-1 ${isSender ? "flex-row-reverse mr-1" : "flex-row ml-1"}`}>
-                                <span className="text-[10px] text-[#6E6E73] whitespace-nowrap">
+                                <span className="text-[10px] text-ink-muted whitespace-nowrap">
                                   {new Date(parseUTC(msg.created_at)).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
                                 </span>
                                 {!msg.is_recalled && msg.reactions && msg.reactions.length > 0 && (
-                                  <div className="bg-white border border-[#D2D2D7] rounded-full px-1.5 py-0.5 text-[11px] flex items-center gap-1 shadow-sm text-[#1D1D1F]">
+                                  <div className="bg-white border border-border rounded-full px-1.5 py-0.5 text-[11px] flex items-center gap-1 shadow-sm text-ink">
                                     {(() => {
                                       const counts: Record<string, number> = {};
                                       msg.reactions.forEach((r: any) => { counts[r.reaction] = (counts[r.reaction] || 0) + 1; });
                                       return Object.entries(counts).map(([emoji, count]) => (
                                         <span key={emoji} className="flex items-center gap-0.5 font-medium leading-none">
                                           <span className="text-[12px] leading-none">{emoji}</span>
-                                          <span className="text-[#6E6E73] text-[11px] tabular-nums leading-none">{count}</span>
+                                          <span className="text-ink-muted text-[11px] tabular-nums leading-none">{count}</span>
                                         </span>
                                       ));
                                     })()}
@@ -2564,14 +2510,14 @@ export default function MessagesPage() {
                               </div>
                             )}
                             </div>
-                            
+
                             {!msg.poll_data && isSender && i === messages.length - 1 && (
                               <div className="flex justify-end mt-1 mr-1">
                                 <div className="w-5 h-5 rounded-full overflow-hidden border-[1.5px] border-white shadow-sm">
                                   {selectedConv.other_user?.avatar_url ? (
                                     <img src={selectedConv.other_user.avatar_url} className="w-full h-full object-cover" alt="" />
                                   ) : (
-                                    <div className="w-full h-full bg-[#0071E3] text-white flex items-center justify-center text-[12px] font-semibold uppercase">
+                                    <div className="w-full h-full bg-brand text-white flex items-center justify-center text-[12px] font-semibold uppercase">
                                       {(aliases[selectedConv.other_user_id] || selectedConv.other_user?.full_name || selectedConv.other_user?.username || "U").charAt(0)}
                                     </div>
                                   )}
@@ -2584,20 +2530,20 @@ export default function MessagesPage() {
                     {typingUsers[selectedConv.other_user_id] && (
                       <div className="flex w-full mb-4 justify-start">
                         <div className="flex gap-2 items-end max-w-[70%]">
-                          <div className="flex-shrink-0 w-7 h-7 rounded-full bg-[#E8E8ED] flex items-center justify-center overflow-hidden">
+                          <div className="flex-shrink-0 w-7 h-7 rounded-full bg-border flex items-center justify-center overflow-hidden">
                             {selectedConv.other_user?.avatar_url ? (
                               <img src={selectedConv.other_user.avatar_url} className="w-full h-full object-cover" alt="" />
                             ) : (
-                              <div className="w-full h-full bg-[#0071E3] text-white flex items-center justify-center text-[11px] font-semibold uppercase">
+                              <div className="w-full h-full bg-brand text-white flex items-center justify-center text-[11px] font-semibold uppercase">
                                 {(aliases[selectedConv.other_user_id] || selectedConv.other_user?.full_name || selectedConv.other_user?.username || "U").charAt(0)}
                               </div>
                             )}
                           </div>
-                          <div className="px-4 py-3 rounded-[18px] bg-[#F5F5F7] rounded-bl-[4px]">
+                          <div className="px-4 py-3 rounded-panel bg-surface-quiet rounded-bl-[4px]">
                             <div className="flex gap-1.5 h-2 items-center">
-                              <span className="w-1.5 h-1.5 bg-[#86868B] rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                              <span className="w-1.5 h-1.5 bg-[#86868B] rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                              <span className="w-1.5 h-1.5 bg-[#86868B] rounded-full animate-bounce"></span>
+                              <span className="w-1.5 h-1.5 bg-ink-muted rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                              <span className="w-1.5 h-1.5 bg-ink-muted rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                              <span className="w-1.5 h-1.5 bg-ink-muted rounded-full animate-bounce"></span>
                             </div>
                           </div>
                         </div>
@@ -2609,40 +2555,40 @@ export default function MessagesPage() {
               </div>
 
 
-              <SmartQuickReplies 
-                replies={quickReplies} 
+              <SmartQuickReplies
+                replies={quickReplies}
                 onSelect={(text) => handleSend(text)}
               />
               {(() => {
                 const isGroupAdmin = isGroupConv && selectedConv?.created_by === (user?._id || (user as any)?.id);
                 const isGroupDeputy = isGroupConv && selectedConv?.deputies?.includes(user?._id || (user as any)?.id);
                 const cannotMessage = isGroupConv && selectedConv?.messaging_restricted && !isGroupAdmin && !isGroupDeputy;
-                
+
                 if (cannotMessage) {
                   return (
                     <div className="flex justify-center p-4 py-8">
-                      <span className="text-[13px] text-[#6E6E73] bg-[#E8E8ED] px-4 py-2 rounded-full font-medium">Chỉ trưởng nhóm và phó nhóm mới được gửi tin nhắn</span>
+                      <span className="text-[13px] text-ink-muted bg-border px-4 py-2 rounded-full font-medium">Chỉ trưởng nhóm và phó nhóm mới được gửi tin nhắn</span>
                     </div>
                   );
                 }
-                
+
                 return (
               <div className="px-4 pb-4 pt-2 bg-transparent relative">
                 <ReplyBlock replyingTo={replyingTo} onCancel={() => setReplyingTo(null)} />
                 {editingMsg && (
-                  <div className="absolute bottom-full left-0 w-full bg-white/95 backdrop-blur-md border-t border-[#E8E8ED] px-4 py-2.5 flex items-center justify-between z-10 animate-in slide-in-from-bottom-2 fade-in duration-200">
-                    <div className="flex flex-col flex-1 overflow-hidden pr-4 border-l-2 border-[#0071E3] pl-3">
-                      <div className="flex items-center gap-1.5 text-[13px] font-semibold text-[#0071E3] mb-0.5">
+                  <div className="absolute bottom-full left-0 w-full bg-white/95 backdrop-blur-md border-t border-border px-4 py-2.5 flex items-center justify-between z-10 animate-in slide-in-from-bottom-2 fade-in duration-200">
+                    <div className="flex flex-col flex-1 overflow-hidden pr-4 border-l-2 border-brand pl-3">
+                      <div className="flex items-center gap-1.5 text-[13px] font-semibold text-brand mb-0.5">
                         <Edit2 className="w-3.5 h-3.5" />
                         <span>Đang chỉnh sửa tin nhắn</span>
                       </div>
-                      <p className="text-[14px] text-[#6E6E73] truncate">
+                      <p className="text-[14px] text-ink-muted truncate">
                         {editingMsg.content || (editingMsg.image_url ? "[Hình ảnh]" : editingMsg.poll_data ? "[Bình chọn]" : "[Đính kèm]")}
                       </p>
                     </div>
-                    <button 
+                    <button
                       onClick={() => { setEditingMsg(null); setNewMessage(""); }}
-                      className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-[#F5F5F7] text-[#6E6E73] transition-colors shrink-0"
+                      className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-surface-quiet text-ink-muted transition-colors shrink-0"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -2661,13 +2607,13 @@ export default function MessagesPage() {
                         }
                       }
                       return (
-                        <div key={idx} className="relative w-16 h-16 shrink-0 rounded-[10px] overflow-hidden border border-[#D2D2D7] bg-white flex items-center justify-center">
+                        <div key={idx} className="relative w-16 h-16 shrink-0 rounded-control overflow-hidden border border-border bg-white flex items-center justify-center">
                           {isImg && objectUrl ? (
                             <img src={objectUrl} alt="" className="w-full h-full object-cover" />
                           ) : (
-                            <FileText className="w-6 h-6 text-[#6E6E73]" />
+                            <FileText className="w-6 h-6 text-ink-muted" />
                           )}
-                          <button onClick={() => setImageFiles(prev => prev.filter((_, i) => i !== idx))} className="absolute top-1 right-1 w-5 h-5 bg-black/50 rounded-full flex items-center justify-center text-white hover:bg-black/70">
+                          <button onClick={() => setImageFiles(prev => prev.filter((_, i) => i !== idx))} className="absolute top-1 right-1 w-5 h-5 bg-ink/50 rounded-full flex items-center justify-center text-white hover:bg-ink/70">
                             <X className="w-3 h-3" />
                           </button>
                         </div>
@@ -2691,10 +2637,10 @@ export default function MessagesPage() {
                   />
                   <div className="flex-1 relative">
                     {isRecording ? (
-                      <div className="w-full bg-[#E8E8ED] border border-transparent rounded-[980px] pl-4 pr-1.5 h-[44px] text-[15px] flex items-center justify-between">
+                      <div className="w-full bg-border border border-transparent rounded-control pl-4 pr-1.5 h-[44px] text-[15px] flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
-                          <div className={`w-2 h-2 bg-red-500 rounded-full ${!isRecordingPaused ? "animate-pulse" : ""}`} />
-                          <span className="text-red-500 font-medium">
+                          <div className={`w-2 h-2 bg-danger-soft0 rounded-full ${!isRecordingPaused ? "animate-pulse" : ""}`} />
+                          <span className="text-danger font-medium">
                             {isRecordingPaused ? "Tạm dừng" : "Đang ghi âm"} ({Math.floor(recordingDuration / 60)}:
                             {(recordingDuration % 60)
                               .toString()
@@ -2705,13 +2651,13 @@ export default function MessagesPage() {
                         <div className="flex items-center gap-0.5">
                           <button
                             onClick={handleTogglePauseRecording}
-                            className="w-8 h-8 flex items-center justify-center text-[#0071E3] hover:bg-black/5 rounded-full transition-colors"
+                            className="w-8 h-8 flex items-center justify-center text-brand hover:bg-ink/5 rounded-full transition-colors"
                           >
                             {isRecordingPaused ? <Mic className="w-[18px] h-[18px]" /> : <Pause className="w-[18px] h-[18px]" />}
                           </button>
                           <button
                             onClick={handleCancelRecording}
-                            className="w-8 h-8 flex items-center justify-center text-[#6E6E73] hover:text-red-500 hover:bg-black/5 rounded-full transition-colors"
+                            className="w-8 h-8 flex items-center justify-center text-ink-muted hover:text-danger hover:bg-ink/5 rounded-full transition-colors"
                           >
                             <Trash2 className="w-[18px] h-[18px]" />
                           </button>
@@ -2721,25 +2667,25 @@ export default function MessagesPage() {
                       <>
                         <button
                           onClick={() => fileInputRef.current?.click()}
-                          className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[36px] h-[36px] flex items-center justify-center text-[#0071E3] hover:bg-[#F5F5F7] rounded-full z-10 transition-colors"
+                          className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[36px] h-[36px] flex items-center justify-center text-brand hover:bg-surface-quiet rounded-full z-10 transition-colors"
                         >
                           <Paperclip className="w-[18px] h-[18px]" />
                         </button>
                         <button
                           onClick={openShareDoc}
-                          className="absolute left-[40px] top-1/2 -translate-y-1/2 w-[36px] h-[36px] flex items-center justify-center text-[#0071E3] hover:bg-[#F5F5F7] rounded-full z-10 transition-colors"
+                          className="absolute left-[40px] top-1/2 -translate-y-1/2 w-[36px] h-[36px] flex items-center justify-center text-brand hover:bg-surface-quiet rounded-full z-10 transition-colors"
                         >
                           <FileText className="w-[18px] h-[18px]" />
                         </button>
                         <button
                           onClick={() => setShowPollModal(true)}
-                          className="absolute left-[78px] top-1/2 -translate-y-1/2 w-[36px] h-[36px] flex items-center justify-center text-[#0071E3] hover:bg-[#F5F5F7] rounded-full z-10 transition-colors"
+                          className="absolute left-[78px] top-1/2 -translate-y-1/2 w-[36px] h-[36px] flex items-center justify-center text-brand hover:bg-surface-quiet rounded-full z-10 transition-colors"
                         >
                           <BarChart2 className="w-[18px] h-[18px]" />
                         </button>
                         <button
                           onClick={() => setShowScheduleModal(true)}
-                          className="absolute left-[116px] top-1/2 -translate-y-1/2 w-[36px] h-[36px] flex items-center justify-center text-[#0071E3] hover:bg-[#F5F5F7] rounded-full z-10 transition-colors"
+                          className="absolute left-[116px] top-1/2 -translate-y-1/2 w-[36px] h-[36px] flex items-center justify-center text-brand hover:bg-surface-quiet rounded-full z-10 transition-colors"
                         >
                           <Clock className="w-[18px] h-[18px]" />
                         </button>
@@ -2751,11 +2697,11 @@ export default function MessagesPage() {
                             if (e.key === "Enter") handleSend();
                           }}
                           placeholder=""
-                          className="w-full h-[44px] bg-white border border-transparent rounded-[980px] pl-[158px] pr-[44px] text-[15px] focus:outline-none focus:border-[#D2D2D7]"
+                          className="w-full h-[44px] bg-white border border-transparent rounded-control pl-[158px] pr-[44px] text-[15px] focus:outline-none focus:border-border"
                         />
                         <button
                           onClick={handleStartRecording}
-                          className="absolute right-1.5 top-1/2 -translate-y-1/2 w-[36px] h-[36px] flex items-center justify-center text-[#0071E3] hover:bg-[#F5F5F7] rounded-full z-10 transition-colors"
+                          className="absolute right-1.5 top-1/2 -translate-y-1/2 w-[36px] h-[36px] flex items-center justify-center text-brand hover:bg-surface-quiet rounded-full z-10 transition-colors"
                         >
                           <Mic className="w-[18px] h-[18px]" />
                         </button>
@@ -2783,26 +2729,26 @@ export default function MessagesPage() {
             </>
           ) : (
             <div className="flex items-center justify-center w-full h-full min-h-[500px]">
-              <span className="text-[17px] text-[#6E6E73]">
+              <span className="text-[17px] text-ink-muted">
                 Chưa có dữ liệu
               </span>
             </div>
           )}
         </div>
-        
+
 
 
 
         {showSharedSidebar && selectedConv && (
-          <div className="w-[300px] md:w-[320px] shrink-0 bg-[#F5F5F7] border-l border-[#D2D2D7] flex flex-col h-full overflow-hidden">
+          <div className="w-[300px] md:w-[320px] shrink-0 bg-surface-quiet border-l border-border flex flex-col h-full overflow-hidden">
             <div className="flex-1 overflow-y-auto hide-scrollbar pt-6">
               <div className="flex flex-col items-center px-4 pb-6">
-                <div className="w-24 h-24 rounded-full bg-[#D2D2D7] overflow-hidden mb-3 relative shadow-sm group">
+                <div className="w-24 h-24 rounded-full bg-border overflow-hidden mb-3 relative shadow-sm group">
                   {isGroupConv ? (
                     (selectedConv.group_avatar || selectedConv.other_user?.avatar_url) ? (
                       <img src={selectedConv.group_avatar || selectedConv.other_user?.avatar_url} className="w-full h-full object-cover" alt="" />
                     ) : (
-                      <div className="w-full h-full bg-[#0071E3] text-white flex items-center justify-center text-[40px] font-semibold uppercase">
+                      <div className="w-full h-full bg-brand text-white flex items-center justify-center text-[40px] font-semibold uppercase">
                         {(selectedConv.group_name || selectedConv.other_user?.full_name || "G").charAt(0)}
                       </div>
                     )
@@ -2810,68 +2756,68 @@ export default function MessagesPage() {
                     selectedConv.other_user?.avatar_url ? (
                       <img src={selectedConv.other_user.avatar_url} className="w-full h-full object-cover" alt="" />
                     ) : (
-                      <div className="w-full h-full bg-[#0071E3] text-white flex items-center justify-center text-[40px] font-semibold uppercase">
+                      <div className="w-full h-full bg-brand text-white flex items-center justify-center text-[40px] font-semibold uppercase">
                         {(aliases[selectedConv.other_user_id] || selectedConv.other_user?.full_name || selectedConv.other_user?.username || "U").charAt(0)}
                       </div>
                     )
                   )}
                   {!isGroupConv && onlineUsers[selectedConv.other_user_id] === true && (
-                    <span className="absolute bottom-1 right-1 w-4 h-4 bg-green-500 border-[3px] border-[#F5F5F7] rounded-full"></span>
+                    <span className="absolute bottom-1 right-1 w-4 h-4 bg-brand-soft0 border-[3px] border-surface-quiet rounded-full"></span>
                   )}
                   {isGroupConv && (
-                    <div onClick={() => groupAvatarInputRef.current?.click()} className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                    <div onClick={() => groupAvatarInputRef.current?.click()} className="absolute inset-0 bg-ink/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                       <Camera className="w-8 h-8 text-white" />
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        ref={groupAvatarInputRef} 
-                        className="hidden" 
-                        onChange={handleGroupAvatarUpload} 
+                      <input
+                        type="file"
+                        accept="image/*"
+                        ref={groupAvatarInputRef}
+                        className="hidden"
+                        onChange={handleGroupAvatarUpload}
                       />
                     </div>
                   )}
                 </div>
-                <h4 className="text-[20px] font-semibold text-[#1D1D1F] text-center leading-tight mt-1 mb-1">
-                  {isGroupConv 
-                    ? (selectedConv.group_name || selectedConv.other_user?.full_name || "Nhóm trò chuyện") 
+                <h4 className="text-[20px] font-semibold text-ink text-center leading-tight mt-1 mb-1">
+                  {isGroupConv
+                    ? (selectedConv.group_name || selectedConv.other_user?.full_name || "Nhóm trò chuyện")
                     : (aliases[selectedConv.other_user_id] || selectedConv.other_user?.full_name || selectedConv.other_user?.username)}
                 </h4>
-                <p className="text-[14px] text-[#6E6E73] mt-1 text-center px-4">
+                <p className="text-[14px] text-ink-muted mt-1 text-center px-4">
                   {renderOnlineStatus(selectedConv.other_user_id, isGroupConv, selectedConv.participant_ids?.length)}
                 </p>
               </div>
 
               <div className="mt-2 px-3 space-y-4">
-                <div className="bg-white rounded-[16px] shadow-sm border border-[#E8E8ED] overflow-hidden divide-y divide-[#E8E8ED]">
+                <div className="bg-white rounded-panel shadow-sm border border-border overflow-hidden divide-y divide-[hsl(var(--border))]">
                   {!isGroupConv && (
-                    <button onClick={() => { setAliasInput(aliases[selectedConv.other_user_id] || ""); setShowAliasModal(true); }} className="w-full px-4 py-3 flex items-center justify-between hover:bg-[#F5F5F7] active:bg-[#E8E8ED] transition-colors">
-                      <span className="text-[15px] text-[#1D1D1F] font-medium">Đổi biệt danh</span>
-                      <ChevronRight className="w-4 h-4 text-[#A1A1A6]" />
+                    <button onClick={() => { setAliasInput(aliases[selectedConv.other_user_id] || ""); setShowAliasModal(true); }} className="w-full px-4 py-3 flex items-center justify-between hover:bg-surface-quiet active:bg-border transition-colors">
+                      <span className="text-[15px] text-ink font-medium">Đổi biệt danh</span>
+                      <ChevronRight className="w-4 h-4 text-ink-faint" />
                     </button>
                   )}
-                  <button onClick={handleToggleMute} className="w-full px-4 py-3 flex items-center justify-between hover:bg-[#F5F5F7] active:bg-[#E8E8ED] transition-colors">
-                    <span className="text-[15px] text-[#1D1D1F] font-medium">Âm báo</span>
-                    <span className="text-[14px] text-[#86868B]">{isMuted ? "Tắt" : "Bật"}</span>
+                  <button onClick={handleToggleMute} className="w-full px-4 py-3 flex items-center justify-between hover:bg-surface-quiet active:bg-border transition-colors">
+                    <span className="text-[15px] text-ink font-medium">Âm báo</span>
+                    <span className="text-[14px] text-ink-faint">{isMuted ? "Tắt" : "Bật"}</span>
                   </button>
                   <div className="px-4 py-3 flex items-center justify-between">
-                    <span className="text-[15px] text-[#1D1D1F] font-medium">Chủ đề</span>
+                    <span className="text-[15px] text-ink font-medium">Chủ đề</span>
                     <div className="flex gap-2">
-                      <button onClick={() => updateTheme("default")} className="w-5 h-5 rounded-full bg-[#0071E3] border border-transparent hover:border-black" />
-                      <button onClick={() => updateTheme("red")} className="w-5 h-5 rounded-full bg-red-500 border border-transparent hover:border-black" />
-                      <button onClick={() => updateTheme("green")} className="w-5 h-5 rounded-full bg-green-500 border border-transparent hover:border-black" />
-                      <button onClick={() => updateTheme("purple")} className="w-5 h-5 rounded-full bg-purple-500 border border-transparent hover:border-black" />
+                      <button onClick={() => updateTheme("default")} className="w-5 h-5 rounded-full bg-brand border border-transparent hover:border-ink" />
+                      <button onClick={() => updateTheme("red")} className="w-5 h-5 rounded-full bg-danger-soft0 border border-transparent hover:border-ink" />
+                      <button onClick={() => updateTheme("green")} className="w-5 h-5 rounded-full bg-brand-soft0 border border-transparent hover:border-ink" />
+                      <button onClick={() => updateTheme("purple")} className="w-5 h-5 rounded-full bg-brand-soft0 border border-transparent hover:border-ink" />
                     </div>
                   </div>
                   <div>
-                    <button onClick={() => setShowSelfDestructMenu(!showSelfDestructMenu)} className="w-full px-4 py-3 flex items-center justify-between hover:bg-[#F5F5F7] active:bg-[#E8E8ED] transition-colors">
-                      <span className="text-[15px] text-[#1D1D1F] font-medium">Tự hủy tin</span>
-                      <div className="flex items-center gap-1 text-[#86868B]">
+                    <button onClick={() => setShowSelfDestructMenu(!showSelfDestructMenu)} className="w-full px-4 py-3 flex items-center justify-between hover:bg-surface-quiet active:bg-border transition-colors">
+                      <span className="text-[15px] text-ink font-medium">Tự hủy tin</span>
+                      <div className="flex items-center gap-1 text-ink-faint">
                         <span className="text-[14px]">{selfDestructSeconds ? `${selfDestructSeconds}s` : "Tắt"}</span>
                         <ChevronRight className={`w-4 h-4 transition-transform ${showSelfDestructMenu ? "rotate-90" : ""}`} />
                       </div>
                     </button>
                     {showSelfDestructMenu && (
-                      <div className="px-3 pb-2 pt-1 bg-[#F5F5F7]/50">
+                      <div className="px-3 pb-2 pt-1 bg-surface-quiet/50">
                         {[
                           { label: "Tắt", value: 0 },
                           { label: "5 giây", value: 5 },
@@ -2882,10 +2828,10 @@ export default function MessagesPage() {
                           <button
                             key={opt.value}
                             onClick={() => { setSelfDestructSeconds(opt.value); setShowSelfDestructMenu(false); }}
-                            className={`w-full text-left py-2 px-3 rounded-[8px] flex items-center justify-between text-[14px] ${selfDestructSeconds === opt.value ? "bg-[#0071E3]/10 text-[#0071E3] font-medium" : "text-[#1D1D1F] hover:bg-black/5"}`}
+                            className={`w-full text-left py-2 px-3 rounded-control flex items-center justify-between text-[14px] ${selfDestructSeconds === opt.value ? "bg-brand/10 text-brand font-medium" : "text-ink hover:bg-ink/5"}`}
                           >
                             {opt.label}
-                            {selfDestructSeconds === opt.value && <Check className="w-4 h-4 text-[#0071E3]" />}
+                            {selfDestructSeconds === opt.value && <Check className="w-4 h-4 text-brand" />}
                           </button>
                         ))}
                       </div>
@@ -2893,31 +2839,31 @@ export default function MessagesPage() {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-[16px] shadow-sm border border-[#E8E8ED] p-4">
-                  <h5 className="text-[13px] font-semibold text-[#6E6E73] uppercase tracking-wider mb-3">File phương tiện</h5>
+                <div className="bg-white rounded-panel shadow-sm border border-border p-4">
+                  <h5 className="text-[13px] font-semibold text-ink-muted uppercase tracking-wider mb-3">File phương tiện</h5>
                   {sharedAttachments.length > 0 ? (
                     <div className="grid grid-cols-3 gap-2">
                       {sharedAttachments.slice(0, 6).map((att: any, idx: number) => {
                         const url = att.url || "";
-                        const href = url ? (url.startsWith("http") ? url : `${API_URL}/storage/${url}`) : "#";
+                        const href = url ? (url.startsWith("http") ? url : `${API_URL}/tai-len/luu-tru/${url}`) : "#";
                         const isImg = url.match(/\.(jpeg|jpg|gif|png)$/i);
                         return (
-                          <a 
-                            key={idx} 
-                            href={href} 
-                            target="_blank" 
+                          <a
+                            key={idx}
+                            href={href}
+                            target="_blank"
                             rel="noreferrer"
-                            className="aspect-square bg-[#F5F5F7] rounded-[8px] flex flex-col items-center justify-center text-[#A1A1A6] hover:bg-[#E8E8ED] transition-colors p-1 cursor-pointer overflow-hidden border border-[#D2D2D7]/50"
+                            className="aspect-square bg-surface-quiet rounded-control flex flex-col items-center justify-center text-ink-faint hover:bg-border transition-colors p-1 cursor-pointer overflow-hidden border border-border/50"
                           >
                             {isImg ? (
                               <img src={href} className="w-full h-full object-cover rounded-[6px]" alt="" />
                             ) : url.match(/\.(mp4|webm|mov)$/i) ? (
-                              <Video className="w-6 h-6 mb-1 text-[#6E6E73]" />
+                              <Video className="w-6 h-6 mb-1 text-ink-muted" />
                             ) : (
-                              <FileText className="w-6 h-6 mb-1 text-[#6E6E73]" />
+                              <FileText className="w-6 h-6 mb-1 text-ink-muted" />
                             )}
                             {!isImg && (
-                              <span className="text-[10px] text-[#6E6E73] truncate w-full text-center px-1">
+                              <span className="text-[10px] text-ink-muted truncate w-full text-center px-1">
                                 {att.name || "File"}
                               </span>
                             )}
@@ -2925,44 +2871,44 @@ export default function MessagesPage() {
                         );
                       })}
                       {sharedAttachments.length > 6 && (
-                        <div className="col-span-3 text-center mt-2 pt-2 border-t border-[#F5F5F7]">
-                          <button className="text-[14px] text-[#0071E3] font-medium hover:underline">Xem tất cả ({sharedAttachments.length})</button>
+                        <div className="col-span-3 text-center mt-2 pt-2 border-t border-surface-quiet">
+                          <button className="text-[14px] text-brand font-medium hover:underline">Xem tất cả ({sharedAttachments.length})</button>
                         </div>
                       )}
                     </div>
                   ) : (
-                    <div className="text-center py-4 bg-[#F5F5F7] rounded-[8px]">
-                      <p className="text-[13px] text-[#6E6E73]">Chưa có file nào</p>
+                    <div className="text-center py-4 bg-surface-quiet rounded-control">
+                      <p className="text-[13px] text-ink-muted">Chưa có file nào</p>
                     </div>
                   )}
                 </div>
 
                 {isGroupConv && (
                   <>
-                    <div className="mt-4 bg-white rounded-[16px] shadow-sm border border-[#E8E8ED] p-4">
-                      <h5 className="text-[13px] font-semibold text-[#6E6E73] uppercase tracking-wider mb-3">Thành viên ({selectedConv.participant_ids?.length || 0})</h5>
-                      <div className="flex flex-col max-h-[150px] overflow-y-auto hide-scrollbar divide-y divide-[#E8E8ED]/50 -mx-2 px-2">
+                    <div className="mt-4 bg-white rounded-panel shadow-sm border border-border p-4">
+                      <h5 className="text-[13px] font-semibold text-ink-muted uppercase tracking-wider mb-3">Thành viên ({selectedConv.participant_ids?.length || 0})</h5>
+                      <div className="flex flex-col max-h-[150px] overflow-y-auto hide-scrollbar divide-y divide-[hsl(var(--border))]/50 -mx-2 px-2">
                         {(selectedConv.participant_ids || []).map((mId: string) => {
                           const mUser = Object.values(conversationsRef.current).find(c => c.other_user_id === mId)?.other_user || { _id: mId };
                           const isGroupAdmin = selectedConv.created_by === mId;
                           const isGroupDeputy = (selectedConv.deputies || []).includes(mId);
                           return (
-                            <div key={mId} className="flex items-center gap-3 py-2 hover:bg-[#F5F5F7] rounded-[8px] transition-colors cursor-pointer px-2">
-                              <div className="w-8 h-8 rounded-full bg-[#D2D2D7] overflow-hidden shrink-0">
+                            <div key={mId} className="flex items-center gap-3 py-2 hover:bg-surface-quiet rounded-control transition-colors cursor-pointer px-2">
+                              <div className="w-8 h-8 rounded-full bg-border overflow-hidden shrink-0">
                                 {mUser?.avatar_url ? (
                                   <img src={mUser.avatar_url} className="w-full h-full object-cover" alt="" />
                                 ) : (
-                                  <div className="w-full h-full bg-[#0071E3] text-white flex items-center justify-center text-[12px] font-semibold uppercase">
+                                  <div className="w-full h-full bg-brand text-white flex items-center justify-center text-[12px] font-semibold uppercase">
                                     {(mUser?.full_name || mUser?.username || "U").charAt(0)}
                                   </div>
                                 )}
                               </div>
                               <div className="flex flex-col flex-1 min-w-0">
-                                <span className="text-[14px] font-medium text-[#1D1D1F] truncate">{mUser?.full_name || mUser?.username || "Thành viên"}</span>
+                                <span className="text-[14px] font-medium text-ink truncate">{mUser?.full_name || mUser?.username || "Thành viên"}</span>
                                 {isGroupAdmin ? (
-                                  <span className="text-[11px] text-[#0071E3] font-medium mt-0.5">Trưởng nhóm</span>
+                                  <span className="text-[11px] text-brand font-medium mt-0.5">Trưởng nhóm</span>
                                 ) : isGroupDeputy ? (
-                                  <span className="text-[11px] text-[#0071E3] mt-0.5">Phó nhóm</span>
+                                  <span className="text-[11px] text-brand mt-0.5">Phó nhóm</span>
                                 ) : null}
                               </div>
                             </div>
@@ -2970,14 +2916,13 @@ export default function MessagesPage() {
                         })}
                       </div>
                     </div>
-                    
-                    <div className="bg-white rounded-[16px] shadow-sm border border-[#E8E8ED] overflow-hidden divide-y divide-[#E8E8ED] mt-4 mb-2">
+
+                    <div className="bg-white rounded-panel shadow-sm border border-border overflow-hidden divide-y divide-[hsl(var(--border))] mt-4 mb-2">
                        <button onClick={async () => {
                          try {
                            let token = selectedConv.invite_token;
                            if (!token) {
-                             const res = await fetch(`${API_URL}/tin-nhan/nhom/${selectedConv._id || selectedConv.id}/link`, { method: "POST", headers: { "Authorization": `Bearer ${getToken()}` } });
-                             const data = await res.json();
+                             const data = await generateGroupInviteAPI(selectedConv._id || selectedConv.id);
                              if (data.data?.invite_token) token = data.data.invite_token;
                            }
                            if (token) {
@@ -2988,7 +2933,7 @@ export default function MessagesPage() {
                          } catch (e) {
                            showToast("Không thể tạo link mời", "error");
                          }
-                       }} className="w-full px-4 py-3 flex items-center gap-3 text-[15px] font-medium text-[#0071E3] hover:bg-[#F5F5F7] active:bg-[#E8E8ED] transition-colors">
+                       }} className="w-full px-4 py-3 flex items-center gap-3 text-[15px] font-medium text-brand hover:bg-surface-quiet active:bg-border transition-colors">
                         <Share2 className="w-5 h-5" />
                         Sao chép link mời
                       </button>
@@ -3004,11 +2949,11 @@ export default function MessagesPage() {
                           requires_approval: selectedConv.requires_approval || false
                         });
                         setShowGroupSettingsModal(true);
-                      }} className="w-full px-4 py-3 flex items-center gap-3 text-[15px] font-medium text-[#0071E3] hover:bg-[#F5F5F7] active:bg-[#E8E8ED] transition-colors">
+                      }} className="w-full px-4 py-3 flex items-center gap-3 text-[15px] font-medium text-brand hover:bg-surface-quiet active:bg-border transition-colors">
                         <Settings2 className="w-5 h-5" />
                         Cài đặt nhóm
                       </button>
-                      <button onClick={() => setShowLeaveGroupModal(true)} className="w-full px-4 py-3 flex items-center gap-3 text-[15px] font-medium text-red-500 hover:bg-red-50 active:bg-red-100 transition-colors">
+                      <button onClick={() => setShowLeaveGroupModal(true)} className="w-full px-4 py-3 flex items-center gap-3 text-[15px] font-medium text-danger hover:bg-danger-soft active:bg-danger-soft transition-colors">
                         <LogOut className="w-5 h-5" />
                         Rời nhóm
                       </button>
@@ -3017,8 +2962,8 @@ export default function MessagesPage() {
                 )}
 
                 {!isGroupConv && (
-                  <div className="bg-white rounded-[16px] shadow-sm overflow-hidden border border-[#E8E8ED] mb-6">
-                    <button onClick={handleBlockUser} className="w-full px-4 py-3 flex items-center gap-3 text-[15px] font-medium text-red-500 hover:bg-[#F5F5F7] active:bg-[#E8E8ED] transition-colors">
+                  <div className="bg-white rounded-panel shadow-sm overflow-hidden border border-border mb-6">
+                    <button onClick={handleBlockUser} className="w-full px-4 py-3 flex items-center gap-3 text-[15px] font-medium text-danger hover:bg-surface-quiet active:bg-border transition-colors">
                       <ShieldAlert className="w-5 h-5" />
                       {isBlocked ? "Bỏ chặn người dùng" : "Chặn người dùng"}
                     </button>
@@ -3049,7 +2994,7 @@ export default function MessagesPage() {
           <div className="flex justify-end gap-3 mt-6">
             <button
               onClick={() => setShowAliasModal(false)}
-              className="px-4 py-2 text-[14px] font-medium text-[#1D1D1F] bg-[#E8E8ED] hover:bg-[#D2D2D7] rounded-full transition-colors"
+              className="px-4 py-2 text-[14px] font-medium text-ink bg-border hover:bg-border rounded-full transition-colors"
             >
               Hủy
             </button>
@@ -3092,8 +3037,8 @@ export default function MessagesPage() {
 
         return (
           <>
-            <div className="fixed inset-0 z-40 bg-black/25 backdrop-blur-[2px]" onClick={dismiss} />
-            <div 
+            <div className="fixed inset-0 z-40 bg-ink/25 backdrop-blur-[2px]" onClick={dismiss} />
+            <div
               style={{
                 position: 'fixed',
                 top: activeMsgRect.top,
@@ -3105,27 +3050,27 @@ export default function MessagesPage() {
               onClick={dismiss}
             >
                <div
-                  className={`rounded-[18px] flex flex-col gap-2 p-4 ${
+                  className={`rounded-panel flex flex-col gap-2 p-4 ${
                     activeMsgObj.is_recalled
-                      ? "bg-white/90 border border-dashed border-[#D2D2D7] text-[#6E6E73] justify-center min-h-[38px]"
+                      ? "bg-white/90 border border-dashed border-border text-ink-muted justify-center min-h-[38px]"
                       : isSender
-                      ? "bg-[#0071E3] text-white"
-                      : "bg-white border border-[#E8E8ED] text-[#1D1D1F]"
+                      ? "bg-brand text-white"
+                      : "bg-white border border-border text-ink"
                   } cursor-pointer select-none shadow-2xl`}
                 >
                   {activeMsgObj.reply_to && !activeMsgObj.is_recalled && (
-                    <div className={`text-[12px] px-2 py-1.5 rounded-[10px] truncate opacity-80 ${isSender ? "bg-[#0055C6] text-white" : "bg-[#E8E8ED] text-[#6E6E73]"}`}>
+                    <div className={`text-[12px] px-2 py-1.5 rounded-control truncate opacity-80 ${isSender ? "bg-brand-hover text-white" : "bg-border text-ink-muted"}`}>
                       <span className="font-semibold block mb-0.5">Trích dẫn:</span>
                       {typeof activeMsgObj.reply_to === 'object' ? activeMsgObj.reply_to.content : "Tin nhắn"}
                     </div>
                   )}
                   {activeMsgObj.image_url && !activeMsgObj.is_recalled && (
-                    <img src={activeMsgObj.image_url.startsWith("http") ? activeMsgObj.image_url : `${API_URL}/storage/${activeMsgObj.image_url}`} alt="" className="rounded-[10px] max-h-[300px] object-cover" />
+                    <img src={activeMsgObj.image_url.startsWith("http") ? activeMsgObj.image_url : `${API_URL}/tai-len/luu-tru/${activeMsgObj.image_url}`} alt="" className="rounded-control max-h-[300px] object-cover" />
                   )}
                   {activeMsgObj.attachments && activeMsgObj.attachments.length > 0 && !activeMsgObj.is_recalled && (
                     <div className="space-y-2">
                       {activeMsgObj.attachments.map((att: any, idx: number) => (
-                        <div key={idx} className={`flex items-center gap-2 p-2 rounded-[10px] ${isSender ? "bg-[#0055C6] text-white" : "bg-[#E8E8ED] text-[#1D1D1F]"}`}>
+                        <div key={idx} className={`flex items-center gap-2 p-2 rounded-control ${isSender ? "bg-brand-hover text-white" : "bg-border text-ink"}`}>
                           <FileText className="w-5 h-5 shrink-0" />
                           <span className="text-[13px] truncate">{att.name || "Tài liệu đính kèm"}</span>
                         </div>
@@ -3133,7 +3078,7 @@ export default function MessagesPage() {
                     </div>
                   )}
                   {activeMsgObj.audio_url && !activeMsgObj.is_recalled && (
-                    <div className={`text-[13px] ${isSender ? "text-white/80" : "text-[#6E6E73]"}`}>[Tin nhắn thoại]</div>
+                    <div className={`text-[13px] ${isSender ? "text-white/80" : "text-ink-muted"}`}>[Tin nhắn thoại]</div>
                   )}
                   {!activeMsgObj.is_recalled && activeMsgObj.content && activeMsgObj.content !== "Tin nhắn thoại" && (
                     <p className="text-[15px] leading-[1.4] whitespace-pre-wrap">{activeMsgObj.content}</p>
@@ -3142,20 +3087,20 @@ export default function MessagesPage() {
                     <span className="text-[13px] italic flex items-center h-full">Tin nhắn đã thu hồi</span>
                   )}
                </div>
-               
+
                <div className={`flex items-center gap-2 mt-1 ${isSender ? "flex-row-reverse mr-1" : "flex-row ml-1"}`}>
                   <span className="text-[10px] text-white font-medium whitespace-nowrap drop-shadow-md">
                     {new Date(parseUTC(activeMsgObj.created_at)).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
                   </span>
                   {!activeMsgObj.is_recalled && activeMsgObj.reactions && activeMsgObj.reactions.length > 0 && (
-                    <div className="bg-white border border-[#D2D2D7] rounded-full px-1.5 py-0.5 text-[11px] flex items-center gap-1 shadow-md text-[#1D1D1F]">
+                    <div className="bg-white border border-border rounded-full px-1.5 py-0.5 text-[11px] flex items-center gap-1 shadow-md text-ink">
                       {(() => {
                         const counts: Record<string, number> = {};
                         activeMsgObj.reactions.forEach((r: any) => { counts[r.reaction] = (counts[r.reaction] || 0) + 1; });
                         return Object.entries(counts).map(([emoji, count]) => (
                           <span key={emoji} className="flex items-center gap-0.5 font-medium leading-none">
                             <span className="text-[12px] leading-none">{emoji}</span>
-                            <span className="text-[#6E6E73] text-[11px] tabular-nums leading-none">{count}</span>
+                            <span className="text-ink-muted text-[11px] tabular-nums leading-none">{count}</span>
                           </span>
                         ));
                       })()}
@@ -3171,7 +3116,7 @@ export default function MessagesPage() {
             >
 
               {!isRecalled && (
-                <div className="flex items-center gap-1 bg-white/95 backdrop-blur-md border border-[#E8E8ED] rounded-full px-3 py-2 shadow-[0_8px_32px_rgba(0,0,0,0.18)] self-start">
+                <div className="flex items-center gap-1 bg-white/95 backdrop-blur-md border border-border rounded-full px-3 py-2 shadow-[0_8px_32px_rgba(0,0,0,0.18)] self-start">
                   {["Yêu thích", "Thích", "Vui", "Bất ngờ", "Buồn", "Cảm ơn"].map((emoji) => (
                     <button
                       key={emoji}
@@ -3185,26 +3130,26 @@ export default function MessagesPage() {
               )}
 
 
-              <div className="flex flex-col bg-white/95 backdrop-blur-md border border-[#E8E8ED] rounded-[16px] shadow-[0_8px_32px_rgba(0,0,0,0.15)] overflow-hidden">
+              <div className="flex flex-col bg-white/95 backdrop-blur-md border border-border rounded-panel shadow-[0_8px_32px_rgba(0,0,0,0.15)] overflow-hidden">
                 {!isRecalled && (
                   <button
                     onClick={() => { setReplyingTo(activeMsgObj); dismiss(); }}
-                    className="flex items-center gap-3 w-full px-4 py-3 text-[15px] text-[#1D1D1F] hover:bg-[#F5F5F7] border-b border-[#F2F2F7] text-left transition-colors"
+                    className="flex items-center gap-3 w-full px-4 py-3 text-[15px] text-ink hover:bg-surface-quiet border-b border-surface-quiet text-left transition-colors"
                   >
-                    <Reply className="w-[18px] h-[18px] text-[#6E6E73]" />
+                    <Reply className="w-[18px] h-[18px] text-ink-muted" />
                     Trả lời
                   </button>
                 )}
 
                 {!isRecalled && (
                   <button
-                    onClick={() => { 
-                      setActiveThreadParentId(msgId); 
-                      dismiss(); 
+                    onClick={() => {
+                      setActiveThreadParentId(msgId);
+                      dismiss();
                     }}
-                    className="flex items-center gap-3 w-full px-4 py-3 text-[15px] text-[#1D1D1F] hover:bg-[#F5F5F7] border-b border-[#F2F2F7] text-left transition-colors"
+                    className="flex items-center gap-3 w-full px-4 py-3 text-[15px] text-ink hover:bg-surface-quiet border-b border-surface-quiet text-left transition-colors"
                   >
-                    <MessageSquareReply className="w-[18px] h-[18px] text-[#6E6E73]" />
+                    <MessageSquareReply className="w-[18px] h-[18px] text-ink-muted" />
                     Phản hồi theo luồng {activeMsgObj?.thread_count > 0 ? `(${activeMsgObj.thread_count})` : ''}
                   </button>
                 )}
@@ -3212,9 +3157,9 @@ export default function MessagesPage() {
                 {!isRecalled && (
                   <button
                     onClick={() => { setShowForwardModal(msgId); dismiss(); }}
-                    className="flex items-center gap-3 w-full px-4 py-3 text-[15px] text-[#1D1D1F] hover:bg-[#F5F5F7] border-b border-[#F2F2F7] text-left transition-colors"
+                    className="flex items-center gap-3 w-full px-4 py-3 text-[15px] text-ink hover:bg-surface-quiet border-b border-surface-quiet text-left transition-colors"
                   >
-                    <Share2 className="w-[18px] h-[18px] text-[#6E6E73]" />
+                    <Share2 className="w-[18px] h-[18px] text-ink-muted" />
                     Chuyển tiếp
                   </button>
                 )}
@@ -3222,24 +3167,24 @@ export default function MessagesPage() {
                 {!isRecalled && (
                   <button
                     onClick={() => { handlePin(msgId); dismiss(); }}
-                    className="flex items-center gap-3 w-full px-4 py-3 text-[15px] text-[#1D1D1F] hover:bg-[#F5F5F7] border-b border-[#F2F2F7] text-left transition-colors"
+                    className="flex items-center gap-3 w-full px-4 py-3 text-[15px] text-ink hover:bg-surface-quiet border-b border-surface-quiet text-left transition-colors"
                   >
-                    {activeMsgObj.is_pinned ? <PinOff className="w-[18px] h-[18px] text-[#6E6E73]" /> : <Pin className="w-[18px] h-[18px] text-[#6E6E73]" />}
+                    {activeMsgObj.is_pinned ? <PinOff className="w-[18px] h-[18px] text-ink-muted" /> : <Pin className="w-[18px] h-[18px] text-ink-muted" />}
                     {activeMsgObj.is_pinned ? "Bỏ ghim" : "Ghim"}
                   </button>
                 )}
                 {!isRecalled && isSender && (
                   <button
                     onClick={() => { setEditingMsg(activeMsgObj); setNewMessage(activeMsgObj.content); dismiss(); }}
-                    className="flex items-center gap-3 w-full px-4 py-3 text-[15px] text-[#1D1D1F] hover:bg-[#F5F5F7] border-b border-[#F2F2F7] text-left transition-colors"
+                    className="flex items-center gap-3 w-full px-4 py-3 text-[15px] text-ink hover:bg-surface-quiet border-b border-surface-quiet text-left transition-colors"
                   >
-                    <Edit2 className="w-[18px] h-[18px] text-[#6E6E73]" />
+                    <Edit2 className="w-[18px] h-[18px] text-ink-muted" />
                     Chỉnh sửa
                   </button>
                 )}
                 <button
                   onClick={() => setShowDeleteSubMenu(showDeleteSubMenu === msgId ? null : msgId)}
-                  className={`flex items-center justify-between gap-3 w-full px-4 py-3 text-[15px] text-red-500 hover:bg-[#FFF5F5] text-left transition-colors ${showDeleteSubMenu === msgId ? "border-b border-[#F2F2F7]" : ""}`}
+                  className={`flex items-center justify-between gap-3 w-full px-4 py-3 text-[15px] text-danger hover:bg-danger-soft text-left transition-colors ${showDeleteSubMenu === msgId ? "border-b border-surface-quiet" : ""}`}
                 >
                   <div className="flex items-center gap-3">
                     <Trash2 className="w-[18px] h-[18px]" />
@@ -3252,7 +3197,7 @@ export default function MessagesPage() {
                     {isSender && !isRecalled && (
                       <button
                         onClick={() => { handleRecall(msgId); dismiss(); }}
-                        className="flex items-center gap-3 w-full px-5 py-2.5 text-[14px] text-orange-500 hover:bg-orange-50 border-b border-[#F2F2F7] text-left transition-colors"
+                        className="flex items-center gap-3 w-full px-5 py-2.5 text-[14px] text-warning hover:bg-warning-soft border-b border-surface-quiet text-left transition-colors"
                       >
                         <Undo2 className="w-[15px] h-[15px]" />
                         Thu hồi tin nhắn
@@ -3260,7 +3205,7 @@ export default function MessagesPage() {
                     )}
                     <button
                       onClick={() => { handleDeleteForMe(msgId); dismiss(); }}
-                      className="flex items-center gap-3 w-full px-5 py-2.5 text-[14px] text-red-500 hover:bg-[#FFF5F5] text-left transition-colors"
+                      className="flex items-center gap-3 w-full px-5 py-2.5 text-[14px] text-danger hover:bg-danger-soft text-left transition-colors"
                     >
                       <Trash2 className="w-[15px] h-[15px]" />
                       Xóa phía tôi

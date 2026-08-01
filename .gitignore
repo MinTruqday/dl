@@ -6,6 +6,11 @@ frontend/.next/
 frontend/next-env.d.ts
 frontend/tsconfig.tsbuildinfo
 frontend/public/
+!frontend/public/
+frontend/public/*
+!frontend/public/images/
+frontend/public/images/*
+!frontend/public/images/doclib-document-workspace.png
 backend/logs/
 backend/.venv/
 *.md

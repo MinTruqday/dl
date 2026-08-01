@@ -52,10 +52,10 @@ package.json`,
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-dirtree { background: #1e293b; border-radius: 8px; padding: 16px; font-family: monospace; color: #cbd5e1; font-size: 14px; position: relative; }
-      .doclib-dirtree-textarea { width: 100%; min-height: 150px; background: transparent; border: none; color: #cbd5e1; font-family: inherit; font-size: inherit; resize: vertical; outline: none; line-height: 1.5; white-space: pre; }
+      .doclib-dirtree { background: hsl(var(--ink)); border-radius: 8px; padding: 16px; font-family: monospace; color: hsl(var(--border)); font-size: 14px; position: relative; }
+      .doclib-dirtree-textarea { width: 100%; min-height: 150px; background: transparent; border: none; color: hsl(var(--border)); font-family: inherit; font-size: inherit; resize: vertical; outline: none; line-height: 1.5; white-space: pre; }
       .doclib-dirtree-view { white-space: pre; line-height: 1.5; }
-      .doclib-dirtree-label { position: absolute; top: -10px; right: 16px; background: #3b82f6; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-family: sans-serif; font-weight: bold; }
+      .doclib-dirtree-label { position: absolute; top: -10px; right: 16px; background: hsl(var(--brand)); color: hsl(var(--surface)); padding: 2px 8px; border-radius: 12px; font-size: 10px; font-family: sans-serif; font-weight: bold; }
     `;
     this.wrapper.appendChild(style);
 

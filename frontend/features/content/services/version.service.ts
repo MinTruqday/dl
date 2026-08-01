@@ -9,7 +9,7 @@ export async function getDocumentVersionsAPI(documentId: string) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi trích xuất bộ sưu tập lịch sử phiên bản");
+    throw new Error(data.message || "Không thể tải bộ sưu tập lịch sử phiên bản");
   return data.data || data;
 }
 
@@ -22,7 +22,7 @@ export async function saveVersionAPI(documentId: string, versionNote: string) {
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi kết xuất bản sao cấu trúc phiên bản");
+  if (!res.ok) throw new Error(data.message || "Không thể xuất bản sao cấu trúc phiên bản");
   return data.data || data;
 }
 
@@ -32,6 +32,6 @@ export async function restoreVersionAPI(versionId: string) {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi phục hồi dữ liệu từ bản sao lưu");
+  if (!res.ok) throw new Error(data.message || "Không thể khôi phục dữ liệu từ bản sao lưu");
   return data.data || data;
 }

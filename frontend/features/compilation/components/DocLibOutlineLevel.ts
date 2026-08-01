@@ -48,13 +48,13 @@ export default class DocLibOutlineLevel implements BlockTool {
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-outline { display: flex; align-items: stretch; gap: 12px; margin: 8px 0; font-family: sans-serif; }
-      .doclib-outline-ctrl { display: flex; align-items: center; justify-content: center; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 0 8px; cursor: pointer; user-select: none; }
-      .doclib-outline-lvl { font-size: 11px; font-weight: bold; color: #64748b; width: 50px; text-align: center; }
-      .doclib-outline-btn { border: none; background: transparent; color: #94a3b8; font-weight: bold; cursor: pointer; padding: 4px; outline: none; }
-      .doclib-outline-btn:hover { color: #3b82f6; }
-      .doclib-outline-text { flex: 1; font-weight: bold; color: #0f172a; outline: none; display: flex; align-items: center; padding: 8px; border-bottom: 1px dotted transparent; transition: 0.3s; }
-      .doclib-outline-text:focus { border-bottom-color: #3b82f6; }
-      .doclib-outline-text:empty:before { content: "DocLib Outline Text"; color: #94a3b8; font-weight: normal; font-style: italic; }
+      .doclib-outline-ctrl { display: flex; align-items: center; justify-content: center; background: hsl(var(--surface-quiet)); border: 1px solid hsl(var(--border)); border-radius: 4px; padding: 0 8px; cursor: pointer; user-select: none; }
+      .doclib-outline-lvl { font-size: 11px; font-weight: bold; color: hsl(var(--ink-muted)); width: 50px; text-align: center; }
+      .doclib-outline-btn { border: none; background: transparent; color: hsl(var(--ink-faint)); font-weight: bold; cursor: pointer; padding: 4px; outline: none; }
+      .doclib-outline-btn:hover { color: hsl(var(--brand)); }
+      .doclib-outline-text { flex: 1; font-weight: bold; color: hsl(var(--ink)); outline: none; display: flex; align-items: center; padding: 8px; border-bottom: 1px dotted transparent; transition: 0.3s; }
+      .doclib-outline-text:focus { border-bottom-color: hsl(var(--brand)); }
+      .doclib-outline-text:empty:before { content: "DocLib Outline Text"; color: hsl(var(--ink-faint)); font-weight: normal; font-style: italic; }
       
       .doclib-outline[data-level="Level 1"] .doclib-outline-text { font-size: 24px; }
       .doclib-outline[data-level="Level 2"] .doclib-outline-text { font-size: 20px; margin-left: 24px; }

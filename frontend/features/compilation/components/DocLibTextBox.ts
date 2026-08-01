@@ -49,10 +49,10 @@ export default class DocLibTextBox implements BlockTool {
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-textbox-wrapper { clear: both; margin: 16px 0; }
-      .doclib-textbox { border: 1px solid #1e293b; background: #fff; padding: 16px; box-shadow: 2px 2px 0px rgba(0,0,0,0.1); font-size: 15px; line-height: 1.6; outline: none; transition: all 0.3s ease; }
-      .doclib-textbox:empty::before { content: "DocLib Text"; color: #94a3b8; pointer-events: none; }
-      .doclib-textbox-controls { display: flex; gap: 8px; margin-top: 8px; background: #f8fafc; padding: 8px; border-radius: 4px; border: 1px solid #e2e8f0; clear: both; }
-      .doclib-textbox-select { padding: 4px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; }
+      .doclib-textbox { border: 1px solid hsl(var(--ink)); background: hsl(var(--surface)); padding: 16px; box-shadow: 2px 2px 0px rgba(0,0,0,0.1); font-size: 15px; line-height: 1.6; outline: none; transition: all 0.3s ease; }
+      .doclib-textbox:empty::before { content: "DocLib Text"; color: hsl(var(--ink-faint)); pointer-events: none; }
+      .doclib-textbox-controls { display: flex; gap: 8px; margin-top: 8px; background: hsl(var(--surface-raised)); padding: 8px; border-radius: 4px; border: 1px solid hsl(var(--border)); clear: both; }
+      .doclib-textbox-select { padding: 4px; border: 1px solid hsl(var(--border)); border-radius: 4px; outline: none; }
     `;
     this.wrapper.appendChild(style);
 

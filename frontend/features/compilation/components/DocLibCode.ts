@@ -59,14 +59,14 @@ export default class DocLibCode implements BlockTool {
     this.textarea.style.minHeight = "150px";
     this.textarea.style.width = "100%";
     this.textarea.style.padding = "10px";
-    this.textarea.style.border = "1px solid #eaeaea";
+    this.textarea.style.border = "1px solid hsl(var(--border))";
     this.textarea.style.borderRadius = "3px";
     this.textarea.style.resize = "vertical";
     this.textarea.style.fontFamily =
       "Menlo, Monaco, Consolas, Courier New, monospace";
     this.textarea.style.fontSize = "14px";
     this.textarea.style.lineHeight = "1.6";
-    this.textarea.style.backgroundColor = "#f8f9fa";
+    this.textarea.style.backgroundColor = "hsl(var(--surface-quiet))";
     this.textarea.style.outline = "none";
 
     this.wrapper.appendChild(this.textarea);

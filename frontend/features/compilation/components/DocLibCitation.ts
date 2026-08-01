@@ -65,7 +65,7 @@ export default class DocLibCitation implements BlockTool {
       if (title) c += ` <em>${title}</em>.`;
       if (source) c += ` ${source}.`;
       if (url)
-        c += ` Retrieved from <a href="${url}" target="_blank" style="color:#0284c7">${url}</a>`;
+        c += ` Retrieved from <a href="${url}" target="_blank" style="color:hsl(var(--brand))">${url}</a>`;
       return c;
     }
     if (style === "MLA") {
@@ -75,7 +75,7 @@ export default class DocLibCitation implements BlockTool {
       if (source) c += ` ${source},`;
       if (year) c += ` ${year}.`;
       if (url)
-        c += ` <a href="${url}" target="_blank" style="color:#0284c7">${url}</a>`;
+        c += ` <a href="${url}" target="_blank" style="color:hsl(var(--brand))">${url}</a>`;
       return c;
     }
     let c = "";
@@ -84,7 +84,7 @@ export default class DocLibCitation implements BlockTool {
     if (source) c += ` <em>${source}</em>`;
     if (year) c += ` (${year}).`;
     if (url)
-      c += ` <a href="${url}" target="_blank" style="color:#0284c7">${url}</a>`;
+      c += ` <a href="${url}" target="_blank" style="color:hsl(var(--brand))">${url}</a>`;
     return c;
   }
 
@@ -96,18 +96,18 @@ export default class DocLibCitation implements BlockTool {
       const style = document.createElement("style");
       style.id = "doclib-citation-styles";
       style.innerHTML = `
-        .doclib-citation-wrapper { border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; background: #fff; margin: 12px 0; }
+        .doclib-citation-wrapper { border: 1px solid hsl(var(--border)); border-radius: 8px; padding: 20px; background: hsl(var(--surface)); margin: 12px 0; }
         .doclib-citation-style-row { display: flex; gap: 8px; margin-bottom: 16px; }
-        .doclib-citation-style-btn { padding: 6px 14px; border: 1px solid #e2e8f0; border-radius: 4px; background: #fff; font-size: 13px; font-weight: 500; color: #475569; cursor: pointer; }
-        .doclib-citation-style-btn.active { background: #0f172a; color: #fff; border-color: #0f172a; }
+        .doclib-citation-style-btn { padding: 6px 14px; border: 1px solid hsl(var(--border)); border-radius: 4px; background: hsl(var(--surface)); font-size: 13px; font-weight: 500; color: hsl(var(--ink-muted)); cursor: pointer; }
+        .doclib-citation-style-btn.active { background: hsl(var(--ink)); color: hsl(var(--surface)); border-color: hsl(var(--ink)); }
         .doclib-citation-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
         .doclib-citation-field { display: flex; flex-direction: column; gap: 4px; }
-        .doclib-citation-field label { font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; }
-        .doclib-citation-field input { padding: 8px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; outline: none; }
-        .doclib-citation-output { border-top: 1px solid #e2e8f0; padding-top: 14px; font-size: 14px; line-height: 1.7; color: #1e293b; background: #f8fafc; padding: 14px; border-radius: 6px; }
+        .doclib-citation-field label { font-size: 11px; font-weight: 600; color: hsl(var(--ink-faint)); text-transform: uppercase; }
+        .doclib-citation-field input { padding: 8px 10px; border: 1px solid hsl(var(--border)); border-radius: 6px; font-size: 13px; outline: none; }
+        .doclib-citation-output { border-top: 1px solid hsl(var(--border)); padding-top: 14px; font-size: 14px; line-height: 1.7; color: hsl(var(--ink)); background: hsl(var(--surface-raised)); padding: 14px; border-radius: 6px; }
         .doclib-citation-actions { display: flex; justify-content: flex-end; margin-top: 10px; }
-        .doclib-citation-copy { padding: 6px 12px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 12px; cursor: pointer; }
-        .doclib-citation-readonly { border-left: 3px solid #0284c7; padding: 12px 16px; background: #f0f9ff; border-radius: 0 6px 6px 0; font-size: 14px; line-height: 1.7; color: #1e293b; }
+        .doclib-citation-copy { padding: 6px 12px; background: hsl(var(--surface-quiet)); border: 1px solid hsl(var(--border)); border-radius: 4px; font-size: 12px; cursor: pointer; }
+        .doclib-citation-readonly { border-left: 3px solid hsl(var(--brand)); padding: 12px 16px; background: hsl(var(--brand-soft)); border-radius: 0 6px 6px 0; font-size: 14px; line-height: 1.7; color: hsl(var(--ink)); }
       `;
       document.head.appendChild(style);
     }

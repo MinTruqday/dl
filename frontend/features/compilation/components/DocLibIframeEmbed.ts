@@ -49,15 +49,15 @@ export default class DocLibIframeEmbed implements BlockTool {
       const style = document.createElement("style");
       style.id = "doclib-iframe-styles";
       style.innerHTML = `
-            .doclib-if-wrapper { margin: 16px 0; border-radius: 8px; overflow: hidden; background: #f8fafc; border: 1px solid #e2e8f0; }
+            .doclib-if-wrapper { margin: 16px 0; border-radius: 8px; overflow: hidden; background: hsl(var(--surface-raised)); border: 1px solid hsl(var(--border)); }
             .doclib-if-iframe { width: 100%; border: none; display: block; }
             .doclib-if-input-wrapper { display: flex; flex-direction: column; gap: 8px; padding: 24px; align-items: center; text-align: center; }
-            .doclib-if-input { width: 100%; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 12px; outline: none; }
-            .doclib-if-input:focus { border-color: #3b82f6; }
-            .doclib-if-btn { background: #3b82f6; color: white; border: none; padding: 10px 24px; border-radius: 6px; font-weight: 500; cursor: pointer; }
-            .doclib-if-btn:hover { background: #2563eb; }
-            .doclib-if-controls { padding: 8px 16px; background: #f1f5f9; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
-            .doclib-if-height-btn { background: #fff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 12px; }
+            .doclib-if-input { width: 100%; border: 1px solid hsl(var(--border)); border-radius: 6px; padding: 10px 12px; outline: none; }
+            .doclib-if-input:focus { border-color: hsl(var(--brand)); }
+            .doclib-if-btn { background: hsl(var(--brand)); color: white; border: none; padding: 10px 24px; border-radius: 6px; font-weight: 500; cursor: pointer; }
+            .doclib-if-btn:hover { background: hsl(var(--brand)); }
+            .doclib-if-controls { padding: 8px 16px; background: hsl(var(--surface-quiet)); border-top: 1px solid hsl(var(--border)); display: flex; justify-content: space-between; align-items: center; }
+            .doclib-if-height-btn { background: hsl(var(--surface)); border: 1px solid hsl(var(--border)); border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 12px; }
         `;
       document.head.appendChild(style);
     }
@@ -108,7 +108,7 @@ export default class DocLibIframeEmbed implements BlockTool {
 
         const rmBtn = document.createElement("button");
         rmBtn.classList.add("doclib-if-height-btn");
-        rmBtn.style.color = "#ef4444";
+        rmBtn.style.color = "hsl(var(--danger))";
         rmBtn.innerText = "Change Link";
         rmBtn.addEventListener("click", () => {
           this.data.url = "";

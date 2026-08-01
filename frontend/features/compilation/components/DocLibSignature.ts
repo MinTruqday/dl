@@ -52,15 +52,15 @@ export default class DocLibSignature implements BlockTool {
       const style = document.createElement("style");
       style.id = "doclib-sig-styles";
       style.innerHTML = `
-        .doclib-sig-wrapper { border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; margin: 12px 0; }
-        .doclib-sig-header { padding: 10px 16px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; }
-        .doclib-sig-label { font-size: 13px; font-weight: 600; color: #475569; }
+        .doclib-sig-wrapper { border: 1px solid hsl(var(--border)); border-radius: 8px; overflow: hidden; margin: 12px 0; }
+        .doclib-sig-header { padding: 10px 16px; background: hsl(var(--surface-raised)); border-bottom: 1px solid hsl(var(--border)); display: flex; align-items: center; justify-content: space-between; }
+        .doclib-sig-label { font-size: 13px; font-weight: 600; color: hsl(var(--ink-muted)); }
         .doclib-sig-actions { display: flex; gap: 6px; }
-        .doclib-sig-btn { padding: 5px 12px; border: 1px solid #e2e8f0; border-radius: 5px; background: #fff; font-size: 12px; cursor: pointer; color: #475569; }
-        .doclib-sig-btn:hover { background: #f0f9ff; border-color: #0284c7; color: #0284c7; }
-        .doclib-sig-canvas { width: 100%; height: 180px; background: #fff; cursor: crosshair; display: block; touch-action: none; }
+        .doclib-sig-btn { padding: 5px 12px; border: 1px solid hsl(var(--border)); border-radius: 5px; background: hsl(var(--surface)); font-size: 12px; cursor: pointer; color: hsl(var(--ink-muted)); }
+        .doclib-sig-btn:hover { background: hsl(var(--brand-soft)); border-color: hsl(var(--brand)); color: hsl(var(--brand)); }
+        .doclib-sig-canvas { width: 100%; height: 180px; background: hsl(var(--surface)); cursor: crosshair; display: block; touch-action: none; }
         .doclib-sig-canvas.readonly { cursor: default; }
-        .doclib-sig-footer { padding: 8px 16px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 11px; color: #94a3b8; }
+        .doclib-sig-footer { padding: 8px 16px; background: hsl(var(--surface-raised)); border-top: 1px solid hsl(var(--border)); font-size: 11px; color: hsl(var(--ink-faint)); }
       `;
       document.head.appendChild(style);
     }
@@ -134,7 +134,7 @@ export default class DocLibSignature implements BlockTool {
         e.preventDefault();
         const pos = this.getPos(canvas, e);
         ctx.lineTo(pos.x, pos.y);
-        ctx.strokeStyle = "#0f172a";
+        ctx.strokeStyle = "#1f1f1d";
         ctx.lineWidth = 2;
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
@@ -178,7 +178,7 @@ export default class DocLibSignature implements BlockTool {
 
       const labelInput = document.createElement("input");
       labelInput.style.cssText =
-        "padding:4px 8px;border:1px solid #e2e8f0;border-radius:5px;font-size:12px;outline:none;color:#475569;";
+        "padding:4px 8px;border:1px solid hsl(var(--border));border-radius:5px;font-size:12px;outline:none;color:hsl(var(--ink-muted));";
       labelInput.value = this.data.label;
       labelInput.placeholder = "DocLib Input";
       labelInput.addEventListener("input", () => {

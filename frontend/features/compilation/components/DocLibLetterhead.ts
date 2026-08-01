@@ -49,20 +49,20 @@ export default class DocLibLetterhead implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-letterhead { display: flex; justify-content: space-between; align-items: flex-start; padding: 24px 0; border-bottom: 3px double #cbd5e1; margin-bottom: 32px; }
+      .doclib-letterhead { display: flex; justify-content: space-between; align-items: flex-start; padding: 24px 0; border-bottom: 3px double hsl(var(--border)); margin-bottom: 32px; }
       .doclib-letterhead-left { display: flex; gap: 16px; align-items: center; max-width: 60%; }
-      .doclib-letterhead-logo { width: 64px; height: 64px; object-fit: contain; background: #f1f5f9; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #94a3b8; }
+      .doclib-letterhead-logo { width: 64px; height: 64px; object-fit: contain; background: hsl(var(--surface-quiet)); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: hsl(var(--ink-faint)); }
       .doclib-letterhead-info { display: flex; flex-direction: column; gap: 4px; }
-      .doclib-letterhead-company { font-size: 24px; font-weight: 800; color: #0f172a; text-transform: uppercase; outline: none; }
-      .doclib-letterhead-address { font-size: 14px; color: #475569; outline: none; }
-      .doclib-letterhead-contact { text-align: right; font-size: 14px; color: #475569; display: flex; flex-direction: column; gap: 4px; outline: none; white-space: pre-wrap; }
+      .doclib-letterhead-company { font-size: 24px; font-weight: 800; color: hsl(var(--ink)); text-transform: uppercase; outline: none; }
+      .doclib-letterhead-address { font-size: 14px; color: hsl(var(--ink-muted)); outline: none; }
+      .doclib-letterhead-contact { text-align: right; font-size: 14px; color: hsl(var(--ink-muted)); display: flex; flex-direction: column; gap: 4px; outline: none; white-space: pre-wrap; }
       
-      .doclib-letterhead-company:empty::before { content: "DocLib Name"; color: #cbd5e1; pointer-events: none; }
-      .doclib-letterhead-address:empty::before { content: "DocLib Text"; color: #cbd5e1; pointer-events: none; }
-      .doclib-letterhead-contact:empty::before { content: "DocLib Text"; color: #cbd5e1; pointer-events: none; }
+      .doclib-letterhead-company:empty::before { content: "DocLib Name"; color: hsl(var(--border)); pointer-events: none; }
+      .doclib-letterhead-address:empty::before { content: "DocLib Text"; color: hsl(var(--border)); pointer-events: none; }
+      .doclib-letterhead-contact:empty::before { content: "DocLib Text"; color: hsl(var(--border)); pointer-events: none; }
       
-      .doclib-letterhead-edit { margin-top: 16px; padding: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; display: flex; gap: 8px; align-items: center; }
-      .doclib-letterhead-input { flex: 1; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; }
+      .doclib-letterhead-edit { margin-top: 16px; padding: 12px; background: hsl(var(--surface-raised)); border: 1px solid hsl(var(--border)); border-radius: 8px; display: flex; gap: 8px; align-items: center; }
+      .doclib-letterhead-input { flex: 1; padding: 6px; border: 1px solid hsl(var(--border)); border-radius: 4px; outline: none; }
     `;
     this.wrapper.appendChild(style);
 

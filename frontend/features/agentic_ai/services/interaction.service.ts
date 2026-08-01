@@ -48,7 +48,7 @@ export async function getAiSessionsAPI(documentId?: string, userId?: string) {
 }
 
 export async function createAiSessionAPI(
-  documentId: string,
+  documentId: string = "",
   firstQuery: string = "",
 ) {
   const res = await fetch(`${API_URL}/lich-su`, {
@@ -59,6 +59,15 @@ export async function createAiSessionAPI(
   const data = await res.json();
   if (!res.ok)
     throw new Error(data.message || "MODULE AGENTIC_AI: Failed to initialize AI session");
+  return data;
+}
+
+export async function getAiSessionAPI(sessionId: string) {
+  const res = await fetch(`${API_URL}/lich-su/${sessionId}`, {
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải cuộc trò chuyện");
   return data;
 }
 

@@ -49,17 +49,17 @@ export default class DocLibCompatibilityChecker implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-compat { font-family: sans-serif; padding: 16px; border: 1px solid #fcd34d; border-radius: 8px; background: #fffbeb; margin: 16px 0; max-width: 500px; display: flex; flex-direction: column; gap: 8px; }
+      .doclib-compat { font-family: sans-serif; padding: 16px; border: 1px solid hsl(var(--warning-soft)); border-radius: 8px; background: #fffbeb; margin: 16px 0; max-width: 500px; display: flex; flex-direction: column; gap: 8px; }
       .doclib-compat-head { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 16px; color: #b45309; border-bottom: 1px solid #fde68a; padding-bottom: 8px; }
-      .doclib-compat-icon { width: 24px; height: 24px; color: #d97706; }
+      .doclib-compat-icon { width: 24px; height: 24px; color: hsl(var(--warning)); }
       .doclib-compat-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
       .doclib-compat-item { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; color: #92400e; position: relative; }
-      .doclib-compat-item::before { content: "•"; color: #d97706; font-weight: bold; }
+      .doclib-compat-item::before { content: "•"; color: hsl(var(--warning)); font-weight: bold; }
       .doclib-compat-text { flex: 1; outline: none; }
-      .doclib-compat-text:empty:before { content: "DocLib Compatibility Issue"; color: #fcd34d; }
-      .doclib-compat-del { font-size: 10px; color: #ef4444; border: none; background: transparent; cursor: pointer; display: none; }
+      .doclib-compat-text:empty:before { content: "DocLib Compatibility Issue"; color: hsl(var(--warning-soft)); }
+      .doclib-compat-del { font-size: 10px; color: hsl(var(--danger)); border: none; background: transparent; cursor: pointer; display: none; }
       .doclib-compat-item:hover .doclib-compat-del { display: block; }
-      .doclib-compat-add { padding: 8px; background: transparent; border: 1px dashed #fcd34d; border-radius: 4px; color: #d97706; text-align: center; font-size: 12px; cursor: pointer; font-weight: bold; }
+      .doclib-compat-add { padding: 8px; background: transparent; border: 1px dashed hsl(var(--warning-soft)); border-radius: 4px; color: hsl(var(--warning)); text-align: center; font-size: 12px; cursor: pointer; font-weight: bold; }
       .doclib-compat-add:hover { background: #fef3c7; }
     `;
     this.wrapper.appendChild(style);

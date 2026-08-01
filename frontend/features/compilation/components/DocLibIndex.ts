@@ -46,18 +46,18 @@ export default class DocLibIndex implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-index { margin: 24px 0; padding: 24px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; }
-      .doclib-index-title { font-size: 18px; font-weight: 700; border-bottom: 2px solid #cbd5e1; padding-bottom: 8px; margin-bottom: 16px; }
+      .doclib-index { margin: 24px 0; padding: 24px; border: 1px solid hsl(var(--border)); border-radius: 8px; background: hsl(var(--surface)); }
+      .doclib-index-title { font-size: 18px; font-weight: 700; border-bottom: 2px solid hsl(var(--border)); padding-bottom: 8px; margin-bottom: 16px; }
       .doclib-index-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-      .doclib-index-item { display: flex; justify-content: space-between; font-size: 14px; border-bottom: 1px dotted #e2e8f0; padding-bottom: 4px; }
-      .doclib-index-term { font-weight: 500; color: #1e293b; }
-      .doclib-index-page { color: #64748b; }
-      .doclib-index-edit { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px dashed #cbd5e1; }
+      .doclib-index-item { display: flex; justify-content: space-between; font-size: 14px; border-bottom: 1px dotted hsl(var(--border)); padding-bottom: 4px; }
+      .doclib-index-term { font-weight: 500; color: hsl(var(--ink)); }
+      .doclib-index-page { color: hsl(var(--ink-muted)); }
+      .doclib-index-edit { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px dashed hsl(var(--border)); }
       .doclib-index-row { display: flex; gap: 8px; }
-      .doclib-index-input { flex: 1; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; }
-      .doclib-index-page-input { width: 80px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; }
-      .doclib-index-btn { padding: 8px 16px; background: #ef4444; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
-      .doclib-index-add { padding: 8px 16px; background: #3b82f6; color: #fff; border: none; border-radius: 4px; cursor: pointer; align-self: flex-start; }
+      .doclib-index-input { flex: 1; padding: 8px; border: 1px solid hsl(var(--border)); border-radius: 4px; outline: none; }
+      .doclib-index-page-input { width: 80px; padding: 8px; border: 1px solid hsl(var(--border)); border-radius: 4px; outline: none; }
+      .doclib-index-btn { padding: 8px 16px; background: hsl(var(--danger)); color: hsl(var(--surface)); border: none; border-radius: 4px; cursor: pointer; }
+      .doclib-index-add { padding: 8px 16px; background: hsl(var(--brand)); color: hsl(var(--surface)); border: none; border-radius: 4px; cursor: pointer; align-self: flex-start; }
     `;
     this.wrapper.appendChild(style);
 

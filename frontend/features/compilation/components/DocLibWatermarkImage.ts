@@ -48,11 +48,11 @@ export default class DocLibWatermarkImage implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-wmi { position: relative; margin: 16px 0; min-height: 100px; border: 1px dashed #cbd5e1; display: flex; align-items: center; justify-content: center; background: #f8fafc; overflow: hidden; border-radius: 8px; }
+      .doclib-wmi { position: relative; margin: 16px 0; min-height: 100px; border: 1px dashed hsl(var(--border)); display: flex; align-items: center; justify-content: center; background: hsl(var(--surface-raised)); overflow: hidden; border-radius: 8px; }
       .doclib-wmi-img { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index: 0; }
-      .doclib-wmi-edit { z-index: 10; display: flex; gap: 8px; background: rgba(255,255,255,0.9); padding: 12px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; flex-wrap: wrap; justify-content: center; width: 80%; }
-      .doclib-wmi-input { padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; flex: 1; min-width: 120px; }
-      .doclib-wmi-select { padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; }
+      .doclib-wmi-edit { z-index: 10; display: flex; gap: 8px; background: rgba(255,255,255,0.9); padding: 12px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid hsl(var(--border)); flex-wrap: wrap; justify-content: center; width: 80%; }
+      .doclib-wmi-input { padding: 8px; border: 1px solid hsl(var(--border)); border-radius: 4px; outline: none; flex: 1; min-width: 120px; }
+      .doclib-wmi-select { padding: 8px; border: 1px solid hsl(var(--border)); border-radius: 4px; outline: none; }
     `;
     this.wrapper.appendChild(style);
 

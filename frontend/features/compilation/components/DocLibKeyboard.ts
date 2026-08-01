@@ -34,7 +34,7 @@ export default class DocLibKeyboard implements InlineTool {
       const style = document.createElement("style");
       style.id = "doclib-kbd-styles";
       style.innerHTML = `
-            kbd.doclib-kbd-mark { display: inline-block; padding: 2px 6px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 0.85em; font-weight: 600; line-height: 1.2; color: #1e293b; background-color: #f8fafc; border: 1px solid #cbd5e1; border-bottom-width: 2px; border-radius: 4px; box-shadow: inset 0 -1px 0 #cbd5e1; margin: 0 2px; }
+            kbd.doclib-kbd-mark { display: inline-block; padding: 2px 6px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 0.85em; font-weight: 600; line-height: 1.2; color: hsl(var(--ink)); background-color: hsl(var(--surface-raised)); border: 1px solid hsl(var(--border)); border-bottom-width: 2px; border-radius: 4px; box-shadow: inset 0 -1px 0 hsl(var(--border)); margin: 0 2px; }
         `;
       document.head.appendChild(style);
     }

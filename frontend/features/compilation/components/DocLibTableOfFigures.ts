@@ -42,13 +42,13 @@ export default class DocLibTableOfFigures implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-tof { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px; margin: 16px 0; }
-      .doclib-tof-title { font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.05em; }
+      .doclib-tof { background: hsl(var(--surface-raised)); border: 1px solid hsl(var(--border)); border-radius: 8px; padding: 24px; margin: 16px 0; }
+      .doclib-tof-title { font-size: 16px; font-weight: 700; color: hsl(var(--ink)); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.05em; }
       .doclib-tof-list { list-style: none; padding: 0; margin: 0; }
       .doclib-tof-item { margin: 8px 0; display: flex; justify-content: space-between; }
-      .doclib-tof-link { color: #334155; text-decoration: none; font-size: 14px; transition: color 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .doclib-tof-link:hover { color: #2563eb; text-decoration: underline; }
-      .doclib-tof-empty { font-size: 13px; color: #94a3b8; font-style: italic; }
+      .doclib-tof-link { color: hsl(var(--ink)); text-decoration: none; font-size: 14px; transition: color 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .doclib-tof-link:hover { color: hsl(var(--brand)); text-decoration: underline; }
+      .doclib-tof-empty { font-size: 13px; color: hsl(var(--ink-faint)); font-style: italic; }
     `;
     this.wrapper.appendChild(style);
 

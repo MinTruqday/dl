@@ -85,7 +85,7 @@ export default function Passkey({ email, onClose, onSuccess }: PasskeyProps) {
       onSuccess();
     } catch (err: any) {
       console.error("Error during passkey verification:", err);
-      showToast(err.message || "Lỗi khởi tạo luồng định danh chứng thư số", "error");
+      showToast(err.message || "Không thể tạo luồng định danh chứng thư số", "error");
     } finally {
       setLoading(false);
     }
@@ -107,10 +107,10 @@ export default function Passkey({ email, onClose, onSuccess }: PasskeyProps) {
       <ModalContent>
         <div className="space-y-4">
           <div className="space-y-2">
-            <label className="block text-[13px] font-medium text-[#6E6E73] mb-2">
+            <label className="block text-[13px] font-medium text-ink-muted mb-2">
               Xác thực sinh trắc học
             </label>
-            <p className="text-[15px] font-medium text-[#1D1D1F] leading-relaxed">
+            <p className="text-[15px] font-medium text-ink leading-relaxed">
               Kích hoạt Passkey để đăng nhập nhanh chóng bằng vân tay hoặc khuôn
               mặt mà không cần mật khẩu.
             </p>
@@ -122,7 +122,7 @@ export default function Passkey({ email, onClose, onSuccess }: PasskeyProps) {
         {!loading && (
           <button
             onClick={onClose}
-            className="flex-1 py-3 bg-white text-[#1D1D1F] text-[15px] font-medium disabled:opacity-50 flex items-center justify-center rounded-full hover:bg-[#E8E8ED] transition-colors"
+            className="flex-1 py-3 bg-white text-ink text-[15px] font-medium disabled:opacity-50 flex items-center justify-center rounded-full hover:bg-border transition-colors"
           >
             Để sau
           </button>
@@ -130,7 +130,7 @@ export default function Passkey({ email, onClose, onSuccess }: PasskeyProps) {
         <button
           onClick={handleRegister}
           disabled={loading}
-          className="flex-1 py-3 bg-[#0071E3] text-white text-[15px] font-medium disabled:opacity-50 flex items-center justify-center rounded-full hover:bg-[#0077ED] transition-colors"
+          className="flex-1 py-3 bg-brand text-white text-[15px] font-medium disabled:opacity-50 flex items-center justify-center rounded-full hover:bg-brand transition-colors"
         >
           {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : null}
           {loading ? "Đang xử lý" : "Xác nhận kích hoạt"}

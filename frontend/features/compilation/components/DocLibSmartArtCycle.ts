@@ -50,15 +50,15 @@ export default class DocLibSmartArtCycle implements BlockTool {
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-cycle { display: flex; flex-direction: column; align-items: center; margin: 32px 0; }
-      .doclib-cycle-chart { position: relative; width: 300px; height: 300px; border-radius: 50%; border: 16px solid #e2e8f0; display: flex; align-items: center; justify-content: center; }
-      .doclib-cycle-center { width: 100px; height: 100px; background: #fff; border-radius: 50%; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); z-index: 10; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #3b82f6; }
-      .doclib-cycle-node { position: absolute; width: 80px; height: 80px; background: #3b82f6; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 12px; font-weight: 600; padding: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); outline: none; }
+      .doclib-cycle-chart { position: relative; width: 300px; height: 300px; border-radius: 50%; border: 16px solid hsl(var(--border)); display: flex; align-items: center; justify-content: center; }
+      .doclib-cycle-center { width: 100px; height: 100px; background: hsl(var(--surface)); border-radius: 50%; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); z-index: 10; display: flex; align-items: center; justify-content: center; font-weight: bold; color: hsl(var(--brand)); }
+      .doclib-cycle-node { position: absolute; width: 80px; height: 80px; background: hsl(var(--brand)); color: hsl(var(--surface)); border-radius: 50%; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 12px; font-weight: 600; padding: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); outline: none; }
       
       .doclib-cycle-edit { margin-top: 24px; display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 400px; }
       .doclib-cycle-row { display: flex; gap: 8px; }
-      .doclib-cycle-input { flex: 1; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; }
-      .doclib-cycle-btn { padding: 8px; background: #ef4444; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
-      .doclib-cycle-add { padding: 8px; background: #10b981; color: #fff; border: none; border-radius: 4px; cursor: pointer; align-self: center; width: 100%; }
+      .doclib-cycle-input { flex: 1; padding: 8px; border: 1px solid hsl(var(--border)); border-radius: 4px; outline: none; }
+      .doclib-cycle-btn { padding: 8px; background: hsl(var(--danger)); color: hsl(var(--surface)); border: none; border-radius: 4px; cursor: pointer; }
+      .doclib-cycle-add { padding: 8px; background: hsl(var(--brand)); color: hsl(var(--surface)); border: none; border-radius: 4px; cursor: pointer; align-self: center; width: 100%; }
     `;
     this.wrapper.appendChild(style);
 

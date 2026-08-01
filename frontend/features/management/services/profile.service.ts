@@ -15,7 +15,7 @@ export async function getUsersAPI(limit: number = 50, offset: number = 0) {
   );
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi trích xuất danh sách tài khoản người dùng");
+    throw new Error(data.message || "Không thể tải danh sách tài khoản người dùng");
   return data;
 }
 
@@ -49,7 +49,7 @@ export async function updateUserRoleAPI(userId: string, role: string) {
 export async function updateUserStatusAPI(userId: string, isActive: boolean) {
   const token = getToken();
   if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
-  const res = await fetch(`${API_URL}/nguoi-dung/${userId}/status`, {
+  const res = await fetch(`${API_URL}/nguoi-dung/${userId}/trang-thai`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -59,7 +59,7 @@ export async function updateUserStatusAPI(userId: string, isActive: boolean) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi cập nhật trạng thái hoạt động tài khoản");
+    throw new Error(data.message || "Không thể cập nhật trạng thái hoạt động tài khoản");
   return data;
 }
 
@@ -76,13 +76,5 @@ export async function searchUsersAPI(query: string, limit: number = 10) {
 }
 
 export async function deleteUserAPI(userId: string) {
-  const token = getToken();
-  if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
-  const res = await fetch(`${API_URL}/nguoi-dung/${userId}`, {
-    method: "DELETE",
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi xóa bỏ tài khoản người dùng");
-  return data;
+  return updateUserStatusAPI(userId, false);
 }

@@ -49,18 +49,18 @@ export default class DocLibDigitalSignature implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-cert { font-family: sans-serif; display: flex; align-items: flex-start; gap: 16px; padding: 16px; border: 2px solid #16a34a; border-radius: 8px; background: #f0fdf4; margin: 16px 0; max-width: 450px; position: relative; }
-      .doclib-cert.invalid { border-color: #ef4444; background: #fef2f2; }
-      .doclib-cert-icon { width: 40px; height: 40px; color: #16a34a; flex-shrink: 0; }
-      .doclib-cert.invalid .doclib-cert-icon { color: #ef4444; }
+      .doclib-cert { font-family: sans-serif; display: flex; align-items: flex-start; gap: 16px; padding: 16px; border: 2px solid hsl(var(--brand)); border-radius: 8px; background: hsl(var(--brand-soft)); margin: 16px 0; max-width: 450px; position: relative; }
+      .doclib-cert.invalid { border-color: hsl(var(--danger)); background: hsl(var(--danger-soft)); }
+      .doclib-cert-icon { width: 40px; height: 40px; color: hsl(var(--brand)); flex-shrink: 0; }
+      .doclib-cert.invalid .doclib-cert-icon { color: hsl(var(--danger)); }
       .doclib-cert-info { flex: 1; display: flex; flex-direction: column; gap: 4px; }
-      .doclib-cert-title { font-size: 16px; font-weight: bold; color: #16a34a; margin-bottom: 4px; }
-      .doclib-cert.invalid .doclib-cert-title { color: #dc2626; }
-      .doclib-cert-row { font-size: 13px; color: #334155; display: flex; }
+      .doclib-cert-title { font-size: 16px; font-weight: bold; color: hsl(var(--brand)); margin-bottom: 4px; }
+      .doclib-cert.invalid .doclib-cert-title { color: hsl(var(--danger)); }
+      .doclib-cert-row { font-size: 13px; color: hsl(var(--ink)); display: flex; }
       .doclib-cert-lbl { font-weight: 600; width: 80px; }
       .doclib-cert-val { flex: 1; outline: none; }
-      .doclib-cert-val:empty:before { content: "DocLib Value"; color: #94a3b8; }
-      .doclib-cert-toggle { position: absolute; top: 16px; right: 16px; font-size: 12px; background: #fff; border: 1px solid #cbd5e1; padding: 4px 8px; border-radius: 4px; cursor: pointer; color: #475569; }
+      .doclib-cert-val:empty:before { content: "DocLib Value"; color: hsl(var(--ink-faint)); }
+      .doclib-cert-toggle { position: absolute; top: 16px; right: 16px; font-size: 12px; background: hsl(var(--surface)); border: 1px solid hsl(var(--border)); padding: 4px 8px; border-radius: 4px; cursor: pointer; color: hsl(var(--ink-muted)); }
     `;
     this.wrapper.appendChild(style);
 

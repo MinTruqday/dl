@@ -8,7 +8,7 @@ export async function getMyProfileAPI() {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi trích xuất thông tin định danh cá nhân");
+  if (!res.ok) throw new Error(data.message || "Không thể tải thông tin định danh cá nhân");
   return data;
 }
 
@@ -26,17 +26,27 @@ export async function updateMyProfileAPI(data: {
     body: JSON.stringify(data),
   });
   const result = await res.json();
-  if (!res.ok) throw new Error(result.message || "Lỗi lưu trữ dữ liệu hồ sơ cá nhân");
+  if (!res.ok) throw new Error(result.message || "Không thể lưu dữ liệu hồ sơ cá nhân");
   return result;
 }
 
-export async function getUserProfileAPI(slug: string) {
-  const res = await fetch(`${API_URL}/ho-so/member/${slug}`, {
-    headers: getAuthHeaders(),
+export async function applyForAuthorAPI(motivation: string, portfolio: string) {
+  const res = await fetch(`${API_URL}/ho-so/tac-gia/ung-tuyen`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ motivation, portfolio }),
   });
   const data = await res.json();
-  if (!res.ok)
-    throw new Error(data.message || "Lỗi trích xuất hồ sơ thành viên hệ thống");
+  if (!res.ok) throw new Error(data.message || "Không thể gửi hồ sơ tác giả");
   return data;
 }
 
+export async function deleteMyAccountAPI() {
+  const res = await fetch(`${API_URL}/ho-so/xoa-tai-khoan`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể xóa tài khoản");
+  return data;
+}

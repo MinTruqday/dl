@@ -47,14 +47,14 @@ export default class DocLibProtectDocument implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-protect { font-family: sans-serif; padding: 16px; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; margin: 16px 0; max-width: 400px; display: flex; flex-direction: column; gap: 12px; }
-      .doclib-protect-head { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 16px; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; }
-      .doclib-protect-icon { width: 24px; height: 24px; color: #eab308; }
+      .doclib-protect { font-family: sans-serif; padding: 16px; border: 1px solid hsl(var(--border)); border-radius: 8px; background: hsl(var(--surface)); margin: 16px 0; max-width: 400px; display: flex; flex-direction: column; gap: 12px; }
+      .doclib-protect-head { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 16px; color: hsl(var(--ink)); border-bottom: 1px solid hsl(var(--border)); padding-bottom: 8px; }
+      .doclib-protect-icon { width: 24px; height: 24px; color: hsl(var(--warning)); }
       .doclib-protect-row { display: flex; align-items: center; justify-content: space-between; font-size: 14px; }
-      .doclib-protect-select { padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; background: #f8fafc; }
-      .doclib-protect-btn { padding: 6px 12px; background: #3b82f6; color: #fff; border: none; border-radius: 4px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-      .doclib-protect-btn:hover { background: #2563eb; }
-      .doclib-protect-btn.active { background: #ef4444; }
+      .doclib-protect-select { padding: 6px; border: 1px solid hsl(var(--border)); border-radius: 4px; outline: none; background: hsl(var(--surface-raised)); }
+      .doclib-protect-btn { padding: 6px 12px; background: hsl(var(--brand)); color: hsl(var(--surface)); border: none; border-radius: 4px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+      .doclib-protect-btn:hover { background: hsl(var(--brand)); }
+      .doclib-protect-btn.active { background: hsl(var(--danger)); }
     `;
     this.wrapper.appendChild(style);
 

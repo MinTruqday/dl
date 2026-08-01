@@ -51,14 +51,14 @@ export default class DocLibSmartArtRelationship implements BlockTool {
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-rel { width: 100%; max-width: 400px; aspect-ratio: 1/1; position: relative; margin: 24px auto; font-family: sans-serif; display: flex; align-items: center; justify-content: center; }
-      .doclib-rel-center { width: 100px; height: 100px; background: #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; text-align: center; font-size: 14px; position: relative; z-index: 10; outline: none; }
-      .doclib-rel-center:empty:before { content: "DocLib Center"; color: #bfdbfe; }
-      .doclib-rel-sat { width: 70px; height: 70px; background: #f8fafc; border: 2px solid #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #1e293b; font-weight: 600; text-align: center; font-size: 12px; position: absolute; outline: none; z-index: 20; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-      .doclib-rel-sat:empty:before { content: "DocLib Sat"; color: #94a3b8; }
-      .doclib-rel-line { position: absolute; background: #cbd5e1; height: 2px; transform-origin: 0 50%; z-index: 5; }
-      .doclib-rel-del { position: absolute; top: -5px; right: -5px; width: 18px; height: 18px; background: #ef4444; color: #fff; border-radius: 50%; font-size: 10px; display: none; align-items: center; justify-content: center; cursor: pointer; border: none; z-index: 30; }
+      .doclib-rel-center { width: 100px; height: 100px; background: hsl(var(--brand)); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: hsl(var(--surface)); font-weight: bold; text-align: center; font-size: 14px; position: relative; z-index: 10; outline: none; }
+      .doclib-rel-center:empty:before { content: "DocLib Center"; color: hsl(var(--brand-soft)); }
+      .doclib-rel-sat { width: 70px; height: 70px; background: hsl(var(--surface-raised)); border: 2px solid hsl(var(--brand)); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: hsl(var(--ink)); font-weight: 600; text-align: center; font-size: 12px; position: absolute; outline: none; z-index: 20; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+      .doclib-rel-sat:empty:before { content: "DocLib Sat"; color: hsl(var(--ink-faint)); }
+      .doclib-rel-line { position: absolute; background: hsl(var(--border)); height: 2px; transform-origin: 0 50%; z-index: 5; }
+      .doclib-rel-del { position: absolute; top: -5px; right: -5px; width: 18px; height: 18px; background: hsl(var(--danger)); color: hsl(var(--surface)); border-radius: 50%; font-size: 10px; display: none; align-items: center; justify-content: center; cursor: pointer; border: none; z-index: 30; }
       .doclib-rel-sat:hover .doclib-rel-del { display: flex; }
-      .doclib-rel-add { position: absolute; bottom: -40px; left: 50%; transform: translateX(-50%); padding: 8px 16px; background: #f1f5f9; border: 1px dashed #cbd5e1; border-radius: 4px; font-size: 12px; color: #3b82f6; cursor: pointer; display: none; }
+      .doclib-rel-add { position: absolute; bottom: -40px; left: 50%; transform: translateX(-50%); padding: 8px 16px; background: hsl(var(--surface-quiet)); border: 1px dashed hsl(var(--border)); border-radius: 4px; font-size: 12px; color: hsl(var(--brand)); cursor: pointer; display: none; }
       .doclib-rel:hover .doclib-rel-add { display: block; }
     `;
     this.wrapper.appendChild(style);

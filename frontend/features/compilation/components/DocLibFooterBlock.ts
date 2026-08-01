@@ -46,9 +46,9 @@ export default class DocLibFooterBlock implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-footer-block { padding: 16px 24px; border-top: 2px solid #cbd5e1; margin-top: 32px; color: #475569; font-size: 14px; font-weight: 500; font-style: italic; outline: none; display: flex; align-items: center; justify-content: space-between; position: relative; }
-      .doclib-footer-block::after { content: "FOOTER"; position: absolute; bottom: -10px; left: 0; font-size: 10px; font-weight: 700; color: #94a3b8; background: #fff; padding: 0 4px; font-style: normal; }
-      .doclib-footer-block:empty::before { content: "DocLib Text"; color: #cbd5e1; pointer-events: none; font-style: normal; }
+      .doclib-footer-block { padding: 16px 24px; border-top: 2px solid hsl(var(--border)); margin-top: 32px; color: hsl(var(--ink-muted)); font-size: 14px; font-weight: 500; font-style: italic; outline: none; display: flex; align-items: center; justify-content: space-between; position: relative; }
+      .doclib-footer-block::after { content: "FOOTER"; position: absolute; bottom: -10px; left: 0; font-size: 10px; font-weight: 700; color: hsl(var(--ink-faint)); background: hsl(var(--surface)); padding: 0 4px; font-style: normal; }
+      .doclib-footer-block:empty::before { content: "DocLib Text"; color: hsl(var(--border)); pointer-events: none; font-style: normal; }
     `;
     this.wrapper.appendChild(style);
 

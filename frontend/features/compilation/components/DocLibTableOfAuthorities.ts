@@ -56,17 +56,17 @@ export default class DocLibTableOfAuthorities implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-toa { font-family: "Times New Roman", serif; padding: 16px; margin: 16px 0; max-width: 600px; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; }
-      .doclib-toa-head { text-align: center; font-size: 18px; font-weight: bold; text-transform: uppercase; margin-bottom: 16px; color: #1e293b; }
+      .doclib-toa { font-family: "Times New Roman", serif; padding: 16px; margin: 16px 0; max-width: 600px; border: 1px solid hsl(var(--border)); border-radius: 8px; background: hsl(var(--surface)); }
+      .doclib-toa-head { text-align: center; font-size: 18px; font-weight: bold; text-transform: uppercase; margin-bottom: 16px; color: hsl(var(--ink)); }
       .doclib-toa-section { margin-bottom: 16px; }
-      .doclib-toa-stitle { font-size: 16px; font-weight: bold; font-style: italic; color: #334155; margin-bottom: 8px; border-bottom: 1px solid #e2e8f0; }
+      .doclib-toa-stitle { font-size: 16px; font-weight: bold; font-style: italic; color: hsl(var(--ink)); margin-bottom: 8px; border-bottom: 1px solid hsl(var(--border)); }
       .doclib-toa-row { display: flex; align-items: flex-end; margin-bottom: 4px; font-size: 14px; position: relative; }
       .doclib-toa-name { outline: none; background: transparent; }
-      .doclib-toa-dots { flex: 1; border-bottom: 1px dotted #94a3b8; margin: 0 8px; position: relative; top: -4px; }
+      .doclib-toa-dots { flex: 1; border-bottom: 1px dotted hsl(var(--ink-faint)); margin: 0 8px; position: relative; top: -4px; }
       .doclib-toa-page { outline: none; background: transparent; min-width: 20px; text-align: right; }
-      .doclib-toa-del { position: absolute; right: -24px; color: #ef4444; font-size: 10px; border: none; background: transparent; cursor: pointer; display: none; }
+      .doclib-toa-del { position: absolute; right: -24px; color: hsl(var(--danger)); font-size: 10px; border: none; background: transparent; cursor: pointer; display: none; }
       .doclib-toa-row:hover .doclib-toa-del { display: block; }
-      .doclib-toa-add { font-family: sans-serif; font-size: 12px; color: #3b82f6; cursor: pointer; display: inline-block; padding: 4px 8px; background: #f8fafc; border-radius: 4px; margin-top: 4px; }
+      .doclib-toa-add { font-family: sans-serif; font-size: 12px; color: hsl(var(--brand)); cursor: pointer; display: inline-block; padding: 4px 8px; background: hsl(var(--surface-raised)); border-radius: 4px; margin-top: 4px; }
     `;
     this.wrapper.appendChild(style);
 

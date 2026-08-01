@@ -48,7 +48,7 @@ export default class DocLibPageBreak implements BlockTool {
         display: flex;
         align-items: center;
         text-align: center;
-        color: #94a3b8;
+        color: hsl(var(--ink-faint));
         margin: 24px 0;
         page-break-after: always;
         break-after: page;
@@ -56,10 +56,10 @@ export default class DocLibPageBreak implements BlockTool {
       .doclib-page-break::before, .doclib-page-break::after {
         content: "";
         flex: 1;
-        border-bottom: 1px dashed #cbd5e1;
+        border-bottom: 1px dashed hsl(var(--border));
       }
       .doclib-page-break:not(.read-only)::before, .doclib-page-break:not(.read-only)::after {
-        border-bottom: 1px dashed #94a3b8;
+        border-bottom: 1px dashed hsl(var(--ink-faint));
       }
       .doclib-page-break-text {
         padding: 0 16px;

@@ -54,17 +54,17 @@ export default class DocLibAiText implements BlockTool {
       const style = document.createElement("style");
       style.id = "doclib-ai-text-styles";
       style.innerHTML = `
-            .doclib-ai-wrapper { border: 1px solid #e2e8f0; border-radius: 12px; background: linear-gradient(180deg, #f8fafc 0%, #fff 100%); margin: 16px 0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-            .doclib-ai-header { padding: 12px 16px; background: #eff6ff; border-bottom: 1px solid #bfdbfe; display: flex; align-items: center; gap: 8px; color: #1e3a8a; font-weight: 600; }
-            .doclib-ai-icon { color: #3b82f6; }
-            .doclib-ai-prompt { padding: 16px; display: flex; gap: 8px; border-bottom: 1px solid #e2e8f0; }
-            .doclib-ai-input { flex-grow: 1; border: 1px solid #cbd5e1; padding: 8px 12px; border-radius: 6px; outline: none; transition: border 0.2s; font-size: 14px; }
-            .doclib-ai-input:focus { border-color: #3b82f6; }
-            .doclib-ai-btn { background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; transition: background 0.2s; }
-            .doclib-ai-btn:hover { background: #2563eb; }
-            .doclib-ai-btn:disabled { background: #94a3b8; cursor: not-allowed; }
-            .doclib-ai-response { padding: 16px; min-height: 100px; font-size: 15px; line-height: 1.6; color: #334155; white-space: pre-wrap; outline: none; }
-            .doclib-ai-generating { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; color: #94a3b8; }
+            .doclib-ai-wrapper { border: 1px solid hsl(var(--border)); border-radius: 12px; background: linear-gradient(180deg, hsl(var(--surface-raised)) 0%, hsl(var(--surface)) 100%); margin: 16px 0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+            .doclib-ai-header { padding: 12px 16px; background: hsl(var(--brand-soft)); border-bottom: 1px solid hsl(var(--brand-soft)); display: flex; align-items: center; gap: 8px; color: #1e3a8a; font-weight: 600; }
+            .doclib-ai-icon { color: hsl(var(--brand)); }
+            .doclib-ai-prompt { padding: 16px; display: flex; gap: 8px; border-bottom: 1px solid hsl(var(--border)); }
+            .doclib-ai-input { flex-grow: 1; border: 1px solid hsl(var(--border)); padding: 8px 12px; border-radius: 6px; outline: none; transition: border 0.2s; font-size: 14px; }
+            .doclib-ai-input:focus { border-color: hsl(var(--brand)); }
+            .doclib-ai-btn { background: hsl(var(--brand)); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; transition: background 0.2s; }
+            .doclib-ai-btn:hover { background: hsl(var(--brand)); }
+            .doclib-ai-btn:disabled { background: hsl(var(--ink-faint)); cursor: not-allowed; }
+            .doclib-ai-response { padding: 16px; min-height: 100px; font-size: 15px; line-height: 1.6; color: hsl(var(--ink)); white-space: pre-wrap; outline: none; }
+            .doclib-ai-generating { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; color: hsl(var(--ink-faint)); }
             @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
         `;
       document.head.appendChild(style);

@@ -1,297 +1,150 @@
-"use client";
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight, Check, FileText, MessageSquareText, Search } from "lucide-react";
 
-import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-
-const easeOutExpo = (t: number) => t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
-const easeInOutCubic = (t: number) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
-
-const GREETINGS = [
-  "Xin chào,", "Hello,", "你好,", "Bonjour,", "Hola,",
-  "こんにちは,", "안녕하세요,", "Ciao,", "Olá,", "Hallo,",
-  "Merhaba,", "Привет,", "Γεια σας,", "Ahoj,", "Witaj,",
-  "Zdravo,", "مرحبا,", "नमस्ते,", "Sawubona,", "Sveiki,",
-  "Hei,", "Hej,", "Szia,", "Halo,", "Kamusta,",
-  "سلام,", "שלום,", "Jambo,", "Kia ora,", "Bula,",
-  "Aloha,", "Talofa,", "Malo e lelei,", "Salama,", "Sannu,",
-  "Dumela,", "Molo,", "Dzień dobry,", "God dag,", "Hoi,",
-  "Habari,", "สวัสดี,", "សួស្តី,", "ສະບາຍດີ,", "မင်္ဂလာပါ,",
-  "ආයුබෝවන්,", "வணக்கம்,", "ನಮಸ್ಕಾರ,", "ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ,", "કેમ છો,",
-  "ሰላም,", "Tena koe,", "Mauri,", "Fakaalofa,", "Alii,",
-  "Kaselehlia,", "Ran annim,", "Mogethin,", "Lenwo,", "Iokwe,",
-  "Hafa adai,", "Tungjou,", "Akkam,", "Tena yistelegn,", "Բարև,",
-  "გამარჯობა,", "Khosh amadid,", "Dobar dan,", "Dober dan,", "Mirëdita,",
-  "Tungjatjeta,", "Buna,", "Здравейте,", "Привіт,", "Прывітанне,",
-  "Сәлем,", "Салам,", "Сайн уу,", "བཀྲ་ཤིས་བདེ་ལེགས།,", "Kaixo,",
-  "Dia dhuit,", "Slav,", "Mabuhay,", "Niltze,", "Allianchu,",
-  "Cześć,", "Sain uu,", "Tansi,", "Aanii,", "Kwe,",
-  "Halito,", "ᎣᏏᏲ,", "Hau,", "Mba'éichapa,", "Irasshaimase,",
-  "Namaskar,", "Aho,", "Boozhoo,", "Wachiya,", "Yá'át'ééh,",
-  "Ahéhee',", "Tlazocamati,", "Na'at'áanii,", "Saluton,"
+const capabilities = [
+  {
+    title: "Tìm đúng tài liệu",
+    description: "Tìm kiếm theo nội dung, chủ đề và mối liên hệ thay vì chỉ dựa vào tên tệp",
+    icon: Search,
+  },
+  {
+    title: "Làm việc cùng nhau",
+    description: "Giao việc, bình luận và theo dõi phiên bản ngay cạnh tài liệu đang xử lý",
+    icon: MessageSquareText,
+  },
+  {
+    title: "Giữ một nguồn dữ liệu",
+    description: "Bản thảo, tài liệu đã xuất bản và tệp lưu trữ nằm trong cùng một không gian",
+    icon: FileText,
+  },
 ];
-const HOLD_MS = 900, FADE_MS = 280, LANG_MS = FADE_MS + HOLD_MS + FADE_MS;
 
-export default function IntroSplash() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const router = useRouter();
-  const [showBtn, setShowBtn] = useState(false);
+const PrimaryCapabilityIcon = capabilities[0].icon;
 
-  useEffect(() => {
-    const canvas = canvasRef.current!;
-    const ctx = canvas.getContext("2d")!;
-
-    let startTime = -1, typedText = "", cursorVis = true, cursorTick = 0;
-    let rafId: number, done = false;
-
-    const TW: Array<{ at: number; text: string }> = [];
-    const HELLO = "Xin chào, ", METIS = "Metis", EXCL = "!", DOCLIB = "DocLib";
-    const HW = HELLO + "Thế giới!";
-    
-    let t = 400;
-    for (let i = 0; i <= HW.length; i++) { TW.push({ at: t, text: HW.substring(0, i) }); t += 110; }
-    t += 900;
-    for (let i = HW.length; i >= HELLO.length; i--) { TW.push({ at: t, text: HW.substring(0, i) }); t += 55; }
-    t += 80;
-    const DF = DOCLIB + EXCL;
-    for (let i = 1; i <= DF.length; i++) { TW.push({ at: t, text: HELLO + DF.substring(0, i) }); t += 110; }
-    t += 1400;
-
-    const MS = 90, MD = 450;
-    const T_MORPH = t, T_MORPH_END = t + MS * 5 + MD + 200;
-    const SWEEP_DUR = 1000;
-    const T_SWEEP_E = T_MORPH_END + 600, T_SWEEP_W = T_SWEEP_E + SWEEP_DUR + 200;
-    const T_SWEEP_DONE = T_SWEEP_W + SWEEP_DUR;
-    const T_LANG_START = T_SWEEP_DONE;
-
-    const FROM = ["D", "o", "c", "L", "i", "b"];
-    const TO = ["M", "e", "t", "i", "s", ""];
-    const metisChars = METIS.split("");
-    const SLOTS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-
-    const layout = {
-      W: 0, H: 0, cx: 0, cy: 0, FS: 0, FONT: "",
-      helloW: 0, metisW: 0, doclibW: 0, exclW: 0,
-      startXD: 0, startXM: 0, wordXD: 0, wordXM: 0,
-      exclXD: 0, exclXM: 0,
-      fromW: [] as number[],
-      fromCharX: [] as number[],
-      metisCharW: [] as number[],
-      metisCharX: [] as number[]
-    };
-
-    const updateLayout = () => {
-      const dpr = window.devicePixelRatio || 1;
-      layout.W = window.innerWidth;
-      layout.H = window.innerHeight;
-      
-      canvas.width = layout.W * dpr;
-      canvas.height = layout.H * dpr;
-      canvas.style.width = `${layout.W}px`;
-      canvas.style.height = `${layout.H}px`;
-      ctx.scale(dpr, dpr);
-
-      layout.cx = layout.W / 2;
-      layout.cy = layout.H * 0.46;
-
-      layout.FS = Math.min(layout.W * 0.08, 72);
-      layout.FONT = `bold ${layout.FS}px -apple-system,"SF Pro Display","Noto Sans",BlinkMacSystemFont,sans-serif`;
-      ctx.font = layout.FONT;
-
-      layout.helloW = ctx.measureText(HELLO).width;
-      layout.metisW = ctx.measureText(METIS).width;
-      layout.doclibW = ctx.measureText(DOCLIB).width;
-      layout.exclW = ctx.measureText(EXCL).width;
-
-      layout.startXD = layout.cx - (layout.helloW + layout.doclibW + layout.exclW) / 2;
-      layout.wordXD = layout.startXD + layout.helloW;
-      layout.exclXD = layout.wordXD + layout.doclibW + 4;
-      
-      layout.startXM = layout.cx - (layout.helloW + layout.metisW + layout.exclW) / 2;
-      layout.wordXM = layout.startXM + layout.helloW;
-      layout.exclXM = layout.wordXM + layout.metisW + 4;
-
-      layout.fromW = FROM.map(ch => ch ? ctx.measureText(ch).width : 0);
-      layout.fromCharX = [];
-      let ax = layout.wordXD;
-      for (let i = 0; i < FROM.length; i++) { 
-        layout.fromCharX.push(ax); 
-        ax += layout.fromW[i]; 
-      }
-
-      layout.metisCharW = metisChars.map(ch => ctx.measureText(ch).width);
-      layout.metisCharX = [];
-      let bx = layout.wordXM;
-      for (const ch of metisChars) { 
-        layout.metisCharX.push(bx); 
-        bx += ctx.measureText(ch).width; 
-      }
-    };
-
-    window.addEventListener("resize", updateLayout);
-    updateLayout();
-
-    const draw = (ts: number) => {
-      if (startTime < 0) startTime = ts;
-      const now = ts - startTime;
-
-      ctx.clearRect(0, 0, layout.W, layout.H);
-      ctx.font = layout.FONT; 
-      ctx.textBaseline = "middle";
-
-      if (now < T_MORPH) {
-        for (const s of TW) { if (now >= s.at) typedText = s.text; }
-        cursorTick += 16; if (cursorTick > 530) { cursorVis = !cursorVis; cursorTick = 0; }
-        const tw = ctx.measureText(typedText).width;
-        const tx = layout.cx - tw / 2;
-        ctx.fillStyle = "#1D1D1F"; ctx.globalAlpha = 1;
-        ctx.fillText(typedText, tx, layout.cy);
-        if (now < T_MORPH - 300 && cursorVis) {
-          ctx.fillRect(tx + tw + 3, layout.cy - layout.FS * 0.38, 3, layout.FS * 0.74);
-        }
-        rafId = requestAnimationFrame(draw); 
-        return;
-      }
-
-      if (now < T_MORPH_END) {
-        const mp = Math.min(1, (now - T_MORPH) / (T_MORPH_END - T_MORPH));
-        const mep = easeOutExpo(mp);
-        ctx.fillStyle = "#1D1D1F"; ctx.globalAlpha = 1;
-        ctx.fillText(HELLO, layout.startXD + (layout.startXM - layout.startXD) * mep, layout.cy);
-        
-        for (let i = 0; i < FROM.length; i++) {
-          const ls = T_MORPH + i * MS;
-          const fc = FROM[i], tc = TO[i];
-          if (now < ls) { 
-            if (fc) { 
-              ctx.fillStyle = "#1D1D1F"; ctx.globalAlpha = 1; 
-              ctx.fillText(fc, layout.fromCharX[i], layout.cy); 
-            } 
-          } else {
-            const p = Math.min(1, (now - ls) / MD);
-            const ep = easeOutExpo(p);
-            if (tc === "") {
-              ctx.globalAlpha = 1 - ep; ctx.fillStyle = "#1D1D1F";
-              ctx.save(); 
-              ctx.translate(layout.fromCharX[i] + layout.fromW[i] / 2, layout.cy);
-              ctx.scale(1 - ep * 0.9, 1 - ep * 0.9); 
-              ctx.fillText(fc, -layout.fromW[i] / 2, 0); 
-              ctx.restore();
-            } else {
-              const dc = p < 0.75 ? SLOTS[Math.floor(Math.random() * SLOTS.length)] : tc;
-              ctx.globalAlpha = 1; ctx.fillStyle = "#1D1D1F";
-              ctx.fillText(dc, layout.fromCharX[i] + (layout.metisCharX[i < 5 ? i : 4] - layout.fromCharX[i]) * ep, layout.cy);
-            }
-          }
-        }
-        ctx.globalAlpha = 1; ctx.fillStyle = "#1D1D1F";
-        ctx.fillText(EXCL, layout.exclXD + (layout.exclXM - layout.exclXD) * easeOutExpo(Math.min(1, (now - T_MORPH) / (T_MORPH_END - T_MORPH))), layout.cy);
-        
-        rafId = requestAnimationFrame(draw); 
-        return;
-      }
-
-      const sweepE = now >= T_SWEEP_E && now < T_SWEEP_W;
-      const sweepW = now >= T_SWEEP_W && now < T_SWEEP_DONE;
-      const afterSweep = now >= T_SWEEP_DONE;
-      
-      let exX = layout.exclXM;
-      if (sweepE) exX = layout.exclXM + (layout.wordXM - layout.exclXM) * easeInOutCubic(clamp((now - T_SWEEP_E) / SWEEP_DUR, 0, 1));
-      else if (sweepW) exX = layout.wordXM + (layout.exclXM - layout.wordXM) * easeInOutCubic(clamp((now - T_SWEEP_W) / SWEEP_DUR, 0, 1));
-
-      const sinColor = (i: number) => {
-        const tt = now * 0.0006 + i * 0.4;
-        const h = 210 + (Math.sin(tt) * 0.5 + 0.5) * 130;
-        return `hsl(${h},75%,60%)`;
-      };
-
-      if (now >= T_LANG_START) {
-        const elapsed = now - T_LANG_START;
-        const adj = elapsed + FADE_MS;
-        const li = Math.floor(adj / LANG_MS) % GREETINGS.length;
-        const g = GREETINGS[li];
-        const ln = adj % LANG_MS;
-        
-        let a = 1;
-        if (ln < FADE_MS) a = easeOutExpo(ln / FADE_MS);
-        else if (ln > FADE_MS + HOLD_MS) a = 1 - easeOutExpo((ln - FADE_MS - HOLD_MS) / FADE_MS);
-
-        const gW = ctx.measureText(g + " ").width;
-        const fullW = gW + layout.metisW + layout.exclW;
-        const gX = layout.cx - fullW / 2;
-
-        ctx.globalAlpha = a; ctx.fillStyle = "#1D1D1F";
-        ctx.fillText(g + " ", gX, layout.cy);
-        
-        const mxLang = gX + gW;
-        for (let i = 0; i < metisChars.length; i++) {
-          let lx = mxLang; 
-          for (let j = 0; j < i; j++) lx += layout.metisCharW[j];
-          ctx.fillStyle = sinColor(i);
-          ctx.fillText(metisChars[i], lx, layout.cy);
-        }
-        ctx.fillStyle = "#1D1D1F"; 
-        ctx.fillText(EXCL, mxLang + layout.metisW + 4, layout.cy);
-        ctx.globalAlpha = 1;
-
-        if (!done) { 
-          done = true; 
-          setTimeout(() => setShowBtn(true), 2500); 
-        }
-
-        rafId = requestAnimationFrame(draw); 
-        return;
-      }
-
-      for (let i = 0; i < metisChars.length; i++) {
-        const lx = layout.metisCharX[i], cw = layout.metisCharW[i];
-        let a = 1, color = "#1D1D1F";
-        if (sweepE) a = clamp((exX - lx) / cw, 0, 1);
-        else if (sweepW || afterSweep) {
-          if (sweepW) a = clamp((exX - lx) / cw, 0, 1);
-          color = sinColor(i);
-        }
-        ctx.globalAlpha = a; ctx.fillStyle = color;
-        ctx.fillText(metisChars[i], lx, layout.cy);
-      }
-      
-      ctx.globalAlpha = 1; ctx.fillStyle = "#1D1D1F";
-      ctx.fillText(HELLO, layout.startXM, layout.cy);
-      ctx.fillText(EXCL, exX, layout.cy);
-
-      rafId = requestAnimationFrame(draw);
-    };
-
-    rafId = requestAnimationFrame(draw);
-    return () => {
-      window.removeEventListener("resize", updateLayout);
-      cancelAnimationFrame(rafId);
-    };
-  }, []);
-
+export default function HomePage() {
   return (
-    <div className="fixed inset-0 bg-white overflow-hidden">
-      <canvas ref={canvasRef} className="absolute inset-0 block w-full h-full" />
+    <div className="min-h-[100dvh] bg-canvas text-ink">
+      <header className="sticky top-0 z-30 border-b border-border bg-canvas/95 backdrop-blur-md">
+        <nav className="mx-auto flex h-16 max-w-[1280px] items-center px-4 md:px-8" aria-label="Điều hướng trang chủ">
+          <Link href="/" className="text-[20px] font-semibold tracking-[-0.04em]">DocLib</Link>
+          <div className="ml-auto flex items-center gap-2 sm:gap-3">
+            <Link href="/kham-pha" className="hidden rounded-control px-3 py-2 text-[14px] font-semibold text-ink-muted hover:bg-surface-quiet hover:text-ink sm:block">
+              Khám phá
+            </Link>
+            <Link href="/dang-nhap" className="rounded-control px-3 py-2 text-[14px] font-semibold hover:bg-surface-quiet">
+              Đăng nhập
+            </Link>
+            <Link href="/dang-ky" className="rounded-control bg-brand px-4 py-2 text-[14px] font-semibold text-white transition hover:bg-brand-hover active:translate-y-px">
+              Đăng ký
+            </Link>
+          </div>
+        </nav>
+      </header>
 
-      <div className="absolute inset-x-0 bottom-0 top-1/2 flex items-center justify-center pointer-events-none">
-        <button
-          onClick={() => router.push("/kham-pha")}
-          style={{
-            opacity: showBtn ? 1 : 0,
-            transform: showBtn ? "scale(1) translateY(0)" : "scale(0.8) translateY(8px)",
-            transition: "opacity 500ms ease, transform 500ms cubic-bezier(0.34,1.56,0.64,1)",
-          }}
-          className={`
-            pointer-events-auto bg-[#0071E3] hover:bg-[#0055C6] hover:scale-105 text-white 
-            border-none rounded-[980px] px-8 py-3 text-[15px] font-semibold 
-            font-['-apple-system','SF_Pro_Display',BlinkMacSystemFont,sans-serif] 
-            cursor-pointer tracking-tight whitespace-nowrap shadow-md
-            transition-all duration-300
-          `}
-        >
-          Bắt đầu
-        </button>
-      </div>
+      <main>
+        <section className="mx-auto grid min-h-[calc(100dvh-64px)] max-w-[1280px] items-center gap-10 px-4 py-12 md:px-8 lg:grid-cols-[0.82fr_1.18fr] lg:gap-16 lg:py-16">
+          <div className="max-w-[560px]">
+            <h1 className="text-balance text-[40px] font-semibold leading-[1.08] tracking-[-0.045em] text-ink sm:text-[46px] lg:text-[52px]">
+              Tài liệu, công việc và trao đổi trong một nơi
+            </h1>
+            <p className="mt-6 max-w-[46ch] text-[17px] leading-relaxed text-ink-muted">
+              DocLib giúp bạn đọc, quản lý và cộng tác trên tài liệu mà không phải chuyển qua nhiều công cụ
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link href="/dang-ky" className="inline-flex min-h-11 items-center gap-2 rounded-control bg-brand px-5 py-2.5 text-[15px] font-semibold text-white transition hover:bg-brand-hover active:translate-y-px">
+                Tạo tài khoản
+                <ArrowRight aria-hidden="true" size={18} strokeWidth={1.75} />
+              </Link>
+              <Link href="/kham-pha" className="inline-flex min-h-11 items-center rounded-control border border-border-strong bg-surface px-5 py-2.5 text-[15px] font-semibold transition hover:bg-surface-quiet active:translate-y-px">
+                Xem tài liệu
+              </Link>
+            </div>
+          </div>
+
+          <div className="relative overflow-hidden rounded-workspace bg-surface shadow-[0_24px_70px_rgba(48,47,42,0.13)]">
+            <Image
+              src="/images/doclib-document-workspace.png"
+              alt="Người dùng đang sắp xếp tài liệu trong không gian làm việc"
+              width={1536}
+              height={1024}
+              priority
+              sizes="(max-width: 1024px) 100vw, 58vw"
+              className="aspect-[3/2] h-full w-full object-cover"
+            />
+          </div>
+        </section>
+
+        <section className="border-y border-border bg-surface">
+          <div className="mx-auto grid max-w-[1280px] gap-0 px-4 md:grid-cols-[1.3fr_0.7fr] md:px-8">
+            <div className="py-16 md:pr-16 lg:py-24">
+              <h2 className="max-w-[700px] text-[28px] font-semibold leading-tight tracking-[-0.035em] md:text-[36px]">
+                Nội dung luôn ở vị trí chính
+              </h2>
+              <p className="mt-5 max-w-[58ch] text-[17px] leading-relaxed text-ink-muted">
+                Điều hướng gọn, phản hồi rõ và các công cụ chỉ xuất hiện khi bạn cần dùng
+              </p>
+            </div>
+            <div className="border-t border-border py-10 md:border-l md:border-t-0 md:py-16 md:pl-12 lg:py-24">
+              <div className="space-y-5">
+                {["Đọc và ghi chú", "Soạn thảo và xuất bản", "Phân quyền và lưu trữ"].map((item) => (
+                  <div key={item} className="flex items-center gap-3 text-[15px] font-semibold">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-soft text-brand">
+                      <Check aria-hidden="true" size={15} strokeWidth={2} />
+                    </span>
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-[1280px] px-4 py-20 md:px-8 lg:py-28">
+          <h2 className="max-w-[680px] text-[28px] font-semibold leading-tight tracking-[-0.035em] md:text-[36px]">
+            Một luồng làm việc liền mạch
+          </h2>
+          <div className="mt-12 grid gap-0 overflow-hidden rounded-workspace border border-border bg-surface md:grid-cols-[1.2fr_0.8fr]">
+            <div className="border-b border-border p-6 md:border-b-0 md:border-r md:p-10">
+              <PrimaryCapabilityIcon aria-hidden="true" size={24} strokeWidth={1.75} className="text-brand" />
+              <h3 className="mt-12 text-[24px] font-semibold tracking-[-0.025em]">{capabilities[0].title}</h3>
+              <p className="mt-3 max-w-[48ch] text-[15px] leading-relaxed text-ink-muted">{capabilities[0].description}</p>
+            </div>
+            <div className="divide-y divide-border">
+              {capabilities.slice(1).map((item) => (
+                <div key={item.title} className="p-6 md:p-8">
+                  <item.icon aria-hidden="true" size={22} strokeWidth={1.75} className="text-brand" />
+                  <h3 className="mt-8 text-[20px] font-semibold tracking-[-0.02em]">{item.title}</h3>
+                  <p className="mt-2 text-[14px] leading-relaxed text-ink-muted">{item.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-brand text-white">
+          <div className="mx-auto flex max-w-[1280px] flex-col items-start justify-between gap-8 px-4 py-16 md:flex-row md:items-center md:px-8 lg:py-20">
+            <div>
+              <h2 className="text-[28px] font-semibold tracking-[-0.03em] md:text-[34px]">Bắt đầu với tài liệu của bạn</h2>
+              <p className="mt-3 text-[16px] text-white/75">Tạo tài khoản và mở không gian làm việc đầu tiên</p>
+            </div>
+            <Link href="/dang-ky" className="inline-flex min-h-11 items-center gap-2 rounded-control bg-white px-5 py-2.5 text-[15px] font-semibold text-brand transition hover:bg-brand-soft active:translate-y-px">
+              Tạo tài khoản
+              <ArrowRight aria-hidden="true" size={18} strokeWidth={1.75} />
+            </Link>
+          </div>
+        </section>
+      </main>
+
+      <footer className="border-t border-border bg-surface">
+        <div className="mx-auto flex max-w-[1280px] flex-col gap-4 px-4 py-8 text-[13px] text-ink-muted sm:flex-row sm:items-center sm:justify-between md:px-8">
+          <span className="font-semibold text-ink">DocLib</span>
+          <div className="flex gap-5">
+            <Link href="/dieu-khoan" className="hover:text-ink">Điều khoản</Link>
+            <Link href="/tro-giup" className="hover:text-ink">Trợ giúp</Link>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

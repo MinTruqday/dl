@@ -46,9 +46,9 @@ export default class DocLibPageColor implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-pagecolor { border: 1px dashed #cbd5e1; border-radius: 8px; padding: 16px; margin: 16px 0; background: #f8fafc; display: flex; align-items: center; justify-content: space-between; }
-      .doclib-pagecolor-label { font-weight: 600; color: #475569; font-size: 14px; display: flex; align-items: center; gap: 8px; }
-      .doclib-pagecolor-swatch { width: 24px; height: 24px; border-radius: 50%; border: 1px solid #cbd5e1; }
+      .doclib-pagecolor { border: 1px dashed hsl(var(--border)); border-radius: 8px; padding: 16px; margin: 16px 0; background: hsl(var(--surface-raised)); display: flex; align-items: center; justify-content: space-between; }
+      .doclib-pagecolor-label { font-weight: 600; color: hsl(var(--ink-muted)); font-size: 14px; display: flex; align-items: center; gap: 8px; }
+      .doclib-pagecolor-swatch { width: 24px; height: 24px; border-radius: 50%; border: 1px solid hsl(var(--border)); }
       .doclib-pagecolor-input { border: none; padding: 0; width: 30px; height: 30px; cursor: pointer; outline: none; background: transparent; }
     `;
     this.wrapper.appendChild(style);

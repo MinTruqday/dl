@@ -37,12 +37,12 @@ export default function HelpPage() {
   );
 
   return (
-    <div className="w-full h-full font-sans text-[#1D1D1F]">
+    <div className="w-full h-full font-sans text-ink">
       <div className="text-center mb-16 space-y-6">
-        <h1 className="text-[40px] md:text-[56px] font-semibold tracking-tight leading-tight">
+        <h1 className="text-[28px] md:text-[32px] font-semibold tracking-tight leading-tight">
           Trung tâm hỗ trợ
         </h1>
-        <p className="text-[17px] text-[#6E6E73] max-w-xl mx-auto leading-relaxed">
+        <p className="text-[17px] text-ink-muted max-w-xl mx-auto leading-relaxed">
           Giải đáp các thắc mắc về trải nghiệm sử dụng hệ thống DocLib.
         </p>
       </div>
@@ -53,37 +53,37 @@ export default function HelpPage() {
             icon: Book,
             title: "Hướng dẫn đọc",
             desc: "Sử dụng trình đọc và quản lý thư viện cá nhân",
-            color: "text-[#0071E3]",
-            bg: "bg-[#0071E3]/10",
+            color: "text-brand",
+            bg: "bg-brand/10",
           },
           {
             icon: LifeBuoy,
             title: "Studio & xuất bản",
             desc: "Đăng tài liệu, thiết lập giá và quản lý thu nhập",
-            color: "text-[#FF9500]",
-            bg: "bg-[#FF9500]/10",
+            color: "text-warning",
+            bg: "bg-warning/10",
           },
           {
             icon: Shield,
             title: "Tài khoản & ví",
             desc: "Bảo mật thông tin, đơn vị dl và các giao dịch",
-            color: "text-[#34C759]",
-            bg: "bg-[#34C759]/10",
+            color: "text-brand",
+            bg: "bg-brand/10",
           },
         ].map((item, idx) => (
           <div
             key={idx}
-            className="p-8 bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] hover: transition- cursor-pointer"
+            className="p-8 bg-surface-quiet rounded-panel border border-border hover: transition- cursor-pointer"
           >
             <div
-              className={`w-12 h-12 rounded-[10px] flex items-center justify-center mb-6 ${item.bg}`}
+              className={`w-12 h-12 rounded-control flex items-center justify-center mb-6 ${item.bg}`}
             >
               <item.icon className={`w-6 h-6 ${item.color}`} />
             </div>
-            <p className="text-[13px] font-medium text-[#6E6E73] mb-4 mb-2">
+            <p className="text-[13px] font-medium text-ink-muted mb-2">
               {item.title}
             </p>
-            <p className="text-[14px] text-[#6E6E73] leading-relaxed">
+            <p className="text-[14px] text-ink-muted leading-relaxed">
               {item.desc}
             </p>
           </div>
@@ -91,43 +91,43 @@ export default function HelpPage() {
       </div>
 
       <div className="space-y-6">
-        <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">
+        <h2 className="text-[20px] font-semibold text-ink mb-4">
           Câu hỏi thường gặp
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredFaqs.map((faq, i) => (
             <div
               key={i}
-              className="p-6 bg-[#F5F5F7] rounded-[18px] hover:bg-[#E8E8ED] transition-colors"
+              className="p-6 bg-surface-quiet rounded-panel hover:bg-border transition-colors"
             >
-              <h4 className="text-[15px] font-semibold text-[#1D1D1F] mb-3 flex items-start gap-3">
-                <HelpCircle className="w-5 h-5 text-[#0071E3] shrink-0 mt-0.5" />
+              <h4 className="text-[15px] font-semibold text-ink mb-3 flex items-start gap-3">
+                <HelpCircle className="w-5 h-5 text-brand shrink-0 mt-0.5" />
                 {faq.q}
               </h4>
-              <p className="text-[14px] text-[#6E6E73] leading-relaxed ml-8">
+              <p className="text-[14px] text-ink-muted leading-relaxed ml-8">
                 {faq.a}
               </p>
             </div>
           ))}
           {filteredFaqs.length === 0 && (
-            <div className="col-span-full py-16 text-center text-[#6E6E73] text-[15px]">
+            <div className="col-span-full py-16 text-center text-ink-muted text-[15px]">
               Không tìm thấy kết quả phù hợp.
             </div>
           )}
         </div>
       </div>
 
-      <div className="mt-20 p-12 bg-[#F5F5F7] rounded-[32px] text-center ">
-        <div className="w-16 h-16 bg-white rounded-[16px] flex items-center justify-center mx-auto mb-6">
-          <MessageCircle className="w-8 h-8 text-[#1D1D1F]" />
+      <div className="mt-20 p-12 bg-surface-quiet rounded-workspace text-center ">
+        <div className="w-16 h-16 bg-white rounded-panel flex items-center justify-center mx-auto mb-6">
+          <MessageCircle className="w-8 h-8 text-ink" />
         </div>
-        <p className="text-[13px] font-medium text-[#6E6E73] mb-4 mb-2">
+        <p className="text-[13px] font-medium text-ink-muted mb-2">
           Cần thêm thông tin?
         </p>
-        <p className="text-[15px] text-[#6E6E73] mb-8">
+        <p className="text-[15px] text-ink-muted mb-8">
           Liên hệ với chúng tôi để được giải đáp thắc mắc trực tiếp.
         </p>
-        <button className="pill-button bg-[#1D1D1F] text-white hover:bg-[#333336]">
+        <button className="pill-button bg-ink text-white hover:bg-ink">
           Gửi yêu cầu hỗ trợ
         </button>
       </div>

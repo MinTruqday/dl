@@ -51,15 +51,15 @@ export default class DocLibFormDropdown implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-form-dd { display: flex; align-items: center; gap: 12px; margin: 16px 0; padding: 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: #fff; }
-      .doclib-form-dd-label { font-size: 15px; font-weight: 600; color: #1e293b; outline: none; flex: 1; }
-      .doclib-form-dd-label:empty::before { content: "DocLib Title"; color: #94a3b8; pointer-events: none; }
-      .doclib-form-dd-select { padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; background: #f8fafc; font-size: 14px; min-width: 150px; cursor: pointer; }
-      .doclib-form-dd-edit { margin-top: 8px; padding: 12px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; display: flex; flex-direction: column; gap: 8px; }
+      .doclib-form-dd { display: flex; align-items: center; gap: 12px; margin: 16px 0; padding: 12px; border: 1px solid hsl(var(--border)); border-radius: 6px; background: hsl(var(--surface)); }
+      .doclib-form-dd-label { font-size: 15px; font-weight: 600; color: hsl(var(--ink)); outline: none; flex: 1; }
+      .doclib-form-dd-label:empty::before { content: "DocLib Title"; color: hsl(var(--ink-faint)); pointer-events: none; }
+      .doclib-form-dd-select { padding: 8px 12px; border: 1px solid hsl(var(--border)); border-radius: 4px; outline: none; background: hsl(var(--surface-raised)); font-size: 14px; min-width: 150px; cursor: pointer; }
+      .doclib-form-dd-edit { margin-top: 8px; padding: 12px; background: hsl(var(--surface-raised)); border: 1px dashed hsl(var(--border)); border-radius: 6px; display: flex; flex-direction: column; gap: 8px; }
       .doclib-form-dd-row { display: flex; gap: 8px; }
-      .doclib-form-dd-input { flex: 1; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; }
-      .doclib-form-dd-btn { padding: 6px 12px; background: #ef4444; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
-      .doclib-form-dd-add { padding: 6px 16px; background: #3b82f6; color: #fff; border: none; border-radius: 4px; cursor: pointer; align-self: flex-start; }
+      .doclib-form-dd-input { flex: 1; padding: 6px; border: 1px solid hsl(var(--border)); border-radius: 4px; outline: none; }
+      .doclib-form-dd-btn { padding: 6px 12px; background: hsl(var(--danger)); color: hsl(var(--surface)); border: none; border-radius: 4px; cursor: pointer; }
+      .doclib-form-dd-add { padding: 6px 16px; background: hsl(var(--brand)); color: hsl(var(--surface)); border: none; border-radius: 4px; cursor: pointer; align-self: flex-start; }
     `;
     this.wrapper.appendChild(style);
 

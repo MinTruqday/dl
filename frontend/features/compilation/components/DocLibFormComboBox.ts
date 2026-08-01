@@ -52,21 +52,21 @@ export default class DocLibFormComboBox implements BlockTool {
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-combo { font-family: sans-serif; display: flex; flex-direction: column; gap: 8px; margin: 16px 0; max-width: 400px; }
-      .doclib-combo-label { font-size: 14px; font-weight: bold; color: #1e293b; outline: none; }
-      .doclib-combo-label:empty:before { content: "DocLib Label"; color: #94a3b8; font-weight: normal; }
+      .doclib-combo-label { font-size: 14px; font-weight: bold; color: hsl(var(--ink)); outline: none; }
+      .doclib-combo-label:empty:before { content: "DocLib Label"; color: hsl(var(--ink-faint)); font-weight: normal; }
       .doclib-combo-wrap { position: relative; display: flex; align-items: center; }
-      .doclib-combo-input { flex: 1; padding: 8px 32px 8px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 14px; outline: none; }
-      .doclib-combo-input:focus { border-color: #3b82f6; }
-      .doclib-combo-toggle { position: absolute; right: 0; top: 0; bottom: 0; width: 32px; background: #f1f5f9; border-left: 1px solid #cbd5e1; border-radius: 0 4px 4px 0; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #475569; }
-      .doclib-combo-list { display: none; position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #cbd5e1; border-radius: 4px; margin-top: 4px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); z-index: 10; max-height: 150px; overflow-y: auto; }
+      .doclib-combo-input { flex: 1; padding: 8px 32px 8px 12px; border: 1px solid hsl(var(--border)); border-radius: 4px; font-size: 14px; outline: none; }
+      .doclib-combo-input:focus { border-color: hsl(var(--brand)); }
+      .doclib-combo-toggle { position: absolute; right: 0; top: 0; bottom: 0; width: 32px; background: hsl(var(--surface-quiet)); border-left: 1px solid hsl(var(--border)); border-radius: 0 4px 4px 0; display: flex; align-items: center; justify-content: center; cursor: pointer; color: hsl(var(--ink-muted)); }
+      .doclib-combo-list { display: none; position: absolute; top: 100%; left: 0; right: 0; background: hsl(var(--surface)); border: 1px solid hsl(var(--border)); border-radius: 4px; margin-top: 4px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); z-index: 10; max-height: 150px; overflow-y: auto; }
       .doclib-combo-list.open { display: block; }
       .doclib-combo-item { padding: 8px 12px; font-size: 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-      .doclib-combo-item:hover { background: #f1f5f9; }
+      .doclib-combo-item:hover { background: hsl(var(--surface-quiet)); }
       .doclib-combo-item-text { outline: none; flex: 1; }
-      .doclib-combo-item-text:empty:before { content: "DocLib Opt"; color: #94a3b8; }
-      .doclib-combo-del { color: #ef4444; font-size: 10px; cursor: pointer; display: none; background: none; border: none; }
+      .doclib-combo-item-text:empty:before { content: "DocLib Opt"; color: hsl(var(--ink-faint)); }
+      .doclib-combo-del { color: hsl(var(--danger)); font-size: 10px; cursor: pointer; display: none; background: none; border: none; }
       .doclib-combo-item:hover .doclib-combo-del { display: block; }
-      .doclib-combo-add { padding: 8px; text-align: center; color: #3b82f6; font-size: 12px; cursor: pointer; border-top: 1px solid #f1f5f9; font-weight: bold; }
+      .doclib-combo-add { padding: 8px; text-align: center; color: hsl(var(--brand)); font-size: 12px; cursor: pointer; border-top: 1px solid hsl(var(--surface-quiet)); font-weight: bold; }
     `;
     this.wrapper.appendChild(style);
 

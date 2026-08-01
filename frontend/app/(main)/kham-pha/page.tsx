@@ -33,7 +33,7 @@ export default function ExplorePage() {
       setCategories(catData.data?.categories || catData.categories || []);
       setRecommendations(recData.data || recData || []);
     } catch (err) {
-      showToast("Lỗi trích xuất bộ sưu tập gợi ý", "error");
+      showToast("Không thể tải bộ sưu tập gợi ý", "error");
     }
   }, [showToast]);
 
@@ -52,7 +52,7 @@ export default function ExplorePage() {
       }
       setDocuments(data.data || data || []);
     } catch (err) {
-      showToast("Lỗi trích xuất bộ sưu tập tài liệu", "error");
+      showToast("Không thể tải bộ sưu tập tài liệu", "error");
     } finally {
       setLoading(false);
     }
@@ -71,38 +71,38 @@ export default function ExplorePage() {
 
   const SkeletonCard = ({ mode }: { mode: "grid" | "list" }) => (
     <div
-      className={`bg-[#F5F5F7] rounded-[18px] overflow-hidden animate-pulse ${
+      className={`bg-surface-quiet rounded-panel overflow-hidden animate-pulse ${
         mode === "grid" ? "flex flex-col" : "flex flex-row gap-4 p-4"
       }`}
     >
       <div
-        className={`bg-[#D2D2D7] ${mode === "grid" ? "aspect-[4/3] w-full" : "w-6 h-6 shrink-0 rounded-[10px]"}`}
+        className={`bg-border ${mode === "grid" ? "aspect-[4/3] w-full" : "w-6 h-6 shrink-0 rounded-control"}`}
       />
       {mode === "grid" && (
         <div className="p-4 space-y-3">
-          <div className="h-3 w-1/3 bg-[#D2D2D7] rounded-full" />
-          <div className="h-4 w-full bg-[#D2D2D7] rounded-full" />
-          <div className="h-4 w-2/3 bg-[#D2D2D7] rounded-full" />
+          <div className="h-3 w-1/3 bg-border rounded-full" />
+          <div className="h-4 w-full bg-border rounded-full" />
+          <div className="h-4 w-2/3 bg-border rounded-full" />
         </div>
       )}
     </div>
   );
 
   return (
-    <div className="w-full h-full font-sans text-[#1D1D1F]">
+    <div className="w-full h-full font-sans text-ink">
       <div className="flex flex-col md:flex-row gap-6">
         <aside className="w-full md:w-[320px] shrink-0 space-y-6 sticky top-0 h-fit">
-          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6">
-            <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
+          <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6">
+            <p className="text-[13px] font-medium text-ink-muted mb-4">
               Phân loại
             </p>
             <nav className="flex flex-col gap-1.5">
               <button
                 onClick={() => setSelectedCategory(null)}
-                className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-[10px] transition-colors ${
+                className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-control transition-colors ${
                   !selectedCategory
-                    ? "bg-white text-[#0071E3] font-medium"
-                    : "text-[#1D1D1F] hover:bg-[#E8E8ED]"
+                    ? "bg-white text-brand font-medium"
+                    : "text-ink hover:bg-border"
                 }`}
               >
                 <span>Tất cả tài liệu</span>
@@ -114,10 +114,10 @@ export default function ExplorePage() {
                   onClick={() =>
                     setSelectedCategory(selectedCategory === cat ? null : cat)
                   }
-                  className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-[10px] transition-colors ${
+                  className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-control transition-colors ${
                     selectedCategory === cat
-                      ? "bg-white text-[#0071E3] font-medium"
-                      : "text-[#1D1D1F] hover:bg-[#E8E8ED]"
+                      ? "bg-white text-brand font-medium"
+                      : "text-ink hover:bg-border"
                   }`}
                 >
                   <span className="truncate text-left">{cat}</span>
@@ -134,8 +134,8 @@ export default function ExplorePage() {
 
         <main className="flex-1 min-w-0 space-y-8 pt-6">
           {recommendations.length > 0 && !searchQuery && (
-            <section className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6">
-              <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-6">
+            <section className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6">
+              <h2 className="text-[20px] font-semibold text-ink mb-6">
                 Gợi ý dành cho bạn
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -143,9 +143,9 @@ export default function ExplorePage() {
                   <Link
                     key={`rec-${doc._id || i}`}
                     href={`/tai-lieu/${doc.slug}`}
-                    className="flex gap-4 p-4 bg-white rounded-[18px] transition-transform hover:scale-[1.02]"
+                    className="flex gap-4 p-4 bg-white rounded-panel transition-transform hover:scale-[1.02]"
                   >
-                    <div className="w-[88px] h-[88px] shrink-0 bg-[#F5F5F7] rounded-[10px] overflow-hidden">
+                    <div className="w-[88px] h-[88px] shrink-0 bg-surface-quiet rounded-control overflow-hidden">
                       {doc.cover_url ? (
                         <img
                           src={doc.cover_url}
@@ -153,17 +153,17 @@ export default function ExplorePage() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full bg-[#F5F5F7]" />
+                        <div className="w-full h-full bg-surface-quiet" />
                       )}
                     </div>
                     <div className="flex-1 flex flex-col min-w-0">
-                      <span className="text-[12px] font-medium text-[#0071E3] mb-1">
+                      <span className="text-[12px] font-medium text-brand mb-1">
                         {doc.categories?.[0] || "Tài liệu"}
                       </span>
-                      <h3 className="text-[17px] font-medium text-[#1D1D1F] line-clamp-2 leading-snug mb-2">
+                      <h3 className="text-[17px] font-medium text-ink line-clamp-2 leading-snug mb-2">
                         {doc.title}
                       </h3>
-                      <div className="mt-auto text-[13px] text-[#6E6E73] truncate">
+                      <div className="mt-auto text-[13px] text-ink-muted truncate">
                         {doc.author?.full_name ||
                           doc.author?.username ||
                           "Ẩn danh"}
@@ -177,20 +177,20 @@ export default function ExplorePage() {
 
           <section>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-              <h2 className="text-[20px] font-semibold text-[#1D1D1F]">
+              <h2 className="text-[20px] font-semibold text-ink">
                 {searchQuery ? `Kết quả cho "${searchQuery}"` : "Kho nội dung"}
               </h2>
               <div className="flex items-center">
-                <div className="flex bg-[#E8E8ED] p-[2px] rounded-full shrink-0">
+                <div className="flex bg-border p-[2px] rounded-full shrink-0">
                   <button
                     onClick={() => setViewMode("grid")}
-                    className={`p-1 rounded-full transition-colors ${viewMode === "grid" ? "bg-white text-[#0071E3]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}
+                    className={`p-1 rounded-full transition-colors ${viewMode === "grid" ? "bg-white text-brand" : "text-ink-muted hover:text-ink"}`}
                   >
                     <LayoutGrid className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => setViewMode("list")}
-                    className={`p-1 rounded-full transition-colors ${viewMode === "list" ? "bg-white text-[#0071E3]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}
+                    className={`p-1 rounded-full transition-colors ${viewMode === "list" ? "bg-white text-brand" : "text-ink-muted hover:text-ink"}`}
                   >
                     <List className="w-4 h-4" />
                   </button>
@@ -226,13 +226,13 @@ export default function ExplorePage() {
                       viewMode === "grid"
                         ? "flex-col"
                         : "flex-row gap-6 p-4 items-center"
-                    } bg-[#F5F5F7] rounded-[18px] overflow-hidden transition-transform hover:scale-[1.02]`}
+                    } bg-surface-quiet rounded-panel overflow-hidden transition-transform hover:scale-[1.02]`}
                   >
                     <div
                       className={`${
                         viewMode === "grid"
                           ? "aspect-[4/3] w-full"
-                          : "w-[120px] h-[120px] shrink-0 rounded-[10px]"
+                          : "w-[120px] h-[120px] shrink-0 rounded-control"
                       } bg-white relative overflow-hidden`}
                     >
                       {document.cover_url ? (
@@ -259,7 +259,7 @@ export default function ExplorePage() {
                               .map((tag: string, idx: number) => (
                                 <span
                                   key={idx}
-                                  className="text-[12px] font-medium text-[#0071E3]"
+                                  className="text-[12px] font-medium text-brand"
                                 >
                                   {tag}
                                 </span>
@@ -270,12 +270,12 @@ export default function ExplorePage() {
                       <h3
                         className={`${
                           viewMode === "grid" ? "text-[17px]" : "text-[20px]"
-                        } font-medium text-[#1D1D1F] line-clamp-2 leading-snug`}
+                        } font-medium text-ink line-clamp-2 leading-snug`}
                       >
                         {document.title}
                       </h3>
 
-                      <div className="text-[13px] text-[#6E6E73] flex items-center gap-2">
+                      <div className="text-[13px] text-ink-muted flex items-center gap-2">
                         <span className="truncate">
                           {document.author?.full_name ||
                             document.author?.username ||
@@ -291,7 +291,7 @@ export default function ExplorePage() {
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-4 text-[13px] text-[#6E6E73] mt-2">
+                      <div className="flex items-center gap-4 text-[13px] text-ink-muted mt-2">
                         <span>
                           {document.views_count?.toLocaleString("vi-VN") || 0}{" "}
                           lượt xem
@@ -303,12 +303,12 @@ export default function ExplorePage() {
                       </div>
 
                       <div className="mt-4 pt-4 flex items-center justify-between">
-                        <span className="text-[15px] font-medium text-[#1D1D1F]">
+                        <span className="text-[15px] font-medium text-ink">
                           {document.is_premium
                             ? `${document.price || 0} dl`
                             : "Miễn phí"}
                         </span>
-                        <span className="text-[15px] text-[#0071E3] font-medium">
+                        <span className="text-[15px] text-brand font-medium">
                           Xem chi tiết
                         </span>
                       </div>
@@ -317,8 +317,8 @@ export default function ExplorePage() {
                 ))}
               </div>
             ) : (
-              <div className="py-24 flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[18px] w-full text-center">
-                <p className="text-[17px] text-[#6E6E73]">Chưa có dữ liệu</p>
+              <div className="py-24 flex flex-col items-center justify-center bg-surface-quiet rounded-panel w-full text-center">
+                <p className="text-[17px] text-ink-muted">Chưa có dữ liệu</p>
               </div>
             )}
           </section>

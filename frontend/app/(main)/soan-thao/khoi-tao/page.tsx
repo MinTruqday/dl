@@ -71,7 +71,7 @@ export default function CreateDocumentPage() {
         }, 1000);
       }
     } catch (err: any) {
-      showToast(err.message || "Lỗi khởi tạo dữ liệu tác phẩm", "error");
+      showToast(err.message || "Không thể tạo dữ liệu tác phẩm", "error");
     } finally {
       setLoading(false);
     }
@@ -80,13 +80,13 @@ export default function CreateDocumentPage() {
   return (
     <form
       onSubmit={handleCreate}
-      className="bg-[#F5F5F7] rounded-[18px] p-6 space-y-6 font-sans text-[#1D1D1F]"
+      className="bg-surface-quiet rounded-panel p-6 space-y-6 font-sans text-ink"
     >
-      <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-6">Khởi tạo</h2>
+      <h2 className="text-[20px] font-semibold text-ink mb-6">Khởi tạo</h2>
       <div className="space-y-6">
           <div className="space-y-2">
-            <label className="text-[13px] font-medium text-[#6E6E73] ml-1 block">
-              Tiêu đề tác phẩm <span className="text-[#FF3B30]">*</span>
+            <label className="text-[13px] font-medium text-ink-muted ml-1 block">
+              Tiêu đề tác phẩm <span className="text-danger">*</span>
             </label>
             <input
               required
@@ -100,7 +100,7 @@ export default function CreateDocumentPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-[13px] font-medium text-[#6E6E73] ml-1 block">
+              <label className="text-[13px] font-medium text-ink-muted ml-1 block">
                 Người đăng
               </label>
               <input
@@ -112,11 +112,11 @@ export default function CreateDocumentPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[13px] font-medium text-[#6E6E73] ml-1 block">
+              <label className="text-[13px] font-medium text-ink-muted ml-1 block">
                 Nhà xuất bản
               </label>
               {user?.role === "admin" ? (
-                <div className="apple-input w-full h-[48px] bg-[#E8E8ED] border-transparent px-4 flex items-center text-[#6E6E73] text-[15px] cursor-not-allowed">
+                <div className="apple-input w-full h-[48px] bg-border border-transparent px-4 flex items-center text-ink-muted text-[15px] cursor-not-allowed">
                   {publisherName}
                 </div>
               ) : (
@@ -131,7 +131,7 @@ export default function CreateDocumentPage() {
           </div>
 
             <div className="space-y-2">
-              <label className="text-[13px] font-medium text-[#6E6E73] ml-1 block">
+              <label className="text-[13px] font-medium text-ink-muted ml-1 block">
                 Tóm tắt nội dung (Tùy chọn)
               </label>
               <textarea
@@ -144,7 +144,7 @@ export default function CreateDocumentPage() {
         </div>
 
         <div className="space-y-4">
-          <label className="text-[15px] font-semibold text-[#1D1D1F] ml-1 block pb-1">
+          <label className="text-[15px] font-semibold text-ink ml-1 block pb-1">
             Môi trường soạn thảo
           </label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -158,7 +158,7 @@ export default function CreateDocumentPage() {
                   key={opt.id}
                   type="button"
                   onClick={() => setContentFormat(opt.id)}
-                  className={`h-[48px] rounded-full text-[15px] font-medium transition-colors ${isSelected ? "bg-[#0071E3] text-white" : "bg-white text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}
+                  className={`h-[48px] rounded-full text-[15px] font-medium transition-colors ${isSelected ? "bg-brand text-white" : "bg-white text-ink hover:bg-border"}`}
                 >
                   {opt.label}
                 </button>

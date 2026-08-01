@@ -50,13 +50,13 @@ export default class DocLibFormSpinButton implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-spin { font-family: sans-serif; display: flex; align-items: center; gap: 16px; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; margin: 16px 0; max-width: 400px; }
-      .doclib-spin-label { font-size: 14px; font-weight: bold; color: #1e293b; outline: none; flex: 1; }
-      .doclib-spin-label:empty:before { content: "DocLib Spin Setting"; color: #94a3b8; font-weight: normal; }
-      .doclib-spin-ctrl { display: flex; align-items: center; border: 1px solid #cbd5e1; border-radius: 4px; overflow: hidden; }
-      .doclib-spin-btn { width: 32px; height: 32px; background: #f8fafc; border: none; cursor: pointer; font-size: 16px; font-weight: bold; color: #475569; display: flex; align-items: center; justify-content: center; }
-      .doclib-spin-btn:hover { background: #e2e8f0; }
-      .doclib-spin-val { width: 48px; height: 32px; border: none; border-left: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; text-align: center; font-size: 14px; font-weight: bold; outline: none; -moz-appearance: textfield; }
+      .doclib-spin { font-family: sans-serif; display: flex; align-items: center; gap: 16px; padding: 12px 16px; border: 1px solid hsl(var(--border)); border-radius: 8px; background: hsl(var(--surface)); margin: 16px 0; max-width: 400px; }
+      .doclib-spin-label { font-size: 14px; font-weight: bold; color: hsl(var(--ink)); outline: none; flex: 1; }
+      .doclib-spin-label:empty:before { content: "DocLib Spin Setting"; color: hsl(var(--ink-faint)); font-weight: normal; }
+      .doclib-spin-ctrl { display: flex; align-items: center; border: 1px solid hsl(var(--border)); border-radius: 4px; overflow: hidden; }
+      .doclib-spin-btn { width: 32px; height: 32px; background: hsl(var(--surface-raised)); border: none; cursor: pointer; font-size: 16px; font-weight: bold; color: hsl(var(--ink-muted)); display: flex; align-items: center; justify-content: center; }
+      .doclib-spin-btn:hover { background: hsl(var(--border)); }
+      .doclib-spin-val { width: 48px; height: 32px; border: none; border-left: 1px solid hsl(var(--border)); border-right: 1px solid hsl(var(--border)); text-align: center; font-size: 14px; font-weight: bold; outline: none; -moz-appearance: textfield; }
       .doclib-spin-val::-webkit-outer-spin-button, .doclib-spin-val::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     `;
     this.wrapper.appendChild(style);

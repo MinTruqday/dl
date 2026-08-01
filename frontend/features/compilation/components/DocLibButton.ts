@@ -94,11 +94,11 @@ export default class DocLibButton implements BlockTool {
       const style = document.createElement("style");
       style.id = "doclib-button-styles";
       style.innerHTML = `
-            .anyButtonContainer__inputHolder { display: flex; flex-direction: column; gap: 10px; padding: 15px; border: 1px dashed #eaeaea; border-radius: 5px; background: #fafafa; }
-            .anyButtonContainer__registerButton { margin-top: 5px; background: #0070FF; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+            .anyButtonContainer__inputHolder { display: flex; flex-direction: column; gap: 10px; padding: 15px; border: 1px dashed hsl(var(--border)); border-radius: 5px; background: hsl(var(--surface-raised)); }
+            .anyButtonContainer__registerButton { margin-top: 5px; background: hsl(var(--brand)); color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
             .anyButtonContainer__registerButton:hover { background: #0056b3; }
             .anyButton__btn { display: inline-block; padding: 10px 20px; border-radius: 5px; text-decoration: none; text-align: center; font-weight: bold; cursor: pointer; }
-            .anyButton__btn--default { background: #0070FF; color: white; }
+            .anyButton__btn--default { background: hsl(var(--brand)); color: white; }
             .anyButton__btn--default:hover { opacity: 0.9; }
             .hide { display: none !important; }
             .anyButtonContainer__anyButtonHolder { text-align: center; margin: 10px 0; }

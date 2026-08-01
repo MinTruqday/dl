@@ -60,7 +60,7 @@ export default class DocLibWarning implements BlockTool {
     iconWrapper.innerHTML = IconWarning;
     iconWrapper.style.marginRight = "15px";
     iconWrapper.style.minWidth = "24px";
-    iconWrapper.style.color = "#388ae5";
+    iconWrapper.style.color = "hsl(var(--brand))";
 
     const contentWrapper = document.createElement("div");
     contentWrapper.style.flexGrow = "1";

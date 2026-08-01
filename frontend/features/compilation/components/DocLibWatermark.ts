@@ -49,8 +49,8 @@ export default class DocLibWatermark implements BlockTool {
     style.innerHTML = `
       .doclib-watermark-edit {
         padding: 16px;
-        background: #f8fafc;
-        border: 1px dashed #cbd5e1;
+        background: hsl(var(--surface-raised));
+        border: 1px dashed hsl(var(--border));
         border-radius: 8px;
         display: flex;
         gap: 12px;
@@ -59,7 +59,7 @@ export default class DocLibWatermark implements BlockTool {
       .doclib-watermark-input {
         flex: 1;
         padding: 8px 12px;
-        border: 1px solid #cbd5e1;
+        border: 1px solid hsl(var(--border));
         border-radius: 6px;
         font-size: 14px;
         outline: none;
@@ -83,7 +83,7 @@ export default class DocLibWatermark implements BlockTool {
       .doclib-watermark-preview span {
         font-size: 120px;
         font-weight: 900;
-        color: #000;
+        color: hsl(var(--ink));
         text-transform: uppercase;
         transform: rotate(-45deg);
         user-select: none;

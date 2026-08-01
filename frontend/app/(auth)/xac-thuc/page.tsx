@@ -69,13 +69,13 @@ function VerifyCodeContent() {
       <div className="w-full max-w-[420px]">
         <div className="auth-panel">
           <div className="text-center mb-8">
-            <h1 className="text-[28px] font-semibold tracking-tight text-[#1D1D1F]">
+            <h1 className="text-[28px] font-semibold tracking-tight text-ink">
               Xác thực mã
             </h1>
-            <p className="mt-2 text-[15px] text-[#6E6E73]">
+            <p className="mt-2 text-[15px] text-ink-muted">
               Mã xác nhận 6 số đã được gửi tới email
               <br />
-              <strong className="text-[#1D1D1F] font-medium">{email}</strong>
+              <strong className="text-ink font-medium">{email}</strong>
             </p>
           </div>
 
@@ -83,7 +83,7 @@ function VerifyCodeContent() {
             <div>
               <label
                 htmlFor="token"
-                className="block text-[13px] font-medium text-[#6E6E73] mb-2 ml-1 text-center"
+                className="block text-[13px] font-medium text-ink-muted mb-2 ml-1 text-center"
               >
                 Nhập mã OTP
               </label>
@@ -96,7 +96,7 @@ function VerifyCodeContent() {
                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
                   setToken(e.target.value)
                 }
-                className="apple-input w-full text-center text-2xl tracking-[0.3em] font-bold text-[#1D1D1F] uppercase"
+                className="apple-input w-full text-center text-2xl tracking-[0.3em] font-bold text-ink uppercase"
                 placeholder=""
                 maxLength={6}
               />
@@ -114,11 +114,11 @@ function VerifyCodeContent() {
             </div>
           </form>
 
-          <div className="mt-8 text-center border-t border-[#D2D2D7] pt-6 flex flex-col gap-4">
+          <div className="mt-8 text-center border-t border-border pt-6 flex flex-col gap-4">
             {countdown > 0 ? (
-              <p className="text-[13px] text-[#6E6E73]">
+              <p className="text-[13px] text-ink-muted">
                 Gửi lại mã xác thực sau{" "}
-                <span className="font-semibold text-[#1D1D1F]">
+                <span className="font-semibold text-ink">
                   {countdown}s
                 </span>
               </p>
@@ -127,7 +127,7 @@ function VerifyCodeContent() {
                 type="button"
                 onClick={handleResend}
                 disabled={resending}
-                className="text-[13px] font-medium text-[#0071E3] hover:text-[#0055C6]"
+                className="text-[13px] font-medium text-brand hover:text-brand-hover"
               >
                 {resending ? "Đang gửi" : "Gửi lại mã xác thực"}
               </button>
@@ -135,7 +135,7 @@ function VerifyCodeContent() {
             <button
               type="button"
               onClick={() => router.back()}
-              className="text-[13px] font-medium text-[#6E6E73] hover:text-[#1D1D1F] transition-colors"
+              className="text-[13px] font-medium text-ink-muted hover:text-ink transition-colors"
             >
               Quay lại bước trước
             </button>

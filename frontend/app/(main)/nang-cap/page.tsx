@@ -38,7 +38,7 @@ export default function UpgradePage() {
       showToast(`Cập nhật cấp độ thành viên ${tier} hoàn tất`, "success");
       setTimeout(() => window.location.reload(), 1000);
     } catch (err: any) {
-      showToast(err.message || "Lỗi cập nhật cấp độ thành viên", "error");
+      showToast(err.message || "Không thể cập nhật cấp độ thành viên", "error");
     } finally {
       setLoading(null);
     }
@@ -53,26 +53,26 @@ export default function UpgradePage() {
   };
 
   return (
-    <div className="w-full h-full font-sans text-[#1D1D1F] overflow-y-auto no-scrollbar">
+    <div className="w-full h-full font-sans text-ink overflow-y-auto no-scrollbar">
       <div className="w-full space-y-12">
         <div className="text-center space-y-4">
-          <h1 className="text-[40px] md:text-[48px] font-semibold tracking-tight flex items-center justify-center gap-3">
+          <h1 className="text-[28px] md:text-[32px] font-semibold tracking-tight flex items-center justify-center gap-3">
             Nâng cấp trải nghiệm DocLib
           </h1>
-          <p className="text-[17px] text-[#6E6E73] max-w-2xl mx-auto leading-relaxed">
+          <p className="text-[17px] text-ink-muted max-w-2xl mx-auto leading-relaxed">
             Mở khóa sức mạnh của các mô hình AI tiên tiến nhất để tăng tốc quá
             trình sáng tác và nghiên cứu của bạn.
           </p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 items-stretch">
-          <div className="bg-white rounded-[18px] border border-[#E8E8ED] p-8 flex flex-col h-full hover:scale-[1.02] transition-transform">
+          <div className="bg-white rounded-panel border border-border p-8 flex flex-col h-full hover:scale-[1.02] transition-transform">
             <div className="mb-10">
-              <h3 className="text-[22px] font-semibold text-[#1D1D1F] mb-4">
+              <h3 className="text-[22px] font-semibold text-ink mb-4">
                 Cơ bản
               </h3>
               <div className="flex items-baseline gap-2">
-                <span className="text-[40px] font-bold text-[#1D1D1F] tracking-tight">
+                <span className="text-[40px] font-bold text-ink tracking-tight">
                   Miễn phí
                 </span>
               </div>
@@ -83,15 +83,15 @@ export default function UpgradePage() {
               ].map((f, i) => (
                 <li
                   key={i}
-                  className="flex items-start gap-3 text-[14px] text-[#1D1D1F]"
+                  className="flex items-start gap-3 text-[14px] text-ink"
                 >
-                  <Check className="w-5 h-5 text-[#34C759] shrink-0" /> {f}
+                  <Check className="w-5 h-5 text-brand shrink-0" /> {f}
                 </li>
               ))}
             </ul>
             <button
               disabled
-              className="w-full py-3.5 rounded-full text-[15px] font-medium bg-[#F5F5F7] text-[#86868B] cursor-not-allowed"
+              className="w-full py-3.5 rounded-full text-[15px] font-medium bg-surface-quiet text-ink-faint cursor-not-allowed"
             >
               {getTierState("BASIC") === "CURRENT"
                 ? "Gói hiện tại"
@@ -99,23 +99,23 @@ export default function UpgradePage() {
             </button>
           </div>
 
-          <div className="bg-white rounded-[18px] border border-[#E8E8ED] p-8 flex flex-col h-full hover:scale-[1.02] transition-transform">
+          <div className="bg-white rounded-panel border border-border p-8 flex flex-col h-full hover:scale-[1.02] transition-transform">
             <div className="mb-10">
-              <h3 className="text-[22px] font-semibold text-[#1D1D1F] mb-4">
+              <h3 className="text-[22px] font-semibold text-ink mb-4">
                 Chuyên sâu
               </h3>
               <div className="flex items-baseline gap-1">
-                <span className="text-[40px] font-bold text-[#1D1D1F] tracking-tight">
+                <span className="text-[40px] font-bold text-ink tracking-tight">
                   750
                 </span>
-                <span className="text-[16px] font-medium text-[#6E6E73]">
+                <span className="text-[16px] font-medium text-ink-muted">
                   dl / tháng
                 </span>
               </div>
             </div>
             <ul className="space-y-4 mb-8 flex-1">
-              <li className="flex items-start gap-3 text-[14px] text-[#1D1D1F]">
-                <Check className="w-5 h-5 text-[#34C759] shrink-0" />{" "}
+              <li className="flex items-start gap-3 text-[14px] text-ink">
+                <Check className="w-5 h-5 text-brand shrink-0" />{" "}
                 <span className="font-semibold">
                   Mọi tính năng của gói Cơ bản
                 </span>
@@ -128,16 +128,16 @@ export default function UpgradePage() {
               ].map((f, i) => (
                 <li
                   key={i}
-                  className="flex items-start gap-3 text-[14px] text-[#1D1D1F]"
+                  className="flex items-start gap-3 text-[14px] text-ink"
                 >
-                  <Check className="w-5 h-5 text-[#34C759] shrink-0" /> {f}
+                  <Check className="w-5 h-5 text-brand shrink-0" /> {f}
                 </li>
               ))}
             </ul>
             <button
               onClick={() => handleUpgrade("PRO", 750)}
               disabled={!!loading || getTierState("PRO") !== "AVAILABLE"}
-              className={`w-full py-3.5 rounded-full text-[15px] font-medium flex items-center justify-center gap-2 ${getTierState("PRO") === "CURRENT" || getTierState("PRO") === "DOWNGRADE" || getTierState("PRO") === "ADMIN" ? "bg-[#F5F5F7] text-[#86868B] cursor-not-allowed" : "bg-[#0071E3] text-white hover:bg-[#0077ED] transition-colors"}`}
+              className={`w-full py-3.5 rounded-full text-[15px] font-medium flex items-center justify-center gap-2 ${getTierState("PRO") === "CURRENT" || getTierState("PRO") === "DOWNGRADE" || getTierState("PRO") === "ADMIN" ? "bg-surface-quiet text-ink-faint cursor-not-allowed" : "bg-brand text-white hover:bg-brand transition-colors"}`}
             >
               {loading === "PRO" ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -151,23 +151,23 @@ export default function UpgradePage() {
             </button>
           </div>
 
-          <div className="bg-white rounded-[18px] border border-[#E8E8ED] p-8 flex flex-col h-full hover:scale-[1.02] transition-transform">
+          <div className="bg-white rounded-panel border border-border p-8 flex flex-col h-full hover:scale-[1.02] transition-transform">
             <div className="mb-10">
-              <h3 className="text-[22px] font-semibold text-[#1D1D1F] mb-4">
+              <h3 className="text-[22px] font-semibold text-ink mb-4">
                 Toàn năng
               </h3>
               <div className="flex items-baseline gap-1">
-                <span className="text-[40px] font-bold text-[#1D1D1F] tracking-tight">
+                <span className="text-[40px] font-bold text-ink tracking-tight">
                   2.500
                 </span>
-                <span className="text-[16px] font-medium text-[#6E6E73]">
+                <span className="text-[16px] font-medium text-ink-muted">
                   dl / tháng
                 </span>
               </div>
             </div>
             <ul className="space-y-4 mb-8 flex-1">
-              <li className="flex items-start gap-3 text-[14px] text-[#1D1D1F]">
-                <Check className="w-5 h-5 text-[#34C759] shrink-0" />{" "}
+              <li className="flex items-start gap-3 text-[14px] text-ink">
+                <Check className="w-5 h-5 text-brand shrink-0" />{" "}
                 <span className="font-semibold">
                   Mọi tính năng của gói Nâng cao
                 </span>
@@ -181,16 +181,16 @@ export default function UpgradePage() {
               ].map((f, i) => (
                 <li
                   key={i}
-                  className="flex items-start gap-3 text-[14px] text-[#1D1D1F]"
+                  className="flex items-start gap-3 text-[14px] text-ink"
                 >
-                  <Check className="w-5 h-5 text-[#34C759] shrink-0" /> {f}
+                  <Check className="w-5 h-5 text-brand shrink-0" /> {f}
                 </li>
               ))}
             </ul>
             <button
               onClick={() => handleUpgrade("PREMIUM", 2500)}
               disabled={!!loading || getTierState("PREMIUM") !== "AVAILABLE"}
-              className={`w-full py-3.5 rounded-full text-[15px] font-medium flex items-center justify-center gap-2 ${getTierState("PREMIUM") === "CURRENT" || getTierState("PREMIUM") === "ADMIN" ? "bg-[#F5F5F7] text-[#86868B] cursor-not-allowed" : "bg-[#1D1D1F] text-white hover:bg-[#333336] transition-colors"}`}
+              className={`w-full py-3.5 rounded-full text-[15px] font-medium flex items-center justify-center gap-2 ${getTierState("PREMIUM") === "CURRENT" || getTierState("PREMIUM") === "ADMIN" ? "bg-surface-quiet text-ink-faint cursor-not-allowed" : "bg-ink text-white hover:bg-ink transition-colors"}`}
             >
               {loading === "PREMIUM" ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -205,7 +205,7 @@ export default function UpgradePage() {
           </div>
         </div>
 
-        <div className="flex items-center justify-center gap-2 text-[13px] text-[#6E6E73]">
+        <div className="flex items-center justify-center gap-2 text-[13px] text-ink-muted">
           <AlertCircle className="w-4 h-4" /> Giao dịch sẽ trừ trực tiếp vào số
           dư (dl) trong ví của bạn. Tỷ giá quy đổi 1 dl = 1.000 VNĐ.
         </div>

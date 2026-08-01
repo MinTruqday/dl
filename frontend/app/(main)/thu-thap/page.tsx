@@ -56,7 +56,7 @@ export default function CollectorPage() {
       const logsRes = await getCollectorLogsAPI();
       setLogs(Array.isArray(logsRes) ? logsRes : (logsRes.data || []));
     } catch (err: any) {
-      showToast("Lỗi trích xuất cấu hình thu thập", "error");
+      showToast("Không thể tải cấu hình thu thập", "error");
     } finally {
       setIsRefreshing(false);
       setIsLoading(false);
@@ -92,7 +92,7 @@ export default function CollectorPage() {
       fetchData();
       setConfirmModal(false);
     } catch (err: any) {
-      showToast("Lỗi khởi tạo tiến trình thu thập", "error");
+      showToast("Không thể tạo tiến trình thu thập", "error");
     } finally {
       setIsRefreshing(false);
       setIsProcessing(false);
@@ -118,14 +118,14 @@ export default function CollectorPage() {
   if (user?.role !== "admin")
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-56px)] gap-6 font-sans text-center">
-        <div className="w-24 h-24 bg-[#F5F5F7] flex items-center justify-center rounded-[18px]">
-          <ShieldAlert className="w-10 h-10 text-[#FF3B30]" />
+        <div className="w-24 h-24 bg-surface-quiet flex items-center justify-center rounded-panel">
+          <ShieldAlert className="w-10 h-10 text-danger" />
         </div>
         <div className="space-y-2 max-w-[300px]">
-          <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
+          <p className="text-[13px] font-medium text-ink-muted mb-4">
             Truy cập bị hạn chế
           </p>
-          <p className="text-[15px] text-[#6E6E73]">
+          <p className="text-[15px] text-ink-muted">
             Bạn không có quyền quản trị để truy cập trang này.
           </p>
         </div>
@@ -133,24 +133,24 @@ export default function CollectorPage() {
     );
 
   return (
-    <div className="w-full h-full font-sans text-[#1D1D1F] flex flex-col gap-6">
+    <div className="w-full h-full font-sans text-ink flex flex-col gap-6">
       <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-0">
-        <aside className="w-full md:w-[320px] shrink-0 xl:col-span-3 flex flex-col bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none overflow-hidden">
+        <aside className="w-full md:w-[320px] shrink-0 xl:col-span-3 flex flex-col bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none overflow-hidden">
           <div className="overflow-y-auto no-scrollbar p-6 md:px-0 md:pt-6 flex flex-col flex-1 gap-8">
             <div>
-              <p className="text-[13px] text-[#6E6E73] font-medium mb-4">Tài liệu đã thu thập</p>
-              <p className="text-[32px] font-semibold text-[#1D1D1F]">
+              <p className="text-[13px] text-ink-muted font-medium mb-4">Tài liệu đã thu thập</p>
+              <p className="text-[32px] font-semibold text-ink">
                 {collectorStats?.total_documents_collected || 0}
               </p>
             </div>
 
             <div>
-              <p className="text-[13px] text-[#6E6E73] font-medium mb-4">
+              <p className="text-[13px] text-ink-muted font-medium mb-4">
                 Trạng thái hoạt động
               </p>
               <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full w-fit">
                 <div
-                  className={`w-2.5 h-2.5 rounded-full ${collectorStats?.status === "operational" ? "bg-[#34C759]" : collectorStats?.status === "paused" ? "bg-[#FF9500]" : "bg-[#FF3B30]"}`}
+                  className={`w-2.5 h-2.5 rounded-full ${collectorStats?.status === "operational" ? "bg-brand" : collectorStats?.status === "paused" ? "bg-warning" : "bg-danger"}`}
                 />
                 <span className="text-[13px] font-medium">
                   {collectorStats?.status === "operational"
@@ -163,7 +163,7 @@ export default function CollectorPage() {
               <button
                 onClick={handleStopCollection}
                 disabled={isProcessing}
-                className="w-full py-3 bg-[#FF3B30]/10 text-[#FF3B30] hover:bg-[#FF3B30]/20 font-medium rounded-[16px] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 mt-4"
+                className="w-full py-3 bg-danger/10 text-danger hover:bg-danger/20 font-medium rounded-panel transition-colors flex items-center justify-center gap-2 disabled:opacity-50 mt-4"
               >
                 {isProcessing ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -173,12 +173,12 @@ export default function CollectorPage() {
             </div>
 
             <div>
-              <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
+              <p className="text-[13px] font-medium text-ink-muted mb-4">
                 Khởi tạo nhiệm vụ
               </p>
               <div className="space-y-4">
                 <div>
-                  <label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">
+                  <label className="text-[13px] font-medium text-ink-muted mb-2 block">
                     Nguồn dữ liệu
                   </label>
                   <select
@@ -203,7 +203,7 @@ export default function CollectorPage() {
                 </div>
                 {collectionForm.source === "CTAN" ? (
                   <div>
-                    <label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">
+                    <label className="text-[13px] font-medium text-ink-muted mb-2 block">
                       Vần
                     </label>
                     <select
@@ -224,7 +224,7 @@ export default function CollectorPage() {
                   </div>
                 ) : collectionForm.source ? (
                   <div>
-                    <label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">
+                    <label className="text-[13px] font-medium text-ink-muted mb-2 block">
                       Số trang thu thập
                     </label>
                     <input
@@ -262,30 +262,30 @@ export default function CollectorPage() {
             <button
               onClick={fetchData}
               disabled={isRefreshing}
-              className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors disabled:opacity-50 flex-shrink-0 w-8 h-8 flex items-center justify-center"
+              className="p-2 bg-surface-quiet text-ink hover:bg-border rounded-full transition-colors disabled:opacity-50 flex-shrink-0 w-8 h-8 flex items-center justify-center"
               title="Đồng bộ"
             >
               <RefreshCcw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
             </button>
           </div>
-          <div className="flex-1 bg-[#1D1D1F] rounded-[18px] overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#333336] bg-[#2A2A2D]">
+          <div className="flex-1 bg-ink rounded-panel overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-ink bg-ink">
               <div className="flex items-center gap-4">
                 <div className="flex gap-2">
-                  <div className="w-3 h-3 rounded-full bg-[#FF3B30]"></div>
-                  <div className="w-3 h-3 rounded-full bg-[#FF9500]"></div>
-                  <div className="w-3 h-3 rounded-full bg-[#34C759]"></div>
+                  <div className="w-3 h-3 rounded-full bg-danger"></div>
+                  <div className="w-3 h-3 rounded-full bg-warning"></div>
+                  <div className="w-3 h-3 rounded-full bg-brand"></div>
                 </div>
-                <div className="flex items-center gap-2 bg-[#1D1D1F] px-3 py-1 rounded-[8px] text-[#A1A1A6] text-[12px] font-mono">
+                <div className="flex items-center gap-2 bg-ink px-3 py-1 rounded-control text-ink-faint text-[12px] font-mono">
                   <Terminal className="w-3.5 h-3.5" /> Live Console
                 </div>
               </div>
-              <div className="text-[12px] font-mono text-[#A1A1A6] flex items-center gap-2">
-                <div className="w-2 h-2 bg-[#34C759] rounded-full animate-pulse" />{" "}
+              <div className="text-[12px] font-mono text-ink-faint flex items-center gap-2">
+                <div className="w-2 h-2 bg-brand rounded-full animate-pulse" />{" "}
                 sys.log
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto no-scrollbar p-6 font-mono text-[13px] leading-relaxed text-[#D1D1D6] bg-[#1D1D1F]">
+            <div className="flex-1 overflow-y-auto no-scrollbar p-6 font-mono text-[13px] leading-relaxed text-border bg-ink">
             {logs.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center opacity-50">
                 <Terminal className="w-10 h-10 mb-3" />
@@ -302,28 +302,28 @@ export default function CollectorPage() {
                   const l = p.length >= 3 ? p[1].trim() : "LOG";
                   const m =
                     p.length >= 3 ? p.slice(2).join(" | ").trim() : log.trim();
-                  let lc = "text-[#A1A1A6]",
-                    bgc = "bg-[#333336] text-[#A1A1A6]";
+                  let lc = "text-ink-faint",
+                    bgc = "bg-ink text-ink-faint";
                   if (l === "INFO") {
-                    lc = "text-[#32ADE6]";
-                    bgc = "bg-[#32ADE6]/10 text-[#32ADE6]";
+                    lc = "text-brand";
+                    bgc = "bg-brand/10 text-brand";
                   } else if (l === "WARNING") {
-                    lc = "text-[#FF9500]";
-                    bgc = "bg-[#FF9500]/10 text-[#FF9500]";
+                    lc = "text-warning";
+                    bgc = "bg-warning/10 text-warning";
                   } else if (l === "ERROR") {
-                    lc = "text-[#FF3B30]";
-                    bgc = "bg-[#FF3B30]/10 text-[#FF3B30]";
+                    lc = "text-danger";
+                    bgc = "bg-danger/10 text-danger";
                   } else if (l === "SUCCESS") {
-                    lc = "text-[#34C759]";
-                    bgc = "bg-[#34C759]/10 text-[#34C759]";
+                    lc = "text-brand";
+                    bgc = "bg-brand/10 text-brand";
                   }
                   return (
                     <div
                       key={i}
-                      className="flex gap-4 items-start hover:bg-[#2A2A2D] p-1 rounded-md transition-colors"
+                      className="flex gap-4 items-start hover:bg-ink p-1 rounded-md transition-colors"
                     >
                       <div className="flex gap-2 items-center w-28 shrink-0">
-                        <span className="text-[#6E6E73]">{t}</span>
+                        <span className="text-ink-muted">{t}</span>
                         {p.length >= 3 && (
                           <span
                             className={`text-[10px] px-2 py-0.5 rounded ${bgc}`}
@@ -353,11 +353,11 @@ export default function CollectorPage() {
           </ModalTitle>
         </ModalHeader>
         <ModalContent>
-          <div className="bg-[#F5F5F7] p-4 rounded-[16px] border-[#E8E8ED] mb-4">
-            <span className="text-[13px] text-[#6E6E73]">Nguồn thu thập: </span>
-            <strong className="text-[#1D1D1F]">{collectionForm.source}</strong>
+          <div className="bg-surface-quiet p-4 rounded-panel border border-border mb-4">
+            <span className="text-[13px] text-ink-muted">Nguồn thu thập: </span>
+            <strong className="text-ink">{collectionForm.source}</strong>
           </div>
-          <p className="text-[14px] text-[#6E6E73] leading-relaxed">
+          <p className="text-[14px] text-ink-muted leading-relaxed">
             Hệ thống sẽ bắt đầu thu thập dữ liệu tự động. Quá trình này có thể
             tốn một khoảng thời gian.
           </p>
@@ -366,7 +366,7 @@ export default function CollectorPage() {
           <button
             onClick={() => !isProcessing && setConfirmModal(false)}
             disabled={isProcessing}
-            className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full"
+            className="px-5 py-2 text-brand font-medium hover:bg-surface-quiet rounded-full"
           >
             Hủy
           </button>

@@ -23,37 +23,7 @@ export async function schedulePublishAPI(
     body: JSON.stringify({ publish_at: publishAt }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi cấu hình lịch trình xuất bản");
-  return data;
-}
-
-export async function configPremiumAPI(
-  documentId: string,
-  premiumChapters: string[],
-) {
-  const res = await fetch(`${API_URL}/xuat-ban/${documentId}/dinh-gia`, {
-    method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ premium_chapters: premiumChapters }),
-  });
-  const data = await res.json();
-  if (!res.ok)
-    throw new Error(data.message || "Lỗi thiết lập cơ chế kiểm soát truy cập thu phí");
-  return data;
-}
-
-export async function setFreePreviewAPI(
-  documentId: string,
-  chapterIds: string[],
-) {
-  const res = await fetch(`${API_URL}/xuat-ban/${documentId}/xem-truoc`, {
-    method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify(chapterIds),
-  });
-  const data = await res.json();
-  if (!res.ok)
-    throw new Error(data.message || "Lỗi cấp quyền truy cập công khai cục bộ");
+  if (!res.ok) throw new Error(data.message || "Không thể cấu hình lịch trình xuất bản");
   return data;
 }
 
@@ -73,16 +43,16 @@ export async function updateSeoMetadataAPI(
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi cập nhật cấu trúc siêu dữ liệu tối ưu hóa tìm kiếm (SEO)");
+    throw new Error(data.message || "Không thể cập nhật cấu trúc siêu dữ liệu tối ưu hóa tìm kiếm (SEO)");
   return data;
 }
 
 export async function getReadabilityScoreAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/xuat-ban/${documentId}/doc-hieu`, {
+  const res = await fetch(`${API_URL}/xuat-ban/${documentId}/do-de-doc`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi trích xuất chỉ số đo lường khả năng đọc hiểu");
+    throw new Error(data.message || "Không thể tải chỉ số đo lường khả năng đọc hiểu");
   return data;
 }

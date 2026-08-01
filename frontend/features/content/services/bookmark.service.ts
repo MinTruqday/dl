@@ -9,7 +9,7 @@ export async function toggleBookmarkAPI(documentId: string) {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi cập nhật trạng thái lưu trữ");
+  if (!res.ok) throw new Error(data.message || "Không thể cập nhật trạng thái lưu trữ");
   return data;
 }
 
@@ -19,7 +19,7 @@ export async function getBookmarksAPI(limit: number = 100) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi trích xuất danh sách tài liệu lưu trữ");
+    throw new Error(data.message || "Không thể tải danh sách tài liệu lưu trữ");
   return data;
 }
 
@@ -31,7 +31,7 @@ export async function createBookmarkFolderAPI(name: string) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi khởi tạo cấu trúc thư mục lưu trữ");
+    throw new Error(data.message || "Không thể tạo cấu trúc thư mục lưu trữ");
   return data;
 }
 
@@ -42,7 +42,7 @@ export async function getBookmarkFoldersAPI() {
   const data = await res.json();
   if (!res.ok)
     throw new Error(
-      data.message || "Lỗi trích xuất cây thư mục lưu trữ",
+      data.message || "Không thể tải cây thư mục lưu trữ",
     );
   return data;
 }
@@ -57,7 +57,7 @@ export async function assignBookmarksToFolderAPI(
     body: JSON.stringify({ bookmark_ids: bookmarkIds }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi cập nhật cấu trúc thư mục");
+  if (!res.ok) throw new Error(data.message || "Không thể cập nhật cấu trúc thư mục");
   return data;
 }
 
@@ -67,6 +67,6 @@ export async function deleteBookmarkFolderAPI(folderId: string) {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi xóa bỏ cấu trúc thư mục");
+  if (!res.ok) throw new Error(data.message || "Không thể xóa cấu trúc thư mục");
   return data;
 }

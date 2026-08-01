@@ -61,19 +61,19 @@ export default class DocLibVerticalTimeline implements BlockTool {
       style.id = "doclib-timeline-styles";
       style.innerHTML = `
         .doclib-tl-wrapper { padding: 20px 0; margin: 12px 0; font-family: sans-serif; position: relative; }
-        .doclib-tl-wrapper::before { content: ''; position: absolute; left: 50%; top: 20px; bottom: 20px; width: 2px; background: #e2e8f0; transform: translateX(-50%); }
+        .doclib-tl-wrapper::before { content: ''; position: absolute; left: 50%; top: 20px; bottom: 20px; width: 2px; background: hsl(var(--border)); transform: translateX(-50%); }
         .doclib-tl-event { display: flex; justify-content: center; align-items: center; margin-bottom: 30px; position: relative; width: 100%; }
         .doclib-tl-event:nth-child(odd) { flex-direction: row-reverse; }
-        .doclib-tl-content { width: 45%; padding: 16px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; }
+        .doclib-tl-content { width: 45%; padding: 16px; background: hsl(var(--surface)); border: 1px solid hsl(var(--border)); border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; }
         .doclib-tl-date { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
-        .doclib-tl-title { font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
-        .doclib-tl-desc { font-size: 14px; color: #475569; line-height: 1.5; }
-        .doclib-tl-dot { width: 16px; height: 16px; border-radius: 50%; border: 3px solid #fff; position: absolute; left: 50%; transform: translateX(-50%); z-index: 1; box-shadow: 0 0 0 2px #e2e8f0; }
-        .doclib-tl-edit { border-top: 1px solid #e2e8f0; margin-top: 24px; padding-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+        .doclib-tl-title { font-size: 16px; font-weight: 700; color: hsl(var(--ink)); margin-bottom: 8px; }
+        .doclib-tl-desc { font-size: 14px; color: hsl(var(--ink-muted)); line-height: 1.5; }
+        .doclib-tl-dot { width: 16px; height: 16px; border-radius: 50%; border: 3px solid hsl(var(--surface)); position: absolute; left: 50%; transform: translateX(-50%); z-index: 1; box-shadow: 0 0 0 2px hsl(var(--border)); }
+        .doclib-tl-edit { border-top: 1px solid hsl(var(--border)); margin-top: 24px; padding-top: 16px; display: flex; flex-direction: column; gap: 8px; }
         .doclib-tl-edit-row { display: grid; grid-template-columns: 1fr 2fr 3fr 40px 30px; gap: 8px; align-items: center; }
-        .doclib-tl-input { padding: 6px 8px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 12px; outline: none; width: 100%; box-sizing: border-box; }
-        .doclib-tl-del { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 16px; }
-        .doclib-tl-add-btn { align-self: flex-start; padding: 6px 12px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 12px; cursor: pointer; margin-top: 8px; }
+        .doclib-tl-input { padding: 6px 8px; border: 1px solid hsl(var(--border)); border-radius: 4px; font-size: 12px; outline: none; width: 100%; box-sizing: border-box; }
+        .doclib-tl-del { background: none; border: none; color: hsl(var(--ink-faint)); cursor: pointer; font-size: 16px; }
+        .doclib-tl-add-btn { align-self: flex-start; padding: 6px 12px; background: hsl(var(--surface-quiet)); border: 1px solid hsl(var(--border)); border-radius: 4px; font-size: 12px; cursor: pointer; margin-top: 8px; }
       `;
       document.head.appendChild(style);
     }
@@ -127,7 +127,7 @@ export default class DocLibVerticalTimeline implements BlockTool {
 
       const header = document.createElement("div");
       header.style.cssText =
-        "display:grid;grid-template-columns:1fr 2fr 3fr 40px 30px;gap:8px;font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;";
+        "display:grid;grid-template-columns:1fr 2fr 3fr 40px 30px;gap:8px;font-size:10px;font-weight:600;color:hsl(var(--ink-faint));text-transform:uppercase;";
       header.innerHTML =
         "<span>Date</span><span>Title</span><span>Description</span><span>Color</span><span></span>";
       editArea.appendChild(header);
@@ -188,7 +188,7 @@ export default class DocLibVerticalTimeline implements BlockTool {
           date: "New Date",
           title: "DocLib New Event",
           description: "Event description",
-          color: "#64748b",
+          color: "hsl(var(--ink-muted))",
         });
         this.buildUI();
       });

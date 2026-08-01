@@ -47,14 +47,14 @@ export default class DocLibSubdocument implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-subdoc { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border: 1px solid #94a3b8; border-radius: 4px; background: #fff; margin: 8px 0; font-family: sans-serif; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+      .doclib-subdoc { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border: 1px solid hsl(var(--ink-faint)); border-radius: 4px; background: hsl(var(--surface)); margin: 8px 0; font-family: sans-serif; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
       .doclib-subdoc-info { display: flex; align-items: center; gap: 12px; flex: 1; }
-      .doclib-subdoc-icon { color: #3b82f6; width: 24px; height: 24px; }
-      .doclib-subdoc-name { font-size: 14px; font-weight: bold; color: #1e293b; outline: none; flex: 1; }
-      .doclib-subdoc-name:empty:before { content: "DocLib Subdocument Link"; color: #94a3b8; font-weight: normal; }
+      .doclib-subdoc-icon { color: hsl(var(--brand)); width: 24px; height: 24px; }
+      .doclib-subdoc-name { font-size: 14px; font-weight: bold; color: hsl(var(--ink)); outline: none; flex: 1; }
+      .doclib-subdoc-name:empty:before { content: "DocLib Subdocument Link"; color: hsl(var(--ink-faint)); font-weight: normal; }
       .doclib-subdoc-status { font-size: 11px; padding: 4px 8px; border-radius: 12px; font-weight: bold; text-transform: uppercase; }
-      .doclib-subdoc-status.linked { background: #dcfce7; color: #16a34a; }
-      .doclib-subdoc-status.locked { background: #fee2e2; color: #dc2626; }
+      .doclib-subdoc-status.linked { background: #dcfce7; color: hsl(var(--brand)); }
+      .doclib-subdoc-status.locked { background: #fee2e2; color: hsl(var(--danger)); }
     `;
     this.wrapper.appendChild(style);
 

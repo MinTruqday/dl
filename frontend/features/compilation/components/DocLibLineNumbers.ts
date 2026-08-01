@@ -48,11 +48,11 @@ export default class DocLibLineNumbers implements BlockTool {
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-linenum { display: flex; gap: 16px; margin: 16px 0; font-family: monospace; font-size: 14px; line-height: 1.8; }
-      .doclib-linenum-gutter { width: 32px; text-align: right; color: #94a3b8; user-select: none; border-right: 1px solid #cbd5e1; padding-right: 8px; display: flex; flex-direction: column; }
+      .doclib-linenum-gutter { width: 32px; text-align: right; color: hsl(var(--ink-faint)); user-select: none; border-right: 1px solid hsl(var(--border)); padding-right: 8px; display: flex; flex-direction: column; }
       .doclib-linenum-content { flex: 1; outline: none; white-space: pre-wrap; }
-      .doclib-linenum-content:empty::before { content: "DocLib Text"; color: #cbd5e1; pointer-events: none; }
-      .doclib-linenum-controls { display: flex; gap: 8px; margin-top: 8px; background: #f8fafc; padding: 8px; border-radius: 4px; border: 1px solid #e2e8f0; }
-      .doclib-linenum-input { width: 60px; padding: 4px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; }
+      .doclib-linenum-content:empty::before { content: "DocLib Text"; color: hsl(var(--border)); pointer-events: none; }
+      .doclib-linenum-controls { display: flex; gap: 8px; margin-top: 8px; background: hsl(var(--surface-raised)); padding: 8px; border-radius: 4px; border: 1px solid hsl(var(--border)); }
+      .doclib-linenum-input { width: 60px; padding: 4px; border: 1px solid hsl(var(--border)); border-radius: 4px; outline: none; }
     `;
     this.wrapper.appendChild(style);
 
@@ -97,7 +97,7 @@ export default class DocLibLineNumbers implements BlockTool {
       const label = document.createElement("span");
       label.innerText = "Start:";
       label.style.fontSize = "12px";
-      label.style.color = "#64748b";
+      label.style.color = "hsl(var(--ink-muted))";
       label.style.alignSelf = "center";
 
       const startInput = document.createElement("input");

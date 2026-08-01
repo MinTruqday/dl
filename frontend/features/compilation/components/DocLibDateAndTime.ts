@@ -47,9 +47,9 @@ export default class DocLibDateAndTime implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-datetime { display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 16px; font-family: monospace; font-size: 14px; color: #334155; margin: 16px 0; }
-      .doclib-datetime-icon { color: #64748b; }
-      .doclib-datetime-select { border: none; background: transparent; outline: none; font-family: monospace; font-size: 14px; color: #334155; cursor: pointer; }
+      .doclib-datetime { display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px; background: hsl(var(--surface-quiet)); border: 1px solid hsl(var(--border)); border-radius: 16px; font-family: monospace; font-size: 14px; color: hsl(var(--ink)); margin: 16px 0; }
+      .doclib-datetime-icon { color: hsl(var(--ink-muted)); }
+      .doclib-datetime-select { border: none; background: transparent; outline: none; font-family: monospace; font-size: 14px; color: hsl(var(--ink)); cursor: pointer; }
     `;
     this.wrapper.appendChild(style);
 

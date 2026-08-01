@@ -57,7 +57,7 @@ export default function ProfilePage() {
       if (res && (res.status === 200 || res.id)) {
         showToast("Cập nhật thông tin hồ sơ hoàn tất", "success");
       } else {
-        showToast("Lỗi cập nhật thông tin hồ sơ", "error");
+        showToast("Không thể cập nhật thông tin hồ sơ", "error");
       }
     } catch (err: any) {
       showToast("Lỗi gián đoạn hệ thống", "error");
@@ -73,7 +73,7 @@ export default function ProfilePage() {
       showToast("Khởi tạo yêu cầu cấp quyền hoàn tất", "success");
       setMotivation("");
     } catch (e: any) {
-      showToast("Lỗi khởi tạo yêu cầu cấp quyền", "error");
+      showToast("Không thể tạo yêu cầu cấp quyền", "error");
     } finally {
       setIsApplying(false);
     }
@@ -85,7 +85,7 @@ export default function ProfilePage() {
       showToast("Cập nhật phân quyền tác giả hoàn tất", "success");
       window.location.reload();
     } catch (e: any) {
-      showToast("Lỗi cập nhật phân quyền tác giả", "error");
+      showToast("Không thể cập nhật phân quyền tác giả", "error");
     } finally {
       setIsSaving(false);
     }
@@ -102,12 +102,12 @@ export default function ProfilePage() {
         setAvatarUrl(
           res.data.url.startsWith("http")
             ? res.data.url
-            : `${API_URL}/storage/${res.data.url}`,
+            : `${API_URL}/tai-len/luu-tru/${res.data.url}`,
         );
         showToast("Lưu trữ tệp đa phương tiện hoàn tất", "success");
       }
     } catch (err: any) {
-      showToast("Lỗi truyền tải tệp đa phương tiện", "error");
+      showToast("Không thể truyền tệp đa phương tiện", "error");
     } finally {
       setIsSaving(false);
     }
@@ -116,7 +116,7 @@ export default function ProfilePage() {
   if (isLoading) {
     return (
       <div className="flex h-[80vh] items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#6E6E73]" />
+        <Loader2 className="w-8 h-8 animate-spin text-ink-muted" />
       </div>
     );
   }
@@ -124,15 +124,15 @@ export default function ProfilePage() {
   if (!user) return null;
 
   return (
-    <div className="w-full h-full flex flex-col font-sans text-[#1D1D1F]">
+    <div className="w-full h-full flex flex-col font-sans text-ink">
       <div
         className={`grid md:grid-cols-12 gap-8 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}
         style={{ transitionDelay: "100ms" }}
       >
         <aside className="md:col-span-4 xl:col-span-4 space-y-6">
-          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 flex flex-col items-center text-center">
+          <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6 flex flex-col items-center text-center">
             <div className="relative group mb-6">
-              <div className="w-32 h-32 rounded-full bg-[#D2D2D7] flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:scale-105">
+              <div className="w-32 h-32 rounded-full bg-border flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:scale-105">
                 {avatarUrl ? (
                   <img
                     src={avatarUrl}
@@ -140,7 +140,7 @@ export default function ProfilePage() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full bg-[#0071E3] text-white flex items-center justify-center text-[56px] font-semibold uppercase">
+                  <div className="w-full h-full bg-brand text-white flex items-center justify-center text-[56px] font-semibold uppercase">
                     {(user.full_name || user.username || "U").charAt(0)}
                   </div>
                 )}
@@ -159,20 +159,20 @@ export default function ProfilePage() {
 
             <div className="w-full mb-8">
               <div className="flex items-center justify-center gap-2 mb-1">
-                <h1 className="text-[20px] font-semibold text-[#1D1D1F] truncate px-2">
+                <h1 className="text-[20px] font-semibold text-ink truncate px-2">
                   {user.full_name || "Ẩn danh"}
                 </h1>
                 {user.role === "admin" && (
-                  <ShieldCheck className="w-5 h-5 text-[#8E8D91]" />
+                  <ShieldCheck className="w-5 h-5 text-ink-muted" />
                 )}
                 {user.role === "author" && (
-                  <BadgeCheck className="w-5 h-5 text-[#0071E3]" />
+                  <BadgeCheck className="w-5 h-5 text-brand" />
                 )}
                 {user.role === "potential_author" && (
-                  <Crown className="w-5 h-5 text-[#FF9500]" />
+                  <Crown className="w-5 h-5 text-warning" />
                 )}
               </div>
-              <p className="text-[14px] text-[#6E6E73]">
+              <p className="text-[14px] text-ink-muted">
                 @{user.slug || "nguoidung"}
               </p>
 
@@ -180,12 +180,12 @@ export default function ProfilePage() {
                 <span
                   className={`px-3 py-1 text-[13px] font-medium rounded-full ${
                     user.role === "admin"
-                      ? "bg-[#E8E8ED] text-[#1D1D1F]"
+                      ? "bg-border text-ink"
                       : user.role === "author"
-                        ? "bg-[#EBF4FF] text-[#0071E3]"
+                        ? "bg-brand-soft text-brand"
                         : user.role === "potential_author"
-                          ? "bg-[#FFF4E5] text-[#FF9500]"
-                          : "bg-[#E8E8ED] text-[#1D1D1F]"
+                          ? "bg-warning-soft text-warning"
+                          : "bg-border text-ink"
                   }`}
                 >
                   {user.role === "admin"
@@ -201,7 +201,7 @@ export default function ProfilePage() {
 
             <button
               onClick={logoutState}
-              className="w-full py-3 bg-white text-[#FF3B30] text-[15px] font-medium flex items-center justify-center gap-2 rounded-full transition-colors hover:bg-[#F5F5F7]"
+              className="w-full py-3 bg-white text-danger text-[15px] font-medium flex items-center justify-center gap-2 rounded-full transition-colors hover:bg-surface-quiet"
             >
               <LogOut className="w-4 h-4" /> Đăng xuất
             </button>
@@ -209,22 +209,22 @@ export default function ProfilePage() {
         </aside>
 
         <main className="md:col-span-8 xl:col-span-8 space-y-6">
-          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-6">
-            <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-6">
+          <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6 space-y-6">
+            <h2 className="text-[20px] font-semibold text-ink mb-6">
               Thông tin cá nhân
             </h2>
 
             <div className="grid sm:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-[13px] font-medium text-[#6E6E73] ml-1 block">
+                <label className="text-[13px] font-medium text-ink-muted ml-1 block">
                   Địa chỉ Email
                 </label>
-                <div className="apple-input w-full h-[48px] bg-[#E8E8ED] border-transparent px-4 flex items-center text-[#6E6E73] text-[15px] cursor-not-allowed">
+                <div className="apple-input w-full h-[48px] bg-border border-transparent px-4 flex items-center text-ink-muted text-[15px] cursor-not-allowed">
                   {user.email}
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-[13px] font-medium text-[#6E6E73] ml-1 block">
+                <label className="text-[13px] font-medium text-ink-muted ml-1 block">
                   Tên hiển thị
                 </label>
                 <input
@@ -237,7 +237,7 @@ export default function ProfilePage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[13px] font-medium text-[#6E6E73] ml-1 block">
+              <label className="text-[13px] font-medium text-ink-muted ml-1 block">
                 Tiểu sử
               </label>
               <textarea
@@ -264,19 +264,19 @@ export default function ProfilePage() {
           </div>
 
           {user.role === "reader" && (
-            <div className="bg-[#EBF4FF] rounded-[18px] p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div className="bg-brand-soft rounded-panel p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
               <div>
-                <h3 className="text-[17px] font-medium text-[#0071E3] flex items-center gap-2 mb-2">
+                <h3 className="text-[17px] font-medium text-brand flex items-center gap-2 mb-2">
                   <BadgeCheck className="w-5 h-5" /> Trở thành Tác giả
                 </h3>
-                <p className="text-[14px] text-[#0055C6]">
+                <p className="text-[14px] text-brand-hover">
                   Nâng cấp tài khoản để xuất bản nội dung và xây dựng cộng đồng của riêng bạn
                 </p>
               </div>
               <button
                 onClick={handleBecomeAuthor}
                 disabled={isSaving}
-                className="pill-button shrink-0 bg-[#0071E3] hover:bg-[#0055C6]"
+                className="pill-button shrink-0 bg-brand hover:bg-brand-hover"
               >
                 {isSaving ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
@@ -288,12 +288,12 @@ export default function ProfilePage() {
           )}
 
           {user.role === "author" && (
-            <div className="bg-[#FFF4E5] rounded-[18px] p-8 space-y-6">
+            <div className="bg-warning-soft rounded-panel p-8 space-y-6">
               <div>
-                <h3 className="text-[17px] font-medium text-[#FF9500] flex items-center gap-2 mb-2">
+                <h3 className="text-[17px] font-medium text-warning flex items-center gap-2 mb-2">
                   <Crown className="w-5 h-5" /> Ứng tuyển Tác giả Tiềm năng
                 </h3>
-                <p className="text-[14px] text-[#CC7700]">
+                <p className="text-[14px] text-warning">
                   Trở thành Tác giả Tiềm năng để nhận ưu đãi hiển thị và thu nhập đặc biệt
                 </p>
               </div>
@@ -302,12 +302,12 @@ export default function ProfilePage() {
                   value={motivation}
                   onChange={(e) => setMotivation(e.target.value)}
                   placeholder=""
-                  className="apple-input flex-1 h-[48px] border-[#FFD699] focus:border-[#FF9500] bg-white"
+                  className="apple-input flex-1 h-[48px] border-warning-soft focus:border-warning bg-white"
                 />
                 <button
                   onClick={handleApplyAuthor}
                   disabled={isApplying}
-                  className="pill-button bg-[#FF9500] hover:bg-[#CC7700] shrink-0"
+                  className="pill-button bg-warning hover:bg-warning shrink-0"
                 >
                   {isApplying ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -320,15 +320,15 @@ export default function ProfilePage() {
           )}
 
           {user.role === "potential_author" && (
-            <div className="bg-[#1D1D1F] rounded-[18px] p-8 flex items-center gap-6 relative overflow-hidden">
-              <div className="w-16 h-16 bg-[#333336] rounded-full flex items-center justify-center shrink-0 z-10">
-                <Crown className="w-8 h-8 text-[#FF9500]" />
+            <div className="bg-ink rounded-panel p-8 flex items-center gap-6 relative overflow-hidden">
+              <div className="w-16 h-16 bg-ink rounded-full flex items-center justify-center shrink-0 z-10">
+                <Crown className="w-8 h-8 text-warning" />
               </div>
               <div className="relative z-10">
                 <h3 className="text-[17px] font-medium text-white mb-1">
                   Tác giả Tiềm năng
                 </h3>
-                <p className="text-[14px] text-[#A1A1A6]">
+                <p className="text-[14px] text-ink-faint">
                   Danh hiệu cao quý dành cho tác giả xuất sắc
                 </p>
               </div>

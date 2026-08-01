@@ -49,14 +49,14 @@ export default class DocLibCoverPage implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-cover { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 800px; padding: 48px; border: 1px solid #e2e8f0; background: #fff; margin: 32px 0; page-break-after: always; position: relative; }
-      .doclib-cover::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 16px; background: #2563eb; }
-      .doclib-cover-title { font-size: 48px; font-weight: 800; text-align: center; color: #0f172a; margin-bottom: 24px; outline: none; width: 100%; }
-      .doclib-cover-subtitle { font-size: 24px; font-weight: 400; text-align: center; color: #475569; margin-bottom: 64px; outline: none; width: 100%; }
-      .doclib-cover-author { font-size: 18px; font-weight: 500; text-align: center; color: #334155; margin-bottom: 8px; outline: none; width: 100%; }
-      .doclib-cover-date { font-size: 16px; text-align: center; color: #64748b; outline: none; width: 100%; }
+      .doclib-cover { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 800px; padding: 48px; border: 1px solid hsl(var(--border)); background: hsl(var(--surface)); margin: 32px 0; page-break-after: always; position: relative; }
+      .doclib-cover::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 16px; background: hsl(var(--brand)); }
+      .doclib-cover-title { font-size: 48px; font-weight: 800; text-align: center; color: hsl(var(--ink)); margin-bottom: 24px; outline: none; width: 100%; }
+      .doclib-cover-subtitle { font-size: 24px; font-weight: 400; text-align: center; color: hsl(var(--ink-muted)); margin-bottom: 64px; outline: none; width: 100%; }
+      .doclib-cover-author { font-size: 18px; font-weight: 500; text-align: center; color: hsl(var(--ink)); margin-bottom: 8px; outline: none; width: 100%; }
+      .doclib-cover-date { font-size: 16px; text-align: center; color: hsl(var(--ink-muted)); outline: none; width: 100%; }
       
-      .doclib-cover-input:empty::before { color: #cbd5e1; pointer-events: none; }
+      .doclib-cover-input:empty::before { color: hsl(var(--border)); pointer-events: none; }
       .doclib-cover-title:empty::before { content: "DocLib Title"; }
       .doclib-cover-subtitle:empty::before { content: "DocLib Input"; }
       .doclib-cover-author:empty::before { content: "DocLib Name"; }

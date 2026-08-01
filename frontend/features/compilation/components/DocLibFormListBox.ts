@@ -52,18 +52,18 @@ export default class DocLibFormListBox implements BlockTool {
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-listbox { font-family: sans-serif; display: flex; flex-direction: column; gap: 8px; margin: 16px 0; max-width: 400px; }
-      .doclib-lb-label { font-size: 14px; font-weight: bold; color: #1e293b; outline: none; }
-      .doclib-lb-label:empty:before { content: "DocLib List Box Title"; color: #94a3b8; font-weight: normal; }
-      .doclib-lb-box { border: 1px solid #cbd5e1; border-radius: 4px; background: #fff; max-height: 200px; overflow-y: auto; padding: 4px; }
+      .doclib-lb-label { font-size: 14px; font-weight: bold; color: hsl(var(--ink)); outline: none; }
+      .doclib-lb-label:empty:before { content: "DocLib List Box Title"; color: hsl(var(--ink-faint)); font-weight: normal; }
+      .doclib-lb-box { border: 1px solid hsl(var(--border)); border-radius: 4px; background: hsl(var(--surface)); max-height: 200px; overflow-y: auto; padding: 4px; }
       .doclib-lb-item { display: flex; align-items: center; padding: 6px 8px; border-radius: 4px; cursor: pointer; user-select: none; position: relative; }
-      .doclib-lb-item:hover { background: #f1f5f9; }
-      .doclib-lb-item.selected { background: #eff6ff; color: #2563eb; font-weight: bold; }
+      .doclib-lb-item:hover { background: hsl(var(--surface-quiet)); }
+      .doclib-lb-item.selected { background: hsl(var(--brand-soft)); color: hsl(var(--brand)); font-weight: bold; }
       .doclib-lb-text { flex: 1; outline: none; font-size: 14px; }
-      .doclib-lb-text:empty:before { content: "DocLib Item"; color: #94a3b8; font-weight: normal; }
-      .doclib-lb-del { font-size: 10px; color: #ef4444; background: none; border: none; cursor: pointer; display: none; }
+      .doclib-lb-text:empty:before { content: "DocLib Item"; color: hsl(var(--ink-faint)); font-weight: normal; }
+      .doclib-lb-del { font-size: 10px; color: hsl(var(--danger)); background: none; border: none; cursor: pointer; display: none; }
       .doclib-lb-item:hover .doclib-lb-del { display: block; }
-      .doclib-lb-add { padding: 8px; font-size: 12px; font-weight: bold; color: #3b82f6; cursor: pointer; text-align: center; border-radius: 4px; }
-      .doclib-lb-add:hover { background: #eff6ff; }
+      .doclib-lb-add { padding: 8px; font-size: 12px; font-weight: bold; color: hsl(var(--brand)); cursor: pointer; text-align: center; border-radius: 4px; }
+      .doclib-lb-add:hover { background: hsl(var(--brand-soft)); }
     `;
     this.wrapper.appendChild(style);
 

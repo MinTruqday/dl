@@ -3,44 +3,6 @@ import {
   getToken,
 } from "@/features/authentication/services/session.service";
 
-export async function getAuthorApplicationsAPI(status: string = "PENDING") {
-  const token = getToken();
-  if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
-  const res = await fetch(
-    `${API_URL}/nguoi-dung/don-dang-ky/tac-gia?status=${status}`,
-    {
-      headers: { Authorization: `Bearer ${token}` },
-    },
-  );
-  const data = await res.json();
-  if (!res.ok)
-    throw new Error(data.message || "Lỗi trích xuất danh sách hồ sơ đăng ký tác giả");
-  return data;
-}
-
-export async function reviewAuthorApplicationAPI(
-  applicationId: string,
-  status: string,
-  reason: string,
-) {
-  const token = getToken();
-  if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
-  const res = await fetch(
-    `${API_URL}/nguoi-dung/don-dang-ky/tac-gia/${applicationId}/xet-duyet`,
-    {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ status, reason }),
-    },
-  );
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi cập nhật trạng thái xét duyệt hồ sơ");
-  return data;
-}
-
 export async function getAdminConfigAPI() {
   const token = getToken();
   if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
@@ -49,7 +11,7 @@ export async function getAdminConfigAPI() {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi trích xuất siêu dữ liệu cấu hình hệ thống");
+    throw new Error(data.message || "Không thể tải siêu dữ liệu cấu hình hệ thống");
   return data;
 }
 
@@ -66,7 +28,7 @@ export async function updateAdminConfigAPI(config: any) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi lưu trữ tham số cấu hình hệ thống");
+    throw new Error(data.message || "Không thể lưu tham số cấu hình hệ thống");
   return data;
 }
 
@@ -90,7 +52,7 @@ export async function getMaintenanceModeAPI() {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi trích xuất trạng thái bảo trì hệ thống");
+    throw new Error(data.message || "Không thể tải trạng thái bảo trì hệ thống");
   return data;
 }
 
@@ -119,7 +81,7 @@ export async function triggerBackupAPI() {
     },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi khởi tạo tiến trình sao lưu dữ liệu");
+  if (!res.ok) throw new Error(data.message || "Không thể tạo tiến trình sao lưu dữ liệu");
   return data;
 }
 
@@ -131,7 +93,7 @@ export async function getAdminReportsAPI() {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi trích xuất danh sách báo cáo quản trị");
+    throw new Error(data.message || "Không thể tải danh sách báo cáo quản trị");
   return data;
 }
 
@@ -143,6 +105,6 @@ export async function getMinioStatsAPI() {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi trích xuất thông số lưu trữ hệ thống MinIO");
+    throw new Error(data.message || "Không thể tải thông số lưu trữ hệ thống MinIO");
   return data;
 }

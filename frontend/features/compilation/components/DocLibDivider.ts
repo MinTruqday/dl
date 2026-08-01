@@ -40,10 +40,10 @@ export default class DocLibDivider implements BlockTool {
       style.innerHTML = `
             .doclib-dv-wrapper { padding: 16px 0; width: 100%; display: flex; justify-content: center; }
             .doclib-dv-line { width: 100%; height: 2px; }
-            .doclib-dv-solid { background: #e2e8f0; }
-            .doclib-dv-dashed { border-top: 2px dashed #cbd5e1; }
-            .doclib-dv-dotted { border-top: 4px dotted #cbd5e1; }
-            .doclib-dv-waves { height: 10px; background-image: radial-gradient(circle at 10px 0, transparent 12px, #e2e8f0 13px); background-size: 20px 10px; background-repeat: repeat-x; }
+            .doclib-dv-solid { background: hsl(var(--border)); }
+            .doclib-dv-dashed { border-top: 2px dashed hsl(var(--border)); }
+            .doclib-dv-dotted { border-top: 4px dotted hsl(var(--border)); }
+            .doclib-dv-waves { height: 10px; background-image: radial-gradient(circle at 10px 0, transparent 12px, hsl(var(--border)) 13px); background-size: 20px 10px; background-repeat: repeat-x; }
         `;
       document.head.appendChild(style);
     }

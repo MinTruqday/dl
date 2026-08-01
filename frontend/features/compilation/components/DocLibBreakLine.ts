@@ -36,7 +36,7 @@ export default class DocLibBreakLine implements BlockTool {
       const style = document.createElement("style");
       style.id = "doclib-breakline-styles";
       style.innerHTML = `
-            .doclib-breakline { margin: 24px 0; border: none; border-top: 1px solid #e2e8f0; }
+            .doclib-breakline { margin: 24px 0; border: none; border-top: 1px solid hsl(var(--border)); }
         `;
       document.head.appendChild(style);
     }

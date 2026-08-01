@@ -28,12 +28,12 @@ export default function TermsPage() {
   ];
 
   return (
-    <div className="w-full max-w-[800px] mx-auto px-6 md:px-0 py-12 md:py-20 font-sans text-[#1D1D1F]">
+    <div className="w-full max-w-[800px] mx-auto px-6 md:px-0 py-12 md:py-20 font-sans text-ink">
       <div className="mb-16  pb-12 text-center">
-        <h1 className="text-[40px] md:text-[56px] font-semibold tracking-tight text-[#1D1D1F] mb-4">
+        <h1 className="text-[28px] md:text-[32px] font-semibold tracking-tight text-ink mb-4">
           Điều khoản & chính sách
         </h1>
-        <p className="text-[15px] text-[#6E6E73]">
+        <p className="text-[15px] text-ink-muted">
           Cập nhật lần cuối: 28 tháng 04, 2026
         </p>
       </div>
@@ -43,38 +43,38 @@ export default function TermsPage() {
           {
             icon: FileText,
             label: "Điều khoản",
-            bg: "bg-[#0071E3]/10",
-            color: "text-[#0071E3]",
+            bg: "bg-brand/10",
+            color: "text-brand",
           },
           {
             icon: Lock,
             label: "Bảo mật",
-            bg: "bg-[#34C759]/10",
-            color: "text-[#34C759]",
+            bg: "bg-brand/10",
+            color: "text-brand",
           },
           {
             icon: Scale,
             label: "Pháp lý",
-            bg: "bg-[#FF9500]/10",
-            color: "text-[#FF9500]",
+            bg: "bg-warning/10",
+            color: "text-warning",
           },
           {
             icon: ShieldCheck,
             label: "Bản quyền",
-            bg: "bg-[#AF52DE]/10",
-            color: "text-[#AF52DE]",
+            bg: "bg-brand/10",
+            color: "text-brand",
           },
         ].map((item, idx) => (
           <div
             key={idx}
-            className="flex flex-col items-center p-6 bg-[#F5F5F7] rounded-[18px]"
+            className="flex flex-col items-center p-6 bg-surface-quiet rounded-panel"
           >
             <div
-              className={`w-12 h-12 rounded-[10px] flex items-center justify-center mb-3 ${item.bg}`}
+              className={`w-12 h-12 rounded-control flex items-center justify-center mb-3 ${item.bg}`}
             >
               <item.icon className={`w-6 h-6 ${item.color}`} />
             </div>
-            <span className="text-[14px] font-medium text-[#1D1D1F]">
+            <span className="text-[14px] font-medium text-ink">
               {item.label}
             </span>
           </div>
@@ -84,10 +84,10 @@ export default function TermsPage() {
       <div className="space-y-12">
         {sections.map((section, i) => (
           <section key={i} className="space-y-4">
-            <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
+            <p className="text-[13px] font-medium text-ink-muted mb-4">
               {section.title}
             </p>
-            <p className="text-[16px] text-[#6E6E73] leading-relaxed">
+            <p className="text-[16px] text-ink-muted leading-relaxed">
               {section.content}
             </p>
           </section>
@@ -95,11 +95,11 @@ export default function TermsPage() {
       </div>
 
       <div className="mt-20 pt-8 text-center">
-        <p className="text-[15px] text-[#6E6E73]">
+        <p className="text-[15px] text-ink-muted">
           Nếu bạn có bất kỳ thắc mắc nào về các điều khoản này, vui lòng{" "}
           <a
             href="/tro-giup"
-            className="text-[#0071E3] hover:underline font-medium"
+            className="text-brand hover:underline font-medium"
           >
             liên hệ với chúng tôi
           </a>

@@ -77,20 +77,20 @@ export default class DocLibMindMap implements BlockTool {
       const style = document.createElement("style");
       style.id = "doclib-mm-styles";
       style.innerHTML = `
-        .doclib-mm-wrapper { border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; background: #fff; margin: 12px 0; overflow-x: auto; }
+        .doclib-mm-wrapper { border: 1px solid hsl(var(--border)); border-radius: 8px; padding: 20px; background: hsl(var(--surface)); margin: 12px 0; overflow-x: auto; }
         .doclib-mm-tree { display: flex; align-items: flex-start; gap: 0; }
         .doclib-mm-node-wrap { display: flex; align-items: center; }
         .doclib-mm-children { display: flex; flex-direction: column; justify-content: center; gap: 0; position: relative; }
         .doclib-mm-child-row { display: flex; align-items: center; }
-        .doclib-mm-connector-h { width: 32px; height: 2px; background: #e2e8f0; flex-shrink: 0; }
-        .doclib-mm-connector-v { width: 2px; background: #e2e8f0; position: absolute; left: 0; }
-        .doclib-mm-node { padding: 8px 14px; border: 2px solid #e2e8f0; border-radius: 20px; font-size: 13px; font-weight: 500; color: #1e293b; background: #fff; white-space: nowrap; cursor: pointer; user-select: none; }
-        .doclib-mm-node.root { border-color: #0284c7; background: #f0f9ff; color: #0c4a6e; font-weight: 700; font-size: 15px; }
-        .doclib-mm-node:hover { border-color: #0284c7; }
+        .doclib-mm-connector-h { width: 32px; height: 2px; background: hsl(var(--border)); flex-shrink: 0; }
+        .doclib-mm-connector-v { width: 2px; background: hsl(var(--border)); position: absolute; left: 0; }
+        .doclib-mm-node { padding: 8px 14px; border: 2px solid hsl(var(--border)); border-radius: 20px; font-size: 13px; font-weight: 500; color: hsl(var(--ink)); background: hsl(var(--surface)); white-space: nowrap; cursor: pointer; user-select: none; }
+        .doclib-mm-node.root { border-color: hsl(var(--brand)); background: hsl(var(--brand-soft)); color: #0c4a6e; font-weight: 700; font-size: 15px; }
+        .doclib-mm-node:hover { border-color: hsl(var(--brand)); }
         .doclib-mm-node-actions { display: flex; gap: 3px; margin-left: 6px; }
-        .doclib-mm-node-btn { padding: 2px 6px; border: 1px solid #e2e8f0; border-radius: 4px; background: #fff; font-size: 11px; cursor: pointer; color: #64748b; }
-        .doclib-mm-node-btn:hover { background: #f0f9ff; color: #0284c7; border-color: #0284c7; }
-        .doclib-mm-inline-input { font-size: 13px; font-weight: 500; border: none; outline: 2px solid #0284c7; border-radius: 20px; padding: 6px 12px; background: #f0f9ff; color: #0c4a6e; }
+        .doclib-mm-node-btn { padding: 2px 6px; border: 1px solid hsl(var(--border)); border-radius: 4px; background: hsl(var(--surface)); font-size: 11px; cursor: pointer; color: hsl(var(--ink-muted)); }
+        .doclib-mm-node-btn:hover { background: hsl(var(--brand-soft)); color: hsl(var(--brand)); border-color: hsl(var(--brand)); }
+        .doclib-mm-inline-input { font-size: 13px; font-weight: 500; border: none; outline: 2px solid hsl(var(--brand)); border-radius: 20px; padding: 6px 12px; background: hsl(var(--brand-soft)); color: #0c4a6e; }
       `;
       document.head.appendChild(style);
     }
@@ -221,7 +221,7 @@ export default class DocLibMindMap implements BlockTool {
 
     if (!this.readOnly) {
       const hint = document.createElement("div");
-      hint.style.cssText = "font-size:11px;color:#94a3b8;margin-bottom:12px;";
+      hint.style.cssText = "font-size:11px;color:hsl(var(--ink-faint));margin-bottom:12px;";
       hint.innerText = "Double-click to edit    + to add branch    x to remove";
       this.wrapper.appendChild(hint);
     }

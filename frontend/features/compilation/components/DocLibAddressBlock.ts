@@ -50,10 +50,10 @@ export default class DocLibAddressBlock implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-address { font-family: "Times New Roman", serif; font-size: 16px; line-height: 1.5; padding: 24px; border: 1px dashed #cbd5e1; border-radius: 4px; background: #fafafa; margin: 16px 0; max-width: 400px; display: flex; flex-direction: column; gap: 4px; }
+      .doclib-address { font-family: "Times New Roman", serif; font-size: 16px; line-height: 1.5; padding: 24px; border: 1px dashed hsl(var(--border)); border-radius: 4px; background: hsl(var(--surface-raised)); margin: 16px 0; max-width: 400px; display: flex; flex-direction: column; gap: 4px; }
       .doclib-address.readonly { border-color: transparent; background: transparent; padding: 0; }
       .doclib-address-line { outline: none; }
-      .doclib-address-line:empty:before { content: attr(data-placeholder); color: #94a3b8; font-style: italic; }
+      .doclib-address-line:empty:before { content: attr(data-placeholder); color: hsl(var(--ink-faint)); font-style: italic; }
       .doclib-address-name { font-weight: bold; }
     `;
     this.wrapper.appendChild(style);

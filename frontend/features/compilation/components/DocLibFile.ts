@@ -49,13 +49,13 @@ export default class DocLibFile implements BlockTool {
       const style = document.createElement("style");
       style.id = "doclib-file-styles";
       style.innerHTML = `
-        .doclib-file-card { display: flex; align-items: center; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; margin: 12px 0; text-decoration: none; color: inherit; }
-        .doclib-file-icon { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #e0f2fe; color: #0284c7; border-radius: 8px; margin-right: 16px; font-weight: bold; font-size: 12px; text-transform: uppercase; }
+        .doclib-file-card { display: flex; align-items: center; padding: 12px 16px; border: 1px solid hsl(var(--border)); border-radius: 8px; background: hsl(var(--surface-raised)); margin: 12px 0; text-decoration: none; color: inherit; }
+        .doclib-file-icon { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #e0f2fe; color: hsl(var(--brand)); border-radius: 8px; margin-right: 16px; font-weight: bold; font-size: 12px; text-transform: uppercase; }
         .doclib-file-info { flex-grow: 1; display: flex; flex-direction: column; gap: 4px; }
         .doclib-file-title { font-weight: 600; font-size: 1em; outline: none; }
-        .doclib-file-title:empty::before { content: 'DocLib Name'; color: #94a3b8; pointer-events: none; }
-        .doclib-file-meta { font-size: 0.85em; color: #64748b; }
-        .doclib-file-download { color: #0284c7; cursor: pointer; padding: 8px; }
+        .doclib-file-title:empty::before { content: 'DocLib Name'; color: hsl(var(--ink-faint)); pointer-events: none; }
+        .doclib-file-meta { font-size: 0.85em; color: hsl(var(--ink-muted)); }
+        .doclib-file-download { color: hsl(var(--brand)); cursor: pointer; padding: 8px; }
         .doclib-file-input-container { display: flex; align-items: center; gap: 8px; }
       `;
       document.head.appendChild(style);
@@ -116,14 +116,14 @@ export default class DocLibFile implements BlockTool {
       uploader.style.flexDirection = "column";
       uploader.style.alignItems = "center";
       uploader.style.justifyContent = "center";
-      uploader.style.border = "2px dashed #cbd5e1";
+      uploader.style.border = "2px dashed hsl(var(--border))";
       uploader.style.borderRadius = "12px";
       uploader.style.padding = "32px";
-      uploader.style.background = "#f8fafc";
+      uploader.style.background = "hsl(var(--surface-raised))";
       uploader.style.cursor = "pointer";
-      uploader.style.color = "#475569";
+      uploader.style.color = "hsl(var(--ink-muted))";
       uploader.innerHTML = `
-              <div style="color: #94a3b8; margin-bottom: 12px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="211121415a48f55a"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="20,4 20,18 9,8 11,9 9,5 17,5"/></svg></div>
+              <div style="color: hsl(var(--ink-faint)); margin-bottom: 12px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="211121415a48f55a"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="20,4 20,18 9,8 11,9 9,5 17,5"/></svg></div>
               <div style="font-weight: 500; font-size: 1.1em; margin-bottom: 4px;">Upload Attachment</div>
               <div style="font-size: 0.9em; opacity: 0.8;">Click to select file or Right click to paste URL</div>
           `;

@@ -75,23 +75,23 @@ export default class DocLibDiffViewer implements BlockTool {
       const style = document.createElement("style");
       style.id = "doclib-diff-styles";
       style.innerHTML = `
-        .doclib-diff-wrapper { border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; margin: 12px 0; }
-        .doclib-diff-header { background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
-        .doclib-diff-lang { font-size: 12px; font-weight: 600; color: #64748b; }
-        .doclib-diff-edit-area { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid #e2e8f0; }
+        .doclib-diff-wrapper { border: 1px solid hsl(var(--border)); border-radius: 8px; overflow: hidden; margin: 12px 0; }
+        .doclib-diff-header { background: hsl(var(--surface-raised)); border-bottom: 1px solid hsl(var(--border)); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
+        .doclib-diff-lang { font-size: 12px; font-weight: 600; color: hsl(var(--ink-muted)); }
+        .doclib-diff-edit-area { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid hsl(var(--border)); }
         .doclib-diff-col { display: flex; flex-direction: column; }
-        .doclib-diff-col:first-child { border-right: 1px solid #e2e8f0; }
+        .doclib-diff-col:first-child { border-right: 1px solid hsl(var(--border)); }
         .doclib-diff-col-label { padding: 6px 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
-        .doclib-diff-col:first-child .doclib-diff-col-label { background: #fef2f2; color: #ef4444; }
-        .doclib-diff-col:last-child .doclib-diff-col-label { background: #f0fdf4; color: #22c55e; }
+        .doclib-diff-col:first-child .doclib-diff-col-label { background: hsl(var(--danger-soft)); color: hsl(var(--danger)); }
+        .doclib-diff-col:last-child .doclib-diff-col-label { background: hsl(var(--brand-soft)); color: hsl(var(--brand)); }
         .doclib-diff-textarea { width: 100%; border: none; outline: none; padding: 12px; font-family: ui-monospace, monospace; font-size: 13px; line-height: 1.6; resize: vertical; min-height: 140px; background: transparent; box-sizing: border-box; }
-        .doclib-diff-output { background: #0f172a; padding: 16px; overflow-x: auto; }
+        .doclib-diff-output { background: hsl(var(--ink)); padding: 16px; overflow-x: auto; }
         .doclib-diff-line { font-family: ui-monospace, monospace; font-size: 13px; line-height: 1.6; padding: 1px 6px; white-space: pre; }
         .doclib-diff-line.del { background: rgba(239,68,68,0.15); color: #fca5a5; }
-        .doclib-diff-line.del::before { content: "- "; color: #ef4444; }
+        .doclib-diff-line.del::before { content: "- "; color: hsl(var(--danger)); }
         .doclib-diff-line.add { background: rgba(34,197,94,0.12); color: #86efac; }
-        .doclib-diff-line.add::before { content: "+ "; color: #22c55e; }
-        .doclib-diff-line.eq { color: #94a3b8; }
+        .doclib-diff-line.add::before { content: "+ "; color: hsl(var(--brand)); }
+        .doclib-diff-line.eq { color: hsl(var(--ink-faint)); }
         .doclib-diff-line.eq::before { content: "  "; }
       `;
       document.head.appendChild(style);
@@ -122,7 +122,7 @@ export default class DocLibDiffViewer implements BlockTool {
 
     const langLabel = document.createElement("span");
     langLabel.classList.add("doclib-diff-lang");
-    langLabel.innerText = `Diff — ${this.data.language}`;
+    langLabel.innerText = `Diff: ${this.data.language}`;
     header.appendChild(langLabel);
 
     if (!this.readOnly) {
@@ -140,7 +140,7 @@ export default class DocLibDiffViewer implements BlockTool {
       ];
       const sel = document.createElement("select");
       sel.style.cssText =
-        "font-size:12px;border:1px solid #e2e8f0;border-radius:4px;padding:4px 8px;outline:none;background:#fff;";
+        "font-size:12px;border:1px solid hsl(var(--border));border-radius:4px;padding:4px 8px;outline:none;background:hsl(var(--surface));";
       langs.forEach((l) => {
         const opt = document.createElement("option");
         opt.value = l;
@@ -150,7 +150,7 @@ export default class DocLibDiffViewer implements BlockTool {
       });
       sel.addEventListener("change", () => {
         this.data.language = sel.value;
-        langLabel.innerText = `Diff — ${this.data.language}`;
+        langLabel.innerText = `Diff: ${this.data.language}`;
       });
       header.appendChild(sel);
     }

@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState, useRef } from "react";
-import { getToken as getAuthToken } from "@/features/authentication/services/session.service";
 import {
   StorageItem,
   listStorageItemsAPI,
@@ -138,7 +137,7 @@ export default function StoragePage() {
       setColorItem(null);
       fetchItems(currentFolderId);
     } catch (e: any) {
-      showToast(e.message || "Lỗi cập nhật màu thư mục", "error");
+      showToast(e.message || "Không thể cập nhật màu thư mục", "error");
     }
   };
 
@@ -199,7 +198,7 @@ export default function StoragePage() {
         setItems(await listStorageItemsAPI(folderId, mode === "trash"));
       }
     } catch (e: any) {
-      showToast(e.message || "Lỗi truy xuất bộ sưu tập lưu trữ", "error");
+      showToast(e.message || "Không thể tải bộ sưu tập lưu trữ", "error");
     } finally {
       setLoading(false);
     }
@@ -239,7 +238,7 @@ export default function StoragePage() {
       setNewFolderName("");
       fetchItems(currentFolderId);
     } catch (e: any) {
-      showToast(e.message || "Lỗi khởi tạo thư mục", "error");
+      showToast(e.message || "Không thể tạo thư mục", "error");
     }
   };
 
@@ -254,7 +253,7 @@ export default function StoragePage() {
       fetchItems(currentFolderId);
       fetchQuota();
     } catch (e: any) {
-      showToast(e.message || "Lỗi truyền tải tệp đa phương tiện", "error");
+      showToast(e.message || "Không thể truyền tệp đa phương tiện", "error");
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -283,7 +282,7 @@ export default function StoragePage() {
       fetchItems(currentFolderId);
       fetchQuota();
     } catch (e: any) {
-      showToast(e.message || "Lỗi truyền tải tệp đa phương tiện", "error");
+      showToast(e.message || "Không thể truyền tệp đa phương tiện", "error");
     } finally {
       setUploading(false);
     }
@@ -309,7 +308,7 @@ export default function StoragePage() {
       fetchItems(viewMode === "trash" ? undefined : currentFolderId, viewMode);
       if (viewMode === "trash") fetchQuota();
     } catch (e: any) {
-      showToast(e.message || "Lỗi thực thi dữ liệu lưu trữ", "error");
+      showToast(e.message || "Không thể thực hiện dữ liệu lưu trữ", "error");
     }
   };
 
@@ -322,7 +321,7 @@ export default function StoragePage() {
         "success",
       );
     } catch (e: any) {
-      showToast(e.message || "Lỗi thiết lập phân quyền", "error");
+      showToast(e.message || "Không thể thiết lập phân quyền", "error");
     }
   };
 
@@ -359,7 +358,7 @@ export default function StoragePage() {
       setNewName("");
       fetchItems(currentFolderId);
     } catch (e: any) {
-      showToast(e.message || "Lỗi cập nhật định danh dữ liệu", "error");
+      showToast(e.message || "Không thể cập nhật định danh dữ liệu", "error");
     }
   };
   const handleUpdateDesc = async () => {
@@ -373,7 +372,7 @@ export default function StoragePage() {
       setDescValue("");
       fetchItems(currentFolderId);
     } catch (e: any) {
-      showToast(e.message || "Lỗi cập nhật ghi chú dữ liệu", "error");
+      showToast(e.message || "Không thể cập nhật ghi chú dữ liệu", "error");
     }
   };
   const handleUpdateTags = async () => {
@@ -390,7 +389,7 @@ export default function StoragePage() {
       setTagsValue("");
       fetchItems(currentFolderId);
     } catch (e: any) {
-      showToast(e.message || "Lỗi cập nhật phân loại nhãn", "error");
+      showToast(e.message || "Không thể cập nhật phân loại nhãn", "error");
     }
   };
 
@@ -402,31 +401,14 @@ export default function StoragePage() {
     }
     setLoading(true);
     try {
-      if (useAISearch) {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/ai/smart-search?q=${encodeURIComponent(searchQuery.trim())}`,
-          { headers: { Authorization: `Bearer ${getAuthToken()}` } },
-        );
-        const data = await res.json();
-        if (res.ok && data.data && Array.isArray(data.data))
-          setItems(data.data);
-        else
-          setItems(
-            await searchStorageItemsAPI(
-              searchQuery.trim(),
-              searchType || undefined,
-            ),
-          );
-      } else {
-        setItems(
-          await searchStorageItemsAPI(
-            searchQuery.trim(),
-            searchType || undefined,
-          ),
-        );
-      }
+      setItems(
+        await searchStorageItemsAPI(
+          searchQuery.trim(),
+          searchType || undefined,
+        ),
+      );
     } catch (e: any) {
-      showToast(e.message || "Lỗi trích xuất bộ sưu tập tìm kiếm", "error");
+      showToast(e.message || "Không thể tải bộ sưu tập tìm kiếm", "error");
     } finally {
       setLoading(false);
     }
@@ -446,7 +428,7 @@ export default function StoragePage() {
       showToast("Khởi tạo liên kết truy cập nhanh hoàn tất", "success");
       fetchItems(currentFolderId);
     } catch (e: any) {
-      showToast(e.message || "Lỗi khởi tạo liên kết truy cập nhanh", "error");
+      showToast(e.message || "Không thể tạo liên kết truy cập nhanh", "error");
     }
   };
   const handleToggleStar = async (item: StorageItem) => {
@@ -454,7 +436,7 @@ export default function StoragePage() {
       await updateStorageItemAPI(item._id, { is_starred: !item.is_starred });
       fetchItems(currentFolderId);
     } catch (e: any) {
-      showToast(e.message || "Lỗi cập nhật trạng thái lưu trữ", "error");
+      showToast(e.message || "Không thể cập nhật trạng thái lưu trữ", "error");
     }
   };
   const handleTogglePublic = async (item: StorageItem) => {
@@ -514,7 +496,7 @@ export default function StoragePage() {
       setVersionItem(null);
       fetchItems(currentFolderId);
     } catch (e: any) {
-      showToast(e.message || "Lỗi cập nhật phiên bản dữ liệu", "error");
+      showToast(e.message || "Không thể cập nhật phiên bản dữ liệu", "error");
     } finally {
       setUploading(false);
       if (versionInputRef.current) versionInputRef.current.value = "";
@@ -531,7 +513,7 @@ export default function StoragePage() {
   };
 
   return (
-    <div className="w-full h-full font-sans text-[#1D1D1F]">
+    <div className="w-full h-full font-sans text-ink">
       <input
         type="file"
         ref={fileInputRef}
@@ -548,35 +530,35 @@ export default function StoragePage() {
       <div className="flex flex-col md:flex-row">
         <aside className="w-full md:w-[240px] shrink-0 space-y-6 sticky top-0 h-fit mb-6 md:mb-0 md:mr-6">
 
-          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6">
-            <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
+          <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6">
+            <p className="text-[13px] font-medium text-ink-muted mb-4">
               Phân loại
             </p>
             <nav className="flex flex-col gap-1.5">
               <button
                 onClick={() => setViewMode("files")}
-                className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-[10px] transition-colors ${viewMode === "files" ? "bg-white text-[#0071E3] font-medium" : "text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}
+                className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-control transition-colors ${viewMode === "files" ? "bg-white text-brand font-medium" : "text-ink hover:bg-border"}`}
               >
                 <span className="truncate text-left">Tất cả</span>
                 {viewMode === "files" && <ChevronRight className="w-4 h-4 shrink-0" />}
               </button>
               <button
                 onClick={() => setViewMode("recent")}
-                className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-[10px] transition-colors ${viewMode === "recent" ? "bg-white text-[#0071E3] font-medium" : "text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}
+                className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-control transition-colors ${viewMode === "recent" ? "bg-white text-brand font-medium" : "text-ink hover:bg-border"}`}
               >
                 <span className="truncate text-left">Gần đây</span>
                 {viewMode === "recent" && <ChevronRight className="w-4 h-4 shrink-0" />}
               </button>
               <button
                 onClick={() => setViewMode("documents")}
-                className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-[10px] transition-colors ${viewMode === "documents" ? "bg-white text-[#0071E3] font-medium" : "text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}
+                className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-control transition-colors ${viewMode === "documents" ? "bg-white text-brand font-medium" : "text-ink hover:bg-border"}`}
               >
                 <span className="truncate text-left">Tệp tin</span>
                 {viewMode === "documents" && <ChevronRight className="w-4 h-4 shrink-0" />}
               </button>
               <button
                 onClick={() => setViewMode("folders")}
-                className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-[10px] transition-colors ${viewMode === "folders" ? "bg-white text-[#0071E3] font-medium" : "text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}
+                className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-control transition-colors ${viewMode === "folders" ? "bg-white text-brand font-medium" : "text-ink hover:bg-border"}`}
               >
 
                 <span className="truncate text-left">Thư mục</span>
@@ -584,7 +566,7 @@ export default function StoragePage() {
               </button>
               <button
                 onClick={() => setViewMode("trash")}
-                className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-[10px] transition-colors ${viewMode === "trash" ? "bg-white text-[#0071E3] font-medium" : "text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}
+                className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-control transition-colors ${viewMode === "trash" ? "bg-white text-brand font-medium" : "text-ink hover:bg-border"}`}
               >
                 <span className="truncate text-left">Thùng rác</span>
                 {viewMode === "trash" && <ChevronRight className="w-4 h-4 shrink-0" />}
@@ -593,17 +575,17 @@ export default function StoragePage() {
           </div>
 
           {quota && (
-            <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-2">
-              <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
+            <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6 space-y-2">
+              <p className="text-[13px] font-medium text-ink-muted mb-4">
                 Dung lượng
               </p>
               <div className="flex flex-col">
-                <span className="text-[13px] font-medium text-[#6E6E73] mb-1">
+                <span className="text-[13px] font-medium text-ink-muted mb-1">
                   {formatSize(quota.used)} / {formatSize(quota.limit)}
                 </span>
-                <div className="w-full h-1.5 bg-[#E8E8ED] rounded-full mt-1 overflow-hidden">
+                <div className="w-full h-1.5 bg-border rounded-full mt-1 overflow-hidden">
                   <div
-                    className="h-full bg-[#0071E3] rounded-full"
+                    className="h-full bg-brand rounded-full"
                     style={{
                       width: `${Math.min(100, (quota.used / quota.limit) * 100)}%`,
                     }}
@@ -616,7 +598,7 @@ export default function StoragePage() {
 
         <main className="flex-1 min-w-0 space-y-8 pt-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <h2 className="flex items-center gap-2 text-[20px] font-semibold text-[#1D1D1F]">
+            <h2 className="flex items-center gap-2 text-[20px] font-semibold text-ink">
               {viewMode === "trash" ? (
                 <span>Thùng rác</span>
               ) : viewMode === "recent" ? (
@@ -632,12 +614,12 @@ export default function StoragePage() {
                   <div key={idx} className="flex items-center gap-2">
                     <button
                       onClick={() => handleNavigateBreadcrumb(idx)}
-                      className={`flex items-center gap-1 transition-colors ${idx === breadcrumbs.length - 1 ? "text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}
+                      className={`flex items-center gap-1 transition-colors ${idx === breadcrumbs.length - 1 ? "text-ink" : "text-ink-muted hover:text-ink"}`}
                     >
                       {crumb.name}
                     </button>
                     {idx < breadcrumbs.length - 1 && (
-                      <ChevronRight className="w-5 h-5 text-[#A1A1A6]" />
+                      <ChevronRight className="w-5 h-5 text-ink-faint" />
                     )}
                   </div>
                 ))
@@ -649,7 +631,7 @@ export default function StoragePage() {
                   {["files", "folders"].includes(viewMode) && (
                     <button
                       onClick={() => setCreateFolderOpen(true)}
-                      className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors"
+                      className="p-2 bg-surface-quiet text-ink hover:bg-border rounded-full transition-colors"
                       title="Thêm thư mục mới"
                     >
                       <FolderPlus className="w-4 h-4" />
@@ -659,7 +641,7 @@ export default function StoragePage() {
                     <button
                       onClick={() => fileInputRef.current?.click()}
                       disabled={uploading}
-                      className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors disabled:opacity-50"
+                      className="p-2 bg-surface-quiet text-ink hover:bg-border rounded-full transition-colors disabled:opacity-50"
                       title="Tải tệp lên"
                     >
                       {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FilePlus className="w-4 h-4" />}
@@ -669,7 +651,7 @@ export default function StoragePage() {
                 {selectedIds.size > 0 && (
                   <button
                     onClick={handleZipDownload}
-                    className="px-4 py-2 rounded-full text-[13px] font-medium bg-[#E8E8ED] text-[#1D1D1F] hover:bg-[#D2D2D7] transition-colors flex items-center gap-2"
+                    className="px-4 py-2 rounded-full text-[13px] font-medium bg-border text-ink hover:bg-border transition-colors flex items-center gap-2"
                   >
                     <Archive className="w-4 h-4" /> ZIP ({selectedIds.size})
                   </button>
@@ -679,7 +661,7 @@ export default function StoragePage() {
           </div>
 
           {viewMode === "trash" && (
-            <div className="bg-[#F5F5F7] text-[#6E6E73] text-[13px] p-3 rounded-[12px] flex items-center justify-center mb-4">
+            <div className="bg-surface-quiet text-ink-muted text-[13px] p-3 rounded-panel flex items-center justify-center mb-4">
               <Info className="w-4 h-4 mr-2" /> Các mục trong Thùng rác sẽ bị xóa vĩnh viễn sau 30 ngày.
             </div>
           )}
@@ -688,16 +670,16 @@ export default function StoragePage() {
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            className={`w-full overflow-x-auto min-h-[400px] transition-colors ${isDraggingOver ? "border border-[#0071E3] bg-[#F5F5F7]/80 rounded-[18px]" : ""}`}
+            className={`w-full overflow-x-auto min-h-[400px] transition-colors ${isDraggingOver ? "border border-brand bg-surface-quiet/80 rounded-panel" : ""}`}
           >
             {loading ? (
               <div className="flex justify-center items-center py-20">
-                <Loader2 className="w-8 h-8 animate-spin text-[#6E6E73]" />
+                <Loader2 className="w-8 h-8 animate-spin text-ink-muted" />
               </div>
             ) : (
                 <table className="w-full text-left border-collapse">
                   <thead>
-                  <tr className="text-[13px] text-[#6E6E73] border-b border-[#E8E8ED]">
+                  <tr className="text-[13px] text-ink-muted border-b border-border">
                     <th className="py-3 px-6 font-medium w-12 text-center"></th>
                     <th className="py-3 px-6 font-medium text-left">Tên</th>
                     {viewMode === "published" ? (
@@ -724,8 +706,8 @@ export default function StoragePage() {
                       <td
                         colSpan={7}
                       >
-                        <div className="py-24 flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[18px] w-full text-center my-4">
-                          <p className="text-[17px] text-[#6E6E73]">Chưa có dữ liệu</p>
+                        <div className="py-24 flex flex-col items-center justify-center bg-surface-quiet rounded-panel w-full text-center my-4">
+                          <p className="text-[17px] text-ink-muted">Chưa có dữ liệu</p>
                         </div>
                       </td>
                     </tr>
@@ -734,7 +716,7 @@ export default function StoragePage() {
                       <tr
                         key={item._id}
                         onClick={() => setDetailsItem(item)}
-                        className="hover:bg-[#E8E8ED]/60 transition-colors cursor-pointer group"
+                        className="hover:bg-border/60 transition-colors cursor-pointer group"
                       >
                         <td
                           className="py-3 px-6 text-center"
@@ -744,14 +726,14 @@ export default function StoragePage() {
                             type="checkbox"
                             checked={selectedIds.has(item._id)}
                             onChange={() => toggleSelect(item._id)}
-                            className="w-4 h-4 rounded-[4px] border-[#C7C7CC] accent-[#0071E3]"
+                            className="w-4 h-4 rounded-[4px] border-ink-faint accent-[hsl(var(--brand))]"
                           />
                         </td>
                         <td className="py-3 px-6 max-w-[300px]">
                           <div className="flex items-center gap-3">
                             <div className="flex items-center gap-2 flex-1 min-w-0">
                               {item.is_starred && (
-                                <Star className="w-4 h-4 text-[#FF9500] fill-[#FF9500] shrink-0" />
+                                <Star className="w-4 h-4 text-warning fill-warning shrink-0" />
                               )}
                               {item.is_folder ? (
                                 <button
@@ -759,9 +741,9 @@ export default function StoragePage() {
                                     e.stopPropagation();
                                     handleNavigate(item);
                                   }}
-                                  className="text-[14px] font-medium text-[#1D1D1F] hover:text-[#0071E3] truncate flex items-center gap-2"
+                                  className="text-[14px] font-medium text-ink hover:text-brand truncate flex items-center gap-2"
                                 >
-                                  <Folder className="w-5 h-5 shrink-0" style={{ color: item.color || "#1D1D1F" }} />
+                                  <Folder className="w-5 h-5 shrink-0" style={{ color: item.color || "hsl(var(--ink))" }} />
                                   <span className="truncate">{item.name || item.title}</span>
                                 </button>
                               ) : viewMode === "published" ? (
@@ -770,7 +752,7 @@ export default function StoragePage() {
                                   href={`/tai-lieu/xem-truoc/${item._id || item.id}`}
                                   onClick={(e) => e.stopPropagation()}
                                   target="_blank"
-                                  className="text-[14px] font-medium text-[#1D1D1F] hover:text-[#0071E3] truncate"
+                                  className="text-[14px] font-medium text-ink hover:text-brand truncate"
                                 >
                                   {item.name || item.title}
                                 </a>
@@ -779,7 +761,7 @@ export default function StoragePage() {
                                   href={`/soan-thao?tai-lieu=${item._id || item.id}`}
                                   onClick={(e) => e.stopPropagation()}
                                   target="_blank"
-                                  className="text-[14px] font-medium text-[#1D1D1F] hover:text-[#0071E3] truncate"
+                                  className="text-[14px] font-medium text-ink hover:text-brand truncate"
                                 >
                                   {item.name || item.title}
                                 </a>
@@ -787,17 +769,17 @@ export default function StoragePage() {
                                 <a
                                   href={`/tai-lieu/xem-truoc/${item._id || item.id}?url=${encodeURIComponent(item.url)}&name=${encodeURIComponent(item.name || item.title || "")}`}
                                   target="_blank"
-                                  className="text-[14px] font-medium text-[#1D1D1F] hover:text-[#0071E3] truncate"
+                                  className="text-[14px] font-medium text-ink hover:text-brand truncate"
                                 >
                                   {item.name || item.title}
                                 </a>
                               ) : (
-                                <span className="text-[14px] font-medium text-[#1D1D1F] truncate">
+                                <span className="text-[14px] font-medium text-ink truncate">
                                   {item.name || item.title}
                                 </span>
                               )}
                               {item.versions && item.versions.length > 0 && (
-                                <span className="text-[10px] font-medium bg-[#E8E8ED] text-[#6E6E73] px-2 py-0.5 rounded-full shrink-0">
+                                <span className="text-[10px] font-medium bg-border text-ink-muted px-2 py-0.5 rounded-full shrink-0">
                                   v{item.versions.length + 1}
                                 </span>
                               )}
@@ -806,24 +788,24 @@ export default function StoragePage() {
                         </td>
                         {viewMode === "published" ? (
                           <>
-                            <td className="py-3 px-6 text-[13px] text-[#6E6E73] text-center hidden md:table-cell">
+                            <td className="py-3 px-6 text-[13px] text-ink-muted text-center hidden md:table-cell">
                               {item.category || "Chưa phân loại"}
                             </td>
-                            <td className="py-3 px-6 text-[13px] text-[#6E6E73] text-center hidden md:table-cell font-mono">
+                            <td className="py-3 px-6 text-[13px] text-ink-muted text-center hidden md:table-cell font-mono">
                               {item.price_dl || 0} dl
                             </td>
                           </>
                         ) : (
                           <>
-                            <td className="py-3 px-6 text-[13px] text-[#6E6E73] text-center hidden md:table-cell">
+                            <td className="py-3 px-6 text-[13px] text-ink-muted text-center hidden md:table-cell">
                               {item.is_folder ? "Thư mục" : "Tài liệu"}
                             </td>
-                            <td className="py-3 px-6 text-[13px] text-[#6E6E73] text-center hidden md:table-cell">
+                            <td className="py-3 px-6 text-[13px] text-ink-muted text-center hidden md:table-cell">
                               {item.is_folder ? "--" : formatSize(item.size)}
                             </td>
                           </>
                         )}
-                        <td className="py-3 px-6 text-[13px] text-[#6E6E73] text-center hidden md:table-cell">
+                        <td className="py-3 px-6 text-[13px] text-ink-muted text-center hidden md:table-cell">
                           {new Date(item.updated_at || item.created_at || Date.now()).toLocaleDateString(
                             "vi-VN",
                           )}
@@ -838,7 +820,7 @@ export default function StoragePage() {
                                     e.stopPropagation();
                                     setOpenMenuId(openMenuId === item._id ? null : item._id);
                                   }}
-                                  className="p-1.5 text-[#6E6E73] hover:bg-[#E8E8ED] hover:text-[#1D1D1F] rounded-[8px]"
+                                  className="p-1.5 text-ink-muted hover:bg-border hover:text-ink rounded-control"
                                 >
                                   <MoreVertical className="w-4 h-4" />
                                 </button>
@@ -847,7 +829,7 @@ export default function StoragePage() {
                                   <>
                                     <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); }} />
                                     <div 
-                                      className="absolute right-0 top-full mt-1 w-48 bg-white rounded-[12px] shadow-[0_4px_24px_rgba(0,0,0,0.1)] border border-[#E8E8ED] py-2 z-50 flex flex-col"
+                                      className="absolute right-0 top-full mt-1 w-48 bg-white rounded-panel shadow-[0_4px_24px_rgba(0,0,0,0.1)] border border-border py-2 z-50 flex flex-col"
                                       onClick={(e) => e.stopPropagation()}
                                     >
                                       <button
@@ -856,18 +838,18 @@ export default function StoragePage() {
                                           handleRestore(item);
                                           setOpenMenuId(null);
                                         }}
-                                        className="flex items-center gap-3 px-4 py-2 text-[14px] text-[#0071E3] hover:bg-[#0071E3]/10 text-left"
+                                        className="flex items-center gap-3 px-4 py-2 text-[14px] text-brand hover:bg-brand/10 text-left"
                                       >
                                         <RotateCcw className="w-4 h-4" /> Khôi phục
                                       </button>
-                                      <div className="h-[1px] bg-[#E8E8ED] my-1" />
+                                      <div className="h-[1px] bg-border my-1" />
                                       <button
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           handleDelete(item);
                                           setOpenMenuId(null);
                                         }}
-                                        className="flex items-center gap-3 px-4 py-2 text-[14px] text-[#FF3B30] hover:bg-[#FF3B30]/10 text-left"
+                                        className="flex items-center gap-3 px-4 py-2 text-[14px] text-danger hover:bg-danger/10 text-left"
                                       >
                                         <Trash2 className="w-4 h-4" /> Xóa vĩnh viễn
                                       </button>
@@ -882,7 +864,7 @@ export default function StoragePage() {
                                     e.stopPropagation();
                                     setOpenMenuId(openMenuId === item._id ? null : item._id);
                                   }}
-                                  className="p-1.5 text-[#6E6E73] hover:bg-[#E8E8ED] hover:text-[#1D1D1F] rounded-[8px]"
+                                  className="p-1.5 text-ink-muted hover:bg-border hover:text-ink rounded-control"
                                 >
                                   <MoreVertical className="w-4 h-4" />
                                 </button>
@@ -891,7 +873,7 @@ export default function StoragePage() {
                                   <>
                                     <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); }} />
                                     <div 
-                                      className="absolute right-0 top-full mt-1 w-48 bg-white rounded-[12px] shadow-[0_4px_24px_rgba(0,0,0,0.1)] border border-[#E8E8ED] py-2 z-50 flex flex-col"
+                                      className="absolute right-0 top-full mt-1 w-48 bg-white rounded-panel shadow-[0_4px_24px_rgba(0,0,0,0.1)] border border-border py-2 z-50 flex flex-col"
                                       onClick={(e) => e.stopPropagation()}
                                     >
                                        <button
@@ -900,9 +882,9 @@ export default function StoragePage() {
                                            handleToggleStar(item);
                                            setOpenMenuId(null);
                                          }}
-                                         className="flex items-center gap-3 px-4 py-2 text-[14px] text-[#1D1D1F] hover:bg-[#F5F5F7] text-left"
+                                         className="flex items-center gap-3 px-4 py-2 text-[14px] text-ink hover:bg-surface-quiet text-left"
                                        >
-                                         <Star className={`w-4 h-4 ${item.is_starred ? "text-[#FF9500] fill-[#FF9500]" : ""}`} />
+                                         <Star className={`w-4 h-4 ${item.is_starred ? "text-warning fill-warning" : ""}`} />
                                          {item.is_starred ? "Bỏ gắn sao" : "Gắn sao"}
                                        </button>
                                           <button
@@ -910,7 +892,7 @@ export default function StoragePage() {
                                               setShareItem(item);
                                               setOpenMenuId(null);
                                             }}
-                                            className="flex items-center gap-3 px-4 py-2 text-[14px] text-[#1D1D1F] hover:bg-[#F5F5F7] text-left"
+                                            className="flex items-center gap-3 px-4 py-2 text-[14px] text-ink hover:bg-surface-quiet text-left"
                                           >
                                             <Share2 className="w-4 h-4" /> Chia sẻ
                                           </button>
@@ -921,9 +903,9 @@ export default function StoragePage() {
                                             setColorItem(item);
                                             setOpenMenuId(null);
                                           }}
-                                          className="flex items-center gap-3 px-4 py-2 text-[14px] text-[#1D1D1F] hover:bg-[#F5F5F7] text-left"
+                                          className="flex items-center gap-3 px-4 py-2 text-[14px] text-ink hover:bg-surface-quiet text-left"
                                         >
-                                          <Palette className="w-4 h-4 text-[#0071E3]" /> Đổi màu
+                                          <Palette className="w-4 h-4 text-brand" /> Đổi màu
                                         </button>
                                       )}
 
@@ -934,7 +916,7 @@ export default function StoragePage() {
                                             versionInputRef.current?.click();
                                             setOpenMenuId(null);
                                           }}
-                                          className="flex items-center gap-3 px-4 py-2 text-[14px] text-[#1D1D1F] hover:bg-[#F5F5F7] text-left"
+                                          className="flex items-center gap-3 px-4 py-2 text-[14px] text-ink hover:bg-surface-quiet text-left"
                                         >
                                           <History className="w-4 h-4" /> Cập nhật bản mới
                                         </button>
@@ -946,7 +928,7 @@ export default function StoragePage() {
                                           setNewName(item.name);
                                           setOpenMenuId(null);
                                         }}
-                                        className="flex items-center gap-3 px-4 py-2 text-[14px] text-[#1D1D1F] hover:bg-[#F5F5F7] text-left"
+                                        className="flex items-center gap-3 px-4 py-2 text-[14px] text-ink hover:bg-surface-quiet text-left"
                                       >
                                         <Edit2 className="w-4 h-4" /> Đổi tên
                                       </button>
@@ -957,17 +939,17 @@ export default function StoragePage() {
                                           setMoveBreadcrumbs([{ name: "Tất cả" }]);
                                           setOpenMenuId(null);
                                         }}
-                                        className="flex items-center gap-3 px-4 py-2 text-[14px] text-[#1D1D1F] hover:bg-[#F5F5F7] text-left"
+                                        className="flex items-center gap-3 px-4 py-2 text-[14px] text-ink hover:bg-surface-quiet text-left"
                                       >
                                         <Archive className="w-4 h-4" /> Di chuyển
                                       </button>
-                                      <div className="h-[1px] bg-[#E8E8ED] my-1" />
+                                      <div className="h-[1px] bg-border my-1" />
                                       <button
                                         onClick={() => {
                                           handleDelete(item);
                                           setOpenMenuId(null);
                                         }}
-                                        className="flex items-center gap-3 px-4 py-2 text-[14px] text-[#FF3B30] hover:bg-[#FF3B30]/10 text-left"
+                                        className="flex items-center gap-3 px-4 py-2 text-[14px] text-danger hover:bg-danger/10 text-left"
                                       >
                                         <Trash2 className="w-4 h-4" /> Xóa
                                       </button>
@@ -989,7 +971,7 @@ export default function StoragePage() {
                 <button
                   onClick={() => fetchItems(undefined, "published", true)}
                   disabled={loading}
-                  className="px-6 py-2 bg-[#0071E3] text-white rounded-full text-[14px] font-medium hover:bg-[#0077ED] transition-colors disabled:opacity-50"
+                  className="px-6 py-2 bg-brand text-white rounded-full text-[14px] font-medium hover:bg-brand transition-colors disabled:opacity-50"
                 >
                   {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Tải thêm"}
                 </button>
@@ -1005,14 +987,14 @@ export default function StoragePage() {
               : "w-0 opacity-0 overflow-hidden"
           }`}
         >
-          <aside className="w-full h-full min-h-0 bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] flex flex-col gap-6 overflow-hidden relative">
+          <aside className="w-full h-full min-h-0 bg-surface-quiet rounded-panel border border-border flex flex-col gap-6 overflow-hidden relative">
             <div className="p-6 flex justify-between items-center bg-white sticky top-0 z-10">
-              <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">
+              <h2 className="text-[20px] font-semibold text-ink mb-4">
                 Chi tiết
               </h2>
               <button
                 onClick={() => setDetailsItem(null)}
-                className="w-8 h-8 flex items-center justify-center bg-[#F5F5F7] rounded-full text-[#6E6E73] hover:text-[#1D1D1F]"
+                className="w-8 h-8 flex items-center justify-center bg-surface-quiet rounded-full text-ink-muted hover:text-ink"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1020,20 +1002,20 @@ export default function StoragePage() {
             
             <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-6 w-full md:w-[320px]">
                 <div className="flex flex-col items-center">
-                  <div className="w-24 h-24 bg-[#F5F5F7] flex items-center justify-center rounded-[20px] mb-4">
+                  <div className="w-24 h-24 bg-surface-quiet flex items-center justify-center rounded-workspace mb-4">
                     {detailsItem?.is_folder ? (
-                      <Folder className="w-12 h-12 text-[#1D1D1F]" />
+                      <Folder className="w-12 h-12 text-ink" />
                     ) : (
-                      <File className="w-12 h-12 text-[#6E6E73]" />
+                      <File className="w-12 h-12 text-ink-muted" />
                     )}
                   </div>
-                  <p className="text-[13px] font-medium text-[#6E6E73] mb-4 text-center max-w-full break-words">
+                  <p className="text-[13px] font-medium text-ink-muted mb-4 text-center max-w-full break-words">
                     {detailsItem?.name || detailsItem?.title}
                   </p>
                 </div>
-                <div className="bg-[#F5F5F7] rounded-[18px] p-5 space-y-3">
+                <div className="bg-surface-quiet rounded-panel p-5 space-y-3">
                   <div className="flex justify-between items-center text-[14px]">
-                    <span className="text-[#6E6E73]">Loại</span>
+                    <span className="text-ink-muted">Loại</span>
                     <span className="font-medium">
                       {viewMode === "published"
                         ? "Tác phẩm"
@@ -1045,27 +1027,27 @@ export default function StoragePage() {
                   {viewMode === "published" ? (
                     <>
                       <div className="flex justify-between items-center text-[14px]">
-                        <span className="text-[#6E6E73]">Thể loại</span>
+                        <span className="text-ink-muted">Thể loại</span>
                         <span className="font-medium">
                           {detailsItem?.category || "Chưa phân loại"}
                         </span>
                       </div>
                       <div className="flex justify-between items-center text-[14px]">
-                        <span className="text-[#6E6E73]">Giá bán</span>
+                        <span className="text-ink-muted">Giá bán</span>
                         <span className="font-medium font-mono">
                           {detailsItem?.price_dl || 0} dl
                         </span>
                       </div>
                       <div className="flex justify-between items-center text-[14px]">
-                        <span className="text-[#6E6E73]">Trạng thái</span>
-                        <span className={`font-medium ${detailsItem?.status === "published" ? "text-[#34C759]" : "text-[#FF9F0A]"}`}>
+                        <span className="text-ink-muted">Trạng thái</span>
+                        <span className={`font-medium ${detailsItem?.status === "published" ? "text-brand" : "text-warning"}`}>
                           {detailsItem?.status === "published" ? "Đã đăng" : "Bản nháp"}
                         </span>
                       </div>
                     </>
                   ) : (
                     <div className="flex justify-between items-center text-[14px]">
-                      <span className="text-[#6E6E73]">Kích thước</span>
+                      <span className="text-ink-muted">Kích thước</span>
                       <span className="font-medium">
                         {detailsItem?.is_folder
                           ? "--"
@@ -1074,7 +1056,7 @@ export default function StoragePage() {
                     </div>
                   )}
                   <div className="flex justify-between items-center text-[14px]">
-                    <span className="text-[#6E6E73]">Tạo lúc</span>
+                    <span className="text-ink-muted">Tạo lúc</span>
                     <span className="font-medium">
                       {(detailsItem?.created_at || detailsItem?.updated_at) && new Date(detailsItem.created_at || detailsItem.updated_at).toLocaleDateString(
                         "vi-VN",
@@ -1082,7 +1064,7 @@ export default function StoragePage() {
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-[14px]">
-                    <span className="text-[#6E6E73]">Sửa đổi</span>
+                    <span className="text-ink-muted">Sửa đổi</span>
                     <span className="font-medium">
                       {detailsItem?.updated_at && new Date(detailsItem.updated_at).toLocaleDateString(
                         "vi-VN",
@@ -1092,24 +1074,24 @@ export default function StoragePage() {
                 </div>
                 {detailsItem?.description && (
                   <div>
-                    <h4 className="text-[14px] font-medium text-[#6E6E73] mb-2">
+                    <h4 className="text-[14px] font-medium text-ink-muted mb-2">
                       Ghi chú AI
                     </h4>
-                    <div className="bg-[#F5F5F7] rounded-[10px] p-4 text-[14px] leading-relaxed">
+                    <div className="bg-surface-quiet rounded-control p-4 text-[14px] leading-relaxed">
                       {detailsItem.description}
                     </div>
                   </div>
                 )}
                 {detailsItem?.tags && detailsItem.tags.length > 0 && (
                   <div>
-                    <h4 className="text-[14px] font-medium text-[#6E6E73] mb-2">
+                    <h4 className="text-[14px] font-medium text-ink-muted mb-2">
                       Nhãn
                     </h4>
                     <div className="flex flex-wrap gap-2">
                       {detailsItem.tags.map((t: string) => (
                         <span
                           key={t}
-                          className="px-3 py-1 bg-[#E8E8ED] text-[#1D1D1F] text-[12px] font-medium rounded-full"
+                          className="px-3 py-1 bg-border text-ink text-[12px] font-medium rounded-full"
                         >
                           {t}
                         </span>
@@ -1145,7 +1127,7 @@ export default function StoragePage() {
         <ModalFooter>
           <button
             onClick={() => setCreateFolderOpen(false)}
-            className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full"
+            className="px-5 py-2 text-brand font-medium hover:bg-surface-quiet rounded-full"
           >
             Hủy
           </button>
@@ -1176,7 +1158,7 @@ export default function StoragePage() {
         <ModalFooter>
           <button
             onClick={() => setRenameItem(null)}
-            className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full"
+            className="px-5 py-2 text-brand font-medium hover:bg-surface-quiet rounded-full"
           >
             Hủy
           </button>
@@ -1197,7 +1179,7 @@ export default function StoragePage() {
         </ModalHeader>
         <ModalContent>
           <div>
-            <label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">
+            <label className="text-[13px] font-medium text-ink-muted mb-2 block">
               Mời người dùng
             </label>
             <div className="flex gap-2">
@@ -1225,12 +1207,12 @@ export default function StoragePage() {
             </button>
           </div>
           <div className="pt-4">
-            <label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">
+            <label className="text-[13px] font-medium text-ink-muted mb-2 block">
               Liên kết công khai
             </label>
             <button
               onClick={() => handleTogglePublic(shareItem!)}
-              className="w-full py-3 bg-white rounded-[10px] text-[14px] font-medium text-[#1D1D1F]  flex items-center justify-center gap-2"
+              className="w-full py-3 bg-white rounded-control text-[14px] font-medium text-ink  flex items-center justify-center gap-2"
             >
               <Share2 className="w-4 h-4" />
               {shareItem?.is_public
@@ -1242,7 +1224,7 @@ export default function StoragePage() {
         <ModalFooter>
           <button
             onClick={() => setShareItem(null)}
-            className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full"
+            className="px-5 py-2 text-brand font-medium hover:bg-surface-quiet rounded-full"
           >
             Đóng
           </button>
@@ -1260,7 +1242,7 @@ export default function StoragePage() {
           </ModalTitle>
         </ModalHeader>
         <ModalContent className="max-h-[300px] overflow-y-auto no-scrollbar">
-          <div className="flex gap-1 text-[13px] text-[#0071E3] mb-4 overflow-x-auto no-scrollbar whitespace-nowrap">
+          <div className="flex gap-1 text-[13px] text-brand mb-4 overflow-x-auto no-scrollbar whitespace-nowrap">
             {moveBreadcrumbs.map((c, i) => (
               <button
                 key={i}
@@ -1286,16 +1268,16 @@ export default function StoragePage() {
                     { id: f._id, name: f.name },
                   ]);
                 }}
-                className="w-full flex items-center gap-3 p-3 bg-white rounded-[10px] hover:bg-[#E8E8ED] transition-colors"
+                className="w-full flex items-center gap-3 p-3 bg-white rounded-control hover:bg-border transition-colors"
               >
-                <Folder className="w-5 h-5 text-[#1D1D1F]" />
+                <Folder className="w-5 h-5 text-ink" />
                 <span className="text-[14px] font-medium truncate">
                   {f.name}
                 </span>
               </button>
             ))}
             {moveFolders.length === 0 && (
-              <p className="text-center text-[#6E6E73] text-[13px]">
+              <p className="text-center text-ink-muted text-[13px]">
                 Không có thư mục con
               </p>
             )}
@@ -1304,7 +1286,7 @@ export default function StoragePage() {
         <ModalFooter>
           <button
             onClick={() => setMoveItem(null)}
-            className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full"
+            className="px-5 py-2 text-brand font-medium hover:bg-surface-quiet rounded-full"
           >
             Hủy
           </button>
@@ -1325,13 +1307,13 @@ export default function StoragePage() {
         <ModalContent>
           <div className="flex items-center gap-3 justify-center py-6">
             {[
-              { hex: "#0071E3", name: "Xanh biển" },
-              { hex: "#FF3B30", name: "Đỏ" },
-              { hex: "#34C759", name: "Xanh lá" },
-              { hex: "#FF9500", name: "Cam" },
-              { hex: "#AF52DE", name: "Tím" },
-              { hex: "#FF2D55", name: "Hồng" },
-              { hex: "#8E8E93", name: "Xám" },
+              { hex: "hsl(var(--brand))", name: "Xanh biển" },
+              { hex: "hsl(var(--danger))", name: "Đỏ" },
+              { hex: "hsl(var(--brand))", name: "Xanh lá" },
+              { hex: "hsl(var(--warning))", name: "Cam" },
+              { hex: "hsl(var(--brand))", name: "Tím" },
+              { hex: "hsl(var(--danger))", name: "Hồng" },
+              { hex: "hsl(var(--ink-muted))", name: "Xám" },
             ].map((c) => (
               <button
                 key={c.hex}
@@ -1346,7 +1328,7 @@ export default function StoragePage() {
         <ModalFooter>
           <button
             onClick={() => setColorItem(null)}
-            className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full"
+            className="px-5 py-2 text-brand font-medium hover:bg-surface-quiet rounded-full"
           >
             Đóng
           </button>
@@ -1355,4 +1337,3 @@ export default function StoragePage() {
     </div>
   );
 }
-

@@ -44,8 +44,8 @@ export default class DocLibEvenPageBreak implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-evenbreak { position: relative; width: 100%; margin: 24px 0; border-top: 2px double #cbd5e1; }
-      .doclib-evenbreak::after { content: "DocLib Section Break (Even Page)"; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: #f8fafc; padding: 0 12px; color: #64748b; font-size: 11px; font-family: sans-serif; letter-spacing: 1px; border-radius: 4px; border: 1px solid #cbd5e1; }
+      .doclib-evenbreak { position: relative; width: 100%; margin: 24px 0; border-top: 2px double hsl(var(--border)); }
+      .doclib-evenbreak::after { content: "DocLib Section Break (Even Page)"; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: hsl(var(--surface-raised)); padding: 0 12px; color: hsl(var(--ink-muted)); font-size: 11px; font-family: sans-serif; letter-spacing: 1px; border-radius: 4px; border: 1px solid hsl(var(--border)); }
     `;
     this.wrapper.appendChild(style);
 

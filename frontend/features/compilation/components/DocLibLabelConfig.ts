@@ -47,13 +47,13 @@ export default class DocLibLabelConfig implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-labelcfg { font-family: sans-serif; padding: 16px; border: 1px dashed #cbd5e1; border-radius: 4px; background: #fafafa; margin: 16px 0; max-width: 400px; display: flex; flex-direction: column; gap: 8px; }
-      .doclib-labelcfg-head { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 8px; }
-      .doclib-labelcfg-title { font-weight: bold; font-size: 14px; color: #1e293b; }
-      .doclib-labelcfg-prod { font-size: 12px; padding: 4px 8px; background: #e2e8f0; border-radius: 4px; color: #475569; outline: none; }
-      .doclib-labelcfg-prod:empty:before { content: "DocLib Product"; color: #94a3b8; }
-      .doclib-labelcfg-content { min-height: 80px; font-family: "Times New Roman", serif; font-size: 14px; outline: none; background: #fff; border: 1px solid #cbd5e1; padding: 8px; border-radius: 4px; }
-      .doclib-labelcfg-content:empty:before { content: "DocLib Label Text"; color: #94a3b8; font-style: italic; }
+      .doclib-labelcfg { font-family: sans-serif; padding: 16px; border: 1px dashed hsl(var(--border)); border-radius: 4px; background: hsl(var(--surface-raised)); margin: 16px 0; max-width: 400px; display: flex; flex-direction: column; gap: 8px; }
+      .doclib-labelcfg-head { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid hsl(var(--border)); padding-bottom: 8px; margin-bottom: 8px; }
+      .doclib-labelcfg-title { font-weight: bold; font-size: 14px; color: hsl(var(--ink)); }
+      .doclib-labelcfg-prod { font-size: 12px; padding: 4px 8px; background: hsl(var(--border)); border-radius: 4px; color: hsl(var(--ink-muted)); outline: none; }
+      .doclib-labelcfg-prod:empty:before { content: "DocLib Product"; color: hsl(var(--ink-faint)); }
+      .doclib-labelcfg-content { min-height: 80px; font-family: "Times New Roman", serif; font-size: 14px; outline: none; background: hsl(var(--surface)); border: 1px solid hsl(var(--border)); padding: 8px; border-radius: 4px; }
+      .doclib-labelcfg-content:empty:before { content: "DocLib Label Text"; color: hsl(var(--ink-faint)); font-style: italic; }
     `;
     this.wrapper.appendChild(style);
 

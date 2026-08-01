@@ -93,8 +93,8 @@ export default class DocLibTextVariant {
       const style = document.createElement("style");
       style.id = "doclib-text-variant-styles";
       style.innerHTML = `
-            .cdx-text-variant--call-out { border: 1px solid #e1e1e1; padding: 15px; border-radius: 5px; background: #fafafa; }
-            .cdx-text-variant--citation { font-style: italic; border-left: 3px solid #000; padding-left: 10px; color: #555; }
+            .cdx-text-variant--call-out { border: 1px solid hsl(var(--border)); padding: 15px; border-radius: 5px; background: hsl(var(--surface-raised)); }
+            .cdx-text-variant--citation { font-style: italic; border-left: 3px solid hsl(var(--ink)); padding-left: 10px; color: #555; }
             .cdx-text-variant--details { font-size: 0.85em; color: #666; }
         `;
       document.head.appendChild(style);

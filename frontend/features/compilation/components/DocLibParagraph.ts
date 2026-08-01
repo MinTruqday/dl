@@ -80,7 +80,7 @@ export default class DocLibParagraph implements BlockTool {
       style.id = "doclib-paragraph-styles";
       style.innerHTML = `
             .doclib-paragraph { line-height: 1.6em; outline: none; padding: 4px 0; margin-bottom: 8px; }
-            .doclib-paragraph[data-placeholder]:empty::before { content: attr(data-placeholder); color: #94a3b8; pointer-events: none; }
+            .doclib-paragraph[data-placeholder]:empty::before { content: attr(data-placeholder); color: hsl(var(--ink-faint)); pointer-events: none; }
         `;
       document.head.appendChild(style);
     }

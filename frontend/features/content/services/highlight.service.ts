@@ -13,13 +13,13 @@ export async function createHighlightAPI(
   if (typeof textOrData === "object" && textOrData !== null) {
     bodyData = {
       text: textOrData.text,
-      color: textOrData.color || color || "#e4e4e7",
+      color: textOrData.color || color || "hsl(var(--border))",
       note: textOrData.note || note || "",
     };
   } else {
     bodyData = {
       text: textOrData,
-      color: color || "#e4e4e7",
+      color: color || "hsl(var(--border))",
       note: note || "",
     };
   }
@@ -30,7 +30,7 @@ export async function createHighlightAPI(
     body: JSON.stringify(bodyData),
   });
   const result = await res.json();
-  if (!res.ok) throw new Error(result.message || "Lỗi khởi tạo siêu dữ liệu đánh dấu");
+  if (!res.ok) throw new Error(result.message || "Không thể tạo siêu dữ liệu đánh dấu");
   return result;
 }
 
@@ -40,7 +40,7 @@ export async function getHighlightsAPI(documentId: string) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi trích xuất bộ sưu tập đánh dấu");
+    throw new Error(data.message || "Không thể tải bộ sưu tập đánh dấu");
   return data;
 }
 
@@ -55,7 +55,7 @@ export async function updateHighlightNoteAPI(
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi lưu trữ dữ liệu chú thích");
+    throw new Error(data.message || "Không thể lưu dữ liệu chú thích");
   return data;
 }
 
@@ -65,7 +65,7 @@ export async function deleteHighlightAPI(highlightId: string) {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi xóa bỏ bản ghi đánh dấu");
+  if (!res.ok) throw new Error(data.message || "Không thể xóa bản ghi đánh dấu");
   return data;
 }
 
@@ -78,7 +78,7 @@ export async function getAllNotesAPI(skip: number = 0, limit: number = 50) {
   );
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi trích xuất tập hợp chú thích");
+    throw new Error(data.message || "Không thể tải tập hợp chú thích");
   return data;
 }
 
@@ -88,7 +88,7 @@ export async function getReadingPreferencesAPI() {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi trích xuất tham số cấu hình hiển thị");
+    throw new Error(data.message || "Không thể tải tham số cấu hình hiển thị");
   return data;
 }
 
@@ -106,15 +106,15 @@ export async function updateReadingPreferencesAPI(data: {
   });
   const result = await res.json();
   if (!res.ok)
-    throw new Error(result.message || "Lỗi lưu trữ tham số cấu hình hiển thị");
+    throw new Error(result.message || "Không thể lưu tham số cấu hình hiển thị");
   return result;
 }
 
 export async function exportHighlightsMarkdownAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/noi-bat/tai-lieu/${documentId}/xuat`, {
+  const res = await fetch(`${API_URL}/noi-bat/tai-lieu/${documentId}/ket-xuat`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi kết xuất siêu dữ liệu đánh dấu");
+  if (!res.ok) throw new Error(data.message || "Không thể xuất siêu dữ liệu đánh dấu");
   return data;
 }

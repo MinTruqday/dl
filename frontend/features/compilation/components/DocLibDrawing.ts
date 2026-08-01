@@ -49,14 +49,14 @@ export default class DocLibDrawing implements BlockTool {
       const style = document.createElement("style");
       style.id = "doclib-drawing-styles";
       style.innerHTML = `
-            .doclib-drawing-wrapper { margin: 16px 0; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: #fff; }
-            .doclib-drawing-canvas { width: 100%; height: 300px; display: block; cursor: crosshair; touch-action: none; background: #f8fafc; }
-            .doclib-drawing-controls { padding: 8px 16px; background: #f1f5f9; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; }
-            .doclib-drawing-btn { font-size: 13px; padding: 4px 12px; border: 1px solid #cbd5e1; background: #fff; border-radius: 4px; cursor: pointer; transition: background 0.2s; }
-            .doclib-drawing-btn:hover { background: #e2e8f0; }
+            .doclib-drawing-wrapper { margin: 16px 0; border: 1px solid hsl(var(--border)); border-radius: 8px; overflow: hidden; background: hsl(var(--surface)); }
+            .doclib-drawing-canvas { width: 100%; height: 300px; display: block; cursor: crosshair; touch-action: none; background: hsl(var(--surface-raised)); }
+            .doclib-drawing-controls { padding: 8px 16px; background: hsl(var(--surface-quiet)); border-bottom: 1px solid hsl(var(--border)); display: flex; justify-content: space-between; }
+            .doclib-drawing-btn { font-size: 13px; padding: 4px 12px; border: 1px solid hsl(var(--border)); background: hsl(var(--surface)); border-radius: 4px; cursor: pointer; transition: background 0.2s; }
+            .doclib-drawing-btn:hover { background: hsl(var(--border)); }
             .doclib-drawing-colors { display: flex; gap: 8px; }
             .doclib-drawing-color { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; }
-            .doclib-drawing-color.active { border-color: #3b82f6; transform: scale(1.1); }
+            .doclib-drawing-color.active { border-color: hsl(var(--brand)); transform: scale(1.1); }
             .doclib-drawing-readonly-img { width: 100%; height: auto; display: block; }
         `;
       document.head.appendChild(style);
@@ -87,8 +87,8 @@ export default class DocLibDrawing implements BlockTool {
 
     const colorsDiv = document.createElement("div");
     colorsDiv.classList.add("doclib-drawing-colors");
-    const colors = ["#0f172a", "#ef4444", "#3b82f6", "#22c55e", "#eab308"];
-    let currentColor = "#0f172a";
+    const colors = ["hsl(var(--ink))", "hsl(var(--danger))", "hsl(var(--brand))", "hsl(var(--brand))", "hsl(var(--warning))"];
+    let currentColor = "hsl(var(--ink))";
 
     colors.forEach((c) => {
       const cBtn = document.createElement("div");

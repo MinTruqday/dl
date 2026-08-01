@@ -50,14 +50,14 @@ export default class DocLibTrackChanges implements BlockTool {
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-tc { font-family: "Times New Roman", serif; font-size: 16px; padding: 4px 8px; margin: 8px 0; border-left: 2px solid transparent; display: inline-block; position: relative; }
-      .doclib-tc.add { color: #16a34a; text-decoration: underline; border-left-color: #16a34a; }
-      .doclib-tc.del { color: #dc2626; text-decoration: line-through; border-left-color: #dc2626; }
+      .doclib-tc.add { color: hsl(var(--brand)); text-decoration: underline; border-left-color: hsl(var(--brand)); }
+      .doclib-tc.del { color: hsl(var(--danger)); text-decoration: line-through; border-left-color: hsl(var(--danger)); }
       .doclib-tc-text { outline: none; display: inline-block; }
-      .doclib-tc-text:empty:before { content: "DocLib Tracked Text"; color: #94a3b8; font-style: italic; }
-      .doclib-tc-meta { position: absolute; left: 100%; top: 0; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; font-family: sans-serif; font-size: 10px; color: #64748b; white-space: nowrap; margin-left: 12px; display: none; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 10; }
+      .doclib-tc-text:empty:before { content: "DocLib Tracked Text"; color: hsl(var(--ink-faint)); font-style: italic; }
+      .doclib-tc-meta { position: absolute; left: 100%; top: 0; background: hsl(var(--surface-raised)); border: 1px solid hsl(var(--border)); border-radius: 4px; padding: 4px 8px; font-family: sans-serif; font-size: 10px; color: hsl(var(--ink-muted)); white-space: nowrap; margin-left: 12px; display: none; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 10; }
       .doclib-tc:hover .doclib-tc-meta { display: block; }
       .doclib-tc-cfg { font-family: sans-serif; font-size: 12px; margin-bottom: 8px; display: flex; gap: 8px; }
-      .doclib-tc-select { padding: 2px 4px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; }
+      .doclib-tc-select { padding: 2px 4px; border: 1px solid hsl(var(--border)); border-radius: 4px; outline: none; }
     `;
     this.wrapper.appendChild(style);
 

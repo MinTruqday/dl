@@ -70,7 +70,7 @@ export default function StatsPage() {
       setRevenue(revData.data || revData);
       setStats(revData.data || revData);
     } catch {
-      showToast("Lỗi trích xuất số liệu phân tích", "error");
+      showToast("Không thể tải số liệu phân tích", "error");
     } finally {
       setLoading(false);
       requestAnimationFrame(() => setVisible(true));
@@ -96,7 +96,7 @@ export default function StatsPage() {
       setSelectedAnalytics(analyticsData?.data || analyticsData);
       setSelectedAcademic(academicData?.data || academicData);
     } catch {
-      showToast("Lỗi trích xuất báo cáo chi tiết", "error");
+      showToast("Không thể tải báo cáo chi tiết", "error");
     } finally {
       setLoadingAnalytics(false);
     }
@@ -113,7 +113,7 @@ export default function StatsPage() {
       showToast("Cập nhật cấu hình định giá hoàn tất", "success");
       setShowPricingModal(false);
     } catch (e: any) {
-      showToast(e.message || "Lỗi cập nhật cấu hình định giá", "error");
+      showToast(e.message || "Không thể cập nhật cấu hình định giá", "error");
     } finally {
       setSettingPrice(false);
     }
@@ -139,7 +139,7 @@ export default function StatsPage() {
       setShowWithdrawalModal(false);
       fetchStatsData();
     } catch (e: any) {
-      showToast(e.message || "Lỗi khởi tạo tiến trình giao dịch tài chính", "error");
+      showToast(e.message || "Không thể tạo tiến trình giao dịch tài chính", "error");
     } finally {
       setRequestingWithdrawal(false);
     }
@@ -150,7 +150,7 @@ export default function StatsPage() {
   return (
     <div className="flex flex-col h-full font-sans">
       <div
-        className={`bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:px-0 md:pt-6 flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-6 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}
+        className={`bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:px-0 md:pt-6 flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-6 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}
         style={{ transitionDelay: "100ms" }}
       >
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 shrink-0">
@@ -159,40 +159,40 @@ export default function StatsPage() {
               label: "Tổng lượt xem",
               val: stats?.total_views || 0,
               icon: Eye,
-              color: "text-[#0071E3]",
-              bg: "bg-[#0071E3]/10",
+              color: "text-brand",
+              bg: "bg-brand/10",
             },
             {
               label: "Kinh nghiệm",
               val: stats?.total_points || 0,
               icon: Database,
-              color: "text-[#FF9F0A]",
-              bg: "bg-[#FF9F0A]/10",
+              color: "text-warning",
+              bg: "bg-warning/10",
             },
             {
               label: "Doanh thu (dl)",
               val: revenue?.available_balance || 0,
               icon: Wallet,
-              color: "text-[#34C759]",
-              bg: "bg-[#34C759]/10",
+              color: "text-brand",
+              bg: "bg-brand/10",
             },
           ].map((s, i) => (
             <div
               key={i}
-              className="bg-white border border-[#E8E8ED] p-6 flex flex-col justify-between h-[140px] rounded-[18px] relative overflow-hidden"
+              className="bg-white border border-border p-6 flex flex-col justify-between h-[140px] rounded-panel relative overflow-hidden"
             >
               <div className="flex justify-between items-start relative z-10">
-                <span className="text-[13px] font-medium text-[#6E6E73]">
+                <span className="text-[13px] font-medium text-ink-muted">
                   {s.label}
                 </span>
                 <div
-                  className={`w-10 h-10 rounded-[10px] ${s.bg} flex items-center justify-center`}
+                  className={`w-10 h-10 rounded-control ${s.bg} flex items-center justify-center`}
                 >
                   <s.icon className={`w-5 h-5 ${s.color}`} />
                 </div>
               </div>
               <div className="flex items-end gap-3 relative z-10">
-                <h4 className="text-[32px] font-semibold text-[#1D1D1F]">
+                <h4 className="text-[32px] font-semibold text-ink">
                   {s.val.toLocaleString()}
                 </h4>
               </div>
@@ -200,23 +200,23 @@ export default function StatsPage() {
           ))}
         </div>
 
-        <div className="bg-white border border-[#E8E8ED] rounded-[18px] flex flex-col flex-1 min-h-0 overflow-hidden pb-6">
-          <div className="p-6 flex items-center gap-3 bg-white border-b border-[#E8E8ED] shrink-0">
-            <BarChart3 className="w-5 h-5 text-[#1D1D1F]" />
-            <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
+        <div className="bg-white border border-border rounded-panel flex flex-col flex-1 min-h-0 overflow-hidden pb-6">
+          <div className="p-6 flex items-center gap-3 bg-white border-b border-border shrink-0">
+            <BarChart3 className="w-5 h-5 text-ink" />
+            <p className="text-[13px] font-medium text-ink-muted mb-4">
               Hiệu suất tác phẩm
             </p>
           </div>
           <div className="flex-1 overflow-auto custom-scrollbar">
             {(stats?.documents || []).length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center p-12 text-center">
-                <div className="w-16 h-16 bg-[#F5F5F7] flex items-center justify-center rounded-[18px] mb-4">
-                  <BookOpen className="w-8 h-8 text-[#C7C7CC]" />
+                <div className="w-16 h-16 bg-surface-quiet flex items-center justify-center rounded-panel mb-4">
+                  <BookOpen className="w-8 h-8 text-ink-faint" />
                 </div>
-                <p className="text-[13px] font-medium text-[#6E6E73] mb-4 mb-2">
+                <p className="text-[13px] font-medium text-ink-muted mb-2">
                   Chưa có dữ liệu
                 </p>
-                <p className="text-[15px] text-[#6E6E73] max-w-sm">
+                <p className="text-[15px] text-ink-muted max-w-sm">
                   Bạn chưa có tác phẩm nào phát sinh số liệu. Hãy xuất bản thêm
                   nội dung.
                 </p>
@@ -224,7 +224,7 @@ export default function StatsPage() {
             ) : (
               <table className="w-full text-left text-[15px] border-collapse min-w-[600px]">
                 <thead className="sticky top-0 bg-white z-10">
-                  <tr className="text-[13px] font-medium text-[#6E6E73]">
+                  <tr className="text-[13px] font-medium text-ink-muted">
                     <th className="px-6 py-4 w-1/2">Tiêu đề tác phẩm</th>
                     <th className="px-6 py-4 text-center">Lượt xem</th>
                     <th className="px-6 py-4 text-center">Xếp hạng</th>
@@ -236,20 +236,20 @@ export default function StatsPage() {
                     <tr
                       key={doc.id || idx}
                       onClick={(e) => handleViewDeepAnalytics(doc.id, e)}
-                      className="cursor-pointer hover:bg-[#F5F5F7] transition-colors group"
+                      className="cursor-pointer hover:bg-surface-quiet transition-colors group"
                     >
                       <td className="px-6 py-4">
-                        <div className="font-semibold text-[#1D1D1F] line-clamp-1">
+                        <div className="font-semibold text-ink line-clamp-1">
                           {doc.title}
                         </div>
                       </td>
                       <td className="px-6 py-4 text-center">
-                        <span className="inline-flex items-center justify-center px-3 py-1 bg-[#0071E3]/10 text-[#0071E3] text-[13px] font-medium rounded-full">
+                        <span className="inline-flex items-center justify-center px-3 py-1 bg-brand/10 text-brand text-[13px] font-medium rounded-full">
                           {doc.views.toLocaleString()}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-center">
-                        <span className="inline-flex items-center justify-center px-3 py-1 bg-[#FF9F0A]/10 text-[#FF9F0A] text-[13px] font-medium rounded-full">
+                        <span className="inline-flex items-center justify-center px-3 py-1 bg-warning/10 text-warning text-[13px] font-medium rounded-full">
                           {doc.rating?.toFixed(1) || "0.0"}
                         </span>
                       </td>
@@ -263,12 +263,12 @@ export default function StatsPage() {
                               setNewPrice(doc.price_dl || 0);
                               setShowPricingModal(true);
                             }}
-                            className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-[#E8E8ED] text-[#6E6E73] transition-colors"
+                            className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-border text-ink-muted transition-colors"
                             title="Thiết lập giá"
                           >
                             <Banknote className="w-5 h-5" />
                           </div>
-                          <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#F5F5F7] group-hover:bg-[#0071E3] group-hover:text-white text-[#1D1D1F] transition-colors">
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center bg-surface-quiet group-hover:bg-brand group-hover:text-white text-ink transition-colors">
                             <ArrowUpRight className="w-5 h-5" />
                           </div>
                         </div>
@@ -299,8 +299,8 @@ export default function StatsPage() {
           <div className="max-h-[70vh] overflow-y-auto custom-scrollbar">
             {loadingAnalytics ? (
               <div className="flex flex-col items-center justify-center py-24">
-                <Loader2 className="w-8 h-8 animate-spin text-[#0071E3] mb-4" />
-                <p className="text-[13px] font-medium text-[#6E6E73]">
+                <Loader2 className="w-8 h-8 animate-spin text-brand mb-4" />
+                <p className="text-[13px] font-medium text-ink-muted">
                   Đang phân tích dữ liệu
                 </p>
               </div>
@@ -308,52 +308,52 @@ export default function StatsPage() {
               <div className="p-6 space-y-8 bg-white">
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 pb-3">
-                    <Eye className="w-5 h-5 text-[#1D1D1F]" />
-                    <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
+                    <Eye className="w-5 h-5 text-ink" />
+                    <p className="text-[13px] font-medium text-ink-muted mb-4">
                       Tương tác độc giả
                     </p>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="p-5 bg-[#F5F5F7] rounded-[18px] flex flex-col justify-between h-[120px]">
-                      <Eye className="w-5 h-5 text-[#0071E3] mb-2" />
+                    <div className="p-5 bg-surface-quiet rounded-panel flex flex-col justify-between h-[120px]">
+                      <Eye className="w-5 h-5 text-brand mb-2" />
                       <div>
-                        <p className="text-[12px] font-medium text-[#6E6E73] mb-1">
+                        <p className="text-[12px] font-medium text-ink-muted mb-1">
                           Lượt xem
                         </p>
-                        <p className="text-[24px] font-semibold text-[#1D1D1F]">
+                        <p className="text-[24px] font-semibold text-ink">
                           {(selectedAnalytics?.views || 0).toLocaleString()}
                         </p>
                       </div>
                     </div>
-                    <div className="p-5 bg-[#F5F5F7] rounded-[18px] flex flex-col justify-between h-[120px]">
-                      <Clock className="w-5 h-5 text-[#AF52DE] mb-2" />
+                    <div className="p-5 bg-surface-quiet rounded-panel flex flex-col justify-between h-[120px]">
+                      <Clock className="w-5 h-5 text-brand mb-2" />
                       <div>
-                        <p className="text-[12px] font-medium text-[#6E6E73] mb-1">
+                        <p className="text-[12px] font-medium text-ink-muted mb-1">
                           Đọc TB
                         </p>
-                        <p className="text-[24px] font-semibold text-[#1D1D1F]">
+                        <p className="text-[24px] font-semibold text-ink">
                           {selectedAnalytics?.avg_read_time || "0 phút"}
                         </p>
                       </div>
                     </div>
-                    <div className="p-5 bg-[#F5F5F7] rounded-[18px] flex flex-col justify-between h-[120px]">
-                      <Bookmark className="w-5 h-5 text-[#34C759] mb-2" />
+                    <div className="p-5 bg-surface-quiet rounded-panel flex flex-col justify-between h-[120px]">
+                      <Bookmark className="w-5 h-5 text-brand mb-2" />
                       <div>
-                        <p className="text-[12px] font-medium text-[#6E6E73] mb-1">
+                        <p className="text-[12px] font-medium text-ink-muted mb-1">
                           Lượt lưu
                         </p>
-                        <p className="text-[24px] font-semibold text-[#1D1D1F]">
+                        <p className="text-[24px] font-semibold text-ink">
                           {selectedAnalytics?.saves || 0}
                         </p>
                       </div>
                     </div>
-                    <div className="p-5 bg-[#F5F5F7] rounded-[18px] flex flex-col justify-between h-[120px]">
-                      <MessageSquare className="w-5 h-5 text-[#FF9F0A] mb-2" />
+                    <div className="p-5 bg-surface-quiet rounded-panel flex flex-col justify-between h-[120px]">
+                      <MessageSquare className="w-5 h-5 text-warning mb-2" />
                       <div>
-                        <p className="text-[12px] font-medium text-[#6E6E73] mb-1">
+                        <p className="text-[12px] font-medium text-ink-muted mb-1">
                           Bình luận
                         </p>
-                        <p className="text-[24px] font-semibold text-[#1D1D1F]">
+                        <p className="text-[24px] font-semibold text-ink">
                           {selectedAnalytics?.comments || 0}
                         </p>
                       </div>
@@ -362,39 +362,39 @@ export default function StatsPage() {
                 </div>
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 pb-3">
-                    <BookOpen className="w-5 h-5 text-[#1D1D1F]" />
-                    <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
+                    <BookOpen className="w-5 h-5 text-ink" />
+                    <p className="text-[13px] font-medium text-ink-muted mb-4">
                       Chỉ số học thuật
                     </p>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="p-6 bg-[#F5F5F7] rounded-[18px] flex items-center justify-between">
+                    <div className="p-6 bg-surface-quiet rounded-panel flex items-center justify-between">
                       <div>
-                        <p className="text-[12px] font-medium text-[#6E6E73] mb-1">
+                        <p className="text-[12px] font-medium text-ink-muted mb-1">
                           Tổng số từ
                         </p>
-                        <p className="text-[24px] font-semibold text-[#1D1D1F]">
+                        <p className="text-[24px] font-semibold text-ink">
                           {(selectedAcademic?.word_count || 0).toLocaleString()}
                         </p>
                       </div>
                       <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-                        <FileText className="w-5 h-5 text-[#1D1D1F]" />
+                        <FileText className="w-5 h-5 text-ink" />
                       </div>
                     </div>
-                    <div className="p-6 bg-[#F5F5F7] rounded-[18px] flex items-center justify-between">
+                    <div className="p-6 bg-surface-quiet rounded-panel flex items-center justify-between">
                       <div>
-                        <p className="text-[12px] font-medium text-[#6E6E73] mb-1">
+                        <p className="text-[12px] font-medium text-ink-muted mb-1">
                           Độ đọc hiểu
                         </p>
-                        <p className="text-[24px] font-semibold text-[#1D1D1F] flex items-baseline gap-1">
+                        <p className="text-[24px] font-semibold text-ink flex items-baseline gap-1">
                           {selectedAcademic?.readability_score || 0}
-                          <span className="text-[15px] text-[#6E6E73]">
+                          <span className="text-[15px] text-ink-muted">
                             /100
                           </span>
                         </p>
                       </div>
                       <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-                        <Percent className="w-5 h-5 text-[#1D1D1F]" />
+                        <Percent className="w-5 h-5 text-ink" />
                       </div>
                     </div>
                   </div>
@@ -406,7 +406,7 @@ export default function StatsPage() {
         <ModalFooter>
           <button
             onClick={() => setShowAnalyticsModal(false)}
-            className="h-[44px] px-8 bg-[#0071E3] text-white text-[15px] font-medium rounded-full hover:bg-[#0077ED] transition-colors"
+            className="h-[44px] px-8 bg-brand text-white text-[15px] font-medium rounded-full hover:bg-brand transition-colors"
           >
             Đóng báo cáo
           </button>
@@ -417,9 +417,9 @@ export default function StatsPage() {
         isOpen={showWithdrawalModal}
         onClose={() => !requestingWithdrawal && setShowWithdrawalModal(false)}
       >
-        <ModalHeader className="bg-[#34C759]/10">
+        <ModalHeader className="bg-brand/10">
           <ModalTitle className="flex items-center gap-2">
-            <Banknote className="w-5 h-5 text-[#34C759]" /> Yêu cầu rút tiền
+            <Banknote className="w-5 h-5 text-brand" /> Yêu cầu rút tiền
           </ModalTitle>
           <ModalDescription className="ml-7">
             Chuyển doanh thu về tài khoản ngân hàng
@@ -427,21 +427,21 @@ export default function StatsPage() {
         </ModalHeader>
         <ModalContent>
           <div className="space-y-6">
-            <div className="bg-[#34C759]/10 p-4 rounded-[10px] flex items-center justify-between border-[#34C759]/20">
-              <span className="text-[13px] font-medium text-[#1D1D1F]">
+            <div className="bg-brand/10 p-4 rounded-control flex items-center justify-between border-brand/20">
+              <span className="text-[13px] font-medium text-ink">
                 Số dư khả dụng:
               </span>
-              <span className="text-[17px] font-semibold text-[#34C759]">
+              <span className="text-[17px] font-semibold text-brand">
                 {revenue?.available_balance || 0} dl
               </span>
             </div>
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-[13px] font-medium text-[#1D1D1F]">
+                <label className="text-[13px] font-medium text-ink">
                   Số tiền cần rút (dl)
                 </label>
                 <div className="relative">
-                  <Banknote className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6E6E73]" />
+                  <Banknote className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-ink-muted" />
                   <input
                     type="number"
                     value={withdrawalAmount || ""}
@@ -449,12 +449,12 @@ export default function StatsPage() {
                       setWithdrawalAmount(parseInt(e.target.value) || 0)
                     }
                     placeholder=""
-                    className="w-full h-[48px] pl-12 pr-4 text-[15px] text-[#1D1D1F] rounded-[10px] outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors"
+                    className="w-full h-[48px] pl-12 pr-4 text-[15px] text-ink rounded-control outline-none focus:border-brand bg-surface-quiet focus:bg-white transition-colors"
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-[13px] font-medium text-[#1D1D1F]">
+                <label className="text-[13px] font-medium text-ink">
                   Tên ngân hàng
                 </label>
                 <input
@@ -463,11 +463,11 @@ export default function StatsPage() {
                     setBankInfo({ ...bankInfo, bank_name: e.target.value })
                   }
                   placeholder=""
-                  className="w-full h-[48px] px-4 text-[15px] text-[#1D1D1F] rounded-[10px] outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors"
+                  className="w-full h-[48px] px-4 text-[15px] text-ink rounded-control outline-none focus:border-brand bg-surface-quiet focus:bg-white transition-colors"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[13px] font-medium text-[#1D1D1F]">
+                <label className="text-[13px] font-medium text-ink">
                   Số tài khoản
                 </label>
                 <input
@@ -476,11 +476,11 @@ export default function StatsPage() {
                     setBankInfo({ ...bankInfo, account_number: e.target.value })
                   }
                   placeholder=""
-                  className="w-full h-[48px] px-4 text-[15px] text-[#1D1D1F] rounded-[10px] outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors"
+                  className="w-full h-[48px] px-4 text-[15px] text-ink rounded-control outline-none focus:border-brand bg-surface-quiet focus:bg-white transition-colors"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[13px] font-medium text-[#1D1D1F]">
+                <label className="text-[13px] font-medium text-ink">
                   Tên chủ tài khoản
                 </label>
                 <input
@@ -489,7 +489,7 @@ export default function StatsPage() {
                     setBankInfo({ ...bankInfo, account_name: e.target.value })
                   }
                   placeholder=""
-                  className="w-full h-[48px] px-4 text-[15px] text-[#1D1D1F] rounded-[10px] outline-none focus:border-[#0071E3] bg-[#F5F5F7] focus:bg-white transition-colors uppercase"
+                  className="w-full h-[48px] px-4 text-[15px] text-ink rounded-control outline-none focus:border-brand bg-surface-quiet focus:bg-white transition-colors uppercase"
                 />
               </div>
             </div>
@@ -499,14 +499,14 @@ export default function StatsPage() {
           <button
             onClick={() => setShowWithdrawalModal(false)}
             disabled={requestingWithdrawal}
-            className="flex-1 h-[44px] bg-white text-[15px] font-medium text-[#1D1D1F] rounded-full hover:bg-[#F5F5F7] transition-colors disabled:opacity-50"
+            className="flex-1 h-[44px] bg-white text-[15px] font-medium text-ink rounded-full hover:bg-surface-quiet transition-colors disabled:opacity-50"
           >
             Hủy bỏ
           </button>
           <button
             onClick={handleWithdrawal}
             disabled={requestingWithdrawal || withdrawalAmount <= 0}
-            className="flex-1 h-[44px] bg-[#34C759] text-white text-[15px] font-medium rounded-full flex items-center justify-center hover:bg-[#2EB150] transition-colors disabled:opacity-50 gap-2"
+            className="flex-1 h-[44px] bg-brand text-white text-[15px] font-medium rounded-full flex items-center justify-center hover:bg-brand transition-colors disabled:opacity-50 gap-2"
           >
             {requestingWithdrawal ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -527,14 +527,14 @@ export default function StatsPage() {
           </ModalTitle>
           <ModalDescription>
             Thay đổi giá bán (dl) cho tác phẩm{" "}
-            <span className="font-semibold text-[#1D1D1F]">
+            <span className="font-semibold text-ink">
               {pricingDocTitle}
             </span>
           </ModalDescription>
         </ModalHeader>
         <ModalContent>
           <div className="space-y-2">
-            <label className="text-[13px] font-medium text-[#1D1D1F]">
+            <label className="text-[13px] font-medium text-ink">
               Giá bán mới (dl)
             </label>
             <div className="relative">
@@ -543,14 +543,14 @@ export default function StatsPage() {
                 min="0"
                 value={newPrice}
                 onChange={(e) => setNewPrice(Number(e.target.value))}
-                className="w-full h-[52px] pl-4 pr-12 rounded-[10px] text-[15px] font-medium bg-[#F5F5F7] focus:bg-white focus:border-[#0071E3] outline-none transition-all"
+                className="w-full h-[52px] pl-4 pr-12 rounded-control text-[15px] font-medium bg-surface-quiet focus:bg-white focus:border-brand outline-none transition-all"
                 placeholder=""
               />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[15px] font-medium text-[#6E6E73]">
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[15px] font-medium text-ink-muted">
                 dl
               </span>
             </div>
-            <p className="text-[13px] text-[#6E6E73] mt-2">
+            <p className="text-[13px] text-ink-muted mt-2">
               Lưu ý: Nhập 0 để phát hành miễn phí.
             </p>
           </div>
@@ -558,14 +558,14 @@ export default function StatsPage() {
         <ModalFooter>
           <button
             onClick={() => setShowPricingModal(false)}
-            className="px-6 py-3 rounded-full text-[15px] font-medium text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors"
+            className="px-6 py-3 rounded-full text-[15px] font-medium text-ink hover:bg-surface-quiet transition-colors"
           >
             Hủy
           </button>
           <button
             onClick={handleSetPricing}
             disabled={settingPrice}
-            className="px-6 py-3 rounded-full bg-[#0071E3] text-white text-[15px] font-medium disabled:opacity-50 flex items-center gap-2 hover:bg-[#0077ED] transition-colors"
+            className="px-6 py-3 rounded-full bg-brand text-white text-[15px] font-medium disabled:opacity-50 flex items-center gap-2 hover:bg-brand transition-colors"
           >
             {settingPrice ? (
               <Loader2 className="w-5 h-5 animate-spin" />

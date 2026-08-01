@@ -40,7 +40,7 @@ export default class DocLibGallery implements BlockTool {
       style.innerHTML = `
             .doclib-gallery-wrapper { margin: 10px 0; }
             .doclib-gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 10px; }
-            .doclib-gallery-item { position: relative; width: 100%; padding-top: 100%; border-radius: 8px; overflow: hidden; background: #f1f5f9; }
+            .doclib-gallery-item { position: relative; width: 100%; padding-top: 100%; border-radius: 8px; overflow: hidden; background: hsl(var(--surface-quiet)); }
             .doclib-gallery-item img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
             .doclib-gallery-item .remove-btn { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: flex; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.2s; }
             .doclib-gallery-item:hover .remove-btn { opacity: 1; }

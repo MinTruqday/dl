@@ -46,11 +46,11 @@ export default class DocLibMasterDocument implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-master { padding: 24px; border: 2px solid #1e293b; border-radius: 8px; background: #f8fafc; margin: 16px 0; font-family: sans-serif; position: relative; }
-      .doclib-master::before { content: "DocLib Master Document Container"; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #1e293b; color: #fff; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; letter-spacing: 1px; }
-      .doclib-master-title { font-size: 24px; font-weight: bold; color: #0f172a; text-align: center; outline: none; margin-bottom: 16px; }
-      .doclib-master-title:empty:before { content: "DocLib Enter Master Title"; color: #94a3b8; }
-      .doclib-master-dropzone { padding: 32px; border: 2px dashed #cbd5e1; border-radius: 4px; text-align: center; color: #64748b; font-size: 14px; background: #fff; }
+      .doclib-master { padding: 24px; border: 2px solid hsl(var(--ink)); border-radius: 8px; background: hsl(var(--surface-raised)); margin: 16px 0; font-family: sans-serif; position: relative; }
+      .doclib-master::before { content: "DocLib Master Document Container"; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: hsl(var(--ink)); color: hsl(var(--surface)); padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; letter-spacing: 1px; }
+      .doclib-master-title { font-size: 24px; font-weight: bold; color: hsl(var(--ink)); text-align: center; outline: none; margin-bottom: 16px; }
+      .doclib-master-title:empty:before { content: "DocLib Enter Master Title"; color: hsl(var(--ink-faint)); }
+      .doclib-master-dropzone { padding: 32px; border: 2px dashed hsl(var(--border)); border-radius: 4px; text-align: center; color: hsl(var(--ink-muted)); font-size: 14px; background: hsl(var(--surface)); }
     `;
     this.wrapper.appendChild(style);
 

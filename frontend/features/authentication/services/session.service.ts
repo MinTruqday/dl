@@ -31,6 +31,16 @@ export function removeToken() {
   }
 }
 
+export async function logoutAPI(allDevices: boolean = false) {
+  const token = getToken();
+  if (!token) return;
+  const endpoint = allDevices ? "dang-xuat-tat-ca" : "dang-xuat";
+  await fetch(`${API_URL}/xac-thuc/${endpoint}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
 let userMePromise: Promise<any> | null = null;
 
 export async function login(email: string, password: string) {
@@ -69,7 +79,7 @@ export async function register(
 
   const json = await res.json();
   if (!res.ok)
-    throw new Error(json.detail || json.message || "Lỗi khởi tạo hồ sơ người dùng mới");
+    throw new Error(json.detail || json.message || "Không thể tạo hồ sơ người dùng mới");
   return json.data;
 }
 
@@ -107,7 +117,7 @@ export const forgotPasswordAPI = async (email: string): Promise<any> => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email }),
   });
-  if (!res.ok) throw new Error("Lỗi khởi tạo tiến trình khôi phục mật khẩu");
+  if (!res.ok) throw new Error("Không thể tạo tiến trình khôi phục mật khẩu");
   return res.json();
 };
 
@@ -122,7 +132,7 @@ export const resetPasswordAPI = async (
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || data.detail || "Lỗi cập nhật cấu trúc mật khẩu mới");
+    throw new Error(data.message || data.detail || "Không thể cập nhật cấu trúc mật khẩu mới");
   return data.data || data;
 };
 
@@ -150,7 +160,7 @@ export const passkeyLoginBeginAPI = async (email: string): Promise<any> => {
   const data = await res.json();
   if (!res.ok)
     throw new Error(
-      data.message || data.detail || "Lỗi khởi tạo luồng đăng nhập chứng thư số",
+      data.message || data.detail || "Không thể tạo luồng đăng nhập chứng thư số",
     );
   return data.data || data;
 };
@@ -184,7 +194,7 @@ export const passkeyRegisterBeginAPI = async (email: string): Promise<any> => {
   const data = await res.json();
   if (!res.ok)
     throw new Error(
-      data.message || data.detail || "Lỗi khởi tạo luồng đăng ký chứng thư số",
+      data.message || data.detail || "Không thể tạo luồng đăng ký chứng thư số",
     );
   return data.data || data;
 };
@@ -206,9 +216,16 @@ export const passkeyRegisterFinishAPI = async (
   return data.data || data;
 };
 export const getGoogleLoginUrlAPI = async (): Promise<string> => {
-  const res = await fetch(`${API_URL}/xac-thuc/google/dang-nhap`);
+  const res = await fetch(`${API_URL}/google/dang-nhap`);
   const data = await res.json();
   if (!res.ok || !data.data?.url)
-    throw new Error("Lỗi truy xuất điểm cuối xác thực định danh Google");
+    throw new Error("Không thể tải điểm cuối xác thực định danh Google");
   return data.data.url;
+};
+
+export const completeGoogleLoginAPI = async (code: string): Promise<any> => {
+  const res = await fetch(`${API_URL}/google/callback?code=${encodeURIComponent(code)}`);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || data.detail || "Không thể xác thực bằng Google");
+  return data.data || data;
 };

@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Manrope } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
-  subsets: ["latin"],
+const manrope = Manrope({
+  subsets: ["latin", "vietnamese"],
   variable: "--font-sans",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
   title: "DocLib",
-  description: "Hệ thống quản lý tài liệu thông minh",
+  description: "Đọc, quản lý và cộng tác trên tài liệu trong một không gian làm việc",
 };
 
 import { AuthProvider } from "@/features/authentication/contexts/AuthContext";
@@ -23,7 +24,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="vi" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans min-h-screen bg-white`}>
+      <body className={`${manrope.variable} min-h-[100dvh] font-sans`}>
         <AuthProvider>
           <ToastProvider>
             <AnnouncementProvider>{children}</AnnouncementProvider>

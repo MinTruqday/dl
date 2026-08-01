@@ -35,7 +35,7 @@ function ResetPasswordContent() {
       showToast(data.message || "Cập nhật cấu trúc mật khẩu hoàn tất", "success");
       setTimeout(() => router.push("/dang-nhap"), 1500);
     } catch (err: any) {
-      showToast(err.message || "Lỗi cập nhật cấu trúc mật khẩu mới", "error");
+      showToast(err.message || "Không thể cập nhật cấu trúc mật khẩu mới", "error");
     } finally {
       setLoading(false);
     }
@@ -46,10 +46,10 @@ function ResetPasswordContent() {
       <div className="w-full max-w-[420px]">
         <div className="auth-panel">
           <div className="text-center mb-8">
-            <h1 className="text-[28px] font-semibold tracking-tight text-[#1D1D1F]">
+            <h1 className="text-[28px] font-semibold tracking-tight text-ink">
               Mật khẩu mới
             </h1>
-            <p className="mt-2 text-[15px] text-[#6E6E73]">
+            <p className="mt-2 text-[15px] text-ink-muted">
               Thiết lập mật khẩu mới cho tài khoản của bạn
             </p>
           </div>
@@ -58,12 +58,12 @@ function ResetPasswordContent() {
             <div>
               <label
                 htmlFor="new-password"
-                className="block text-[13px] font-medium text-[#6E6E73] mb-2 ml-1"
+                className="block text-[13px] font-medium text-ink-muted mb-2 ml-1"
               >
                 Mật khẩu mới
               </label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6E6E73]" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-ink-muted" />
                 <input
                   id="new-password"
                   name="new-password"
@@ -79,7 +79,7 @@ function ResetPasswordContent() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#6E6E73]"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-ink-muted"
                 >
                   {showPassword ? (
                     <EyeOff className="w-5 h-5" />

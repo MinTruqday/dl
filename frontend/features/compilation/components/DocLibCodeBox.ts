@@ -43,11 +43,11 @@ export default class DocLibCodeBox implements BlockTool {
       const style = document.createElement("style");
       style.id = "doclib-codebox-styles";
       style.innerHTML = `
-            .doclib-codebox-wrapper { background: #1e293b; border-radius: 8px; overflow: hidden; margin: 16px 0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-            .doclib-codebox-header { display: flex; justify-content: space-between; padding: 8px 16px; background: #0f172a; align-items: center; border-bottom: 1px solid #334155; }
-            .doclib-codebox-lang { background: transparent; color: #94a3b8; border: none; font-size: 12px; outline: none; font-weight: 600; cursor: pointer; text-transform: uppercase; }
-            .doclib-codebox-lang option { background: #0f172a; color: #f8fafc; }
-            .doclib-codebox-textarea { width: 100%; min-height: 150px; background: transparent; color: #f8fafc; padding: 16px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 14px; border: none; outline: none; resize: vertical; line-height: 1.5; tab-size: 4; }
+            .doclib-codebox-wrapper { background: hsl(var(--ink)); border-radius: 8px; overflow: hidden; margin: 16px 0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+            .doclib-codebox-header { display: flex; justify-content: space-between; padding: 8px 16px; background: hsl(var(--ink)); align-items: center; border-bottom: 1px solid hsl(var(--ink)); }
+            .doclib-codebox-lang { background: transparent; color: hsl(var(--ink-faint)); border: none; font-size: 12px; outline: none; font-weight: 600; cursor: pointer; text-transform: uppercase; }
+            .doclib-codebox-lang option { background: hsl(var(--ink)); color: hsl(var(--surface-raised)); }
+            .doclib-codebox-textarea { width: 100%; min-height: 150px; background: transparent; color: hsl(var(--surface-raised)); padding: 16px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 14px; border: none; outline: none; resize: vertical; line-height: 1.5; tab-size: 4; }
             .doclib-codebox-dots { display: flex; gap: 6px; }
             .doclib-codebox-dot { width: 12px; height: 12px; border-radius: 50%; }
         `;
@@ -71,9 +71,9 @@ export default class DocLibCodeBox implements BlockTool {
     const dots = document.createElement("div");
     dots.classList.add("doclib-codebox-dots");
     dots.innerHTML = `
-          <div class="doclib-codebox-dot" style="background: #ef4444;"></div>
-          <div class="doclib-codebox-dot" style="background: #eab308;"></div>
-          <div class="doclib-codebox-dot" style="background: #22c55e;"></div>
+          <div class="doclib-codebox-dot" style="background: hsl(var(--danger));"></div>
+          <div class="doclib-codebox-dot" style="background: hsl(var(--warning));"></div>
+          <div class="doclib-codebox-dot" style="background: hsl(var(--brand));"></div>
       `;
 
     const langSelect = document.createElement("select");

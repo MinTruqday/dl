@@ -47,15 +47,15 @@ export default class DocLibBibliography implements BlockTool {
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-bib {
-        background: #fff;
-        border-top: 2px solid #e2e8f0;
+        background: hsl(var(--surface));
+        border-top: 2px solid hsl(var(--border));
         padding-top: 24px;
         margin: 32px 0;
       }
       .doclib-bib-title {
         font-size: 18px;
         font-weight: 700;
-        color: #1e293b;
+        color: hsl(var(--ink));
         margin-bottom: 16px;
       }
       .doclib-bib-list {
@@ -63,15 +63,15 @@ export default class DocLibBibliography implements BlockTool {
       }
       .doclib-bib-entry {
         font-size: 14px;
-        color: #475569;
+        color: hsl(var(--ink-muted));
         line-height: 1.6;
         margin-bottom: 12px;
         padding-left: 24px;
         text-indent: -24px;
       }
       .doclib-bib-edit {
-        background: #f8fafc;
-        border: 1px solid #cbd5e1;
+        background: hsl(var(--surface-raised));
+        border: 1px solid hsl(var(--border));
         padding: 16px;
         border-radius: 8px;
       }
@@ -83,22 +83,22 @@ export default class DocLibBibliography implements BlockTool {
       .doclib-bib-input {
         flex: 1;
         padding: 8px;
-        border: 1px solid #cbd5e1;
+        border: 1px solid hsl(var(--border));
         border-radius: 4px;
         font-size: 13px;
         outline: none;
       }
       .doclib-bib-del {
-        background: #ef4444;
-        color: #fff;
+        background: hsl(var(--danger));
+        color: hsl(var(--surface));
         border: none;
         border-radius: 4px;
         cursor: pointer;
         padding: 0 12px;
       }
       .doclib-bib-add {
-        background: #3b82f6;
-        color: #fff;
+        background: hsl(var(--brand));
+        color: hsl(var(--surface));
         border: none;
         border-radius: 4px;
         padding: 8px 16px;

@@ -50,18 +50,18 @@ export default class DocLibThesaurus implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-thes { font-family: sans-serif; padding: 16px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; margin: 16px 0; max-width: 400px; display: flex; flex-direction: column; gap: 12px; }
-      .doclib-thes-head { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 16px; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
-      .doclib-thes-word { color: #3b82f6; outline: none; border-bottom: 1px dashed #3b82f6; }
-      .doclib-thes-word:empty:before { content: "DocLib Word"; color: #94a3b8; }
+      .doclib-thes { font-family: sans-serif; padding: 16px; border: 1px solid hsl(var(--border)); border-radius: 8px; background: hsl(var(--surface)); margin: 16px 0; max-width: 400px; display: flex; flex-direction: column; gap: 12px; }
+      .doclib-thes-head { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 16px; color: hsl(var(--ink)); border-bottom: 1px solid hsl(var(--surface-quiet)); padding-bottom: 8px; }
+      .doclib-thes-word { color: hsl(var(--brand)); outline: none; border-bottom: 1px dashed hsl(var(--brand)); }
+      .doclib-thes-word:empty:before { content: "DocLib Word"; color: hsl(var(--ink-faint)); }
       .doclib-thes-list { display: flex; flex-wrap: wrap; gap: 8px; }
-      .doclib-thes-item { padding: 4px 12px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 16px; font-size: 13px; color: #475569; display: flex; align-items: center; gap: 6px; }
+      .doclib-thes-item { padding: 4px 12px; background: hsl(var(--surface-raised)); border: 1px solid hsl(var(--border)); border-radius: 16px; font-size: 13px; color: hsl(var(--ink-muted)); display: flex; align-items: center; gap: 6px; }
       .doclib-thes-text { outline: none; }
-      .doclib-thes-text:empty:before { content: "DocLib Synonym"; color: #cbd5e1; }
-      .doclib-thes-del { color: #ef4444; font-size: 10px; border: none; background: transparent; cursor: pointer; display: none; }
+      .doclib-thes-text:empty:before { content: "DocLib Synonym"; color: hsl(var(--border)); }
+      .doclib-thes-del { color: hsl(var(--danger)); font-size: 10px; border: none; background: transparent; cursor: pointer; display: none; }
       .doclib-thes-item:hover .doclib-thes-del { display: block; }
-      .doclib-thes-add { font-size: 12px; color: #3b82f6; border: 1px dashed #3b82f6; background: transparent; border-radius: 16px; padding: 4px 12px; cursor: pointer; }
-      .doclib-thes-add:hover { background: #eff6ff; }
+      .doclib-thes-add { font-size: 12px; color: hsl(var(--brand)); border: 1px dashed hsl(var(--brand)); background: transparent; border-radius: 16px; padding: 4px 12px; cursor: pointer; }
+      .doclib-thes-add:hover { background: hsl(var(--brand-soft)); }
     `;
     this.wrapper.appendChild(style);
 

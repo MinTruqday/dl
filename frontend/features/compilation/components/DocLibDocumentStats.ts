@@ -50,12 +50,12 @@ export default class DocLibDocumentStats implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-stats { font-family: sans-serif; padding: 20px; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; max-width: 350px; margin: 16px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-      .doclib-stats-title { font-size: 16px; font-weight: bold; color: #1e293b; margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; }
-      .doclib-stats-row { display: flex; justify-content: space-between; font-size: 14px; color: #475569; padding: 4px 0; }
-      .doclib-stats-val { font-weight: 600; color: #0f172a; outline: none; }
-      .doclib-stats-val:empty:before { content: "0"; color: #94a3b8; }
-      .doclib-stats-refresh { margin-top: 16px; width: 100%; padding: 8px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px; color: #3b82f6; cursor: pointer; font-weight: bold; }
+      .doclib-stats { font-family: sans-serif; padding: 20px; border: 1px solid hsl(var(--border)); border-radius: 8px; background: hsl(var(--surface)); max-width: 350px; margin: 16px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+      .doclib-stats-title { font-size: 16px; font-weight: bold; color: hsl(var(--ink)); margin-bottom: 16px; border-bottom: 1px solid hsl(var(--border)); padding-bottom: 8px; }
+      .doclib-stats-row { display: flex; justify-content: space-between; font-size: 14px; color: hsl(var(--ink-muted)); padding: 4px 0; }
+      .doclib-stats-val { font-weight: 600; color: hsl(var(--ink)); outline: none; }
+      .doclib-stats-val:empty:before { content: "0"; color: hsl(var(--ink-faint)); }
+      .doclib-stats-refresh { margin-top: 16px; width: 100%; padding: 8px; background: hsl(var(--surface-quiet)); border: 1px solid hsl(var(--border)); border-radius: 4px; font-size: 13px; color: hsl(var(--brand)); cursor: pointer; font-weight: bold; }
     `;
     this.wrapper.appendChild(style);
 

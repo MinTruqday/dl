@@ -46,8 +46,8 @@ export default class DocLibTooltip implements InlineTool {
       const style = document.createElement("style");
       style.id = "doclib-tooltip-styles";
       style.innerHTML = `
-            .cdx-tooltip { border-bottom: 1px dashed #388ae5; cursor: help; background-color: rgba(56, 138, 229, 0.1); }
-            .tooltip-tool__input { display: block; width: 100%; box-sizing: border-box; padding: 5px 10px; border: 1px solid #e1e1e1; margin-top: 5px; }
+            .cdx-tooltip { border-bottom: 1px dashed hsl(var(--brand)); cursor: help; background-color: rgba(56, 138, 229, 0.1); }
+            .tooltip-tool__input { display: block; width: 100%; box-sizing: border-box; padding: 5px 10px; border: 1px solid hsl(var(--border)); margin-top: 5px; }
         `;
       document.head.appendChild(style);
     }

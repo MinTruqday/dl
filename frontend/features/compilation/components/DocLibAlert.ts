@@ -103,7 +103,7 @@ export default class DocLibAlert implements BlockTool {
       button.title = tune.name;
 
       if (this.data.type === tune.name) {
-        button.style.boxShadow = "0 0 0 2px #388ae5";
+        button.style.boxShadow = "0 0 0 2px hsl(var(--brand))";
       }
 
       button.addEventListener("click", () => {
@@ -117,7 +117,7 @@ export default class DocLibAlert implements BlockTool {
         Array.from(wrapper.children).forEach(
           (btn: any) => (btn.style.boxShadow = "none"),
         );
-        button.style.boxShadow = "0 0 0 2px #388ae5";
+        button.style.boxShadow = "0 0 0 2px hsl(var(--brand))";
       });
 
       wrapper.appendChild(button);

@@ -8,8 +8,8 @@ export default function EmptyState({
   compact?: boolean;
 }) {
   return (
-    <div className={`${compact ? "py-12" : "py-24"} flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[18px] w-full animate-in fade-in duration-500`}>
-      <p className="text-[17px] text-[#6E6E73]">{text}</p>
+    <div className={`${compact ? "py-12" : "py-24"} flex flex-col items-center justify-center bg-surface-quiet rounded-panel w-full animate-in fade-in duration-500`}>
+      <p className="text-[17px] text-ink-muted">{text}</p>
     </div>
   );
 }

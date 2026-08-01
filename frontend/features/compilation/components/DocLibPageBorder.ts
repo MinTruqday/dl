@@ -37,7 +37,7 @@ export default class DocLibPageBorder implements BlockTool {
     this.readOnly = !!readOnly;
     this.data = {
       style: data?.style || "solid",
-      color: data?.color || "#0f172a",
+      color: data?.color || "hsl(var(--ink))",
       width: data?.width || "4px",
     };
   }
@@ -48,12 +48,12 @@ export default class DocLibPageBorder implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-page-border-container { position: relative; margin: 32px 0; min-height: 400px; padding: 32px; display: flex; align-items: center; justify-content: center; background: #fff; }
+      .doclib-page-border-container { position: relative; margin: 32px 0; min-height: 400px; padding: 32px; display: flex; align-items: center; justify-content: center; background: hsl(var(--surface)); }
       .doclib-page-border-inner { position: absolute; top: 16px; left: 16px; right: 16px; bottom: 16px; pointer-events: none; }
-      .doclib-page-border-text { font-size: 24px; font-weight: 700; color: #334155; outline: none; text-align: center; z-index: 10; width: 100%; }
-      .doclib-page-border-text:empty::before { content: "DocLib Title"; color: #cbd5e1; pointer-events: none; }
-      .doclib-page-border-controls { display: flex; gap: 8px; margin-top: 16px; background: #f8fafc; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; }
-      .doclib-page-border-input { padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; }
+      .doclib-page-border-text { font-size: 24px; font-weight: 700; color: hsl(var(--ink)); outline: none; text-align: center; z-index: 10; width: 100%; }
+      .doclib-page-border-text:empty::before { content: "DocLib Title"; color: hsl(var(--border)); pointer-events: none; }
+      .doclib-page-border-controls { display: flex; gap: 8px; margin-top: 16px; background: hsl(var(--surface-raised)); padding: 12px; border: 1px solid hsl(var(--border)); border-radius: 8px; }
+      .doclib-page-border-input { padding: 6px; border: 1px solid hsl(var(--border)); border-radius: 4px; outline: none; }
     `;
     this.wrapper.appendChild(style);
 

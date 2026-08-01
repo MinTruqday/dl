@@ -14,7 +14,7 @@ export async function inviteCollaboratorAPI(
     body: JSON.stringify({ document_id: documentId, email, role }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi khởi tạo yêu cầu cộng tác");
+  if (!res.ok) throw new Error(data.message || "Không thể tạo yêu cầu cộng tác");
   return data;
 }
 
@@ -24,7 +24,7 @@ export async function getCollaboratorsAPI(documentId: string) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi trích xuất danh sách tài khoản cộng tác");
+    throw new Error(data.message || "Không thể tải danh sách tài khoản cộng tác");
   return data;
 }
 
@@ -44,7 +44,7 @@ export async function getCollaborationInvitesAPI() {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi trích xuất danh sách yêu cầu chờ xử lý");
+    throw new Error(data.message || "Không thể tải danh sách yêu cầu chờ xử lý");
   return data;
 }
 
@@ -68,13 +68,13 @@ export async function getCollaborationActivitiesAPI(documentId: string) {
   );
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi trích xuất nhật ký hoạt động phiên");
+    throw new Error(data.message || "Không thể tải nhật ký hoạt động phiên");
   return data;
 }
 
 export async function transferOwnershipAPI(documentId: string, userId: string) {
   const res = await fetch(
-    `${API_URL}/cong-tac/tai-lieu/${documentId}/transfer-owner`,
+    `${API_URL}/cong-tac/documents/${documentId}/transfer-ownership`,
     {
       method: "POST",
       headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
@@ -92,7 +92,7 @@ export async function pingCollaborationStatusAPI(documentId: string) {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi đồng bộ tín hiệu nhịp tim kết nối");
+  if (!res.ok) throw new Error(data.message || "Không thể đồng bộ tín hiệu nhịp tim kết nối");
   return data;
 }
 
@@ -105,7 +105,7 @@ export async function getOnlineCollaboratorsAPI(documentId: string) {
   );
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi trích xuất trạng thái hiện diện trực tuyến");
+    throw new Error(data.message || "Không thể tải trạng thái hiện diện trực tuyến");
   return data;
 }
 
@@ -135,7 +135,7 @@ export async function sendMemoAPI(documentId: string, message: string) {
   );
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi khởi tạo bản tin giao tiếp");
+    throw new Error(data.message || "Không thể tạo bản tin giao tiếp");
   return data;
 }
 
@@ -148,7 +148,7 @@ export async function getMemosAPI(documentId: string) {
   );
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi trích xuất luồng dữ liệu giao tiếp");
+    throw new Error(data.message || "Không thể tải luồng dữ liệu giao tiếp");
   return data;
 }
 
@@ -156,27 +156,27 @@ export async function updateCollabAccessAPI(
   documentId: string,
   accessLevel: string,
 ) {
-  const res = await fetch(`${API_URL}/cong-tac/tai-lieu/${documentId}/access`, {
+  const res = await fetch(`${API_URL}/cong-tac/tai-lieu/${documentId}/quyen-truy-cap`, {
     method: "PATCH",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ access_level: accessLevel }),
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi cấu hình tham số bảo mật luồng");
+    throw new Error(data.message || "Không thể cấu hình tham số bảo mật luồng");
   return data;
 }
 
 export async function getSentPendingInvitesAPI(documentId: string) {
   const res = await fetch(
-    `${API_URL}/cong-tac/tai-lieu/${documentId}/loi-moi-da-gui`,
+    `${API_URL}/cong-tac/documents/${documentId}/sent-invitations`,
     {
       headers: getAuthHeaders(),
     },
   );
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi trích xuất danh sách yêu cầu chờ duyệt");
+    throw new Error(data.message || "Không thể tải danh sách yêu cầu chờ duyệt");
   return data;
 }
 
@@ -193,14 +193,14 @@ export async function revokeInviteAPI(inviteId: string) {
 
 export async function getContributionStatsAPI(documentId: string) {
   const res = await fetch(
-    `${API_URL}/cong-tac/tai-lieu/${documentId}/statistics-dong-gop`,
+    `${API_URL}/cong-tac/documents/${documentId}/contribution-stats`,
     {
       headers: getAuthHeaders(),
     },
   );
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi trích xuất số liệu phân tích tần suất đóng góp");
+    throw new Error(data.message || "Không thể tải số liệu phân tích tần suất đóng góp");
   return data;
 }
 
@@ -218,7 +218,7 @@ export async function createSnapshotAPI(
   );
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi kết xuất bản sao phiên làm việc (Snapshot)");
+    throw new Error(data.message || "Không thể xuất bản sao phiên làm việc (Snapshot)");
   return data;
 }
 
@@ -231,7 +231,7 @@ export async function getSnapshotsAPI(documentId: string) {
   );
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi trích xuất bộ sưu tập lịch sử phiên bản");
+    throw new Error(data.message || "Không thể tải bộ sưu tập lịch sử phiên bản");
   return data;
 }
 
@@ -266,7 +266,7 @@ export async function getLockStatusAPI(documentId: string) {
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi trích xuất cờ tín hiệu đồng bộ phiên");
+  if (!res.ok) throw new Error(data.message || "Không thể tải cờ tín hiệu đồng bộ phiên");
   return data;
 }
 
@@ -276,7 +276,7 @@ export async function generateInviteCodeAPI(documentId: string) {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi khởi tạo token xác thực phiên kết nối");
+  if (!res.ok) throw new Error(data.message || "Không thể tạo token xác thực phiên kết nối");
   return data;
 }
 
@@ -297,7 +297,7 @@ export async function createCollabTaskAPI(
   assignedTo: string,
 ) {
   const res = await fetch(
-    `${API_URL}/cong-tac/tai-lieu/${documentId}/nhiem-vu`,
+    `${API_URL}/cong-tac/tai-lieu/${documentId}/cong-viec`,
     {
       method: "POST",
       headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
@@ -306,20 +306,20 @@ export async function createCollabTaskAPI(
   );
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi khởi tạo cấu trúc công việc phân tán");
+    throw new Error(data.message || "Không thể tạo cấu trúc công việc phân tán");
   return data;
 }
 
 export async function getCollabTasksAPI(documentId: string) {
   const res = await fetch(
-    `${API_URL}/cong-tac/tai-lieu/${documentId}/nhiem-vu`,
+    `${API_URL}/cong-tac/tai-lieu/${documentId}/cong-viec`,
     {
       headers: getAuthHeaders(),
     },
   );
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi trích xuất ma trận công việc hiện hành");
+    throw new Error(data.message || "Không thể tải ma trận công việc hiện hành");
   return data;
 }
 
@@ -330,7 +330,7 @@ export async function updateCollabTaskAPI(taskId: string, isDone: boolean) {
     body: JSON.stringify({ is_done: isDone }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi cập nhật cờ trạng thái xử lý tiến trình");
+  if (!res.ok) throw new Error(data.message || "Không thể cập nhật cờ trạng thái xử lý tiến trình");
   return data;
 }
 
@@ -353,7 +353,7 @@ export async function getTaskCommentsAPI(taskId: string) {
   const data = await res.json();
   if (!res.ok)
     throw new Error(
-      data.message || "Lỗi trích xuất chuỗi phản hồi liên kết",
+      data.message || "Không thể tải chuỗi phản hồi liên kết",
     );
   return data;
 }
@@ -364,45 +364,51 @@ export async function createCommentAPI(payload: {
   content: string;
   parent_id?: string | null;
 }) {
-  const res = await fetch(`${API_URL}/cong-tac/binh-luan`, {
+  const res = await fetch(`${API_URL}/soan-thao/${payload.item_id}/binh-luan`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      block_id: payload.parent_id || "document",
+      text: payload.content,
+      selected_text: "",
+    }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi lưu trữ nội dung phản hồi văn bản");
+  if (!res.ok) throw new Error(data.message || "Không thể lưu nội dung phản hồi văn bản");
   return data;
 }
 
 export async function getCommentsByItemAPI(itemId: string) {
-  const res = await fetch(`${API_URL}/cong-tac/binh-luan/muc-tieu/${itemId}`, {
+  const res = await fetch(`${API_URL}/soan-thao/${itemId}/binh-luan`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi trích xuất cấu trúc cây phản hồi");
-  return data;
-}
-
-export async function editCommentAPI(commentId: string, content: string) {
-  const res = await fetch(`${API_URL}/cong-tac/binh-luan/${commentId}`, {
-    method: "PUT",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ content }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi cập nhật cấu trúc dữ liệu phản hồi");
-  return data;
+    throw new Error(data.message || "Không thể tải cấu trúc cây phản hồi");
+  const comments = Array.isArray(data.data) ? data.data : [];
+  return {
+    ...data,
+    data: comments.map((comment: any) => ({
+      ...comment,
+      content: comment.content || comment.text,
+      path: comment.path || "document",
+      author: comment.author || {
+        username: comment.user_name,
+        full_name: comment.user_name,
+      },
+      user: comment.user || {
+        id: comment.user_id,
+        full_name: comment.user_name,
+      },
+    })),
+  };
 }
 
 export async function deleteCommentAPI(commentId: string) {
-  const res = await fetch(
-    `${API_URL}/cong-tac/binh-luan/muc-tieu/${commentId}`,
-    {
-      method: "DELETE",
-      headers: getAuthHeaders(),
-    },
-  );
+  const res = await fetch(`${API_URL}/soan-thao/binh-luan/${commentId}/giai-quyet`, {
+    method: "PUT",
+    headers: getAuthHeaders(),
+  });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Lỗi hủy bỏ node dữ liệu phản hồi");
   return data;

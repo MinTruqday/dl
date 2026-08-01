@@ -43,6 +43,8 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import PageLoader from "@/shared/components/common/PageLoader";
+import { applyForAuthorAPI, deleteMyAccountAPI } from "@/features/management/services/account.service";
+import { removeToken } from "@/features/authentication/services/session.service";
 
 type TabKey =
   | "privacy"
@@ -107,7 +109,7 @@ export default function SettingsPage() {
         setPayoutInfo(user.settings.payout_info || "");
       }
     } catch (err: any) {
-      showToast("Lỗi đồng bộ dữ liệu cấu hình", "error");
+      showToast("Không thể đồng bộ dữ liệu cấu hình", "error");
     }
   }, [user, showToast]);
 
@@ -124,7 +126,7 @@ export default function SettingsPage() {
       refreshUser?.();
       return true;
     } catch (err: any) {
-      showToast("Lỗi cập nhật thay đổi cấu hình", "error");
+      showToast("Không thể cập nhật thay đổi cấu hình", "error");
       return false;
     }
   };
@@ -138,7 +140,7 @@ export default function SettingsPage() {
       });
       showToast("Cập nhật thiết lập quyền riêng tư hoàn tất", "success");
     } catch (err: any) {
-      showToast("Lỗi cập nhật thiết lập quyền riêng tư", "error");
+      showToast("Không thể cập nhật thiết lập quyền riêng tư", "error");
     } finally {
       setLoading(false);
     }
@@ -148,16 +150,7 @@ export default function SettingsPage() {
     if (!motivation) return showToast("Dữ liệu lý do ứng tuyển không được để trống", "error");
     setLoading(true);
     try {
-      const { API_URL, getToken } = await import("@/features/authentication/services/session.service");
-      const res = await fetch(`${API_URL}/ho-so/tac-gia/ung-tuyen`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${getToken()}`
-        },
-        body: JSON.stringify({ motivation, portfolio })
-      });
-      if (!res.ok) throw new Error("Lỗi gửi yêu cầu ứng tuyển tác giả");
+      await applyForAuthorAPI(motivation, portfolio);
       showToast("Gửi yêu cầu ứng tuyển hoàn tất", "success");
       setMotivation("");
       setPortfolio("");
@@ -180,7 +173,7 @@ export default function SettingsPage() {
       );
       setConfirmModal(null);
     } catch (err: any) {
-      showToast("Lỗi cập nhật trạng thái bảo trì", "error");
+      showToast("Không thể cập nhật trạng thái bảo trì", "error");
     } finally {
       setLoading(false);
     }
@@ -199,7 +192,7 @@ export default function SettingsPage() {
       );
       setConfirmModal(null);
     } catch (err: any) {
-      showToast("Lỗi cập nhật trạng thái đăng ký", "error");
+      showToast("Không thể cập nhật trạng thái đăng ký", "error");
     } finally {
       setLoading(false);
     }
@@ -214,7 +207,7 @@ export default function SettingsPage() {
   }) => (
     <button
       onClick={onToggle}
-      className={`w-[50px] h-[30px] rounded-full relative shrink-0 transition-colors duration-300 ${active ? "bg-[#34C759]" : "bg-[#E8E8ED]"}`}
+      className={`w-[50px] h-[30px] rounded-full relative shrink-0 transition-colors duration-300 ${active ? "bg-brand" : "bg-border"}`}
     >
       <div
         className={`absolute top-[2px] w-[26px] h-[26px] bg-white rounded-full transition-transform duration-300 ${active ? "translate-x-[22px]" : "translate-x-[2px]"}`}
@@ -266,14 +259,14 @@ export default function SettingsPage() {
   ].filter((s) => !user || s.roles.includes(user.role));
 
   return (
-    <div className="w-full h-full flex flex-col font-sans text-[#1D1D1F]">
+    <div className="w-full h-full flex flex-col font-sans text-ink">
       <div
         className={`flex flex-col md:flex-row gap-6 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}
         style={{ transitionDelay: "100ms" }}
       >
         <aside className="w-full md:w-[320px] shrink-0 space-y-6 sticky top-0 h-fit">
-          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6">
-            <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
+          <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6">
+            <p className="text-[13px] font-medium text-ink-muted mb-4">
               Danh mục
             </p>
             <nav className="flex flex-col gap-1.5">
@@ -283,7 +276,7 @@ export default function SettingsPage() {
                   <button
                     key={section.id}
                     onClick={() => setActiveSection(section.id as TabKey)}
-                    className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-[10px] transition-colors ${active ? "bg-white text-[#0071E3] font-medium" : "text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}
+                    className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-control transition-colors ${active ? "bg-white text-brand font-medium" : "text-ink hover:bg-border"}`}
                   >
                     <span className="truncate text-left">{section.label}</span>
                     {active && <ChevronRight className="w-4 h-4 shrink-0" />}
@@ -292,16 +285,16 @@ export default function SettingsPage() {
               })}
             </nav>
           </div>
-          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6">
-            <div className="text-[13px] font-medium text-[#6E6E73] mb-4">
+          <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6">
+            <div className="text-[13px] font-medium text-ink-muted mb-4">
               Định danh hiện tại
             </div>
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white rounded-[10px] flex items-center justify-center text-[15px] font-semibold text-[#1D1D1F] uppercase">
+              <div className="w-12 h-12 bg-white rounded-control flex items-center justify-center text-[15px] font-semibold text-ink uppercase">
                 {user?.role?.slice(0, 3)}
               </div>
               <div>
-                <p className="text-[15px] font-medium text-[#1D1D1F]">
+                <p className="text-[15px] font-medium text-ink">
                   {user?.role === "admin"
                     ? "Quản trị viên"
                     : user?.role === "author"
@@ -310,7 +303,7 @@ export default function SettingsPage() {
                           ? "Tác giả tiềm năng"
                           : "Độc giả"}
                 </p>
-                <p className="text-[13px] text-[#6E6E73] mt-0.5">
+                <p className="text-[13px] text-ink-muted mt-0.5">
                   {user?.email || "Chưa định danh"}
                 </p>
               </div>
@@ -319,24 +312,24 @@ export default function SettingsPage() {
         </aside>
 
         <main className="flex-1 min-w-0 xl:col-span-8">
-          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 min-h-[600px]">
+          <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6 min-h-[600px]">
             {activeSection === "privacy" && (
               <div className="space-y-8">
                 <div>
-                  <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-1">
+                  <h2 className="text-[20px] font-semibold text-ink mb-1">
                     Quyền riêng tư
                   </h2>
-                  <p className="text-[15px] text-[#6E6E73]">
+                  <p className="text-[15px] text-ink-muted">
                     Thiết lập khả năng hiển thị cá nhân
                   </p>
                 </div>
-                <div className="bg-white rounded-[18px] divide-y divide-[#E8E8ED]">
+                <div className="bg-white rounded-panel divide-y divide-[hsl(var(--border))]">
                   <div className="p-5 flex items-center justify-between">
                     <div>
-                      <h4 className="text-[17px] font-medium text-[#1D1D1F]">
+                      <h4 className="text-[17px] font-medium text-ink">
                         Chế độ đọc ẩn danh
                       </h4>
-                      <p className="text-[14px] text-[#6E6E73] mt-1">
+                      <p className="text-[14px] text-ink-muted mt-1">
                         Không hiển thị lịch sử đọc trên bảng xếp hạng.
                       </p>
                     </div>
@@ -347,10 +340,10 @@ export default function SettingsPage() {
                   </div>
                   <div className="p-5 flex items-center justify-between">
                     <div>
-                      <h4 className="text-[17px] font-medium text-[#1D1D1F]">
+                      <h4 className="text-[17px] font-medium text-ink">
                         Thư viện nội bộ
                       </h4>
-                      <p className="text-[14px] text-[#6E6E73] mt-1">
+                      <p className="text-[14px] text-ink-muted mt-1">
                         Giới hạn truy cập bộ sưu tập cá nhân.
                       </p>
                     </div>
@@ -379,18 +372,18 @@ export default function SettingsPage() {
             {activeSection === "author" && (
               <div className="space-y-8">
                 <div>
-                  <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-1">
+                  <h2 className="text-[20px] font-semibold text-ink mb-1">
                     Cấu hình Tác giả
                   </h2>
-                  <p className="text-[15px] text-[#6E6E73]">Quản lý sáng tác</p>
+                  <p className="text-[15px] text-ink-muted">Quản lý sáng tác</p>
                 </div>
-                <div className="bg-white rounded-[18px] divide-y divide-[#E8E8ED]">
+                <div className="bg-white rounded-panel divide-y divide-[hsl(var(--border))]">
                   <div className="p-5 flex items-center justify-between">
                     <div>
-                      <h4 className="text-[17px] font-medium text-[#1D1D1F]">
+                      <h4 className="text-[17px] font-medium text-ink">
                         Tự động sao lưu
                       </h4>
-                      <p className="text-[14px] text-[#6E6E73]">
+                      <p className="text-[14px] text-ink-muted">
                         Sao lưu 30 giây.
                       </p>
                     </div>
@@ -405,7 +398,7 @@ export default function SettingsPage() {
                     />
                   </div>
                   <div className="p-5 space-y-3">
-                    <h4 className="text-[17px] font-medium text-[#1D1D1F]">
+                    <h4 className="text-[17px] font-medium text-ink">
                       Trạng thái xuất bản mặc định
                     </h4>
                     <div className="grid grid-cols-2 gap-4">
@@ -418,7 +411,7 @@ export default function SettingsPage() {
                             });
                             if (s) setDefaultVisibility(m);
                           }}
-                          className={`py-3 rounded-[10px] font-medium transition-colors ${defaultVisibility === m ? "bg-[#0071E3] text-white" : "bg-[#F5F5F7] text-[#1D1D1F]"}`}
+                          className={`py-3 rounded-control font-medium transition-colors ${defaultVisibility === m ? "bg-brand text-white" : "bg-surface-quiet text-ink"}`}
                         >
                           {m === "public" ? "Công khai" : "Riêng tư"}
                         </button>
@@ -426,7 +419,7 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   <div className="p-5 space-y-3">
-                    <h4 className="text-[17px] font-medium text-[#1D1D1F]">
+                    <h4 className="text-[17px] font-medium text-ink">
                       Thông tin thụ hưởng
                     </h4>
                     <textarea
@@ -458,17 +451,17 @@ export default function SettingsPage() {
             {activeSection === "admin" && (
               <div className="space-y-8">
                 <div>
-                  <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">
+                  <h2 className="text-[20px] font-semibold text-ink mb-4">
                     Cấu hình hệ thống
                   </h2>
                 </div>
-                <div className="bg-white rounded-[18px] divide-y divide-[#E8E8ED]">
-                  <div className="p-5 flex items-center justify-between bg-[#FFF0F0] rounded-t-[18px]">
+                <div className="bg-white rounded-panel divide-y divide-[hsl(var(--border))]">
+                  <div className="p-5 flex items-center justify-between bg-danger-soft rounded-t-[18px]">
                     <div>
-                      <h4 className="text-[17px] font-medium text-[#FF3B30]">
+                      <h4 className="text-[17px] font-medium text-danger">
                         Bảo trì hệ thống
                       </h4>
-                      <p className="text-[14px] text-[#FF6961]">
+                      <p className="text-[14px] text-danger">
                         Khóa ghi dữ liệu.
                       </p>
                     </div>
@@ -484,7 +477,7 @@ export default function SettingsPage() {
                   </div>
                   <div className="p-5 flex items-center justify-between">
                     <div>
-                      <h4 className="text-[17px] font-medium text-[#1D1D1F]">
+                      <h4 className="text-[17px] font-medium text-ink">
                         Đăng ký mới
                       </h4>
                     </div>
@@ -505,22 +498,22 @@ export default function SettingsPage() {
             {activeSection === "apply_author" && (
               <div className="space-y-8">
                 <div>
-                  <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">
+                  <h2 className="text-[20px] font-semibold text-ink mb-4">
                     Tác giả tiềm năng
                   </h2>
                 </div>
                 {user?.author_status === "pending" ? (
-                  <div className="py-12 text-center bg-white rounded-[18px]">
-                    <Clock className="w-12 h-12 text-[#6E6E73] mx-auto mb-4" />
-                    <p className="text-[15px] font-medium text-[#1D1D1F]">
+                  <div className="py-12 text-center bg-white rounded-panel">
+                    <Clock className="w-12 h-12 text-ink-muted mx-auto mb-4" />
+                    <p className="text-[15px] font-medium text-ink">
                       Đang xem xét
                     </p>
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    <div className="bg-white p-6 rounded-[18px] space-y-4">
+                    <div className="bg-white p-6 rounded-panel space-y-4">
                       <div className="space-y-2">
-                        <label className="text-[13px] font-medium text-[#6E6E73]">
+                        <label className="text-[13px] font-medium text-ink-muted">
                           Lý do
                         </label>
                         <textarea
@@ -530,7 +523,7 @@ export default function SettingsPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[13px] font-medium text-[#6E6E73]">
+                        <label className="text-[13px] font-medium text-ink-muted">
                           Portfolio
                         </label>
                         <input
@@ -560,11 +553,11 @@ export default function SettingsPage() {
             {activeSection === "announcements" && (
               <div className="space-y-8">
                 <div>
-                  <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">
+                  <h2 className="text-[20px] font-semibold text-ink mb-4">
                     Thông báo
                   </h2>
                 </div>
-                <div className="bg-white rounded-[18px] divide-y divide-[#E8E8ED]">
+                <div className="bg-white rounded-panel divide-y divide-[hsl(var(--border))]">
                   {[
                     { id: "notifyCommunity", label: "Cộng đồng" },
                     { id: "notifyFinance", label: "Tài chính" },
@@ -575,13 +568,13 @@ export default function SettingsPage() {
                       className="p-5 flex items-center justify-between"
                     >
                       <div>
-                        <h4 className="text-[17px] font-medium text-[#1D1D1F]">
+                        <h4 className="text-[17px] font-medium text-ink">
                           {item.label}
                         </h4>
                       </div>
                       <div className="flex gap-6">
                         <div className="flex items-center gap-2">
-                          <span className="text-[13px] text-[#6E6E73]">
+                          <span className="text-[13px] text-ink-muted">
                             Email
                           </span>
                           <CustomSwitch
@@ -596,7 +589,7 @@ export default function SettingsPage() {
                           />
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[13px] text-[#6E6E73]">
+                          <span className="text-[13px] text-ink-muted">
                             App
                           </span>
                           <CustomSwitch
@@ -620,39 +613,36 @@ export default function SettingsPage() {
             {activeSection === "account" && (
               <div className="space-y-8">
                 <div>
-                  <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">
+                  <h2 className="text-[20px] font-semibold text-ink mb-4">
                     Tài khoản
                   </h2>
                 </div>
-                <div className="bg-white rounded-[18px] divide-y divide-[#E8E8ED]">
+                <div className="bg-white rounded-panel divide-y divide-[hsl(var(--border))]">
                   <div className="p-5 flex items-center justify-between">
                     <div>
-                      <h4 className="text-[15px] font-medium text-[#1D1D1F]">
+                      <h4 className="text-[15px] font-medium text-ink">
                         Email
                       </h4>
-                      <p className="text-[14px] text-[#6E6E73]">
+                      <p className="text-[14px] text-ink-muted">
                         {user?.email}
                       </p>
                     </div>
                   </div>
                 </div>
-                <div className="bg-[#FFF0F0] rounded-[18px] p-6 mt-8">
-                  <h3 className="text-[17px] font-medium text-[#FF3B30] mb-4">
+                <div className="bg-danger-soft rounded-panel p-6 mt-8">
+                  <h3 className="text-[17px] font-medium text-danger mb-4">
                     Vùng nguy hiểm
                   </h3>
                   <button 
                     onClick={async () => {
-                      if (!confirm("Bạn có chắc chắn muốn xóa tài khoản vĩnh viễn?")) return;
-                      const { API_URL, getToken, removeToken } = await import("@/features/authentication/services/session.service");
+                      if (!confirm("Xác nhận xóa tài khoản vĩnh viễn")) return;
                       try {
-                        const res = await fetch(`${API_URL}/ho-so/xoa-tai-khoan`, { method: "DELETE", headers: { Authorization: `Bearer ${getToken()}` } });
-                        if (res.ok) {
-                          removeToken();
-                          window.location.href = "/dang-nhap";
-                        }
+                        await deleteMyAccountAPI();
+                        removeToken();
+                        window.location.href = "/dang-nhap";
                       } catch(e) {}
                     }}
-                    className="py-2 px-4 bg-[#FF3B30] text-white rounded-[10px] text-[15px] font-medium"
+                    className="py-2 px-4 bg-danger text-white rounded-control text-[15px] font-medium"
                   >
                     Xóa tài khoản
                   </button>
@@ -674,7 +664,7 @@ export default function SettingsPage() {
           </ModalTitle>
         </ModalHeader>
         <ModalContent>
-          <p className="text-[15px] text-[#6E6E73]">
+          <p className="text-[15px] text-ink-muted">
             Bạn chắc chắn thay đổi hệ thống?
           </p>
         </ModalContent>
@@ -682,7 +672,7 @@ export default function SettingsPage() {
           <button
             onClick={() => setConfirmModal(null)}
             disabled={loading}
-            className="px-4 py-2 text-[#0071E3] font-medium rounded-full hover:bg-[#F5F5F7]"
+            className="px-4 py-2 text-brand font-medium rounded-full hover:bg-surface-quiet"
           >
             Hủy
           </button>

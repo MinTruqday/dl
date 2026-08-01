@@ -88,7 +88,7 @@ export default class DocLibGlow implements BlockTool {
     const image = element?.closest<HTMLImageElement>("img") || block?.querySelector<HTMLImageElement>("img");
     if (image) {
       image.dataset.wordEffect = this.mode;
-      image.style.filter = "drop-shadow(0 0 8px #2563eb)";
+      image.style.filter = "drop-shadow(0 0 8px hsl(var(--brand)))";
       image.dispatchEvent(new InputEvent("input", { bubbles: true }));
       return;
     }

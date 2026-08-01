@@ -36,7 +36,7 @@ function bytesToB64url(bytes: ArrayBuffer): string {
 function GoogleIcon() {
   return (
     <svg
-      className="w-5 h-5 text-[#1D1D1F]"
+      className="w-5 h-5 text-ink"
       viewBox="0 0 24 24"
       fill="currentColor"
     >
@@ -96,10 +96,10 @@ export default function LoginPage() {
       const verify = await passkeyLoginFinishAPI(inputEmail, credentialJSON);
 
       await loginState(verify.access_token || verify);
-      showToast("Xác thực chứng thư số Passkey hợp lệ", "success");
+      showToast("Đã đăng nhập bằng Passkey", "success");
       router.push("/kham-pha");
     } catch (err: any) {
-      showToast(err.message || "Lỗi xác thực định danh chứng thư số", "error");
+      showToast(err.message || "Không thể đăng nhập bằng Passkey", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -117,11 +117,11 @@ export default function LoginPage() {
         setIsSubmitting(false);
       } else {
         await loginState(res.access_token || res);
-        showToast("Xác thực thông tin đăng nhập hợp lệ", "success");
+        showToast("Đã đăng nhập", "success");
         router.push("/kham-pha");
       }
     } catch (err: any) {
-      showToast(err.message || "Lỗi sai lệch thông tin định danh hệ thống", "error");
+      showToast(err.message || "Email hoặc mật khẩu không đúng", "error");
       setIsSubmitting(false);
     }
   };
@@ -142,24 +142,21 @@ export default function LoginPage() {
 
           <div className="auth-panel">
             <div className="text-center mb-8">
-              <h1 className="text-[28px] font-semibold text-[#1D1D1F] tracking-tight">
+              <h1 className="text-[28px] font-semibold text-ink tracking-tight">
                 Đăng nhập
               </h1>
-              <p className="mt-2 text-[15px] text-[#6E6E73]">
-                Chào mừng trở lại! Vui lòng nhập thông tin.
-              </p>
             </div>
 
             <form className="space-y-5" onSubmit={handleLogin}>
               <div>
                 <label
                   htmlFor="email"
-                  className="block text-[13px] font-medium text-[#6E6E73] mb-2 ml-1"
+                  className="block text-[13px] font-medium text-ink-muted mb-2 ml-1"
                 >
                   Tài khoản
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6E6E73]" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-ink-muted" />
                   <input
                     id="email"
                     name="email"
@@ -179,12 +176,12 @@ export default function LoginPage() {
               <div>
                 <label
                   htmlFor="password"
-                  className="block text-[13px] font-medium text-[#6E6E73] mb-2 ml-1"
+                  className="block text-[13px] font-medium text-ink-muted mb-2 ml-1"
                 >
                   Mật khẩu
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6E6E73]" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-ink-muted" />
                   <input
                     id="password"
                     name="password"
@@ -199,8 +196,9 @@ export default function LoginPage() {
                   />
                   <button
                     type="button"
+                    aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#6E6E73]"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-ink-muted"
                   >
                     {showPassword ? (
                       <EyeOff className="w-5 h-5" />
@@ -217,20 +215,20 @@ export default function LoginPage() {
                     id="remember-me"
                     name="remember-me"
                     type="checkbox"
-                    className="h-4 w-4 accent-[#0071E3] rounded cursor-pointer"
+                    className="h-4 w-4 accent-[hsl(var(--brand))] rounded cursor-pointer"
                   />
                   <label
                     htmlFor="remember-me"
-                    className="ml-2 block text-[13px] text-[#1D1D1F]"
+                    className="ml-2 block text-[13px] text-ink"
                   >
                     Ghi nhớ phiên
                   </label>
                 </div>
                 <a
                   href="/quen-mat-khau"
-                  className="text-[13px] font-medium text-[#0071E3] hover:text-[#0055C6]"
+                  className="text-[13px] font-medium text-brand hover:text-brand-hover"
                 >
-                  Quên mật khẩu?
+                  Quên mật khẩu
                 </a>
               </div>
 
@@ -247,9 +245,9 @@ export default function LoginPage() {
             </form>
 
             <div className="mt-7 flex items-center justify-center gap-3">
-              <div className="h-px bg-[#D2D2D7] flex-1" />
-              <span className="text-[13px] text-[#6E6E73]">Hoặc</span>
-              <div className="h-px bg-[#D2D2D7] flex-1" />
+              <div className="h-px bg-border flex-1" />
+              <span className="text-[13px] text-ink-muted">Hoặc</span>
+              <div className="h-px bg-border flex-1" />
             </div>
 
             <div className="mt-7 grid grid-cols-2 gap-3">
@@ -258,16 +256,16 @@ export default function LoginPage() {
                 onClick={async () => {
                   if (!email) {
                     showToast(
-                      "Lỗi thiếu hụt trường địa chỉ email cho định danh chứng thư số",
+                      "Nhập email để dùng Passkey",
                       "error",
                     );
                     return;
                   }
                   await completePasskeyLogin(email);
                 }}
-                className="w-full inline-flex justify-center items-center py-3 border border-[#D2D2D7] rounded-[10px] bg-white text-[15px] font-medium text-[#1D1D1F] gap-2 hover:bg-[#F5F5F7] transition-colors"
+                className="w-full inline-flex justify-center items-center py-3 border border-border rounded-control bg-white text-[15px] font-medium text-ink gap-2 hover:bg-surface-quiet transition-colors"
               >
-                <KeyRound className="w-5 h-5 text-[#1D1D1F]" />
+                <KeyRound className="w-5 h-5 text-ink" />
                 Passkey
               </button>
               <button
@@ -277,10 +275,10 @@ export default function LoginPage() {
                     const url = await getGoogleLoginUrlAPI();
                     window.location.href = url;
                   } catch (err: any) {
-                    showToast("Lỗi kết nối điểm cuối định danh Google", "error");
+                    showToast("Không thể kết nối với Google", "error");
                   }
                 }}
-                className="w-full inline-flex justify-center items-center py-3 border border-[#D2D2D7] rounded-[10px] bg-white text-[15px] font-medium text-[#1D1D1F] gap-2 hover:bg-[#F5F5F7] transition-colors"
+                className="w-full inline-flex justify-center items-center py-3 border border-border rounded-control bg-white text-[15px] font-medium text-ink gap-2 hover:bg-surface-quiet transition-colors"
               >
                 <GoogleIcon />
                 Google
@@ -288,11 +286,11 @@ export default function LoginPage() {
             </div>
 
             <div className="mt-8 text-center">
-              <p className="text-[15px] text-[#6E6E73]">
-                Chưa có tài khoản?{" "}
+              <p className="text-[15px] text-ink-muted">
+                Chưa có tài khoản{" "}
                 <a
                   href="/dang-ky"
-                  className="font-medium text-[#0071E3] hover:text-[#0055C6]"
+                  className="font-medium text-brand hover:text-brand-hover"
                 >
                   Đăng ký ngay
                 </a>

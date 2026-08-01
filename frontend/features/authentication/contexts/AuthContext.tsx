@@ -4,6 +4,7 @@ import {
   getUserMe,
   getToken,
   removeToken,
+  logoutAPI,
 } from "@/features/authentication/services/session.service";
 import { useRouter, usePathname } from "next/navigation";
 
@@ -23,7 +24,7 @@ interface AuthProps {
   isAuthenticated: boolean;
   isLoading: boolean;
   loginState: (token: string) => Promise<void>;
-  logoutState: () => void;
+  logoutState: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthProps | undefined>(undefined);
@@ -75,9 +76,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   };
 
-  const logoutState = () => {
+  const logoutState = async () => {
+    try {
+      await logoutAPI();
+    } finally {
     clearAuth();
     router.push("/dang-nhap");
+    }
   };
 
   return (

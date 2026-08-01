@@ -80,14 +80,14 @@ export default function ReportsManagementPage() {
   if (user?.role !== "admin")
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-56px)] gap-6 font-sans text-center">
-        <div className="w-24 h-24 bg-[#F5F5F7] flex items-center justify-center rounded-[18px]">
-          <ShieldAlert className="w-10 h-10 text-[#FF3B30]" />
+        <div className="w-24 h-24 bg-surface-quiet flex items-center justify-center rounded-panel">
+          <ShieldAlert className="w-10 h-10 text-danger" />
         </div>
         <div className="space-y-2 max-w-[300px]">
-          <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
+          <p className="text-[13px] font-medium text-ink-muted mb-4">
             Truy cập bị hạn chế
           </p>
-          <p className="text-[15px] text-[#6E6E73]">
+          <p className="text-[15px] text-ink-muted">
             Bạn không có quyền quản trị để truy cập trang này.
           </p>
         </div>
@@ -99,17 +99,17 @@ export default function ReportsManagementPage() {
   ).length;
 
   return (
-    <div className="w-full h-full font-sans text-[#1D1D1F] flex flex-col gap-6">
+    <div className="w-full h-full font-sans text-ink flex flex-col gap-6">
       <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-0">
         <aside className="w-full md:w-[320px] shrink-0 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
-          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
-            <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
+          <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
+            <p className="text-[13px] font-medium text-ink-muted mb-4">
               Giao diện
             </p>
             <button
               onClick={fetchData}
               disabled={isRefreshing}
-              className="w-full py-2 rounded-[10px] bg-white  text-[#1D1D1F] font-medium text-[14px] hover:bg-[#F5F5F7] transition-colors flex items-center justify-center gap-2"
+              className="w-full py-2 rounded-control bg-white  text-ink font-medium text-[14px] hover:bg-surface-quiet transition-colors flex items-center justify-center gap-2"
             >
               {isRefreshing ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -120,20 +120,20 @@ export default function ReportsManagementPage() {
         </aside>
 
         <main className="flex-1 min-w-0 flex flex-col min-h-0 pt-6">
-          <div className="bg-[#F5F5F7] rounded-[18px] flex-1 overflow-hidden flex flex-col min-h-0">
-            <div className="flex items-center justify-between p-6 bg-[#F5F5F7]/30">
+          <div className="bg-surface-quiet rounded-panel flex-1 overflow-hidden flex flex-col min-h-0">
+            <div className="flex items-center justify-between p-6 bg-surface-quiet/30">
               <div className="flex items-center gap-3">
-                <h2 className="text-[20px] font-medium text-[#1D1D1F]">
+                <h2 className="text-[20px] font-medium text-ink">
                   Hàng đợi báo cáo
                 </h2>
                 {pendingCount > 0 && (
-                  <span className="px-3 py-1 bg-[#FF3B30]/10 text-[#FF3B30] text-[13px] font-medium rounded-full flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-[#FF3B30] animate-pulse"></div>
+                  <span className="px-3 py-1 bg-danger/10 text-danger text-[13px] font-medium rounded-full flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-danger animate-pulse"></div>
                     {pendingCount} chờ xử lý
                   </span>
                 )}
               </div>
-              <span className="text-[13px] text-[#6E6E73] font-medium">
+              <span className="text-[13px] text-ink-muted font-medium">
                 Tổng: {reports.length}
               </span>
             </div>
@@ -141,7 +141,7 @@ export default function ReportsManagementPage() {
             <div className="overflow-y-auto no-scrollbar flex-1 p-2">
               <table className="w-full text-left text-[14px] border-collapse">
                 <thead>
-                  <tr className="text-[13px] text-[#6E6E73]">
+                  <tr className="text-[13px] text-ink-muted">
                     <th className="py-3 px-6 font-medium w-[20%]">Đối tượng</th>
                     <th className="py-3 px-6 font-medium w-[30%]">
                       Nội dung báo cáo
@@ -162,13 +162,13 @@ export default function ReportsManagementPage() {
                     <tr>
                       <td colSpan={5} className="py-24 text-center">
                         <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
-                          <div className="w-16 h-16 bg-[#F5F5F7] rounded-[16px] flex items-center justify-center mb-4">
-                            <FileWarning className="w-8 h-8 text-[#C7C7CC]" />
+                          <div className="w-16 h-16 bg-surface-quiet rounded-panel flex items-center justify-center mb-4">
+                            <FileWarning className="w-8 h-8 text-ink-faint" />
                           </div>
-                          <h2 className="text-[20px] font-medium text-[#1D1D1F] mb-1">
+                          <h2 className="text-[20px] font-medium text-ink mb-1">
                             {searchQuery ? "Không tìm thấy" : "Chưa có báo cáo"}
                           </h2>
-                          <p className="text-[17px] text-[#6E6E73]">
+                          <p className="text-[17px] text-ink-muted">
                             {searchQuery
                               ? "Vui lòng thử từ khóa khác."
                               : "Hệ thống hiện không có vi phạm nào."}
@@ -180,33 +180,33 @@ export default function ReportsManagementPage() {
                     filteredReports.map((r) => (
                       <tr
                         key={r.id}
-                        className="hover:bg-[#F5F5F7] transition-colors group"
+                        className="hover:bg-surface-quiet transition-colors group"
                       >
                         <td className="py-3 px-6">
                           <div className="flex flex-col gap-1">
-                            <span className="text-[12px] bg-[#E8E8ED] text-[#6E6E73] px-2 py-0.5 rounded-md w-fit font-medium">
+                            <span className="text-[12px] bg-border text-ink-muted px-2 py-0.5 rounded-md w-fit font-medium">
                               {r.target_type || "Nội dung"}
                             </span>
-                            <span className="text-[13px] text-[#6E6E73] font-mono truncate max-w-[150px]">
+                            <span className="text-[13px] text-ink-muted font-mono truncate max-w-[150px]">
                               {r.target_id}
                             </span>
                           </div>
                         </td>
                         <td className="py-3 px-6 max-w-sm">
                           <div className="flex flex-col gap-1">
-                            <span className="font-medium text-[#1D1D1F]">
+                            <span className="font-medium text-ink">
                               {r.reason}
                             </span>
-                            <p className="text-[13px] text-[#6E6E73] line-clamp-2">
+                            <p className="text-[13px] text-ink-muted line-clamp-2">
                               "{r.description || "Không có mô tả chi tiết."}"
                             </p>
                           </div>
                         </td>
                         <td className="py-3 px-6">
-                          <span className="font-medium text-[#1D1D1F]">
+                          <span className="font-medium text-ink">
                             {r.reporter_name || "Ẩn danh"}
                           </span>
-                          <p className="text-[12px] text-[#6E6E73] mt-0.5">
+                          <p className="text-[12px] text-ink-muted mt-0.5">
                             {r.created_at
                               ? new Date(r.created_at).toLocaleDateString(
                                   "vi-VN",
@@ -216,16 +216,16 @@ export default function ReportsManagementPage() {
                         </td>
                         <td className="py-3 px-6">
                           {r.status === "RESOLVED" ? (
-                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#E8F5E9] text-[#34C759] rounded-full text-[12px] font-medium">
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-brand-soft text-brand rounded-full text-[12px] font-medium">
                               <CheckCircle2 className="w-3.5 h-3.5" /> Đã xử lý
                             </div>
                           ) : r.status === "DISMISSED" ? (
-                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#F5F5F7] text-[#6E6E73] rounded-full text-[12px] font-medium">
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-surface-quiet text-ink-muted rounded-full text-[12px] font-medium">
                               <XCircle className="w-3.5 h-3.5" /> Đã bỏ qua
                             </div>
                           ) : (
-                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FFF4E5] text-[#FF9500] rounded-full text-[12px] font-medium">
-                              <div className="w-2 h-2 rounded-full bg-[#FF9500] animate-pulse"></div>{" "}
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-warning-soft text-warning rounded-full text-[12px] font-medium">
+                              <div className="w-2 h-2 rounded-full bg-warning animate-pulse"></div>{" "}
                               Đang chờ
                             </div>
                           )}
@@ -241,7 +241,7 @@ export default function ReportsManagementPage() {
                                     action: "DISMISSED",
                                   })
                                 }
-                                className="px-3 py-1.5 text-[13px] font-medium text-[#6E6E73] bg-white  hover:bg-[#F5F5F7] rounded-[10px] transition-colors"
+                                className="px-3 py-1.5 text-[13px] font-medium text-ink-muted bg-white  hover:bg-surface-quiet rounded-control transition-colors"
                               >
                                 Bỏ qua
                               </button>
@@ -252,13 +252,13 @@ export default function ReportsManagementPage() {
                                     action: "RESOLVED",
                                   })
                                 }
-                                className="px-3 py-1.5 text-[13px] font-medium text-white bg-[#0071E3] hover:bg-[#0077ED] rounded-[10px] transition-colors"
+                                className="px-3 py-1.5 text-[13px] font-medium text-white bg-brand hover:bg-brand rounded-control transition-colors"
                               >
                                 Xử lý
                               </button>
                             </div>
                           ) : (
-                            <span className="text-[#A1A1A6]">--</span>
+                            <span className="text-ink-faint">--</span>
                           )}
                         </td>
                       </tr>
@@ -279,21 +279,21 @@ export default function ReportsManagementPage() {
           <ModalTitle className="flex items-center gap-2">
             {confirmModal?.action === "RESOLVED" ? (
               <>
-                <AlertOctagon className="w-5 h-5 text-[#FF3B30]" /> Xác nhận xử
+                <AlertOctagon className="w-5 h-5 text-danger" /> Xác nhận xử
                 lý
               </>
             ) : (
               <>
-                <XCircle className="w-5 h-5 text-[#6E6E73]" /> Xác nhận bỏ qua
+                <XCircle className="w-5 h-5 text-ink-muted" /> Xác nhận bỏ qua
               </>
             )}
           </ModalTitle>
         </ModalHeader>
         <ModalContent>
-          <div className="bg-[#F5F5F7] p-4 rounded-[16px] border-[#E8E8ED] mb-4 font-mono text-[13px] text-[#6E6E73]">
+          <div className="bg-surface-quiet p-4 rounded-panel border border-border mb-4 font-mono text-[13px] text-ink-muted">
             ID: {confirmModal?.reportId}
           </div>
-          <p className="text-[14px] text-[#6E6E73] leading-relaxed">
+          <p className="text-[14px] text-ink-muted leading-relaxed">
             {confirmModal?.action === "RESOLVED"
               ? "Bạn có chắc chắn muốn xử lý vi phạm này? Tác giả sẽ nhận được cảnh báo."
               : "Bạn muốn bỏ qua báo cáo này? Nội dung sẽ vẫn hiển thị bình thường."}
@@ -303,14 +303,14 @@ export default function ReportsManagementPage() {
           <button
             onClick={() => !isProcessing && setConfirmModal(null)}
             disabled={isProcessing}
-            className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full disabled:opacity-50"
+            className="px-5 py-2 text-brand font-medium hover:bg-surface-quiet rounded-full disabled:opacity-50"
           >
             Hủy
           </button>
           <button
             onClick={confirmResolve}
             disabled={isProcessing}
-            className={`pill-button disabled:opacity-50 flex items-center gap-2 ${confirmModal?.action === "RESOLVED" ? "bg-[#FF3B30] hover:bg-[#D70015]" : ""}`}
+            className={`pill-button disabled:opacity-50 flex items-center gap-2 ${confirmModal?.action === "RESOLVED" ? "bg-danger hover:bg-danger" : ""}`}
           >
             {isProcessing && <Loader2 className="w-4 h-4 animate-spin" />} Xác
             nhận

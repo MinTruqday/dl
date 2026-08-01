@@ -11,7 +11,7 @@ export async function getPrivacySettingsAPI() {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi trích xuất cấu hình quyền riêng tư");
+    throw new Error(data.message || "Không thể tải cấu hình quyền riêng tư");
   return data;
 }
 
@@ -28,14 +28,14 @@ export async function updatePrivacySettingsAPI(settings: any) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi cập nhật cấu hình quyền riêng tư");
+    throw new Error(data.message || "Không thể cập nhật cấu hình quyền riêng tư");
   return data;
 }
 
 export async function updateTypographyAPI(typography: any) {
   const token = getToken();
   if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
-  const res = await fetch(`${API_URL}/doc-hieu/giao-dien`, {
+  const res = await fetch(`${API_URL}/ho-so/cai-dat`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -44,7 +44,7 @@ export async function updateTypographyAPI(typography: any) {
     body: JSON.stringify(typography),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi cập nhật cấu hình giao diện hiển thị");
+  if (!res.ok) throw new Error(data.message || "Không thể cập nhật cấu hình giao diện hiển thị");
   return data;
 }
 
@@ -61,7 +61,7 @@ export async function updateGeneralSettingsAPI(settings: any) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi cập nhật cấu hình hệ thống");
+    throw new Error(data.message || "Không thể cập nhật cấu hình hệ thống");
   return data;
 }
 

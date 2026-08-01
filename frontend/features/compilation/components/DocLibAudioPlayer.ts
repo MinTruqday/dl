@@ -56,18 +56,18 @@ export default class DocLibAudioPlayer implements BlockTool {
       const style = document.createElement("style");
       style.id = "doclib-audio-player-styles";
       style.innerHTML = `
-            .doclib-ap-wrapper { border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; padding: 16px; margin: 16px 0; display: flex; align-items: center; gap: 16px; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1); }
-            .doclib-ap-cover { width: 80px; height: 80px; border-radius: 8px; object-fit: cover; background: #f1f5f9; cursor: pointer; flex-shrink: 0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+            .doclib-ap-wrapper { border: 1px solid hsl(var(--border)); border-radius: 12px; background: hsl(var(--surface)); padding: 16px; margin: 16px 0; display: flex; align-items: center; gap: 16px; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1); }
+            .doclib-ap-cover { width: 80px; height: 80px; border-radius: 8px; object-fit: cover; background: hsl(var(--surface-quiet)); cursor: pointer; flex-shrink: 0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
             .doclib-ap-info { flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-            .doclib-ap-title { font-weight: 700; font-size: 1.1em; color: #0f172a; outline: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-            .doclib-ap-title:empty::before { content: 'DocLib Title'; color: #94a3b8; pointer-events: none; }
-            .doclib-ap-artist { font-size: 0.9em; color: #64748b; outline: none; }
-            .doclib-ap-artist:empty::before { content: 'DocLib Name'; color: #94a3b8; pointer-events: none; }
+            .doclib-ap-title { font-weight: 700; font-size: 1.1em; color: hsl(var(--ink)); outline: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .doclib-ap-title:empty::before { content: 'DocLib Title'; color: hsl(var(--ink-faint)); pointer-events: none; }
+            .doclib-ap-artist { font-size: 0.9em; color: hsl(var(--ink-muted)); outline: none; }
+            .doclib-ap-artist:empty::before { content: 'DocLib Name'; color: hsl(var(--ink-faint)); pointer-events: none; }
             .doclib-ap-controls { display: flex; flex-direction: column; gap: 8px; width: 100%; margin-top: 8px; }
             .doclib-ap-audio { width: 100%; height: 32px; }
             .doclib-ap-inputs { display: flex; flex-direction: column; gap: 8px; width: 100%; }
-            .doclib-ap-edit-btn { position: absolute; right: 16px; top: 16px; background: transparent; border: none; color: #94a3b8; cursor: pointer; }
-            .doclib-ap-edit-btn:hover { color: #0f172a; }
+            .doclib-ap-edit-btn { position: absolute; right: 16px; top: 16px; background: transparent; border: none; color: hsl(var(--ink-faint)); cursor: pointer; }
+            .doclib-ap-edit-btn:hover { color: hsl(var(--ink)); }
         `;
       document.head.appendChild(style);
     }

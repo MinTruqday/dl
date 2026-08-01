@@ -38,7 +38,7 @@ export async function getAuthorRevenueAPI() {
   });
   const data = await res.json();
   if (!res.ok) {
-    throw new Error(data.detail || data.message || "Lỗi trích xuất số liệu doanh thu");
+    throw new Error(data.detail || data.message || "Không thể tải số liệu doanh thu");
   }
   return data;
 }
@@ -59,7 +59,7 @@ export async function setDocumentPricingAPI(
   });
   const data = await res.json();
   if (!res.ok) {
-    throw new Error(data.detail || data.message || "Lỗi cập nhật cấu hình định giá");
+    throw new Error(data.detail || data.message || "Không thể cập nhật cấu hình định giá");
   }
   return data;
 }

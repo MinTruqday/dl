@@ -46,9 +46,9 @@ export default class DocLibSectionBreak implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-sbreak { border-top: 2px dashed #94a3b8; margin: 32px 0; position: relative; text-align: center; }
-      .doclib-sbreak-label { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: #fff; padding: 0 12px; font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 0.1em; }
-      .doclib-sbreak-select { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); padding: 4px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; background: #f8fafc; }
+      .doclib-sbreak { border-top: 2px dashed hsl(var(--ink-faint)); margin: 32px 0; position: relative; text-align: center; }
+      .doclib-sbreak-label { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: hsl(var(--surface)); padding: 0 12px; font-size: 11px; font-weight: 700; color: hsl(var(--ink-muted)); letter-spacing: 0.1em; }
+      .doclib-sbreak-select { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); padding: 4px; font-size: 12px; border: 1px solid hsl(var(--border)); border-radius: 4px; outline: none; background: hsl(var(--surface-raised)); }
     `;
     this.wrapper.appendChild(style);
 

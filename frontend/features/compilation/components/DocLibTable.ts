@@ -46,12 +46,12 @@ export default class DocLibTable implements BlockTool {
       style.id = "doclib-table-styles";
       style.innerHTML = `
         .doclib-table-wrapper { width: 100%; margin: 16px 0; overflow-x: auto; }
-        .doclib-table { width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0; }
-        .doclib-table td { border: 1px solid #e2e8f0; padding: 8px 12px; min-width: 100px; outline: none; }
-        .doclib-table td:empty::before { content: ''; color: #cbd5e1; }
+        .doclib-table { width: 100%; border-collapse: collapse; border: 1px solid hsl(var(--border)); }
+        .doclib-table td { border: 1px solid hsl(var(--border)); padding: 8px 12px; min-width: 100px; outline: none; }
+        .doclib-table td:empty::before { content: ''; color: hsl(var(--border)); }
         .doclib-table-controls { display: flex; gap: 8px; margin-top: 8px; justify-content: flex-end; }
-        .doclib-table-btn { padding: 4px 8px; font-size: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; cursor: pointer; color: #475569; }
-        .doclib-table-btn:hover { background: #e2e8f0; }
+        .doclib-table-btn { padding: 4px 8px; font-size: 12px; background: hsl(var(--surface-raised)); border: 1px solid hsl(var(--border)); border-radius: 4px; cursor: pointer; color: hsl(var(--ink-muted)); }
+        .doclib-table-btn:hover { background: hsl(var(--border)); }
       `;
       document.head.appendChild(style);
     }

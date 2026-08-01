@@ -68,7 +68,7 @@ export default function WalletPage() {
       const txList = historyRes.data ?? historyRes ?? [];
       setHistory(Array.isArray(txList) ? txList : []);
     } catch (error) {
-      showToast("Lỗi trích xuất dữ liệu ví điện tử", "error");
+      showToast("Không thể tải dữ liệu ví điện tử", "error");
     } finally {
       setIsLoading(false);
       requestAnimationFrame(() => setVisible(true));
@@ -94,7 +94,7 @@ export default function WalletPage() {
         console.error("Deposit response:", res);
       }
     } catch (e: any) {
-      showToast(e.message || "Lỗi khởi tạo giao dịch nạp tiền", "error");
+      showToast(e.message || "Không thể tạo giao dịch nạp tiền", "error");
     } finally {
       setTopupLoading(false);
     }
@@ -140,7 +140,7 @@ export default function WalletPage() {
       setShowWithdrawModal(false);
       fetchWalletData();
     } catch (e: any) {
-      showToast(e.message || "Lỗi thực thi giao dịch rút tiền", "error");
+      showToast(e.message || "Không thể thực hiện giao dịch rút tiền", "error");
     } finally {
       setWithdrawLoading(false);
     }
@@ -151,12 +151,12 @@ export default function WalletPage() {
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-56px)] gap-6 px-6 text-center">
-        <div className="w-20 h-20 bg-[#F5F5F7] rounded-[18px] flex items-center justify-center">
-          <AlertCircle className="w-8 h-8 text-[#6E6E73]" />
+        <div className="w-20 h-20 bg-surface-quiet rounded-panel flex items-center justify-center">
+          <AlertCircle className="w-8 h-8 text-ink-muted" />
         </div>
         <div>
-          <p className="text-[13px] font-medium text-[#6E6E73] mb-4">Truy cập bị hạn chế</p>
-          <p className="text-[15px] text-[#6E6E73] mt-2">Đăng nhập để quản lý ví cá nhân</p>
+          <p className="text-[13px] font-medium text-ink-muted mb-4">Truy cập bị hạn chế</p>
+          <p className="text-[15px] text-ink-muted mt-2">Đăng nhập để quản lý ví cá nhân</p>
         </div>
         <button onClick={() => (window.location.href = "/dang-nhap")} className="pill-button">
           Đăng nhập
@@ -166,7 +166,7 @@ export default function WalletPage() {
   }
 
   return (
-    <div className="w-full h-full flex flex-col font-sans text-[#1D1D1F]">
+    <div className="w-full h-full flex flex-col font-sans text-ink">
 
       <Modal
         isOpen={showTopupModal}
@@ -180,29 +180,29 @@ export default function WalletPage() {
         <ModalHeader>
           <ModalTitle>{checkoutUrl ? "Thanh toán đang chờ xác nhận" : "Nạp tiền"}</ModalTitle>
           {!checkoutUrl && (
-            <p className="text-[13px] text-[#6E6E73] mt-1">Chọn mệnh giá nạp (VNĐ)</p>
+            <p className="text-[13px] text-ink-muted mt-1">Chọn mệnh giá nạp (VNĐ)</p>
           )}
         </ModalHeader>
         <ModalContent>
           {checkoutUrl ? (
             <div className="space-y-5 text-center">
-              <div className="w-16 h-16 bg-[#EBF4FF] rounded-full flex items-center justify-center mx-auto">
-                <ExternalLink className="w-8 h-8 text-[#0071E3]" />
+              <div className="w-16 h-16 bg-brand-soft rounded-full flex items-center justify-center mx-auto">
+                <ExternalLink className="w-8 h-8 text-brand" />
               </div>
               <div>
-                <p className="text-[17px] font-semibold text-[#1D1D1F]">Trang thanh toán đã mở</p>
-                <p className="text-[14px] text-[#6E6E73] mt-2">
+                <p className="text-[17px] font-semibold text-ink">Trang thanh toán đã mở</p>
+                <p className="text-[14px] text-ink-muted mt-2">
                   Hoàn tất thanh toán trên trang PayOS, sau đó nhấn <strong>Xác nhận hoàn tất</strong> để cập nhật số dư.
                 </p>
               </div>
-              <div className="bg-[#F5F5F7] rounded-[12px] p-4 text-left">
-                <p className="text-[13px] text-[#6E6E73]">Số tiền nạp</p>
-                <p className="text-[20px] font-bold text-[#1D1D1F]">{topupAmount.toLocaleString()} ₫</p>
-                <p className="text-[12px] text-[#6E6E73] mt-1">≈ {(topupAmount / 1000).toFixed(0)} dl</p>
+              <div className="bg-surface-quiet rounded-panel p-4 text-left">
+                <p className="text-[13px] text-ink-muted">Số tiền nạp</p>
+                <p className="text-[20px] font-bold text-ink">{topupAmount.toLocaleString()} ₫</p>
+                <p className="text-[12px] text-ink-muted mt-1">≈ {(topupAmount / 1000).toFixed(0)} dl</p>
               </div>
               <button
                 onClick={handleOpenPayment}
-                className="w-full flex items-center justify-center gap-2 py-3 text-[15px] text-[#0071E3] font-medium rounded-[10px] border border-[#D2D2D7] hover:bg-[#F5F5F7] transition-colors"
+                className="w-full flex items-center justify-center gap-2 py-3 text-[15px] text-brand font-medium rounded-control border border-border hover:bg-surface-quiet transition-colors"
               >
                 <ExternalLink className="w-4 h-4" />
                 Mở lại trang thanh toán
@@ -215,10 +215,10 @@ export default function WalletPage() {
                   <button
                     key={amt}
                     onClick={() => setTopupAmount(amt)}
-                    className={`py-3 text-[15px] font-medium rounded-[10px] transition-colors border ${
+                    className={`py-3 text-[15px] font-medium rounded-control transition-colors border ${
                       topupAmount === amt
-                        ? "bg-[#0071E3] text-white border-[#0071E3]"
-                        : "bg-white text-[#0071E3] border-[#D2D2D7] hover:bg-[#E8E8ED]"
+                        ? "bg-brand text-white border-brand"
+                        : "bg-white text-brand border-border hover:bg-border"
                     }`}
                   >
                     {amt.toLocaleString()} ₫
@@ -234,9 +234,9 @@ export default function WalletPage() {
                   min={10000}
                   step={10000}
                 />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[15px] text-[#6E6E73]">₫</span>
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[15px] text-ink-muted">₫</span>
               </div>
-              <p className="text-[13px] text-[#6E6E73] text-center">1.000 VNĐ = 1 dl</p>
+              <p className="text-[13px] text-ink-muted text-center">1.000 VNĐ = 1 dl</p>
             </div>
           )}
         </ModalContent>
@@ -245,7 +245,7 @@ export default function WalletPage() {
             <>
               <button
                 onClick={() => setCheckoutUrl(null)}
-                className="px-4 py-2 text-[#6E6E73] font-medium rounded-full hover:bg-[#F5F5F7] transition-colors"
+                className="px-4 py-2 text-ink-muted font-medium rounded-full hover:bg-surface-quiet transition-colors"
               >
                 Quay lại
               </button>
@@ -261,7 +261,7 @@ export default function WalletPage() {
               <button
                 onClick={() => setShowTopupModal(false)}
                 disabled={topupLoading}
-                className="px-4 py-2 text-[#0071E3] font-medium rounded-full hover:bg-[#F5F5F7] transition-colors"
+                className="px-4 py-2 text-brand font-medium rounded-full hover:bg-surface-quiet transition-colors"
               >
                 Hủy
               </button>
@@ -283,12 +283,12 @@ export default function WalletPage() {
       >
         <ModalHeader>
           <ModalTitle>Rút thu nhập</ModalTitle>
-          <p className="text-[13px] text-[#6E6E73] mt-1">1 dl = 1.000 VNĐ · Phí 2% · Tối thiểu 50 dl (50.000 VNĐ)</p>
+          <p className="text-[13px] text-ink-muted mt-1">1 dl = 1.000 VNĐ · Phí 2% · Tối thiểu 50 dl (50.000 VNĐ)</p>
         </ModalHeader>
         <ModalContent>
           <div className="space-y-4">
             <div>
-              <label className="block text-[13px] font-medium text-[#6E6E73] mb-1.5">
+              <label className="block text-[13px] font-medium text-ink-muted mb-1.5">
                 Số dl muốn rút
               </label>
               <div className="relative">
@@ -300,16 +300,16 @@ export default function WalletPage() {
                   min={50}
                   className="apple-input w-full pr-12"
                 />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[14px] text-[#6E6E73] font-medium">dl</span>
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[14px] text-ink-muted font-medium">dl</span>
               </div>
               {withdrawAmount && parseInt(withdrawAmount) >= 50 && (
-                <p className="text-[12px] text-[#34C759] mt-1">
+                <p className="text-[12px] text-brand mt-1">
                   ≈ {(parseInt(withdrawAmount) * 980).toLocaleString()} VNĐ (sau phí 2%)
                 </p>
               )}
             </div>
             <div>
-              <label className="block text-[13px] font-medium text-[#6E6E73] mb-1.5">Tên ngân hàng</label>
+              <label className="block text-[13px] font-medium text-ink-muted mb-1.5">Tên ngân hàng</label>
               <input
                 type="text"
                 value={bankName}
@@ -319,7 +319,7 @@ export default function WalletPage() {
               />
             </div>
             <div>
-              <label className="block text-[13px] font-medium text-[#6E6E73] mb-1.5">Số tài khoản</label>
+              <label className="block text-[13px] font-medium text-ink-muted mb-1.5">Số tài khoản</label>
               <input
                 type="text"
                 value={bankAccount}
@@ -329,7 +329,7 @@ export default function WalletPage() {
               />
             </div>
             <div>
-              <label className="block text-[13px] font-medium text-[#6E6E73] mb-1.5">Tên chủ tài khoản</label>
+              <label className="block text-[13px] font-medium text-ink-muted mb-1.5">Tên chủ tài khoản</label>
               <input
                 type="text"
                 value={accountHolder}
@@ -338,11 +338,11 @@ export default function WalletPage() {
                 className="apple-input w-full"
               />
             </div>
-            <div className="bg-[#EBF4FF] p-4 rounded-[10px]">
-              <h4 className="text-[13px] font-semibold text-[#0071E3] flex items-center gap-1.5 mb-2">
+            <div className="bg-brand-soft p-4 rounded-control">
+              <h4 className="text-[13px] font-semibold text-brand flex items-center gap-1.5 mb-2">
                 <Info className="w-4 h-4" /> Lưu ý
               </h4>
-              <ul className="text-[12px] text-[#0055C6] list-disc list-inside space-y-1">
+              <ul className="text-[12px] text-brand-hover list-disc list-inside space-y-1">
                 <li>Xử lý trong vòng 24-48 giờ làm việc</li>
                 <li>Kiểm tra kỹ thông tin ngân hàng trước khi gửi</li>
                 <li>Số dư sẽ bị trừ ngay, hoàn lại nếu bị từ chối</li>
@@ -354,7 +354,7 @@ export default function WalletPage() {
           <button
             onClick={() => setShowWithdrawModal(false)}
             disabled={withdrawLoading}
-            className="px-4 py-2 text-[#0071E3] font-medium rounded-full hover:bg-[#F5F5F7] transition-colors"
+            className="px-4 py-2 text-brand font-medium rounded-full hover:bg-surface-quiet transition-colors"
           >
             Hủy
           </button>
@@ -379,15 +379,15 @@ export default function WalletPage() {
         className={`flex flex-col md:flex-row gap-6 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}
       >
         <aside className="w-full md:w-[280px] shrink-0 space-y-6">
-          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 text-center">
-            <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">Số dư khả dụng</h2>
+          <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6 text-center">
+            <h2 className="text-[20px] font-semibold text-ink mb-4">Số dư khả dụng</h2>
             <div className="flex items-baseline justify-center gap-1">
-              <span className="text-[48px] font-bold tracking-tight text-[#1D1D1F]">
+              <span className="text-[48px] font-bold tracking-tight text-ink">
                 {isLoading ? "Đang tải" : balance.toLocaleString()}
               </span>
-              <span className="text-[20px] font-medium text-[#6E6E73]">dl</span>
+              <span className="text-[20px] font-medium text-ink-muted">dl</span>
             </div>
-            <p className="text-[13px] text-[#6E6E73] mt-1">
+            <p className="text-[13px] text-ink-muted mt-1">
               ≈ {isLoading ? "Đang tải" : (balance * 1000).toLocaleString()} VNĐ
             </p>
             <div className="flex flex-col gap-3 mt-8">
@@ -400,7 +400,7 @@ export default function WalletPage() {
               {(user?.role === "author" || user?.role === "admin") && (
                 <button
                   onClick={() => setShowWithdrawModal(true)}
-                  className="py-3 bg-white text-[#0071E3] font-medium rounded-full border border-[#D2D2D7] hover:bg-[#E8E8ED] transition-colors"
+                  className="py-3 bg-white text-brand font-medium rounded-full border border-border hover:bg-border transition-colors"
                 >
                   Rút tiền
                 </button>
@@ -410,21 +410,21 @@ export default function WalletPage() {
         </aside>
 
         <main className="flex-1 min-w-0">
-          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 min-h-[500px]">
+          <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6 min-h-[500px]">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-[20px] font-semibold text-[#1D1D1F]">Lịch sử giao dịch</h2>
-              <span className="px-3 py-1 bg-[#E8E8ED] text-[#1D1D1F] text-[13px] font-medium rounded-full">
+              <h2 className="text-[20px] font-semibold text-ink">Lịch sử giao dịch</h2>
+              <span className="px-3 py-1 bg-border text-ink text-[13px] font-medium rounded-full">
                 {history.length} mục
               </span>
             </div>
 
             {isLoading ? (
               <div className="py-24 flex justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-[#6E6E73]" />
+                <Loader2 className="w-8 h-8 animate-spin text-ink-muted" />
               </div>
             ) : history.length === 0 ? (
-              <div className="py-24 flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[18px] w-full text-center">
-                <p className="text-[17px] text-[#6E6E73]">Chưa có giao dịch nào</p>
+              <div className="py-24 flex flex-col items-center justify-center bg-surface-quiet rounded-panel w-full text-center">
+                <p className="text-[17px] text-ink-muted">Chưa có giao dịch nào</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -434,33 +434,33 @@ export default function WalletPage() {
                   return (
                     <div
                       key={tx._id}
-                      className="flex items-center justify-between p-4 bg-white rounded-[16px] hover:bg-[#FAFAFA] transition-colors"
+                      className="flex items-center justify-between p-4 bg-white rounded-panel hover:bg-surface-raised transition-colors"
                     >
                       <div className="flex items-center gap-4">
                         <div
                           className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${
-                            isIn ? "bg-[#E3F2E1] text-[#34C759]" : "bg-[#F5F5F7] text-[#6E6E73]"
+                            isIn ? "bg-brand-soft text-brand" : "bg-surface-quiet text-ink-muted"
                           }`}
                         >
                           {isIn ? <ArrowDownLeft className="w-5 h-5" /> : <ArrowUpRight className="w-5 h-5" />}
                         </div>
                         <div>
-                          <p className="text-[15px] font-medium text-[#1D1D1F]">
+                          <p className="text-[15px] font-medium text-ink">
                             {tx.note || (tx.type === "TOPUP" ? "Nạp tiền" : tx.type === "WITHDRAW" ? "Rút tiền" : "Giao dịch")}
                           </p>
-                          <p className="text-[13px] text-[#6E6E73]">
+                          <p className="text-[13px] text-ink-muted">
                             {new Date(tx.created_at).toLocaleString("vi-VN")}
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className={`text-[17px] font-semibold ${isIn ? "text-[#34C759]" : "text-[#1D1D1F]"}`}>
+                        <p className={`text-[17px] font-semibold ${isIn ? "text-brand" : "text-ink"}`}>
                           {isIn ? "+" : "-"}{displayAmount.toLocaleString()} dl
                         </p>
-                        <p className="text-[12px] text-[#6E6E73] flex items-center justify-end gap-1.5 mt-0.5">
+                        <p className="text-[12px] text-ink-muted flex items-center justify-end gap-1.5 mt-0.5">
                           <span
                             className={`w-1.5 h-1.5 rounded-full ${
-                              tx.status === "COMPLETED" ? "bg-[#34C759]" : "bg-[#FF9500]"
+                              tx.status === "COMPLETED" ? "bg-brand" : "bg-warning"
                             }`}
                           />
                           {tx.status === "COMPLETED" ? "Hoàn tất" : "Đang xử lý"}

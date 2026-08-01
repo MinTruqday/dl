@@ -48,15 +48,15 @@ export default class DocLibPrintPreview implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-print { display: flex; gap: 24px; padding: 24px; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; margin: 16px 0; max-width: 600px; font-family: sans-serif; }
+      .doclib-print { display: flex; gap: 24px; padding: 24px; border: 1px solid hsl(var(--border)); border-radius: 8px; background: hsl(var(--surface-raised)); margin: 16px 0; max-width: 600px; font-family: sans-serif; }
       .doclib-print-settings { flex: 1; display: flex; flex-direction: column; gap: 16px; }
-      .doclib-print-title { font-size: 16px; font-weight: bold; color: #1e293b; margin-bottom: 8px; }
+      .doclib-print-title { font-size: 16px; font-weight: bold; color: hsl(var(--ink)); margin-bottom: 8px; }
       .doclib-print-field { display: flex; flex-direction: column; gap: 4px; }
-      .doclib-print-label { font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; }
-      .doclib-print-select { padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; background: #fff; outline: none; font-size: 14px; }
-      .doclib-print-preview { width: 150px; display: flex; align-items: center; justify-content: center; border-left: 1px dashed #cbd5e1; padding-left: 24px; }
-      .doclib-print-paper { background: #fff; border: 1px solid #94a3b8; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: all 0.3s ease; position: relative; }
-      .doclib-print-paper::after { content: "DocLib Print"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #cbd5e1; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+      .doclib-print-label { font-size: 12px; font-weight: 600; color: hsl(var(--ink-muted)); text-transform: uppercase; }
+      .doclib-print-select { padding: 8px; border: 1px solid hsl(var(--border)); border-radius: 4px; background: hsl(var(--surface)); outline: none; font-size: 14px; }
+      .doclib-print-preview { width: 150px; display: flex; align-items: center; justify-content: center; border-left: 1px dashed hsl(var(--border)); padding-left: 24px; }
+      .doclib-print-paper { background: hsl(var(--surface)); border: 1px solid hsl(var(--ink-faint)); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: all 0.3s ease; position: relative; }
+      .doclib-print-paper::after { content: "DocLib Print"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: hsl(var(--border)); font-size: 10px; font-weight: bold; text-transform: uppercase; }
     `;
     this.wrapper.appendChild(style);
 
@@ -160,9 +160,9 @@ export default class DocLibPrintPreview implements BlockTool {
       paper.style.borderStyle = "solid";
       paper.style.borderColor = "transparent";
       paper.style.backgroundClip = "content-box";
-      paper.style.backgroundColor = "#e2e8f0";
+      paper.style.backgroundColor = "hsl(var(--border))";
       paper.style.boxShadow =
-        "0 0 0 1px #94a3b8 inset, 0 4px 6px -1px rgba(0,0,0,0.1)";
+        "0 0 0 1px hsl(var(--ink-faint)) inset, 0 4px 6px -1px rgba(0,0,0,0.1)";
     };
 
     updatePreview();

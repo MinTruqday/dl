@@ -75,25 +75,25 @@ export default class DocLibChart implements BlockTool {
       const style = document.createElement("style");
       style.id = "doclib-chart-styles";
       style.innerHTML = `
-        .doclib-chart-wrapper { border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px; background: #fff; margin: 16px 0; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+        .doclib-chart-wrapper { border: 1px solid hsl(var(--border)); border-radius: 8px; padding: 24px; background: hsl(var(--surface)); margin: 16px 0; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
         .doclib-chart-canvas-container { width: 100%; height: 400px; display: flex; justify-content: center; align-items: center; margin-bottom: 24px; }
-        .doclib-chart-config { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; padding: 16px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .doclib-chart-config { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; padding: 16px; background: hsl(var(--surface-raised)); border-radius: 8px; border: 1px solid hsl(var(--border)); }
         .doclib-chart-config-item { display: flex; flex-direction: column; gap: 4px; }
-        .doclib-chart-config-label { font-size: 12px; font-weight: 600; color: #475569; }
-        .doclib-chart-config-input { padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; font-size: 13px; }
-        .doclib-chart-config-check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #475569; font-weight: 500; cursor: pointer; }
-        .doclib-chart-editor { width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; font-size: 13px; overflow-x: auto; }
-        .doclib-chart-row { display: flex; border-bottom: 1px solid #e2e8f0; min-width: fit-content; }
+        .doclib-chart-config-label { font-size: 12px; font-weight: 600; color: hsl(var(--ink-muted)); }
+        .doclib-chart-config-input { padding: 6px; border: 1px solid hsl(var(--border)); border-radius: 4px; outline: none; font-size: 13px; }
+        .doclib-chart-config-check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: hsl(var(--ink-muted)); font-weight: 500; cursor: pointer; }
+        .doclib-chart-editor { width: 100%; border: 1px solid hsl(var(--border)); border-radius: 8px; overflow: hidden; font-size: 13px; overflow-x: auto; }
+        .doclib-chart-row { display: flex; border-bottom: 1px solid hsl(var(--border)); min-width: fit-content; }
         .doclib-chart-row:last-child { border-bottom: none; }
-        .doclib-chart-cell { flex: 1; padding: 8px; border-right: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; min-width: 120px; flex-direction: column; gap: 4px; }
-        .doclib-chart-cell.header { background: #f8fafc; font-weight: 600; color: #475569; flex-direction: row; }
+        .doclib-chart-cell { flex: 1; padding: 8px; border-right: 1px solid hsl(var(--border)); display: flex; align-items: center; justify-content: center; min-width: 120px; flex-direction: column; gap: 4px; }
+        .doclib-chart-cell.header { background: hsl(var(--surface-raised)); font-weight: 600; color: hsl(var(--ink-muted)); flex-direction: row; }
         .doclib-chart-input { width: 100%; border: none; outline: none; background: transparent; text-align: center; }
         .doclib-chart-color-picker { width: 24px; height: 24px; padding: 0; border: none; cursor: pointer; border-radius: 4px; }
         .doclib-chart-btn-group { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-        .doclib-chart-btn { padding: 6px 12px; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 4px; background: #fff; cursor: pointer; color: #475569; font-weight: 500; transition: background 0.2s; }
-        .doclib-chart-btn:hover { background: #f1f5f9; }
-        .doclib-chart-btn.danger { color: #ef4444; border-color: #fca5a5; }
-        .doclib-chart-btn.danger:hover { background: #fef2f2; }
+        .doclib-chart-btn { padding: 6px 12px; font-size: 13px; border: 1px solid hsl(var(--border)); border-radius: 4px; background: hsl(var(--surface)); cursor: pointer; color: hsl(var(--ink-muted)); font-weight: 500; transition: background 0.2s; }
+        .doclib-chart-btn:hover { background: hsl(var(--surface-quiet)); }
+        .doclib-chart-btn.danger { color: hsl(var(--danger)); border-color: #fca5a5; }
+        .doclib-chart-btn.danger:hover { background: hsl(var(--danger-soft)); }
       `;
       document.head.appendChild(style);
     }
@@ -215,7 +215,7 @@ export default class DocLibChart implements BlockTool {
           });
         } catch (e) {
           canvasContainer.innerHTML =
-            '<span style="color:#ef4444; font-weight: 500;">Error rendering Chart.js</span>';
+            '<span style="color:hsl(var(--danger)); font-weight: 500;">Error rendering Chart.js</span>';
         }
       };
 
@@ -334,7 +334,7 @@ export default class DocLibChart implements BlockTool {
         colorPicker.classList.add("doclib-chart-color-picker");
         colorPicker.value = ds.backgroundColor
           ? ds.backgroundColor.slice(0, 7)
-          : "#3b82f6";
+          : "hsl(var(--brand))";
         colorPicker.title = "Pick dataset color";
         colorPicker.addEventListener("input", () => {
           ds.backgroundColor = colorPicker.value + "99";

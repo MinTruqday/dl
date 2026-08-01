@@ -53,17 +53,17 @@ export default class DocLibImage implements BlockTool {
             .doclib-image-wrapper { text-align: center; margin: 16px 0; }
             .doclib-image-container { position: relative; border-radius: 8px; overflow: hidden; display: inline-block; max-width: 100%; transition: all 0.3s; line-height: 0; }
             .doclib-image-img { max-width: 100%; display: block; border-radius: inherit; }
-            .doclib-image-caption { outline: none; text-align: center; color: #64748b; font-size: 0.9em; padding: 8px 4px 4px 4px; }
-            .doclib-image-caption:empty::before { content: 'DocLib Input'; color: #94a3b8; pointer-events: none; }
-            .doclib-image-container.with-border { border: 2px solid #e2e8f0; }
-            .doclib-image-container.with-background { padding: 24px; background: #f1f5f9; border-radius: 12px; }
+            .doclib-image-caption { outline: none; text-align: center; color: hsl(var(--ink-muted)); font-size: 0.9em; padding: 8px 4px 4px 4px; }
+            .doclib-image-caption:empty::before { content: 'DocLib Input'; color: hsl(var(--ink-faint)); pointer-events: none; }
+            .doclib-image-container.with-border { border: 2px solid hsl(var(--border)); }
+            .doclib-image-container.with-background { padding: 24px; background: hsl(var(--surface-quiet)); border-radius: 12px; }
             .doclib-image-container.stretched { width: 100%; display: block; }
             .doclib-image-container.stretched .doclib-image-img { width: 100%; }
-            .doclib-image-uploader { display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px dashed #cbd5e1; border-radius: 12px; padding: 48px; background: #f8fafc; cursor: pointer; transition: all 0.2s; color: #475569; }
-            .doclib-image-uploader:hover { background: #f1f5f9; border-color: #94a3b8; }
+            .doclib-image-uploader { display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px dashed hsl(var(--border)); border-radius: 12px; padding: 48px; background: hsl(var(--surface-raised)); cursor: pointer; transition: all 0.2s; color: hsl(var(--ink-muted)); }
+            .doclib-image-uploader:hover { background: hsl(var(--surface-quiet)); border-color: hsl(var(--ink-faint)); }
             .doclib-image-uploader input[type="file"] { display: none; }
-            .doclib-image-icon { color: #94a3b8; margin-bottom: 12px; transition: color 0.2s; }
-            .doclib-image-uploader:hover .doclib-image-icon { color: #64748b; }
+            .doclib-image-icon { color: hsl(var(--ink-faint)); margin-bottom: 12px; transition: color 0.2s; }
+            .doclib-image-uploader:hover .doclib-image-icon { color: hsl(var(--ink-muted)); }
         `;
       document.head.appendChild(style);
     }

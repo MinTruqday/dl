@@ -182,7 +182,7 @@ export default function DocumentsPage() {
         setDocuments((prev) => (isLoadMore ? [...prev, ...docs] : docs));
         if (!isLoadMore) setFolders(foldersData.data || foldersData || []);
       } catch (err: any) {
-        showToast("Lỗi trích xuất danh sách tài liệu từ hệ thống", "error");
+        showToast("Không thể tải danh sách tài liệu từ hệ thống", "error");
       } finally {
         if (requestId === requestIdRef.current) {
           isRefreshingRef.current = false;
@@ -303,7 +303,7 @@ export default function DocumentsPage() {
         await deleteAuthorDocumentAPI(
           createdDoc.data._id || createdDoc.data.id,
         ).catch(() => {});
-        throw new Error("Lỗi truyền tải tệp tin lên hệ thống lưu trữ đám mây");
+        throw new Error("Không thể truyền tệp tin lên hệ thống lưu trữ đám mây");
       }
       showToast("Khởi tạo tài liệu mới hoàn tất", "success");
       setCreateDocModal(false);
@@ -324,7 +324,7 @@ export default function DocumentsPage() {
       setFile(null);
       fetchData();
     } catch (err: any) {
-      showToast(err.message || "Lỗi thực thi nghiệp vụ tài liệu", "error");
+      showToast(err.message || "Không thể thực hiện nghiệp vụ tài liệu", "error");
     } finally {
       setIsCreating(false);
     }
@@ -339,7 +339,7 @@ export default function DocumentsPage() {
       setFolderName("");
       fetchData();
     } catch (err: any) {
-      showToast("Lỗi khởi tạo thư mục lưu trữ", "error");
+      showToast("Không thể tạo thư mục lưu trữ", "error");
     }
   };
   const executeDelete = async () => {
@@ -367,7 +367,7 @@ export default function DocumentsPage() {
       setLockPassword("");
       fetchData();
     } catch (err: any) {
-      showToast("Lỗi cấu hình bảo mật tài liệu", "error");
+      showToast("Không thể cấu hình bảo mật tài liệu", "error");
     }
   };
   const handleShareSubmit = async (e: React.FormEvent) => {
@@ -383,14 +383,14 @@ export default function DocumentsPage() {
       await toggleStarDocumentAPI(id);
       fetchData();
     } catch (err: any) {
-      showToast("Lỗi cập nhật trạng thái dữ liệu", "error");
+      showToast("Không thể cập nhật trạng thái dữ liệu", "error");
     }
   };
 
   if (authLoading || isLoading) return <PageLoader />;
 
   return (
-    <div className="w-full h-full font-sans text-[#1D1D1F]">
+    <div className="w-full h-full font-sans text-ink">
       <input
         type="file"
         ref={fileInputRef}
@@ -399,14 +399,14 @@ export default function DocumentsPage() {
       />
       <div className="flex flex-col md:flex-row">
         <aside className="w-full md:w-[240px] shrink-0 space-y-6 sticky top-0 h-fit mb-6 md:mb-0 md:mr-6">
-          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6">
-            <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
+          <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6">
+            <p className="text-[13px] font-medium text-ink-muted mb-4">
               Phân loại
             </p>
             <nav className="flex flex-col gap-1.5">
               <button
                 onClick={() => { setViewMode("list"); setFilterStar(false); setFilterFormat("all"); }}
-                className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-[10px] transition-colors bg-white text-[#0071E3] font-medium`}
+                className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-control transition-colors bg-white text-brand font-medium`}
               >
                 <span className="truncate text-left">Tất cả tài liệu</span>
                 <ChevronRight className="w-4 h-4 shrink-0" />
@@ -414,15 +414,15 @@ export default function DocumentsPage() {
             </nav>
           </div>
 
-          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-2">
-            <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
+          <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6 space-y-2">
+            <p className="text-[13px] font-medium text-ink-muted mb-4">
               Lọc định dạng
             </p>
             <div className="relative">
               <select
                 value={filterFormat}
                 onChange={(e) => setFilterFormat(e.target.value)}
-                className="w-full h-[44px] bg-[#F5F5F7] md:bg-white px-4 text-[14px] font-medium focus:outline-none focus:border-[#0071E3] appearance-none rounded-[10px] border border-transparent focus:bg-white transition-colors"
+                className="w-full h-[44px] bg-surface-quiet md:bg-white px-4 text-[14px] font-medium focus:outline-none focus:border-brand appearance-none rounded-control border border-transparent focus:bg-white transition-colors"
               >
                 <option value="all">Mọi định dạng</option>
                 <option value="pdf">PDF</option>
@@ -431,14 +431,14 @@ export default function DocumentsPage() {
                 <option value="pptx">PowerPoint</option>
                 <option value="zip">ZIP</option>
               </select>
-              <ChevronRight className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none rotate-90 text-[#6E6E73]" />
+              <ChevronRight className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none rotate-90 text-ink-muted" />
             </div>
           </div>
         </aside>
 
         <main className="flex-1 min-w-0 space-y-8 pt-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <h2 className="flex items-center gap-2 text-[20px] font-semibold text-[#1D1D1F]">
+            <h2 className="flex items-center gap-2 text-[20px] font-semibold text-ink">
               {!currentFolder && breadcrumbs.length === 0 ? (
                 <span>Gốc</span>
               ) : (
@@ -448,11 +448,11 @@ export default function DocumentsPage() {
                       setCurrentFolder(null);
                       setBreadcrumbs([]);
                     }}
-                    className={`flex items-center gap-1 transition-colors hover:text-[#1D1D1F] text-[#6E6E73]`}
+                    className={`flex items-center gap-1 transition-colors hover:text-ink text-ink-muted`}
                   >
                     Gốc
                   </button>
-                  <ChevronRight className="w-5 h-5 text-[#A1A1A6]" />
+                  <ChevronRight className="w-5 h-5 text-ink-faint" />
                   {breadcrumbs.map((crumb, idx) => (
                     <div key={idx} className="flex items-center gap-2">
                       <button
@@ -461,12 +461,12 @@ export default function DocumentsPage() {
                           setBreadcrumbs(nb);
                           setCurrentFolder(nb[nb.length - 1]);
                         }}
-                        className={`flex items-center gap-1 transition-colors ${idx === breadcrumbs.length - 1 ? "text-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}
+                        className={`flex items-center gap-1 transition-colors ${idx === breadcrumbs.length - 1 ? "text-ink" : "text-ink-muted hover:text-ink"}`}
                       >
                         {crumb.name}
                       </button>
                       {idx < breadcrumbs.length - 1 && (
-                        <ChevronRight className="w-5 h-5 text-[#A1A1A6]" />
+                        <ChevronRight className="w-5 h-5 text-ink-faint" />
                       )}
                     </div>
                   ))}
@@ -477,7 +477,7 @@ export default function DocumentsPage() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => fetchData()}
-                  className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors"
+                  className="p-2 bg-surface-quiet text-ink hover:bg-border rounded-full transition-colors"
                   title="Làm mới"
                 >
                   {isRefreshing ? (
@@ -488,14 +488,14 @@ export default function DocumentsPage() {
                 </button>
                 <button
                   onClick={() => setCreateFolderModal(true)}
-                  className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors"
+                  className="p-2 bg-surface-quiet text-ink hover:bg-border rounded-full transition-colors"
                   title="Thêm thư mục mới"
                 >
                   <FolderPlus className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setCreateDocModal(true)}
-                  className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors"
+                  className="p-2 bg-surface-quiet text-ink hover:bg-border rounded-full transition-colors"
                   title="Thêm tài liệu"
                 >
                   <Plus className="w-4 h-4" />
@@ -509,16 +509,16 @@ export default function DocumentsPage() {
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            className={`w-full overflow-x-auto min-h-[400px] transition-colors rounded-[18px] ${isDraggingOver ? "border-2 border-dashed border-[#0071E3] bg-[#0071E3]/5" : ""}`}
+            className={`w-full overflow-x-auto min-h-[400px] transition-colors rounded-panel ${isDraggingOver ? "border-2 border-dashed border-brand bg-brand/5" : ""}`}
           >
             {isLoading ? (
               <div className="flex justify-center items-center py-20">
-                <Loader2 className="w-8 h-8 animate-spin text-[#6E6E73]" />
+                <Loader2 className="w-8 h-8 animate-spin text-ink-muted" />
               </div>
             ) : viewMode === "list" ? (
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="text-[13px] text-[#6E6E73] border-b border-[#E8E8ED]">
+                  <tr className="text-[13px] text-ink-muted border-b border-border">
                     <th className="py-3 px-6 font-medium text-left">Tên</th>
                     <th className="py-3 px-6 font-medium text-center hidden md:table-cell">Thể loại</th>
                     <th className="py-3 px-6 font-medium text-center hidden md:table-cell">Bảo mật</th>
@@ -530,8 +530,8 @@ export default function DocumentsPage() {
                   {folders.length === 0 && documents.length === 0 ? (
                     <tr>
                       <td colSpan={5}>
-                        <div className="py-24 flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[18px] w-full text-center my-4">
-                          <p className="text-[17px] text-[#6E6E73]">Chưa có dữ liệu</p>
+                        <div className="py-24 flex flex-col items-center justify-center bg-surface-quiet rounded-panel w-full text-center my-4">
+                          <p className="text-[17px] text-ink-muted">Chưa có dữ liệu</p>
                         </div>
                       </td>
                     </tr>
@@ -544,7 +544,7 @@ export default function DocumentsPage() {
                             setCurrentFolder(folder);
                             setBreadcrumbs([...breadcrumbs, folder]);
                           }}
-                          className="hover:bg-[#E8E8ED]/60 transition-colors cursor-pointer group border-b border-[#F5F5F7] last:border-0"
+                          className="hover:bg-border/60 transition-colors cursor-pointer group border-b border-surface-quiet last:border-0"
                         >
                           <td className="py-3 px-6 max-w-[300px]">
                             <div className="flex items-center gap-3">
@@ -554,29 +554,29 @@ export default function DocumentsPage() {
                                   setCurrentFolder(folder);
                                   setBreadcrumbs([...breadcrumbs, folder]);
                                 }}
-                                className="font-medium text-[#1D1D1F] hover:text-[#0071E3] truncate text-left"
+                                className="font-medium text-ink hover:text-brand truncate text-left"
                               >
                                 {folder.name}
                               </button>
                             </div>
                           </td>
                           <td className="py-3 px-6 text-center hidden md:table-cell">
-                            <span className="text-[12px] bg-[#F5F5F7] text-[#6E6E73] px-3 py-1 rounded-full font-medium">Thư mục</span>
+                            <span className="text-[12px] bg-surface-quiet text-ink-muted px-3 py-1 rounded-full font-medium">Thư mục</span>
                           </td>
-                          <td className="py-3 px-6 text-center hidden md:table-cell text-[#6E6E73]">--</td>
-                          <td className="py-3 px-6 text-center hidden md:table-cell text-[#6E6E73]">--</td>
+                          <td className="py-3 px-6 text-center hidden md:table-cell text-ink-muted">--</td>
+                          <td className="py-3 px-6 text-center hidden md:table-cell text-ink-muted">--</td>
                           <td className="py-3 px-6 text-right">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setConfirmModal({
                                   show: true,
-                                  title: "Xóa thư mục?",
+                                  title: "Xóa thư mục",
                                   docId: folder._id,
                                   type: "folder",
                                 });
                               }}
-                              className="p-2 text-[#6E6E73] hover:text-[#FF3B30] hover:bg-[#FF3B30]/10 rounded-full opacity-0 group-hover:opacity-100 transition-all"
+                              className="p-2 text-ink-muted hover:text-danger hover:bg-danger/10 rounded-full opacity-0 group-hover:opacity-100 transition-all"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -587,33 +587,33 @@ export default function DocumentsPage() {
                         <tr
                           key={doc._id || doc.id}
                           onClick={() => window.open(`/tai-lieu/xem-truoc/${doc._id || doc.id}`, "_blank")}
-                          className="hover:bg-[#E8E8ED]/60 transition-colors cursor-pointer group border-b border-[#F5F5F7] last:border-0"
+                          className="hover:bg-border/60 transition-colors cursor-pointer group border-b border-surface-quiet last:border-0"
                         >
                           <td className="py-3 px-6 max-w-[300px]">
                             <div className="flex items-center gap-3">
                               <div className="flex flex-col min-w-0">
                                 <div className="flex items-center gap-2 flex-1 min-w-0">
-                                  {doc.is_starred && <Star className="w-4 h-4 text-[#FF9500] fill-[#FF9500] shrink-0" />}
-                                  <p className="font-medium text-[#1D1D1F] hover:text-[#0071E3] truncate">{doc.title}</p>
+                                  {doc.is_starred && <Star className="w-4 h-4 text-warning fill-warning shrink-0" />}
+                                  <p className="font-medium text-ink hover:text-brand truncate">{doc.title}</p>
                                 </div>
-                                <p className="text-[12px] text-[#6E6E73] mt-0.5">{doc.publisher_name || "DocLib"}</p>
+                                <p className="text-[12px] text-ink-muted mt-0.5">{doc.publisher_name || "DocLib"}</p>
                               </div>
                             </div>
                           </td>
                           <td className="py-3 px-6 text-center hidden md:table-cell">
-                            <span className="text-[13px] text-[#6E6E73]">{doc.category || "Tài liệu"}</span>
+                            <span className="text-[13px] text-ink-muted">{doc.category || "Tài liệu"}</span>
                           </td>
                           <td className="py-3 px-6 text-center hidden md:table-cell">
                             {doc.is_protected ? (
-                              <span className="inline-flex items-center justify-center gap-1 text-[13px] text-[#1D1D1F] bg-[#F5F5F7] px-3 py-1 rounded-full">
+                              <span className="inline-flex items-center justify-center gap-1 text-[13px] text-ink bg-surface-quiet px-3 py-1 rounded-full">
                                 <Lock className="w-3 h-3" /> Đã khóa
                               </span>
                             ) : (
-                              <span className="text-[13px] text-[#6E6E73]">Không</span>
+                              <span className="text-[13px] text-ink-muted">Không</span>
                             )}
                           </td>
                           <td className="py-3 px-6 text-center hidden md:table-cell">
-                            <span className={`text-[12px] px-3 py-1 rounded-full font-medium inline-block ${doc.status === "published" ? "bg-[#E8F3FF] text-[#0071E3]" : "bg-[#F5F5F7] text-[#6E6E73]"}`}>
+                            <span className={`text-[12px] px-3 py-1 rounded-full font-medium inline-block ${doc.status === "published" ? "bg-brand-soft text-brand" : "bg-surface-quiet text-ink-muted"}`}>
                               {doc.status === "published" ? "Đã đăng" : "Bản nháp"}
                             </span>
                           </td>
@@ -621,19 +621,19 @@ export default function DocumentsPage() {
                             <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                               <button
                                 onClick={(e) => { e.stopPropagation(); toggleStar(doc._id || doc.id); }}
-                                className={`p-2 rounded-full transition-colors ${doc.is_starred ? "text-[#FF9500] bg-[#FF9500]/10" : "text-[#6E6E73] hover:bg-[#E8E8ED] hover:text-[#1D1D1F]"}`}
+                                className={`p-2 rounded-full transition-colors ${doc.is_starred ? "text-warning bg-warning/10" : "text-ink-muted hover:bg-border hover:text-ink"}`}
                               >
-                                <Star className={`w-4 h-4 ${doc.is_starred ? "fill-[#FF9500]" : ""}`} />
+                                <Star className={`w-4 h-4 ${doc.is_starred ? "fill-warning" : ""}`} />
                               </button>
                               <button
                                 onClick={(e) => { e.stopPropagation(); setLockModal({ show: true, docId: doc._id || doc.id }); }}
-                                className="p-2 text-[#6E6E73] hover:bg-[#E8E8ED] hover:text-[#1D1D1F] rounded-full transition-colors"
+                                className="p-2 text-ink-muted hover:bg-border hover:text-ink rounded-full transition-colors"
                               >
                                 <Lock className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={(e) => { e.stopPropagation(); setShareModal({ show: true, docId: doc._id || doc.id }); }}
-                                className="p-2 text-[#6E6E73] hover:bg-[#E8E8ED] hover:text-[#1D1D1F] rounded-full transition-colors"
+                                className="p-2 text-ink-muted hover:bg-border hover:text-ink rounded-full transition-colors"
                               >
                                 <Share2 className="w-4 h-4" />
                               </button>
@@ -642,12 +642,12 @@ export default function DocumentsPage() {
                                   e.stopPropagation();
                                   setConfirmModal({
                                     show: true,
-                                    title: "Xóa tài liệu?",
+                                    title: "Xóa tài liệu",
                                     docId: doc._id || doc.id,
                                     type: "doc",
                                   });
                                 }}
-                                className="p-2 text-[#6E6E73] hover:bg-[#FF3B30]/10 hover:text-[#FF3B30] rounded-full transition-colors"
+                                className="p-2 text-ink-muted hover:bg-danger/10 hover:text-danger rounded-full transition-colors"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -668,7 +668,7 @@ export default function DocumentsPage() {
                       setCurrentFolder(folder);
                       setBreadcrumbs([...breadcrumbs, folder]);
                     }}
-                    className="group bg-white border border-[#E8E8ED] hover:border-[#0071E3] hover:shadow-sm rounded-[18px] p-4 flex flex-col items-center justify-center text-center cursor-pointer transition-all aspect-square relative"
+                    className="group bg-white border border-border hover:border-brand hover:shadow-sm rounded-panel p-4 flex flex-col items-center justify-center text-center cursor-pointer transition-all aspect-square relative"
                   >
                     <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1 z-10">
                       <button
@@ -676,63 +676,63 @@ export default function DocumentsPage() {
                           e.stopPropagation();
                           setConfirmModal({
                             show: true,
-                            title: "Xóa thư mục?",
+                            title: "Xóa thư mục",
                             docId: folder._id,
                             type: "folder",
                           });
                         }}
-                        className="p-1.5 text-[#6E6E73] hover:bg-[#FF3B30]/10 hover:text-[#FF3B30] rounded-full bg-white shadow-sm"
+                        className="p-1.5 text-ink-muted hover:bg-danger/10 hover:text-danger rounded-full bg-white shadow-sm"
                       >
                         <Trash2 className="w-3 h-3" />
                       </button>
                     </div>
-                    <Folder className="w-12 h-12 text-[#0071E3] fill-[#0071E3]/10 mb-3" />
-                    <span className="font-medium text-[#1D1D1F] text-[14px] line-clamp-2 w-full px-2">{folder.name}</span>
-                    <span className="text-[12px] text-[#6E6E73] mt-1">Thư mục</span>
+                    <Folder className="w-12 h-12 text-brand fill-brand/10 mb-3" />
+                    <span className="font-medium text-ink text-[14px] line-clamp-2 w-full px-2">{folder.name}</span>
+                    <span className="text-[12px] text-ink-muted mt-1">Thư mục</span>
                   </div>
                 ))}
                 {documents.map((doc) => (
                   <div
                     key={doc._id || doc.id}
                     onClick={() => window.open(`/tai-lieu/xem-truoc/${doc._id || doc.id}`, "_blank")}
-                    className="group bg-white border border-[#E8E8ED] hover:border-[#0071E3] hover:shadow-sm rounded-[18px] p-4 flex flex-col items-center justify-center text-center cursor-pointer transition-all aspect-[3/4] relative"
+                    className="group bg-white border border-border hover:border-brand hover:shadow-sm rounded-panel p-4 flex flex-col items-center justify-center text-center cursor-pointer transition-all aspect-[3/4] relative"
                   >
                     <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1 z-10">
                       <button
                         onClick={(e) => { e.stopPropagation(); toggleStar(doc._id || doc.id); }}
-                        className={`p-1.5 rounded-full bg-white shadow-sm transition-colors ${doc.is_starred ? "text-[#FF9500]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}
+                        className={`p-1.5 rounded-full bg-white shadow-sm transition-colors ${doc.is_starred ? "text-warning" : "text-ink-muted hover:text-ink"}`}
                       >
-                        <Star className={`w-3 h-3 ${doc.is_starred ? "fill-[#FF9500]" : ""}`} />
+                        <Star className={`w-3 h-3 ${doc.is_starred ? "fill-warning" : ""}`} />
                       </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           setConfirmModal({
                             show: true,
-                            title: "Xóa tài liệu?",
+                            title: "Xóa tài liệu",
                             docId: doc._id || doc.id,
                             type: "doc",
                           });
                         }}
-                        className="p-1.5 text-[#6E6E73] hover:bg-[#FF3B30]/10 hover:text-[#FF3B30] rounded-full bg-white shadow-sm"
+                        className="p-1.5 text-ink-muted hover:bg-danger/10 hover:text-danger rounded-full bg-white shadow-sm"
                       >
                         <Trash2 className="w-3 h-3" />
                       </button>
                     </div>
                     {doc.is_starred && (
                       <div className="absolute top-2 left-2 group-hover:hidden">
-                        <Star className="w-4 h-4 text-[#FF9500] fill-[#FF9500]" />
+                        <Star className="w-4 h-4 text-warning fill-warning" />
                       </div>
                     )}
-                    <div className="w-full flex-1 bg-[#F5F5F7] rounded-[12px] flex flex-col items-center justify-center mb-3 text-[#6E6E73] overflow-hidden">
+                    <div className="w-full flex-1 bg-surface-quiet rounded-panel flex flex-col items-center justify-center mb-3 text-ink-muted overflow-hidden">
                       {doc.cover_url ? (
                         <img src={doc.cover_url} alt="Cover" className="w-full h-full object-cover" />
                       ) : (
                         <FileText className="w-12 h-12 mb-2 opacity-50" />
                       )}
                     </div>
-                    <span className="font-medium text-[#1D1D1F] text-[14px] line-clamp-2 w-full px-1">{doc.title}</span>
-                    <span className="text-[12px] text-[#6E6E73] mt-1 line-clamp-1 w-full px-1">{doc.publisher_name || "DocLib"}</span>
+                    <span className="font-medium text-ink text-[14px] line-clamp-2 w-full px-1">{doc.title}</span>
+                    <span className="text-[12px] text-ink-muted mt-1 line-clamp-1 w-full px-1">{doc.publisher_name || "DocLib"}</span>
                   </div>
                 ))}
               </div>
@@ -749,27 +749,27 @@ export default function DocumentsPage() {
         onClose={() => setConfirmModal(null)}
       >
         <ModalHeader>
-          <ModalTitle className="text-[#FF3B30] flex items-center gap-2">
+          <ModalTitle className="text-danger flex items-center gap-2">
             <AlertTriangle className="w-5 h-5" /> Cảnh báo xóa
           </ModalTitle>
         </ModalHeader>
         <ModalContent>
-          <p className="text-[15px] text-[#6E6E73]">
+          <p className="text-[15px] text-ink-muted">
             Bạn có chắc chắn muốn xóa{" "}
-            <strong className="text-[#1D1D1F]">{confirmModal?.title}</strong>?
+            <strong className="text-ink">{confirmModal?.title}</strong>?
             Hành động này không thể hoàn tác.
           </p>
         </ModalContent>
         <ModalFooter>
           <button
             onClick={() => setConfirmModal(null)}
-            className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full"
+            className="px-5 py-2 text-brand font-medium hover:bg-surface-quiet rounded-full"
           >
             Hủy
           </button>
           <button
             onClick={executeDelete}
-            className="pill-button bg-[#FF3B30] hover:bg-[#D70015]"
+            className="pill-button bg-danger hover:bg-danger"
           >
             Xóa vĩnh viễn
           </button>
@@ -789,7 +789,7 @@ export default function DocumentsPage() {
         <ModalContent className="grid md:grid-cols-2 gap-8">
           <div className="space-y-4">
             <div>
-              <label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">
+              <label className="text-[13px] font-medium text-ink-muted mb-2 block">
                 Tiêu đề
               </label>
               <input
@@ -803,7 +803,7 @@ export default function DocumentsPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">
+                <label className="text-[13px] font-medium text-ink-muted mb-2 block">
                   Thể loại
                 </label>
                 <select
@@ -820,7 +820,7 @@ export default function DocumentsPage() {
                 </select>
               </div>
               <div>
-                <label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">
+                <label className="text-[13px] font-medium text-ink-muted mb-2 block">
                   Giá (dl)
                 </label>
                 <input
@@ -837,7 +837,7 @@ export default function DocumentsPage() {
               </div>
             </div>
             <div>
-              <label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">
+              <label className="text-[13px] font-medium text-ink-muted mb-2 block">
                 Mô tả
               </label>
               <textarea
@@ -845,13 +845,13 @@ export default function DocumentsPage() {
                 onChange={(e) =>
                   setNewDoc({ ...newDoc, description: e.target.value })
                 }
-                className="apple-input w-full bg-white h-24 resize-none p-3 rounded-[16px]"
+                className="apple-input w-full bg-white h-24 resize-none p-3 rounded-panel"
               />
             </div>
           </div>
           <div className="space-y-4">
             <div>
-              <label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">
+              <label className="text-[13px] font-medium text-ink-muted mb-2 block">
                 Tệp đính kèm
               </label>
               <input
@@ -863,23 +863,23 @@ export default function DocumentsPage() {
               />
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="h-32 bg-[#F5F5F7] border-[#E8E8ED] rounded-[18px] flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-[#0071E3] transition-colors border-dashed"
+                className="h-32 bg-surface-quiet border-border rounded-panel flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-brand transition-colors border-dashed"
               >
-                <div className="w-10 h-10 bg-[#F5F5F7] rounded-full flex items-center justify-center text-[#0071E3]">
+                <div className="w-10 h-10 bg-surface-quiet rounded-full flex items-center justify-center text-brand">
                   {file ? (
                     <FileCheck className="w-5 h-5" />
                   ) : (
                     <Upload className="w-5 h-5" />
                   )}
                 </div>
-                <p className="text-[14px] font-medium text-[#1D1D1F]">
+                <p className="text-[14px] font-medium text-ink">
                   {file ? file.name : "Chọn tệp tin"}
                 </p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">
+                <label className="text-[13px] font-medium text-ink-muted mb-2 block">
                   Hiển thị
                 </label>
                 <select
@@ -894,7 +894,7 @@ export default function DocumentsPage() {
                 </select>
               </div>
               <div>
-                <label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">
+                <label className="text-[13px] font-medium text-ink-muted mb-2 block">
                   Trạng thái
                 </label>
                 <select
@@ -914,7 +914,7 @@ export default function DocumentsPage() {
         <ModalFooter>
           <button
             onClick={() => setCreateDocModal(false)}
-            className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full"
+            className="px-5 py-2 text-brand font-medium hover:bg-surface-quiet rounded-full"
           >
             Hủy
           </button>
@@ -955,7 +955,7 @@ export default function DocumentsPage() {
         <ModalFooter>
           <button
             onClick={() => setCreateFolderModal(false)}
-            className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full"
+            className="px-5 py-2 text-brand font-medium hover:bg-surface-quiet rounded-full"
           >
             Hủy
           </button>
@@ -995,7 +995,7 @@ export default function DocumentsPage() {
         <ModalFooter>
           <button
             onClick={() => setLockModal(null)}
-            className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full"
+            className="px-5 py-2 text-brand font-medium hover:bg-surface-quiet rounded-full"
           >
             Hủy
           </button>
@@ -1020,12 +1020,12 @@ export default function DocumentsPage() {
             onSubmit={handleShareSubmit}
             className="space-y-4"
           >
-            <div className="flex items-center gap-3 bg-[#F5F5F7] p-4 rounded-[16px] border-[#E8E8ED]">
+            <div className="flex items-center gap-3 bg-surface-quiet p-4 rounded-panel border border-border">
               <input
                 type="checkbox"
                 checked={isPublic}
                 onChange={(e) => setIsPublic(e.target.checked)}
-                className="w-5 h-5 rounded-[6px] border-[#C7C7CC] accent-[#0071E3]"
+                className="w-5 h-5 rounded-[6px] border-ink-faint accent-[hsl(var(--brand))]"
               />
               <span className="text-[15px] font-medium">
                 Bật liên kết công khai
@@ -1033,7 +1033,7 @@ export default function DocumentsPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">
+                <label className="text-[13px] font-medium text-ink-muted mb-2 block">
                   Mật khẩu (Tùy chọn)
                 </label>
                 <input
@@ -1044,7 +1044,7 @@ export default function DocumentsPage() {
                 />
               </div>
               <div>
-                <label className="text-[13px] font-medium text-[#6E6E73] mb-2 block">
+                <label className="text-[13px] font-medium text-ink-muted mb-2 block">
                   Thời hạn
                 </label>
                 <select
@@ -1059,12 +1059,12 @@ export default function DocumentsPage() {
               </div>
             </div>
             {publicUrl && (
-              <div className="bg-[#F5F5F7] p-6 rounded-[18px] border-[#E8E8ED] flex flex-col items-center gap-4 mt-4">
+              <div className="bg-surface-quiet p-6 rounded-panel border border-border flex flex-col items-center gap-4 mt-4">
                 <input
                   type="text"
                   readOnly
                   value={publicUrl}
-                  className="apple-input w-full text-center bg-[#F5F5F7] text-[#0071E3]"
+                  className="apple-input w-full text-center bg-surface-quiet text-brand"
                   onFocus={(e) => e.target.select()}
                 />
                 <div className="p-2 bg-white rounded-xl ">
@@ -1080,7 +1080,7 @@ export default function DocumentsPage() {
               setShareModal(null);
               setPublicUrl("");
             }}
-            className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full"
+            className="px-5 py-2 text-brand font-medium hover:bg-surface-quiet rounded-full"
           >
             Đóng
           </button>

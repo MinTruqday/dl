@@ -35,7 +35,7 @@ export async function getCollectorStatsAPI() {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi trích xuất trạng thái luồng dữ liệu thu thập");
+    throw new Error(data.message || "Không thể tải trạng thái luồng dữ liệu thu thập");
   return data;
 }
 
@@ -44,6 +44,6 @@ export async function getCollectorLogsAPI() {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi trích xuất nhật ký tiến trình thu thập");
+  if (!res.ok) throw new Error(data.message || "Không thể tải nhật ký tiến trình thu thập");
   return data;
 }

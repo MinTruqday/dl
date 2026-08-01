@@ -49,11 +49,11 @@ export default class DocLibSmartArtPyramid implements BlockTool {
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-pyramid { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; margin: 16px 0; max-width: 400px; height: 300px; font-family: sans-serif; position: relative; margin-left: auto; margin-right: auto; }
-      .doclib-pyr-level { display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; color: #fff; text-align: center; outline: none; transition: 0.3s; }
+      .doclib-pyr-level { display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; color: hsl(var(--surface)); text-align: center; outline: none; transition: 0.3s; }
       .doclib-pyr-level:empty:before { content: attr(data-placeholder); color: rgba(255,255,255,0.7); }
-      .doclib-pyr-top { width: 100px; height: 100px; background: #ef4444; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); margin-bottom: -1px; display: flex; align-items: flex-end; padding-bottom: 12px; z-index: 3; }
-      .doclib-pyr-mid { width: 220px; height: 80px; background: #f59e0b; clip-path: polygon(25% 0%, 75% 0%, 100% 100%, 0% 100%); margin-bottom: -1px; z-index: 2; }
-      .doclib-pyr-bot { width: 340px; height: 80px; background: #10b981; clip-path: polygon(18% 0%, 82% 0%, 100% 100%, 0% 100%); z-index: 1; }
+      .doclib-pyr-top { width: 100px; height: 100px; background: hsl(var(--danger)); clip-path: polygon(50% 0%, 0% 100%, 100% 100%); margin-bottom: -1px; display: flex; align-items: flex-end; padding-bottom: 12px; z-index: 3; }
+      .doclib-pyr-mid { width: 220px; height: 80px; background: hsl(var(--warning)); clip-path: polygon(25% 0%, 75% 0%, 100% 100%, 0% 100%); margin-bottom: -1px; z-index: 2; }
+      .doclib-pyr-bot { width: 340px; height: 80px; background: hsl(var(--brand)); clip-path: polygon(18% 0%, 82% 0%, 100% 100%, 0% 100%); z-index: 1; }
     `;
     this.wrapper.appendChild(style);
 

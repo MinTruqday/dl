@@ -46,12 +46,12 @@ export default class DocLibMarkdownBlock implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-md { display: flex; flex-direction: column; gap: 8px; font-family: sans-serif; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; }
-      .doclib-md-tabs { display: flex; background: #f8fafc; border-bottom: 1px solid #cbd5e1; }
-      .doclib-md-tab { padding: 8px 16px; cursor: pointer; font-size: 13px; font-weight: bold; color: #64748b; }
-      .doclib-md-tab.active { background: #fff; color: #0f172a; border-bottom: 2px solid #3b82f6; }
+      .doclib-md { display: flex; flex-direction: column; gap: 8px; font-family: sans-serif; border: 1px solid hsl(var(--border)); border-radius: 8px; overflow: hidden; }
+      .doclib-md-tabs { display: flex; background: hsl(var(--surface-raised)); border-bottom: 1px solid hsl(var(--border)); }
+      .doclib-md-tab { padding: 8px 16px; cursor: pointer; font-size: 13px; font-weight: bold; color: hsl(var(--ink-muted)); }
+      .doclib-md-tab.active { background: hsl(var(--surface)); color: hsl(var(--ink)); border-bottom: 2px solid hsl(var(--brand)); }
       .doclib-md-content { padding: 16px; min-height: 150px; }
-      .doclib-md-textarea { width: 100%; height: 100%; min-height: 150px; background: transparent; border: none; font-family: monospace; font-size: 14px; resize: vertical; outline: none; line-height: 1.5; color: #0f172a; }
+      .doclib-md-textarea { width: 100%; height: 100%; min-height: 150px; background: transparent; border: none; font-family: monospace; font-size: 14px; resize: vertical; outline: none; line-height: 1.5; color: hsl(var(--ink)); }
       .doclib-md-preview { font-family: sans-serif; }
       .doclib-md-preview h1 { font-size: 2em; margin-bottom: 0.5em; }
       .doclib-md-preview h2 { font-size: 1.5em; margin-bottom: 0.5em; }

@@ -57,7 +57,7 @@ export default class DocLibQuote implements BlockTool {
 
     this.wrapper.style.margin = "20px 0";
     this.wrapper.style.padding = "10px 20px";
-    this.wrapper.style.borderLeft = "3px solid #000";
+    this.wrapper.style.borderLeft = "3px solid hsl(var(--ink))";
     this.wrapper.style.backgroundColor = "rgba(0,0,0,0.02)";
     this.wrapper.style.fontStyle = "italic";
 

@@ -39,8 +39,8 @@ export default class DocLibBordersAndShading implements BlockTool {
       text: data?.text || "",
       borderWidth: data?.borderWidth || "2px",
       borderStyle: data?.borderStyle || "solid",
-      borderColor: data?.borderColor || "#3b82f6",
-      bgColor: data?.bgColor || "#eff6ff",
+      borderColor: data?.borderColor || "hsl(var(--brand))",
+      bgColor: data?.bgColor || "hsl(var(--brand-soft))",
     };
   }
 
@@ -50,10 +50,10 @@ export default class DocLibBordersAndShading implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-bns { padding: 16px; margin: 16px 0; border-radius: 4px; font-size: 16px; line-height: 1.6; color: #1e293b; outline: none; transition: all 0.2s; }
-      .doclib-bns:empty::before { content: "DocLib Text"; color: #94a3b8; pointer-events: none; }
-      .doclib-bns-controls { display: flex; gap: 8px; margin-top: 12px; background: #f8fafc; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; flex-wrap: wrap; }
-      .doclib-bns-input { padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; font-size: 14px; }
+      .doclib-bns { padding: 16px; margin: 16px 0; border-radius: 4px; font-size: 16px; line-height: 1.6; color: hsl(var(--ink)); outline: none; transition: all 0.2s; }
+      .doclib-bns:empty::before { content: "DocLib Text"; color: hsl(var(--ink-faint)); pointer-events: none; }
+      .doclib-bns-controls { display: flex; gap: 8px; margin-top: 12px; background: hsl(var(--surface-raised)); padding: 12px; border: 1px solid hsl(var(--border)); border-radius: 8px; flex-wrap: wrap; }
+      .doclib-bns-input { padding: 6px; border: 1px solid hsl(var(--border)); border-radius: 4px; outline: none; font-size: 14px; }
     `;
     this.wrapper.appendChild(style);
 

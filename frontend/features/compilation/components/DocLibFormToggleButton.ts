@@ -47,12 +47,12 @@ export default class DocLibFormToggleButton implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-toggle { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; margin: 16px 0; max-width: 400px; font-family: sans-serif; cursor: pointer; user-select: none; }
-      .doclib-toggle-label { font-size: 14px; font-weight: bold; color: #1e293b; outline: none; flex: 1; }
-      .doclib-toggle-label:empty:before { content: "DocLib Toggle Setting"; color: #94a3b8; font-weight: normal; }
-      .doclib-toggle-track { width: 44px; height: 24px; background: #cbd5e1; border-radius: 12px; position: relative; transition: background 0.3s; flex-shrink: 0; }
-      .doclib-toggle-track.active { background: #10b981; }
-      .doclib-toggle-thumb { width: 20px; height: 20px; background: #fff; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: transform 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+      .doclib-toggle { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border: 1px solid hsl(var(--border)); border-radius: 8px; background: hsl(var(--surface)); margin: 16px 0; max-width: 400px; font-family: sans-serif; cursor: pointer; user-select: none; }
+      .doclib-toggle-label { font-size: 14px; font-weight: bold; color: hsl(var(--ink)); outline: none; flex: 1; }
+      .doclib-toggle-label:empty:before { content: "DocLib Toggle Setting"; color: hsl(var(--ink-faint)); font-weight: normal; }
+      .doclib-toggle-track { width: 44px; height: 24px; background: hsl(var(--border)); border-radius: 12px; position: relative; transition: background 0.3s; flex-shrink: 0; }
+      .doclib-toggle-track.active { background: hsl(var(--brand)); }
+      .doclib-toggle-thumb { width: 20px; height: 20px; background: hsl(var(--surface)); border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: transform 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
       .doclib-toggle-track.active .doclib-toggle-thumb { transform: translateX(20px); }
     `;
     this.wrapper.appendChild(style);

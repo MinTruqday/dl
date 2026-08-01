@@ -2,54 +2,45 @@
 @tailwind components;
 @tailwind utilities;
 
-*,
-html,
-body,
-button,
-input,
-select,
-textarea,
-pre,
-code {
-  font-family:
-    var(--font-sans), -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", sans-serif !important;
-}
-
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 11%;
-    
-    --card: 0 0% 96%;
-    --card-foreground: 0 0% 11%;
-    
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 11%;
-    
-    --primary: 210 100% 45%;
+    --canvas: 48 7% 96%;
+    --surface: 0 0% 100%;
+    --surface-quiet: 48 9% 93%;
+    --surface-raised: 40 29% 98%;
+    --ink: 60 3% 12%;
+    --ink-muted: 50 3% 42%;
+    --ink-faint: 50 4% 58%;
+    --border: 50 9% 85%;
+    --border-strong: 48 7% 76%;
+    --brand: 163 33% 27%;
+    --brand-hover: 163 34% 22%;
+    --brand-soft: 160 16% 91%;
+    --danger: 5 53% 42%;
+    --danger-soft: 7 48% 94%;
+    --warning: 41 68% 32%;
+    --warning-soft: 43 58% 92%;
+    --background: var(--canvas);
+    --foreground: var(--ink);
+    --card: var(--surface);
+    --card-foreground: var(--ink);
+    --popover: var(--surface);
+    --popover-foreground: var(--ink);
+    --primary: var(--brand);
     --primary-foreground: 0 0% 100%;
-    
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 210 100% 45%;
-    
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
-    
-    --accent: 0 0% 96%;
-    --accent-foreground: 0 0% 11%;
-    
-    --destructive: 0 100% 59%;
+    --secondary: var(--surface-quiet);
+    --secondary-foreground: var(--ink);
+    --muted: var(--surface-quiet);
+    --muted-foreground: var(--ink-muted);
+    --accent: var(--brand-soft);
+    --accent-foreground: var(--brand);
+    --destructive: var(--danger);
     --destructive-foreground: 0 0% 100%;
-
-    --border: 240 6% 83%;
-    --input: 240 6% 83%;
-    --ring: 210 100% 45%;
-    --radius: 18px;
-
-    --navbar-height: 56px;
-    --sidebar-width-expanded: 240px;
-    --sidebar-width-collapsed: 72px;
-    --sidebar-: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    --input: var(--border);
+    --ring: var(--brand);
+    --radius: 12px;
+    --sidebar-width: 224px;
+    --topbar-height: 60px;
   }
 
   * {
@@ -58,73 +49,116 @@ code {
   }
 
   html {
+    background: hsl(var(--canvas));
+    color: hsl(var(--ink));
+    font-synthesis: none;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    scroll-behavior: smooth;
   }
 
   body {
-    @apply bg-background text-foreground antialiased font-sans;
-    font-size: 17px;
-    line-height: 1.6;
-    letter-spacing: 0;
+    min-height: 100dvh;
+    background: hsl(var(--canvas));
+    color: hsl(var(--ink));
+    font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  :focus-visible {
+    outline: 2px solid hsl(var(--brand));
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: hsl(var(--brand-soft));
+    color: hsl(var(--ink));
   }
 
   ::-webkit-scrollbar {
-    width: 0px;
-    height: 0px;
+    height: 10px;
+    width: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border-strong));
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+  }
+}
+
+@layer components {
+  .page-shell {
+    @apply mx-auto flex w-full max-w-[1280px] flex-1 flex-col px-4 py-6 md:px-8 md:py-8;
+  }
+
+  .common-panel,
+  .auth-panel {
+    @apply rounded-panel border border-border bg-surface p-5 md:p-6;
+  }
+
+  .pill-button {
+    @apply inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-control bg-brand px-5 py-2.5 text-[15px] font-semibold text-white transition duration-150 hover:bg-brand-hover active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .secondary-button {
+    @apply inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-control border border-border-strong bg-surface px-5 py-2.5 text-[15px] font-semibold text-ink transition duration-150 hover:bg-surface-quiet active:translate-y-px;
+  }
+
+  .apple-input {
+    @apply min-h-11 rounded-control border border-border-strong bg-surface px-3.5 py-2.5 text-[15px] text-ink outline-none transition duration-150 placeholder:text-ink-faint focus:border-brand focus:ring-2 focus:ring-brand-soft disabled:cursor-not-allowed disabled:bg-surface-quiet;
+  }
+
+  .product-heading {
+    @apply text-[28px] font-semibold leading-tight tracking-[-0.025em] text-ink md:text-[34px];
+  }
+
+  .product-description {
+    @apply mt-2 max-w-[65ch] text-[15px] leading-relaxed text-ink-muted;
+  }
+
+  .skeleton {
+    @apply animate-pulse rounded-control bg-surface-quiet;
   }
 }
 
 @layer utilities {
-  .app-main {
-    padding-top: var(--navbar-height);
-    margin-left: var(--sidebar-width-expanded);
-    transition: margin-left var(--sidebar-);
-    min-height: 100vh;
-  }
-
-  .app-main.sidebar-collapsed {
-    margin-left: var(--sidebar-width-collapsed);
-  }
-
-  @media (max-width: 768px) {
-    .app-main,
-    .app-main.sidebar-collapsed {
-      margin-left: 0;
-    }
-  }
-
   .hide-scrollbar {
     scrollbar-width: none;
-    -ms-overflow-style: none;
   }
 
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
   }
-  
-  .glass-nav {
-    background-color: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+
+  .text-balance {
+    text-wrap: balance;
   }
 }
 
-@layer components {
-  .common-panel {
-    @apply bg-[#F5F5F7] border-none rounded-[18px] p-10;
-  }
-  .auth-panel {
-    @apply bg-[#F5F5F7] border-none rounded-[18px] p-10;
-  }
-  .pill-button {
-    @apply bg-[#0071E3] text-white px-6 py-3 rounded-[980px] font-medium text-[17px] leading-tight transition-colors hover:bg-[#0055C6];
-  }
-  .secondary-button {
-    @apply bg-transparent text-[#0071E3] font-medium text-[17px] leading-tight hover:text-[#0055C6];
-  }
-  .apple-input {
-    @apply border border-[#D2D2D7] rounded-[10px] px-4 py-3 text-[17px] focus:outline-none focus:border-[#0071E3] transition-colors bg-white;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

@@ -46,10 +46,10 @@ export default class DocLibHyphenation implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-hyph { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 4px; background: #fff; margin: 16px 0; max-width: 300px; font-family: sans-serif; }
-      .doclib-hyph-title { font-size: 14px; font-weight: bold; color: #1e293b; display: flex; align-items: center; gap: 8px; }
-      .doclib-hyph-title::before { content: "ABC-"; color: #3b82f6; font-family: monospace; font-weight: bold; }
-      .doclib-hyph-select { padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; outline: none; font-size: 13px; cursor: pointer; }
+      .doclib-hyph { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border: 1px solid hsl(var(--border)); border-radius: 4px; background: hsl(var(--surface)); margin: 16px 0; max-width: 300px; font-family: sans-serif; }
+      .doclib-hyph-title { font-size: 14px; font-weight: bold; color: hsl(var(--ink)); display: flex; align-items: center; gap: 8px; }
+      .doclib-hyph-title::before { content: "ABC-"; color: hsl(var(--brand)); font-family: monospace; font-weight: bold; }
+      .doclib-hyph-select { padding: 6px 12px; border: 1px solid hsl(var(--border)); border-radius: 4px; background: hsl(var(--surface-raised)); outline: none; font-size: 13px; cursor: pointer; }
     `;
     this.wrapper.appendChild(style);
 

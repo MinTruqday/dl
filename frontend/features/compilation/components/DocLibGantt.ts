@@ -57,20 +57,20 @@ export default class DocLibGantt implements BlockTool {
       const style = document.createElement("style");
       style.id = "doclib-gantt-styles";
       style.innerHTML = `
-        .doclib-gantt-wrapper { border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; background: #fff; margin: 12px 0; overflow-x: auto; }
-        .doclib-gantt-title { font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 16px; }
+        .doclib-gantt-wrapper { border: 1px solid hsl(var(--border)); border-radius: 8px; padding: 20px; background: hsl(var(--surface)); margin: 12px 0; overflow-x: auto; }
+        .doclib-gantt-title { font-size: 15px; font-weight: 700; color: hsl(var(--ink)); margin-bottom: 16px; }
         .doclib-gantt-header { display: flex; margin-bottom: 4px; padding-left: 160px; }
-        .doclib-gantt-day-label { flex: 1; font-size: 10px; color: #94a3b8; text-align: center; }
+        .doclib-gantt-day-label { flex: 1; font-size: 10px; color: hsl(var(--ink-faint)); text-align: center; }
         .doclib-gantt-row { display: flex; align-items: center; height: 36px; margin-bottom: 6px; }
-        .doclib-gantt-task-name { width: 150px; min-width: 150px; font-size: 12px; font-weight: 500; color: #475569; padding-right: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .doclib-gantt-track { flex: 1; height: 100%; background: #f1f5f9; border-radius: 4px; position: relative; overflow: hidden; }
-        .doclib-gantt-bar { position: absolute; height: 100%; border-radius: 4px; display: flex; align-items: center; padding: 0 8px; font-size: 10px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; }
-        .doclib-gantt-edit { border-top: 1px solid #e2e8f0; margin-top: 16px; padding-top: 14px; }
+        .doclib-gantt-task-name { width: 150px; min-width: 150px; font-size: 12px; font-weight: 500; color: hsl(var(--ink-muted)); padding-right: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .doclib-gantt-track { flex: 1; height: 100%; background: hsl(var(--surface-quiet)); border-radius: 4px; position: relative; overflow: hidden; }
+        .doclib-gantt-bar { position: absolute; height: 100%; border-radius: 4px; display: flex; align-items: center; padding: 0 8px; font-size: 10px; font-weight: 600; color: hsl(var(--surface)); white-space: nowrap; overflow: hidden; }
+        .doclib-gantt-edit { border-top: 1px solid hsl(var(--border)); margin-top: 16px; padding-top: 14px; }
         .doclib-gantt-task-edit { display: grid; grid-template-columns: 2fr 1fr 1fr 30px; gap: 6px; align-items: center; margin-bottom: 6px; }
-        .doclib-gantt-input { padding: 6px 8px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 12px; outline: none; width: 100%; box-sizing: border-box; }
-        .doclib-gantt-del-btn { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 16px; line-height: 1; }
-        .doclib-gantt-del-btn:hover { color: #ef4444; }
-        .doclib-gantt-add-btn { margin-top: 8px; padding: 7px 14px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px; cursor: pointer; }
+        .doclib-gantt-input { padding: 6px 8px; border: 1px solid hsl(var(--border)); border-radius: 4px; font-size: 12px; outline: none; width: 100%; box-sizing: border-box; }
+        .doclib-gantt-del-btn { background: none; border: none; color: hsl(var(--ink-faint)); cursor: pointer; font-size: 16px; line-height: 1; }
+        .doclib-gantt-del-btn:hover { color: hsl(var(--danger)); }
+        .doclib-gantt-add-btn { margin-top: 8px; padding: 7px 14px; background: hsl(var(--surface-quiet)); border: 1px solid hsl(var(--border)); border-radius: 6px; font-size: 12px; cursor: pointer; }
       `;
       document.head.appendChild(style);
     }
@@ -143,7 +143,7 @@ export default class DocLibGantt implements BlockTool {
 
       const totalLabel = document.createElement("div");
       totalLabel.style.cssText =
-        "font-size:12px;color:#64748b;margin-bottom:8px;";
+        "font-size:12px;color:hsl(var(--ink-muted));margin-bottom:8px;";
       totalLabel.innerText = `Total days: ${this.data.totalDays}`;
 
       const totalInput = document.createElement("input");
@@ -164,7 +164,7 @@ export default class DocLibGantt implements BlockTool {
 
       const colHeader = document.createElement("div");
       colHeader.style.cssText =
-        "display:grid;grid-template-columns:2fr 1fr 1fr 30px;gap:6px;font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;margin-top:12px;margin-bottom:4px;";
+        "display:grid;grid-template-columns:2fr 1fr 1fr 30px;gap:6px;font-size:10px;font-weight:600;color:hsl(var(--ink-faint));text-transform:uppercase;margin-top:12px;margin-bottom:4px;";
       colHeader.innerHTML =
         "<span>Task name</span><span>Start</span><span>End</span><span></span>";
       edit.appendChild(colHeader);
@@ -232,11 +232,11 @@ export default class DocLibGantt implements BlockTool {
       addBtn.classList.add("doclib-gantt-add-btn");
       addBtn.innerText = "Add task";
       const colors = [
-        "#0284c7",
+        "hsl(var(--brand))",
         "#7c3aed",
-        "#059669",
-        "#d97706",
-        "#dc2626",
+        "hsl(var(--brand))",
+        "hsl(var(--warning))",
+        "hsl(var(--danger))",
         "#0891b2",
         "#db2777",
       ];

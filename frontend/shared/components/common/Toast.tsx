@@ -22,10 +22,10 @@ export function ToastContainer({
           key={t.id}
           className={`flex items-center gap-3 px-4 py-3 border text-sm font-medium animate-in slide-in-from-left-8 ${
             t.type === "success"
-              ? "bg-white border-black text-black"
+              ? "bg-white border-ink text-ink"
               : t.type === "error"
-                ? "bg-white border-black text-black font-bold"
-                : "bg-black border-black text-white"
+                ? "bg-white border-ink text-ink font-bold"
+                : "bg-ink border-ink text-white"
           }`}
         >
           {t.type === "success" && <CheckCircle className="w-5 h-5" />}

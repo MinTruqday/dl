@@ -77,8 +77,8 @@ export default function PaymentResultPage() {
       icon: Loader2,
       title: "Đang xử lý",
       description: "Hệ thống đang xác nhận giao dịch của bạn",
-      color: "text-[#0071E3]",
-      bgClass: "bg-[#F5F5F7]",
+      color: "text-brand",
+      bgClass: "bg-surface-quiet",
     },
     success: {
       icon: CheckCircle2,
@@ -86,22 +86,22 @@ export default function PaymentResultPage() {
       description: (paymentInfo?.amount_paid || paymentInfo?.amount)
         ? `${Number(paymentInfo.amount_paid || paymentInfo.amount || 0).toLocaleString()} VNĐ đã được cộng vào ví`
         : "Số dư sẽ được cập nhật trong giây lát",
-      color: "text-[#34C759]",
-      bgClass: "bg-[#EAF8ED]",
+      color: "text-brand",
+      bgClass: "bg-brand-soft",
     },
     failed: {
       icon: XCircle,
       title: "Giao dịch lỗi",
       description: "Không thể xác nhận thanh toán. Vui lòng thử lại",
-      color: "text-[#FF3B30]",
-      bgClass: "bg-[#FFEBEB]",
+      color: "text-danger",
+      bgClass: "bg-danger-soft",
     },
     cancelled: {
       icon: XCircle,
       title: "Giao dịch đã hủy",
       description: "Bạn đã hủy giao dịch này",
-      color: "text-[#FF3B30]",
-      bgClass: "bg-[#FFEBEB]",
+      color: "text-danger",
+      bgClass: "bg-danger-soft",
     },
   };
 
@@ -109,8 +109,8 @@ export default function PaymentResultPage() {
   const IconComponent = current.icon;
 
   return (
-    <div className="w-full h-[calc(100vh-56px)] flex flex-col items-center justify-center font-sans text-[#1D1D1F] px-6 md:px-0">
-      <div className="w-full max-w-[480px] bg-[#F5F5F7] border-[#E8E8ED] rounded-[18px] p-10 flex flex-col items-center text-center">
+    <div className="w-full h-[calc(100vh-56px)] flex flex-col items-center justify-center font-sans text-ink px-6 md:px-0">
+      <div className="w-full max-w-[480px] bg-surface-quiet border-border rounded-panel p-10 flex flex-col items-center text-center">
         <div
           className={`w-20 h-20 rounded-full flex items-center justify-center mb-6 ${current.bgClass}`}
         >
@@ -119,33 +119,33 @@ export default function PaymentResultPage() {
           />
         </div>
 
-        <h1 className="text-[24px] font-semibold text-[#1D1D1F] mb-2">
+        <h1 className="text-[24px] font-semibold text-ink mb-2">
           {current.title}
         </h1>
-        <p className="text-[15px] text-[#6E6E73] mb-8">{current.description}</p>
+        <p className="text-[15px] text-ink-muted mb-8">{current.description}</p>
 
         {status === "success" && paymentInfo && (
-          <div className="w-full bg-[#F5F5F7] rounded-[18px] p-6 space-y-4 mb-8">
+          <div className="w-full bg-surface-quiet rounded-panel p-6 space-y-4 mb-8">
             <div className="flex items-center justify-between">
-              <span className="text-[13px] text-[#6E6E73] font-medium">Mã giao dịch</span>
-              <span className="text-[15px] font-medium text-[#1D1D1F]">#{paymentInfo.order_code}</span>
+              <span className="text-[13px] text-ink-muted font-medium">Mã giao dịch</span>
+              <span className="text-[15px] font-medium text-ink">#{paymentInfo.order_code}</span>
             </div>
-            <div className="w-full h-px bg-[#E8E8ED]"></div>
+            <div className="w-full h-px bg-border"></div>
             <div className="flex items-center justify-between">
-              <span className="text-[13px] text-[#6E6E73] font-medium">Số tiền nạp</span>
-              <span className="text-[15px] font-semibold text-[#1D1D1F]">
+              <span className="text-[13px] text-ink-muted font-medium">Số tiền nạp</span>
+              <span className="text-[15px] font-semibold text-ink">
                 {(paymentInfo.amount_paid || paymentInfo.amount)
                   ? `${Number(paymentInfo.amount_paid || paymentInfo.amount).toLocaleString()} VNĐ`
-              : <span className="text-[#6E6E73] text-[13px]">Đang cập nhật</span>
+              : <span className="text-ink-muted text-[13px]">Đang cập nhật</span>
                 }
               </span>
             </div>
             {paymentInfo.dl > 0 && (
               <>
-                <div className="w-full h-px bg-[#E8E8ED]"></div>
+                <div className="w-full h-px bg-border"></div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[13px] text-[#6E6E73] font-medium">Số dl nhận được</span>
-                  <span className="text-[15px] font-semibold text-[#34C759]">+{paymentInfo.dl.toLocaleString()} dl</span>
+                  <span className="text-[13px] text-ink-muted font-medium">Số dl nhận được</span>
+                  <span className="text-[15px] font-semibold text-brand">+{paymentInfo.dl.toLocaleString()} dl</span>
                 </div>
               </>
             )}
@@ -155,14 +155,14 @@ export default function PaymentResultPage() {
         <div className="flex items-center gap-4 w-full">
           <Link
             href="/vi-tien"
-            className="flex-1 h-12 bg-[#F5F5F7] text-[#1D1D1F] text-[15px] font-medium flex items-center justify-center gap-2 rounded-full hover:bg-[#E8E8ED] transition-colors"
+            className="flex-1 h-12 bg-surface-quiet text-ink text-[15px] font-medium flex items-center justify-center gap-2 rounded-full hover:bg-border transition-colors"
           >
             <ArrowLeft className="w-4 h-4" /> Về ví tiền
           </Link>
           {(status === "failed" || status === "cancelled") && (
             <button
               onClick={verifyPayment}
-              className="flex-1 h-12 bg-[#0071E3] text-white text-[15px] font-medium flex items-center justify-center rounded-full hover:bg-[#0077ED] transition-colors"
+              className="flex-1 h-12 bg-brand text-white text-[15px] font-medium flex items-center justify-center rounded-full hover:bg-brand transition-colors"
             >
               Thử lại
             </button>

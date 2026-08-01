@@ -51,32 +51,32 @@ export default class DocLibMailMerge implements BlockTool {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        background: #f1f5f9;
-        border: 1px solid #cbd5e1;
+        background: hsl(var(--surface-quiet));
+        border: 1px solid hsl(var(--border));
         border-radius: 4px;
         padding: 2px 8px;
         font-family: monospace;
         font-size: 13px;
-        color: #0f172a;
+        color: hsl(var(--ink));
       }
       .doclib-mailmerge-edit {
         display: flex;
         gap: 8px;
-        background: #fff;
-        border: 1px solid #cbd5e1;
+        background: hsl(var(--surface));
+        border: 1px solid hsl(var(--border));
         padding: 12px;
         border-radius: 6px;
       }
       .doclib-mailmerge-input {
         flex: 1;
         padding: 6px 10px;
-        border: 1px solid #e2e8f0;
+        border: 1px solid hsl(var(--border));
         border-radius: 4px;
         font-size: 13px;
         outline: none;
       }
       .doclib-mailmerge-input:focus {
-        border-color: #3b82f6;
+        border-color: hsl(var(--brand));
       }
     `;
     this.wrapper.appendChild(style);

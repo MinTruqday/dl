@@ -11,7 +11,7 @@ export async function createDepositLinkAPI(amount: number) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi khởi tạo phiên giao dịch nạp tiền");
+    throw new Error(data.message || "Không thể tạo phiên giao dịch nạp tiền");
   return data;
 }
 

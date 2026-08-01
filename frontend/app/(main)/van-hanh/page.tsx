@@ -72,7 +72,7 @@ export default function OperationDashboard() {
       if (qData) setQuotaConfigs(qData);
       if (minioData) setMinioStats(minioData.data || minioData);
     } catch (err: any) {
-      showToast("Lỗi trích xuất số liệu vận hành", "error");
+      showToast("Không thể tải số liệu vận hành", "error");
     } finally {
       setIsRefreshing(false);
       setIsLoading(false);
@@ -96,7 +96,7 @@ export default function OperationDashboard() {
         "success",
       );
     } catch (err: any) {
-      showToast("Lỗi cấu hình chế độ bảo trì", "error");
+      showToast("Không thể cấu hình chế độ bảo trì", "error");
     } finally {
       setIsProcessing(false);
     }
@@ -109,7 +109,7 @@ export default function OperationDashboard() {
       await triggerBackupAPI();
       showToast("Khởi tạo yêu cầu sao lưu hệ thống hoàn tất", "success");
     } catch (err: any) {
-      showToast("Lỗi khởi tạo tiến trình sao lưu hệ thống", "error");
+      showToast("Không thể tạo tiến trình sao lưu hệ thống", "error");
     } finally {
       setIsProcessing(false);
     }
@@ -121,7 +121,7 @@ export default function OperationDashboard() {
       await updateRoleQuotaAPI(role, quotaConfigs[role]);
       showToast(`Cập nhật hạn mức phân quyền ${role} hoàn tất`, "success");
     } catch (err: any) {
-      showToast("Lỗi cập nhật hạn mức phân quyền", "error");
+      showToast("Không thể cập nhật hạn mức phân quyền", "error");
     } finally {
       setIsSavingQuota(null);
     }
@@ -145,14 +145,14 @@ export default function OperationDashboard() {
   if (user?.role !== "admin")
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-56px)] gap-6 font-sans text-center">
-        <div className="w-24 h-24 bg-[#F5F5F7] flex items-center justify-center rounded-[18px]">
-          <ShieldAlert className="w-10 h-10 text-[#FF3B30]" />
+        <div className="w-24 h-24 bg-surface-quiet flex items-center justify-center rounded-panel">
+          <ShieldAlert className="w-10 h-10 text-danger" />
         </div>
         <div className="space-y-2 max-w-[300px]">
-          <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
+          <p className="text-[13px] font-medium text-ink-muted mb-4">
             Truy cập bị hạn chế
           </p>
-          <p className="text-[15px] text-[#6E6E73]">
+          <p className="text-[15px] text-ink-muted">
             Bạn không có quyền quản trị để truy cập trang này.
           </p>
         </div>
@@ -160,12 +160,12 @@ export default function OperationDashboard() {
     );
 
   return (
-    <div className="w-full h-full font-sans text-[#1D1D1F] flex flex-col gap-8">
+    <div className="w-full h-full font-sans text-ink flex flex-col gap-8">
       <div className="flex flex-col md:flex-row md:items-center justify-end gap-4">
         <button
           onClick={fetchData}
           disabled={isRefreshing}
-          className="pill-button flex items-center gap-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED]"
+          className="pill-button flex items-center gap-2 bg-surface-quiet text-ink hover:bg-border"
         >
           {isRefreshing ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -177,97 +177,97 @@ export default function OperationDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <section className="lg:col-span-2 bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] p-6 flex flex-col gap-6">
-          <h2 className="text-[20px] font-semibold text-[#1D1D1F] flex items-center gap-2">
-            <Server className="w-5 h-5 text-[#6E6E73]" /> Sức khỏe hệ thống
+        <section className="lg:col-span-2 bg-surface-quiet rounded-panel border border-border p-6 flex flex-col gap-6">
+          <h2 className="text-[20px] font-semibold text-ink flex items-center gap-2">
+            <Server className="w-5 h-5 text-ink-muted" /> Sức khỏe hệ thống
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="bg-[#F5F5F7] rounded-[18px] p-5 flex flex-col gap-3">
+            <div className="bg-surface-quiet rounded-panel p-5 flex flex-col gap-3">
               <div className="flex items-center justify-between">
-                <span className="text-[14px] font-medium text-[#1D1D1F]">
+                <span className="text-[14px] font-medium text-ink">
                   Core API
                 </span>
                 <div
-                  className={`w-2.5 h-2.5 rounded-full ${health?.status === "healthy" ? "bg-[#34C759]" : "bg-[#FF3B30]"}`}
+                  className={`w-2.5 h-2.5 rounded-full ${health?.status === "healthy" ? "bg-brand" : "bg-danger"}`}
                 />
               </div>
-              <p className="text-[13px] text-[#6E6E73]">
+              <p className="text-[13px] text-ink-muted">
                 {health?.status === "healthy"
                   ? "Hoạt động ổn định"
                   : "Gặp sự cố"}
               </p>
             </div>
-            <div className="bg-[#F5F5F7] rounded-[18px] p-5 flex flex-col gap-3">
+            <div className="bg-surface-quiet rounded-panel p-5 flex flex-col gap-3">
               <div className="flex items-center justify-between">
-                <span className="text-[14px] font-medium text-[#1D1D1F]">
+                <span className="text-[14px] font-medium text-ink">
                   Database
                 </span>
                 <div
-                  className={`w-2.5 h-2.5 rounded-full ${health?.services?.database === "connected" ? "bg-[#34C759]" : "bg-[#FF3B30]"}`}
+                  className={`w-2.5 h-2.5 rounded-full ${health?.services?.database === "connected" ? "bg-brand" : "bg-danger"}`}
                 />
               </div>
-              <p className="text-[13px] text-[#6E6E73]">MongoDB v7.0</p>
+              <p className="text-[13px] text-ink-muted">MongoDB v7.0</p>
             </div>
-            <div className="bg-[#F5F5F7] rounded-[18px] p-5 flex flex-col gap-3">
+            <div className="bg-surface-quiet rounded-panel p-5 flex flex-col gap-3">
               <div className="flex items-center justify-between">
-                <span className="text-[14px] font-medium text-[#1D1D1F]">
+                <span className="text-[14px] font-medium text-ink">
                   Cache
                 </span>
                 <div
-                  className={`w-2.5 h-2.5 rounded-full ${health?.services?.cache === "connected" ? "bg-[#34C759]" : "bg-[#FF3B30]"}`}
+                  className={`w-2.5 h-2.5 rounded-full ${health?.services?.cache === "connected" ? "bg-brand" : "bg-danger"}`}
                 />
               </div>
-              <p className="text-[13px] text-[#6E6E73]">Redis Cloud</p>
+              <p className="text-[13px] text-ink-muted">Redis Cloud</p>
             </div>
-            <div className="bg-[#F5F5F7] rounded-[18px] p-5 flex flex-col gap-3">
+            <div className="bg-surface-quiet rounded-panel p-5 flex flex-col gap-3">
               <div className="flex items-center justify-between">
-                <span className="text-[14px] font-medium text-[#1D1D1F]">
+                <span className="text-[14px] font-medium text-ink">
                   AI Agent
                 </span>
                 <div
-                  className={`w-2.5 h-2.5 rounded-full ${health?.services?.ai_agent === "healthy" ? "bg-[#34C759]" : "bg-[#FF3B30]"}`}
+                  className={`w-2.5 h-2.5 rounded-full ${health?.services?.ai_agent === "healthy" ? "bg-brand" : "bg-danger"}`}
                 />
               </div>
-              <p className="text-[13px] text-[#6E6E73]">RAG Service</p>
+              <p className="text-[13px] text-ink-muted">RAG Service</p>
             </div>
           </div>
         </section>
 
-        <section className="bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] p-6 flex flex-col gap-6">
-          <h2 className="text-[20px] font-semibold text-[#1D1D1F] flex items-center gap-2">
-            <Shield className="w-5 h-5 text-[#6E6E73]" /> Điều hành
+        <section className="bg-surface-quiet rounded-panel border border-border p-6 flex flex-col gap-6">
+          <h2 className="text-[20px] font-semibold text-ink flex items-center gap-2">
+            <Shield className="w-5 h-5 text-ink-muted" /> Điều hành
           </h2>
           <div className="flex flex-col gap-4">
-            <div className="bg-[#FFF4E5] rounded-[18px] p-5 border border-[#FF9500]/20 flex flex-col gap-4">
+            <div className="bg-warning-soft rounded-panel p-5 border border-warning/20 flex flex-col gap-4">
               <div>
-                <h3 className="text-[17px] font-medium text-[#FF9500]">
+                <h3 className="text-[17px] font-medium text-warning">
                   Bảo trì hệ thống
                 </h3>
-                <p className="text-[13px] text-[#FF9500]/80 mt-1">
+                <p className="text-[13px] text-warning/80 mt-1">
                   Ngắt kết nối người dùng. Gây gián đoạn.
                 </p>
               </div>
               <button
                 onClick={toggleMaintenance}
                 disabled={isProcessing}
-                className={`w-full py-2.5 rounded-full text-[13px] font-medium transition-colors ${maintenanceMode ? "bg-[#FF3B30] text-white" : "bg-white text-[#FF9500] hover:bg-[#FF9500]/10"}`}
+                className={`w-full py-2.5 rounded-full text-[13px] font-medium transition-colors ${maintenanceMode ? "bg-danger text-white" : "bg-white text-warning hover:bg-warning/10"}`}
               >
                 {maintenanceMode ? "Tắt bảo trì" : "Bật bảo trì"}
               </button>
             </div>
-            <div className="bg-[#F5F5F7] rounded-[18px] p-5 flex flex-col gap-4">
+            <div className="bg-surface-quiet rounded-panel p-5 flex flex-col gap-4">
               <div>
-                <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">
+                <h2 className="text-[20px] font-semibold text-ink mb-4">
                   Sao lưu dữ liệu
                 </h2>
-                <p className="text-[13px] text-[#6E6E73] mt-1">
+                <p className="text-[13px] text-ink-muted mt-1">
                   Snapshot toàn bộ DB về kho lạnh.
                 </p>
               </div>
               <button
                 onClick={triggerBackup}
                 disabled={isProcessing}
-                className="w-full py-2.5 bg-white text-[#0071E3] font-medium rounded-full text-[13px] font-medium hover:bg-[#E8E8ED] "
+                className="w-full py-2.5 bg-white text-brand font-medium rounded-full text-[13px] font-medium hover:bg-border "
               >
                 Tiến hành sao lưu
               </button>
@@ -276,16 +276,16 @@ export default function OperationDashboard() {
         </section>
       </div>
 
-      <section className="bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] p-6 flex flex-col gap-6">
+      <section className="bg-surface-quiet rounded-panel border border-border p-6 flex flex-col gap-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-[20px] font-semibold text-[#1D1D1F] flex items-center gap-2">
-            <HardDrive className="w-5 h-5 text-[#6E6E73]" /> Kho lưu trữ (MinIO)
+          <h2 className="text-[20px] font-semibold text-ink flex items-center gap-2">
+            <HardDrive className="w-5 h-5 text-ink-muted" /> Kho lưu trữ (MinIO)
           </h2>
-          <div className="flex items-center gap-2 bg-[#F5F5F7] px-3 py-1.5 rounded-full">
+          <div className="flex items-center gap-2 bg-surface-quiet px-3 py-1.5 rounded-full">
             <div
-              className={`w-2 h-2 rounded-full ${minioStats?.status === "healthy" ? "bg-[#34C759]" : "bg-[#FF3B30]"}`}
+              className={`w-2 h-2 rounded-full ${minioStats?.status === "healthy" ? "bg-brand" : "bg-danger"}`}
             />
-            <span className="text-[12px] font-medium text-[#6E6E73]">
+            <span className="text-[12px] font-medium text-ink-muted">
               {minioStats?.status === "healthy" ? "Đã kết nối" : "Mất kết nối"}
             </span>
           </div>
@@ -293,31 +293,31 @@ export default function OperationDashboard() {
 
         {minioLoading ? (
           <div className="py-10 flex justify-center">
-            <Loader2 className="w-6 h-6 animate-spin text-[#6E6E73]" />
+            <Loader2 className="w-6 h-6 animate-spin text-ink-muted" />
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 text-center">
-              <p className="text-[13px] text-[#6E6E73] font-medium mb-1">
+            <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6 text-center">
+              <p className="text-[13px] text-ink-muted font-medium mb-1">
                 Tổng dung lượng
               </p>
-              <p className="text-[28px] font-semibold text-[#1D1D1F]">
+              <p className="text-[28px] font-semibold text-ink">
                 {formatBytes(minioStats?.total_size_bytes || 0)}
               </p>
             </div>
-            <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 text-center">
-              <p className="text-[13px] text-[#6E6E73] font-medium mb-1">
+            <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6 text-center">
+              <p className="text-[13px] text-ink-muted font-medium mb-1">
                 Tổng số tệp
               </p>
-              <p className="text-[28px] font-semibold text-[#1D1D1F]">
+              <p className="text-[28px] font-semibold text-ink">
                 {minioStats?.total_objects_count || 0}
               </p>
             </div>
-            <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 text-center">
-              <p className="text-[13px] text-[#6E6E73] font-medium mb-1">
+            <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6 text-center">
+              <p className="text-[13px] text-ink-muted font-medium mb-1">
                 Số lượng Buckets
               </p>
-              <p className="text-[28px] font-semibold text-[#1D1D1F]">
+              <p className="text-[28px] font-semibold text-ink">
                 {minioStats?.total_buckets || 0}
               </p>
             </div>
@@ -325,13 +325,13 @@ export default function OperationDashboard() {
         )}
       </section>
 
-      <section className="bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] p-6 flex flex-col gap-6">
-        <h2 className="text-[20px] font-semibold text-[#1D1D1F] flex items-center gap-2">
-          <Zap className="w-5 h-5 text-[#6E6E73]" /> Hạn mức AI
+      <section className="bg-surface-quiet rounded-panel border border-border p-6 flex flex-col gap-6">
+        <h2 className="text-[20px] font-semibold text-ink flex items-center gap-2">
+          <Zap className="w-5 h-5 text-ink-muted" /> Hạn mức AI
         </h2>
         {quotaLoading ? (
           <div className="py-10 flex justify-center">
-            <Loader2 className="w-6 h-6 animate-spin text-[#6E6E73]" />
+            <Loader2 className="w-6 h-6 animate-spin text-ink-muted" />
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -347,17 +347,17 @@ export default function OperationDashboard() {
                 return (
                   <div
                     key={role}
-                    className="bg-[#F5F5F7] rounded-[18px] p-5 flex flex-col gap-4 "
+                    className="bg-surface-quiet rounded-panel p-5 flex flex-col gap-4 "
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-[14px] font-medium text-[#1D1D1F]">
+                      <span className="text-[14px] font-medium text-ink">
                         {roleLabels[role]}
                       </span>
                       {!isAdmin && (
                         <button
                           onClick={() => handleUpdateQuota(role)}
                           disabled={!!isSavingQuota}
-                          className="text-[#0071E3] hover:text-[#0077ED] disabled:opacity-50"
+                          className="text-brand hover:text-brand disabled:opacity-50"
                         >
                           {isSavingQuota === role ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
@@ -369,7 +369,7 @@ export default function OperationDashboard() {
                     </div>
                     <div className="space-y-3">
                       <div>
-                        <label className="text-[12px] text-[#6E6E73] mb-1 block">
+                        <label className="text-[12px] text-ink-muted mb-1 block">
                           Yêu cầu / ngày
                         </label>
                         <input
@@ -392,7 +392,7 @@ export default function OperationDashboard() {
                         />
                       </div>
                       <div>
-                        <label className="text-[12px] text-[#6E6E73] mb-1 block">
+                        <label className="text-[12px] text-ink-muted mb-1 block">
                           Token / ngày
                         </label>
                         <input

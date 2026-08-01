@@ -49,21 +49,21 @@ export default class DocLibColorPalette implements BlockTool {
       const style = document.createElement("style");
       style.id = "doclib-cp2-styles";
       style.innerHTML = `
-        .doclib-pal-wrapper { border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; background: #fff; margin: 12px 0; }
-        .doclib-pal-title { font-size: 13px; font-weight: 600; color: #0f172a; margin-bottom: 14px; }
+        .doclib-pal-wrapper { border: 1px solid hsl(var(--border)); border-radius: 8px; padding: 20px; background: hsl(var(--surface)); margin: 12px 0; }
+        .doclib-pal-title { font-size: 13px; font-weight: 600; color: hsl(var(--ink)); margin-bottom: 14px; }
         .doclib-pal-swatches { display: flex; flex-wrap: wrap; gap: 10px; }
         .doclib-pal-swatch { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; }
         .doclib-pal-color { width: 56px; height: 56px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.08); transition: transform 0.1s; }
         .doclib-pal-swatch:hover .doclib-pal-color { transform: scale(1.08); }
-        .doclib-pal-hex { font-size: 10px; font-family: ui-monospace, monospace; color: #64748b; font-weight: 500; }
-        .doclib-pal-name { font-size: 10px; color: #94a3b8; }
-        .doclib-pal-edit { border-top: 1px solid #f1f5f9; margin-top: 14px; padding-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
-        .doclib-pal-color-edit { display: flex; align-items: center; gap: 6px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px; }
+        .doclib-pal-hex { font-size: 10px; font-family: ui-monospace, monospace; color: hsl(var(--ink-muted)); font-weight: 500; }
+        .doclib-pal-name { font-size: 10px; color: hsl(var(--ink-faint)); }
+        .doclib-pal-edit { border-top: 1px solid hsl(var(--surface-quiet)); margin-top: 14px; padding-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
+        .doclib-pal-color-edit { display: flex; align-items: center; gap: 6px; background: hsl(var(--surface-raised)); border: 1px solid hsl(var(--border)); border-radius: 6px; padding: 4px 8px; }
         .doclib-pal-color-input { width: 28px; height: 28px; border: none; padding: 0; cursor: pointer; border-radius: 4px; }
-        .doclib-pal-name-input { font-size: 11px; border: none; background: transparent; outline: none; color: #475569; width: 80px; }
-        .doclib-pal-del { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 14px; }
-        .doclib-pal-add-btn { padding: 6px 12px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 11px; cursor: pointer; align-self: center; }
-        .doclib-pal-copied { font-size: 10px; color: #059669; }
+        .doclib-pal-name-input { font-size: 11px; border: none; background: transparent; outline: none; color: hsl(var(--ink-muted)); width: 80px; }
+        .doclib-pal-del { background: none; border: none; color: hsl(var(--ink-faint)); cursor: pointer; font-size: 14px; }
+        .doclib-pal-add-btn { padding: 6px 12px; background: hsl(var(--surface-quiet)); border: 1px solid hsl(var(--border)); border-radius: 6px; font-size: 11px; cursor: pointer; align-self: center; }
+        .doclib-pal-copied { font-size: 10px; color: hsl(var(--brand)); }
       `;
       document.head.appendChild(style);
     }

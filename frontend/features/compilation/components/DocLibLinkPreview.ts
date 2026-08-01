@@ -52,16 +52,16 @@ export default class DocLibLinkPreview implements BlockTool {
       const style = document.createElement("style");
       style.id = "doclib-link-preview-styles";
       style.innerHTML = `
-        .doclib-link-card { display: flex; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: #fff; text-decoration: none; color: inherit; margin: 12px 0; transition: box-shadow 0.2s; min-height: 120px; }
+        .doclib-link-card { display: flex; border: 1px solid hsl(var(--border)); border-radius: 8px; overflow: hidden; background: hsl(var(--surface)); text-decoration: none; color: inherit; margin: 12px 0; transition: box-shadow 0.2s; min-height: 120px; }
         .doclib-link-card:hover { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
         .doclib-link-content { padding: 16px; flex: 1; display: flex; flex-direction: column; justify-content: center; }
-        .doclib-link-title { font-weight: 600; font-size: 1.05em; color: #0f172a; margin-bottom: 4px; outline: none; }
-        .doclib-link-title:empty::before { content: 'DocLib Title'; color: #94a3b8; pointer-events: none; }
-        .doclib-link-desc { font-size: 0.9em; color: #475569; margin-bottom: 12px; outline: none; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .doclib-link-desc:empty::before { content: 'DocLib Input'; color: #94a3b8; pointer-events: none; }
-        .doclib-link-site { font-size: 0.8em; color: #64748b; font-weight: 500; outline: none; }
-        .doclib-link-site:empty::before { content: 'DocLib Name'; color: #94a3b8; pointer-events: none; }
-        .doclib-link-image { width: 160px; background: #f1f5f9; background-size: cover; background-position: center; border-left: 1px solid #e2e8f0; position: relative; }
+        .doclib-link-title { font-weight: 600; font-size: 1.05em; color: hsl(var(--ink)); margin-bottom: 4px; outline: none; }
+        .doclib-link-title:empty::before { content: 'DocLib Title'; color: hsl(var(--ink-faint)); pointer-events: none; }
+        .doclib-link-desc { font-size: 0.9em; color: hsl(var(--ink-muted)); margin-bottom: 12px; outline: none; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .doclib-link-desc:empty::before { content: 'DocLib Input'; color: hsl(var(--ink-faint)); pointer-events: none; }
+        .doclib-link-site { font-size: 0.8em; color: hsl(var(--ink-muted)); font-weight: 500; outline: none; }
+        .doclib-link-site:empty::before { content: 'DocLib Name'; color: hsl(var(--ink-faint)); pointer-events: none; }
+        .doclib-link-image { width: 160px; background: hsl(var(--surface-quiet)); background-size: cover; background-position: center; border-left: 1px solid hsl(var(--border)); position: relative; }
         .doclib-link-image::after { content: 'Change image'; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); color: white; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; font-size: 12px; cursor: pointer; }
         .doclib-link-image:hover::after { opacity: 1; }
         .doclib-link-input-container { display: flex; gap: 8px; align-items: center; }

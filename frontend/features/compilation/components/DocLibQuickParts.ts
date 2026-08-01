@@ -46,10 +46,10 @@ export default class DocLibQuickParts implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-quickp { font-family: sans-serif; padding: 16px; border: 1px dashed #cbd5e1; border-radius: 8px; background: #f8fafc; margin: 16px 0; position: relative; }
-      .doclib-quickp::before { content: "DocLib Quick Part"; position: absolute; top: -10px; left: 16px; background: #fff; padding: 0 8px; color: #64748b; font-size: 11px; font-weight: bold; border-radius: 12px; border: 1px solid #cbd5e1; text-transform: uppercase; }
-      .doclib-quickp-text { outline: none; min-height: 50px; font-size: 14px; color: #1e293b; line-height: 1.5; }
-      .doclib-quickp-text:empty:before { content: "DocLib Insert reusable text here"; color: #94a3b8; }
+      .doclib-quickp { font-family: sans-serif; padding: 16px; border: 1px dashed hsl(var(--border)); border-radius: 8px; background: hsl(var(--surface-raised)); margin: 16px 0; position: relative; }
+      .doclib-quickp::before { content: "DocLib Quick Part"; position: absolute; top: -10px; left: 16px; background: hsl(var(--surface)); padding: 0 8px; color: hsl(var(--ink-muted)); font-size: 11px; font-weight: bold; border-radius: 12px; border: 1px solid hsl(var(--border)); text-transform: uppercase; }
+      .doclib-quickp-text { outline: none; min-height: 50px; font-size: 14px; color: hsl(var(--ink)); line-height: 1.5; }
+      .doclib-quickp-text:empty:before { content: "DocLib Insert reusable text here"; color: hsl(var(--ink-faint)); }
     `;
     this.wrapper.appendChild(style);
 

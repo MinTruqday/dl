@@ -58,21 +58,21 @@ export default class DocLibTimeline implements BlockTool {
       style.id = "doclib-timeline-styles";
       style.innerHTML = `
             .doclib-tl-wrapper { position: relative; margin: 24px 0; padding-left: 24px; }
-            .doclib-tl-wrapper::before { content: ''; position: absolute; left: 8px; top: 8px; bottom: 8px; width: 2px; background: #e2e8f0; }
+            .doclib-tl-wrapper::before { content: ''; position: absolute; left: 8px; top: 8px; bottom: 8px; width: 2px; background: hsl(var(--border)); }
             .doclib-tl-item { position: relative; margin-bottom: 24px; }
             .doclib-tl-item:last-child { margin-bottom: 0; }
-            .doclib-tl-dot { position: absolute; left: -21px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: #3b82f6; border: 3px solid #fff; box-shadow: 0 0 0 2px #3b82f6; }
-            .doclib-tl-content { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; position: relative; }
-            .doclib-tl-content::before { content: ''; position: absolute; left: -6px; top: 6px; width: 10px; height: 10px; background: #f8fafc; border-left: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; transform: rotate(45deg); }
-            .doclib-tl-title { font-weight: 700; font-size: 1.1em; color: #0f172a; outline: none; margin-bottom: 4px; }
-            .doclib-tl-title:empty::before { content: 'Enter event name'; color: #94a3b8; }
-            .doclib-tl-date { font-size: 0.85em; color: #3b82f6; font-weight: 600; outline: none; margin-bottom: 8px; }
+            .doclib-tl-dot { position: absolute; left: -21px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: hsl(var(--brand)); border: 3px solid hsl(var(--surface)); box-shadow: 0 0 0 2px hsl(var(--brand)); }
+            .doclib-tl-content { background: hsl(var(--surface-raised)); border: 1px solid hsl(var(--border)); border-radius: 8px; padding: 16px; position: relative; }
+            .doclib-tl-content::before { content: ''; position: absolute; left: -6px; top: 6px; width: 10px; height: 10px; background: hsl(var(--surface-raised)); border-left: 1px solid hsl(var(--border)); border-bottom: 1px solid hsl(var(--border)); transform: rotate(45deg); }
+            .doclib-tl-title { font-weight: 700; font-size: 1.1em; color: hsl(var(--ink)); outline: none; margin-bottom: 4px; }
+            .doclib-tl-title:empty::before { content: 'Enter event name'; color: hsl(var(--ink-faint)); }
+            .doclib-tl-date { font-size: 0.85em; color: hsl(var(--brand)); font-weight: 600; outline: none; margin-bottom: 8px; }
             .doclib-tl-date:empty::before { content: 'Time'; color: #93c5fd; }
-            .doclib-tl-desc { font-size: 0.95em; color: #475569; outline: none; line-height: 1.5; }
-            .doclib-tl-desc:empty::before { content: 'Detailed description'; color: #94a3b8; }
-            .doclib-tl-btn { margin-top: 16px; padding: 8px 16px; background: #f1f5f9; border: 1px dashed #cbd5e1; border-radius: 8px; color: #64748b; font-weight: 500; cursor: pointer; width: 100%; text-align: center; transition: background 0.2s; }
-            .doclib-tl-btn:hover { background: #e2e8f0; }
-            .doclib-tl-rm { position: absolute; top: 8px; right: 8px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; background: #fee2e2; color: #ef4444; border-radius: 4px; cursor: pointer; border: none; opacity: 0; transition: opacity 0.2s; }
+            .doclib-tl-desc { font-size: 0.95em; color: hsl(var(--ink-muted)); outline: none; line-height: 1.5; }
+            .doclib-tl-desc:empty::before { content: 'Detailed description'; color: hsl(var(--ink-faint)); }
+            .doclib-tl-btn { margin-top: 16px; padding: 8px 16px; background: hsl(var(--surface-quiet)); border: 1px dashed hsl(var(--border)); border-radius: 8px; color: hsl(var(--ink-muted)); font-weight: 500; cursor: pointer; width: 100%; text-align: center; transition: background 0.2s; }
+            .doclib-tl-btn:hover { background: hsl(var(--border)); }
+            .doclib-tl-rm { position: absolute; top: 8px; right: 8px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; background: #fee2e2; color: hsl(var(--danger)); border-radius: 4px; cursor: pointer; border: none; opacity: 0; transition: opacity 0.2s; }
             .doclib-tl-content:hover .doclib-tl-rm { opacity: 1; }
         `;
       document.head.appendChild(style);

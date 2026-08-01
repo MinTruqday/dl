@@ -48,13 +48,13 @@ export default class DocLibCombineDocuments implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-combine { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 24px; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; margin: 16px 0; font-family: sans-serif; }
-      .doclib-combine-doc { flex: 1; min-width: 120px; text-align: center; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-      .doclib-combine-title { font-size: 14px; font-weight: bold; color: #0f172a; margin-bottom: 8px; outline: none; }
-      .doclib-combine-title:empty:before { content: attr(data-placeholder); color: #94a3b8; font-weight: normal; }
-      .doclib-combine-icon { font-size: 24px; color: #3b82f6; margin-bottom: 8px; }
-      .doclib-combine-arrow { font-size: 24px; color: #94a3b8; font-weight: bold; }
-      .doclib-combine-merged { flex: 1; min-width: 140px; text-align: center; background: #eff6ff; border: 2px dashed #3b82f6; border-radius: 8px; padding: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+      .doclib-combine { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 24px; border: 1px solid hsl(var(--border)); border-radius: 8px; background: hsl(var(--surface-raised)); margin: 16px 0; font-family: sans-serif; }
+      .doclib-combine-doc { flex: 1; min-width: 120px; text-align: center; background: hsl(var(--surface)); border: 1px solid hsl(var(--border)); border-radius: 8px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+      .doclib-combine-title { font-size: 14px; font-weight: bold; color: hsl(var(--ink)); margin-bottom: 8px; outline: none; }
+      .doclib-combine-title:empty:before { content: attr(data-placeholder); color: hsl(var(--ink-faint)); font-weight: normal; }
+      .doclib-combine-icon { font-size: 24px; color: hsl(var(--brand)); margin-bottom: 8px; }
+      .doclib-combine-arrow { font-size: 24px; color: hsl(var(--ink-faint)); font-weight: bold; }
+      .doclib-combine-merged { flex: 1; min-width: 140px; text-align: center; background: hsl(var(--brand-soft)); border: 2px dashed hsl(var(--brand)); border-radius: 8px; padding: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
     `;
     this.wrapper.appendChild(style);
 

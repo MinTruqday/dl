@@ -43,8 +43,8 @@ export default class DocLibAudio implements BlockTool {
       style.innerHTML = `
             .doclib-audio-wrapper { text-align: center; }
             .doclib-audio-player { width: 100%; border-radius: 8px; margin-bottom: 8px; outline: none; }
-            .doclib-audio-caption { outline: none; text-align: center; color: #64748b; font-size: 0.9em; padding: 4px; }
-            .doclib-audio-caption:empty::before { content: 'DocLib Input'; color: #94a3b8; pointer-events: none; }
+            .doclib-audio-caption { outline: none; text-align: center; color: hsl(var(--ink-muted)); font-size: 0.9em; padding: 4px; }
+            .doclib-audio-caption:empty::before { content: 'DocLib Input'; color: hsl(var(--ink-faint)); pointer-events: none; }
             .doclib-audio-input-container { display: flex; align-items: center; }
             .doclib-audio-input { flex-grow: 1; margin-right: 12px; }
         `;
@@ -83,14 +83,14 @@ export default class DocLibAudio implements BlockTool {
       uploader.style.flexDirection = "column";
       uploader.style.alignItems = "center";
       uploader.style.justifyContent = "center";
-      uploader.style.border = "2px dashed #cbd5e1";
+      uploader.style.border = "2px dashed hsl(var(--border))";
       uploader.style.borderRadius = "12px";
       uploader.style.padding = "32px";
-      uploader.style.background = "#f8fafc";
+      uploader.style.background = "hsl(var(--surface-raised))";
       uploader.style.cursor = "pointer";
-      uploader.style.color = "#475569";
+      uploader.style.color = "hsl(var(--ink-muted))";
       uploader.innerHTML = `
-              <div style="color: #94a3b8; margin-bottom: 12px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="af7d00642b0c4241"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="9,10 4,19 13,16 19,18 20,12 19,14"/></svg></div>
+              <div style="color: hsl(var(--ink-faint)); margin-bottom: 12px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="af7d00642b0c4241"><rect x="4" y="4" width="16" height="16" rx="3"/><polyline points="9,10 4,19 13,16 19,18 20,12 19,14"/></svg></div>
               <div style="font-weight: 500; font-size: 1.1em; margin-bottom: 4px;">Upload Audio</div>
               <div style="font-size: 0.9em; opacity: 0.8;">Click to select file or Right click to paste URL</div>
           `;

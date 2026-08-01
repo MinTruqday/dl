@@ -86,7 +86,7 @@ export default class DocLibTableBordersInside implements BlockTool {
       anchor instanceof HTMLElement ? anchor : anchor?.parentElement || null;
     const table = element?.closest<HTMLTableElement>("table");
     if (!table) throw new Error("Select a table before running this command");
-    table.style.border = "1px solid #111827";
-    table.querySelectorAll<HTMLElement>("td,th").forEach((cell) => (cell.style.border = "1px solid #111827"));
+    table.style.border = "1px solid hsl(var(--ink))";
+    table.querySelectorAll<HTMLElement>("td,th").forEach((cell) => (cell.style.border = "1px solid hsl(var(--ink))"));
   }
 }

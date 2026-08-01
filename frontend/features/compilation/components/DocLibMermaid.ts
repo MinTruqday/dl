@@ -48,10 +48,10 @@ export default class DocLibMermaid implements BlockTool {
       const style = document.createElement("style");
       style.id = "doclib-mermaid-styles";
       style.innerHTML = `
-        .doclib-mermaid-wrapper { border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; margin: 10px 0; }
-        .doclib-mermaid-textarea { width: 100%; min-height: 120px; padding: 16px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; border: none; border-bottom: 1px solid #e2e8f0; outline: none; resize: vertical; background: #f8fafc; font-size: 14px; line-height: 1.5; box-sizing: border-box; }
+        .doclib-mermaid-wrapper { border: 1px solid hsl(var(--border)); border-radius: 8px; overflow: hidden; margin: 10px 0; }
+        .doclib-mermaid-textarea { width: 100%; min-height: 120px; padding: 16px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; border: none; border-bottom: 1px solid hsl(var(--border)); outline: none; resize: vertical; background: hsl(var(--surface-raised)); font-size: 14px; line-height: 1.5; box-sizing: border-box; }
         .doclib-mermaid-preview { padding: 24px; text-align: center; background: white; min-height: 120px; display: flex; justify-content: center; align-items: center; overflow-x: auto; }
-        .doclib-mermaid-error { color: #ef4444; font-weight: 500; font-size: 13px; padding: 12px; }
+        .doclib-mermaid-error { color: hsl(var(--danger)); font-weight: 500; font-size: 13px; padding: 12px; }
       `;
       document.head.appendChild(style);
     }

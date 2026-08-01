@@ -48,12 +48,12 @@ export default class DocLibMacroButton implements BlockTool {
     const style = document.createElement("style");
     style.innerHTML = `
       .doclib-macro { margin: 24px 0; display: flex; flex-direction: column; align-items: center; gap: 16px; }
-      .doclib-macro-btn { padding: 12px 32px; background: #0f172a; color: #fff; border: none; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; transition: background 0.2s; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-      .doclib-macro-btn:hover { background: #1e293b; }
+      .doclib-macro-btn { padding: 12px 32px; background: hsl(var(--ink)); color: hsl(var(--surface)); border: none; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; transition: background 0.2s; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+      .doclib-macro-btn:hover { background: hsl(var(--ink)); }
       .doclib-macro-btn:active { transform: translateY(1px); }
       
-      .doclib-macro-edit { display: flex; gap: 8px; background: #f8fafc; padding: 12px; border: 1px dashed #cbd5e1; border-radius: 8px; }
-      .doclib-macro-input { padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; }
+      .doclib-macro-edit { display: flex; gap: 8px; background: hsl(var(--surface-raised)); padding: 12px; border: 1px dashed hsl(var(--border)); border-radius: 8px; }
+      .doclib-macro-input { padding: 8px; border: 1px solid hsl(var(--border)); border-radius: 4px; outline: none; }
     `;
     this.wrapper.appendChild(style);
 

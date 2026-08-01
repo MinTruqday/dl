@@ -37,7 +37,7 @@ export default class DocLibShape implements BlockTool {
     this.readOnly = !!readOnly;
     this.data = {
       shape: data?.shape || "rectangle",
-      fill: data?.fill || "#3b82f6",
+      fill: data?.fill || "hsl(var(--brand))",
       stroke: data?.stroke || "#1d4ed8",
       text: data?.text || "",
     };
@@ -52,11 +52,11 @@ export default class DocLibShape implements BlockTool {
       .doclib-shape-wrap { display: flex; flex-direction: column; align-items: center; margin: 24px 0; }
       .doclib-shape-svg { width: 150px; height: 150px; position: relative; display: flex; align-items: center; justify-content: center; }
       .doclib-shape-svg svg { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
-      .doclib-shape-text { position: relative; z-index: 2; color: #fff; font-weight: 600; text-align: center; max-width: 80%; outline: none; }
+      .doclib-shape-text { position: relative; z-index: 2; color: hsl(var(--surface)); font-weight: 600; text-align: center; max-width: 80%; outline: none; }
       .doclib-shape-text:empty::before { content: "DocLib Text"; color: rgba(255,255,255,0.6); pointer-events: none; }
       
-      .doclib-shape-controls { display: flex; gap: 8px; margin-top: 16px; background: #f8fafc; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; }
-      .doclib-shape-select, .doclib-shape-color { padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; }
+      .doclib-shape-controls { display: flex; gap: 8px; margin-top: 16px; background: hsl(var(--surface-raised)); padding: 12px; border: 1px solid hsl(var(--border)); border-radius: 8px; }
+      .doclib-shape-select, .doclib-shape-color { padding: 6px; border: 1px solid hsl(var(--border)); border-radius: 4px; outline: none; }
     `;
     this.wrapper.appendChild(style);
 

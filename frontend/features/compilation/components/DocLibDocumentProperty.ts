@@ -47,11 +47,11 @@ export default class DocLibDocumentProperty implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-prop { display: inline-flex; align-items: center; gap: 8px; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; font-family: sans-serif; font-size: 14px; margin: 4px 0; }
-      .doclib-prop-type { font-weight: bold; color: #64748b; font-size: 12px; text-transform: uppercase; user-select: none; }
-      .doclib-prop-val { color: #0f172a; min-width: 50px; outline: none; }
-      .doclib-prop-val:empty:before { content: "DocLib Value"; color: #94a3b8; font-style: italic; }
-      .doclib-prop-select { font-weight: bold; color: #64748b; font-size: 12px; text-transform: uppercase; border: none; background: transparent; outline: none; cursor: pointer; }
+      .doclib-prop { display: inline-flex; align-items: center; gap: 8px; padding: 4px 8px; border: 1px solid hsl(var(--border)); border-radius: 4px; background: hsl(var(--surface-raised)); font-family: sans-serif; font-size: 14px; margin: 4px 0; }
+      .doclib-prop-type { font-weight: bold; color: hsl(var(--ink-muted)); font-size: 12px; text-transform: uppercase; user-select: none; }
+      .doclib-prop-val { color: hsl(var(--ink)); min-width: 50px; outline: none; }
+      .doclib-prop-val:empty:before { content: "DocLib Value"; color: hsl(var(--ink-faint)); font-style: italic; }
+      .doclib-prop-select { font-weight: bold; color: hsl(var(--ink-muted)); font-size: 12px; text-transform: uppercase; border: none; background: transparent; outline: none; cursor: pointer; }
     `;
     this.wrapper.appendChild(style);
 

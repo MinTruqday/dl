@@ -1,7 +1,7 @@
 "use client";
 
-import Workspace from "@/features/content/components/Workspace";
 import { usePathname } from "next/navigation";
+import AppShell from "@/app/_components/AppShell";
 
 export default function MainLayout({
   children,
@@ -10,19 +10,7 @@ export default function MainLayout({
 }) {
   const pathname = usePathname();
 
-  const isPublic = () => {
-    if (pathname === "/") return true;
-    if (pathname.startsWith("/kham-pha")) return true;
+  const isPublic = pathname.startsWith("/kham-pha") || pathname.startsWith("/tai-lieu/");
 
-    if (pathname.startsWith("/author")) return true;
-    if (pathname.startsWith("/search")) return true;
-
-    if (pathname.startsWith("/tai-lieu/")) {
-      return true;
-    }
-
-    return false;
-  };
-
-  return <Workspace requireAuth={!isPublic()}>{children}</Workspace>;
+  return <AppShell requireAuth={!isPublic}>{children}</AppShell>;
 }

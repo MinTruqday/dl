@@ -36,10 +36,10 @@ export default class DocLibTextHighlight implements InlineTool {
       style.id = "doclib-text-highlight-styles";
       style.innerHTML = `
             mark[data-color] { padding: 2px 4px; border-radius: 4px; color: inherit; }
-            .doclib-th-picker { position: absolute; top: 100%; left: 0; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px; display: flex; gap: 4px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); z-index: 100; margin-top: 4px; }
+            .doclib-th-picker { position: absolute; top: 100%; left: 0; background: hsl(var(--surface)); border: 1px solid hsl(var(--border)); border-radius: 6px; padding: 4px; display: flex; gap: 4px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); z-index: 100; margin-top: 4px; }
             .doclib-th-color { width: 20px; height: 20px; border-radius: 4px; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); }
             .doclib-th-color:hover { transform: scale(1.1); }
-            .doclib-th-clear { display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 4px; cursor: pointer; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 12px; }
+            .doclib-th-clear { display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 4px; cursor: pointer; border: 1px solid hsl(var(--border)); background: hsl(var(--surface-raised)); font-size: 12px; }
         `;
       document.head.appendChild(style);
     }
@@ -53,9 +53,9 @@ export default class DocLibTextHighlight implements InlineTool {
     this.colorPicker.style.display = "none";
 
     const colors = [
-      { name: "yellow", value: "#fef08a" },
-      { name: "green", value: "#bbf7d0" },
-      { name: "blue", value: "#bfdbfe" },
+      { name: "yellow", value: "hsl(var(--warning-soft))" },
+      { name: "green", value: "hsl(var(--brand-soft))" },
+      { name: "blue", value: "hsl(var(--brand-soft))" },
       { name: "pink", value: "#fbcfe8" },
       { name: "purple", value: "#e9d5ff" },
     ];
@@ -90,7 +90,7 @@ export default class DocLibTextHighlight implements InlineTool {
     if (termWrapper) {
       this.togglePicker();
     } else {
-      this.wrap(range, "#fef08a");
+      this.wrap(range, "hsl(var(--warning-soft))");
     }
   }
 

@@ -20,7 +20,7 @@ export async function requestWithdrawalAPI(
     body: JSON.stringify({ amount, bank_info: bankInfo }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi khởi tạo yêu cầu rút tiền");
+  if (!res.ok) throw new Error(data.message || "Không thể tạo yêu cầu rút tiền");
   return data;
 }
 
@@ -30,7 +30,7 @@ export async function getWithdrawalQueueAPI(status: string = "PENDING") {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi trích xuất hàng đợi thanh toán");
+    throw new Error(data.message || "Không thể tải hàng đợi thanh toán");
   return data;
 }
 
@@ -57,15 +57,5 @@ export async function cancelWithdrawalAPI(withdrawalId: string) {
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Lỗi hủy bỏ yêu cầu rút tiền");
-  return data;
-}
-
-export async function getMyWithdrawalsAPI() {
-  const res = await fetch(`${API_URL}/rut-tien/ca-nhan`, {
-    headers: getAuthHeaders(),
-  });
-  const data = await res.json();
-  if (!res.ok)
-    throw new Error(data.message || "Lỗi trích xuất danh sách yêu cầu rút tiền");
   return data;
 }

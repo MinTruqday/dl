@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 import Passkey from "@/features/authentication/components/Passkey";
+import { completeGoogleLoginAPI } from "@/features/authentication/services/session.service";
 
 function GoogleCallbackContent() {
   const router = useRouter();
@@ -19,11 +20,7 @@ function GoogleCallbackContent() {
     if (code) {
       const handleCallback = async () => {
         try {
-          const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/auth/google/feedback?code=${code}`,
-          );
-          const data = await res.json();
-          const authData = data.data || data;
+          const authData = await completeGoogleLoginAPI(code);
 
           if (authData.access_token) {
             await loginState(authData.access_token);
@@ -33,7 +30,7 @@ function GoogleCallbackContent() {
               router.push("/");
             }
           } else {
-            setError(data.message || authData.detail || "Xác thực lỗi");
+            setError(authData.detail || "Xác thực không thành công");
           }
         } catch (err) {
           setError("Lỗi kết nối hệ thống dịch vụ");
@@ -59,10 +56,10 @@ function GoogleCallbackContent() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white font-sans px-4">
         <div className="auth-panel max-w-md w-full text-center">
-          <h2 className="text-[20px] font-semibold text-[#1D1D1F] tracking-tight">
+          <h2 className="text-[20px] font-semibold text-ink tracking-tight">
             Lỗi xác thực
           </h2>
-          <p className="mt-2 text-[15px] text-[#FF3B30]">{error}</p>
+          <p className="mt-2 text-[15px] text-danger">{error}</p>
           <button
             onClick={() => router.push("/dang-nhap")}
             className="pill-button w-full mt-6"
@@ -77,8 +74,8 @@ function GoogleCallbackContent() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white font-sans px-4">
       <div className="auth-panel flex flex-col items-center justify-center gap-4">
-        <Loader2 className="h-8 w-8 animate-spin text-[#0071E3]" />
-        <p className="text-[15px] font-medium text-[#1D1D1F]">
+        <Loader2 className="h-8 w-8 animate-spin text-brand" />
+        <p className="text-[15px] font-medium text-ink">
           Đang xử lý đăng nhập bằng Google
         </p>
       </div>
@@ -91,7 +88,7 @@ export default function GoogleCallbackPage() {
     <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center bg-white font-sans px-4">
-          <Loader2 className="h-10 w-10 animate-spin text-[#0071E3]" />
+          <Loader2 className="h-10 w-10 animate-spin text-brand" />
         </div>
       }
     >

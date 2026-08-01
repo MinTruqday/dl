@@ -36,8 +36,8 @@ export default class DocLibStyleTune {
             .doclib-st-colors { display: flex; flex-wrap: wrap; gap: 4px; }
             .doclib-st-color { width: 24px; height: 24px; border-radius: 4px; cursor: pointer; border: 1px solid rgba(0,0,0,0.1); }
             .doclib-st-color:hover { transform: scale(1.1); }
-            .doclib-st-color.active { border: 2px solid #3b82f6; }
-            .doclib-st-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: #475569; font-weight: 500; }
+            .doclib-st-color.active { border: 2px solid hsl(var(--brand)); }
+            .doclib-st-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: hsl(var(--ink-muted)); font-weight: 500; }
         `;
       document.head.appendChild(style);
     }
@@ -46,13 +46,13 @@ export default class DocLibStyleTune {
 
     const colors = [
       "transparent",
-      "#f8fafc",
-      "#f1f5f9",
-      "#fef2f2",
+      "hsl(var(--surface-raised))",
+      "hsl(var(--surface-quiet))",
+      "hsl(var(--danger-soft))",
       "#fff7ed",
       "#fefce8",
-      "#f0fdf4",
-      "#f0f9ff",
+      "hsl(var(--brand-soft))",
+      "hsl(var(--brand-soft))",
       "#f5f3ff",
       "#fff1f2",
     ];

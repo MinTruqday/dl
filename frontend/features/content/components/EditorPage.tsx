@@ -12,7 +12,6 @@ import {
   exportToWordAPI,
   compilePreviewAPI
 } from "@/features/compilation/services/editorjs.service";
-import { compileDocumentAPI } from "@/features/compilation/services/composition.service";
 import { publishDocumentAPI } from "@/features/content/services/publication.service";
 import { API_URL, getAuthHeaders } from "@/features/authentication/services/session.service";
 import { useAuth } from "@/features/authentication/contexts/AuthContext";
@@ -40,26 +39,26 @@ import { compileLatexPreviewAPI, exportLatexAPI } from "@/features/compilation/s
 
 const customParsers = {
   alert: (block: any) =>
-    `<div class="p-4 rounded-[10px] my-4 bg-[#F5F5F7]"><strong>${block.data.type || "Lưu ý"}</strong>: ${block.data.message}</div>`,
+    `<div class="p-4 rounded-control my-4 bg-surface-quiet"><strong>${block.data.type || "Lưu ý"}</strong>: ${block.data.message}</div>`,
   table: (block: any) =>
-    `<table class="w-full border-collapse  border-[#D2D2D7] my-4">${(block.data.content || []).map((row: any) => `<tr>${row.map((cell: any) => `<td class=" border-[#D2D2D7] p-2">${cell}</td>`).join("")}</tr>`).join("")}</table>`,
+    `<table class="w-full border-collapse  border-border my-4">${(block.data.content || []).map((row: any) => `<tr>${row.map((cell: any) => `<td class=" border-border p-2">${cell}</td>`).join("")}</tr>`).join("")}</table>`,
   toggle: (block: any) =>
-    `<details class="p-4  border-[#D2D2D7] rounded-[10px] my-4"><summary class="font-semibold cursor-pointer">${block.data.text}</summary><div class="mt-2 text-[14px] text-[#6E6E73]">${block.data.items}</div></details>`,
+    `<details class="p-4  border-border rounded-control my-4"><summary class="font-semibold cursor-pointer">${block.data.text}</summary><div class="mt-2 text-[14px] text-ink-muted">${block.data.items}</div></details>`,
   checklist: (block: any) =>
     `<ul class="list-none pl-0 my-4">${(block.data.items || []).map((item: any) => `<li class="flex items-start gap-2"><input type="checkbox" ${item.checked ? "checked" : ""} disabled /> <span>${item.text}</span></li>`).join("")}</ul>`,
   nestedChecklist: (block: any) =>
     `<ul class="list-none pl-0 my-4">${(block.data.items || []).map((item: any) => `<li class="flex items-start gap-2"><input type="checkbox" ${item.checked ? "checked" : ""} disabled /> <span>${item.content}</span></li>`).join("")}</ul>`,
   originalQuote: (block: any) =>
-    `<blockquote class="-4 border-[#D2D2D7] pl-4 py-2 italic my-4 text-[#6E6E73]">${block.data.text} <br/><cite class="text-[14px] font-semibold mt-2 block">- ${block.data.caption}</cite></blockquote>`,
-  divider: () => `<hr class="my-6 border-[#D2D2D7]" />`,
+    `<blockquote class="-4 border-border pl-4 py-2 italic my-4 text-ink-muted">${block.data.text} <br/><cite class="text-[14px] font-semibold mt-2 block">- ${block.data.caption}</cite></blockquote>`,
+  divider: () => `<hr class="my-6 border-border" />`,
   math: (block: any) =>
-    `<div class="p-4 bg-[#F5F5F7] font-mono text-[14px] my-4 overflow-x-auto rounded-[10px]">${block.data.math}</div>`,
+    `<div class="p-4 bg-surface-quiet font-mono text-[14px] my-4 overflow-x-auto rounded-control">${block.data.math}</div>`,
   mermaid: (block: any) =>
-    `<div class="p-4  border-[#D2D2D7] rounded-[10px] my-4 text-[14px] text-[#6E6E73] italic">[Biểu đồ Mermaid không được hỗ trợ trong xem trước]</div>`,
+    `<div class="p-4  border-border rounded-control my-4 text-[14px] text-ink-muted italic">[Biểu đồ Mermaid không được hỗ trợ trong xem trước]</div>`,
   attaches: (block: any) =>
-    `<div class="p-4  border-[#D2D2D7] rounded-[10px] my-4 flex flex-col gap-1 text-[14px] bg-[#F5F5F7]"><span class="font-semibold text-[#1D1D1F]">${block.data.title || "Tập tin đính kèm"}</span><a href="${block.data.file?.url}" class="text-[#0071E3] hover:underline break-all">${block.data.file?.url}</a></div>`,
+    `<div class="p-4  border-border rounded-control my-4 flex flex-col gap-1 text-[14px] bg-surface-quiet"><span class="font-semibold text-ink">${block.data.title || "Tập tin đính kèm"}</span><a href="${block.data.file?.url}" class="text-brand hover:underline break-all">${block.data.file?.url}</a></div>`,
   personality: (block: any) =>
-    `<div class="p-4  border-[#D2D2D7] rounded-[10px] my-4 flex gap-4 items-center bg-[#F5F5F7]"><img src="${block.data.photo}" class="w-16 h-16 rounded-full object-cover" /><div><div class="font-semibold text-[#1D1D1F]">${block.data.name}</div><div class="text-[14px] text-[#6E6E73]">${block.data.description}</div></div></div>`,
+    `<div class="p-4  border-border rounded-control my-4 flex gap-4 items-center bg-surface-quiet"><img src="${block.data.photo}" class="w-16 h-16 rounded-full object-cover" /><div><div class="font-semibold text-ink">${block.data.name}</div><div class="text-[14px] text-ink-muted">${block.data.description}</div></div></div>`,
 };
 
 const edjsParser = edjsHTML(customParsers);
@@ -81,7 +80,7 @@ const safeParseEditorJs = (data: any) => {
         return {
           type: "paragraph",
           data: {
-            text: `<div class="p-4 bg-[#FFF0F0] text-[#FF3B30] text-[14px] my-4 rounded-[10px]">Khối chưa hỗ trợ xem trước: ${b.type}</div>`,
+            text: `<div class="p-4 bg-danger-soft text-danger text-[14px] my-4 rounded-control">Khối chưa hỗ trợ xem trước: ${b.type}</div>`,
           },
         };
       return b;
@@ -157,7 +156,7 @@ function StudioContent() {
       if (list.length > 0 && !selectedDocumentId)
         setSelectedDocumentId(list[0]._id || list[0].id);
     } catch (err: any) {
-      showToast("Lỗi đồng bộ danh sách tài liệu", "error");
+      showToast("Không thể đồng bộ danh sách tài liệu", "error");
     } finally {
       setIsLoading(false);
     }
@@ -170,7 +169,7 @@ function StudioContent() {
       setContent(data.data?.content || data?.content || "");
       setStatusMsg("Đã tải xong");
     } catch (e: any) {
-      setStatusMsg("Lỗi trích xuất dữ liệu bản thảo");
+      setStatusMsg("Không thể tải dữ liệu bản thảo");
     }
   }, [selectedDocumentId]);
 
@@ -195,7 +194,7 @@ function StudioContent() {
         setStatusMsg("Đã lưu bản nháp");
         setTimeout(() => setStatusMsg("Sẵn sàng"), 2000);
       } catch (err) {
-        setStatusMsg("Lỗi lưu trữ dữ liệu bản thảo");
+        setStatusMsg("Không thể lưu dữ liệu bản thảo");
       }
     }, 5000);
     return () => clearTimeout(timer);
@@ -213,7 +212,7 @@ function StudioContent() {
       );
       showToast("Lưu trữ bản thảo hoàn tất", "success");
     } catch (err: any) {
-      showToast("Lỗi lưu trữ dữ liệu bản thảo", "error");
+      showToast("Không thể lưu dữ liệu bản thảo", "error");
     } finally {
       setIsSaving(false);
       setStatusMsg("Sẵn sàng");
@@ -224,7 +223,6 @@ function StudioContent() {
     if (!selectedDocumentId) return;
     setStatusMsg("Đang xuất bản");
     try {
-      await compileDocumentAPI(selectedDocumentId);
       await publishDocumentAPI(selectedDocumentId);
       showToast("Xuất bản tài liệu hoàn tất", "success");
       fetchDocuments();
@@ -299,7 +297,7 @@ function StudioContent() {
       const res = await fetch(`${API_URL}/ket-xuat/${selectedDocumentId}/drm`, {
         headers: getAuthHeaders(),
       });
-      if (!res.ok) throw new Error("Lỗi kết xuất tài liệu định dạng mã hóa bảo mật");
+      if (!res.ok) throw new Error("Không thể xuất tài liệu định dạng mã hóa bảo mật");
       
       const contentDisposition = res.headers.get('content-disposition');
       let filename = `${selectedDocument?.title || "ban-thao"}.doclib`;
@@ -328,31 +326,31 @@ function StudioContent() {
   if (isLoading)
     return (
       <div className="flex-1 flex flex-col items-center justify-center min-h-[80vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-[#6E6E73]" />
+        <Loader2 className="w-8 h-8 animate-spin text-ink-muted" />
       </div>
     );
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-[#1D1D1F] flex flex-col gap-6">
+    <div className="w-full max-w-[1200px] mx-auto px-6 py-6 h-[calc(100dvh-56px)] font-sans text-ink flex flex-col gap-6">
       <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-0">
-        <main className="flex-1 min-w-0 flex flex-col min-h-0 bg-[#F5F5F7] rounded-[18px] overflow-hidden">
-          <div className="h-[60px] px-6 flex items-center justify-between shrink-0 border-b border-[#E8E8ED]">
+        <main className="flex-1 min-w-0 flex flex-col min-h-0 bg-surface-quiet rounded-panel overflow-hidden">
+          <div className="h-[60px] px-6 flex items-center justify-between shrink-0 border-b border-border">
             <div className="flex items-center gap-6 h-full">
-              <div className="flex flex-col max-w-[240px] border-r border-[#E8E8ED] pr-6 justify-center h-full">
+              <div className="flex flex-col max-w-[240px] border-r border-border pr-6 justify-center h-full">
                 <span
-                  className="text-[14px] font-semibold text-[#1D1D1F] truncate"
+                  className="text-[14px] font-semibold text-ink truncate"
                   title={selectedDocument?.title || "Bản thảo chưa đặt tên"}
                 >
                   {selectedDocument?.title || "Bản thảo chưa đặt tên"}
                 </span>
-                <span className="text-[12px] text-[#6E6E73] truncate">{statusMsg}</span>
+                <span className="text-[12px] text-ink-muted truncate">{statusMsg}</span>
               </div>
               <div className="flex items-center gap-2 h-full">
                 {(["edit", "preview", "raw"] as const).map((m) => (
                   <button
                     key={m}
                     onClick={() => setEditorMode(m)}
-                    className={`h-full px-4 text-[14px] font-medium flex items-center transition-colors ${editorMode === m ? "text-[#1D1D1F] border-b-2 border-[#1D1D1F]" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}
+                    className={`h-full px-4 text-[14px] font-medium flex items-center transition-colors ${editorMode === m ? "text-ink border-b-2 border-ink" : "text-ink-muted hover:text-ink"}`}
                   >
                     {m === "edit"
                       ? "Soạn thảo"
@@ -368,21 +366,21 @@ function StudioContent() {
               <button
                 onClick={() => setShowExportModal(true)}
                 disabled={!selectedDocumentId || isExporting}
-                className="px-3 py-1.5 text-[13px] font-medium rounded-full bg-white text-[#1D1D1F] hover:bg-[#E8E8ED] transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                className="px-3 py-1.5 text-[13px] font-medium rounded-full bg-white text-ink hover:bg-border transition-colors disabled:opacity-50 flex items-center gap-1.5"
               >
                 <Download className="w-3.5 h-3.5" /> Xuất
               </button>
               <button
                 onClick={handleSave}
                 disabled={!selectedDocumentId || isSaving}
-                className="px-3 py-1.5 text-[13px] font-medium rounded-full bg-white text-[#0071E3] hover:bg-[#E8E8ED] transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                className="px-3 py-1.5 text-[13px] font-medium rounded-full bg-white text-brand hover:bg-border transition-colors disabled:opacity-50 flex items-center gap-1.5"
               >
                 <Save className="w-3.5 h-3.5" /> {isSaving ? "Đang lưu" : "Lưu nháp"}
               </button>
               <button
                 onClick={handlePublish}
                 disabled={!selectedDocumentId}
-                className="px-3 py-1.5 text-[13px] font-medium rounded-full bg-[#0071E3] text-white hover:bg-[#0077ED] transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                className="px-3 py-1.5 text-[13px] font-medium rounded-full bg-brand text-white hover:bg-brand transition-colors disabled:opacity-50 flex items-center gap-1.5"
               >
                 Phát hành
               </button>
@@ -404,25 +402,25 @@ function StudioContent() {
                 {selectedDocument?.content_format === "doclibx" ? (
                   isPreviewCompiling ? (
                     <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
-                      <Loader2 className="w-8 h-8 animate-spin text-[#6E6E73] mb-4" />
-                      <p className="text-[14px] text-[#6E6E73]">
+                      <Loader2 className="w-8 h-8 animate-spin text-ink-muted mb-4" />
+                      <p className="text-[14px] text-ink-muted">
                 Biên dịch LaTeX
                       </p>
                     </div>
                   ) : previewPdfUrl ? (
                     <iframe
                       src={previewPdfUrl}
-                      className="w-full h-[800px] rounded-[18px]"
+                      className="w-full h-[800px] rounded-panel"
                       title="Preview"
                     />
                   ) : (
-                    <div className="text-center text-[#6E6E73] mt-12">
+                    <div className="text-center text-ink-muted mt-12">
                       Chưa có dữ liệu PDF.
                     </div>
                   )
                 ) : (
                   <div
-                    className="prose prose-zinc max-w-none font-sans text-[16px] leading-relaxed text-[#1D1D1F]"
+                    className="prose prose-zinc max-w-none font-sans text-[16px] leading-relaxed text-ink"
                     dangerouslySetInnerHTML={{
                       __html: (() => {
                         try {
@@ -438,7 +436,7 @@ function StudioContent() {
                 )}
               </div>
             ) : (
-              <pre className="p-6 bg-[#F5F5F7] text-[#1D1D1F] text-[13px] font-mono whitespace-pre-wrap rounded-[18px]">
+              <pre className="p-6 bg-surface-quiet text-ink text-[13px] font-mono whitespace-pre-wrap rounded-panel">
                 {content || "Trống"}
               </pre>
             )}
@@ -459,21 +457,21 @@ function StudioContent() {
         <ModalContent className="space-y-3">
           <button
             onClick={() => { setShowExportModal(false); handleExportPDF(); }}
-            className="w-full text-left px-4 py-3 text-[15px] font-medium rounded-[10px] bg-white text-[#1D1D1F] hover:bg-[#E8E8ED] transition-colors flex items-center justify-between"
+            className="w-full text-left px-4 py-3 text-[15px] font-medium rounded-control bg-white text-ink hover:bg-border transition-colors flex items-center justify-between"
           >
             Định dạng PDF (.pdf)
           </button>
           {selectedDocument?.content_format !== "doclibx" && (
             <button
               onClick={() => { setShowExportModal(false); handleExportDOCX(); }}
-              className="w-full text-left px-4 py-3 text-[15px] font-medium rounded-[10px] bg-white text-[#1D1D1F] hover:bg-[#E8E8ED] transition-colors flex items-center justify-between"
+              className="w-full text-left px-4 py-3 text-[15px] font-medium rounded-control bg-white text-ink hover:bg-border transition-colors flex items-center justify-between"
             >
               Định dạng Word (.docx)
             </button>
           )}
           <button
             onClick={() => { setShowExportModal(false); handleExportDRM(); }}
-            className="w-full text-left px-4 py-3 text-[15px] font-medium rounded-[10px] bg-white text-[#1D1D1F] hover:bg-[#E8E8ED] transition-colors flex items-center justify-between"
+            className="w-full text-left px-4 py-3 text-[15px] font-medium rounded-control bg-white text-ink hover:bg-border transition-colors flex items-center justify-between"
           >
             Định dạng Bảo mật (.doclib)
           </button>
@@ -488,7 +486,7 @@ export default function AuthorStudioPage() {
     <Suspense
       fallback={
         <div className="flex-1 flex items-center justify-center min-h-[80vh]">
-          <Loader2 className="w-8 h-8 animate-spin text-[#6E6E73]" />
+          <Loader2 className="w-8 h-8 animate-spin text-ink-muted" />
         </div>
       }
     >

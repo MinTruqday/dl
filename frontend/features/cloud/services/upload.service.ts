@@ -4,7 +4,7 @@ import {
 } from "@/features/authentication/services/session.service";
 
 async function doDirectUpload(file: File, isSystem: boolean, isMessageAttachment: boolean) {
-  const reqRes = await fetch(`${API_URL}/tai-len/yeu-cau-presigned-url`, {
+  const reqRes = await fetch(`${API_URL}/tai-len/presigned-url`, {
     method: "POST",
     headers: {
       ...getAuthHeaders(),
@@ -51,7 +51,7 @@ async function doDirectUpload(file: File, isSystem: boolean, isMessageAttachment
   });
   
   const confirmData = await confirmRes.json();
-  if (!confirmRes.ok) throw new Error(confirmData.detail || confirmData.message || "Lỗi đồng bộ trạng thái lưu trữ cuối cùng");
+  if (!confirmRes.ok) throw new Error(confirmData.detail || confirmData.message || "Không thể đồng bộ trạng thái lưu trữ cuối cùng");
   
   return confirmData;
 }

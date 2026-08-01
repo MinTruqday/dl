@@ -3,14 +3,15 @@
 import { useToast } from "@/shared/contexts/ToastContext";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import {
-  getToken,
-  API_URL,
-} from "@/features/authentication/services/session.service";
+import { API_URL } from "@/features/authentication/services/session.service";
 import {
   queryRagAPI,
   translateTextAPI,
+  getAiSessionsAPI,
+  createAiSessionAPI,
 } from "@/features/agentic_ai/services/interaction.service";
+import { getDocumentWithPasswordAPI, getDocumentDecryptionKeyAPI } from "@/features/content/services/document.service";
+import { getArchiveTreeAPI, getArchiveContentAPI } from "@/features/cloud/services/storage.service";
 import {
   createHighlightAPI,
   getHighlightsAPI,
@@ -81,6 +82,7 @@ export default function DocumentViewer() {
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = 1;
   const [isExpanded, setIsExpanded] = useState(false);
+  const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
 
   const [zipTree, setZipTree] = useState<any[]>([]);
   const [selectedZipFile, setSelectedZipFile] = useState<{
@@ -109,7 +111,7 @@ export default function DocumentViewer() {
       const res = await getHighlightsAPI(id);
       setHighlights(Array.isArray(res) ? res : res.data || []);
     } catch {
-      showToast("Lỗi đồng bộ dữ liệu nêu bật tài liệu", "error");
+      showToast("Không thể đồng bộ dữ liệu nêu bật tài liệu", "error");
     }
   }, [id, showToast]);
 
@@ -137,43 +139,33 @@ export default function DocumentViewer() {
         return;
       }
       try {
-        const token = getToken();
-        if (!token) {
+        const result = await getDocumentWithPasswordAPI(id, pwd);
+        if (result.status === 401) {
           router.push("/dang-nhap");
           return;
         }
-        const headers: any = { Authorization: `Bearer ${token}` };
-        if (pwd) headers["x-document-password"] = pwd;
-        const res = await fetch(`${API_URL}/tai-lieu/${id}`, { headers });
-        if (res.status === 401) {
-          router.push("/dang-nhap");
-          return;
-        }
-        if (res.status === 403) {
+        if (result.status === 403) {
           setIsLocked(true);
           setLoading(false);
           return;
         }
-        if (res.ok) {
-          const data = await res.json();
-          setDocument(data.data || data);
+        if (result.data) {
+          const data = result.data;
+          setDocument(data);
           setIsLocked(false);
           const bookmarks = await getBookmarksAPI();
           if (bookmarks?.data)
             setIsBookmarked(
               bookmarks.data.some(
                 (b: any) =>
-                  (b.id || b._id) === (data.data?.id || data.data?._id || id),
+                  (b.id || b._id) === (data.id || data._id || id),
               ),
             );
-          if (data.data?.content_format === "zip" && data.data?.file_url) {
+          if (data.content_format === "zip" && data.file_url) {
             setSidebarTab("zip");
-            fetch(
-              `${API_URL}/doc-sach/tree-zip?file_url=${encodeURIComponent(data.data.file_url)}`,
-            )
-              .then((r) => r.json())
-              .then((res) => setZipTree(res.data || []))
-              .catch((err) => console.error("Error fetching zip tree for document ID:", id, err));
+            getArchiveTreeAPI(data.file_url)
+              .then(setZipTree)
+              .catch(() => showToast("Không thể đọc cấu trúc tệp nén", "error"));
           }
         } else
           setError("Quyền truy cập của bạn bị giới hạn đối với tài liệu này");
@@ -183,21 +175,15 @@ export default function DocumentViewer() {
         setLoading(false);
       }
     },
-    [id, rawName, rawUrl, router],
+    [id, rawName, rawUrl, router, showToast],
   );
 
   const fetchSessions = useCallback(async () => {
     try {
-      const token = getToken();
-      const res = await fetch(`${API_URL}/lich-su?document_id=${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setSessions(data.data || data || []);
-      }
+      const data = await getAiSessionsAPI(id);
+      setSessions(data.data || data || []);
     } catch {
-      showToast("Lỗi đồng bộ dữ liệu lịch sử hội thoại", "error");
+      showToast("Không thể đồng bộ dữ liệu lịch sử hội thoại", "error");
     }
   }, [id, showToast]);
 
@@ -233,14 +219,7 @@ export default function DocumentViewer() {
     ) {
       const decrypt = async () => {
         try {
-          const token = getToken();
-          const keyRes = await fetch(
-            `${API_URL}/tai-lieu/${document._id || document.id || id}/khoa-giai-ma`,
-            { headers: { Authorization: `Bearer ${token}` } },
-          );
-          if (!keyRes.ok) throw new Error();
-          const keyData = await keyRes.json();
-          const keyRaw = atob(keyData.data.key);
+          const keyRaw = atob(await getDocumentDecryptionKeyAPI(document._id || document.id || id));
           const keyBytes = new Uint8Array(keyRaw.length);
           for (let i = 0; i < keyRaw.length; i++)
             keyBytes[i] = keyRaw.charCodeAt(i);
@@ -293,23 +272,12 @@ export default function DocumentViewer() {
     let sessionId = currentSessionId;
     if (!sessionId) {
       try {
-        const token = getToken();
-        const res = await fetch(`${API_URL}/lich-su`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ document_id: id, first_query: textToSubmit }),
-        });
-        if (res.ok) {
-          const data = await res.json();
-          sessionId = data.data?._id || data._id;
-          setCurrentSessionId(sessionId);
-          fetchSessions();
-        }
+        const data = await createAiSessionAPI(id, textToSubmit);
+        sessionId = data.data?._id || data._id;
+        setCurrentSessionId(sessionId);
+        fetchSessions();
       } catch {
-        showToast("Lỗi khởi tạo phiên hội thoại mới", "error");
+        showToast("Không thể tạo phiên hội thoại mới", "error");
         setAsking(false);
         return;
       }
@@ -332,7 +300,7 @@ export default function DocumentViewer() {
           id: (Date.now() + 1).toString(),
           role: "assistant",
           content:
-            res.data?.answer || res.answer || "Lỗi trích xuất phản hồi",
+            res.data?.answer || res.answer || "Không thể tải phản hồi",
         },
       ]);
     } catch (e: any) {
@@ -388,7 +356,7 @@ export default function DocumentViewer() {
   const saveHighlight = async () => {
     if (!selection) return;
     try {
-      await createHighlightAPI(id, selection.text, "#F5F5F7");
+      await createHighlightAPI(id, selection.text, "hsl(var(--surface-quiet))");
       fetchHighlights();
       setSelection(null);
       window.getSelection()?.removeAllRanges();
@@ -419,7 +387,7 @@ export default function DocumentViewer() {
         "success",
       );
     } catch {
-      showToast("Lỗi cập nhật trạng thái dấu trang", "error");
+      showToast("Không thể cập nhật trạng thái dấu trang", "error");
     }
   };
 
@@ -469,7 +437,7 @@ export default function DocumentViewer() {
       canvasRef.current.style.width = `${width}px`;
       canvasRef.current.style.height = `${totalHeight}px`;
       ctx.scale(dpr, dpr);
-      ctx.fillStyle = "#1D1D1F";
+      ctx.fillStyle = "hsl(var(--ink))";
       ctx.textBaseline = "top";
       ctx.font = `400 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
       let y = padding;
@@ -499,10 +467,10 @@ export default function DocumentViewer() {
   const getPageContent = () => {
     if (document?.content_format === "zip") {
       return (
-        <div className="w-full h-full flex flex-col bg-[#F5F5F7] border-[#E8E8ED] rounded-[18px] overflow-hidden">
-          <div className="h-14  bg-[#F5F5F7] flex items-center px-6 shrink-0">
-            <FileText className="w-4 h-4 mr-3 text-[#6E6E73]" />
-            <span className="text-[13px] font-medium text-[#1D1D1F]">
+        <div className="w-full h-full flex flex-col bg-surface-quiet border-border rounded-panel overflow-hidden">
+          <div className="h-14  bg-surface-quiet flex items-center px-6 shrink-0">
+            <FileText className="w-4 h-4 mr-3 text-ink-muted" />
+            <span className="text-[13px] font-medium text-ink">
               {selectedZipFile
                 ? selectedZipFile.name
                 : "Trình duyệt mã nguồn ZIP"}
@@ -511,24 +479,24 @@ export default function DocumentViewer() {
           <div className="flex-1 overflow-auto p-6 bg-white">
             {zipLoading ? (
               <div className="flex h-full items-center justify-center">
-                <Loader2 className="w-6 h-6 animate-spin text-[#0071E3]" />
+                <Loader2 className="w-6 h-6 animate-spin text-brand" />
               </div>
             ) : selectedZipFile ? (
               selectedZipFile.type === "text" ? (
-                <pre className="text-[13px] font-mono text-[#1D1D1F] whitespace-pre-wrap leading-relaxed bg-[#F5F5F7] p-6 rounded-[18px] ">
+                <pre className="text-[13px] font-mono text-ink whitespace-pre-wrap leading-relaxed bg-surface-quiet p-6 rounded-panel ">
                   {selectedZipFile.content}
                 </pre>
               ) : (
-                <div className="flex h-full flex-col items-center justify-center text-[#6E6E73]">
-                  <AlertTriangle className="w-12 h-12 mb-4 text-[#C7C7CC]" />
+                <div className="flex h-full flex-col items-center justify-center text-ink-muted">
+                  <AlertTriangle className="w-12 h-12 mb-4 text-ink-faint" />
                   <p className="text-[13px]">
                     Định dạng không được hỗ trợ hiển thị
                   </p>
                 </div>
               )
             ) : (
-              <div className="flex h-full flex-col items-center justify-center text-[#6E6E73]">
-                <Folder className="w-12 h-12 mb-4 text-[#C7C7CC]" />
+              <div className="flex h-full flex-col items-center justify-center text-ink-muted">
+                <Folder className="w-12 h-12 mb-4 text-ink-faint" />
                 <p className="text-[13px]">Chọn tệp để xem mã nguồn</p>
               </div>
             )}
@@ -538,7 +506,7 @@ export default function DocumentViewer() {
     }
     if (document?.content_format === "raw") {
       return (
-        <div className="w-full h-full flex items-center justify-center bg-[#F5F5F7] rounded-[18px] overflow-hidden">
+        <div className="w-full h-full flex items-center justify-center bg-surface-quiet rounded-panel overflow-hidden">
           <iframe
             src={document.file_url}
             className="w-full h-full border-none bg-white"
@@ -550,14 +518,14 @@ export default function DocumentViewer() {
     if (readingMode === "double")
       return (
         <div
-          className="prose max-w-none text-[#1D1D1F] leading-relaxed text-[15px] whitespace-pre-wrap"
+          className="prose max-w-none text-ink leading-relaxed text-[15px] whitespace-pre-wrap"
           style={{ columnCount: 2, columnGap: "4rem" }}
         >
           <CanvasRenderer text={decryptedContent} />
         </div>
       );
     return (
-      <div className="prose max-w-none text-[#1D1D1F] leading-relaxed text-[15px] whitespace-pre-wrap">
+      <div className="prose max-w-none text-ink leading-relaxed text-[15px] whitespace-pre-wrap">
         <CanvasRenderer text={decryptedContent} />
       </div>
     );
@@ -565,15 +533,15 @@ export default function DocumentViewer() {
 
   if (isLocked)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F5F5F7] font-sans px-6">
-        <div className="bg-[#F5F5F7] p-10 w-full max-w-[400px] border-[#E8E8ED] flex flex-col items-center text-center rounded-[18px]">
-          <div className="w-20 h-20 bg-[#F5F5F7] flex items-center justify-center mb-6 rounded-full">
-            <Lock className="w-8 h-8 text-[#0071E3]" />
+      <div className="min-h-screen flex items-center justify-center bg-surface-quiet font-sans px-6">
+        <div className="bg-surface-quiet p-10 w-full max-w-[400px] border-border flex flex-col items-center text-center rounded-panel">
+          <div className="w-20 h-20 bg-surface-quiet flex items-center justify-center mb-6 rounded-full">
+            <Lock className="w-8 h-8 text-brand" />
           </div>
-          <p className="text-[13px] font-medium text-[#6E6E73] mb-4 mb-2">
+          <p className="text-[13px] font-medium text-ink-muted mb-2">
             Thực thể bảo mật
           </p>
-          <p className="text-[15px] text-[#6E6E73] mb-8">
+          <p className="text-[15px] text-ink-muted mb-8">
             Nhập mã định danh để tiếp cận dữ liệu
           </p>
           <div className="w-full space-y-4">
@@ -583,11 +551,11 @@ export default function DocumentViewer() {
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && fetchDocument(password)}
               placeholder=""
-              className="w-full h-[52px] bg-[#F5F5F7] border border-transparent px-4 text-center text-[15px] focus:outline-none focus:border-[#0071E3] focus:bg-white rounded-[10px] transition-all"
+              className="w-full h-[52px] bg-surface-quiet border border-transparent px-4 text-center text-[15px] focus:outline-none focus:border-brand focus:bg-white rounded-control transition-all"
             />
             <button
               onClick={() => fetchDocument(password)}
-              className="w-full h-[52px] bg-[#0071E3] text-white text-[15px] font-medium rounded-full hover:bg-[#0077ED] transition-colors"
+              className="w-full h-[52px] bg-brand text-white text-[15px] font-medium rounded-full hover:bg-brand transition-colors"
             >
               Xác thực quyền truy cập
             </button>
@@ -598,12 +566,12 @@ export default function DocumentViewer() {
 
   if (error)
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F5F5F7] font-sans px-6">
-        <AlertTriangle className="w-16 h-16 text-[#FF3B30] mb-6" />
-        <p className="text-[15px] text-[#1D1D1F] mb-8">{error}</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-surface-quiet font-sans px-6">
+        <AlertTriangle className="w-16 h-16 text-danger mb-6" />
+        <p className="text-[15px] text-ink mb-8">{error}</p>
         <button
           onClick={() => router.back()}
-          className="h-[44px] px-8 bg-[#0071E3] text-white text-[15px] font-medium rounded-full hover:bg-[#0077ED] transition-colors"
+          className="h-[44px] px-8 bg-brand text-white text-[15px] font-medium rounded-full hover:bg-brand transition-colors"
         >
           Quay lại
         </button>
@@ -612,38 +580,38 @@ export default function DocumentViewer() {
 
   return (
     <div
-      className={`flex h-screen bg-[#F5F5F7] overflow-hidden font-sans ${document?.is_protected ? "select-none" : ""}`}
+      className={`flex h-[calc(100dvh-60px)] bg-surface-quiet overflow-hidden font-sans ${document?.is_protected ? "select-none" : ""}`}
       onMouseUp={handleTextSelection}
     >
-      <div className="w-[72px] border-r border-[#E8E8ED] bg-white flex flex-col items-center py-6 gap-6 shrink-0 z-50">
+      <div className="hidden w-[72px] shrink-0 flex-col items-center gap-5 border-r border-border bg-surface py-5 md:flex">
         <button
           onClick={() => setSidebarTab("chat")}
-          className={`p-3 rounded-xl transition-colors ${sidebarTab === "chat" ? "bg-[#0071E3] text-white " : "text-[#6E6E73] hover:text-[#1D1D1F] hover:bg-[#F5F5F7]"}`}
+          className={`p-3 rounded-xl transition-colors ${sidebarTab === "chat" ? "bg-brand text-white " : "text-ink-muted hover:text-ink hover:bg-surface-quiet"}`}
         >
           <Bot className="w-6 h-6" />
         </button>
         <button
           onClick={() => setSidebarTab("highlights")}
-          className={`p-3 rounded-xl transition-colors ${sidebarTab === "highlights" ? "bg-[#0071E3] text-white " : "text-[#6E6E73] hover:text-[#1D1D1F] hover:bg-[#F5F5F7]"}`}
+          className={`p-3 rounded-xl transition-colors ${sidebarTab === "highlights" ? "bg-brand text-white " : "text-ink-muted hover:text-ink hover:bg-surface-quiet"}`}
         >
           <Highlighter className="w-6 h-6" />
         </button>
         <button
           onClick={() => setSidebarTab("thumbnails")}
-          className={`p-3 rounded-xl transition-colors ${sidebarTab === "thumbnails" ? "bg-[#0071E3] text-white " : "text-[#6E6E73] hover:text-[#1D1D1F] hover:bg-[#F5F5F7]"}`}
+          className={`p-3 rounded-xl transition-colors ${sidebarTab === "thumbnails" ? "bg-brand text-white " : "text-ink-muted hover:text-ink hover:bg-surface-quiet"}`}
         >
           <BookOpen className="w-6 h-6" />
         </button>
         <button
           onClick={() => setSidebarTab("history")}
-          className={`p-3 rounded-xl transition-colors ${sidebarTab === "history" ? "bg-[#0071E3] text-white " : "text-[#6E6E73] hover:text-[#1D1D1F] hover:bg-[#F5F5F7]"}`}
+          className={`p-3 rounded-xl transition-colors ${sidebarTab === "history" ? "bg-brand text-white " : "text-ink-muted hover:text-ink hover:bg-surface-quiet"}`}
         >
           <History className="w-6 h-6" />
         </button>
         {document?.content_format === "zip" && (
           <button
             onClick={() => setSidebarTab("zip")}
-            className={`p-3 rounded-xl transition-colors ${sidebarTab === "zip" ? "bg-[#0071E3] text-white " : "text-[#6E6E73] hover:text-[#1D1D1F] hover:bg-[#F5F5F7]"}`}
+            className={`p-3 rounded-xl transition-colors ${sidebarTab === "zip" ? "bg-brand text-white " : "text-ink-muted hover:text-ink hover:bg-surface-quiet"}`}
           >
             <Folder className="w-6 h-6" />
           </button>
@@ -651,58 +619,59 @@ export default function DocumentViewer() {
       </div>
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-[60px]  flex items-center justify-between px-6 bg-white/90 backdrop-blur-md shrink-0 z-40">
+        <header className="h-[60px] flex shrink-0 items-center justify-between gap-2 border-b border-border bg-surface/90 px-3 backdrop-blur-md md:px-6">
           <div className="flex items-center gap-4 flex-1">
             <button
               onClick={() => router.back()}
-              className="p-2 text-[#6E6E73] rounded-full hover:bg-[#F5F5F7] hover:text-[#1D1D1F] transition-colors"
+              aria-label="Quay lại"
+              className="p-2 text-ink-muted rounded-full hover:bg-surface-quiet hover:text-ink transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <h1 className="text-[15px] font-semibold text-[#1D1D1F] truncate max-w-xs md:max-w-md">
+            <h1 className="text-[15px] font-semibold text-ink truncate max-w-xs md:max-w-md">
               {document?.title}
             </h1>
           </div>
-          <div className="flex-1 flex justify-center text-[13px] font-medium text-[#6E6E73]">
+          <div className="hidden flex-1 justify-center text-[13px] font-medium text-ink-muted sm:flex">
             Trang {currentPage} / 1 (100%)
           </div>
-          <div className="flex items-center justify-end gap-6 flex-1">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-1 items-center justify-end gap-2 md:gap-5">
+            <div className="hidden items-center gap-2 sm:flex">
               <button
                 onClick={() => changeZoom(-10)}
-                className="p-2 text-[#6E6E73] rounded-full hover:bg-[#F5F5F7] transition-colors"
+                className="p-2 text-ink-muted rounded-full hover:bg-surface-quiet transition-colors"
               >
                 <ZoomOut className="w-5 h-5" />
               </button>
-              <span className="text-[13px] font-medium text-[#1D1D1F] min-w-[3rem] text-center">
+              <span className="text-[13px] font-medium text-ink min-w-[3rem] text-center">
                 {zoom}%
               </span>
               <button
                 onClick={() => changeZoom(10)}
-                className="p-2 text-[#6E6E73] rounded-full hover:bg-[#F5F5F7] transition-colors"
+                className="p-2 text-ink-muted rounded-full hover:bg-surface-quiet transition-colors"
               >
                 <ZoomIn className="w-5 h-5" />
               </button>
             </div>
-            <div className="w-px h-6 bg-[#E8E8ED]" />
-            <div className="flex items-center gap-1 bg-[#F5F5F7] p-1 rounded-full">
+            <div className="hidden h-6 w-px bg-border md:block" />
+            <div className="hidden items-center gap-1 rounded-control bg-surface-quiet p-1 md:flex">
               <button
                 onClick={() => setReadingMode("single")}
-                className={`p-1.5 rounded-full transition-colors ${readingMode === "single" ? "text-[#1D1D1F] bg-white" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}
+                className={`p-1.5 rounded-full transition-colors ${readingMode === "single" ? "text-ink bg-white" : "text-ink-muted hover:text-ink"}`}
               >
                 <Square className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setReadingMode("double")}
-                className={`p-1.5 rounded-full transition-colors ${readingMode === "double" ? "text-[#1D1D1F] bg-white" : "text-[#6E6E73] hover:text-[#1D1D1F]"}`}
+                className={`p-1.5 rounded-full transition-colors ${readingMode === "double" ? "text-ink bg-white" : "text-ink-muted hover:text-ink"}`}
               >
                 <Columns className="w-4 h-4" />
               </button>
             </div>
-            <div className="w-px h-6 bg-[#E8E8ED]" />
+            <div className="hidden h-6 w-px bg-border md:block" />
             <button
               onClick={toggleBookmark}
-              className={`p-2 rounded-full transition-colors ${isBookmarked ? "text-[#0071E3]" : "text-[#6E6E73] hover:bg-[#F5F5F7] hover:text-[#1D1D1F]"}`}
+              className={`p-2 rounded-full transition-colors ${isBookmarked ? "text-brand" : "text-ink-muted hover:bg-surface-quiet hover:text-ink"}`}
             >
               {isBookmarked ? (
                 <BookmarkCheck className="w-5 h-5" />
@@ -710,12 +679,20 @@ export default function DocumentViewer() {
                 <Bookmark className="w-5 h-5" />
               )}
             </button>
+            <button
+              type="button"
+              onClick={() => setMobilePanelOpen(true)}
+              className="flex h-10 w-10 items-center justify-center rounded-control text-ink-muted hover:bg-surface-quiet lg:hidden"
+              aria-label="Mở công cụ đọc"
+            >
+              <Bot className="h-5 w-5" />
+            </button>
           </div>
         </header>
 
-        <main className="flex-1 overflow-auto bg-[#F5F5F7] p-6 md:p-8 relative flex justify-center custom-scrollbar">
+        <main className="relative flex flex-1 justify-center overflow-auto bg-surface-quiet p-3 custom-scrollbar md:p-8">
           <div
-            className={`mx-auto bg-[#F5F5F7] border-[#E8E8ED] ${document?.content_format === "zip" ? "p-0 h-full max-w-full rounded-[18px]" : "p-12 md:p-16 min-h-full origin-top rounded-[18px]"} transition-transform duration-300 ${readingMode === "double" && document?.content_format !== "zip" ? "w-full max-w-5xl" : document?.content_format !== "zip" ? "w-full max-w-3xl" : "w-full h-full"}`}
+            className={`mx-auto border border-border bg-surface ${document?.content_format === "zip" ? "p-0 h-full max-w-full rounded-panel" : "p-5 md:p-16 min-h-full origin-top rounded-panel"} transition-transform duration-300 ${readingMode === "double" && document?.content_format !== "zip" ? "w-full max-w-5xl" : document?.content_format !== "zip" ? "w-full max-w-3xl" : "w-full h-full"}`}
             style={{
               transform:
                 document?.content_format === "zip"
@@ -727,7 +704,7 @@ export default function DocumentViewer() {
           </div>
           {selection && (
             <div
-              className="fixed z-50 flex gap-2 bg-[#F5F5F7]/90 backdrop-blur-md p-2 border-[#E8E8ED] rounded-[18px] transition-all"
+              className="fixed z-50 flex gap-2 bg-surface-quiet/90 backdrop-blur-md p-2 border-border rounded-panel transition-all"
               style={{
                 left: selection.x,
                 top: selection.y,
@@ -736,14 +713,14 @@ export default function DocumentViewer() {
             >
               <button
                 onClick={saveHighlight}
-                className="p-2 text-[#6E6E73] hover:text-[#1D1D1F] hover:bg-[#F5F5F7] rounded-full transition-colors"
+                className="p-2 text-ink-muted hover:text-ink hover:bg-surface-quiet rounded-full transition-colors"
               >
                 <Highlighter className="w-5 h-5" />
               </button>
               <button
                 onClick={handleTranslate}
                 disabled={translating}
-                className="p-2 text-[#6E6E73] hover:text-[#1D1D1F] hover:bg-[#F5F5F7] rounded-full transition-colors"
+                className="p-2 text-ink-muted hover:text-ink hover:bg-surface-quiet rounded-full transition-colors"
               >
                 {translating ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
@@ -751,7 +728,7 @@ export default function DocumentViewer() {
                   <Languages className="w-5 h-5" />
                 )}
               </button>
-              <button className="p-2 text-[#6E6E73] hover:text-[#1D1D1F] hover:bg-[#F5F5F7] rounded-full transition-colors">
+              <button className="p-2 text-ink-muted hover:text-ink hover:bg-surface-quiet rounded-full transition-colors">
                 <Zap className="w-5 h-5" />
               </button>
             </div>
@@ -759,11 +736,12 @@ export default function DocumentViewer() {
         </main>
       </div>
 
-      <div
-        className={`${isExpanded ? "w-[480px]" : "w-[360px]"} border-l border-[#E8E8ED] bg-white flex flex-col shrink-0 z-50 transition-all duration-300`}
+      {mobilePanelOpen && <button type="button" className="fixed inset-0 z-40 bg-ink/30 lg:hidden" onClick={() => setMobilePanelOpen(false)} aria-label="Đóng công cụ đọc" />}
+      <aside
+        className={`${mobilePanelOpen ? "flex" : "hidden"} fixed inset-y-[60px] right-0 z-50 w-[min(88vw,360px)] flex-col border-l border-border bg-surface shadow-xl lg:relative lg:inset-auto lg:flex lg:shrink-0 lg:shadow-none ${isExpanded ? "lg:w-[480px]" : "lg:w-[360px]"}`}
       >
         <div className="h-[60px]  flex items-center px-6 justify-between shrink-0">
-          <span className="text-[15px] font-semibold text-[#1D1D1F]">
+          <span className="text-[15px] font-semibold text-ink">
             {sidebarTab === "chat"
               ? "Cố vấn AI"
               : sidebarTab === "highlights"
@@ -774,10 +752,13 @@ export default function DocumentViewer() {
                     ? "Mã nguồn ZIP"
                     : "Mục lục"}
           </span>
+          <button type="button" onClick={() => setMobilePanelOpen(false)} className="flex h-10 w-10 items-center justify-center rounded-control text-ink-muted hover:bg-surface-quiet lg:hidden" aria-label="Đóng công cụ đọc">
+            <X className="h-5 w-5" />
+          </button>
           {sidebarTab === "chat" && (
             <button
               onClick={() => setIsExpanded(!isExpanded)}
-              className="p-2 text-[#6E6E73] rounded-full hover:bg-[#F5F5F7] transition-colors"
+              className="hidden p-2 text-ink-muted rounded-control hover:bg-surface-quiet transition-colors lg:block"
             >
               {isExpanded ? (
                 <Minimize2 className="w-4 h-4" />
@@ -786,6 +767,19 @@ export default function DocumentViewer() {
               )}
             </button>
           )}
+        </div>
+
+        <div className="grid grid-cols-4 gap-1 border-b border-border px-3 pb-3 md:hidden">
+          {[
+            { id: "chat", label: "Trò chuyện", icon: Bot },
+            { id: "highlights", label: "Nêu bật", icon: Highlighter },
+            { id: "thumbnails", label: "Mục lục", icon: BookOpen },
+            { id: "history", label: "Lịch sử", icon: History },
+          ].map((item) => (
+            <button key={item.id} type="button" onClick={() => setSidebarTab(item.id as typeof sidebarTab)} aria-label={item.label} className={`flex h-10 items-center justify-center rounded-control ${sidebarTab === item.id ? "bg-brand-soft text-brand" : "text-ink-muted hover:bg-surface-quiet"}`}>
+              <item.icon className="h-4 w-4" />
+            </button>
+          ))}
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 custom-scrollbar bg-white">
@@ -797,23 +791,23 @@ export default function DocumentViewer() {
                   className={`flex gap-4 ${msg.role === "user" ? "flex-row-reverse" : ""} group`}
                 >
                   <div
-                    className={`w-10 h-10 shrink-0 flex items-center justify-center rounded-full ${msg.role === "user" ? "bg-[#F5F5F7] " : "bg-[#0071E3] text-white"}`}
+                    className={`w-10 h-10 shrink-0 flex items-center justify-center rounded-full ${msg.role === "user" ? "bg-surface-quiet " : "bg-brand text-white"}`}
                   >
                     {msg.role === "user" ? (
-                      <User className="w-5 h-5 text-[#6E6E73]" />
+                      <User className="w-5 h-5 text-ink-muted" />
                     ) : (
                       <Bot className="w-5 h-5" />
                     )}
                   </div>
                   <div className="flex flex-col gap-2 max-w-[80%]">
                     <div
-                      className={`text-[15px] leading-relaxed p-4 rounded-[20px] relative ${msg.role === "user" ? "bg-[#0071E3] text-white rounded-tr-[4px]" : "bg-[#F5F5F7] text-[#1D1D1F] rounded-tl-[4px]"}`}
+                      className={`text-[15px] leading-relaxed p-4 rounded-workspace relative ${msg.role === "user" ? "bg-brand text-white rounded-tr-[4px]" : "bg-surface-quiet text-ink rounded-tl-[4px]"}`}
                     >
                       {msg.content}
                       {msg.role === "user" && !asking && (
                         <button
                           onClick={() => setEditingMessageId(msg.id)}
-                          className="absolute -left-12 top-1 opacity-0 group-hover:opacity-100 p-2 text-[#6E6E73] rounded-full hover:bg-[#E8E8ED] transition-all"
+                          className="absolute -left-12 top-1 opacity-0 group-hover:opacity-100 p-2 text-ink-muted rounded-full hover:bg-border transition-all"
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
@@ -823,7 +817,7 @@ export default function DocumentViewer() {
                       <div className="flex flex-col gap-3 mt-2">
                         <textarea
                           defaultValue={msg.content}
-                          className="w-full p-4 text-[15px] border border-[#0071E3] rounded-[18px] outline-none"
+                          className="w-full p-4 text-[15px] border border-brand rounded-panel outline-none"
                           onKeyDown={(e) =>
                             e.key === "Enter" &&
                             !e.shiftKey &&
@@ -834,7 +828,7 @@ export default function DocumentViewer() {
                         <div className="flex justify-end gap-2">
                           <button
                             onClick={() => setEditingMessageId(null)}
-                            className="px-4 py-2 text-[13px] font-medium text-[#6E6E73] hover:bg-[#F5F5F7] rounded-full"
+                            className="px-4 py-2 text-[13px] font-medium text-ink-muted hover:bg-surface-quiet rounded-full"
                           >
                             Hủy bỏ
                           </button>
@@ -848,7 +842,7 @@ export default function DocumentViewer() {
                                 ).value,
                               )
                             }
-                            className="px-4 py-2 bg-[#0071E3] text-white text-[13px] font-medium rounded-full"
+                            className="px-4 py-2 bg-brand text-white text-[13px] font-medium rounded-full"
                           >
                             Cập nhật
                           </button>
@@ -868,18 +862,18 @@ export default function DocumentViewer() {
                 highlights.map((h, i) => (
                   <div
                     key={i}
-                    className="p-5  bg-[#F5F5F7] rounded-[18px] group"
+                    className="p-5  bg-surface-quiet rounded-panel group"
                   >
-                    <p className="text-[15px] text-[#1D1D1F] mb-4 italic pl-4 border-l-2 border-[#0071E3]">
+                    <p className="text-[15px] text-ink mb-4 italic pl-4 border-l-2 border-brand">
                       "{h.text}"
                     </p>
                     <div className="flex justify-between items-center">
-                      <span className="text-[12px] text-[#6E6E73]">
+                      <span className="text-[12px] text-ink-muted">
                         {new Date(h.created_at).toLocaleDateString("vi-VN")}
                       </span>
                       <button
                         onClick={() => deleteHighlightItem(h.id || h._id)}
-                        className="p-2 text-[#6E6E73] hover:text-[#FF3B30] hover:bg-[#FFEBEB] rounded-full"
+                        className="p-2 text-ink-muted hover:text-danger hover:bg-danger-soft rounded-full"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -900,12 +894,12 @@ export default function DocumentViewer() {
                       setCurrentSessionId(s._id);
                       setSidebarTab("chat");
                     }}
-                    className={`p-5 border cursor-pointer rounded-[18px] relative ${currentSessionId === s._id ? "border-[#0071E3] bg-[#EBF4FF]" : "border-[#E8E8ED] bg-[#F5F5F7]"}`}
+                    className={`p-5 border cursor-pointer rounded-panel relative ${currentSessionId === s._id ? "border-brand bg-brand-soft" : "border-border bg-surface-quiet"}`}
                   >
-                    <p className="text-[15px] font-medium text-[#1D1D1F] pr-8">
+                    <p className="text-[15px] font-medium text-ink pr-8">
                       {s.title}
                     </p>
-                    <p className="text-[12px] text-[#6E6E73] mt-2">
+                    <p className="text-[12px] text-ink-muted mt-2">
                       {new Date(s.updated_at).toLocaleDateString("vi-VN")}
                     </p>
                   </div>
@@ -913,32 +907,28 @@ export default function DocumentViewer() {
               )}
             </div>
           ) : sidebarTab === "zip" ? (
-            <div className="space-y-1 text-[13px] bg-[#F5F5F7] p-4 rounded-[18px] min-h-[400px]">
+            <div className="space-y-1 text-[13px] bg-surface-quiet p-4 rounded-panel min-h-[400px]">
               {zipTree.map((item, i) => (
                 <div
                   key={i}
                   onClick={() => {
                     if (!item.is_dir) {
                       setZipLoading(true);
-                      fetch(
-                        `${API_URL}/doc-sach/content-zip?file_url=${encodeURIComponent(document?.file_url)}&path=${encodeURIComponent(item.path)}`,
-                      )
-                        .then((r) => r.json())
+                      getArchiveContentAPI(document?.file_url, item.path)
                         .then((res) =>
                           setSelectedZipFile({
                             name: item.name,
-                            content: res.data?.content || "",
-                            type: res.data?.type || "text",
+                            content: res.content || "",
+                            type: res.type || "text",
                           }),
                         )
-                        .catch((err) => {
-                          console.error("Error fetching zip content for file:", item.path, err);
-                          showToast("Lỗi trích xuất mã nguồn tệp tin ZIP", "error");
+                        .catch(() => {
+                          showToast("Không thể tải mã nguồn tệp tin ZIP", "error");
                         })
                         .finally(() => setZipLoading(false));
                     }
                   }}
-                  className={`flex items-center gap-2 px-3 py-2 cursor-pointer rounded-[10px] ${!item.is_dir && selectedZipFile?.name === item.name ? "bg-[#0071E3] text-white" : "text-[#1D1D1F] hover:bg-[#E8E8ED]"}`}
+                  className={`flex items-center gap-2 px-3 py-2 cursor-pointer rounded-control ${!item.is_dir && selectedZipFile?.name === item.name ? "bg-brand text-white" : "text-ink hover:bg-border"}`}
                   style={{
                     paddingLeft: `${(item.path.split("/").length - 1) * 16 + 12}px`,
                   }}
@@ -958,7 +948,7 @@ export default function DocumentViewer() {
                 <div
                   key={p}
                   onClick={() => setCurrentPage(p)}
-                  className={`aspect-[3/4] border flex flex-col items-center justify-center gap-2 cursor-pointer rounded-[18px] ${currentPage === p ? "bg-[#0071E3] text-white" : "bg-[#F5F5F7] border-[#E8E8ED] text-[#1D1D1F]"}`}
+                  className={`aspect-[3/4] border flex flex-col items-center justify-center gap-2 cursor-pointer rounded-panel ${currentPage === p ? "bg-brand text-white" : "bg-surface-quiet border-border text-ink"}`}
                 >
                   <span className="text-[20px] font-semibold">{p}</span>
                   <span className="text-[12px]">Trang</span>
@@ -979,26 +969,26 @@ export default function DocumentViewer() {
                   !e.shiftKey &&
                   (e.preventDefault(), handleAskAI())
                 }
-                className="w-full min-h-[120px] p-4 pb-16 text-[15px] bg-[#F5F5F7] border border-transparent focus:bg-white focus:border-[#0071E3] resize-none rounded-[18px] text-[#1D1D1F] placeholder:text-[#6E6E73] outline-none"
+                className="w-full min-h-[120px] p-4 pb-16 text-[15px] bg-surface-quiet border border-transparent focus:bg-white focus:border-brand resize-none rounded-panel text-ink placeholder:text-ink-muted outline-none"
                 placeholder=""
                 disabled={asking}
               />
               <div className="absolute bottom-4 left-4">
-                <button className="w-10 h-10 flex items-center justify-center text-[#6E6E73] bg-white  hover:bg-[#F5F5F7] rounded-full">
+                <button className="w-10 h-10 flex items-center justify-center text-ink-muted bg-white  hover:bg-surface-quiet rounded-full">
                   <Paperclip className="w-5 h-5" />
                 </button>
               </div>
               <button
                 onClick={() => handleAskAI()}
                 disabled={asking || !question.trim()}
-                className="absolute bottom-4 right-4 w-10 h-10 bg-[#0071E3] text-white flex items-center justify-center disabled:opacity-50 rounded-full hover:bg-[#0077ED]"
+                className="absolute bottom-4 right-4 w-10 h-10 bg-brand text-white flex items-center justify-center disabled:opacity-50 rounded-full hover:bg-brand"
               >
                 <Send className="w-4 h-4" />
               </button>
             </div>
           </div>
         )}
-      </div>
+      </aside>
     </div>
   );
 }

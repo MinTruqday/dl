@@ -116,7 +116,7 @@ export default function StudioCollabPage() {
       setDocuments(docsData.data || docsData || []);
       setInvites(invitesData.data || invitesData || []);
     } catch (err) {
-      showToast("Lỗi trích xuất bộ sưu tập tài liệu", "error");
+      showToast("Không thể tải bộ sưu tập tài liệu", "error");
     } finally {
       setLoading(false);
     }
@@ -149,7 +149,7 @@ export default function StudioCollabPage() {
       setLockStatus(lock.data || lock || { is_locked: false });
       setTasks(tasksRes.data || tasksRes || []);
     } catch (err) {
-      showToast("Lỗi trích xuất cấu hình cộng tác", "error");
+      showToast("Không thể tải cấu hình cộng tác", "error");
     }
   }, [selectedDocumentId, showToast]);
 
@@ -213,7 +213,7 @@ export default function StudioCollabPage() {
       loadData();
       fetchCollaboratorDetails();
     } catch (err) {
-      showToast("Lỗi khởi tạo yêu cầu cấp quyền cộng tác", "error");
+      showToast("Không thể tạo yêu cầu cấp quyền cộng tác", "error");
     } finally {
       setActionLoading(false);
     }
@@ -272,7 +272,7 @@ export default function StudioCollabPage() {
       showToast("Cập nhật phân quyền truy cập hoàn tất", "success");
       fetchCollaboratorDetails();
     } catch (err) {
-      showToast("Lỗi cập nhật phân quyền truy cập", "error");
+      showToast("Không thể cập nhật phân quyền truy cập", "error");
     }
   };
 
@@ -283,7 +283,7 @@ export default function StudioCollabPage() {
       setNewMemo("");
       fetchCollaboratorDetails();
     } catch (err) {
-      showToast("Lỗi truyền tải dữ liệu ghi chú", "error");
+      showToast("Không thể truyền dữ liệu ghi chú", "error");
     }
   };
 
@@ -295,7 +295,7 @@ export default function StudioCollabPage() {
       showToast("Cập nhật cấu hình bảo mật hoàn tất", "success");
       fetchCollaboratorDetails();
     } catch (err) {
-      showToast("Lỗi cập nhật cấu hình bảo mật", "error");
+      showToast("Không thể cập nhật cấu hình bảo mật", "error");
     }
   };
 
@@ -317,7 +317,7 @@ export default function StudioCollabPage() {
       setNewSnapshotName("");
       fetchCollaboratorDetails();
     } catch (err) {
-      showToast("Lỗi khởi tạo bản sao lưu dữ liệu", "error");
+      showToast("Không thể tạo bản sao lưu dữ liệu", "error");
     }
   };
 
@@ -350,7 +350,7 @@ export default function StudioCollabPage() {
       setInviteCode(res.data?.invite_code || res.invite_code || "");
       showToast("Khởi tạo mã phiên truy cập hoàn tất", "success");
     } catch (err) {
-      showToast("Lỗi khởi tạo mã phiên truy cập", "error");
+      showToast("Không thể tạo mã phiên truy cập", "error");
     }
   };
 
@@ -379,7 +379,7 @@ export default function StudioCollabPage() {
       fetchCollaboratorDetails();
       showToast("Khởi tạo bản ghi nhiệm vụ hoàn tất", "success");
     } catch (err) {
-      showToast("Lỗi khởi tạo bản ghi nhiệm vụ", "error");
+      showToast("Không thể tạo bản ghi nhiệm vụ", "error");
     }
   };
 
@@ -388,7 +388,7 @@ export default function StudioCollabPage() {
       await updateCollabTaskAPI(taskId, !currentStatus);
       fetchCollaboratorDetails();
     } catch (err) {
-      showToast("Lỗi cập nhật trạng thái nhiệm vụ", "error");
+      showToast("Không thể cập nhật trạng thái nhiệm vụ", "error");
     }
   };
 
@@ -399,7 +399,7 @@ export default function StudioCollabPage() {
       const cRes = await getTaskCommentsAPI(taskId);
       setActiveTaskComments(cRes.data || cRes || []);
     } catch (err) {
-      showToast("Lỗi trích xuất bộ sưu tập phản hồi", "error");
+      showToast("Không thể tải bộ sưu tập phản hồi", "error");
     }
   };
 
@@ -411,7 +411,7 @@ export default function StudioCollabPage() {
       const cRes = await getTaskCommentsAPI(activeTaskId);
       setActiveTaskComments(cRes.data || cRes || []);
     } catch (err) {
-      showToast("Lỗi truyền tải dữ liệu phản hồi", "error");
+      showToast("Không thể truyền dữ liệu phản hồi", "error");
     }
   };
 
@@ -443,11 +443,11 @@ export default function StudioCollabPage() {
   if (loading || isLoading) return <PageLoader />;
 
   return (
-    <div className="w-full h-full font-sans text-[#1D1D1F] flex flex-col gap-6">
+    <div className="w-full h-full font-sans text-ink flex flex-col gap-6">
       <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-0">
         <aside className="w-full md:w-[320px] shrink-0 flex flex-col space-y-6 overflow-y-auto no-scrollbar pb-6 pr-2">
-          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
-            <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
+          <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
+            <p className="text-[13px] font-medium text-ink-muted mb-4">
               Gia nhập phiên
             </p>
             <div className="flex flex-col xl:flex-row items-center gap-2">
@@ -466,15 +466,15 @@ export default function StudioCollabPage() {
               </button>
             </div>
           </div>
-          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
-            <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
+          <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
+            <p className="text-[13px] font-medium text-ink-muted mb-4">
               Tài liệu hoạt động
             </p>
             <div className="relative">
               <select
                 value={selectedDocumentId}
                 onChange={(e) => setSelectedDocumentId(e.target.value)}
-                className="w-full h-[44px] bg-white  px-4 text-[15px] focus:outline-none focus:border-[#0071E3] appearance-none rounded-[10px]"
+                className="w-full h-[44px] bg-white  px-4 text-[15px] focus:outline-none focus:border-brand appearance-none rounded-control"
               >
                 <option value="">Chọn tài liệu biên tập</option>
                 {documents.map((doc) => (
@@ -483,24 +483,24 @@ export default function StudioCollabPage() {
                   </option>
                 ))}
               </select>
-              <ChevronRight className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none rotate-90 text-[#6E6E73]" />
+              <ChevronRight className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none rotate-90 text-ink-muted" />
             </div>
 
             {selectedDocumentId && isOwnerOfSelected() && (
               <div className="space-y-3 pt-4">
-                <label className="text-[13px] font-medium text-[#6E6E73]">
+                <label className="text-[13px] font-medium text-ink-muted">
                   Quyền truy cập
                 </label>
                 <div className="flex flex-col gap-2">
                   <button
                     onClick={() => handleUpdateAccessLevel("invite_only")}
-                    className={`flex items-center justify-center gap-2 px-4 py-3 text-[14px] font-medium rounded-[10px] transition-colors ${accessLevel === "invite_only" ? "bg-[#0071E3] text-white" : "bg-white text-[#0071E3] font-medium hover:bg-[#E8E8ED]"}`}
+                    className={`flex items-center justify-center gap-2 px-4 py-3 text-[14px] font-medium rounded-control transition-colors ${accessLevel === "invite_only" ? "bg-brand text-white" : "bg-white text-brand font-medium hover:bg-border"}`}
                   >
                     Chỉ người được mời
                   </button>
                   <button
                     onClick={() => handleUpdateAccessLevel("anyone_with_link")}
-                    className={`flex items-center justify-center gap-2 px-4 py-3 text-[14px] font-medium rounded-[10px] transition-colors ${accessLevel === "anyone_with_link" ? "bg-[#0071E3] text-white" : "bg-white text-[#0071E3] font-medium hover:bg-[#E8E8ED]"}`}
+                    className={`flex items-center justify-center gap-2 px-4 py-3 text-[14px] font-medium rounded-control transition-colors ${accessLevel === "anyone_with_link" ? "bg-brand text-white" : "bg-white text-brand font-medium hover:bg-border"}`}
                   >
                     Có link tham gia
                   </button>
@@ -510,12 +510,12 @@ export default function StudioCollabPage() {
           </div>
 
           {selectedDocumentId && (
-            <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
-              <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
+            <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
+              <p className="text-[13px] font-medium text-ink-muted mb-4">
                 Khóa phiên
               </p>
               {lockStatus.is_locked ? (
-                <div className="p-4 bg-[#FFF0F0] text-[#FF3B30] text-[14px] rounded-[10px]">
+                <div className="p-4 bg-danger-soft text-danger text-[14px] rounded-control">
                   Khóa bởi:{" "}
                   <strong className="font-semibold">
                     {lockStatus.user_name}
@@ -523,7 +523,7 @@ export default function StudioCollabPage() {
                   {lockStatus.user_id === (user._id || user.id) && (
                     <button
                       onClick={handleReleaseLock}
-                      className="mt-3 w-full py-2 bg-white rounded-[10px] font-medium text-[#FF3B30]"
+                      className="mt-3 w-full py-2 bg-white rounded-control font-medium text-danger"
                     >
                       Nhả khóa
                     </button>
@@ -532,7 +532,7 @@ export default function StudioCollabPage() {
               ) : (
                 <button
                   onClick={handleAcquireLock}
-                  className="w-full py-3 bg-[#0071E3] text-white text-[14px] font-medium rounded-[10px] hover:bg-[#005bb5] transition-colors"
+                  className="w-full py-3 bg-brand text-white text-[14px] font-medium rounded-control hover:bg-brand transition-colors"
                 >
                   Yêu cầu khóa độc quyền
                 </button>
@@ -541,8 +541,8 @@ export default function StudioCollabPage() {
           )}
 
           {selectedDocumentId && (
-            <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
-              <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
+            <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
+              <p className="text-[13px] font-medium text-ink-muted mb-4">
                 Mời cộng tác
               </p>
               <input
@@ -555,13 +555,13 @@ export default function StudioCollabPage() {
               <div className="flex gap-2">
                 <button
                   onClick={() => setRole("editor")}
-                  className={`flex-1 py-2 text-[13px] font-medium rounded-[10px] transition-colors ${role === "editor" ? "bg-black text-white" : "bg-white text-[#0071E3] font-medium"}`}
+                  className={`flex-1 py-2 text-[13px] font-medium rounded-control transition-colors ${role === "editor" ? "bg-ink text-white" : "bg-white text-brand font-medium"}`}
                 >
                   Biên tập
                 </button>
                 <button
                   onClick={() => setRole("viewer")}
-                  className={`flex-1 py-2 text-[13px] font-medium rounded-[10px] transition-colors ${role === "viewer" ? "bg-black text-white" : "bg-white text-[#0071E3] font-medium"}`}
+                  className={`flex-1 py-2 text-[13px] font-medium rounded-control transition-colors ${role === "viewer" ? "bg-ink text-white" : "bg-white text-brand font-medium"}`}
                 >
                   Người xem
                 </button>
@@ -569,7 +569,7 @@ export default function StudioCollabPage() {
               <button
                 onClick={handleInvite}
                 disabled={actionLoading || !collaboratorEmail}
-                className="w-full py-3 bg-[#0071E3] text-white text-[14px] font-medium rounded-[10px] disabled:opacity-50"
+                className="w-full py-3 bg-brand text-white text-[14px] font-medium rounded-control disabled:opacity-50"
               >
                 {actionLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin mx-auto" />
@@ -581,12 +581,12 @@ export default function StudioCollabPage() {
           )}
 
           {selectedDocumentId && isOwnerOfSelected() && (
-            <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
-              <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
+            <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
+              <p className="text-[13px] font-medium text-ink-muted mb-4">
                 Mã mời nhanh
               </p>
               {inviteCode ? (
-                <div className="flex items-center gap-2 bg-white p-3 rounded-[10px] ">
+                <div className="flex items-center gap-2 bg-white p-3 rounded-control ">
                   <span className="font-mono font-bold tracking-wider text-[14px] flex-1 text-center select-all">
                     {inviteCode}
                   </span>
@@ -595,7 +595,7 @@ export default function StudioCollabPage() {
                       navigator.clipboard.writeText(inviteCode);
                       showToast("Sao chép mã phiên truy cập vào bộ nhớ tạm hoàn tất", "success");
                     }}
-                    className="text-[13px] font-medium text-[#0071E3]"
+                    className="text-[13px] font-medium text-brand"
                   >
                     Copy
                   </button>
@@ -603,7 +603,7 @@ export default function StudioCollabPage() {
               ) : (
                 <button
                   onClick={handleGenerateCode}
-                  className="w-full py-3 bg-white text-[14px] font-medium rounded-[10px] "
+                  className="w-full py-3 bg-white text-[14px] font-medium rounded-control "
                 >
                   Tạo mã mời
                 </button>
@@ -612,25 +612,25 @@ export default function StudioCollabPage() {
           )}
 
           {selectedDocumentId && sentPendingInvites.length > 0 && (
-            <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
-              <p className="text-[13px] font-medium text-[#6E6E73] mb-4">
+            <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
+              <p className="text-[13px] font-medium text-ink-muted mb-4">
                 Lời mời đã gửi (chờ)
               </p>
               <div className="space-y-3">
                 {sentPendingInvites.map((sp) => (
                   <div
                     key={sp._id || sp.id}
-                    className="flex justify-between items-center bg-white p-3 rounded-[10px]"
+                    className="flex justify-between items-center bg-white p-3 rounded-control"
                   >
                     <div>
                       <p className="font-medium text-[14px]">{sp.invitee_id}</p>
-                      <p className="text-[12px] text-[#6E6E73]">
+                      <p className="text-[12px] text-ink-muted">
                         Vai trò: {sp.role}
                       </p>
                     </div>
                     <button
                       onClick={() => handleRevokeInvite(sp._id || sp.id)}
-                      className="text-[13px] text-[#FF3B30]"
+                      className="text-[13px] text-danger"
                     >
                       Thu hồi
                     </button>
@@ -641,12 +641,12 @@ export default function StudioCollabPage() {
           )}
 
           {selectedDocumentId && (
-            <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
+            <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6 space-y-4">
               <div className="flex justify-between items-center">
-                <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">
+                <h2 className="text-[20px] font-semibold text-ink mb-4">
                   Cộng tác viên
                 </h2>
-                <span className="text-[13px] text-[#6E6E73]">
+                <span className="text-[13px] text-ink-muted">
                   {collaborators.length}
                 </span>
               </div>
@@ -657,18 +657,18 @@ export default function StudioCollabPage() {
                     return (
                       <div
                         key={c.collaboration_id}
-                        className="bg-white p-4 rounded-[16px]"
+                        className="bg-white p-4 rounded-panel"
                       >
                         <div className="flex justify-between items-start gap-2">
                           <div className="flex items-center gap-2">
                             <span
-                              className={`w-2 h-2 rounded-full ${status === "online" ? "bg-[#34C759]" : "bg-[#E8E8ED]"}`}
+                              className={`w-2 h-2 rounded-full ${status === "online" ? "bg-brand" : "bg-border"}`}
                             />
                             <div>
-                              <p className="text-[14px] font-medium text-[#1D1D1F] leading-tight">
+                              <p className="text-[14px] font-medium text-ink leading-tight">
                                 {c.full_name}
                               </p>
-                              <p className="text-[12px] text-[#6E6E73] mt-0.5">
+                              <p className="text-[12px] text-ink-muted mt-0.5">
                                 {c.email}
                               </p>
                             </div>
@@ -682,13 +682,13 @@ export default function StudioCollabPage() {
                                   e.target.value,
                                 )
                               }
-                              className="bg-[#F5F5F7] text-[12px] px-2 py-1 rounded-[8px] outline-none "
+                              className="bg-surface-quiet text-[12px] px-2 py-1 rounded-control outline-none "
                             >
                               <option value="editor">Biên tập</option>
                               <option value="viewer">Xem</option>
                             </select>
                           ) : (
-                            <span className="bg-[#F5F5F7] text-[12px] px-2 py-1 rounded-[8px] text-[#6E6E73]">
+                            <span className="bg-surface-quiet text-[12px] px-2 py-1 rounded-control text-ink-muted">
                               {c.role === "editor" ? "Biên tập" : "Xem"}
                             </span>
                           )}
@@ -700,7 +700,7 @@ export default function StudioCollabPage() {
                                 setTransferId(c.user_id);
                                 setTransferName(c.full_name);
                               }}
-                              className="text-[12px] font-medium text-[#0071E3]"
+                              className="text-[12px] font-medium text-brand"
                             >
                               Chuyển chủ
                             </button>
@@ -708,7 +708,7 @@ export default function StudioCollabPage() {
                               onClick={() =>
                                 handleRemoveCollaborator(c.collaboration_id)
                               }
-                              className="text-[12px] font-medium text-[#FF3B30]"
+                              className="text-[12px] font-medium text-danger"
                             >
                               Xóa
                             </button>
@@ -726,8 +726,8 @@ export default function StudioCollabPage() {
         </aside>
 
         <main className="flex-1 min-w-0 space-y-6 overflow-y-auto no-scrollbar pb-6">
-          <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-6">
-            <h2 className="text-[20px] font-semibold text-[#1D1D1F] mb-4">
+          <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6 space-y-6">
+            <h2 className="text-[20px] font-semibold text-ink mb-4">
               Thư mời cộng tác
             </h2>
             {filteredInvites.length > 0 ? (
@@ -735,13 +735,13 @@ export default function StudioCollabPage() {
                 {filteredInvites.map((inv) => (
                   <div
                     key={inv._id || inv.id}
-                    className="bg-[#F5F5F7] border-[#E8E8ED] rounded-[18px] p-5 flex flex-col md:flex-row justify-between gap-4 items-start md:items-center"
+                    className="bg-surface-quiet border-border rounded-panel p-5 flex flex-col md:flex-row justify-between gap-4 items-start md:items-center"
                   >
                     <div>
-                      <h4 className="text-[16px] font-medium text-[#1D1D1F]">
+                      <h4 className="text-[16px] font-medium text-ink">
                         {inv.document_title}
                       </h4>
-                      <p className="text-[13px] text-[#6E6E73] mt-1">
+                      <p className="text-[13px] text-ink-muted mt-1">
                         Từ: {inv.inviter_name} • Vai trò:{" "}
                         {inv.role === "editor" ? "Biên tập" : "Xem"}
                       </p>
@@ -752,7 +752,7 @@ export default function StudioCollabPage() {
                           onClick={() =>
                             handleRespond(inv._id || inv.id, "REJECTED")
                           }
-                          className="px-4 py-2 bg-[#F5F5F7] text-[#1D1D1F] text-[14px] font-medium rounded-[12px]"
+                          className="px-4 py-2 bg-surface-quiet text-ink text-[14px] font-medium rounded-panel"
                         >
                           Từ chối
                         </button>
@@ -760,7 +760,7 @@ export default function StudioCollabPage() {
                           onClick={() =>
                             handleRespond(inv._id || inv.id, "ACCEPTED")
                           }
-                          className="px-4 py-2 bg-[#0071E3] text-white text-[14px] font-medium rounded-[12px]"
+                          className="px-4 py-2 bg-brand text-white text-[14px] font-medium rounded-panel"
                         >
                           Chấp nhận
                         </button>
@@ -770,7 +770,7 @@ export default function StudioCollabPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-center text-[#6E6E73] text-[15px] py-10">
+              <p className="text-center text-ink-muted text-[15px] py-10">
                 Bạn chưa nhận được lời mời nào.
               </p>
             )}
@@ -778,8 +778,8 @@ export default function StudioCollabPage() {
 
           {selectedDocumentId && (
             <>
-              <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-6">
-                <h2 className="text-[20px] font-semibold text-[#1D1D1F] flex items-center gap-2">
+              <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6 space-y-6">
+                <h2 className="text-[20px] font-semibold text-ink flex items-center gap-2">
                   <CheckSquare className="w-5 h-5" /> Nhiệm vụ & Checklist
                 </h2>
                 <div className="flex gap-2">
@@ -808,7 +808,7 @@ export default function StudioCollabPage() {
                   {tasks.map((task) => (
                     <div
                       key={task.id}
-                      className="bg-[#F5F5F7] p-4 rounded-[16px] flex justify-between items-start gap-4 border-[#E8E8ED]"
+                      className="bg-surface-quiet p-4 rounded-panel flex justify-between items-start gap-4 border-border"
                     >
                       <div className="flex gap-3 items-start">
                         <button
@@ -818,25 +818,25 @@ export default function StudioCollabPage() {
                           className="mt-1"
                         >
                           {task.is_done ? (
-                            <CheckSquare className="w-5 h-5 text-[#34C759]" />
+                            <CheckSquare className="w-5 h-5 text-brand" />
                           ) : (
-                            <Square className="w-5 h-5 text-[#6E6E73]" />
+                            <Square className="w-5 h-5 text-ink-muted" />
                           )}
                         </button>
                         <div>
                           <p
-                            className={`text-[15px] font-medium ${task.is_done ? "line-through text-[#6E6E73]" : "text-[#1D1D1F]"}`}
+                            className={`text-[15px] font-medium ${task.is_done ? "line-through text-ink-muted" : "text-ink"}`}
                           >
                             {task.task_desc}
                           </p>
-                          <p className="text-[12px] text-[#6E6E73] mt-1">
+                          <p className="text-[12px] text-ink-muted mt-1">
                             Giao: {task.assigned_to} • Tạo: {task.created_by}
                           </p>
                         </div>
                       </div>
                       <button
                         onClick={() => handleViewTaskComments(task.id)}
-                        className="text-[13px] font-medium text-[#0071E3]"
+                        className="text-[13px] font-medium text-brand"
                       >
                         Thảo luận
                       </button>
@@ -845,32 +845,32 @@ export default function StudioCollabPage() {
                 </div>
               </div>
 
-              <div className="bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none p-6 md:p-0 md:pt-6 space-y-6">
-                <h2 className="text-[20px] font-semibold text-[#1D1D1F] flex items-center gap-2">
+              <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6 space-y-6">
+                <h2 className="text-[20px] font-semibold text-ink flex items-center gap-2">
                   <MessageSquare className="w-5 h-5" /> Bảng ghim & Trao đổi
                 </h2>
-                <div className="h-64 bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] p-4 overflow-y-auto space-y-4 no-scrollbar">
+                <div className="h-64 bg-surface-quiet rounded-panel border border-border p-4 overflow-y-auto space-y-4 no-scrollbar">
                   {memos.length > 0 ? (
                     memos.map((m) => (
                       <div
                         key={m.id}
-                        className="bg-[#F5F5F7] p-4 rounded-[16px] max-w-[85%] "
+                        className="bg-surface-quiet p-4 rounded-panel max-w-[85%] "
                       >
-                        <div className="flex justify-between text-[12px] text-[#6E6E73] mb-2">
-                          <span className="font-semibold text-[#1D1D1F]">
+                        <div className="flex justify-between text-[12px] text-ink-muted mb-2">
+                          <span className="font-semibold text-ink">
                             {m.sender_name}
                           </span>
                           <span>
                             {new Date(m.timestamp).toLocaleTimeString("vi-VN")}
                           </span>
                         </div>
-                        <p className="text-[14px] text-[#1D1D1F] leading-relaxed">
+                        <p className="text-[14px] text-ink leading-relaxed">
                           {m.message}
                         </p>
                       </div>
                     ))
                   ) : (
-                    <p className="text-center text-[#6E6E73] text-[14px] py-10">
+                    <p className="text-center text-ink-muted text-[14px] py-10">
                       Bảng tin trống.
                     </p>
                   )}
@@ -904,16 +904,16 @@ export default function StudioCollabPage() {
           </ModalTitle>
         </ModalHeader>
         <ModalContent>
-          <p className="text-[15px] text-[#6E6E73]">
+          <p className="text-[15px] text-ink-muted">
             Bạn muốn chuyển quyền sở hữu tài liệu cho{" "}
-            <strong className="text-[#1D1D1F]">{transferName}</strong>? Sau khi
+            <strong className="text-ink">{transferName}</strong>? Sau khi
             chuyển, bạn sẽ chỉ còn quyền cộng tác viên.
           </p>
         </ModalContent>
         <ModalFooter>
           <button
             onClick={() => setTransferId(null)}
-            className="px-5 py-2 text-[#0071E3] font-medium hover:bg-[#F5F5F7] rounded-full"
+            className="px-5 py-2 text-brand font-medium hover:bg-surface-quiet rounded-full"
           >
             Hủy
           </button>
@@ -934,22 +934,22 @@ export default function StudioCollabPage() {
           </ModalTitle>
         </ModalHeader>
         <ModalContent>
-          <div className="h-64 bg-[#F5F5F7] rounded-[18px] border-[#E8E8ED] p-4 overflow-y-auto space-y-4 no-scrollbar">
+          <div className="h-64 bg-surface-quiet rounded-panel border border-border p-4 overflow-y-auto space-y-4 no-scrollbar">
             {activeTaskComments.length > 0 ? (
               activeTaskComments.map((c) => (
                 <div
                   key={c.id}
-                  className="bg-[#F5F5F7] p-3 rounded-[10px]  max-w-[90%]"
+                  className="bg-surface-quiet p-3 rounded-control  max-w-[90%]"
                 >
-                  <div className="flex justify-between text-[11px] text-[#6E6E73] mb-1">
-                    <span className="font-semibold text-[#1D1D1F]">
+                  <div className="flex justify-between text-[11px] text-ink-muted mb-1">
+                    <span className="font-semibold text-ink">
                       {c.sender_name}
                     </span>
                     <span>
                       {new Date(c.timestamp).toLocaleTimeString("vi-VN")}
                     </span>
                   </div>
-                  <p className="text-[14px] text-[#1D1D1F]">{c.comment_text}</p>
+                  <p className="text-[14px] text-ink">{c.comment_text}</p>
                 </div>
               ))
             ) : (

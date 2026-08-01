@@ -29,7 +29,7 @@ export default function ForgotPasswordPage() {
         window.location.href = `/xac-thuc?email=${encodeURIComponent(email)}`;
       }, 1500);
     } catch (err: any) {
-      showToast(err.message || "Lỗi khởi tạo luồng phân phối mã xác thực", "error");
+      showToast(err.message || "Không thể tạo luồng phân phối mã xác thực", "error");
     } finally {
       setLoading(false);
     }
@@ -41,10 +41,10 @@ export default function ForgotPasswordPage() {
         <div className="w-full max-w-[420px]">
           <div className="auth-panel">
             <div className="text-center mb-8">
-              <h1 className="text-[28px] font-semibold tracking-tight text-[#1D1D1F]">
+              <h1 className="text-[28px] font-semibold tracking-tight text-ink">
                 Quên mật khẩu
               </h1>
-              <p className="mt-2 text-[15px] text-[#6E6E73]">
+              <p className="mt-2 text-[15px] text-ink-muted">
                 Nhập email của bạn để nhận mã xác thực khôi phục mật khẩu.
               </p>
             </div>
@@ -53,12 +53,12 @@ export default function ForgotPasswordPage() {
               <div>
                 <label
                   htmlFor="email"
-                  className="block text-[13px] font-medium text-[#6E6E73] mb-2 ml-1"
+                  className="block text-[13px] font-medium text-ink-muted mb-2 ml-1"
                 >
                   Địa chỉ email
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6E6E73]" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-ink-muted" />
                   <input
                     id="email"
                     name="email"
@@ -86,19 +86,19 @@ export default function ForgotPasswordPage() {
               </div>
             </form>
 
-            <div className="mt-8 text-center border-t border-[#D2D2D7] pt-6 flex flex-col gap-3">
-              <span className="text-[15px] text-[#6E6E73]">
+            <div className="mt-8 text-center border-t border-border pt-6 flex flex-col gap-3">
+              <span className="text-[15px] text-ink-muted">
                 Đã có mã xác thực?{" "}
                 <a
                   href="/xac-thuc"
-                  className="font-medium text-[#0071E3] hover:text-[#0055C6]"
+                  className="font-medium text-brand hover:text-brand-hover"
                 >
                   Nhập mã ngay
                 </a>
               </span>
               <a
                 href="/dang-nhap"
-                className="text-[13px] font-medium text-[#6E6E73] hover:text-[#1D1D1F] transition-colors"
+                className="text-[13px] font-medium text-ink-muted hover:text-ink transition-colors"
               >
                 Quay lại màn hình đăng nhập
               </a>

@@ -36,9 +36,9 @@ export default class DocLibUndo {
       const style = document.createElement("style");
       style.id = "doclib-undo-styles";
       style.innerHTML = `
-            .doclib-undo-wrapper { position: fixed; bottom: 20px; right: 20px; display: flex; gap: 8px; z-index: 1000; background: #fff; padding: 6px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; }
-            .doclib-undo-btn { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 6px; border: none; background: transparent; color: #475569; cursor: pointer; transition: all 0.2s; }
-            .doclib-undo-btn:hover:not(:disabled) { background: #f1f5f9; color: #0f172a; }
+            .doclib-undo-wrapper { position: fixed; bottom: 20px; right: 20px; display: flex; gap: 8px; z-index: 1000; background: hsl(var(--surface)); padding: 6px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); border: 1px solid hsl(var(--border)); }
+            .doclib-undo-btn { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 6px; border: none; background: transparent; color: hsl(var(--ink-muted)); cursor: pointer; transition: all 0.2s; }
+            .doclib-undo-btn:hover:not(:disabled) { background: hsl(var(--surface-quiet)); color: hsl(var(--ink)); }
             .doclib-undo-btn:disabled { opacity: 0.4; cursor: not-allowed; }
         `;
       document.head.appendChild(style);

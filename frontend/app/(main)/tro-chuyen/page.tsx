@@ -4,12 +4,13 @@ import {
   getUserInstructionsAPI,
   saveUserInstructionsAPI,
   clearUserInstructionsAPI,
+  getAiSessionsAPI,
+  createAiSessionAPI,
+  getAiSessionAPI,
+  updateAiSessionTitleAPI,
+  deleteAiSessionAPI,
 } from "@/features/agentic_ai/services/interaction.service";
 import { uploadChatAttachmentAPI } from "@/features/cloud/services/upload.service";
-import {
-  getToken,
-  API_URL,
-} from "@/features/authentication/services/session.service";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useState, useEffect, useRef } from "react";
 import { useAuth } from "@/features/authentication/contexts/AuthContext";
@@ -65,7 +66,7 @@ function PayOSEmbedded({ checkoutUrl }: { checkoutUrl: string }) {
   return (
     <div
       id={elementId.current}
-      className="w-full min-h-[450px] border-[#E8E8ED] rounded-[18px] my-4 bg-[#F5F5F7] overflow-hidden"
+      className="w-full min-h-[450px] border-border rounded-panel my-4 bg-surface-quiet overflow-hidden"
     ></div>
   );
 }
@@ -77,32 +78,32 @@ function RecommendedDocsCards({ payloadStr }: { payloadStr: string }) {
     if (!Array.isArray(recs) || recs.length === 0) return null;
 
     return (
-      <div className="my-4 p-4 rounded-[18px] bg-[#F5F5F7] border border-[#E8E8ED]">
-        <div className="flex items-center gap-2 font-semibold text-[15px] text-[#1D1D1F] mb-3">
-          <FileText className="w-4 h-4 text-[#0071E3]" />
+      <div className="my-4 p-4 rounded-panel bg-surface-quiet border border-border">
+        <div className="flex items-center gap-2 font-semibold text-[15px] text-ink mb-3">
+          <FileText className="w-4 h-4 text-brand" />
           <span>Tài liệu gợi ý dành cho bạn:</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {recs.map((item: any, idx: number) => (
             <div
               key={idx}
-              className="p-3.5 rounded-[14px] bg-white border border-[#E8E8ED] hover:border-[#0071E3] transition-all flex flex-col justify-between"
+              className="p-3.5 rounded-panel bg-white border border-border hover:border-brand transition-all flex flex-col justify-between"
             >
               <div>
-                <h4 className="font-semibold text-[14px] text-[#1D1D1F] line-clamp-2 mb-1">
+                <h4 className="font-semibold text-[14px] text-ink line-clamp-2 mb-1">
                   {item.title}
                 </h4>
-                <p className="text-[12px] text-[#6E6E73] line-clamp-2 mb-2">
+                <p className="text-[12px] text-ink-muted line-clamp-2 mb-2">
                   {item.summary}
                 </p>
               </div>
-              <div className="flex items-center justify-between pt-2 border-t border-[#F5F5F7] mt-auto">
-                <span className="text-[12px] font-medium text-[#0071E3]">
+              <div className="flex items-center justify-between pt-2 border-t border-surface-quiet mt-auto">
+                <span className="text-[12px] font-medium text-brand">
                   {item.price_dl > 0 ? `${item.price_dl} DL` : "Miễn phí"}
                 </span>
                 <a
                   href={item.url}
-                  className="px-2.5 py-1 rounded-full bg-[#0071E3] text-white text-[12px] font-medium hover:bg-[#0055C6] transition-colors flex items-center gap-1"
+                  className="px-2.5 py-1 rounded-full bg-brand text-white text-[12px] font-medium hover:bg-brand-hover transition-colors flex items-center gap-1"
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -137,34 +138,34 @@ function InteractiveMindmapCanvas({ payloadStr }: { payloadStr: string }) {
 
     return (
       <div
-        className={`my-4 p-5 rounded-[18px] bg-[#F5F5F7] border border-[#E8E8ED] transition-all ${
+        className={`my-4 p-5 rounded-panel bg-surface-quiet border border-border transition-all ${
           isFullscreen ? "fixed inset-4 z-50 overflow-auto bg-white shadow-2xl" : ""
         }`}
       >
-        <div className="flex items-center justify-between border-b border-[#E8E8ED] pb-3 mb-4">
-          <div className="flex items-center gap-2 font-semibold text-[15px] text-[#1D1D1F]">
-            <Activity className="w-4.5 h-4.5 text-[#0071E3]" />
+        <div className="flex items-center justify-between border-b border-border pb-3 mb-4">
+          <div className="flex items-center gap-2 font-semibold text-[15px] text-ink">
+            <Activity className="w-4.5 h-4.5 text-brand" />
             <span>{tree.title || "Sơ đồ tư duy"}</span>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setZoom((z) => Math.max(0.7, z - 0.1))}
-              className="px-2.5 py-1 rounded-full bg-white border border-[#E8E8ED] text-[12px] font-medium text-[#1D1D1F] hover:bg-[#F5F5F7]"
+              className="px-2.5 py-1 rounded-full bg-white border border-border text-[12px] font-medium text-ink hover:bg-surface-quiet"
             >
               -
             </button>
-            <span className="text-[12px] font-medium text-[#6E6E73]">
+            <span className="text-[12px] font-medium text-ink-muted">
               {Math.round(zoom * 100)}%
             </span>
             <button
               onClick={() => setZoom((z) => Math.min(1.5, z + 0.1))}
-              className="px-2.5 py-1 rounded-full bg-white border border-[#E8E8ED] text-[12px] font-medium text-[#1D1D1F] hover:bg-[#F5F5F7]"
+              className="px-2.5 py-1 rounded-full bg-white border border-border text-[12px] font-medium text-ink hover:bg-surface-quiet"
             >
               +
             </button>
             <button
               onClick={() => setIsFullscreen(!isFullscreen)}
-              className="p-1.5 rounded-full bg-white border border-[#E8E8ED] text-[#6E6E73] hover:text-[#1D1D1F] hover:bg-[#F5F5F7]"
+              className="p-1.5 rounded-full bg-white border border-border text-ink-muted hover:text-ink hover:bg-surface-quiet"
             >
               <Maximize2 className="w-3.5 h-3.5" />
             </button>
@@ -176,7 +177,7 @@ function InteractiveMindmapCanvas({ payloadStr }: { payloadStr: string }) {
           style={{ transform: `scale(${zoom})` }}
         >
           <div className="flex flex-col items-center">
-            <div className="px-6 py-3 rounded-full bg-[#0071E3] text-white font-bold text-[16px] shadow-md mb-8 cursor-pointer hover:bg-[#0055C6] transition-colors">
+            <div className="px-6 py-3 rounded-full bg-brand text-white font-bold text-[16px] shadow-md mb-8 cursor-pointer hover:bg-brand-hover transition-colors">
               {root.name}
             </div>
 
@@ -186,18 +187,18 @@ function InteractiveMindmapCanvas({ payloadStr }: { payloadStr: string }) {
                 return (
                   <div
                     key={branch.id}
-                    className="flex flex-col rounded-[16px] bg-white border border-[#E8E8ED] p-4 shadow-sm"
+                    className="flex flex-col rounded-panel bg-white border border-border p-4 shadow-sm"
                   >
                     <div
                       onClick={() => toggleNode(branch.id)}
-                      className="flex items-center justify-between font-semibold text-[14px] text-[#1D1D1F] cursor-pointer border-b border-[#F5F5F7] pb-2 mb-3"
+                      className="flex items-center justify-between font-semibold text-[14px] text-ink cursor-pointer border-b border-surface-quiet pb-2 mb-3"
                     >
                       <span className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-[#0071E3]" />
+                        <span className="w-2 h-2 rounded-full bg-brand" />
                         {branch.name}
                       </span>
                       <ChevronDown
-                        className={`w-4 h-4 text-[#86868B] transition-transform ${
+                        className={`w-4 h-4 text-ink-faint transition-transform ${
                           isCollapsed ? "-rotate-90" : ""
                         }`}
                       />
@@ -208,9 +209,9 @@ function InteractiveMindmapCanvas({ payloadStr }: { payloadStr: string }) {
                         {(branch.children || []).map((sub: any) => (
                           <li
                             key={sub.id}
-                            className="text-[13px] text-[#6E6E73] flex items-center gap-2 pl-2 py-1 rounded-[8px] hover:bg-[#F5F5F7] transition-colors"
+                            className="text-[13px] text-ink-muted flex items-center gap-2 pl-2 py-1 rounded-control hover:bg-surface-quiet transition-colors"
                           >
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#AEAEB2]" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-ink-faint" />
                             <span>{sub.name}</span>
                           </li>
                         ))}
@@ -286,36 +287,36 @@ function CustomInstructionsModal({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="w-full max-w-lg bg-white rounded-[24px] border border-[#E8E8ED] shadow-xl p-6 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between border-b border-[#E8E8ED] pb-4 mb-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 backdrop-blur-sm p-4">
+      <div className="w-full max-w-lg bg-white rounded-workspace border border-border shadow-xl p-6 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
           <div className="flex items-center gap-2">
-            <Edit2 className="w-5 h-5 text-[#0071E3]" />
-            <h3 className="text-[17px] font-semibold text-[#1D1D1F]">
+            <Edit2 className="w-5 h-5 text-brand" />
+            <h3 className="text-[17px] font-semibold text-ink">
               Tùy chỉnh chỉ dẫn cá nhân cho AI
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-[#F5F5F7] text-[#86868B] hover:text-[#1D1D1F]"
+            className="p-1.5 rounded-full hover:bg-surface-quiet text-ink-faint hover:text-ink"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <p className="text-[13px] text-[#6E6E73] mb-4">
+        <p className="text-[13px] text-ink-muted mb-4">
           Nhập các chỉ dẫn cá nhân để AI tự động ghi nhớ và áp dụng thống nhất
           xuyên suốt tất cả các phiên trò chuyện của bạn.
         </p>
 
         {loading ? (
           <div className="py-8 flex justify-center items-center">
-            <Loader2 className="w-6 h-6 text-[#0071E3] animate-spin" />
+            <Loader2 className="w-6 h-6 text-brand animate-spin" />
           </div>
         ) : (
           <>
             <div className="mb-4">
-              <label className="block text-[13px] font-medium text-[#1D1D1F] mb-1.5">
+              <label className="block text-[13px] font-medium text-ink mb-1.5">
                 Chỉ dẫn mẫu (Nhấn để áp dụng nhanh):
               </label>
               <div className="flex flex-wrap gap-2">
@@ -328,7 +329,7 @@ function CustomInstructionsModal({
                         prev ? `${prev}\n- ${preset}` : `- ${preset}`
                       )
                     }
-                    className="text-[12px] px-2.5 py-1 rounded-full bg-[#F5F5F7] text-[#1D1D1F] border border-[#E8E8ED] hover:border-[#0071E3] transition-all text-left"
+                    className="text-[12px] px-2.5 py-1 rounded-full bg-surface-quiet text-ink border border-border hover:border-brand transition-all text-left"
                   >
                     {preset}
                   </button>
@@ -341,14 +342,14 @@ function CustomInstructionsModal({
               onChange={(e) => setInstructions(e.target.value)}
               placeholder="Ví dụ: Luôn bắt đầu phản hồi bằng tóm tắt TL;DR ngắn gọn"
               rows={5}
-              className="w-full p-3.5 rounded-[12px] border border-[#D2D2D7] focus:border-[#0071E3] outline-none text-[14px] text-[#1D1D1F] resize-none mb-4"
+              className="w-full p-3.5 rounded-panel border border-border focus:border-brand outline-none text-[14px] text-ink resize-none mb-4"
             />
 
             <div className="flex items-center justify-between">
               <button
                 onClick={handleClear}
                 type="button"
-                className="text-[13px] text-[#FF3B30] font-medium hover:underline"
+                className="text-[13px] text-danger font-medium hover:underline"
               >
                 Xóa tất cả
               </button>
@@ -357,7 +358,7 @@ function CustomInstructionsModal({
                 <button
                   onClick={onClose}
                   type="button"
-                  className="px-4 py-2 rounded-full border border-[#E8E8ED] text-[#1D1D1F] text-[13px] font-medium hover:bg-[#F5F5F7]"
+                  className="px-4 py-2 rounded-full border border-border text-ink text-[13px] font-medium hover:bg-surface-quiet"
                 >
                   Hủy
                 </button>
@@ -365,7 +366,7 @@ function CustomInstructionsModal({
                   onClick={handleSave}
                   disabled={saving}
                   type="button"
-                  className="px-5 py-2 rounded-full bg-[#0071E3] text-white text-[13px] font-medium hover:bg-[#0055C6] disabled:opacity-50 flex items-center gap-1.5"
+                  className="px-5 py-2 rounded-full bg-brand text-white text-[13px] font-medium hover:bg-brand-hover disabled:opacity-50 flex items-center gap-1.5"
                 >
                   {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   <span>Lưu chỉ dẫn</span>
@@ -412,41 +413,41 @@ function QuotaIndicator() {
   );
 
   return (
-    <div className="flex flex-col gap-3 p-4 bg-[#F5F5F7]  rounded-[18px]">
+    <div className="flex flex-col gap-3 p-4 bg-surface-quiet  rounded-panel">
       <div className="flex items-center gap-2">
-        <Activity className="w-4 h-4 text-[#0071E3]" />
-        <span className="text-[12px] font-semibold text-[#1D1D1F]">
+        <Activity className="w-4 h-4 text-brand" />
+        <span className="text-[12px] font-semibold text-ink">
           Hạn mức sử dụng ngày
         </span>
       </div>
 
       <div className="space-y-3">
         <div className="space-y-1.5">
-          <div className="flex justify-between text-[11px] font-medium text-[#6E6E73]">
+          <div className="flex justify-between text-[11px] font-medium text-ink-muted">
             <span>Yêu cầu</span>
             <span>
               {usage.used_requests} / {usage.limit_requests}
             </span>
           </div>
-          <div className="h-1.5 w-full bg-[#E8E8ED] rounded-full overflow-hidden">
+          <div className="h-1.5 w-full bg-border rounded-full overflow-hidden">
             <div
-              className={`h-full ${reqPercent > 90 ? "bg-[#FF3B30]" : "bg-[#0071E3]"}`}
+              className={`h-full ${reqPercent > 90 ? "bg-danger" : "bg-brand"}`}
               style={{ width: `${reqPercent}%` }}
             />
           </div>
         </div>
 
         <div className="space-y-1.5">
-          <div className="flex justify-between text-[11px] font-medium text-[#6E6E73]">
+          <div className="flex justify-between text-[11px] font-medium text-ink-muted">
             <span>Token</span>
             <span>
               {usage.used_tokens.toLocaleString()} /{" "}
               {usage.limit_tokens.toLocaleString()}
             </span>
           </div>
-          <div className="h-1.5 w-full bg-[#E8E8ED] rounded-full overflow-hidden">
+          <div className="h-1.5 w-full bg-border rounded-full overflow-hidden">
             <div
-              className={`h-full ${tokenPercent > 90 ? "bg-[#FF3B30]" : "bg-[#0071E3]"}`}
+              className={`h-full ${tokenPercent > 90 ? "bg-danger" : "bg-brand"}`}
               style={{ width: `${tokenPercent}%` }}
             />
           </div>
@@ -454,7 +455,7 @@ function QuotaIndicator() {
       </div>
 
       {(reqPercent >= 100 || tokenPercent >= 100) && (
-        <p className="text-[12px] font-semibold text-[#FF3B30] mt-1">
+        <p className="text-[12px] font-semibold text-danger mt-1">
           Đã đạt giới hạn hôm nay
         </p>
       )}
@@ -494,7 +495,7 @@ const UserMessage = ({ content }: { content: string }) => {
   }
 
   return (
-    <div className="bg-[#0071E3] text-white px-5 py-3.5 rounded-[20px] rounded-tr-[4px]">
+    <div className="bg-brand text-white px-5 py-3.5 rounded-workspace rounded-tr-[4px]">
       <p className="text-[15px] whitespace-pre-wrap leading-relaxed min-w-0 break-words">
         {displayContent}
       </p>
@@ -574,15 +575,9 @@ export default function TroChuyenPage() {
 
   const fetchHistory = useCallback(async () => {
     try {
-      const token = getToken();
       if (!currentUserId) return;
-      const res = await fetch(`${API_URL}/lich-su?user_id=${currentUserId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setSessions(data.data || data || []);
-      }
+      const data = await getAiSessionsAPI(undefined, currentUserId);
+      setSessions(data.data || data || []);
     } catch (err) {
       console.error("Error loading chat history:", err);
     }
@@ -667,22 +662,10 @@ export default function TroChuyenPage() {
     let sessionId = currentSessionId;
     if (!sessionId) {
       try {
-        const token = getToken();
-        const userId = user?.id || user?._id;
-        const res = await fetch(`${API_URL}/lich-su`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ first_query: userMessage, user_id: userId }),
-        });
-        if (res.ok) {
-          const data = await res.json();
-          sessionId = data.data?._id || data._id;
-          setCurrentSessionId(sessionId);
-          fetchHistory();
-        }
+        const data = await createAiSessionAPI("", userMessage);
+        sessionId = data.data?._id || data._id;
+        setCurrentSessionId(sessionId);
+        fetchHistory();
       } catch (err) {}
     }
 
@@ -728,7 +711,7 @@ export default function TroChuyenPage() {
         } catch (e: any) {
           setMessages((prev) => {
             const updated = [...prev];
-            updated[updated.length - 1].content = e.message || "Lỗi truyền tải tệp ảnh lên máy chủ";
+            updated[updated.length - 1].content = e.message || "Không thể truyền tệp ảnh lên máy chủ";
             return updated;
           });
           setIsSending(false);
@@ -741,7 +724,7 @@ export default function TroChuyenPage() {
         } catch (e: any) {
           setMessages((prev) => {
             const updated = [...prev];
-            updated[updated.length - 1].content = e.message || "Lỗi truyền tải tệp tin lên máy chủ";
+            updated[updated.length - 1].content = e.message || "Không thể truyền tệp tin lên máy chủ";
             return updated;
           });
           setIsSending(false);
@@ -908,7 +891,7 @@ export default function TroChuyenPage() {
             setMessages((prev) => {
               const updated = [...prev];
               const lastMsg = { ...updated[updated.length - 1] };
-              lastMsg.content = "Lỗi thực thi luồng dữ liệu phản hồi từ AI";
+              lastMsg.content = "Không thể thực hiện luồng dữ liệu phản hồi từ AI";
               updated[updated.length - 1] = lastMsg;
               return updated;
             });
@@ -953,24 +936,24 @@ export default function TroChuyenPage() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col font-sans text-[#1D1D1F]">
+    <div className="w-full h-full flex flex-col font-sans text-ink">
       <div className="flex flex-1 min-h-0 gap-6">
-        <aside className="w-full lg:w-[320px] bg-[#F5F5F7] md:bg-transparent rounded-[18px] md:rounded-none flex flex-col overflow-hidden shrink-0 hidden lg:flex">
+        <aside className="w-full lg:w-[320px] bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none flex flex-col overflow-hidden shrink-0 hidden lg:flex">
           <div className="px-6 md:px-0 pt-6 pb-4 flex items-center justify-between shrink-0">
-            <h2 className="text-[20px] font-semibold text-[#1D1D1F]">
+            <h2 className="text-[20px] font-semibold text-ink">
               Lịch sử
             </h2>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowInstructionsModal(true)}
-                className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors"
+                className="p-2 bg-surface-quiet text-ink hover:bg-border rounded-full transition-colors"
                 title="Tùy chỉnh chỉ dẫn cá nhân"
               >
-                <Edit2 className="w-4 h-4 text-[#0071E3]" />
+                <Edit2 className="w-4 h-4 text-brand" />
               </button>
               <button
                 onClick={() => (window.location.href = "/nang-cap")}
-                className="px-3 py-1.5 text-[13px] font-medium bg-[#0071E3] text-white rounded-full hover:bg-[#0055C6] transition-colors shadow-sm"
+                className="px-3 py-1.5 text-[13px] font-medium bg-brand text-white rounded-full hover:bg-brand-hover transition-colors shadow-sm"
               >
                 Nâng cấp
               </button>
@@ -979,7 +962,7 @@ export default function TroChuyenPage() {
                   setCurrentSessionId(null);
                   setMessages([]);
                 }}
-                className="p-2 bg-[#F5F5F7] text-[#1D1D1F] hover:bg-[#E8E8ED] rounded-full transition-colors"
+                className="p-2 bg-surface-quiet text-ink hover:bg-border rounded-full transition-colors"
                 title="Cuộc trò chuyện mới"
               >
                 <PlusIcon className="w-4 h-4" />
@@ -988,8 +971,8 @@ export default function TroChuyenPage() {
           </div>
           <div className="overflow-y-auto px-6 md:px-0 pb-6 flex flex-col gap-2 shrink custom-scrollbar">
             {sessions.length === 0 ? (
-              <div className="py-12 flex flex-col items-center justify-center bg-[#F5F5F7] rounded-[18px]">
-                <p className="text-[17px] font-medium text-[#6E6E73]">
+              <div className="py-12 flex flex-col items-center justify-center bg-surface-quiet rounded-panel">
+                <p className="text-[17px] font-medium text-ink-muted">
                   Chưa có dữ liệu
                 </p>
               </div>
@@ -997,22 +980,16 @@ export default function TroChuyenPage() {
               sessions.map((s) => (
                 <div
                   key={s._id}
-                  className={`p-3 rounded-[14px] cursor-pointer transition-colors ${currentSessionId === s._id ? "bg-white border border-transparent shadow-[0_1px_2px_rgba(0,0,0,0.05)]" : "border border-transparent hover:bg-[#E8E8ED]"}`}
+                  className={`p-3 rounded-panel cursor-pointer transition-colors ${currentSessionId === s._id ? "bg-white border border-transparent shadow-[0_1px_2px_rgba(0,0,0,0.05)]" : "border border-transparent hover:bg-border"}`}
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div
                       className="flex-1 min-w-0 cursor-pointer"
                       onClick={async () => {
-                        const token = getToken();
                         setCurrentSessionId(s._id);
                         setView("chat");
                         try {
-                          const res = await fetch(
-                            `${API_URL}/lich-su/${s._id}?user_id=${user?.id || user?._id}`,
-                            { headers: { Authorization: `Bearer ${token}` } },
-                          );
-                          if (res.ok) {
-                            const data = await res.json();
+                            const data = await getAiSessionAPI(s._id);
                             const msgs = data.data ? data.data.messages : data.messages;
                             const mapped = (msgs || []).map(
                               (m: any) => ({
@@ -1025,7 +1002,6 @@ export default function TroChuyenPage() {
                               }),
                             );
                             setMessages(mapped);
-                          }
                         } catch (e) {}
                       }}
                     >
@@ -1042,39 +1018,24 @@ export default function TroChuyenPage() {
                               e.stopPropagation();
                               if (!editingTitleValue.trim()) return;
                               try {
-                                const token = getToken();
-                                const res = await fetch(
-                                  `${API_URL}/lich-su/${s._id}/tieu-de?user_id=${user?.id || user?._id}`,
-                                  {
-                                    method: "PUT",
-                                    headers: {
-                                      Authorization: `Bearer ${token}`,
-                                      "Content-Type": "application/json",
-                                    },
-                                    body: JSON.stringify({
-                                      title: editingTitleValue,
-                                    }),
-                                  },
-                                );
-                                if (res.ok) {
-                                  fetchHistory();
-                                  setEditingTitleId(null);
-                                }
+                                await updateAiSessionTitleAPI(s._id, editingTitleValue);
+                                fetchHistory();
+                                setEditingTitleId(null);
                               } catch (err) {}
                             } else if (e.key === "Escape") {
                               setEditingTitleId(null);
                             }
                           }}
-                          className="w-full text-[15px] font-medium text-[#1D1D1F] bg-[#F5F5F7] border border-[#0071E3] rounded-[8px] px-2 py-1 outline-none"
+                          className="w-full text-[15px] font-medium text-ink bg-surface-quiet border border-brand rounded-control px-2 py-1 outline-none"
                         />
                       ) : (
-                        <p className="text-[15px] font-medium text-[#1D1D1F] truncate">
+                        <p className="text-[15px] font-medium text-ink truncate">
                           {s.title}
                         </p>
                       )}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <p className="text-[12px] text-[#6E6E73] whitespace-nowrap">
+                      <p className="text-[12px] text-ink-muted whitespace-nowrap">
                         {new Date(s.updated_at).toLocaleDateString("vi-VN")}
                       </p>
                       <div className="relative">
@@ -1085,7 +1046,7 @@ export default function TroChuyenPage() {
                               openDropdownId === s._id ? null : s._id,
                             );
                           }}
-                          className="p-1.5 text-[#6E6E73] hover:text-[#1D1D1F] hover:bg-[#F5F5F7] rounded-full transition-colors"
+                          className="p-1.5 text-ink-muted hover:text-ink hover:bg-surface-quiet rounded-full transition-colors"
                         >
                           <MoreVertical className="w-4 h-4" />
                         </button>
@@ -1098,9 +1059,9 @@ export default function TroChuyenPage() {
                                 setOpenDropdownId(null);
                               }}
                             />
-                            <div className="absolute right-0 top-full mt-1 w-36 p-1.5 bg-white  rounded-[14px] z-50">
+                            <div className="absolute right-0 top-full mt-1 w-36 p-1.5 bg-white  rounded-panel z-50">
                               <button
-                                className="w-full text-left px-3 py-2 text-[13px] text-[#1D1D1F] hover:bg-[#F5F5F7] rounded-[10px] transition-colors flex items-center gap-2"
+                                className="w-full text-left px-3 py-2 text-[13px] text-ink hover:bg-surface-quiet rounded-control transition-colors flex items-center gap-2"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setOpenDropdownId(null);
@@ -1115,26 +1076,15 @@ export default function TroChuyenPage() {
                                   e.stopPropagation();
                                   setOpenDropdownId(null);
                                   try {
-                                    const token = getToken();
-                                    const res = await fetch(
-                                      `${API_URL}/lich-su/${s._id}?user_id=${user?.id || user?._id}`,
-                                      {
-                                        method: "DELETE",
-                                        headers: {
-                                          Authorization: `Bearer ${token}`,
-                                        },
-                                      },
-                                    );
-                                    if (res.ok) {
+                                    await deleteAiSessionAPI(s._id);
                                       if (currentSessionId === s._id) {
                                         setCurrentSessionId(null);
                                         setMessages([]);
                                       }
                                       fetchHistory();
-                                    }
                                   } catch (err) {}
                                 }}
-                                className="w-full text-left px-3 py-2 text-[13px] text-[#FF3B30] hover:bg-[#FFEBEB] rounded-[10px] transition-colors flex items-center gap-2"
+                                className="w-full text-left px-3 py-2 text-[13px] text-danger hover:bg-danger-soft rounded-control transition-colors flex items-center gap-2"
                               >
                                 <Trash2 className="w-3.5 h-3.5" /> Xóa
                               </button>
@@ -1151,17 +1101,17 @@ export default function TroChuyenPage() {
           </div>
         </aside>
 
-        <main className="flex-1 flex flex-col min-w-0 h-full bg-[#F5F5F7] md:bg-transparent rounded-[24px] md:rounded-none relative overflow-hidden">
+        <main className="flex-1 flex flex-col min-w-0 h-full bg-surface-quiet md:bg-transparent rounded-workspace md:rounded-none relative overflow-hidden">
           <div
             ref={scrollRef}
             className="flex-1 overflow-y-auto flex flex-col min-h-0 custom-scrollbar relative"
           >
             {messages.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
-                <p className="text-[24px] font-semibold text-[#1D1D1F]">
+                <p className="text-[24px] font-semibold text-ink">
                   Xin chào, {user.full_name}
                 </p>
-                <p className="text-[15px] text-[#6E6E73] mt-2 leading-relaxed max-w-sm">
+                <p className="text-[15px] text-ink-muted mt-2 leading-relaxed max-w-sm">
                   Tôi có thể giúp gì cho bạn hôm nay?
                 </p>
               </div>
@@ -1176,21 +1126,21 @@ export default function TroChuyenPage() {
                             <img
                               src={msg.attachments.image}
                               alt="Attachment"
-                              className="max-w-[240px] max-h-[240px] object-cover rounded-[16px] border border-[#E8E8ED]"
+                              className="max-w-[240px] max-h-[240px] object-cover rounded-panel border border-border"
                             />
                           )}
                           {msg.attachments?.file && (
-                            <div className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-[14px] border border-[#E8E8ED] shadow-sm">
-                              <FileText className="w-5 h-5 text-[#0071E3]" />
-                              <span className="text-[14px] font-medium text-[#1D1D1F]">
+                            <div className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-panel border border-border shadow-sm">
+                              <FileText className="w-5 h-5 text-brand" />
+                              <span className="text-[14px] font-medium text-ink">
                                 {msg.attachments.file}
                               </span>
                             </div>
                           )}
                           {msg.attachments?.folder && (
-                            <div className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-[14px] border border-[#E8E8ED] shadow-sm">
-                              <Folder className="w-5 h-5 text-[#FF9500]" />
-                              <span className="text-[14px] font-medium text-[#1D1D1F]">
+                            <div className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-panel border border-border shadow-sm">
+                              <Folder className="w-5 h-5 text-warning" />
+                              <span className="text-[14px] font-medium text-ink">
                                 {msg.attachments.folder}
                               </span>
                             </div>
@@ -1215,27 +1165,27 @@ export default function TroChuyenPage() {
                         <div className="py-2 w-full relative group">
                           {msg.isThinkingEnabled && msg.thoughts && msg.thoughts.length > 0 && (
                             <div className="mb-3 mt-1">
-                              <details className="group/details bg-[#F5F5F7] rounded-[14px] overflow-hidden border border-[#E8E8ED]" open={isSending && idx === messages.length - 1}>
-                                <summary className="flex items-center gap-2 px-4 py-2.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden border-b border-transparent group-open/details:border-[#E8E8ED] transition-colors">
+                              <details className="group/details bg-surface-quiet rounded-panel overflow-hidden border border-border" open={isSending && idx === messages.length - 1}>
+                                <summary className="flex items-center gap-2 px-4 py-2.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden border-b border-transparent group-open/details:border-border transition-colors">
                                   <div className="flex-1 flex items-center gap-2">
-                                    <Activity className="w-4 h-4 text-[#0071E3]" />
-                                    <span className="text-[14px] font-semibold text-[#1D1D1F]">
+                                    <Activity className="w-4 h-4 text-brand" />
+                                    <span className="text-[14px] font-semibold text-ink">
                                       Quá trình xử lý
                                     </span>
                                   </div>
-                                  <ChevronDown className="w-4 h-4 text-[#86868B] transition-transform duration-200 group-open/details:rotate-180" />
+                                  <ChevronDown className="w-4 h-4 text-ink-faint transition-transform duration-200 group-open/details:rotate-180" />
                                 </summary>
-                                <div className="px-4 py-3 bg-white text-[14px] text-[#6E6E73] border-t border-[#E8E8ED] flex flex-col gap-2">
+                                <div className="px-4 py-3 bg-white text-[14px] text-ink-muted border-t border-border flex flex-col gap-2">
                                   {msg.thoughts.map((t, tIdx) => (
                                     <div key={tIdx} className="flex gap-2 items-start">
                                       <div className="mt-1">
                                         {(isSending && idx === messages.length - 1 && tIdx === msg.thoughts!.length - 1) ? (
-                                          <Loader2 className="w-3.5 h-3.5 text-[#0071E3] animate-spin" />
+                                          <Loader2 className="w-3.5 h-3.5 text-brand animate-spin" />
                                         ) : (
-                                          <div className="w-1.5 h-1.5 rounded-full bg-[#34C759] mt-1" />
+                                          <div className="w-1.5 h-1.5 rounded-full bg-brand mt-1" />
                                         )}
                                       </div>
-                                      <span className="text-[14px] text-[#1D1D1F] leading-relaxed">{t}</span>
+                                      <span className="text-[14px] text-ink leading-relaxed">{t}</span>
                                     </div>
                                   ))}
                                 </div>
@@ -1248,19 +1198,19 @@ export default function TroChuyenPage() {
                               
                               return (
                                 <div key={sIdx} className="mb-3 mt-1">
-                                  <details className="group/details bg-[#F5F5F7] rounded-[14px] overflow-hidden border border-[#E8E8ED]" open={isSending && idx === messages.length - 1 && sIdx === segments.length - 1}>
-                                    <summary className="flex items-center gap-2 px-4 py-2.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden border-b border-transparent group-open/details:border-[#E8E8ED] transition-colors">
+                                  <details className="group/details bg-surface-quiet rounded-panel overflow-hidden border border-border" open={isSending && idx === messages.length - 1 && sIdx === segments.length - 1}>
+                                    <summary className="flex items-center gap-2 px-4 py-2.5 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden border-b border-transparent group-open/details:border-border transition-colors">
                                       <div className="flex-1 flex items-center gap-2">
-                                        <Activity className="w-4 h-4 text-[#0071E3]" />
-                                        <span className="text-[14px] font-semibold text-[#1D1D1F]">
+                                        <Activity className="w-4 h-4 text-brand" />
+                                        <span className="text-[14px] font-semibold text-ink">
                                           <ThoughtTimer isRunning={isSending && idx === messages.length - 1 && sIdx === segments.length - 1} />
                                         </span>
                                       </div>
-                                      <ChevronDown className="w-4 h-4 text-[#86868B] transition-transform duration-200 group-open/details:rotate-180" />
+                                      <ChevronDown className="w-4 h-4 text-ink-faint transition-transform duration-200 group-open/details:rotate-180" />
                                     </summary>
-                                    <div className="px-4 py-3 bg-white text-[14px] text-[#6E6E73] border-t border-[#E8E8ED]">
+                                    <div className="px-4 py-3 bg-white text-[14px] text-ink-muted border-t border-border">
                                       {thinkContent ? (
-                                        <div className="prose prose-sm max-w-none prose-zinc prose-p:leading-relaxed text-[#6E6E73]">
+                                        <div className="prose prose-sm max-w-none prose-zinc prose-p:leading-relaxed text-ink-muted">
                                           <ReactMarkdown
                                             remarkPlugins={[remarkGfm, remarkMath]}
                                             rehypePlugins={[rehypeKatex, rehypeHighlight]}
@@ -1270,8 +1220,8 @@ export default function TroChuyenPage() {
                                         </div>
                                       ) : (
                                         <div className="flex gap-2 items-center py-1">
-                                          <Loader2 className="w-4 h-4 text-[#0071E3] animate-spin" />
-                                          <span className="text-[14px] text-[#6E6E73] font-medium animate-pulse">
+                                          <Loader2 className="w-4 h-4 text-brand animate-spin" />
+                                          <span className="text-[14px] text-ink-muted font-medium animate-pulse">
                                             Đang kích hoạt không gian suy luận
                                           </span>
                                         </div>
@@ -1306,7 +1256,7 @@ export default function TroChuyenPage() {
                                 <ReactMarkdown
                                   remarkPlugins={[remarkGfm, remarkMath]}
                                   rehypePlugins={[rehypeKatex, rehypeHighlight]}
-                                  className="prose prose-sm max-w-none prose-zinc prose-p:text-[15px] prose-p:text-[#1D1D1F] prose-p:leading-relaxed prose-code:bg-[#F5F5F7] prose-code:text-[#FF3B30] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-[6px] prose-pre:bg-[#1D1D1F] prose-pre:rounded-[14px]"
+                                  className="prose prose-sm max-w-none prose-zinc prose-p:text-[15px] prose-p:text-ink prose-p:leading-relaxed prose-code:bg-surface-quiet prose-code:text-danger prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-[6px] prose-pre:bg-ink prose-pre:rounded-panel"
                                   components={{
                                     a: ({ href, children, ...props }) => {
                                       if (
@@ -1319,7 +1269,7 @@ export default function TroChuyenPage() {
                                       return (
                                         <a
                                           href={href}
-                                          className="text-[#0071E3] font-medium hover:underline"
+                                          className="text-brand font-medium hover:underline"
                                           target="_blank"
                                           rel="noreferrer"
                                           {...props}
@@ -1342,13 +1292,13 @@ export default function TroChuyenPage() {
 
                           {!cleanText && segments.length === 0 && (
                             <div className="flex gap-1.5 h-6 items-center">
-                              <div className="w-2 h-2 rounded-full bg-[#C7C7CC] animate-pulse" />
+                              <div className="w-2 h-2 rounded-full bg-ink-faint animate-pulse" />
                               <div
-                                className="w-2 h-2 rounded-full bg-[#C7C7CC] animate-pulse"
+                                className="w-2 h-2 rounded-full bg-ink-faint animate-pulse"
                                 style={{ animationDelay: "0.2s" }}
                               />
                               <div
-                                className="w-2 h-2 rounded-full bg-[#C7C7CC] animate-pulse"
+                                className="w-2 h-2 rounded-full bg-ink-faint animate-pulse"
                                 style={{ animationDelay: "0.4s" }}
                               />
                             </div>
@@ -1363,7 +1313,7 @@ export default function TroChuyenPage() {
           </div>
 
           <div className="shrink-0 px-6 pb-6 pt-2 md:px-0 md:pb-0">
-            <div className="w-full relative bg-white border border-[#D2D2D7] focus-within:border-[#0071E3] transition-colors rounded-[24px] p-2">
+            <div className="w-full relative bg-white border border-border focus-within:border-brand transition-colors rounded-workspace p-2">
               <input
                 type="file"
                 ref={fileInputRef}
@@ -1401,24 +1351,24 @@ export default function TroChuyenPage() {
               />
 
               {showAttachments && (
-                <div className="absolute bottom-full left-0 mb-2 w-40 bg-white rounded-[14px] py-2 z-50 shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-[#E8E8ED]">
+                <div className="absolute bottom-full left-0 mb-2 w-40 bg-white rounded-panel py-2 z-50 shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-border">
                   <button
                     onClick={() => {
                       fileInputRef.current?.click();
                       setShowAttachments(false);
                     }}
-                    className="w-full text-left px-4 py-2.5 text-[15px] font-medium text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors flex items-center gap-3"
+                    className="w-full text-left px-4 py-2.5 text-[15px] font-medium text-ink hover:bg-surface-quiet transition-colors flex items-center gap-3"
                   >
-                    <FileText className="w-5 h-5 text-[#0071E3]" /> Tài liệu
+                    <FileText className="w-5 h-5 text-brand" /> Tài liệu
                   </button>
                   <button
                     onClick={() => {
                       imageInputRef.current?.click();
                       setShowAttachments(false);
                     }}
-                    className="w-full text-left px-4 py-2.5 text-[15px] font-medium text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors flex items-center gap-3"
+                    className="w-full text-left px-4 py-2.5 text-[15px] font-medium text-ink hover:bg-surface-quiet transition-colors flex items-center gap-3"
                   >
-                    <ImageIcon className="w-5 h-5 text-[#34C759]" /> Hình ảnh
+                    <ImageIcon className="w-5 h-5 text-brand" /> Hình ảnh
                   </button>
                   {user?.ai_tier === "PREMIUM" && (
                     <button
@@ -1426,9 +1376,9 @@ export default function TroChuyenPage() {
                         folderInputRef.current?.click();
                         setShowAttachments(false);
                       }}
-                      className="w-full text-left px-4 py-2.5 text-[15px] font-medium text-[#1D1D1F] hover:bg-[#F5F5F7] transition-colors flex items-center gap-3"
+                      className="w-full text-left px-4 py-2.5 text-[15px] font-medium text-ink hover:bg-surface-quiet transition-colors flex items-center gap-3"
                     >
-                      <Folder className="w-5 h-5 text-[#FF9500]" /> Thư mục
+                      <Folder className="w-5 h-5 text-warning" /> Thư mục
                     </button>
                   )}
                 </div>
@@ -1441,25 +1391,25 @@ export default function TroChuyenPage() {
                       <img
                         src={selectedImage.data}
                         alt=""
-                        className="h-16 w-16 object-cover rounded-[14px] border border-[#E8E8ED]"
+                        className="h-16 w-16 object-cover rounded-panel border border-border"
                       />
                       <button
                         onClick={() => setSelectedImage(null)}
-                        className="absolute -top-2 -right-2 w-6 h-6 bg-[#F5F5F7] text-[#6E6E73] hover:text-[#1D1D1F] flex items-center justify-center rounded-full shadow-sm"
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-surface-quiet text-ink-muted hover:text-ink flex items-center justify-center rounded-full shadow-sm"
                       >
                         <X className="w-4 h-4" />
                       </button>
                     </div>
                   )}
                   {selectedFile && (
-                    <div className="relative group shrink-0 h-16 px-4 bg-[#F5F5F7] border border-[#E8E8ED] flex items-center gap-3 rounded-[14px]">
-                      <FileText className="w-5 h-5 text-[#0071E3] shrink-0" />
-                      <span className="text-[13px] font-medium text-[#1D1D1F] truncate max-w-[150px]">
+                    <div className="relative group shrink-0 h-16 px-4 bg-surface-quiet border border-border flex items-center gap-3 rounded-panel">
+                      <FileText className="w-5 h-5 text-brand shrink-0" />
+                      <span className="text-[13px] font-medium text-ink truncate max-w-[150px]">
                         {selectedFile.name}
                       </span>
                       <button
                         onClick={() => setSelectedFile(null)}
-                        className="absolute -top-2 -right-2 w-6 h-6 bg-[#F5F5F7] text-[#6E6E73] hover:text-[#1D1D1F] flex items-center justify-center rounded-full shadow-sm border border-[#E8E8ED]"
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-surface-quiet text-ink-muted hover:text-ink flex items-center justify-center rounded-full shadow-sm border border-border"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -1468,15 +1418,15 @@ export default function TroChuyenPage() {
 
                   {selectedFolder && (
                     <div className="relative group shrink-0">
-                      <div className="flex items-center gap-3 px-4 py-3 bg-[#F5F5F7] rounded-[16px] border border-[#E8E8ED]">
-                        <Folder className="w-6 h-6 text-[#FF9500]" />
-                        <span className="text-[14px] font-medium text-[#1D1D1F] max-w-[150px] truncate">
+                      <div className="flex items-center gap-3 px-4 py-3 bg-surface-quiet rounded-panel border border-border">
+                        <Folder className="w-6 h-6 text-warning" />
+                        <span className="text-[14px] font-medium text-ink max-w-[150px] truncate">
                           {selectedFolder.name}
                         </span>
                       </div>
                       <button
                         onClick={() => setSelectedFolder(null)}
-                        className="absolute -top-2 -right-2 bg-white text-[#86868B] hover:text-[#1D1D1F] p-1.5 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.1)] border border-[#E8E8ED] transition-colors z-10 opacity-0 group-hover:opacity-100"
+                        className="absolute -top-2 -right-2 bg-white text-ink-faint hover:text-ink p-1.5 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.1)] border border-border transition-colors z-10 opacity-0 group-hover:opacity-100"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -1535,7 +1485,7 @@ export default function TroChuyenPage() {
                   placeholder=""
                   disabled={isSending}
                   rows={1}
-                  className={`w-full min-h-[56px] text-[17px] leading-[24px] bg-transparent outline-none font-medium text-[#1D1D1F] placeholder:text-[#6E6E73] resize-none overflow-y-auto custom-scrollbar transition-colors duration-200 ${
+                  className={`w-full min-h-[56px] text-[17px] leading-[24px] bg-transparent outline-none font-medium text-ink placeholder:text-ink-muted resize-none overflow-y-auto custom-scrollbar transition-colors duration-200 ${
                     isExpanded
                       ? "px-4 pt-4 pb-[56px]"
                       : "py-[16px] pl-[56px] pr-[180px]"
@@ -1548,7 +1498,7 @@ export default function TroChuyenPage() {
                     <button
                       type="button"
                       onClick={handleAttach}
-                      className="text-[#6E6E73] shrink-0 rounded-full w-10 h-10 flex items-center justify-center hover:bg-[#F5F5F7] hover:text-[#1D1D1F] transition-colors"
+                      className="text-ink-muted shrink-0 rounded-full w-10 h-10 flex items-center justify-center hover:bg-surface-quiet hover:text-ink transition-colors"
                     >
                       <PlusIcon className="w-5 h-5" />
                     </button>
@@ -1557,7 +1507,7 @@ export default function TroChuyenPage() {
                     <label
                       className={`flex h-10 items-center gap-2 ${user?.ai_tier !== "PREMIUM" && user?.role !== "admin" ? "cursor-not-allowed opacity-50" : "cursor-pointer"} group shrink-0 select-none`}
                     >
-                      <span className="text-[14px] font-medium text-[#6E6E73] select-none">
+                      <span className="text-[14px] font-medium text-ink-muted select-none">
                         Suy nghĩ
                       </span>
                       <div className="relative inline-flex items-center">
@@ -1572,7 +1522,7 @@ export default function TroChuyenPage() {
                         />
                         <div 
                           className={`w-11 h-6 rounded-full transition-colors duration-200 flex items-center px-[2px] shrink-0 outline-none select-none ${
-                            thinking ? "bg-[#34C759]" : "bg-[#D2D2D7]"
+                            thinking ? "bg-brand" : "bg-border"
                           }`}
                         >
                           <div 
@@ -1589,7 +1539,7 @@ export default function TroChuyenPage() {
                         isSending ||
                         (!input.trim() && !selectedImage && !selectedFile && !selectedFolder)
                       }
-                      className="w-10 h-10 shrink-0 bg-[#0071E3] text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors hover:bg-[#0077ED]"
+                      className="w-10 h-10 shrink-0 bg-brand text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors hover:bg-brand"
                     >
                       {isSending ? (
                         <Loader2 className="w-5 h-5 animate-spin" />
@@ -1602,7 +1552,7 @@ export default function TroChuyenPage() {
               </form>
             </div>
             <div className="mt-1 text-center mb-1">
-              <span className="text-[12px] italic text-[#86868B]">
+              <span className="text-[12px] italic text-ink-faint">
                 * DocLib Metis là trí tuệ nhân tạo và có thể mắc sai lầm
               </span>
             </div>

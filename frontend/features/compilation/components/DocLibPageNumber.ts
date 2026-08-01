@@ -47,10 +47,10 @@ export default class DocLibPageNumber implements BlockTool {
 
     const style = document.createElement("style");
     style.innerHTML = `
-      .doclib-pagenum { border: 1px dashed #cbd5e1; border-radius: 8px; padding: 16px; margin: 16px 0; background: #f8fafc; font-family: monospace; display: flex; justify-content: space-between; align-items: center; }
-      .doclib-pagenum-preview { font-weight: bold; color: #475569; font-size: 16px; }
+      .doclib-pagenum { border: 1px dashed hsl(var(--border)); border-radius: 8px; padding: 16px; margin: 16px 0; background: hsl(var(--surface-raised)); font-family: monospace; display: flex; justify-content: space-between; align-items: center; }
+      .doclib-pagenum-preview { font-weight: bold; color: hsl(var(--ink-muted)); font-size: 16px; }
       .doclib-pagenum-controls { display: flex; gap: 8px; }
-      .doclib-pagenum-select { padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; background: #fff; }
+      .doclib-pagenum-select { padding: 6px; border: 1px solid hsl(var(--border)); border-radius: 4px; outline: none; background: hsl(var(--surface)); }
     `;
     this.wrapper.appendChild(style);
 
