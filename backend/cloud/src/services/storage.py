@@ -4,7 +4,7 @@ from src.core.infrastructure.mongo import mongo
 from datetime import datetime, timezone
 from typing import List, Optional
 
-from fastapi import Query
+from fastapi import HTTPException, Query
 from loguru import logger
 from src.schemas.storage import StorageItemCreate, StorageItemInDB, StorageItemUpdate
 

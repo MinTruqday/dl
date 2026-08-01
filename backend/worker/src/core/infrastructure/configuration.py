@@ -15,7 +15,6 @@ class Settings(BaseModel):
     SECRET_KEY: str = os.environ["SECRET_KEY"]
     MONGODB_URI: str = os.environ["MONGODB_URI"]
     RABBITMQ_URI: str = os.environ["RABBITMQ_URI"]
-    CONTENT_DB_NAME: str = os.environ["CONTENT_DB_NAME"]
     WORKER_DB_NAME: str = os.environ["WORKER_DB_NAME"]
     MINIO_ENDPOINT: str = os.environ["MINIO_ENDPOINT"]
     MINIO_ACCESS_KEY: str = os.environ["MINIO_ACCESS_KEY"]

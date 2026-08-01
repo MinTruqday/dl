@@ -9,6 +9,7 @@ from src.core.infrastructure.database import database
 from src.core.logic_logger import log_logic_execution
 from src.schemas.wallet import Transaction, TransactionType
 from src.services.humanity_client import HumanityClient
+from src.services.authentication_client import AuthenticationClient
 
 
 ALLOWED_WITHDRAWAL_QUEUE_STATUSES = {
@@ -64,11 +65,7 @@ class WithdrawalService:
             raise HTTPException(status_code=400, detail="Số dư doanh thu khả dụng không đủ để rút tiền")
 
         now = datetime.now(timezone.utc)
-        auth_db = database.mongodb[settings.AUTHENTICATION_DB_NAME]
-        credential = await auth_db.auth_credentials.find_one(
-            {"_id": user_id},
-            {"last_password_change": 1},
-        )
+        credential = await AuthenticationClient.security_state(user_id)
         last_password_change = credential.get("last_password_change") if credential else None
         if isinstance(last_password_change, datetime):
             if last_password_change.tzinfo is None:

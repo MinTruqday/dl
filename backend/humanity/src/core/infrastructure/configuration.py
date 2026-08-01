@@ -21,6 +21,5 @@ class Settings(BaseModel):
     REDIS_URI: str = os.environ["REDIS_URI"]
     PLATFORM_SYSTEM_ID: str = os.environ["PLATFORM_SYSTEM_ID"]
     HUMANITY_DB_NAME: str = os.environ["HUMANITY_DB_NAME"]
-    AUTHENTICATION_DB_NAME: str = os.environ["AUTHENTICATION_DB_NAME"]
 
 settings = Settings()

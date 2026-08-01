@@ -22,7 +22,12 @@ class PricingService:
             "is_drm_protected": data.get("is_drm_protected", True),
             "updated_at": datetime.now(timezone.utc),
         }
-        await PricingRepository.update_document(document_id, {"$set": update})
+        await PricingRepository.update_document(
+            document_id,
+            {"$set": update},
+            str(current_user.id),
+            getattr(current_user.role, "value", current_user.role) == "admin",
+        )
         logger.info("Document pricing configuration updated")
         return {"message": "Cập nhật cấu hình giá bán tài liệu hoàn tất"}
 

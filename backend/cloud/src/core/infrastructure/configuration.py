@@ -38,6 +38,5 @@ class Settings(BaseModel):
     MESSAGING_URL: str = get_service_url("MESSAGING")
     HUMANITY_URL: str = get_service_url("HUMANITY")
     CLOUD_DB_NAME: str = os.environ["CLOUD_DB_NAME"]
-    USAGE_DB_NAME: str = os.environ["USAGE_DB_NAME"]
 
 settings = Settings()

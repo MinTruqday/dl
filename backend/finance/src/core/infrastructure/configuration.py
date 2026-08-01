@@ -28,10 +28,9 @@ class Settings(BaseModel):
     PLATFORM_SYSTEM_ID: str = os.environ["PLATFORM_SYSTEM_ID"]
     NOTIFICATION_URL: str = get_service_url("NOTIFICATION")
     HUMANITY_URL: str = get_service_url("HUMANITY")
+    CONTENT_URL: str = get_service_url("CONTENT")
+    USAGE_URL: str = get_service_url("USAGE")
+    AUTHENTICATION_URL: str = get_service_url("AUTHENTICATION")
     FINANCE_DB_NAME: str = os.environ["FINANCE_DB_NAME"]
-    CONTENT_DB_NAME: str = os.environ["CONTENT_DB_NAME"]
-    HUMANITY_DB_NAME: str = os.environ["HUMANITY_DB_NAME"]
-    USAGE_DB_NAME: str = os.environ["USAGE_DB_NAME"]
-    AUTHENTICATION_DB_NAME: str = os.environ["AUTHENTICATION_DB_NAME"]
 
 settings = Settings()

@@ -16,8 +16,6 @@ class Settings(BaseModel):
     CORS_ALLOWED_ORIGINS: str = os.environ["CORS_ALLOWED_ORIGINS"]
     MONGODB_URI: str = os.environ["MONGODB_URI"]
     REDIS_URI: str = os.environ["REDIS_URI"]
-    CONTENT_DB_NAME: str = os.environ["CONTENT_DB_NAME"]
-    MESSAGING_DB_NAME: str = os.environ["MESSAGING_DB_NAME"]
     MAX_WS_MESSAGE_BYTES: int = int(os.environ["MAX_WS_MESSAGE_BYTES"])
     MAX_WS_FRAMES_PER_SECOND: int = int(os.environ["MAX_WS_FRAMES_PER_SECOND"])
     MAX_WS_CONNECTIONS_PER_USER: int = int(os.environ["MAX_WS_CONNECTIONS_PER_USER"])

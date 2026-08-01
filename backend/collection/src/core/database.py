@@ -3,16 +3,10 @@ from datetime import datetime, timezone
 from loguru import logger
 from uuid6 import uuid7
 
-from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import database as infrastructure
+from src.services.content_client import exchange_collected_document
 
 
 class Database:
-    def get_collection(self):
-        if infrastructure.mongodb is None:
-            raise RuntimeError("MongoDB connection is not initialized")
-        return infrastructure.mongodb[settings.CONTENT_DB_NAME]["documents"]
-
     async def insert_document(self, document_data: dict):
         now = datetime.now(timezone.utc)
         document = {
@@ -24,26 +18,17 @@ class Database:
         identity = document.get("source_url") or document.get("file_url")
         if not identity:
             raise ValueError("Collected document requires a source identity")
-        query = (
-            {"source_url": identity}
-            if document.get("source_url")
-            else {"file_url": identity}
-        )
-        result = await self.get_collection().find_one_and_update(
-            query,
-            {"$setOnInsert": document},
-            upsert=True,
-            return_document=True,
-        )
+        result = await exchange_collected_document("upsert_collected", document=document)
         logger.info("Collected document record persisted")
-        return str(result["_id"])
+        return str(result["document_id"])
 
     async def update_document(self, document_id: str, update_data: dict):
-        result = await self.get_collection().update_one(
-            {"_id": document_id},
-            {"$set": {**update_data, "updated_at": datetime.now(timezone.utc)}},
+        result = await exchange_collected_document(
+            "update_collected",
+            document_id=document_id,
+            values=update_data,
         )
-        return result.modified_count == 1
+        return bool(result["updated"])
 
 
 database = Database()

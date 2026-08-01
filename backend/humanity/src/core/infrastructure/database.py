@@ -27,7 +27,6 @@ async def init_db():
 
 async def reconcile_duplicate_users():
     db = database.mongodb[settings.HUMANITY_DB_NAME]
-    auth_db = database.mongodb[settings.AUTHENTICATION_DB_NAME]
     groups = await db["users"].aggregate(
         [
             {"$match": {"email": {"$type": "string"}}},
@@ -37,10 +36,10 @@ async def reconcile_duplicate_users():
     ).to_list(length=None)
     for group in groups:
         users = group["users"]
-        credential = await auth_db["auth_credentials"].find_one({"email": group["_id"]})
-        credential_id = str(credential["_id"]) if credential else None
-        keeper = next((user for user in users if str(user["_id"]) == credential_id), None)
-        keeper = keeper or sorted(users, key=lambda item: str(item["_id"]))[0]
+        keeper = sorted(
+            users,
+            key=lambda item: (str(item.get("created_at", "")), str(item["_id"])),
+        )[0]
         merged = dict(keeper)
         for user in users:
             for key, value in user.items():

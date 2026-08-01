@@ -5,6 +5,8 @@ from pymongo import ReturnDocument
 from src.core.infrastructure.mongo import mongo
 from src.core.infrastructure.database import database
 from src.core.infrastructure.configuration import settings
+from src.services.content_client import ContentClient
+from src.services.finance_client import FinanceClient
 class LicenseRepository:
     @staticmethod
     def _get_db():
@@ -24,20 +26,11 @@ class LicenseRepository:
 
     @classmethod
     async def get_document(cls, document_id: str) -> Optional[Dict[str, Any]]:
-        content_db = database.mongodb[settings.CONTENT_DB_NAME]
-        return await content_db["documents"].find_one({"_id": document_id})
+        return await ContentClient.get(document_id)
 
     @classmethod
     async def get_purchase(cls, user_id: str, item_id: str) -> Optional[Dict[str, Any]]:
-        finance_db = database.mongodb[settings.FINANCE_DB_NAME]
-        return await finance_db["purchases"].find_one(
-            {
-                "user_id": user_id,
-                "document_id": item_id,
-                "item_type": "document",
-                "status": {"$ne": "CANCELLED"},
-            }
-        )
+        return await FinanceClient.get_purchase(user_id, item_id)
 
     @classmethod
     async def claim_access(

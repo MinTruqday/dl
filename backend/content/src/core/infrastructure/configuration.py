@@ -30,10 +30,9 @@ class Settings(BaseModel):
     NOTIFICATION_URL: str = get_service_url("NOTIFICATION")
     MANAGEMENT_URL: str = get_service_url("MANAGEMENT")
     USAGE_URL: str = get_service_url("USAGE")
+    FINANCE_URL: str = get_service_url("FINANCE")
+    DRM_URL: str = get_service_url("DRM")
     CONTENT_DB_NAME: str = os.environ["CONTENT_DB_NAME"]
-    HUMANITY_DB_NAME: str = os.environ["HUMANITY_DB_NAME"]
-    FINANCE_DB_NAME: str = os.environ["FINANCE_DB_NAME"]
-    DRM_DB_NAME: str = os.environ["DRM_DB_NAME"]
     MINIO_ENDPOINT: str = os.environ["MINIO_ENDPOINT"]
     MINIO_PUBLIC_URL: str = os.environ["MINIO_PUBLIC_URL"]
 

@@ -23,9 +23,8 @@ class Settings(BaseModel):
     REDIS_URI: str = os.environ["REDIS_URI"]
     PLATFORM_SYSTEM_ID: str = os.environ["PLATFORM_SYSTEM_ID"]
     DRM_DB_NAME: str = os.environ["DRM_DB_NAME"]
-    FINANCE_DB_NAME: str = os.environ["FINANCE_DB_NAME"]
-    CONTENT_DB_NAME: str = os.environ["CONTENT_DB_NAME"]
-    HUMANITY_DB_NAME: str = os.environ["HUMANITY_DB_NAME"]
     HUMANITY_URL: str = get_service_url("HUMANITY")
+    CONTENT_URL: str = get_service_url("CONTENT")
+    FINANCE_URL: str = get_service_url("FINANCE")
 
 settings = Settings()

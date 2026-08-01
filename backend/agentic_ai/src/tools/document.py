@@ -483,35 +483,10 @@ async def recommend_documents(query: str, config: RunnableConfig) -> str:
     CRITICAL: Returns a structured summary of the top 3 matching documents including title, link, price, and match description.
     </contract>
     """
-    import os
-    from motor.motor_asyncio import AsyncIOMotorClient
-    from src.core.infrastructure.database import database
+    from src.services.content_client import ContentClient
 
     try:
-        db_name = os.getenv("CONTENT_DB_NAME", "doclib_content")
-        if database.mongodb:
-            db = database.mongodb[db_name]
-        else:
-            mongo_uri = os.getenv("MONGODB_URI", "mongodb://doclib_mongodb:27017")
-            client = AsyncIOMotorClient(mongo_uri)
-            db = client[db_name]
-
-        search_filter = {
-            "status": "published",
-            "is_deleted": {"$ne": True},
-        }
-        if query and query.strip():
-            search_filter["$or"] = [
-                {"title": {"$regex": query, "$options": "i"}},
-                {"description": {"$regex": query, "$options": "i"}},
-                {"tags": {"$regex": query, "$options": "i"}},
-            ]
-
-        docs = await db["documents"].find(search_filter).limit(3).to_list(length=3)
-
-        if not docs:
-            docs = await db["documents"].find({"status": "published", "is_deleted": {"$ne": True}}).limit(3).to_list(length=3)
-
+        docs = await ContentClient.search(query)
         if not docs:
             return json.dumps({
                 "status": "success",
@@ -521,7 +496,7 @@ async def recommend_documents(query: str, config: RunnableConfig) -> str:
 
         recommendations = []
         for doc in docs:
-            doc_id = str(doc.get("_id") or doc.get("id"))
+            doc_id = str(doc.get("id"))
             recommendations.append({
                 "id": doc_id,
                 "title": doc.get("title") or "",

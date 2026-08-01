@@ -14,7 +14,6 @@ from loguru import logger
 from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import database
 from src.repositories.system import SystemRepository
 from src.repositories.policy import PolicyProposalRepository
 from src.repositories.moderation import ModerationRepository
@@ -75,7 +74,7 @@ class HealthService:
 
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
         backup_id = str(uuid7())
-        object_name = f"system/backups/doclib-{timestamp}-{backup_id}.json.gz"
+        object_name = f"management/backups/doclib-management-{timestamp}-{backup_id}.json.gz"
         created_at = datetime.now(timezone.utc)
         await mongo.insert_one(
             "backup_jobs",
@@ -100,34 +99,23 @@ class HealthService:
             with gzip.open(file_path, "wt", encoding="utf-8", compresslevel=6) as output:
                 output.write('{"created_at":')
                 output.write(json_util.dumps(created_at))
-                output.write(',"databases":{')
-                database_index = 0
-                names = await database.mongodb.list_database_names()
-                for database_name in names:
-                    if database_name in {"admin", "config", "local"}:
-                        continue
-                    if database_index:
+                output.write(',"database":{')
+                target = mongo.get_db()
+                collection_index = 0
+                for collection_name in await target.list_collection_names():
+                    if collection_index:
                         output.write(",")
-                    database_index += 1
-                    output.write(json_util.dumps(database_name))
-                    output.write(":{")
-                    target = database.mongodb[database_name]
-                    collection_index = 0
-                    for collection_name in await target.list_collection_names():
-                        if collection_index:
+                    collection_index += 1
+                    output.write(json_util.dumps(collection_name))
+                    output.write(":[")
+                    document_index = 0
+                    async for document in target[collection_name].find({}).batch_size(250):
+                        if document_index:
                             output.write(",")
-                        collection_index += 1
-                        output.write(json_util.dumps(collection_name))
-                        output.write(":[")
-                        document_index = 0
-                        async for document in target[collection_name].find({}).batch_size(250):
-                            if document_index:
-                                output.write(",")
-                            document_index += 1
-                            document_count += 1
-                            output.write(json_util.dumps(document))
-                        output.write("]")
-                    output.write("}")
+                        document_index += 1
+                        document_count += 1
+                        output.write(json_util.dumps(document))
+                    output.write("]")
                 output.write("}}")
             size_bytes = os.path.getsize(file_path)
             await upload_file_path(
@@ -147,7 +135,7 @@ class HealthService:
                     }
                 },
             )
-            logger.info("System data backup completed")
+            logger.info("Management data backup completed")
             return {
                 "object_name": object_name,
                 "size_bytes": size_bytes,
@@ -165,7 +153,7 @@ class HealthService:
                     }
                 },
             )
-            logger.exception("System data backup failed")
+            logger.exception("Management data backup failed")
             raise HTTPException(
                 status_code=503,
                 detail="Không thể hoàn thành bản sao lưu dữ liệu hệ thống",

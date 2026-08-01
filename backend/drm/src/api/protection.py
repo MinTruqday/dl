@@ -12,6 +12,7 @@ from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 from src.core.infrastructure.redis import redis
 from src.services.humanity_client import HumanityClient
+from src.services.content_client import ContentClient
 
 router = APIRouter(
     prefix="/bao-ve",
@@ -91,15 +92,7 @@ async def get_user_trust_profile(
 async def analyze_document_risk(
     document_id: str = Query(min_length=1, max_length=128),
 ) -> Dict[str, Any]:
-    document = await database.mongodb[settings.CONTENT_DB_NAME].documents.find_one(
-        {"_id": document_id},
-        {
-            "is_premium": 1,
-            "visibility": 1,
-            "status": 1,
-            "is_deleted": 1,
-        },
-    )
+    document = await ContentClient.get(document_id)
     if not document or document.get("is_deleted"):
         raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
     drm_db = database.mongodb[settings.DRM_DB_NAME]
@@ -170,10 +163,7 @@ async def issue_temporary_aes_key(
     user_id: str = Query(min_length=1, max_length=128),
     ttl_seconds: int = Query(default=300, ge=60, le=3600),
 ) -> Dict[str, Any]:
-    document = await database.mongodb[settings.CONTENT_DB_NAME].documents.find_one(
-        {"_id": document_id, "is_deleted": {"$ne": True}},
-        {"_id": 1},
-    )
+    document = await ContentClient.get(document_id)
     user = await HumanityClient.get(user_id)
     if not document:
         raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
@@ -236,3 +226,23 @@ async def verify_device_fingerprint(
         "risk_multiplier": 1.0 if is_match and known_ip else 2.5,
         "reason": "verified" if is_match else "fingerprint_mismatch"
     }
+
+@router.get("/noi-bo/giay-phep")
+async def get_internal_license(file_id: str) -> Dict[str, Any]:
+    license_doc = await database.mongodb[settings.DRM_DB_NAME].drm_licenses.find_one(
+        {"file_id": file_id}
+    )
+    if not license_doc:
+        raise HTTPException(status_code=404, detail="Không tìm thấy giấy phép")
+    license_doc["_id"] = str(license_doc["_id"])
+    return {"data": license_doc}
+
+@router.get("/noi-bo/cau-hinh")
+async def get_internal_document_settings(document_id: str) -> Dict[str, Any]:
+    settings_doc = await database.mongodb[settings.DRM_DB_NAME].document_drm_settings.find_one(
+        {"document_id": document_id}
+    )
+    if not settings_doc:
+        raise HTTPException(status_code=404, detail="Không tìm thấy cấu hình DRM")
+    settings_doc["_id"] = str(settings_doc["_id"])
+    return {"data": settings_doc}

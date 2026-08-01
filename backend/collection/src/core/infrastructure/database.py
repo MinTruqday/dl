@@ -44,10 +44,6 @@ async def setup_indexes():
         await db["collection_jobs"].create_index([("status", 1), ("created_at", -1)], background=True)
         await db["collection_jobs"].create_index([("source", 1), ("created_at", -1)], background=True)
         await db["collection_jobs"].create_index([("created_at", -1)], expireAfterSeconds=30 * 24 * 60 * 60)
-        content_db = database.mongodb[settings.CONTENT_DB_NAME]
-        await content_db["documents"].create_index([("source_url", 1)], background=True)
-        await content_db["documents"].create_index([("creator_id", 1), ("created_at", -1)], background=True)
-
         logger.info("MongoDB indexes created")
     except Exception:
         logger.exception("MongoDB index initialization failed")

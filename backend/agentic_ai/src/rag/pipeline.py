@@ -2,7 +2,6 @@ import os
 from typing import Dict, List, Optional
 
 from loguru import logger
-from motor.motor_asyncio import AsyncIOMotorClient
 
 from src.rag.chunk import chunker
 from src.rag.embedding import embedder
@@ -10,6 +9,7 @@ from src.store.vector import vector_store
 from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
+from src.services.content_client import ContentClient
 
 class PipelineRag:
     """
@@ -18,16 +18,7 @@ class PipelineRag:
     <metis_behavior>Extracts raw data robustly across formats. Never drops exceptions silently; routes errors to system logs. Integrates Neo4j for GraphRAG entity extraction.</metis_behavior>
     </module_purpose>
     """
-    _mongo_client = None
-
     def __init__(self):
-        mongo_uri = settings.MONGODB_URI
-        if PipelineRag._mongo_client is None:
-            PipelineRag._mongo_client = AsyncIOMotorClient(
-                mongo_uri, maxPoolSize=100
-            )
-        self._mongo = PipelineRag._mongo_client
-        self._db = self._mongo[settings.CONTENT_DB_NAME]
         minio_endpoint = settings.MINIO_ENDPOINT
         self._minio_base = minio_endpoint.rstrip("/")
         self._minio_private_bucket = settings.MINIO_PRIVATE_BUCKET
@@ -36,7 +27,7 @@ class PipelineRag:
     async def authorize_document(
         self, document_id: str, user_id: str, is_admin: bool = False
     ) -> Dict:
-        document = await self._db.documents.find_one({"_id": document_id})
+        document = await ContentClient.accessible(document_id, user_id, is_admin)
         if not document:
             raise ValueError("Document not found or access denied")
         if not is_admin:
@@ -168,16 +159,7 @@ class PipelineRag:
         )
         await vector_store.wait_upsert()
 
-        await self._db.documents.update_one(
-            {"_id": document_id},
-            {
-                "$set": {
-                    "indexing_status": "indexed",
-                    "indexed_chunks": len(chunks),
-                    "extraction_method": extraction_method,
-                }
-            },
-        )
+        await ContentClient.update_index(document_id, len(chunks), extraction_method)
 
         return {
             "document_id": document_id,

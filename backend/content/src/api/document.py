@@ -7,6 +7,7 @@ from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Body, Depends, Header, HTTPException, Query, status, File, UploadFile
 from pydantic import BaseModel
 from loguru import logger
+from uuid6 import uuid7
 from src.api.dependency import (
     get_current_user,
     get_current_user_optional,
@@ -124,6 +125,130 @@ async def get_internal_document_stats(req: dict):
         recent = await documents.find({"creator_id": {"$in": source_ids}}, {"created_at": 1}).sort("created_at", -1).limit(1).to_list(length=1)
         result["last_run"] = recent[0].get("created_at") if recent else None
     return {"data": result}
+
+@router.post(
+    "/noi-bo/trao-doi",
+    dependencies=[Depends(verify_internal_token)],
+    include_in_schema=False,
+)
+async def exchange_internal_document(req: dict):
+    action = str(req.get("action", ""))
+    document_id = str(req.get("document_id", ""))
+    documents = database.mongodb[settings.CONTENT_DB_NAME].documents
+    if action == "get_document":
+        document = await documents.find_one({"_id": document_id, "is_deleted": {"$ne": True}})
+        if not document:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+        document["_id"] = str(document["_id"])
+        document.pop("password", None)
+        document.pop("access_password_hash", None)
+        return {"data": document}
+    if action == "get_accessible_document":
+        user_id = str(req.get("user_id", ""))
+        is_admin = bool(req.get("is_admin", False))
+        edit = bool(req.get("edit", False))
+        access = [
+            {"creator_id": user_id},
+            {"coauthors": user_id},
+            {"collaborators.user_id": user_id},
+            {"shared_with.user_id": user_id},
+        ]
+        if not edit:
+            access.append({"visibility": "public", "status": "published"})
+        query = {"_id": document_id, "is_deleted": {"$ne": True}}
+        if not is_admin:
+            query["$or"] = access
+        document = await documents.find_one(query)
+        if not document:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu hoặc thiếu quyền truy cập")
+        document["_id"] = str(document["_id"])
+        document.pop("password", None)
+        document.pop("access_password_hash", None)
+        return {"data": document}
+    if action == "list_creator_documents":
+        creator_id = str(req.get("creator_id", ""))
+        rows = await documents.find(
+            {"creator_id": creator_id, "is_deleted": {"$ne": True}},
+            {"title": 1, "slug": 1, "views": 1, "view_count": 1, "price_dl": 1, "price_dls": 1},
+        ).to_list(length=None)
+        for row in rows:
+            row["_id"] = str(row["_id"])
+        return {"data": rows}
+    if action == "update_pricing":
+        actor_id = str(req.get("actor_id", ""))
+        is_admin = bool(req.get("is_admin", False))
+        query = {"_id": document_id, "is_deleted": {"$ne": True}}
+        if not is_admin:
+            query["creator_id"] = actor_id
+        values = {
+            "price_dl": max(0, int(req.get("price_dl", 0))),
+            "is_drm_protected": bool(req.get("is_drm_protected", True)),
+            "is_premium": int(req.get("price_dl", 0)) > 0,
+            "updated_at": datetime.now(timezone.utc),
+        }
+        result = await documents.update_one(query, {"$set": values})
+        if result.matched_count != 1:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu hoặc thiếu quyền cập nhật")
+        return {"data": {"document_id": document_id, **values}}
+    if action == "update_index":
+        result = await documents.update_one(
+            {"_id": document_id, "is_deleted": {"$ne": True}},
+            {"$set": {
+                "indexing_status": "indexed",
+                "indexed_chunks": int(req.get("indexed_chunks", 0)),
+                "extraction_method": str(req.get("extraction_method", "")),
+                "updated_at": datetime.now(timezone.utc),
+            }},
+        )
+        return {"data": {"updated": result.matched_count == 1}}
+    if action == "upsert_collected":
+        payload = dict(req.get("document") or {})
+        identity = payload.get("source_url") or payload.get("file_url")
+        if not identity:
+            raise HTTPException(status_code=422, detail="Tài liệu thu thập thiếu định danh nguồn")
+        now = datetime.now(timezone.utc)
+        payload.setdefault("_id", str(uuid7()))
+        payload.setdefault("created_at", now)
+        payload["updated_at"] = now
+        query = {"source_url": identity} if payload.get("source_url") else {"file_url": identity}
+        row = await documents.find_one_and_update(
+            query,
+            {"$setOnInsert": payload},
+            upsert=True,
+            return_document=ReturnDocument.AFTER,
+        )
+        return {"data": {"document_id": str(row["_id"])}}
+    if action == "update_collected":
+        result = await documents.update_one(
+            {"_id": document_id},
+            {"$set": {**dict(req.get("values") or {}), "updated_at": datetime.now(timezone.utc)}},
+        )
+        return {"data": {"updated": result.modified_count == 1}}
+    if action == "search_documents":
+        text = str(req.get("query", "")).strip()
+        search_filter = {"status": "published", "is_deleted": {"$ne": True}}
+        if text:
+            search_filter["$or"] = [
+                {"title": {"$regex": text, "$options": "i"}},
+                {"description": {"$regex": text, "$options": "i"}},
+                {"tags": {"$regex": text, "$options": "i"}},
+            ]
+        rows = await documents.find(search_filter).limit(3).to_list(length=3)
+        if not rows and text:
+            rows = await documents.find(
+                {"status": "published", "is_deleted": {"$ne": True}}
+            ).limit(3).to_list(length=3)
+        result = []
+        for row in rows:
+            result.append({
+                "id": str(row["_id"]),
+                "title": row.get("title", ""),
+                "slug": row.get("slug", ""),
+                "price_dl": row.get("price_dl", 0),
+                "summary": row.get("summary") or row.get("description") or "",
+            })
+        return {"data": result}
+    raise HTTPException(status_code=422, detail="Tác vụ trao đổi tài liệu không hợp lệ")
 
 @router.post("", response_model=APIResponse[DocumentResponse], status_code=status.HTTP_201_CREATED)
 async def create_document(

@@ -1,6 +1,7 @@
 from src.core.infrastructure.mongo import mongo
 from src.core.infrastructure.database import database
 from src.core.infrastructure.configuration import settings
+from src.services.content_client import ContentClient
 
 class FinetuneRepository:
     @staticmethod
@@ -53,11 +54,11 @@ class FinetuneRepository:
         return await mongo.delete_one("finetune_samples", *args, **kwargs)
 
     @classmethod
-    async def find_document_context(cls, *args, **kwargs):
-        return await database.mongodb[settings.CONTENT_DB_NAME].documents.find_one(
-            *args,
-            **kwargs,
-        )
+    async def find_document_context(cls, query, *args, **kwargs):
+        document_id = str(query.get("_id", ""))
+        if not document_id:
+            return None
+        return await ContentClient.get(document_id)
 
     @classmethod
     async def insert_one(cls, *args, **kwargs):

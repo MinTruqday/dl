@@ -131,18 +131,15 @@ class ConversionRag:
                 import uuid
                 import base64
                 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-                from motor.motor_asyncio import AsyncIOMotorClient
-                from src.core.infrastructure.configuration import settings
+                from src.services.drm_client import DrmClient
 
                 file_id_bytes = file_bytes[:16]
                 nonce = file_bytes[48:60]
                 ciphertext = file_bytes[60:]
                 file_id = str(uuid.UUID(bytes=file_id_bytes))
 
-                mongo_client = AsyncIOMotorClient(settings.MONGODB_URI)
                 try:
-                    db = mongo_client[settings.DRM_DB_NAME]
-                    license_doc = await db.drm_licenses.find_one({"file_id": file_id})
+                    license_doc = await DrmClient.license_by_file(file_id)
 
                     if not license_doc or not license_doc.get("aes_key"):
                         return {"error": "document_decryption_license_not_found"}
@@ -153,8 +150,6 @@ class ConversionRag:
                     raw_text = decrypted_data.decode("utf-8")
                 except Exception:
                     return {"error": "document_decryption_failed"}
-                finally:
-                    mongo_client.close()
 
                 chunks = self._split_markdown_to_chunks(raw_text)
                 return {

@@ -2,7 +2,8 @@ from enum import Enum
 from typing import Any, List, Optional
 
 import jwt
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, Header, HTTPException, Request, status
+import hmac
 from fastapi.security import OAuth2PasswordBearer
 from loguru import logger
 
@@ -40,6 +41,10 @@ class CurrentUser(BaseModel):
 from src.core.security.access import ALGORITHM, SECRET_KEY
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/xac-thuc/dang-nhap")
+
+async def verify_internal_token(x_internal_token: str = Header(default="")):
+    if not hmac.compare_digest(x_internal_token, settings.SECRET_KEY):
+        raise HTTPException(status_code=403, detail="Mã xác thực nội bộ không hợp lệ")
 
 async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
     credentials_exception = HTTPException(

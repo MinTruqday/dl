@@ -1,8 +1,7 @@
 from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
 from datetime import datetime, timezone
-from src.core.infrastructure.database import database
-from src.core.infrastructure.configuration import settings
+from src.services.content_client import ContentClient
 from src.repositories.copyright import CopyrightRepository
 from loguru import logger
 from fastapi import HTTPException
@@ -32,17 +31,11 @@ class CopyrightService:
     @staticmethod
     @log_logic_execution
     async def update_drm_settings(document_id: str, disable_copy: bool, hide_from_search: bool, current_user) -> dict:
-        document = await database.mongodb[settings.CONTENT_DB_NAME]["documents"].find_one(
-            {"_id": document_id},
-            {"creator_id": 1, "coauthors": 1},
-        )
-        if not document:
-            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
         user_id = str(current_user.id)
-        is_owner = document.get("creator_id") == user_id
-        is_coauthor = user_id in document.get("coauthors", [])
         from src.core.dependency import Role
-        if getattr(current_user.role, "value", current_user.role) != Role.ADMIN.value and not is_owner and not is_coauthor:
+        is_admin = getattr(current_user.role, "value", current_user.role) == Role.ADMIN.value
+        document = await ContentClient.get_accessible(document_id, user_id, is_admin, edit=True)
+        if not document:
             raise HTTPException(status_code=403, detail="Bạn không có quyền cấu hình DRM cho tài liệu này")
         await mongo.update_one("document_drm_settings", 
             {"document_id": document_id},

@@ -11,6 +11,7 @@ from src.api.monetization import router as monetization_router
 from src.api.transfer import router as transfer_router
 from src.api.wallet import router as wallet_router
 from src.api.withdrawal import router as withdrawal_router
+from src.api.internal import router as internal_router
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import close_db, database, init_db
 from src.core.infrastructure.redis import redis
@@ -59,6 +60,7 @@ app.include_router(deposit_router)
 app.include_router(withdrawal_router)
 app.include_router(monetization_router)
 app.include_router(transfer_router)
+app.include_router(internal_router)
 
 
 @app.get("/health")

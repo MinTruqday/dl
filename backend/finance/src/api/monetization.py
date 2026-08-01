@@ -83,7 +83,9 @@ async def set_document_pricing(
             "price_dl": req.price_dl, 
             "is_drm_protected": req.is_drm_protected,
             "is_premium": req.price_dl > 0
-        }}
+        }},
+        str(current_user.id),
+        current_user.role == Role.ADMIN,
     )
 
     return APIResponse(

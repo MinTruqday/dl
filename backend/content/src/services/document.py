@@ -27,6 +27,8 @@ from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 from src.repositories.document import DocumentRepository
 from src.repositories.reading import ReadingRepository
+from src.services.drm_client import DrmClient
+from src.services.finance_client import FinanceClient
 
 def serialize_document(document):
     if not document:
@@ -53,11 +55,7 @@ class DocumentService:
     async def _has_purchase(user_id: str | None, document_id: str) -> bool:
         if not user_id:
             return False
-        purchase = await database.mongodb[settings.FINANCE_DB_NAME].purchases.find_one(
-            {"user_id": user_id, "item_id": document_id, "status": "purchased"},
-            {"_id": 1},
-        )
-        return purchase is not None
+        return await FinanceClient.has_purchase(user_id, document_id)
 
     @staticmethod
     async def _can_read_full(document: dict, current_user) -> bool:
@@ -297,7 +295,7 @@ class DocumentService:
         
         file_id = str(uuid.UUID(bytes=file_id_bytes))
         
-        license_doc = await database.mongodb[settings.DRM_DB_NAME].drm_licenses.find_one({"file_id": file_id})
+        license_doc = await DrmClient.license_by_file(file_id)
         if not license_doc:
             raise ValueError("Không tìm thấy giấy phép hợp lệ cho tài liệu này")
         if license_doc.get("status") != "ACTIVE":
@@ -654,8 +652,7 @@ class DocumentService:
             await redis.setex(f"aes_key:{document['_id']}:{uid_str}", 300, b64_key)
 
         try:
-            from src.core.infrastructure.mongo import mongo
-            drm_doc = await database.mongodb[settings.DRM_DB_NAME].document_drm_settings.find_one({"document_id": document["_id"]})
+            drm_doc = await DrmClient.document_settings(document["_id"])
             if drm_doc:
                 document["drm_settings"] = {
                     "disable_copy": drm_doc.get("disable_copy", False),
@@ -1161,7 +1158,7 @@ class DocumentService:
         total_words = len(content.split()) if content else 0
         avg_read_time_min = max(1, total_words // 200)
         bookmark_count = await mongo.count_documents(collection="bookmarks", filter={"document_id": document_id})
-        purchase_count = await database.mongodb[settings.FINANCE_DB_NAME].purchases.count_documents({"item_id": document_id, "status": "purchased"})
+        purchase_count = await FinanceClient.purchase_count(document_id)
         return {
             "views": views,
             "avg_read_time": f"{avg_read_time_min} minutes",
