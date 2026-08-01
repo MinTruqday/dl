@@ -9,7 +9,8 @@ export async function toggleBookmarkAPI(documentId: string) {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể cập nhật trạng thái lưu trữ");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể cập nhật trạng thái lưu trữ");
   return data;
 }
 
@@ -41,23 +42,22 @@ export async function getBookmarkFoldersAPI() {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(
-      data.message || "Không thể tải cây thư mục lưu trữ",
-    );
+    throw new Error(data.message || "Không thể tải cây thư mục lưu trữ");
   return data;
 }
 
 export async function assignBookmarksToFolderAPI(
   folderId: string,
-  bookmarkIds: string[],
+  documentIds: string[],
 ) {
   const res = await fetch(`${API_URL}/dau-trang/thu-muc/${folderId}`, {
     method: "PUT",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ bookmark_ids: bookmarkIds }),
+    body: JSON.stringify({ folder_id: folderId, document_ids: documentIds }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể cập nhật cấu trúc thư mục");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể cập nhật cấu trúc thư mục");
   return data;
 }
 
@@ -67,6 +67,7 @@ export async function deleteBookmarkFolderAPI(folderId: string) {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể xóa cấu trúc thư mục");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể xóa cấu trúc thư mục");
   return data;
 }

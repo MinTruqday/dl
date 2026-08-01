@@ -20,7 +20,8 @@ export async function requestWithdrawalAPI(
     body: JSON.stringify({ amount, bank_info: bankInfo }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tạo yêu cầu rút tiền");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tạo yêu cầu rút tiền");
   return data;
 }
 

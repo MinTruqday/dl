@@ -21,9 +21,12 @@ export function Button({
   ...props
 }: ButtonProps) {
   const vClass = {
-    primary: "border-brand bg-brand text-white hover:border-brand-hover hover:bg-brand-hover",
-    secondary: "border-border-strong bg-surface text-ink hover:bg-surface-quiet",
-    outline: "border-border-strong bg-transparent text-ink hover:bg-surface-quiet",
+    primary:
+      "border-brand bg-brand text-white hover:border-brand-hover hover:bg-brand-hover",
+    secondary:
+      "border-border-strong bg-surface text-ink hover:bg-surface-quiet",
+    outline:
+      "border-border-strong bg-transparent text-ink hover:bg-surface-quiet",
     ghost: "border-transparent bg-transparent text-ink hover:bg-surface-quiet",
     danger: "border-danger bg-danger text-white hover:bg-danger/90",
   };

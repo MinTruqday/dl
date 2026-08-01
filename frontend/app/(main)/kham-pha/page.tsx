@@ -1,329 +1,132 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
-import { getDocumentsAPI } from "@/features/content/services/document.service";
-import {
-  getTagsCategoriesAPI,
-  getPersonalizedRecommendationsAPI,
-  smartSearchAPI,
-} from "@/features/content/services/discovery.service";
-import { useAuth } from "@/features/authentication/contexts/AuthContext";
-import Link from "next/link";
-import { useToast } from "@/shared/contexts/ToastContext";
-import { LayoutGrid, List as ListIcon, List, ChevronRight } from "lucide-react";
+
+import { FormEvent } from "react";
+import { Button } from "@/shared/components/ui/Button";
+import DocumentResults from "@/app/_components/DocumentResults";
+import InlineState from "@/app/_components/InlineState";
+import PageHeader from "@/app/_components/PageHeader";
+import SegmentedTabs from "@/app/_components/SegmentedTabs";
+import { useExploreDocuments } from "./useExploreDocuments";
 
 export default function ExplorePage() {
-  const { showToast } = useToast();
-  const [documents, setDocuments] = useState<any[]>([]);
-  const [recommendations, setRecommendations] = useState<any[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [thinking, setThinking] = useState(false);
+  const {
+    documents,
+    recommendations,
+    categories,
+    category,
+    setCategory,
+    query,
+    setQuery,
+    semantic,
+    setSemantic,
+    loading,
+    error,
+    reload,
+  } = useExploreDocuments();
 
-  const { user } = useAuth();
-
-  const loadInitialData = useCallback(async () => {
-    try {
-      const [catData, recData] = await Promise.all([
-        getTagsCategoriesAPI(),
-        getPersonalizedRecommendationsAPI(4),
-      ]);
-      setCategories(catData.data?.categories || catData.categories || []);
-      setRecommendations(recData.data || recData || []);
-    } catch (err) {
-      showToast("Không thể tải bộ sưu tập gợi ý", "error");
-    }
-  }, [showToast]);
-
-  const loadDocuments = useCallback(async () => {
-    setLoading(true);
-    try {
-      let data;
-      if (thinking && searchQuery.trim()) {
-        data = await smartSearchAPI(searchQuery);
-      } else {
-        data = await getDocumentsAPI(
-          searchQuery || undefined,
-          "latest",
-          selectedCategory || undefined,
-        );
-      }
-      setDocuments(data.data || data || []);
-    } catch (err) {
-      showToast("Không thể tải bộ sưu tập tài liệu", "error");
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedCategory, searchQuery, thinking, showToast]);
-
-  useEffect(() => {
-    loadInitialData();
-  }, [loadInitialData]);
-
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      loadDocuments();
-    }, 300);
-    return () => clearTimeout(timeoutId);
-  }, [loadDocuments]);
-
-  const SkeletonCard = ({ mode }: { mode: "grid" | "list" }) => (
-    <div
-      className={`bg-surface-quiet rounded-panel overflow-hidden animate-pulse ${
-        mode === "grid" ? "flex flex-col" : "flex flex-row gap-4 p-4"
-      }`}
-    >
-      <div
-        className={`bg-border ${mode === "grid" ? "aspect-[4/3] w-full" : "w-6 h-6 shrink-0 rounded-control"}`}
-      />
-      {mode === "grid" && (
-        <div className="p-4 space-y-3">
-          <div className="h-3 w-1/3 bg-border rounded-full" />
-          <div className="h-4 w-full bg-border rounded-full" />
-          <div className="h-4 w-2/3 bg-border rounded-full" />
-        </div>
-      )}
-    </div>
-  );
+  const submit = (event: FormEvent) => {
+    event.preventDefault();
+    reload();
+  };
 
   return (
-    <div className="w-full h-full font-sans text-ink">
-      <div className="flex flex-col md:flex-row gap-6">
-        <aside className="w-full md:w-[320px] shrink-0 space-y-6 sticky top-0 h-fit">
-          <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6">
-            <p className="text-[13px] font-medium text-ink-muted mb-4">
-              Phân loại
-            </p>
-            <nav className="flex flex-col gap-1.5">
-              <button
-                onClick={() => setSelectedCategory(null)}
-                className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-control transition-colors ${
-                  !selectedCategory
-                    ? "bg-white text-brand font-medium"
-                    : "text-ink hover:bg-border"
-                }`}
-              >
-                <span>Tất cả tài liệu</span>
-                {!selectedCategory && <ChevronRight className="w-4 h-4" />}
-              </button>
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() =>
-                    setSelectedCategory(selectedCategory === cat ? null : cat)
-                  }
-                  className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-control transition-colors ${
-                    selectedCategory === cat
-                      ? "bg-white text-brand font-medium"
-                      : "text-ink hover:bg-border"
-                  }`}
-                >
-                  <span className="truncate text-left">{cat}</span>
-                  {selectedCategory === cat && (
-                    <ChevronRight className="w-4 h-4 shrink-0" />
-                  )}
-                </button>
-              ))}
-            </nav>
-          </div>
+    <div className="w-full">
+      <PageHeader
+        title="Khám phá"
+      />
+      <form
+        onSubmit={submit}
+        className="mb-6 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]"
+      >
+        <div>
+          <label htmlFor="explore-query" className="sr-only">
+            Nội dung tìm kiếm
+          </label>
+          <input
+            id="explore-query"
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            className="apple-input w-full"
+            placeholder="Tên tài liệu, tác giả hoặc nội dung"
+          />
+        </div>
+        <Button type="submit" variant="secondary">
+          Tìm kiếm
+        </Button>
+      </form>
 
-          
-        </aside>
-
-        <main className="flex-1 min-w-0 space-y-8 pt-6">
-          {recommendations.length > 0 && !searchQuery && (
-            <section className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6">
-              <h2 className="text-[20px] font-semibold text-ink mb-6">
-                Gợi ý dành cho bạn
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {recommendations.map((doc, i) => (
-                  <Link
-                    key={`rec-${doc._id || i}`}
-                    href={`/tai-lieu/${doc.slug}`}
-                    className="flex gap-4 p-4 bg-white rounded-panel transition-transform hover:scale-[1.02]"
-                  >
-                    <div className="w-[88px] h-[88px] shrink-0 bg-surface-quiet rounded-control overflow-hidden">
-                      {doc.cover_url ? (
-                        <img
-                          src={doc.cover_url}
-                          alt={doc.title}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-surface-quiet" />
-                      )}
-                    </div>
-                    <div className="flex-1 flex flex-col min-w-0">
-                      <span className="text-[12px] font-medium text-brand mb-1">
-                        {doc.categories?.[0] || "Tài liệu"}
-                      </span>
-                      <h3 className="text-[17px] font-medium text-ink line-clamp-2 leading-snug mb-2">
-                        {doc.title}
-                      </h3>
-                      <div className="mt-auto text-[13px] text-ink-muted truncate">
-                        {doc.author?.full_name ||
-                          doc.author?.username ||
-                          "Ẩn danh"}
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          )}
-
-          <section>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-              <h2 className="text-[20px] font-semibold text-ink">
-                {searchQuery ? `Kết quả cho "${searchQuery}"` : "Kho nội dung"}
-              </h2>
-              <div className="flex items-center">
-                <div className="flex bg-border p-[2px] rounded-full shrink-0">
-                  <button
-                    onClick={() => setViewMode("grid")}
-                    className={`p-1 rounded-full transition-colors ${viewMode === "grid" ? "bg-white text-brand" : "text-ink-muted hover:text-ink"}`}
-                  >
-                    <LayoutGrid className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setViewMode("list")}
-                    className={`p-1 rounded-full transition-colors ${viewMode === "list" ? "bg-white text-brand" : "text-ink-muted hover:text-ink"}`}
-                  >
-                    <List className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {loading ? (
-              <div
-                className={`grid gap-6 ${
-                  viewMode === "grid"
-                    ? "grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
-                    : "grid-cols-1"
-                }`}
-              >
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                  <SkeletonCard key={i} mode={viewMode} />
-                ))}
-              </div>
-            ) : documents.length > 0 ? (
-              <div
-                className={`grid gap-6 ${
-                  viewMode === "grid"
-                    ? "grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
-                    : "grid-cols-1"
-                }`}
-              >
-                {documents.map((document, i) => (
-                  <Link
-                    key={`doc-${document._id || i}`}
-                    href={`/tai-lieu/${document.slug}`}
-                    className={`flex ${
-                      viewMode === "grid"
-                        ? "flex-col"
-                        : "flex-row gap-6 p-4 items-center"
-                    } bg-surface-quiet rounded-panel overflow-hidden transition-transform hover:scale-[1.02]`}
-                  >
-                    <div
-                      className={`${
-                        viewMode === "grid"
-                          ? "aspect-[4/3] w-full"
-                          : "w-[120px] h-[120px] shrink-0 rounded-control"
-                      } bg-white relative overflow-hidden`}
-                    >
-                      {document.cover_url ? (
-                        <img
-                          src={document.cover_url}
-                          alt={document.title}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-white" />
-                      )}
-                    </div>
-
-                    <div
-                      className={`${
-                        viewMode === "grid" ? "p-5" : "flex-1"
-                      } flex flex-col gap-2`}
-                    >
-                      {document.categories &&
-                        document.categories.length > 0 && (
-                          <div className="flex flex-wrap gap-2 mb-1">
-                            {document.categories
-                              .slice(0, 1)
-                              .map((tag: string, idx: number) => (
-                                <span
-                                  key={idx}
-                                  className="text-[12px] font-medium text-brand"
-                                >
-                                  {tag}
-                                </span>
-                              ))}
-                          </div>
-                        )}
-
-                      <h3
-                        className={`${
-                          viewMode === "grid" ? "text-[17px]" : "text-[20px]"
-                        } font-medium text-ink line-clamp-2 leading-snug`}
-                      >
-                        {document.title}
-                      </h3>
-
-                      <div className="text-[13px] text-ink-muted flex items-center gap-2">
-                        <span className="truncate">
-                          {document.author?.full_name ||
-                            document.author?.username ||
-                            "Ẩn danh"}
-                        </span>
-                        <span>•</span>
-                        <span className="shrink-0">
-                          {document.created_at
-                            ? new Date(document.created_at).toLocaleDateString(
-                                "vi-VN",
-                              )
-                            : "Gần đây"}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-4 text-[13px] text-ink-muted mt-2">
-                        <span>
-                          {document.views_count?.toLocaleString("vi-VN") || 0}{" "}
-                          lượt xem
-                        </span>
-                        <span>
-                          {document.average_rating?.toFixed(1) || "0.0"} sao
-                        </span>
-                        <span>{document.chapters_count || 0} chương</span>
-                      </div>
-
-                      <div className="mt-4 pt-4 flex items-center justify-between">
-                        <span className="text-[15px] font-medium text-ink">
-                          {document.is_premium
-                            ? `${document.price || 0} dl`
-                            : "Miễn phí"}
-                        </span>
-                        <span className="text-[15px] text-brand font-medium">
-                          Xem chi tiết
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <div className="py-24 flex flex-col items-center justify-center bg-surface-quiet rounded-panel w-full text-center">
-                <p className="text-[17px] text-ink-muted">Chưa có dữ liệu</p>
-              </div>
-            )}
-          </section>
-        </main>
+      <div className="mb-7 flex flex-col gap-4">
+        <div className="flex items-center gap-3">
+          <input
+            id="semantic-search"
+            type="checkbox"
+            checked={semantic}
+            onChange={(event) => setSemantic(event.target.checked)}
+            className="h-4 w-4 accent-[hsl(var(--brand))]"
+          />
+          <label
+            htmlFor="semantic-search"
+            className="text-[13px] font-medium text-ink"
+          >
+            Tìm theo ý nghĩa nội dung
+          </label>
+        </div>
+        <SegmentedTabs
+          label="Chọn chủ đề"
+          value={category}
+          onChange={setCategory}
+          tabs={[
+            { id: "all", label: "Tất cả" },
+            ...categories.map((item) => ({ id: item, label: item })),
+          ]}
+        />
       </div>
+
+      {error && (
+        <div className="mb-6">
+          <InlineState
+            title="Không thể tải tài liệu"
+            detail={error}
+            tone="danger"
+            action={
+              <Button variant="secondary" onClick={reload}>
+                Tải lại
+              </Button>
+            }
+          />
+        </div>
+      )}
+
+      {!query && recommendations.length > 0 && (
+        <section className="mb-9" aria-labelledby="recommendation-title">
+          <h2
+            id="recommendation-title"
+            className="mb-4 text-[18px] font-semibold text-ink"
+          >
+            Được đề xuất
+          </h2>
+          <DocumentResults documents={recommendations} compact />
+        </section>
+      )}
+
+      <section aria-labelledby="catalog-title">
+        <div className="mb-4 flex items-end justify-between gap-4">
+          <h2 id="catalog-title" className="text-[18px] font-semibold text-ink">
+            Tài liệu công khai
+          </h2>
+          {!loading && (
+            <p className="text-[13px] text-ink-muted">
+              {documents.length} kết quả
+            </p>
+          )}
+        </div>
+        <DocumentResults
+          documents={documents}
+          loading={loading}
+          emptyDescription="Thử chủ đề khác hoặc thay nội dung tìm kiếm"
+        />
+      </section>
     </div>
   );
 }

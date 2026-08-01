@@ -58,7 +58,9 @@ export async function login(email: string, password: string) {
 
   const json = await res.json();
   if (!res.ok)
-    throw new Error(json.detail || json.message || "Lỗi xác thực thông tin đăng nhập");
+    throw new Error(
+      json.detail || json.message || "Lỗi xác thực thông tin đăng nhập",
+    );
   return json.data;
 }
 
@@ -79,7 +81,9 @@ export async function register(
 
   const json = await res.json();
   if (!res.ok)
-    throw new Error(json.detail || json.message || "Không thể tạo hồ sơ người dùng mới");
+    throw new Error(
+      json.detail || json.message || "Không thể tạo hồ sơ người dùng mới",
+    );
   return json.data;
 }
 
@@ -132,7 +136,9 @@ export const resetPasswordAPI = async (
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || data.detail || "Không thể cập nhật cấu trúc mật khẩu mới");
+    throw new Error(
+      data.message || data.detail || "Không thể cập nhật cấu trúc mật khẩu mới",
+    );
   return data.data || data;
 };
 
@@ -144,7 +150,9 @@ export const verifyCodeAPI = async (token: string): Promise<any> => {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || data.detail || "Lỗi sai lệch mã thông báo xác thực");
+    throw new Error(
+      data.message || data.detail || "Lỗi sai lệch mã thông báo xác thực",
+    );
   return data.data || data;
 };
 
@@ -160,7 +168,9 @@ export const passkeyLoginBeginAPI = async (email: string): Promise<any> => {
   const data = await res.json();
   if (!res.ok)
     throw new Error(
-      data.message || data.detail || "Không thể tạo luồng đăng nhập chứng thư số",
+      data.message ||
+        data.detail ||
+        "Không thể tạo luồng đăng nhập chứng thư số",
     );
   return data.data || data;
 };
@@ -180,7 +190,9 @@ export const passkeyLoginFinishAPI = async (
   const data = await res.json();
   if (!res.ok)
     throw new Error(
-      data.message || data.detail || "Lỗi hoàn tất luồng đăng nhập chứng thư số",
+      data.message ||
+        data.detail ||
+        "Lỗi hoàn tất luồng đăng nhập chứng thư số",
     );
   return data.data || data;
 };
@@ -224,8 +236,13 @@ export const getGoogleLoginUrlAPI = async (): Promise<string> => {
 };
 
 export const completeGoogleLoginAPI = async (code: string): Promise<any> => {
-  const res = await fetch(`${API_URL}/google/callback?code=${encodeURIComponent(code)}`);
+  const res = await fetch(
+    `${API_URL}/google/callback?code=${encodeURIComponent(code)}`,
+  );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || data.detail || "Không thể xác thực bằng Google");
+  if (!res.ok)
+    throw new Error(
+      data.message || data.detail || "Không thể xác thực bằng Google",
+    );
   return data.data || data;
 };

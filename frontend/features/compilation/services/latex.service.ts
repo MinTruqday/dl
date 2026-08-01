@@ -21,7 +21,10 @@ export async function cloudAutoSaveAPI(documentId: string, content: string) {
     body: JSON.stringify({ document_id: documentId, content }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể đồng bộ hóa dữ liệu mã nguồn tự động");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể đồng bộ hóa dữ liệu mã nguồn tự động",
+    );
   return data;
 }
 
@@ -31,7 +34,8 @@ export async function getLatexDraftAPI() {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải bộ đệm dữ liệu nháp");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải bộ đệm dữ liệu nháp");
   return data;
 }
 
@@ -46,7 +50,9 @@ export async function compileLatexPreviewAPI(
   });
   if (!res.ok) {
     const data = await res.json();
-    throw new Error(data.message || "Không thể thực hiện tiến trình kết xuất LaTeX");
+    throw new Error(
+      data.message || "Không thể thực hiện tiến trình kết xuất LaTeX",
+    );
   }
   return res.blob();
 }
@@ -59,7 +65,9 @@ export async function formatLatexAPI(content: string) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể thực hiện tiến trình chuẩn hóa cú pháp LaTeX");
+    throw new Error(
+      data.message || "Không thể thực hiện tiến trình chuẩn hóa cú pháp LaTeX",
+    );
   return data;
 }
 
@@ -71,7 +79,9 @@ export async function exportLatexAPI(content: string, format: string = "docx") {
   });
   if (!res.ok) {
     const data = await res.json();
-    throw new Error(data.message || "Không thể tạo luồng kết xuất tài liệu đích");
+    throw new Error(
+      data.message || "Không thể tạo luồng kết xuất tài liệu đích",
+    );
   }
   return res.blob();
 }
@@ -84,7 +94,9 @@ export async function exportProjectZipAPI(content: string) {
   });
   if (!res.ok) {
     const data = await res.json();
-    throw new Error(data.message || "Không thể tạo luồng nén và kết xuất dự án");
+    throw new Error(
+      data.message || "Không thể tạo luồng nén và kết xuất dự án",
+    );
   }
   return res.blob();
 }

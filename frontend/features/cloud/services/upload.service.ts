@@ -3,7 +3,11 @@ import {
   getAuthHeaders,
 } from "@/features/authentication/services/session.service";
 
-async function doDirectUpload(file: File, isSystem: boolean, isMessageAttachment: boolean) {
+async function doDirectUpload(
+  file: File,
+  isSystem: boolean,
+  isMessageAttachment: boolean,
+) {
   const reqRes = await fetch(`${API_URL}/tai-len/presigned-url`, {
     method: "POST",
     headers: {
@@ -15,13 +19,18 @@ async function doDirectUpload(file: File, isSystem: boolean, isMessageAttachment
       size: file.size,
       content_type: file.type || "application/octet-stream",
       is_system: isSystem,
-      is_message_attachment: isMessageAttachment
+      is_message_attachment: isMessageAttachment,
     }),
   });
-  
+
   const reqData = await reqRes.json();
-  if (!reqRes.ok) throw new Error(reqData.detail || reqData.message || "Lỗi cấp phát chuỗi xác thực (Presigned URL)");
-  
+  if (!reqRes.ok)
+    throw new Error(
+      reqData.detail ||
+        reqData.message ||
+        "Lỗi cấp phát chuỗi xác thực (Presigned URL)",
+    );
+
   const { upload_url, file_path } = reqData.data;
 
   const putRes = await fetch(upload_url, {
@@ -31,8 +40,9 @@ async function doDirectUpload(file: File, isSystem: boolean, isMessageAttachment
     },
     body: file,
   });
-  
-  if (!putRes.ok) throw new Error("Lỗi đẩy luồng dữ liệu (Stream) lên máy chủ lưu trữ");
+
+  if (!putRes.ok)
+    throw new Error("Lỗi đẩy luồng dữ liệu (Stream) lên máy chủ lưu trữ");
 
   const confirmRes = await fetch(`${API_URL}/tai-len/xac-nhan`, {
     method: "POST",
@@ -46,13 +56,18 @@ async function doDirectUpload(file: File, isSystem: boolean, isMessageAttachment
       size: file.size,
       content_type: file.type || "application/octet-stream",
       is_system: isSystem,
-      is_message_attachment: isMessageAttachment
+      is_message_attachment: isMessageAttachment,
     }),
   });
-  
+
   const confirmData = await confirmRes.json();
-  if (!confirmRes.ok) throw new Error(confirmData.detail || confirmData.message || "Không thể đồng bộ trạng thái lưu trữ cuối cùng");
-  
+  if (!confirmRes.ok)
+    throw new Error(
+      confirmData.detail ||
+        confirmData.message ||
+        "Không thể đồng bộ trạng thái lưu trữ cuối cùng",
+    );
+
   return confirmData;
 }
 
@@ -70,4 +85,14 @@ export async function uploadImageAPI(file: File) {
 
 export async function uploadChatAttachmentAPI(file: File) {
   return await doDirectUpload(file, false, true);
+}
+
+export async function getChatAttachmentBlobUrlAPI(filePath: string) {
+  if (!filePath || /^(https?:|blob:|data:)/.test(filePath)) return filePath;
+  const response = await fetch(
+    `${API_URL}/tai-len/noi-dung/${filePath.replace(/^\/+/, "")}`,
+    { headers: getAuthHeaders() },
+  );
+  if (!response.ok) throw new Error("Không thể tải tệp tin nhắn");
+  return URL.createObjectURL(await response.blob());
 }

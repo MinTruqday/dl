@@ -21,6 +21,8 @@ export async function verifyDepositAPI(orderCode: number) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi xác thực trạng thái giao dịch nạp tiền");
+    throw new Error(
+      data.message || "Lỗi xác thực trạng thái giao dịch nạp tiền",
+    );
   return data;
 }

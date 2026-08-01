@@ -17,7 +17,9 @@ export async function processTextAPI(
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "MODULE AGENTIC_AI: Text processing failed");
+    throw new Error(
+      data.message || "Không thể xử lý văn bản",
+    );
   return data;
 }
 
@@ -29,7 +31,10 @@ export async function smartSearchAIAPI(query: string) {
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Semantic search failed");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể tìm kiếm theo nội dung",
+    );
   return data;
 }
 
@@ -43,7 +48,10 @@ export async function getAiSessionsAPI(documentId?: string, userId?: string) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "MODULE AGENTIC_AI: Failed to retrieve conversation history");
+    throw new Error(
+      data.message ||
+        "Không thể tải lịch sử trò chuyện",
+    );
   return data;
 }
 
@@ -58,7 +66,9 @@ export async function createAiSessionAPI(
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "MODULE AGENTIC_AI: Failed to initialize AI session");
+    throw new Error(
+      data.message || "Không thể tạo phiên trò chuyện",
+    );
   return data;
 }
 
@@ -81,7 +91,10 @@ export async function updateAiSessionTitleAPI(
     body: JSON.stringify({ title }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Failed to update session title");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể đổi tên phiên trò chuyện",
+    );
   return data;
 }
 
@@ -91,7 +104,10 @@ export async function deleteAiSessionAPI(sessionId: string) {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Failed to delete session");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể xóa phiên trò chuyện",
+    );
   return data;
 }
 export async function streamAiChatAPI(payload: any) {
@@ -100,7 +116,7 @@ export async function streamAiChatAPI(payload: any) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Accept": "text/event-stream",
+      Accept: "text/event-stream",
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(payload),
@@ -124,7 +140,10 @@ export async function queryRagAPI(
     }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: RAG query inference failed");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể trả lời từ dữ liệu tài liệu",
+    );
   return data;
 }
 
@@ -138,7 +157,10 @@ export async function translateTextAPI(
     body: JSON.stringify({ text, target_lang: targetLang }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Translation inference failed");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể dịch nội dung",
+    );
   return data;
 }
 
@@ -149,7 +171,10 @@ export async function suggestCitationsAPI(text: string, style: string = "APA") {
     body: JSON.stringify({ text, style }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Citation suggestion inference failed");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể đề xuất trích dẫn",
+    );
   return data;
 }
 
@@ -164,7 +189,10 @@ export async function transformToneAPI(
     body: JSON.stringify({ text, tone, expansion }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Text transformation inference failed");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể chuyển đổi văn bản",
+    );
   return data;
 }
 
@@ -175,7 +203,10 @@ export async function peerReviewAPI(text: string, criteria: string[] = []) {
     body: JSON.stringify({ text, criteria }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Content review inference failed");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể kiểm tra nội dung",
+    );
   return data;
 }
 
@@ -189,7 +220,11 @@ export async function multiDocSynthesisAPI(
     body: JSON.stringify({ document_ids: documentIds, query }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Multi-document synthesis inference failed");
+  if (!res.ok)
+    throw new Error(
+      data.message ||
+        "Không thể tổng hợp tài liệu",
+    );
   return data;
 }
 

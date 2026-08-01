@@ -12,6 +12,7 @@ MINIO_ACCESS_KEY = settings.MINIO_ACCESS_KEY
 MINIO_SECRET_KEY = settings.MINIO_SECRET_KEY
 MINIO_PRIVATE_BUCKET = settings.MINIO_PRIVATE_BUCKET
 MINIO_PUBLIC_BUCKET = settings.MINIO_PUBLIC_BUCKET
+MINIO_LEGACY_BUCKET = settings.MINIO_LEGACY_BUCKET
 MINIO_PUBLIC_URL = settings.MINIO_PUBLIC_URL
 
 def get_bucket(path: str) -> str:
@@ -89,9 +90,16 @@ async def upload_file(
 
 async def download_file(object_name: str) -> tuple[bytes, str]:
     storage_client = await get_storage_client()
-    response = await storage_client.get_object(
-        Bucket=get_bucket(object_name), Key=object_name
-    )
+    try:
+        response = await storage_client.get_object(
+            Bucket=get_bucket(object_name), Key=object_name
+        )
+    except ClientError as error:
+        if error.response.get("Error", {}).get("Code") not in {"NoSuchKey", "404"}:
+            raise
+        response = await storage_client.get_object(
+            Bucket=MINIO_LEGACY_BUCKET, Key=object_name
+        )
     content = await response["Body"].read()
 
     if response.get("ContentEncoding") == "br":

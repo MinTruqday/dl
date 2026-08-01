@@ -1,1339 +1,411 @@
 "use client";
 
-import { useCallback, useEffect, useState, useRef } from "react";
+import Link from "next/link";
+import { useRef, useState } from "react";
 import {
-  StorageItem,
-  listStorageItemsAPI,
-  createFolderAPI,
-  uploadStorageFileAPI,
-  deleteStorageItemAPI,
-  updateStorageItemAPI,
-  searchStorageItemsAPI,
-  copyStorageItemAPI,
-  uploadFileVersionAPI,
-  getRecentStorageItemsAPI,
-  shareStorageItemAPI,
-  getStorageQuotaAPI,
-  createShortcutAPI,
-  downloadZipAPI,
-  getFileVersionsAPI,
-  restoreFileVersionAPI,
-  moveToTrashAPI,
-  restoreFromTrashAPI,
-  emptyTrashAPI,
-  createProtectedShareLinkAPI,
-  toggleStarItemAPI,
-  getStarredItemsAPI,
-  analyzeStorageQuotaAPI,
-  duplicateItemAPI,
-  setFolderColorAPI,
-  updateItemTagsAPI,
-  getPreviewPayloadAPI,
-} from "@/features/cloud/services/storage.service";
-
-import {
-  getMyDocumentsAPI,
-  deleteAuthorDocumentAPI,
-  lockDocumentAPI,
-} from "@/features/content/services/document.service";
-import { useAuth } from "@/features/authentication/contexts/AuthContext";
-import { useToast } from "@/shared/contexts/ToastContext";
-import {
-  Folder,
   File,
-  FilePlus,
-  FolderPlus,
-  Upload,
-  Plus,
-  ChevronRight,
-  MoreVertical,
-  Trash2,
-  Edit2,
-  Download,
-  Loader2,
-  Search,
-  Copy,
-  Star,
-  Share2,
-  History,
-  Tag,
-  MessageSquare,
-  Grid,
-  List,
-  LayoutGrid,
+  Folder,
   RotateCcw,
-  Clock,
-  Info,
-  Link as LinkIcon,
-  Palette,
-  Archive,
-  Home,
-  X,
-  Lock,
-  Unlock,
+  Share2,
+  Star,
+  Trash2,
+  Upload,
 } from "lucide-react";
-import {
-  Modal,
-  ModalHeader,
-  ModalTitle,
-  ModalContent,
-  ModalFooter,
-} from "@/shared/components/ui/Modal";
+import InlineState from "@/app/_components/InlineState";
+import MetricStrip from "@/app/_components/MetricStrip";
+import PageHeader from "@/app/_components/PageHeader";
+import SegmentedTabs from "@/app/_components/SegmentedTabs";
+import PageLoader from "@/shared/components/common/PageLoader";
+import { Button } from "@/shared/components/ui/Button";
+import { StorageShareModal, StorageTextModal } from "./StorageModals";
+import { StorageItem, StorageView, useStorage } from "./useStorage";
 
+function size(value: number) {
+  if (!value) return "0 B";
+  const units = ["B", "KB", "MB", "GB"];
+  const index = Math.min(
+    Math.floor(Math.log(value) / Math.log(1024)),
+    units.length - 1,
+  );
+  return `${(value / 1024 ** index).toFixed(index ? 1 : 0)} ${units[index]}`;
+}
 export default function StoragePage() {
-  const { user } = useAuth() as any;
-  const { showToast } = useToast();
-  const [items, setItems] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const [currentFolderId, setCurrentFolderId] = useState<string | undefined>(
-    undefined,
-  );
-  const [breadcrumbs, setBreadcrumbs] = useState<
-    { id?: string; name: string }[]
-  >([{ name: "Tất cả" }]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const [createFolderOpen, setCreateFolderOpen] = useState(false);
-  const [newFolderName, setNewFolderName] = useState("");
+  const state = useStorage();
+  const input = useRef<HTMLInputElement>(null);
+  const versionInput = useRef<HTMLInputElement>(null);
+  const [folderOpen, setFolderOpen] = useState(false);
   const [renameItem, setRenameItem] = useState<StorageItem | null>(null);
-  const [newName, setNewName] = useState("");
-  const [descItem, setDescItem] = useState<StorageItem | null>(null);
-  const [descValue, setDescValue] = useState("");
-  const [tagsItem, setTagsItem] = useState<any>(null);
-  const [tagsValue, setTagsValue] = useState("");
-  const [viewMode, setViewMode] = useState<"files" | "trash" | "recent" | "documents" | "folders" | "published">(
-    "files",
-  );
-  const [moveItem, setMoveItem] = useState<any>(null);
-  const [moveTargetId, setMoveTargetId] = useState<string | undefined>(
-    undefined,
-  );
-  const [moveBreadcrumbs, setMoveBreadcrumbs] = useState<
-    { id?: string; name: string }[]
-  >([{ name: "Tất cả" }]);
-  const [moveFolders, setMoveFolders] = useState<StorageItem[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchType, setSearchType] = useState<"" | "folder" | "file">("");
-  const versionInputRef = useRef<HTMLInputElement>(null);
-  const [versionItem, setVersionItem] = useState<StorageItem | null>(null);
-  const [layoutMode, setLayoutMode] = useState<"list" | "grid">("list");
-  const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [shareItem, setShareItem] = useState<StorageItem | null>(null);
-  const [shareEmail, setShareEmail] = useState("");
-  const [shareRole, setShareRole] = useState("viewer");
-  const [useAISearch, setUseAISearch] = useState(false);
-  const [activeSidebarTab, setActiveSidebarTab] = useState<"info" | "ai">(
-    "info",
-  );
-  const [chatInput, setChatInput] = useState("");
-  const [colorItem, setColorItem] = useState<StorageItem | null>(null);
-
-  const handleSetFolderColor = async (colorHex: string) => {
-    if (!colorItem) return;
-    try {
-      await setFolderColorAPI(colorItem._id, colorHex);
-      showToast("Cập nhật màu sắc thư mục hoàn tất", "success");
-      setColorItem(null);
-      fetchItems(currentFolderId);
-    } catch (e: any) {
-      showToast(e.message || "Không thể cập nhật màu thư mục", "error");
-    }
-  };
-
-  const [chatHistory, setChatHistory] = useState<
-    { role: string; content: string }[]
-  >([]);
-  const [quota, setQuota] = useState<{ used: number; limit: number } | null>(
-    null,
-  );
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [detailsItem, setDetailsItem] = useState<any>(null);
-  const [relatedItems, setRelatedItems] = useState<any[]>([]);
-  const [colorValue, setColorValue] = useState("");
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const [hasMorePublished, setHasMorePublished] = useState(true);
-  const publishedCursor = useRef<string | null>(null);
-
-
-  const fetchQuota = async () => {
-    try {
-      setQuota(await getStorageQuotaAPI());
-    } catch (e) {}
-  };
-  useEffect(() => {
-    fetchQuota();
-  }, []);
-
-  const fetchItems = useCallback(async (
-    folderId?: string,
-    mode: typeof viewMode = viewMode,
-    isLoadMore = false
-  ) => {
-    if (!isLoadMore) setLoading(true);
-    try {
-      if (mode === "published") {
-        const currentCursor = isLoadMore ? publishedCursor.current : undefined;
-        const res = await getMyDocumentsAPI("", currentCursor || "", 20);
-        let docs = res.data || res || [];
-        setHasMorePublished(docs.length >= 20);
-        if (docs.length > 0) {
-          publishedCursor.current =
-            docs[docs.length - 1].id || docs[docs.length - 1]._id;
-        } else if (!isLoadMore) {
-          publishedCursor.current = null;
-        }
-        if (isLoadMore) {
-          setItems((prev) => [...prev, ...docs]);
-        } else {
-          setItems(docs);
-        }
-      } else if (mode === "recent") {
-        setItems(await getRecentStorageItemsAPI(20));
-      } else if (mode === "documents") {
-        setItems(await searchStorageItemsAPI("", "file"));
-      } else if (mode === "folders") {
-        setItems(await searchStorageItemsAPI("", "folder"));
-      } else {
-        setItems(await listStorageItemsAPI(folderId, mode === "trash"));
-      }
-    } catch (e: any) {
-      showToast(e.message || "Không thể tải bộ sưu tập lưu trữ", "error");
-    } finally {
-      setLoading(false);
-    }
-  }, [showToast, viewMode]);
-
-  const fetchMoveFolders = useCallback(async (folderId?: string) => {
-    try {
-      const data = await listStorageItemsAPI(folderId);
-      setMoveFolders(
-        data.filter((i) => i.is_folder && i._id !== moveItem?._id),
-      );
-    } catch (e) {}
-  }, [moveItem]);
-
-  useEffect(() => {
-    fetchItems(
-      viewMode === "trash" || viewMode === "recent" || viewMode === "documents" || viewMode === "folders" || viewMode === "published"
-        ? undefined
-        : currentFolderId,
-      viewMode,
-    );
-  }, [currentFolderId, fetchItems, viewMode]);
-
-  useEffect(() => {
-  }, [detailsItem, activeSidebarTab]);
-
-  useEffect(() => {
-    if (moveItem) fetchMoveFolders(moveTargetId);
-  }, [fetchMoveFolders, moveItem, moveTargetId]);
-
-  const handleCreateFolder = async () => {
-    if (!newFolderName.trim()) return;
-    try {
-      await createFolderAPI(newFolderName.trim(), currentFolderId);
-      showToast("Khởi tạo thư mục hoàn tất", "success");
-      setCreateFolderOpen(false);
-      setNewFolderName("");
-      fetchItems(currentFolderId);
-    } catch (e: any) {
-      showToast(e.message || "Không thể tạo thư mục", "error");
-    }
-  };
-
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files?.length) return;
-    setUploading(true);
-    try {
-      for (let i = 0; i < files.length; i++)
-        await uploadStorageFileAPI(files[i], currentFolderId);
-      showToast("Tải lên tệp đa phương tiện hoàn tất", "success");
-      fetchItems(currentFolderId);
-      fetchQuota();
-    } catch (e: any) {
-      showToast(e.message || "Không thể truyền tệp đa phương tiện", "error");
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    if (viewMode !== "trash" && viewMode !== "recent") setIsDraggingOver(true);
-  };
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDraggingOver(false);
-  };
-  const handleDrop = async (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDraggingOver(false);
-    if (viewMode === "trash" || viewMode === "recent") return;
-    const files = e.dataTransfer.files;
-    if (!files?.length) return;
-    setUploading(true);
-    try {
-      for (let i = 0; i < files.length; i++)
-        await uploadStorageFileAPI(files[i], currentFolderId);
-      showToast("Tải lên tệp đa phương tiện hoàn tất", "success");
-      fetchItems(currentFolderId);
-      fetchQuota();
-    } catch (e: any) {
-      showToast(e.message || "Không thể truyền tệp đa phương tiện", "error");
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleNavigate = (folder: StorageItem) => {
-    if (folder.is_shortcut && folder.target_id) return;
-    setCurrentFolderId(folder._id);
-    setBreadcrumbs([...breadcrumbs, { id: folder._id, name: folder.name }]);
-  };
-  const handleNavigateBreadcrumb = (index: number) => {
-    setCurrentFolderId(breadcrumbs[index].id);
-    setBreadcrumbs(breadcrumbs.slice(0, index + 1));
-  };
-
-  const handleDelete = async (item: StorageItem) => {
-    try {
-      await deleteStorageItemAPI(item._id, viewMode === "trash");
-      showToast(
-        viewMode === "trash" ? "Xóa vĩnh viễn dữ liệu hoàn tất" : "Chuyển dữ liệu vào thùng rác hoàn tất",
-        "success",
-      );
-      fetchItems(viewMode === "trash" ? undefined : currentFolderId, viewMode);
-      if (viewMode === "trash") fetchQuota();
-    } catch (e: any) {
-      showToast(e.message || "Không thể thực hiện dữ liệu lưu trữ", "error");
-    }
-  };
-
-  const handleToggleLock = async (item: StorageItem) => {
-    try {
-      await updateStorageItemAPI(item._id, { is_public: !item.is_public });
-      fetchItems(currentFolderId);
-      showToast(
-        !item.is_public ? "Thiết lập phân quyền công khai hoàn tất" : "Thiết lập phân quyền riêng tư hoàn tất",
-        "success",
-      );
-    } catch (e: any) {
-      showToast(e.message || "Không thể thiết lập phân quyền", "error");
-    }
-  };
-
-  const handleRestore = async (item: StorageItem) => {
-    try {
-      await updateStorageItemAPI(item._id, { is_trashed: false });
-      showToast("Khôi phục dữ liệu lưu trữ hoàn tất", "success");
-      fetchItems(undefined, "trash");
-    } catch (e: any) {
-      showToast(e.message || "Lỗi khôi phục dữ liệu lưu trữ", "error");
-    }
-  };
-  const handleMove = async () => {
-    if (!moveItem) return;
-    try {
-      await updateStorageItemAPI(moveItem._id, {
-        parent_id: (moveTargetId === undefined ? null : moveTargetId) as any,
-      });
-      showToast("Di chuyển dữ liệu lưu trữ hoàn tất", "success");
-      setMoveItem(null);
-      setMoveTargetId(undefined);
-      setMoveBreadcrumbs([{ id: "root", name: "Tất cả" }]);
-      fetchItems(currentFolderId);
-    } catch (e: any) {
-      showToast(e.message || "Lỗi di chuyển dữ liệu lưu trữ", "error");
-    }
-  };
-  const handleRename = async () => {
-    if (!renameItem || !newName.trim()) return;
-    try {
-      await updateStorageItemAPI(renameItem._id, { name: newName.trim() });
-      showToast("Cập nhật định danh dữ liệu hoàn tất", "success");
-      setRenameItem(null);
-      setNewName("");
-      fetchItems(currentFolderId);
-    } catch (e: any) {
-      showToast(e.message || "Không thể cập nhật định danh dữ liệu", "error");
-    }
-  };
-  const handleUpdateDesc = async () => {
-    if (!descItem) return;
-    try {
-      await updateStorageItemAPI(descItem._id, {
-        description: descValue.trim(),
-      });
-      showToast("Cập nhật ghi chú dữ liệu hoàn tất", "success");
-      setDescItem(null);
-      setDescValue("");
-      fetchItems(currentFolderId);
-    } catch (e: any) {
-      showToast(e.message || "Không thể cập nhật ghi chú dữ liệu", "error");
-    }
-  };
-  const handleUpdateTags = async () => {
-    if (!tagsItem) return;
-    try {
-      await updateStorageItemAPI(tagsItem._id, {
-        tags: tagsValue
-          .split(",")
-          .map((t) => t.trim())
-          .filter(Boolean),
-      });
-      showToast("Cập nhật phân loại nhãn hoàn tất", "success");
-      setTagsItem(null);
-      setTagsValue("");
-      fetchItems(currentFolderId);
-    } catch (e: any) {
-      showToast(e.message || "Không thể cập nhật phân loại nhãn", "error");
-    }
-  };
-
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery.trim() && !searchType) {
-      fetchItems(currentFolderId);
-      return;
-    }
-    setLoading(true);
-    try {
-      setItems(
-        await searchStorageItemsAPI(
-          searchQuery.trim(),
-          searchType || undefined,
-        ),
-      );
-    } catch (e: any) {
-      showToast(e.message || "Không thể tải bộ sưu tập tìm kiếm", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-  const handleCopy = async (item: StorageItem) => {
-    try {
-      await copyStorageItemAPI(item._id, currentFolderId);
-      showToast("Nhân bản dữ liệu lưu trữ hoàn tất", "success");
-      fetchItems(currentFolderId);
-    } catch (e: any) {
-      showToast(e.message || "Lỗi nhân bản dữ liệu lưu trữ", "error");
-    }
-  };
-  const handleCreateShortcut = async (item: StorageItem) => {
-    try {
-      await createShortcutAPI(item._id, currentFolderId);
-      showToast("Khởi tạo liên kết truy cập nhanh hoàn tất", "success");
-      fetchItems(currentFolderId);
-    } catch (e: any) {
-      showToast(e.message || "Không thể tạo liên kết truy cập nhanh", "error");
-    }
-  };
-  const handleToggleStar = async (item: StorageItem) => {
-    try {
-      await updateStorageItemAPI(item._id, { is_starred: !item.is_starred });
-      fetchItems(currentFolderId);
-    } catch (e: any) {
-      showToast(e.message || "Không thể cập nhật trạng thái lưu trữ", "error");
-    }
-  };
-  const handleTogglePublic = async (item: StorageItem) => {
-    try {
-      if (!item.is_public) {
-        await updateStorageItemAPI(item._id, { is_public: true });
-        showToast("Kích hoạt phân quyền chia sẻ công khai hoàn tất", "success");
-        fetchItems(currentFolderId);
-      } else {
-        navigator.clipboard.writeText(
-          `${window.location.origin}/storage/share/${item.share_token}`,
-        );
-        showToast("Sao chép liên kết chia sẻ vào bộ nhớ tạm hoàn tất", "success");
-      }
-    } catch (e: any) {
-      showToast(e.message || "Lỗi kích hoạt phân quyền chia sẻ", "error");
-    }
-  };
-  const handleShareSubmit = async () => {
-    if (!shareItem || !shareEmail.trim()) return;
-    try {
-      await shareStorageItemAPI(shareItem._id, shareEmail.trim(), shareRole);
-      showToast("Cấp phát quyền chia sẻ dữ liệu hoàn tất", "success");
-      setShareItem(null);
-      setShareEmail("");
-      setShareRole("viewer");
-      fetchItems(currentFolderId);
-    } catch (e: any) {
-      showToast(e.message || "Lỗi cấp phát quyền chia sẻ dữ liệu", "error");
-    }
-  };
-  const handleZipDownload = async () => {
-    if (selectedIds.size === 0) return;
-    showToast("Khởi tạo tiến trình nén dữ liệu", "success");
-    try {
-      await downloadZipAPI(Array.from(selectedIds));
-      setSelectedIds(new Set());
-    } catch (e: any) {
-      showToast(e.message || "Lỗi tiến trình nén dữ liệu", "error");
-    }
-  };
-  const toggleSelect = (id: string) => {
-    const n = new Set(selectedIds);
-    if (n.has(id)) n.delete(id);
-    else n.add(id);
-    setSelectedIds(n);
-  };
-  const handleUploadVersion = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const files = e.target.files;
-    if (!files?.length || !versionItem) return;
-    setUploading(true);
-    try {
-      await uploadFileVersionAPI(versionItem._id, files[0]);
-      showToast("Cập nhật phiên bản dữ liệu hoàn tất", "success");
-      setVersionItem(null);
-      fetchItems(currentFolderId);
-    } catch (e: any) {
-      showToast(e.message || "Không thể cập nhật phiên bản dữ liệu", "error");
-    } finally {
-      setUploading(false);
-      if (versionInputRef.current) versionInputRef.current.value = "";
-    }
-  };
-
-  const formatSize = (bytes: number) => {
-    if (bytes === 0) return "0 B";
-    if (!bytes) return "--";
-    const k = 1024;
-    const sizes = ["B", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
-  };
-
+  const [versionItem, setVersionItem] = useState<StorageItem | null>(null);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [filters, setFilters] = useState({
+    extension: "",
+    min_size_mb: "",
+    max_size_mb: "",
+  });
+  const tabs: { id: StorageView; label: string }[] = [
+    { id: "files", label: "Tệp" },
+    { id: "recent", label: "Gần đây" },
+    { id: "starred", label: "Đã gắn sao" },
+    { id: "trash", label: "Thùng rác" },
+  ];
   return (
-    <div className="w-full h-full font-sans text-ink">
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleUpload}
-        className="hidden"
-        multiple
-      />
-      <input
-        type="file"
-        ref={versionInputRef}
-        onChange={handleUploadVersion}
-        className="hidden"
-      />
-      <div className="flex flex-col md:flex-row">
-        <aside className="w-full md:w-[240px] shrink-0 space-y-6 sticky top-0 h-fit mb-6 md:mb-0 md:mr-6">
-
-          <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6">
-            <p className="text-[13px] font-medium text-ink-muted mb-4">
-              Phân loại
-            </p>
-            <nav className="flex flex-col gap-1.5">
-              <button
-                onClick={() => setViewMode("files")}
-                className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-control transition-colors ${viewMode === "files" ? "bg-white text-brand font-medium" : "text-ink hover:bg-border"}`}
-              >
-                <span className="truncate text-left">Tất cả</span>
-                {viewMode === "files" && <ChevronRight className="w-4 h-4 shrink-0" />}
-              </button>
-              <button
-                onClick={() => setViewMode("recent")}
-                className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-control transition-colors ${viewMode === "recent" ? "bg-white text-brand font-medium" : "text-ink hover:bg-border"}`}
-              >
-                <span className="truncate text-left">Gần đây</span>
-                {viewMode === "recent" && <ChevronRight className="w-4 h-4 shrink-0" />}
-              </button>
-              <button
-                onClick={() => setViewMode("documents")}
-                className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-control transition-colors ${viewMode === "documents" ? "bg-white text-brand font-medium" : "text-ink hover:bg-border"}`}
-              >
-                <span className="truncate text-left">Tệp tin</span>
-                {viewMode === "documents" && <ChevronRight className="w-4 h-4 shrink-0" />}
-              </button>
-              <button
-                onClick={() => setViewMode("folders")}
-                className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-control transition-colors ${viewMode === "folders" ? "bg-white text-brand font-medium" : "text-ink hover:bg-border"}`}
-              >
-
-                <span className="truncate text-left">Thư mục</span>
-                {viewMode === "folders" && <ChevronRight className="w-4 h-4 shrink-0" />}
-              </button>
-              <button
-                onClick={() => setViewMode("trash")}
-                className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-control transition-colors ${viewMode === "trash" ? "bg-white text-brand font-medium" : "text-ink hover:bg-border"}`}
-              >
-                <span className="truncate text-left">Thùng rác</span>
-                {viewMode === "trash" && <ChevronRight className="w-4 h-4 shrink-0" />}
-              </button>
-            </nav>
-          </div>
-
-          {quota && (
-            <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6 space-y-2">
-              <p className="text-[13px] font-medium text-ink-muted mb-4">
-                Dung lượng
-              </p>
-              <div className="flex flex-col">
-                <span className="text-[13px] font-medium text-ink-muted mb-1">
-                  {formatSize(quota.used)} / {formatSize(quota.limit)}
-                </span>
-                <div className="w-full h-1.5 bg-border rounded-full mt-1 overflow-hidden">
-                  <div
-                    className="h-full bg-brand rounded-full"
-                    style={{
-                      width: `${Math.min(100, (quota.used / quota.limit) * 100)}%`,
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-        </aside>
-
-        <main className="flex-1 min-w-0 space-y-8 pt-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <h2 className="flex items-center gap-2 text-[20px] font-semibold text-ink">
-              {viewMode === "trash" ? (
-                <span>Thùng rác</span>
-              ) : viewMode === "recent" ? (
-                <span>Mở gần đây</span>
-              ) : viewMode === "documents" ? (
-                <span>Tệp tin</span>
-              ) : viewMode === "published" ? (
-                <span>Tài liệu</span>
-              ) : viewMode === "folders" ? (
-                <span>Thư mục</span>
-              ) : (
-                breadcrumbs.map((crumb, idx) => (
-                  <div key={idx} className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleNavigateBreadcrumb(idx)}
-                      className={`flex items-center gap-1 transition-colors ${idx === breadcrumbs.length - 1 ? "text-ink" : "text-ink-muted hover:text-ink"}`}
-                    >
-                      {crumb.name}
-                    </button>
-                    {idx < breadcrumbs.length - 1 && (
-                      <ChevronRight className="w-5 h-5 text-ink-faint" />
-                    )}
-                  </div>
-                ))
-              )}
-            </h2>
-            {["files", "documents", "folders"].includes(viewMode) && (
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                  {["files", "folders"].includes(viewMode) && (
-                    <button
-                      onClick={() => setCreateFolderOpen(true)}
-                      className="p-2 bg-surface-quiet text-ink hover:bg-border rounded-full transition-colors"
-                      title="Thêm thư mục mới"
-                    >
-                      <FolderPlus className="w-4 h-4" />
-                    </button>
-                  )}
-                  {["files", "documents"].includes(viewMode) && (
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={uploading}
-                      className="p-2 bg-surface-quiet text-ink hover:bg-border rounded-full transition-colors disabled:opacity-50"
-                      title="Tải tệp lên"
-                    >
-                      {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FilePlus className="w-4 h-4" />}
-                    </button>
-                  )}
-                </div>
-                {selectedIds.size > 0 && (
-                  <button
-                    onClick={handleZipDownload}
-                    className="px-4 py-2 rounded-full text-[13px] font-medium bg-border text-ink hover:bg-border transition-colors flex items-center gap-2"
-                  >
-                    <Archive className="w-4 h-4" /> ZIP ({selectedIds.size})
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-
-          {viewMode === "trash" && (
-            <div className="bg-surface-quiet text-ink-muted text-[13px] p-3 rounded-panel flex items-center justify-center mb-4">
-              <Info className="w-4 h-4 mr-2" /> Các mục trong Thùng rác sẽ bị xóa vĩnh viễn sau 30 ngày.
-            </div>
-          )}
-
-          <div
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            className={`w-full overflow-x-auto min-h-[400px] transition-colors ${isDraggingOver ? "border border-brand bg-surface-quiet/80 rounded-panel" : ""}`}
-          >
-            {loading ? (
-              <div className="flex justify-center items-center py-20">
-                <Loader2 className="w-8 h-8 animate-spin text-ink-muted" />
-              </div>
-            ) : (
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                  <tr className="text-[13px] text-ink-muted border-b border-border">
-                    <th className="py-3 px-6 font-medium w-12 text-center"></th>
-                    <th className="py-3 px-6 font-medium text-left">Tên</th>
-                    {viewMode === "published" ? (
-                      <>
-                        <th className="py-3 px-6 font-medium text-center hidden md:table-cell">Thể loại</th>
-                        <th className="py-3 px-6 font-medium text-center hidden md:table-cell">Giá bán</th>
-                      </>
-                    ) : (
-                      <>
-                        <th className="py-3 px-6 font-medium text-center hidden md:table-cell">Loại</th>
-                        <th className="py-3 px-6 font-medium text-center hidden md:table-cell">Kích thước</th>
-                      </>
-                    )}
-                    <th className="py-3 px-6 font-medium text-center hidden md:table-cell">Cập nhật</th>
-                    <th className="py-3 px-6 font-medium text-right">
-
-                      Thao tác
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={7}
-                      >
-                        <div className="py-24 flex flex-col items-center justify-center bg-surface-quiet rounded-panel w-full text-center my-4">
-                          <p className="text-[17px] text-ink-muted">Chưa có dữ liệu</p>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : (
-                    items.map((item) => (
-                      <tr
-                        key={item._id}
-                        onClick={() => setDetailsItem(item)}
-                        className="hover:bg-border/60 transition-colors cursor-pointer group"
-                      >
-                        <td
-                          className="py-3 px-6 text-center"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedIds.has(item._id)}
-                            onChange={() => toggleSelect(item._id)}
-                            className="w-4 h-4 rounded-[4px] border-ink-faint accent-[hsl(var(--brand))]"
-                          />
-                        </td>
-                        <td className="py-3 px-6 max-w-[300px]">
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                              {item.is_starred && (
-                                <Star className="w-4 h-4 text-warning fill-warning shrink-0" />
-                              )}
-                              {item.is_folder ? (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleNavigate(item);
-                                  }}
-                                  className="text-[14px] font-medium text-ink hover:text-brand truncate flex items-center gap-2"
-                                >
-                                  <Folder className="w-5 h-5 shrink-0" style={{ color: item.color || "hsl(var(--ink))" }} />
-                                  <span className="truncate">{item.name || item.title}</span>
-                                </button>
-                              ) : viewMode === "published" ? (
-
-                                <a
-                                  href={`/tai-lieu/xem-truoc/${item._id || item.id}`}
-                                  onClick={(e) => e.stopPropagation()}
-                                  target="_blank"
-                                  className="text-[14px] font-medium text-ink hover:text-brand truncate"
-                                >
-                                  {item.name || item.title}
-                                </a>
-                              ) : (item.name || item.title)?.endsWith('.doclib') ? (
-                                <a
-                                  href={`/soan-thao?tai-lieu=${item._id || item.id}`}
-                                  onClick={(e) => e.stopPropagation()}
-                                  target="_blank"
-                                  className="text-[14px] font-medium text-ink hover:text-brand truncate"
-                                >
-                                  {item.name || item.title}
-                                </a>
-                              ) : item.url ? (
-                                <a
-                                  href={`/tai-lieu/xem-truoc/${item._id || item.id}?url=${encodeURIComponent(item.url)}&name=${encodeURIComponent(item.name || item.title || "")}`}
-                                  target="_blank"
-                                  className="text-[14px] font-medium text-ink hover:text-brand truncate"
-                                >
-                                  {item.name || item.title}
-                                </a>
-                              ) : (
-                                <span className="text-[14px] font-medium text-ink truncate">
-                                  {item.name || item.title}
-                                </span>
-                              )}
-                              {item.versions && item.versions.length > 0 && (
-                                <span className="text-[10px] font-medium bg-border text-ink-muted px-2 py-0.5 rounded-full shrink-0">
-                                  v{item.versions.length + 1}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-                        {viewMode === "published" ? (
-                          <>
-                            <td className="py-3 px-6 text-[13px] text-ink-muted text-center hidden md:table-cell">
-                              {item.category || "Chưa phân loại"}
-                            </td>
-                            <td className="py-3 px-6 text-[13px] text-ink-muted text-center hidden md:table-cell font-mono">
-                              {item.price_dl || 0} dl
-                            </td>
-                          </>
-                        ) : (
-                          <>
-                            <td className="py-3 px-6 text-[13px] text-ink-muted text-center hidden md:table-cell">
-                              {item.is_folder ? "Thư mục" : "Tài liệu"}
-                            </td>
-                            <td className="py-3 px-6 text-[13px] text-ink-muted text-center hidden md:table-cell">
-                              {item.is_folder ? "--" : formatSize(item.size)}
-                            </td>
-                          </>
-                        )}
-                        <td className="py-3 px-6 text-[13px] text-ink-muted text-center hidden md:table-cell">
-                          {new Date(item.updated_at || item.created_at || Date.now()).toLocaleDateString(
-                            "vi-VN",
-                          )}
-                        </td>
-                        <td className="py-3 px-6 text-right">
-
-                          <div className="flex justify-end gap-1 transition-opacity">
-                            {viewMode === "trash" ? (
-                              <div className="relative">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setOpenMenuId(openMenuId === item._id ? null : item._id);
-                                  }}
-                                  className="p-1.5 text-ink-muted hover:bg-border hover:text-ink rounded-control"
-                                >
-                                  <MoreVertical className="w-4 h-4" />
-                                </button>
-                                
-                                {openMenuId === item._id && (
-                                  <>
-                                    <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); }} />
-                                    <div 
-                                      className="absolute right-0 top-full mt-1 w-48 bg-white rounded-panel shadow-[0_4px_24px_rgba(0,0,0,0.1)] border border-border py-2 z-50 flex flex-col"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleRestore(item);
-                                          setOpenMenuId(null);
-                                        }}
-                                        className="flex items-center gap-3 px-4 py-2 text-[14px] text-brand hover:bg-brand/10 text-left"
-                                      >
-                                        <RotateCcw className="w-4 h-4" /> Khôi phục
-                                      </button>
-                                      <div className="h-[1px] bg-border my-1" />
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleDelete(item);
-                                          setOpenMenuId(null);
-                                        }}
-                                        className="flex items-center gap-3 px-4 py-2 text-[14px] text-danger hover:bg-danger/10 text-left"
-                                      >
-                                        <Trash2 className="w-4 h-4" /> Xóa vĩnh viễn
-                                      </button>
-                                    </div>
-                                  </>
-                                )}
-                              </div>
-                            ) : (
-                              <div className="relative">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setOpenMenuId(openMenuId === item._id ? null : item._id);
-                                  }}
-                                  className="p-1.5 text-ink-muted hover:bg-border hover:text-ink rounded-control"
-                                >
-                                  <MoreVertical className="w-4 h-4" />
-                                </button>
-                                
-                                {openMenuId === item._id && (
-                                  <>
-                                    <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); }} />
-                                    <div 
-                                      className="absolute right-0 top-full mt-1 w-48 bg-white rounded-panel shadow-[0_4px_24px_rgba(0,0,0,0.1)] border border-border py-2 z-50 flex flex-col"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                       <button
-                                         onClick={(e) => {
-                                           e.stopPropagation();
-                                           handleToggleStar(item);
-                                           setOpenMenuId(null);
-                                         }}
-                                         className="flex items-center gap-3 px-4 py-2 text-[14px] text-ink hover:bg-surface-quiet text-left"
-                                       >
-                                         <Star className={`w-4 h-4 ${item.is_starred ? "text-warning fill-warning" : ""}`} />
-                                         {item.is_starred ? "Bỏ gắn sao" : "Gắn sao"}
-                                       </button>
-                                          <button
-                                            onClick={() => {
-                                              setShareItem(item);
-                                              setOpenMenuId(null);
-                                            }}
-                                            className="flex items-center gap-3 px-4 py-2 text-[14px] text-ink hover:bg-surface-quiet text-left"
-                                          >
-                                            <Share2 className="w-4 h-4" /> Chia sẻ
-                                          </button>
-                                      {item.is_folder && (
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setColorItem(item);
-                                            setOpenMenuId(null);
-                                          }}
-                                          className="flex items-center gap-3 px-4 py-2 text-[14px] text-ink hover:bg-surface-quiet text-left"
-                                        >
-                                          <Palette className="w-4 h-4 text-brand" /> Đổi màu
-                                        </button>
-                                      )}
-
-                                      {!item.is_folder && (
-                                        <button
-                                          onClick={() => {
-                                            setVersionItem(item);
-                                            versionInputRef.current?.click();
-                                            setOpenMenuId(null);
-                                          }}
-                                          className="flex items-center gap-3 px-4 py-2 text-[14px] text-ink hover:bg-surface-quiet text-left"
-                                        >
-                                          <History className="w-4 h-4" /> Cập nhật bản mới
-                                        </button>
-                                      )}
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setRenameItem(item);
-                                          setNewName(item.name);
-                                          setOpenMenuId(null);
-                                        }}
-                                        className="flex items-center gap-3 px-4 py-2 text-[14px] text-ink hover:bg-surface-quiet text-left"
-                                      >
-                                        <Edit2 className="w-4 h-4" /> Đổi tên
-                                      </button>
-                                      <button
-                                        onClick={() => {
-                                          setMoveItem(item);
-                                          setMoveTargetId(undefined);
-                                          setMoveBreadcrumbs([{ name: "Tất cả" }]);
-                                          setOpenMenuId(null);
-                                        }}
-                                        className="flex items-center gap-3 px-4 py-2 text-[14px] text-ink hover:bg-surface-quiet text-left"
-                                      >
-                                        <Archive className="w-4 h-4" /> Di chuyển
-                                      </button>
-                                      <div className="h-[1px] bg-border my-1" />
-                                      <button
-                                        onClick={() => {
-                                          handleDelete(item);
-                                          setOpenMenuId(null);
-                                        }}
-                                        className="flex items-center gap-3 px-4 py-2 text-[14px] text-danger hover:bg-danger/10 text-left"
-                                      >
-                                        <Trash2 className="w-4 h-4" /> Xóa
-                                      </button>
-                                     </div>
-                                   </>
-                                 )}
-                               </div>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            )}
-            {viewMode === "published" && hasMorePublished && (
-              <div className="flex justify-center mt-6">
+    <div className="w-full">
+      <PageHeader
+        title="Lưu trữ"
+        actions={
+          <>
+            <input
+              ref={input}
+              type="file"
+              multiple
+              className="hidden"
+              onChange={(event) =>
+                event.target.files && state.upload(event.target.files)
+              }
+            />
+            <Button variant="secondary" onClick={() => setFolderOpen(true)}>
+              Tạo thư mục
+            </Button>
+            <Button
+              icon={<Upload size={16} />}
+              onClick={() => input.current?.click()}
+            >
+              Tải lên
+            </Button>
+          </>
+        }
+        meta={
+          <nav className="flex flex-wrap gap-2">
+            <button
+              className="font-semibold text-ink"
+              onClick={() => state.setPath([])}
+            >
+              Gốc
+            </button>
+            {state.path.map((folder, index) => (
+              <span key={folder._id} className="flex gap-2">
+                <span>/</span>
                 <button
-                  onClick={() => fetchItems(undefined, "published", true)}
-                  disabled={loading}
-                  className="px-6 py-2 bg-brand text-white rounded-full text-[14px] font-medium hover:bg-brand transition-colors disabled:opacity-50"
+                  onClick={() => state.setPath(state.path.slice(0, index + 1))}
                 >
-                  {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Tải thêm"}
+                  {folder.name}
                 </button>
-              </div>
-            )}
-          </div>
-        </main>
-
-        <div
-          className={`shrink-0 transition-all duration-300 ease-in-out ${
-            detailsItem
-              ? "w-full md:w-[320px] opacity-100 md:ml-6 mt-6 md:mt-0"
-              : "w-0 opacity-0 overflow-hidden"
-          }`}
-        >
-          <aside className="w-full h-full min-h-0 bg-surface-quiet rounded-panel border border-border flex flex-col gap-6 overflow-hidden relative">
-            <div className="p-6 flex justify-between items-center bg-white sticky top-0 z-10">
-              <h2 className="text-[20px] font-semibold text-ink mb-4">
-                Chi tiết
-              </h2>
-              <button
-                onClick={() => setDetailsItem(null)}
-                className="w-8 h-8 flex items-center justify-center bg-surface-quiet rounded-full text-ink-muted hover:text-ink"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-6 w-full md:w-[320px]">
-                <div className="flex flex-col items-center">
-                  <div className="w-24 h-24 bg-surface-quiet flex items-center justify-center rounded-workspace mb-4">
-                    {detailsItem?.is_folder ? (
-                      <Folder className="w-12 h-12 text-ink" />
-                    ) : (
-                      <File className="w-12 h-12 text-ink-muted" />
-                    )}
-                  </div>
-                  <p className="text-[13px] font-medium text-ink-muted mb-4 text-center max-w-full break-words">
-                    {detailsItem?.name || detailsItem?.title}
-                  </p>
-                </div>
-                <div className="bg-surface-quiet rounded-panel p-5 space-y-3">
-                  <div className="flex justify-between items-center text-[14px]">
-                    <span className="text-ink-muted">Loại</span>
-                    <span className="font-medium">
-                      {viewMode === "published"
-                        ? "Tác phẩm"
-                        : detailsItem?.is_folder
-                        ? "Thư mục"
-                        : detailsItem?.mime_type || "Tệp tin"}
-                    </span>
-                  </div>
-                  {viewMode === "published" ? (
-                    <>
-                      <div className="flex justify-between items-center text-[14px]">
-                        <span className="text-ink-muted">Thể loại</span>
-                        <span className="font-medium">
-                          {detailsItem?.category || "Chưa phân loại"}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center text-[14px]">
-                        <span className="text-ink-muted">Giá bán</span>
-                        <span className="font-medium font-mono">
-                          {detailsItem?.price_dl || 0} dl
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center text-[14px]">
-                        <span className="text-ink-muted">Trạng thái</span>
-                        <span className={`font-medium ${detailsItem?.status === "published" ? "text-brand" : "text-warning"}`}>
-                          {detailsItem?.status === "published" ? "Đã đăng" : "Bản nháp"}
-                        </span>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="flex justify-between items-center text-[14px]">
-                      <span className="text-ink-muted">Kích thước</span>
-                      <span className="font-medium">
-                        {detailsItem?.is_folder
-                          ? "--"
-                          : formatSize(detailsItem?.size || 0)}
-                      </span>
-                    </div>
-                  )}
-                  <div className="flex justify-between items-center text-[14px]">
-                    <span className="text-ink-muted">Tạo lúc</span>
-                    <span className="font-medium">
-                      {(detailsItem?.created_at || detailsItem?.updated_at) && new Date(detailsItem.created_at || detailsItem.updated_at).toLocaleDateString(
-                        "vi-VN",
-                      )}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-[14px]">
-                    <span className="text-ink-muted">Sửa đổi</span>
-                    <span className="font-medium">
-                      {detailsItem?.updated_at && new Date(detailsItem.updated_at).toLocaleDateString(
-                        "vi-VN",
-                      )}
-                    </span>
-                  </div>
-                </div>
-                {detailsItem?.description && (
-                  <div>
-                    <h4 className="text-[14px] font-medium text-ink-muted mb-2">
-                      Ghi chú AI
-                    </h4>
-                    <div className="bg-surface-quiet rounded-control p-4 text-[14px] leading-relaxed">
-                      {detailsItem.description}
-                    </div>
-                  </div>
-                )}
-                {detailsItem?.tags && detailsItem.tags.length > 0 && (
-                  <div>
-                    <h4 className="text-[14px] font-medium text-ink-muted mb-2">
-                      Nhãn
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {detailsItem.tags.map((t: string) => (
-                        <span
-                          key={t}
-                          className="px-3 py-1 bg-border text-ink text-[12px] font-medium rounded-full"
-                        >
-                          {t}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-          </aside>
+              </span>
+            ))}
+          </nav>
+        }
+      />
+      {state.error && (
+        <div className="mb-6">
+          <InlineState
+            title="Không thể xử lý kho lưu trữ"
+            detail={state.error}
+            tone="danger"
+            action={
+              <Button variant="secondary" onClick={state.reload}>
+                Tải lại
+              </Button>
+            }
+          />
         </div>
+      )}
+      {state.notice && (
+        <div className="mb-6">
+          <InlineState
+            title={state.notice}
+            action={
+              <Button variant="ghost" onClick={state.clearNotice}>
+                Đóng
+              </Button>
+            }
+          />
+        </div>
+      )}
+      <MetricStrip
+        items={[
+          { label: "Đã dùng", value: size(state.quota.used) },
+          { label: "Giới hạn", value: size(state.quota.limit) },
+          {
+            label: "Còn lại",
+            value: size(Math.max(0, state.quota.limit - state.quota.used)),
+          },
+        ]}
+      />
+      <div className="my-6 flex flex-col gap-3 sm:flex-row">
+        <div className="flex-1">
+          <SegmentedTabs<StorageView>
+            label="Chế độ lưu trữ"
+            value={state.view}
+            onChange={(value) => {
+              state.setPath([]);
+              state.setView(value);
+            }}
+            tabs={tabs}
+          />
+        </div>
+        <input
+          value={state.query}
+          onChange={(event) => state.setQuery(event.target.value)}
+          className="apple-input sm:w-72"
+          placeholder="Tìm tệp hoặc thư mục"
+        />
+        <Button
+          variant="secondary"
+          onClick={() => setAdvancedOpen((value) => !value)}
+        >
+          Lọc nâng cao
+        </Button>
       </div>
-
-      <Modal
-        isOpen={createFolderOpen}
-        onClose={() => setCreateFolderOpen(false)}
-        className="max-w-sm"
-      >
-        <ModalHeader>
-          <ModalTitle>
-            Tạo thư mục mới
-          </ModalTitle>
-        </ModalHeader>
-        <ModalContent>
+      {advancedOpen && (
+        <form
+          className="mb-6 grid gap-3 rounded-panel border border-border bg-surface p-4 sm:grid-cols-[1fr_1fr_1fr_auto]"
+          onSubmit={async (event) => {
+            event.preventDefault();
+            await state.advancedSearch({
+              q: state.query.trim() || undefined,
+              extension: filters.extension.trim() || undefined,
+              min_size_mb: filters.min_size_mb
+                ? Number(filters.min_size_mb)
+                : undefined,
+              max_size_mb: filters.max_size_mb
+                ? Number(filters.max_size_mb)
+                : undefined,
+            });
+          }}
+        >
           <input
-            type="text"
-            value={newFolderName}
-            onChange={(e) => setNewFolderName(e.target.value)}
-            placeholder=""
-            className="apple-input w-full bg-white"
-            autoFocus
+            value={filters.extension}
+            onChange={(event) =>
+              setFilters((value) => ({
+                ...value,
+                extension: event.target.value,
+              }))
+            }
+            className="apple-input"
+            placeholder="Phần mở rộng"
           />
-        </ModalContent>
-        <ModalFooter>
-          <button
-            onClick={() => setCreateFolderOpen(false)}
-            className="px-5 py-2 text-brand font-medium hover:bg-surface-quiet rounded-full"
-          >
-            Hủy
-          </button>
-          <button onClick={handleCreateFolder} className="pill-button">
-            Tạo
-          </button>
-        </ModalFooter>
-      </Modal>
-
-      <Modal
-        isOpen={!!renameItem}
-        onClose={() => setRenameItem(null)}
-        className="max-w-sm"
-      >
-        <ModalHeader>
-          <ModalTitle>Đổi tên</ModalTitle>
-        </ModalHeader>
-        <ModalContent>
           <input
-            type="text"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            placeholder=""
-            className="apple-input w-full bg-white"
-            autoFocus
+            type="number"
+            min="0"
+            value={filters.min_size_mb}
+            onChange={(event) =>
+              setFilters((value) => ({
+                ...value,
+                min_size_mb: event.target.value,
+              }))
+            }
+            className="apple-input"
+            placeholder="Tối thiểu MB"
           />
-        </ModalContent>
-        <ModalFooter>
-          <button
-            onClick={() => setRenameItem(null)}
-            className="px-5 py-2 text-brand font-medium hover:bg-surface-quiet rounded-full"
-          >
-            Hủy
-          </button>
-          <button onClick={handleRename} className="pill-button">
-            Lưu
-          </button>
-        </ModalFooter>
-      </Modal>
-
-      <Modal
-        isOpen={!!shareItem}
-        onClose={() => setShareItem(null)}
-      >
-        <ModalHeader>
-          <ModalTitle>
-            Chia sẻ {shareItem?.name}
-          </ModalTitle>
-        </ModalHeader>
-        <ModalContent>
-          <div>
-            <label className="text-[13px] font-medium text-ink-muted mb-2 block">
-              Mời người dùng
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="email"
-                value={shareEmail}
-                onChange={(e) => setShareEmail(e.target.value)}
-                placeholder=""
-                className="apple-input flex-1 bg-white"
-              />
-              <select
-                value={shareRole}
-                onChange={(e) => setShareRole(e.target.value)}
-                className="apple-input w-28 bg-white"
-              >
-                <option value="viewer">Xem</option>
-                <option value="editor">Sửa</option>
-              </select>
-            </div>
-            <button
-              onClick={handleShareSubmit}
-              className="mt-3 w-full pill-button"
+          <input
+            type="number"
+            min="0"
+            value={filters.max_size_mb}
+            onChange={(event) =>
+              setFilters((value) => ({
+                ...value,
+                max_size_mb: event.target.value,
+              }))
+            }
+            className="apple-input"
+            placeholder="Tối đa MB"
+          />
+          <Button type="submit">Áp dụng</Button>
+        </form>
+      )}
+      {selectedIds.length > 0 && state.view !== "trash" && (
+        <div className="mb-3 flex items-center justify-between border-y border-border py-3">
+          <p className="text-[13px] font-semibold text-ink">
+            Đã chọn {selectedIds.length} mục
+          </p>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setSelectedIds([])}
             >
-              Chia sẻ ngay
-            </button>
-          </div>
-          <div className="pt-4">
-            <label className="text-[13px] font-medium text-ink-muted mb-2 block">
-              Liên kết công khai
-            </label>
-            <button
-              onClick={() => handleTogglePublic(shareItem!)}
-              className="w-full py-3 bg-white rounded-control text-[14px] font-medium text-ink  flex items-center justify-center gap-2"
+              Bỏ chọn
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={state.processing === "download"}
+              onClick={() => state.downloadSelected(selectedIds)}
             >
-              <Share2 className="w-4 h-4" />
-              {shareItem?.is_public
-                ? "Sao chép link public"
-                : "Tạo link public"}
-            </button>
+              Tải ZIP
+            </Button>
           </div>
-        </ModalContent>
-        <ModalFooter>
-          <button
-            onClick={() => setShareItem(null)}
-            className="px-5 py-2 text-brand font-medium hover:bg-surface-quiet rounded-full"
-          >
-            Đóng
-          </button>
-        </ModalFooter>
-      </Modal>
-
-      <Modal
-        isOpen={!!moveItem}
-        onClose={() => setMoveItem(null)}
-        className="max-w-sm"
-      >
-        <ModalHeader>
-          <ModalTitle>
-            Chuyển đến
-          </ModalTitle>
-        </ModalHeader>
-        <ModalContent className="max-h-[300px] overflow-y-auto no-scrollbar">
-          <div className="flex gap-1 text-[13px] text-brand mb-4 overflow-x-auto no-scrollbar whitespace-nowrap">
-            {moveBreadcrumbs.map((c, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  setMoveTargetId(c.id);
-                  setMoveBreadcrumbs(moveBreadcrumbs.slice(0, i + 1));
-                }}
-                className="hover:underline"
-              >
-                {c.name}
-                {i < moveBreadcrumbs.length - 1 && " / "}
-              </button>
-            ))}
-          </div>
-          <div className="space-y-2">
-            {moveFolders.map((f) => (
-              <button
-                key={f._id}
-                onClick={() => {
-                  setMoveTargetId(f._id);
-                  setMoveBreadcrumbs([
-                    ...moveBreadcrumbs,
-                    { id: f._id, name: f.name },
-                  ]);
-                }}
-                className="w-full flex items-center gap-3 p-3 bg-white rounded-control hover:bg-border transition-colors"
-              >
-                <Folder className="w-5 h-5 text-ink" />
-                <span className="text-[14px] font-medium truncate">
-                  {f.name}
-                </span>
-              </button>
-            ))}
-            {moveFolders.length === 0 && (
-              <p className="text-center text-ink-muted text-[13px]">
-                Không có thư mục con
-              </p>
-            )}
-          </div>
-        </ModalContent>
-        <ModalFooter>
-          <button
-            onClick={() => setMoveItem(null)}
-            className="px-5 py-2 text-brand font-medium hover:bg-surface-quiet rounded-full"
-          >
-            Hủy
-          </button>
-          <button onClick={handleMove} className="pill-button">
-            Chuyển tới đây
-          </button>
-        </ModalFooter>
-      </Modal>
-
-      <Modal
-        isOpen={!!colorItem}
-        onClose={() => setColorItem(null)}
-        className="max-w-sm"
-      >
-        <ModalHeader>
-          <ModalTitle>Đổi màu sắc thư mục</ModalTitle>
-        </ModalHeader>
-        <ModalContent>
-          <div className="flex items-center gap-3 justify-center py-6">
-            {[
-              { hex: "hsl(var(--brand))", name: "Xanh biển" },
-              { hex: "hsl(var(--danger))", name: "Đỏ" },
-              { hex: "hsl(var(--brand))", name: "Xanh lá" },
-              { hex: "hsl(var(--warning))", name: "Cam" },
-              { hex: "hsl(var(--brand))", name: "Tím" },
-              { hex: "hsl(var(--danger))", name: "Hồng" },
-              { hex: "hsl(var(--ink-muted))", name: "Xám" },
-            ].map((c) => (
-              <button
-                key={c.hex}
-                onClick={() => handleSetFolderColor(c.hex)}
-                className="w-8 h-8 rounded-full transition-transform hover:scale-125 border-2 border-white shadow-md"
-                style={{ backgroundColor: c.hex }}
-                title={c.name}
-              />
-            ))}
-          </div>
-        </ModalContent>
-        <ModalFooter>
-          <button
-            onClick={() => setColorItem(null)}
-            className="px-5 py-2 text-brand font-medium hover:bg-surface-quiet rounded-full"
-          >
-            Đóng
-          </button>
-        </ModalFooter>
-      </Modal>
+        </div>
+      )}
+      {state.loading ? (
+        <PageLoader rows={7} />
+      ) : state.items.length ? (
+        <ul className="overflow-hidden rounded-panel border border-border bg-surface">
+          {state.items.map((item) => (
+            <li
+              key={item._id}
+              className="flex flex-col gap-4 border-b border-border px-5 py-4 last:border-b-0 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                {state.view !== "trash" && (
+                  <input
+                    type="checkbox"
+                    aria-label={`Chọn ${item.name}`}
+                    checked={selectedIds.includes(item._id)}
+                    onChange={(event) =>
+                      setSelectedIds((rows) =>
+                        event.target.checked
+                          ? [...rows, item._id]
+                          : rows.filter((id) => id !== item._id),
+                      )
+                    }
+                    className="h-4 w-4 accent-[hsl(var(--brand))]"
+                  />
+                )}
+                {item.is_folder ? (
+                  <Folder size={18} className="shrink-0 text-brand" />
+                ) : (
+                  <File size={18} className="shrink-0 text-ink-muted" />
+                )}
+                {item.is_folder ? (
+                  <button
+                    onClick={() => state.setPath([...state.path, item])}
+                    className="min-w-0 truncate text-left text-[14px] font-semibold text-ink hover:text-brand"
+                  >
+                    {item.name}
+                  </button>
+                ) : (
+                  <div className="min-w-0">
+                    <Link
+                      href={`/tai-lieu/xem-truoc/${item._id}?url=${encodeURIComponent(item.url || "")}&name=${encodeURIComponent(item.name)}`}
+                      className="block truncate text-[14px] font-semibold text-ink hover:text-brand"
+                    >
+                      {item.name}
+                    </Link>
+                    <p className="mt-1 text-[12px] text-ink-muted">
+                      {size(item.size)} ·{" "}
+                      {new Date(
+                        item.updated_at || item.created_at,
+                      ).toLocaleDateString("vi-VN")}
+                    </p>
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-1">
+                {state.view === "trash" ? (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label="Khôi phục"
+                    onClick={() => state.restore(item)}
+                  >
+                    <RotateCcw size={16} />
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      aria-label="Đánh dấu sao"
+                      onClick={() => state.toggleStar(item)}
+                    >
+                      <Star
+                        size={16}
+                        fill={item.is_starred ? "currentColor" : "none"}
+                      />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      aria-label="Chia sẻ"
+                      onClick={() => setShareItem(item)}
+                    >
+                      <Share2 size={16} />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setRenameItem(item)}
+                    >
+                      Đổi tên
+                    </Button>
+                    {!item.is_folder && (
+                      <>
+                        <input
+                          ref={versionInput}
+                          type="file"
+                          className="hidden"
+                          onChange={(event) => {
+                            const file = event.target.files?.[0];
+                            if (versionItem && file)
+                              state.uploadVersion(versionItem, file);
+                          }}
+                        />
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            setVersionItem(item);
+                            requestAnimationFrame(() =>
+                              versionInput.current?.click(),
+                            );
+                          }}
+                        >
+                          Bản mới
+                        </Button>
+                      </>
+                    )}
+                  </>
+                )}
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  aria-label="Xóa"
+                  onClick={() => state.remove(item)}
+                >
+                  <Trash2 size={16} />
+                </Button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <InlineState
+          title="Không có dữ liệu"
+          detail={
+            state.view === "trash"
+              ? "Thùng rác đang trống"
+              : "Tải lên tệp hoặc tạo thư mục để bắt đầu"
+          }
+        />
+      )}
+      <StorageTextModal
+        open={folderOpen}
+        close={() => setFolderOpen(false)}
+        title="Tạo thư mục"
+        label="Tên thư mục"
+        processing={state.processing === "folder"}
+        submit={state.createFolder}
+      />
+      <StorageTextModal
+        open={Boolean(renameItem)}
+        close={() => setRenameItem(null)}
+        title="Đổi tên"
+        label="Tên mới"
+        processing={state.processing === "rename"}
+        submit={(value) => state.rename(renameItem!, value)}
+      />
+      <StorageShareModal
+        item={shareItem}
+        close={() => setShareItem(null)}
+        processing={state.processing === "share"}
+        submit={(email, role) => state.share(shareItem!, email, role)}
+        createLink={(password, expiresInHours) =>
+          state.createProtectedLink(shareItem!, password, expiresInHours)
+        }
+      />
     </div>
   );
 }

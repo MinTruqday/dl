@@ -19,7 +19,9 @@ export async function getSystemHealthAPI() {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi giám sát trạng thái sức khỏe hệ thống");
+    throw new Error(
+      data.message || "Lỗi giám sát trạng thái sức khỏe hệ thống",
+    );
   return data;
 }
 

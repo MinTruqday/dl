@@ -10,7 +10,8 @@ const manrope = Manrope({
 
 export const metadata: Metadata = {
   title: "DocLib",
-  description: "Đọc, quản lý và cộng tác trên tài liệu trong một không gian làm việc",
+  description:
+    "Đọc, quản lý và cộng tác trên tài liệu trong một không gian làm việc",
 };
 
 import { AuthProvider } from "@/features/authentication/contexts/AuthContext";

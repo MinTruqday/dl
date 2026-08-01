@@ -1,110 +1,108 @@
-"use client";
+import Link from "next/link";
+import PageHeader from "@/app/_components/PageHeader";
 
-import React from "react";
-import { ShieldCheck, FileText, Lock, Scale } from "lucide-react";
+const sections = [
+  {
+    id: "su-dung",
+    title: "Sử dụng dịch vụ",
+    paragraphs: [
+      "Khi tạo tài khoản hoặc sử dụng DocLib bạn đồng ý cung cấp thông tin chính xác và chịu trách nhiệm với hoạt động phát sinh từ tài khoản của mình",
+      "Bạn không được dùng dịch vụ để phát tán nội dung trái pháp luật xâm phạm quyền của người khác hoặc can thiệp vào hoạt động của hệ thống",
+    ],
+  },
+  {
+    id: "noi-dung",
+    title: "Nội dung và bản quyền",
+    paragraphs: [
+      "Tác giả giữ quyền đối với nội dung do mình đăng tải và chịu trách nhiệm về quyền sử dụng các tài liệu nguồn",
+      "Người đọc chỉ được sử dụng tài liệu trong phạm vi giấy phép đi kèm và không được sao chép phân phối hoặc bán lại khi chưa có chấp thuận",
+    ],
+  },
+  {
+    id: "thanh-toan",
+    title: "Thanh toán",
+    paragraphs: [
+      "Giao dịch bằng dl được ghi nhận trong lịch sử ví và được xử lý theo mức giá hiển thị tại thời điểm xác nhận",
+      "Yêu cầu xử lý giao dịch sai cần được gửi qua trang trợ giúp cùng mã giao dịch để đối chiếu",
+    ],
+  },
+  {
+    id: "du-lieu",
+    title: "Dữ liệu cá nhân",
+    paragraphs: [
+      "DocLib sử dụng dữ liệu tài khoản để vận hành xác thực bảo vệ tài liệu và cung cấp các chức năng mà bạn lựa chọn",
+      "Bạn có thể thay đổi quyền riêng tư tải dữ liệu liên quan hoặc yêu cầu xóa tài khoản trong phần cài đặt",
+    ],
+  },
+  {
+    id: "thay-doi",
+    title: "Thay đổi điều khoản",
+    paragraphs: [
+      "Phiên bản mới có hiệu lực từ ngày được ghi ở đầu trang và thay thế phiên bản trước đó",
+      "Nếu thay đổi ảnh hưởng đáng kể đến quyền của người dùng DocLib sẽ thông báo qua tài khoản trước khi áp dụng",
+    ],
+  },
+];
 
 export default function TermsPage() {
-  const sections = [
-    {
-      title: "1. Điều khoản sử dụng",
-      content:
-        "Bằng cách sử dụng DocLib, bạn đồng ý tuân thủ các quy định và điều kiện được nêu trong tài liệu này. Chúng tôi có quyền thay đổi điều khoản bất cứ lúc nào mà không cần thông báo trước.",
-    },
-    {
-      title: "2. Quyền sở hữu trí tuệ",
-      content:
-        "Tất cả nội dung được đăng tải bởi Tác giả đều thuộc quyền sở hữu của họ. DocLib chỉ cung cấp nền tảng để phân phối và chia sẻ. Người dùng không được phép sao chép hoặc phát tán trái phép các tài liệu có bản quyền.",
-    },
-    {
-      title: "3. Chính sách thanh toán",
-      content:
-        "Các giao dịch sử dụng dl là cuối cùng và không thể hoàn lại, trừ các trường hợp đặc biệt theo quy định của pháp luật hoặc sai sót hệ thống được xác nhận.",
-    },
-    {
-      title: "4. Quyền riêng tư",
-      content:
-        "Chúng tôi cam kết bảo mật thông tin cá nhân của bạn và chỉ sử dụng cho mục đích cải thiện trải nghiệm người dùng. Thông tin của bạn sẽ không bao giờ được bán cho bên thứ ba.",
-    },
-  ];
-
   return (
-    <div className="w-full max-w-[800px] mx-auto px-6 md:px-0 py-12 md:py-20 font-sans text-ink">
-      <div className="mb-16  pb-12 text-center">
-        <h1 className="text-[28px] md:text-[32px] font-semibold tracking-tight text-ink mb-4">
-          Điều khoản & chính sách
-        </h1>
-        <p className="text-[15px] text-ink-muted">
-          Cập nhật lần cuối: 28 tháng 04, 2026
-        </p>
-      </div>
+    <div className="w-full">
+      <PageHeader title="Điều khoản" meta="Hiệu lực từ 28 tháng 4 2026" />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
-        {[
-          {
-            icon: FileText,
-            label: "Điều khoản",
-            bg: "bg-brand/10",
-            color: "text-brand",
-          },
-          {
-            icon: Lock,
-            label: "Bảo mật",
-            bg: "bg-brand/10",
-            color: "text-brand",
-          },
-          {
-            icon: Scale,
-            label: "Pháp lý",
-            bg: "bg-warning/10",
-            color: "text-warning",
-          },
-          {
-            icon: ShieldCheck,
-            label: "Bản quyền",
-            bg: "bg-brand/10",
-            color: "text-brand",
-          },
-        ].map((item, idx) => (
-          <div
-            key={idx}
-            className="flex flex-col items-center p-6 bg-surface-quiet rounded-panel"
-          >
-            <div
-              className={`w-12 h-12 rounded-control flex items-center justify-center mb-3 ${item.bg}`}
+      <div className="grid gap-8 lg:grid-cols-[220px_minmax(0,720px)] lg:items-start">
+        <nav
+          className="border-y border-border py-2 lg:sticky lg:top-[84px]"
+          aria-label="Nội dung điều khoản"
+        >
+          {sections.map((section, index) => (
+            <a
+              key={section.id}
+              href={`#${section.id}`}
+              className="grid grid-cols-[24px_1fr] gap-2 border-b border-border py-3 text-[13px] text-ink-muted last:border-b-0 hover:text-ink"
             >
-              <item.icon className={`w-6 h-6 ${item.color}`} />
-            </div>
-            <span className="text-[14px] font-medium text-ink">
-              {item.label}
-            </span>
-          </div>
-        ))}
+              <span className="text-ink-faint">{index + 1}</span>
+              <span className="font-semibold">{section.title}</span>
+            </a>
+          ))}
+        </nav>
+
+        <article className="divide-y divide-border border-t border-border">
+          {sections.map((section, index) => (
+            <section
+              key={section.id}
+              id={section.id}
+              className="scroll-mt-24 py-7 first:pt-6"
+            >
+              <div className="grid gap-5 sm:grid-cols-[32px_1fr]">
+                <span className="text-[13px] font-semibold text-ink-faint">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <div>
+                  <h2 className="text-[17px] font-semibold text-ink">
+                    {section.title}
+                  </h2>
+                  <div className="mt-4 space-y-4">
+                    {section.paragraphs.map((paragraph) => (
+                      <p
+                        key={paragraph}
+                        className="text-[15px] leading-7 text-ink-muted"
+                      >
+                        {paragraph}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </section>
+          ))}
+        </article>
       </div>
 
-      <div className="space-y-12">
-        {sections.map((section, i) => (
-          <section key={i} className="space-y-4">
-            <p className="text-[13px] font-medium text-ink-muted mb-4">
-              {section.title}
-            </p>
-            <p className="text-[16px] text-ink-muted leading-relaxed">
-              {section.content}
-            </p>
-          </section>
-        ))}
-      </div>
-
-      <div className="mt-20 pt-8 text-center">
-        <p className="text-[15px] text-ink-muted">
-          Nếu bạn có bất kỳ thắc mắc nào về các điều khoản này, vui lòng{" "}
-          <a
-            href="/tro-giup"
-            className="text-brand hover:underline font-medium"
-          >
-            liên hệ với chúng tôi
-          </a>
-          .
-        </p>
+      <div className="mt-10 border-t border-border pt-5 text-[13px] text-ink-muted">
+        Cần hỗ trợ về điều khoản
+        <Link href="/tro-giup" className="ml-2 font-semibold text-brand">
+          Mở trợ giúp
+        </Link>
       </div>
     </div>
   );

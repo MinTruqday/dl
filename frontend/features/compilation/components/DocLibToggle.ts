@@ -3,7 +3,7 @@ import { API, BlockTool } from "@editorjs/editorjs";
 export default class DocLibToggle implements BlockTool {
   static readonly feature = {
     id: "DocLibToggle",
-    title: "DocLib Toggle",
+    title: "Nội dung thu gọn",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7f170dbeac285bc4"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="12,10 17,7 6,10 10,13 8,5 8,16"/></svg>',
     product: "doclib",
   } as const;
@@ -14,7 +14,7 @@ export default class DocLibToggle implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "DocLib Toggle",
+      title: "Nội dung thu gọn",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="7f170dbeac285bc4"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="12,10 17,7 6,10 10,13 8,5 8,16"/></svg>',
     };
   }
@@ -48,7 +48,7 @@ export default class DocLibToggle implements BlockTool {
             .doclib-toggle-icon { margin-right: 8px; transition: transform 0.2s; display: flex; align-items: center; justify-content: center; }
             .doclib-toggle-details[open] .doclib-toggle-icon { transform: rotate(90deg); }
             .doclib-toggle-title { flex-grow: 1; outline: none; }
-            .doclib-toggle-title:empty::before { content: 'DocLib Title'; color: hsl(var(--ink-faint)); pointer-events: none; }
+            .doclib-toggle-title:empty::before { content: 'Tiêu đề'; color: hsl(var(--ink-faint)); pointer-events: none; }
             .doclib-toggle-content { padding: 16px; min-height: 80px; outline: none; line-height: 1.6; }
             .doclib-toggle-content:empty::before { content: 'DocLib Input'; color: hsl(var(--ink-faint)); pointer-events: none; }
         `;

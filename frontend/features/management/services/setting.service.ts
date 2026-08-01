@@ -5,7 +5,8 @@ import {
 
 export async function getPrivacySettingsAPI() {
   const token = getToken();
-  if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
+  if (!token)
+    throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
   const res = await fetch(`${API_URL}/ho-so/cai-dat`, {
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -17,7 +18,8 @@ export async function getPrivacySettingsAPI() {
 
 export async function updatePrivacySettingsAPI(settings: any) {
   const token = getToken();
-  if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
+  if (!token)
+    throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
   const res = await fetch(`${API_URL}/ho-so/cai-dat`, {
     method: "PUT",
     headers: {
@@ -28,13 +30,16 @@ export async function updatePrivacySettingsAPI(settings: any) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể cập nhật cấu hình quyền riêng tư");
+    throw new Error(
+      data.message || "Không thể cập nhật cấu hình quyền riêng tư",
+    );
   return data;
 }
 
 export async function updateTypographyAPI(typography: any) {
   const token = getToken();
-  if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
+  if (!token)
+    throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
   const res = await fetch(`${API_URL}/ho-so/cai-dat`, {
     method: "PUT",
     headers: {
@@ -44,13 +49,17 @@ export async function updateTypographyAPI(typography: any) {
     body: JSON.stringify(typography),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể cập nhật cấu hình giao diện hiển thị");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể cập nhật cấu hình giao diện hiển thị",
+    );
   return data;
 }
 
 export async function updateGeneralSettingsAPI(settings: any) {
   const token = getToken();
-  if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
+  if (!token)
+    throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
   const res = await fetch(`${API_URL}/ho-so/cai-dat`, {
     method: "PUT",
     headers: {

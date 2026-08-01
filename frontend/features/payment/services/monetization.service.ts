@@ -11,7 +11,9 @@ export async function purchaseDocumentAPI(documentId: string) {
   });
   const data = await res.json();
   if (!res.ok) {
-    throw new Error(data.detail || data.message || "Lỗi giao dịch mua tài liệu");
+    throw new Error(
+      data.detail || data.message || "Lỗi giao dịch mua tài liệu",
+    );
   }
   return data;
 }
@@ -31,6 +33,18 @@ export async function buyMembershipAPI(tier: "PRO" | "PREMIUM") {
   return data;
 }
 
+export async function getMembershipPricingAPI() {
+  const res = await fetch(`${API_URL}/kiem-tien/bang-gia`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.detail || data.message || "Không thể tải bảng giá");
+  }
+  return data;
+}
+
 export async function getAuthorRevenueAPI() {
   const res = await fetch(`${API_URL}/kiem-tien/doanh-thu`, {
     method: "GET",
@@ -38,7 +52,9 @@ export async function getAuthorRevenueAPI() {
   });
   const data = await res.json();
   if (!res.ok) {
-    throw new Error(data.detail || data.message || "Không thể tải số liệu doanh thu");
+    throw new Error(
+      data.detail || data.message || "Không thể tải số liệu doanh thu",
+    );
   }
   return data;
 }
@@ -59,7 +75,9 @@ export async function setDocumentPricingAPI(
   });
   const data = await res.json();
   if (!res.ok) {
-    throw new Error(data.detail || data.message || "Không thể cập nhật cấu hình định giá");
+    throw new Error(
+      data.detail || data.message || "Không thể cập nhật cấu hình định giá",
+    );
   }
   return data;
 }

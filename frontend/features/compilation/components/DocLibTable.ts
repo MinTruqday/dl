@@ -3,7 +3,7 @@ import { API, BlockTool } from "@editorjs/editorjs";
 export default class DocLibTable implements BlockTool {
   static readonly feature = {
     id: "DocLibTable",
-    title: "DocLib Table",
+    title: "Bảng",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="eab225f6131a7830"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="17,12 7,12 6,13 5,18 19,8 6,6"/></svg>',
     product: "doclib",
   } as const;
@@ -15,7 +15,7 @@ export default class DocLibTable implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "DocLib Table",
+      title: "Bảng",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="eab225f6131a7830"><rect x="5" y="5" width="14" height="14" rx="3"/><polyline points="17,12 7,12 6,13 5,18 19,8 6,6"/></svg>',
     };
   }
@@ -89,7 +89,7 @@ export default class DocLibTable implements BlockTool {
 
     const addRowBtn = document.createElement("button");
     addRowBtn.classList.add("doclib-table-btn");
-    addRowBtn.innerText = "+ Add row";
+    addRowBtn.innerText = "Thêm hàng";
     addRowBtn.addEventListener("click", () => {
       const cols = this.data?.content[0]?.length || 2;
       this.data?.content.push(Array(cols).fill(""));
@@ -98,7 +98,7 @@ export default class DocLibTable implements BlockTool {
 
     const addColBtn = document.createElement("button");
     addColBtn.classList.add("doclib-table-btn");
-    addColBtn.innerText = "+ Add column";
+    addColBtn.innerText = "Thêm cột";
     addColBtn.addEventListener("click", () => {
       this.data?.content.forEach((row) => row.push(""));
       this.buildUI();
@@ -106,7 +106,7 @@ export default class DocLibTable implements BlockTool {
 
     const rmRowBtn = document.createElement("button");
     rmRowBtn.classList.add("doclib-table-btn");
-    rmRowBtn.innerText = "- Remove row";
+    rmRowBtn.innerText = "Xóa hàng";
     rmRowBtn.addEventListener("click", () => {
       if (this.data?.content.length > 1) {
         this.data?.content.pop();
@@ -116,7 +116,7 @@ export default class DocLibTable implements BlockTool {
 
     const rmColBtn = document.createElement("button");
     rmColBtn.classList.add("doclib-table-btn");
-    rmColBtn.innerText = "- Remove column";
+    rmColBtn.innerText = "Xóa cột";
     rmColBtn.addEventListener("click", () => {
       if (this.data?.content[0]?.length > 1) {
         this.data?.content.forEach((row) => row.pop());

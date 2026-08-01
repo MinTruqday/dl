@@ -62,14 +62,20 @@ export const sendMessageAPI = async (
       audio_url: audioUrl,
       reply_to_id: replyToId,
       self_destruct_in: selfDestructIn,
-      attachments: documentUrl ? [{ url: documentUrl, name: documentName }] : [],
+      attachments: documentUrl
+        ? [{ url: documentUrl, name: documentName }]
+        : [],
       parent_message_id: parentMessageId,
       scheduled_at: scheduledAt,
       client_msg_id: crypto.randomUUID(),
     }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể thực hiện luồng chuyển tiếp dữ liệu thông điệp");
+  if (!res.ok)
+    throw new Error(
+      data.message ||
+        "Không thể thực hiện luồng chuyển tiếp dữ liệu thông điệp",
+    );
   return data;
 };
 
@@ -81,7 +87,10 @@ export const togglePinAPI = async (messageId: string) => {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể cập nhật trạng thái dữ liệu ghim");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể cập nhật trạng thái dữ liệu ghim",
+    );
   return data;
 };
 
@@ -97,7 +106,10 @@ export const editMessageAPI = async (messageId: string, content: string) => {
     body: JSON.stringify({ content }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể cập nhật cấu trúc dữ liệu thông điệp");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể cập nhật cấu trúc dữ liệu thông điệp",
+    );
   return data;
 };
 
@@ -109,7 +121,10 @@ export const recallMessageAPI = async (messageId: string) => {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể hoàn tác trạng thái dữ liệu thông điệp");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể hoàn tác trạng thái dữ liệu thông điệp",
+    );
   return data;
 };
 
@@ -121,7 +136,8 @@ export const deleteMessageForMeAPI = async (messageId: string) => {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể xóa bản ghi dữ liệu cục bộ");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể xóa bản ghi dữ liệu cục bộ");
   return data;
 };
 
@@ -133,11 +149,18 @@ export const restoreMessageAPI = async (messageId: string) => {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể khôi phục bản ghi dữ liệu thông điệp");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể khôi phục bản ghi dữ liệu thông điệp",
+    );
   return data;
 };
 
-export const saveToCloudAPI = async (messageId: string, content: string, attachments: any[] = []) => {
+export const saveToCloudAPI = async (
+  messageId: string,
+  content: string,
+  attachments: any[] = [],
+) => {
   const token = getToken();
   if (!token) throw new Error("Phiên đăng nhập đã hết hạn");
   const res = await fetch(`${API_URL}/tin-nhan/cloud/luu-tin-nhan`, {
@@ -149,7 +172,8 @@ export const saveToCloudAPI = async (messageId: string, content: string, attachm
     body: JSON.stringify({ message_id: messageId, content, attachments }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi lưu tin nhắn vào kho cá nhân");
+  if (!res.ok)
+    throw new Error(data.message || "Lỗi lưu tin nhắn vào kho cá nhân");
   return data;
 };
 
@@ -165,11 +189,18 @@ export const updateThemeAPI = async (otherUserId: string, themeId: string) => {
     body: JSON.stringify({ theme_id: themeId }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể cập nhật chủ đề cuộc trò chuyện");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể cập nhật chủ đề cuộc trò chuyện",
+    );
   return data;
 };
 
-export const createAnnouncementAPI = async (groupId: string, title: string, body: string) => {
+export const createAnnouncementAPI = async (
+  groupId: string,
+  title: string,
+  body: string,
+) => {
   const token = getToken();
   if (!token) throw new Error("Phiên đăng nhập đã hết hạn");
   const res = await fetch(`${API_URL}/tin-nhan/${groupId}/thong-bao`, {
@@ -193,7 +224,8 @@ export const generateGroupInviteAPI = async (groupId: string) => {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi tạo đường dẫn mời tham gia nhóm");
+  if (!res.ok)
+    throw new Error(data.message || "Lỗi tạo đường dẫn mời tham gia nhóm");
   return data;
 };
 
@@ -229,7 +261,10 @@ export const setNicknameAPI = async (otherUserId: string, nickname: string) => {
   return data;
 };
 
-export const shareContactCardAPI = async (otherUserId: string, contactUserId: string) => {
+export const shareContactCardAPI = async (
+  otherUserId: string,
+  contactUserId: string,
+) => {
   const token = getToken();
   if (!token) throw new Error("Phiên đăng nhập đã hết hạn");
   const res = await fetch(`${API_URL}/tin-nhan/${otherUserId}/danh-thiep`, {
@@ -245,7 +280,10 @@ export const shareContactCardAPI = async (otherUserId: string, contactUserId: st
   return data;
 };
 
-export const archiveThreadAPI = async (otherUserId: string, isArchived: boolean = true) => {
+export const archiveThreadAPI = async (
+  otherUserId: string,
+  isArchived: boolean = true,
+) => {
   const token = getToken();
   if (!token) throw new Error("Phiên đăng nhập đã hết hạn");
   const res = await fetch(`${API_URL}/tin-nhan/${otherUserId}/luu-tru`, {
@@ -257,7 +295,10 @@ export const archiveThreadAPI = async (otherUserId: string, isArchived: boolean 
     body: JSON.stringify({ is_archived: isArchived }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể cập nhật trạng thái lưu trữ cuộc trò chuyện");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể cập nhật trạng thái lưu trữ cuộc trò chuyện",
+    );
   return data;
 };
 
@@ -273,11 +314,15 @@ export const setPinLockAPI = async (otherUserId: string, pinCode: string) => {
     body: JSON.stringify({ pin_code: pinCode }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi đặt mã PIN ẩn cuộc trò chuyện");
+  if (!res.ok)
+    throw new Error(data.message || "Lỗi đặt mã PIN ẩn cuộc trò chuyện");
   return data;
 };
 
-export const setMessageAlarmAPI = async (messageId: string, remindAt: string) => {
+export const setMessageAlarmAPI = async (
+  messageId: string,
+  remindAt: string,
+) => {
   const token = getToken();
   if (!token) throw new Error("Phiên đăng nhập đã hết hạn");
   const res = await fetch(`${API_URL}/tin-nhan/${messageId}/nhac-hen`, {
@@ -289,11 +334,15 @@ export const setMessageAlarmAPI = async (messageId: string, remindAt: string) =>
     body: JSON.stringify({ remind_at: remindAt }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi đặt lịch nhắc hẹn tin nhắn");
+  if (!res.ok)
+    throw new Error(data.message || "Lỗi đặt lịch nhắc hẹn tin nhắn");
   return data;
 };
 
-export const transferGroupOwnershipAPI = async (groupId: string, newLeaderId: string) => {
+export const transferGroupOwnershipAPI = async (
+  groupId: string,
+  newLeaderId: string,
+) => {
   const token = getToken();
   if (!token) throw new Error("Phiên đăng nhập đã hết hạn");
   const res = await fetch(`${API_URL}/tin-nhan/${groupId}/chuyen-truong-nhom`, {
@@ -305,11 +354,15 @@ export const transferGroupOwnershipAPI = async (groupId: string, newLeaderId: st
     body: JSON.stringify({ new_leader_id: newLeaderId }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi chuyển giao quyền Trưởng nhóm");
+  if (!res.ok)
+    throw new Error(data.message || "Lỗi chuyển giao quyền Trưởng nhóm");
   return data;
 };
 
-export const setGroupSlowModeAPI = async (groupId: string, delaySeconds: number) => {
+export const setGroupSlowModeAPI = async (
+  groupId: string,
+  delaySeconds: number,
+) => {
   const token = getToken();
   if (!token) throw new Error("Phiên đăng nhập đã hết hạn");
   const res = await fetch(`${API_URL}/tin-nhan/${groupId}/che-do-cham`, {
@@ -321,7 +374,8 @@ export const setGroupSlowModeAPI = async (groupId: string, delaySeconds: number)
     body: JSON.stringify({ delay_seconds: delaySeconds }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể cập nhật chế độ tin nhắn chậm");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể cập nhật chế độ tin nhắn chậm");
   return data;
 };
 
@@ -332,11 +386,15 @@ export const exportChatHistoryAPI = async (otherUserId: string) => {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải lịch sử trò chuyện");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải lịch sử trò chuyện");
   return data;
 };
 
-export const setAutoReplyAPI = async (autoReplyText: string, isEnabled: boolean = true) => {
+export const setAutoReplyAPI = async (
+  autoReplyText: string,
+  isEnabled: boolean = true,
+) => {
   const token = getToken();
   if (!token) throw new Error("Phiên đăng nhập đã hết hạn");
   const res = await fetch(`${API_URL}/tin-nhan/ca-nhan/tra-loi-tu-dong`, {
@@ -345,14 +403,21 @@ export const setAutoReplyAPI = async (autoReplyText: string, isEnabled: boolean 
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ auto_reply_text: autoReplyText, is_enabled: isEnabled }),
+    body: JSON.stringify({
+      auto_reply_text: autoReplyText,
+      is_enabled: isEnabled,
+    }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể cấu hình tin nhắn tự động");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể cấu hình tin nhắn tự động");
   return data;
 };
 
-export const manageGroupPermissionsAPI = async (groupId: string, adminOnly: boolean) => {
+export const manageGroupPermissionsAPI = async (
+  groupId: string,
+  adminOnly: boolean,
+) => {
   const token = getToken();
   if (!token) throw new Error("Phiên đăng nhập đã hết hạn");
   const res = await fetch(`${API_URL}/tin-nhan/${groupId}/quyen-gui-tin-nhan`, {
@@ -364,11 +429,16 @@ export const manageGroupPermissionsAPI = async (groupId: string, adminOnly: bool
     body: JSON.stringify({ admin_only: adminOnly }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi phân quyền gửi tin nhắn nhóm");
+  if (!res.ok)
+    throw new Error(data.message || "Lỗi phân quyền gửi tin nhắn nhóm");
   return data;
 };
 
-export const createGroupEventAPI = async (groupId: string, title: string, eventTime: string) => {
+export const createGroupEventAPI = async (
+  groupId: string,
+  title: string,
+  eventTime: string,
+) => {
   const token = getToken();
   if (!token) throw new Error("Phiên đăng nhập đã hết hạn");
   const res = await fetch(`${API_URL}/tin-nhan/${groupId}/su-kien`, {
@@ -384,7 +454,10 @@ export const createGroupEventAPI = async (groupId: string, title: string, eventT
   return data;
 };
 
-export const setVipPriorityAPI = async (otherUserId: string, isVip: boolean = true) => {
+export const setVipPriorityAPI = async (
+  otherUserId: string,
+  isVip: boolean = true,
+) => {
   const token = getToken();
   if (!token) throw new Error("Phiên đăng nhập đã hết hạn");
   const res = await fetch(`${API_URL}/tin-nhan/${otherUserId}/uu-tien-vip`, {
@@ -396,11 +469,15 @@ export const setVipPriorityAPI = async (otherUserId: string, isVip: boolean = tr
     body: JSON.stringify({ is_vip: isVip }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể cập nhật thẻ ưu tiên VIP");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể cập nhật thẻ ưu tiên VIP");
   return data;
 };
 
-export const setAutoCleanScheduleAPI = async (otherUserId: string, days: number = 30) => {
+export const setAutoCleanScheduleAPI = async (
+  otherUserId: string,
+  days: number = 30,
+) => {
   const token = getToken();
   if (!token) throw new Error("Phiên đăng nhập đã hết hạn");
   const res = await fetch(`${API_URL}/tin-nhan/${otherUserId}/xoa-dinh-ky`, {
@@ -412,21 +489,28 @@ export const setAutoCleanScheduleAPI = async (otherUserId: string, days: number 
     body: JSON.stringify({ days }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể cấu hình lịch xóa định kỳ");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể cấu hình lịch xóa định kỳ");
   return data;
 };
 
-export const snoozeNotificationsAPI = async (otherUserId: string, minutes: number = 60) => {
+export const snoozeNotificationsAPI = async (
+  otherUserId: string,
+  minutes: number = 60,
+) => {
   const token = getToken();
   if (!token) throw new Error("Phiên đăng nhập đã hết hạn");
-  const res = await fetch(`${API_URL}/tin-nhan/${otherUserId}/tam-tat-thong-bao`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+  const res = await fetch(
+    `${API_URL}/tin-nhan/${otherUserId}/tam-tat-thong-bao`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ minutes }),
     },
-    body: JSON.stringify({ minutes }),
-  });
+  );
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Lỗi tắt thông báo tạm thời");
   return data;
@@ -435,11 +519,15 @@ export const snoozeNotificationsAPI = async (otherUserId: string, minutes: numbe
 export const getMediaVaultAPI = async (otherUserId: string) => {
   const token = getToken();
   if (!token) throw new Error("Phiên đăng nhập đã hết hạn");
-  const res = await fetch(`${API_URL}/tin-nhan/${otherUserId}/kho-phuong-tien`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const res = await fetch(
+    `${API_URL}/tin-nhan/${otherUserId}/kho-phuong-tien`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải kho phương tiện & tệp");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải kho phương tiện & tệp");
   return data;
 };
 
@@ -451,11 +539,16 @@ export const clearChatStorageAPI = async (otherUserId: string) => {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi dọn dẹp dung lượng trò chuyện");
+  if (!res.ok)
+    throw new Error(data.message || "Lỗi dọn dẹp dung lượng trò chuyện");
   return data;
 };
 
-export const setDeputyAdminAPI = async (groupId: string, deputyUserId: string, isDeputy: boolean = true) => {
+export const setDeputyAdminAPI = async (
+  groupId: string,
+  deputyUserId: string,
+  isDeputy: boolean = true,
+) => {
   const token = getToken();
   if (!token) throw new Error("Phiên đăng nhập đã hết hạn");
   const res = await fetch(`${API_URL}/tin-nhan/nhom/${groupId}/pho-nhom`, {
@@ -483,7 +576,8 @@ export const setGroupRulesAPI = async (groupId: string, rules: string) => {
     body: JSON.stringify({ rules }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể thiết lập Nội quy nhóm");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể thiết lập Nội quy nhóm");
   return data;
 };
 
@@ -494,11 +588,16 @@ export const getGroupActivityLogAPI = async (groupId: string) => {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải nhật ký hoạt động nhóm");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải nhật ký hoạt động nhóm");
   return data;
 };
 
-export const setQuietHoursAPI = async (startHour: number = 22, endHour: number = 7, isEnabled: boolean = true) => {
+export const setQuietHoursAPI = async (
+  startHour: number = 22,
+  endHour: number = 7,
+  isEnabled: boolean = true,
+) => {
   const token = getToken();
   if (!token) throw new Error("Phiên đăng nhập đã hết hạn");
   const res = await fetch(`${API_URL}/tin-nhan/ca-nhan/khung-gio-yen-tinh`, {
@@ -507,14 +606,22 @@ export const setQuietHoursAPI = async (startHour: number = 22, endHour: number =
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ start_hour: startHour, end_hour: endHour, is_enabled: isEnabled }),
+    body: JSON.stringify({
+      start_hour: startHour,
+      end_hour: endHour,
+      is_enabled: isEnabled,
+    }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể cấu hình khung giờ yên tĩnh");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể cấu hình khung giờ yên tĩnh");
   return data;
 };
 
-export const setAutoTranslateAPI = async (targetLang: string = "vi", isEnabled: boolean = true) => {
+export const setAutoTranslateAPI = async (
+  targetLang: string = "vi",
+  isEnabled: boolean = true,
+) => {
   const token = getToken();
   if (!token) throw new Error("Phiên đăng nhập đã hết hạn");
   const res = await fetch(`${API_URL}/tin-nhan/ca-nhan/tu-dong-dich`, {
@@ -526,14 +633,10 @@ export const setAutoTranslateAPI = async (targetLang: string = "vi", isEnabled: 
     body: JSON.stringify({ target_lang: targetLang, is_enabled: isEnabled }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể cấu hình tự động dịch tin nhắn");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể cấu hình tự động dịch tin nhắn");
   return data;
 };
-
-
-
-
-
 
 export const searchMessagesAPI = async (otherUserId: string, q: string) => {
   const token = getToken();
@@ -545,7 +648,8 @@ export const searchMessagesAPI = async (otherUserId: string, q: string) => {
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi truy vấn cơ sở dữ liệu thông điệp");
+  if (!res.ok)
+    throw new Error(data.message || "Lỗi truy vấn cơ sở dữ liệu thông điệp");
   return data;
 };
 
@@ -556,7 +660,7 @@ export const globalSearchAPI = async (q: string) => {
     `${API_URL}/tin-nhan/tim-kiem-toan-cuc?q=${encodeURIComponent(q)}`,
     {
       headers: { Authorization: `Bearer ${token}` },
-    }
+    },
   );
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Lỗi tìm kiếm toàn cục");
@@ -576,7 +680,9 @@ export const addReactionAPI = async (messageId: string, reaction: string) => {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể cập nhật trường dữ liệu tương tác biểu tượng");
+    throw new Error(
+      data.message || "Không thể cập nhật trường dữ liệu tương tác biểu tượng",
+    );
   return data;
 };
 
@@ -588,7 +694,10 @@ export const markAsReadAPI = async (otherUserId: string) => {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể cập nhật trạng thái đọc của người dùng");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể cập nhật trạng thái đọc của người dùng",
+    );
   return data;
 };
 
@@ -610,7 +719,10 @@ export const shareDocumentAPI = async (
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể thiết lập quyền truy cập tài liệu liên kết");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể thiết lập quyền truy cập tài liệu liên kết",
+    );
   return data;
 };
 
@@ -624,7 +736,10 @@ export const getSharedAttachmentsAPI = async (otherUserId: string) => {
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách tập tin đính kèm chia sẻ");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể tải danh sách tập tin đính kèm chia sẻ",
+    );
   return data;
 };
 
@@ -636,7 +751,10 @@ export const blockUserAPI = async (otherUserId: string) => {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể thiết lập quy tắc hạn chế người dùng");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể thiết lập quy tắc hạn chế người dùng",
+    );
   return data;
 };
 
@@ -648,7 +766,8 @@ export const unblockUserAPI = async (otherUserId: string) => {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể xóa quy tắc hạn chế người dùng");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể xóa quy tắc hạn chế người dùng");
   return data;
 };
 
@@ -662,7 +781,8 @@ export const getBlockedStatusAPI = async (otherUserId: string) => {
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải trạng thái quy tắc hạn chế");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải trạng thái quy tắc hạn chế");
   return data;
 };
 
@@ -677,7 +797,22 @@ export const togglePinConversationAPI = async (otherUserId: string) => {
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể cập nhật trạng thái ghim luồng hội thoại");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể cập nhật trạng thái ghim luồng hội thoại",
+    );
+  return data;
+};
+
+export const getPinnedMessagesAPI = async (otherUserId: string) => {
+  const token = getToken();
+  if (!token) throw new Error("Phiên đăng nhập đã hết hạn");
+  const res = await fetch(`${API_URL}/tin-nhan/${otherUserId}/tin-nhan-ghim`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải tin nhắn đã ghim");
   return data;
 };
 
@@ -696,7 +831,10 @@ export const translateMessageAPI = async (
     body: JSON.stringify({ target_lang: targetLang }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể thực hiện luồng phiên dịch thông điệp");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể thực hiện luồng phiên dịch thông điệp",
+    );
   return data;
 };
 
@@ -715,7 +853,8 @@ export const createGroupAPI = async (
     body: JSON.stringify({ group_name: groupName, member_ids: memberIds }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tạo luồng hội thoại nhóm");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tạo luồng hội thoại nhóm");
   return data;
 };
 
@@ -731,17 +870,27 @@ export const addGroupMemberAPI = async (groupId: string, userId: string) => {
     body: JSON.stringify({ user_id: userId }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể cập nhật danh sách thành viên nhóm");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể cập nhật danh sách thành viên nhóm",
+    );
   return data;
 };
 
-export const removeGroupMemberAPI = async (groupId: string, userId: string, silent: boolean = false) => {
+export const removeGroupMemberAPI = async (
+  groupId: string,
+  userId: string,
+  silent: boolean = false,
+) => {
   const token = getToken();
   if (!token) throw new Error("Phiên đăng nhập đã hết hạn");
-  const res = await fetch(`${API_URL}/tin-nhan/nhom/${groupId}/thanh-vien/${userId}?silent=${silent}`, {
-    method: "DELETE",
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const res = await fetch(
+    `${API_URL}/tin-nhan/nhom/${groupId}/thanh-vien/${userId}?silent=${silent}`,
+    {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Lỗi xóa thành viên khỏi nhóm");
   return data;
@@ -759,11 +908,16 @@ export const updateGroupSettingsAPI = async (groupId: string, updates: any) => {
     body: JSON.stringify(updates),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể cập nhật thiết lập nhóm");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể cập nhật thiết lập nhóm");
   return data;
 };
 
-export const updateGroupInfoAPI = async (groupId: string, groupName: string, avatarUrl: string) => {
+export const updateGroupInfoAPI = async (
+  groupId: string,
+  groupName: string,
+  avatarUrl: string,
+) => {
   const token = getToken();
   if (!token) throw new Error("Phiên đăng nhập đã hết hạn");
   const res = await fetch(`${API_URL}/tin-nhan/nhom/${groupId}/thong-tin`, {
@@ -775,11 +929,15 @@ export const updateGroupInfoAPI = async (groupId: string, groupName: string, ava
     body: JSON.stringify({ group_name: groupName, avatar_url: avatarUrl }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể cập nhật thông tin nhóm");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể cập nhật thông tin nhóm");
   return data;
 };
 
-export const forwardMessageAPI = async (messageId: string, receiverIds: string[]) => {
+export const forwardMessageAPI = async (
+  messageId: string,
+  receiverIds: string[],
+) => {
   const token = getToken();
   if (!token) throw new Error("Phiên đăng nhập đã hết hạn");
   const res = await fetch(`${API_URL}/tin-nhan/chuyen-tiep`, {
@@ -795,7 +953,11 @@ export const forwardMessageAPI = async (messageId: string, receiverIds: string[]
   return data;
 };
 
-export const createPollAPI = async (receiverId: string, question: string, options: string[]) => {
+export const createPollAPI = async (
+  receiverId: string,
+  question: string,
+  options: string[],
+) => {
   const token = getToken();
   if (!token) throw new Error("Phiên đăng nhập đã hết hạn");
   const res = await fetch(`${API_URL}/tin-nhan/binh-chon`, {
@@ -814,14 +976,17 @@ export const createPollAPI = async (receiverId: string, question: string, option
 export const votePollAPI = async (messageId: string, optionId: string) => {
   const token = getToken();
   if (!token) throw new Error("Phiên đăng nhập đã hết hạn");
-  const res = await fetch(`${API_URL}/tin-nhan/binh-chon/${messageId}/bo-phieu`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+  const res = await fetch(
+    `${API_URL}/tin-nhan/binh-chon/${messageId}/bo-phieu`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ option_id: optionId }),
     },
-    body: JSON.stringify({ option_id: optionId }),
-  });
+  );
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Lỗi bỏ phiếu");
   return data;
@@ -839,7 +1004,10 @@ export const saveDraftAPI = async (otherUserId: string, content: string) => {
     body: JSON.stringify({ content }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể lưu dữ liệu thông điệp tạm thời");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể lưu dữ liệu thông điệp tạm thời",
+    );
   return data;
 };
 
@@ -850,7 +1018,10 @@ export const getDraftAPI = async (otherUserId: string) => {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải bản ghi thông điệp tạm thời");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể tải bản ghi thông điệp tạm thời",
+    );
   return data;
 };
 
@@ -869,7 +1040,10 @@ export const toggleSelfDestructAPI = async (
     body: JSON.stringify({ seconds }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể thiết lập bộ đếm vòng đời thông điệp");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể thiết lập bộ đếm vòng đời thông điệp",
+    );
   return data;
 };
 
@@ -881,7 +1055,10 @@ export const toggleMuteAPI = async (otherUserId: string) => {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi thay đổi trạng thái cấu hình thông báo luồng");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Lỗi thay đổi trạng thái cấu hình thông báo luồng",
+    );
   return data;
 };
 
@@ -892,11 +1069,15 @@ export const getConversationSettingsAPI = async (otherUserId: string) => {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải bộ thông số cấu hình luồng");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải bộ thông số cấu hình luồng");
   return data;
 };
 
-export const updateConversationSettingsAPI = async (otherUserId: string, updates: any) => {
+export const updateConversationSettingsAPI = async (
+  otherUserId: string,
+  updates: any,
+) => {
   const token = getToken();
   if (!token) throw new Error("Phiên đăng nhập đã hết hạn");
   const res = await fetch(`${API_URL}/tin-nhan/${otherUserId}/cai-dat`, {
@@ -908,7 +1089,10 @@ export const updateConversationSettingsAPI = async (otherUserId: string, updates
     body: JSON.stringify(updates),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể cập nhật cấu hình cuộc trò chuyện");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể cập nhật cấu hình cuộc trò chuyện",
+    );
   return data;
 };
 
@@ -923,7 +1107,10 @@ export const deleteConversationAPI = async (otherUserId: string) => {
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể xóa toàn bộ dữ liệu luồng hội thoại");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể xóa toàn bộ dữ liệu luồng hội thoại",
+    );
   return data;
 };
 
@@ -962,16 +1149,23 @@ export const getQuickRepliesAPI = async (otherUserId: string) => {
 export const markUnreadAPI = async (otherUserId: string) => {
   const token = getToken();
   if (!token) throw new Error("Phiên đăng nhập đã hết hạn");
-  const res = await fetch(`${API_URL}/tin-nhan/${otherUserId}/danh-dau-chua-doc`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const res = await fetch(
+    `${API_URL}/tin-nhan/${otherUserId}/danh-dau-chua-doc`,
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi đánh dấu chưa đọc cuộc trò chuyện");
+  if (!res.ok)
+    throw new Error(data.message || "Lỗi đánh dấu chưa đọc cuộc trò chuyện");
   return data;
 };
 
-export const setDisappearingTimerAPI = async (otherUserId: string, timerSeconds: number) => {
+export const setDisappearingTimerAPI = async (
+  otherUserId: string,
+  timerSeconds: number,
+) => {
   const token = getToken();
   if (!token) throw new Error("Phiên đăng nhập đã hết hạn");
   const res = await fetch(`${API_URL}/tin-nhan/${otherUserId}/tu-xoa`, {
@@ -983,6 +1177,7 @@ export const setDisappearingTimerAPI = async (otherUserId: string, timerSeconds:
     body: JSON.stringify({ timer_seconds: timerSeconds }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể cấu hình tự xóa tin nhắn");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể cấu hình tự xóa tin nhắn");
   return data;
 };

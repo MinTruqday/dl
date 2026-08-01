@@ -1,7 +1,7 @@
 export default class DocLibIndentTune {
   static readonly feature = {
     id: "DocLibIndent",
-    title: "DocLib Indent",
+    title: "Thụt lề",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="2f7b086539fff469"><rect x="2" y="2" width="20" height="20" rx="3"/><polyline points="17,8 12,20 10,4 10,7 13,17 19,5"/></svg>',
     product: "doclib",
   } as const;

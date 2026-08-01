@@ -448,5 +448,17 @@ class HealthService:
         return result
 
     @staticmethod
+    async def update_admin_report(report_id: str, status: str, current_user) -> dict:
+        now = datetime.now(timezone.utc)
+        result = await ModerationRepository.update_report(
+            {"_id": report_id},
+            {"$set": {"status": status, "resolved_at": now, "resolved_by": str(current_user.id)}},
+        )
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Không tìm thấy báo cáo yêu cầu")
+        await HealthService._audit(current_user, "report.update", report_id, {"status": status})
+        return {"report_id": report_id, "status": status}
+
+    @staticmethod
     async def _audit(current_user, action: str, target_id: str, details: dict):
         await SystemRepository.insert_audit_log({"_id": str(uuid7()), "actor_id": str(current_user.id), "action": action, "target_id": target_id, "details": details, "timestamp": datetime.now(timezone.utc)})

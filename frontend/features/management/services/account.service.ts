@@ -8,7 +8,10 @@ export async function getMyProfileAPI() {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải thông tin định danh cá nhân");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể tải thông tin định danh cá nhân",
+    );
   return data;
 }
 
@@ -26,7 +29,8 @@ export async function updateMyProfileAPI(data: {
     body: JSON.stringify(data),
   });
   const result = await res.json();
-  if (!res.ok) throw new Error(result.message || "Không thể lưu dữ liệu hồ sơ cá nhân");
+  if (!res.ok)
+    throw new Error(result.message || "Không thể lưu dữ liệu hồ sơ cá nhân");
   return result;
 }
 

@@ -26,6 +26,7 @@ class Settings(BaseModel):
     MINIO_SECRET_KEY: str = os.getenv("MINIO_SECRET_KEY", "")
     MINIO_PRIVATE_BUCKET: str = os.getenv("MINIO_PRIVATE_BUCKET", "doclib-private")
     MINIO_PUBLIC_BUCKET: str = os.getenv("MINIO_PUBLIC_BUCKET", "doclib-public")
+    MINIO_LEGACY_BUCKET: str = os.getenv("MINIO_LEGACY_BUCKET", "doclib-books")
     MINIO_REGION: str = os.getenv("MINIO_REGION", "us-east-1")
     MINIO_PUBLIC_URL: Optional[str] = os.getenv("MINIO_PUBLIC_URL")
     MIN_FILE_SIZE_BYTES: int = int(os.getenv("MIN_FILE_SIZE_BYTES", "1"))
@@ -36,5 +37,6 @@ class Settings(BaseModel):
     CLOUD_DB_NAME: str = os.getenv("CLOUD_DB_NAME", "doclib_cloud")
     HUMANITY_DB_NAME: str = os.getenv("HUMANITY_DB_NAME", "doclib_humanity")
     USAGE_DB_NAME: str = os.getenv("USAGE_DB_NAME", "doclib_usage")
+    MESSAGING_DB_NAME: str = os.getenv("MESSAGING_DB_NAME", "doclib_messaging")
 
 settings = Settings()

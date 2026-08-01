@@ -18,7 +18,9 @@ export async function getMyQuotaAPI(): Promise<QuotaUsage> {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải thông tin hạn mức tài nguyên");
+    throw new Error(
+      data.message || "Không thể tải thông tin hạn mức tài nguyên",
+    );
   return data.data;
 }
 
@@ -29,7 +31,10 @@ export async function updateRoleQuotaAPI(role: string, limits: any) {
     body: JSON.stringify(limits),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể lưu cấu hình hạn mức tài nguyên");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể lưu cấu hình hạn mức tài nguyên",
+    );
   return data;
 }
 
@@ -38,6 +43,7 @@ export async function getGlobalQuotaConfigAPI() {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải cấu hình hạn mức toàn cục");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải cấu hình hạn mức toàn cục");
   return data.data;
 }

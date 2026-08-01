@@ -9,7 +9,7 @@ from uuid import UUID
 
 import aiofiles
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, Response
 
 from src.api.dependency import get_db, require_role
 from src.core.dependency import CurrentUser, Role, Tier
@@ -18,7 +18,7 @@ from src.core.infrastructure.database import database
 from src.core.infrastructure.redis import redis
 from src.core.logging_route import LoggingRoute
 from src.core.response import APIResponse
-from src.core.storage import get_bucket, get_storage_client
+from src.core.storage import download_file, get_bucket, get_storage_client
 from src.schemas.storage import StorageItemCreate
 from src.schemas.upload import ConfirmUploadRequest, PresignedUrlRequest
 from src.services.storage import StorageService
@@ -83,6 +83,35 @@ async def can_download(file_path: str, user_id: str, role: Role) -> bool:
         "$or": [{"owner_id": user_id}, {"shared_with.user_id": user_id}],
     }
     if await db.storage_items.find_one(query, {"_id": 1}):
+        return True
+    messaging = database.mongodb[settings.MESSAGING_DB_NAME]
+    groups = await messaging.message_groups.find(
+        {"members": user_id}, {"_id": 1}
+    ).to_list(length=None)
+    group_ids = [str(group["_id"]) for group in groups]
+    message = await messaging.messages.find_one(
+        {
+            "$and": [
+                {
+                    "$or": [
+                        {"image_url": file_path},
+                        {"audio_url": file_path},
+                        {"attachments.url": file_path},
+                        {"attachments.file_url": file_path},
+                    ]
+                },
+                {
+                    "$or": [
+                        {"sender_id": user_id},
+                        {"receiver_id": user_id},
+                        {"receiver_id": {"$in": group_ids}},
+                    ]
+                },
+            ]
+        },
+        {"_id": 1},
+    )
+    if message:
         return True
     return role == Role.ADMIN and file_path.startswith("system/")
 
@@ -204,6 +233,14 @@ async def get_presigned_download_url(file_path: str, current_user: CurrentUser =
         raise HTTPException(status_code=403, detail="Không có quyền tải xuống tệp này")
     url_data = await UploadService.get_presigned_url(file_path)
     return RedirectResponse(url=url_data["download_url"], status_code=302)
+
+
+@router.get("/noi-dung/{file_path:path}")
+async def get_message_attachment_content(file_path: str, current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER]))):
+    if not await can_download(file_path, current_user.id, current_user.role):
+        raise HTTPException(status_code=403, detail="Không có quyền tải xuống tệp này")
+    content, content_type = await download_file(file_path)
+    return Response(content=content, media_type=content_type)
 
 
 @router.post("/phan-doan", response_model=APIResponse[Any], status_code=201)

@@ -3,7 +3,7 @@ import { API, InlineTool } from "@editorjs/editorjs";
 export default class DocLibTextHighlight implements InlineTool {
   static readonly feature = {
     id: "DocLibTextHighlight",
-    title: "DocLib TextHighlight",
+    title: "Tô sáng",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="a21b4ad9c88e1fea"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="13,14 10,17 17,10 18,17 9,20 5,19"/></svg>',
     product: "doclib",
   } as const;

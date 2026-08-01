@@ -9,7 +9,7 @@ from src.services.telemetry import TelemetryService
 
 from src.core.response import APIResponse
 from src.core.dependency import Role
-from src.schemas.operation import ShadowbanUpdate, SystemConfigUpdate
+from src.schemas.operation import ReportStatusUpdate, ShadowbanUpdate, SystemConfigUpdate
 
 router = APIRouter(route_class=LoggingRoute, prefix="/van-hanh")
 
@@ -94,6 +94,22 @@ async def get_admin_reports(db=Depends(get_db)):
     return APIResponse(
         data=await HealthService.get_admin_reports(),
         message="Trích xuất danh sách báo cáo vi phạm hoàn tất",
+    )
+
+@router.patch(
+    "/bao-cao/{report_id}",
+    response_model=APIResponse[Any],
+    dependencies=[Depends(require_role([Role.ADMIN]))],
+)
+async def update_admin_report(
+    report_id: str,
+    payload: ReportStatusUpdate,
+    current_user: CurrentUser = Depends(get_current_user),
+    db=Depends(get_db),
+):
+    return APIResponse(
+        data=await HealthService.update_admin_report(report_id, payload.status, current_user),
+        message="Cập nhật trạng thái báo cáo hoàn tất",
     )
 
 @router.post(

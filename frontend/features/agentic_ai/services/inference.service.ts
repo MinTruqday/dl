@@ -13,7 +13,10 @@ export async function translateTextAPI(
     body: JSON.stringify({ text, target_lang: targetLang }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Translation inference failed");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể dịch nội dung",
+    );
   return data;
 }
 
@@ -24,7 +27,10 @@ export async function grammarCheckAPI(text: string) {
     body: JSON.stringify({ text }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Grammar analysis inference failed");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể kiểm tra ngữ pháp",
+    );
   return data;
 }
 
@@ -35,7 +41,10 @@ export async function getSynonymsAPI(text: string) {
     body: JSON.stringify({ text }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Synonym extraction failed");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể tìm từ đồng nghĩa",
+    );
   return data;
 }
 
@@ -46,6 +55,37 @@ export async function generateCodeAPI(prompt: string) {
     body: JSON.stringify({ prompt }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Code generation inference failed");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể tạo mã nguồn",
+    );
   return data;
 }
+
+async function postInference(path: string, body: object) {
+  const res = await fetch(`${API_URL}${path}`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  if (!res.ok)
+    throw new Error(
+      typeof data.detail === "string"
+        ? data.detail
+        : data.message || "Không thể xử lý nội dung",
+    );
+  return data;
+}
+
+export const summarizeTextAPI = (text: string) =>
+  postInference("/suy-luan/tom-tat", { text, language: "vi" });
+
+export const extractGlossaryAPI = (text: string) =>
+  postInference("/suy-luan/giai-thich-thuat-ngu", { text });
+
+export const factCheckTextAPI = (text: string) =>
+  postInference("/suy-luan/kiem-chung-su-that", { text });
+
+export const checkPlagiarismAPI = (content: string) =>
+  postInference("/suy-luan/kiem-tra-dao-van", { content });

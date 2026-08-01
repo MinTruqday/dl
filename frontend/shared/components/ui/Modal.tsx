@@ -120,7 +120,12 @@ export function ModalTitle({
   className?: string;
 }) {
   return (
-    <h3 className={cn("text-[20px] font-semibold tracking-[-0.02em] text-ink", className)}>
+    <h3
+      className={cn(
+        "text-[20px] font-semibold tracking-[-0.02em] text-ink",
+        className,
+      )}
+    >
       {children}
     </h3>
   );
@@ -152,7 +157,9 @@ export function ModalContent({
   children: React.ReactNode;
   className?: string;
 }) {
-  return <div className={cn("space-y-4 bg-surface p-6", className)}>{children}</div>;
+  return (
+    <div className={cn("space-y-4 bg-surface p-6", className)}>{children}</div>
+  );
 }
 
 export function ModalFooter({

@@ -79,4 +79,7 @@ class ShareService:
         item = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one({"_id": link["item_id"]})
         if not item:
             raise HTTPException(status_code=404, detail="Tệp gốc đã bị xóa")
+        if not item.get("is_folder") and item.get("url"):
+            from src.services.upload import UploadService
+            item.update(await UploadService.get_presigned_url(item["url"]))
         return {"item": item, "access_granted": True}

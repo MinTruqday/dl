@@ -30,7 +30,8 @@ export async function createHighlightAPI(
     body: JSON.stringify(bodyData),
   });
   const result = await res.json();
-  if (!res.ok) throw new Error(result.message || "Không thể tạo siêu dữ liệu đánh dấu");
+  if (!res.ok)
+    throw new Error(result.message || "Không thể tạo siêu dữ liệu đánh dấu");
   return result;
 }
 
@@ -65,7 +66,8 @@ export async function deleteHighlightAPI(highlightId: string) {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể xóa bản ghi đánh dấu");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể xóa bản ghi đánh dấu");
   return data;
 }
 
@@ -106,15 +108,21 @@ export async function updateReadingPreferencesAPI(data: {
   });
   const result = await res.json();
   if (!res.ok)
-    throw new Error(result.message || "Không thể lưu tham số cấu hình hiển thị");
+    throw new Error(
+      result.message || "Không thể lưu tham số cấu hình hiển thị",
+    );
   return result;
 }
 
 export async function exportHighlightsMarkdownAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/noi-bat/tai-lieu/${documentId}/ket-xuat`, {
-    headers: getAuthHeaders(),
-  });
+  const res = await fetch(
+    `${API_URL}/noi-bat/tai-lieu/${documentId}/ket-xuat`,
+    {
+      headers: getAuthHeaders(),
+    },
+  );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể xuất siêu dữ liệu đánh dấu");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể xuất siêu dữ liệu đánh dấu");
   return data;
 }

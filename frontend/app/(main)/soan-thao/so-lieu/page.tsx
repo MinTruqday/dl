@@ -1,579 +1,194 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { useToast } from "@/shared/contexts/ToastContext";
-import {
-  getDocumentAnalyticsAPI,
-  getAcademicMetricsAPI,
-} from "@/features/content/services/document.service";
-import { requestWithdrawalAPI } from "@/features/payment/services/withdrawal.service";
-import {
-  Eye,
-  Database,
-  Wallet,
-  Banknote,
-  Loader2,
-  BarChart3,
-  ArrowUpRight,
-  Clock,
-  Bookmark,
-  MessageSquare,
-  FileText,
-  Percent,
-  BookOpen,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import InlineState from "@/app/_components/InlineState";
+import MetricStrip from "@/app/_components/MetricStrip";
+import PageHeader from "@/app/_components/PageHeader";
+import PageLoader from "@/shared/components/common/PageLoader";
+import { Button } from "@/shared/components/ui/Button";
 import {
   Modal,
-  ModalHeader,
-  ModalTitle,
   ModalContent,
   ModalFooter,
-  ModalDescription,
+  ModalHeader,
+  ModalTitle,
 } from "@/shared/components/ui/Modal";
-import {
-  getAuthorRevenueAPI,
-  setDocumentPricingAPI,
-} from "@/features/payment/services/monetization.service";
-import PageLoader from "@/shared/components/common/PageLoader";
+import { useDocumentStatistics } from "./useDocumentStatistics";
+import DocumentWorkspaceNavigation from "../_components/DocumentWorkspaceNavigation";
 
-export default function StatsPage() {
-  const { showToast } = useToast();
-  const [stats, setStats] = useState<any>(null);
-  const [revenue, setRevenue] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [visible, setVisible] = useState(false);
+const format = new Intl.NumberFormat("vi-VN");
 
-  const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
-  const [selectedAnalytics, setSelectedAnalytics] = useState<any>(null);
-  const [selectedAcademic, setSelectedAcademic] = useState<any>(null);
-  const [loadingAnalytics, setLoadingAnalytics] = useState(false);
-
-  const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
-  const [withdrawalAmount, setWithdrawalAmount] = useState(0);
-  const [bankInfo, setBankInfo] = useState({
-    bank_name: "",
-    account_number: "",
-    account_name: "",
-  });
-  const [requestingWithdrawal, setRequestingWithdrawal] = useState(false);
-
-  const [showPricingModal, setShowPricingModal] = useState(false);
-  const [pricingDocId, setPricingDocId] = useState("");
-  const [pricingDocTitle, setPricingDocTitle] = useState("");
-  const [newPrice, setNewPrice] = useState(0);
-  const [settingPrice, setSettingPrice] = useState(false);
-
-  const fetchStatsData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const revData = await getAuthorRevenueAPI();
-      setRevenue(revData.data || revData);
-      setStats(revData.data || revData);
-    } catch {
-      showToast("Không thể tải số liệu phân tích", "error");
-    } finally {
-      setLoading(false);
-      requestAnimationFrame(() => setVisible(true));
-    }
-  }, [showToast]);
-
-  useEffect(() => {
-    fetchStatsData();
-  }, [fetchStatsData]);
-
-  const handleViewDeepAnalytics = async (
-    docId: string,
-    e: React.MouseEvent,
-  ) => {
-    e.stopPropagation();
-    setLoadingAnalytics(true);
-    setShowAnalyticsModal(true);
-    try {
-      const [analyticsData, academicData] = await Promise.all([
-        getDocumentAnalyticsAPI(docId).catch(() => null),
-        getAcademicMetricsAPI(docId).catch(() => null),
-      ]);
-      setSelectedAnalytics(analyticsData?.data || analyticsData);
-      setSelectedAcademic(academicData?.data || academicData);
-    } catch {
-      showToast("Không thể tải báo cáo chi tiết", "error");
-    } finally {
-      setLoadingAnalytics(false);
-    }
-  };
-
-  const handleSetPricing = async () => {
-    if (newPrice < 0) {
-      showToast("Lỗi sai lệch định dạng chuẩn giá trị", "error");
-      return;
-    }
-    setSettingPrice(true);
-    try {
-      await setDocumentPricingAPI(pricingDocId, newPrice);
-      showToast("Cập nhật cấu hình định giá hoàn tất", "success");
-      setShowPricingModal(false);
-    } catch (e: any) {
-      showToast(e.message || "Không thể cập nhật cấu hình định giá", "error");
-    } finally {
-      setSettingPrice(false);
-    }
-  };
-
-  const handleWithdrawal = async () => {
-    if (withdrawalAmount <= 0) {
-      showToast("Lỗi giá trị giao dịch không hợp lệ", "error");
-      return;
-    }
-    if (
-      !bankInfo.bank_name ||
-      !bankInfo.account_number ||
-      !bankInfo.account_name
-    ) {
-      showToast("Lỗi thiếu hụt trường thông tin thanh toán", "error");
-      return;
-    }
-    setRequestingWithdrawal(true);
-    try {
-      await requestWithdrawalAPI(withdrawalAmount, bankInfo);
-      showToast("Khởi tạo tiến trình giao dịch tài chính hoàn tất", "success");
-      setShowWithdrawalModal(false);
-      fetchStatsData();
-    } catch (e: any) {
-      showToast(e.message || "Không thể tạo tiến trình giao dịch tài chính", "error");
-    } finally {
-      setRequestingWithdrawal(false);
-    }
-  };
-
-  if (loading) return <PageLoader />;
-
+export default function DocumentStatisticsPage() {
+  const state = useDocumentStatistics();
+  const [price, setPrice] = useState(0);
+  useEffect(() => setPrice(state.selected?.price ?? 0), [state.selected]);
+  if (state.loading) return <PageLoader rows={6} />;
   return (
-    <div className="flex flex-col h-full font-sans">
-      <div
-        className={`bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:px-0 md:pt-6 flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-6 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}
-        style={{ transitionDelay: "100ms" }}
-      >
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 shrink-0">
-          {[
-            {
-              label: "Tổng lượt xem",
-              val: stats?.total_views || 0,
-              icon: Eye,
-              color: "text-brand",
-              bg: "bg-brand/10",
-            },
-            {
-              label: "Kinh nghiệm",
-              val: stats?.total_points || 0,
-              icon: Database,
-              color: "text-warning",
-              bg: "bg-warning/10",
-            },
-            {
-              label: "Doanh thu (dl)",
-              val: revenue?.available_balance || 0,
-              icon: Wallet,
-              color: "text-brand",
-              bg: "bg-brand/10",
-            },
-          ].map((s, i) => (
-            <div
-              key={i}
-              className="bg-white border border-border p-6 flex flex-col justify-between h-[140px] rounded-panel relative overflow-hidden"
-            >
-              <div className="flex justify-between items-start relative z-10">
-                <span className="text-[13px] font-medium text-ink-muted">
-                  {s.label}
-                </span>
-                <div
-                  className={`w-10 h-10 rounded-control ${s.bg} flex items-center justify-center`}
-                >
-                  <s.icon className={`w-5 h-5 ${s.color}`} />
-                </div>
-              </div>
-              <div className="flex items-end gap-3 relative z-10">
-                <h4 className="text-[32px] font-semibold text-ink">
-                  {s.val.toLocaleString()}
-                </h4>
-              </div>
-            </div>
-          ))}
+    <div className="w-full">
+      <DocumentWorkspaceNavigation />
+      <PageHeader title="Số liệu tài liệu" />
+      {state.error && (
+        <div className="mb-6">
+          <InlineState
+            title="Không thể xử lý số liệu"
+            detail={state.error}
+            tone="danger"
+            action={
+              <Button variant="secondary" onClick={state.reload}>
+                Tải lại
+              </Button>
+            }
+          />
         </div>
-
-        <div className="bg-white border border-border rounded-panel flex flex-col flex-1 min-h-0 overflow-hidden pb-6">
-          <div className="p-6 flex items-center gap-3 bg-white border-b border-border shrink-0">
-            <BarChart3 className="w-5 h-5 text-ink" />
-            <p className="text-[13px] font-medium text-ink-muted mb-4">
-              Hiệu suất tác phẩm
-            </p>
-          </div>
-          <div className="flex-1 overflow-auto custom-scrollbar">
-            {(stats?.documents || []).length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center p-12 text-center">
-                <div className="w-16 h-16 bg-surface-quiet flex items-center justify-center rounded-panel mb-4">
-                  <BookOpen className="w-8 h-8 text-ink-faint" />
-                </div>
-                <p className="text-[13px] font-medium text-ink-muted mb-2">
-                  Chưa có dữ liệu
-                </p>
-                <p className="text-[15px] text-ink-muted max-w-sm">
-                  Bạn chưa có tác phẩm nào phát sinh số liệu. Hãy xuất bản thêm
-                  nội dung.
-                </p>
-              </div>
-            ) : (
-              <table className="w-full text-left text-[15px] border-collapse min-w-[600px]">
-                <thead className="sticky top-0 bg-white z-10">
-                  <tr className="text-[13px] font-medium text-ink-muted">
-                    <th className="px-6 py-4 w-1/2">Tiêu đề tác phẩm</th>
-                    <th className="px-6 py-4 text-center">Lượt xem</th>
-                    <th className="px-6 py-4 text-center">Xếp hạng</th>
-                    <th className="px-6 py-4 text-right">Chi tiết</th>
+      )}
+      {state.notice && (
+        <div className="mb-6">
+          <InlineState
+            title={state.notice}
+            action={
+              <Button variant="ghost" onClick={state.clearNotice}>
+                Đóng
+              </Button>
+            }
+          />
+        </div>
+      )}
+      <MetricStrip
+        items={[
+          { label: "Lượt xem", value: format.format(state.data.total_views) },
+          {
+            label: "Doanh thu",
+            value: `${format.format(state.data.total_revenue)} dl`,
+          },
+          {
+            label: "Số dư",
+            value: `${format.format(state.data.available_balance)} dl`,
+          },
+          { label: "Tài liệu", value: state.data.documents.length },
+        ]}
+      />
+      <section className="mt-8">
+        <h2 className="mb-3 text-[17px] font-semibold text-ink">
+          Hiệu suất theo tài liệu
+        </h2>
+        {state.data.documents.length ? (
+          <div className="overflow-x-auto rounded-panel border border-border bg-surface">
+            <table className="w-full min-w-[680px] text-left">
+              <thead className="bg-surface-quiet text-[12px] font-semibold text-ink-muted">
+                <tr>
+                  <th className="px-4 py-3">Tài liệu</th>
+                  <th className="px-4 py-3 text-right">Lượt xem</th>
+                  <th className="px-4 py-3 text-right">Lượt mua</th>
+                  <th className="px-4 py-3 text-right">Giá</th>
+                  <th className="px-4 py-3 text-right">Doanh thu</th>
+                  <th className="px-4 py-3 text-right">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {state.data.documents.map((document) => (
+                  <tr key={document.id} className="text-[14px]">
+                    <td className="max-w-80 truncate px-4 py-3.5 font-semibold text-ink">
+                      {document.title}
+                    </td>
+                    <td className="px-4 py-3.5 text-right text-ink-muted">
+                      {format.format(document.views)}
+                    </td>
+                    <td className="px-4 py-3.5 text-right text-ink-muted">
+                      {format.format(document.purchases)}
+                    </td>
+                    <td className="px-4 py-3.5 text-right text-ink-muted">
+                      {format.format(document.price)} dl
+                    </td>
+                    <td className="px-4 py-3.5 text-right font-semibold text-ink">
+                      {format.format(document.revenue)} dl
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => state.inspect(document)}
+                      >
+                        Chi tiết
+                      </Button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {(stats?.documents || []).map((doc: any, idx: number) => (
-                    <tr
-                      key={doc.id || idx}
-                      onClick={(e) => handleViewDeepAnalytics(doc.id, e)}
-                      className="cursor-pointer hover:bg-surface-quiet transition-colors group"
-                    >
-                      <td className="px-6 py-4">
-                        <div className="font-semibold text-ink line-clamp-1">
-                          {doc.title}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className="inline-flex items-center justify-center px-3 py-1 bg-brand/10 text-brand text-[13px] font-medium rounded-full">
-                          {doc.views.toLocaleString()}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className="inline-flex items-center justify-center px-3 py-1 bg-warning/10 text-warning text-[13px] font-medium rounded-full">
-                          {doc.rating?.toFixed(1) || "0.0"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex justify-end items-center gap-2">
-                          <div
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setPricingDocId(doc.id);
-                              setPricingDocTitle(doc.title);
-                              setNewPrice(doc.price_dl || 0);
-                              setShowPricingModal(true);
-                            }}
-                            className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-border text-ink-muted transition-colors"
-                            title="Thiết lập giá"
-                          >
-                            <Banknote className="w-5 h-5" />
-                          </div>
-                          <div className="w-10 h-10 rounded-full flex items-center justify-center bg-surface-quiet group-hover:bg-brand group-hover:text-white text-ink transition-colors">
-                            <ArrowUpRight className="w-5 h-5" />
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+                ))}
+              </tbody>
+            </table>
           </div>
-        </div>
-      </div>
-
+        ) : (
+          <InlineState
+            title="Chưa có số liệu"
+            detail="Xuất bản tài liệu để bắt đầu ghi nhận lượt đọc"
+          />
+        )}
+      </section>
       <Modal
-        isOpen={showAnalyticsModal}
-        onClose={() => setShowAnalyticsModal(false)}
-        className="max-w-3xl"
-      >
-        <ModalHeader>
-          <ModalTitle className="flex items-center gap-2">
-            <BarChart3 className="w-5 h-5" /> Phân tích & Chỉ số học thuật
-          </ModalTitle>
-          <ModalDescription className="ml-7">
-            Báo cáo chi tiết hiệu suất tác phẩm
-          </ModalDescription>
-        </ModalHeader>
-        <ModalContent>
-          <div className="max-h-[70vh] overflow-y-auto custom-scrollbar">
-            {loadingAnalytics ? (
-              <div className="flex flex-col items-center justify-center py-24">
-                <Loader2 className="w-8 h-8 animate-spin text-brand mb-4" />
-                <p className="text-[13px] font-medium text-ink-muted">
-                  Đang phân tích dữ liệu
-                </p>
-              </div>
-            ) : (
-              <div className="p-6 space-y-8 bg-white">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 pb-3">
-                    <Eye className="w-5 h-5 text-ink" />
-                    <p className="text-[13px] font-medium text-ink-muted mb-4">
-                      Tương tác độc giả
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="p-5 bg-surface-quiet rounded-panel flex flex-col justify-between h-[120px]">
-                      <Eye className="w-5 h-5 text-brand mb-2" />
-                      <div>
-                        <p className="text-[12px] font-medium text-ink-muted mb-1">
-                          Lượt xem
-                        </p>
-                        <p className="text-[24px] font-semibold text-ink">
-                          {(selectedAnalytics?.views || 0).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="p-5 bg-surface-quiet rounded-panel flex flex-col justify-between h-[120px]">
-                      <Clock className="w-5 h-5 text-brand mb-2" />
-                      <div>
-                        <p className="text-[12px] font-medium text-ink-muted mb-1">
-                          Đọc TB
-                        </p>
-                        <p className="text-[24px] font-semibold text-ink">
-                          {selectedAnalytics?.avg_read_time || "0 phút"}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="p-5 bg-surface-quiet rounded-panel flex flex-col justify-between h-[120px]">
-                      <Bookmark className="w-5 h-5 text-brand mb-2" />
-                      <div>
-                        <p className="text-[12px] font-medium text-ink-muted mb-1">
-                          Lượt lưu
-                        </p>
-                        <p className="text-[24px] font-semibold text-ink">
-                          {selectedAnalytics?.saves || 0}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="p-5 bg-surface-quiet rounded-panel flex flex-col justify-between h-[120px]">
-                      <MessageSquare className="w-5 h-5 text-warning mb-2" />
-                      <div>
-                        <p className="text-[12px] font-medium text-ink-muted mb-1">
-                          Bình luận
-                        </p>
-                        <p className="text-[24px] font-semibold text-ink">
-                          {selectedAnalytics?.comments || 0}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 pb-3">
-                    <BookOpen className="w-5 h-5 text-ink" />
-                    <p className="text-[13px] font-medium text-ink-muted mb-4">
-                      Chỉ số học thuật
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-6 bg-surface-quiet rounded-panel flex items-center justify-between">
-                      <div>
-                        <p className="text-[12px] font-medium text-ink-muted mb-1">
-                          Tổng số từ
-                        </p>
-                        <p className="text-[24px] font-semibold text-ink">
-                          {(selectedAcademic?.word_count || 0).toLocaleString()}
-                        </p>
-                      </div>
-                      <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-                        <FileText className="w-5 h-5 text-ink" />
-                      </div>
-                    </div>
-                    <div className="p-6 bg-surface-quiet rounded-panel flex items-center justify-between">
-                      <div>
-                        <p className="text-[12px] font-medium text-ink-muted mb-1">
-                          Độ đọc hiểu
-                        </p>
-                        <p className="text-[24px] font-semibold text-ink flex items-baseline gap-1">
-                          {selectedAcademic?.readability_score || 0}
-                          <span className="text-[15px] text-ink-muted">
-                            /100
-                          </span>
-                        </p>
-                      </div>
-                      <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-                        <Percent className="w-5 h-5 text-ink" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </ModalContent>
-        <ModalFooter>
-          <button
-            onClick={() => setShowAnalyticsModal(false)}
-            className="h-[44px] px-8 bg-brand text-white text-[15px] font-medium rounded-full hover:bg-brand transition-colors"
-          >
-            Đóng báo cáo
-          </button>
-        </ModalFooter>
-      </Modal>
-
-      <Modal
-        isOpen={showWithdrawalModal}
-        onClose={() => !requestingWithdrawal && setShowWithdrawalModal(false)}
-      >
-        <ModalHeader className="bg-brand/10">
-          <ModalTitle className="flex items-center gap-2">
-            <Banknote className="w-5 h-5 text-brand" /> Yêu cầu rút tiền
-          </ModalTitle>
-          <ModalDescription className="ml-7">
-            Chuyển doanh thu về tài khoản ngân hàng
-          </ModalDescription>
-        </ModalHeader>
-        <ModalContent>
-          <div className="space-y-6">
-            <div className="bg-brand/10 p-4 rounded-control flex items-center justify-between border-brand/20">
-              <span className="text-[13px] font-medium text-ink">
-                Số dư khả dụng:
-              </span>
-              <span className="text-[17px] font-semibold text-brand">
-                {revenue?.available_balance || 0} dl
-              </span>
-            </div>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-[13px] font-medium text-ink">
-                  Số tiền cần rút (dl)
-                </label>
-                <div className="relative">
-                  <Banknote className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-ink-muted" />
-                  <input
-                    type="number"
-                    value={withdrawalAmount || ""}
-                    onChange={(e) =>
-                      setWithdrawalAmount(parseInt(e.target.value) || 0)
-                    }
-                    placeholder=""
-                    className="w-full h-[48px] pl-12 pr-4 text-[15px] text-ink rounded-control outline-none focus:border-brand bg-surface-quiet focus:bg-white transition-colors"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[13px] font-medium text-ink">
-                  Tên ngân hàng
-                </label>
-                <input
-                  value={bankInfo.bank_name}
-                  onChange={(e) =>
-                    setBankInfo({ ...bankInfo, bank_name: e.target.value })
-                  }
-                  placeholder=""
-                  className="w-full h-[48px] px-4 text-[15px] text-ink rounded-control outline-none focus:border-brand bg-surface-quiet focus:bg-white transition-colors"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[13px] font-medium text-ink">
-                  Số tài khoản
-                </label>
-                <input
-                  value={bankInfo.account_number}
-                  onChange={(e) =>
-                    setBankInfo({ ...bankInfo, account_number: e.target.value })
-                  }
-                  placeholder=""
-                  className="w-full h-[48px] px-4 text-[15px] text-ink rounded-control outline-none focus:border-brand bg-surface-quiet focus:bg-white transition-colors"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[13px] font-medium text-ink">
-                  Tên chủ tài khoản
-                </label>
-                <input
-                  value={bankInfo.account_name}
-                  onChange={(e) =>
-                    setBankInfo({ ...bankInfo, account_name: e.target.value })
-                  }
-                  placeholder=""
-                  className="w-full h-[48px] px-4 text-[15px] text-ink rounded-control outline-none focus:border-brand bg-surface-quiet focus:bg-white transition-colors uppercase"
-                />
-              </div>
-            </div>
-          </div>
-        </ModalContent>
-        <ModalFooter>
-          <button
-            onClick={() => setShowWithdrawalModal(false)}
-            disabled={requestingWithdrawal}
-            className="flex-1 h-[44px] bg-white text-[15px] font-medium text-ink rounded-full hover:bg-surface-quiet transition-colors disabled:opacity-50"
-          >
-            Hủy bỏ
-          </button>
-          <button
-            onClick={handleWithdrawal}
-            disabled={requestingWithdrawal || withdrawalAmount <= 0}
-            className="flex-1 h-[44px] bg-brand text-white text-[15px] font-medium rounded-full flex items-center justify-center hover:bg-brand transition-colors disabled:opacity-50 gap-2"
-          >
-            {requestingWithdrawal ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              "Gửi yêu cầu"
-            )}
-          </button>
-        </ModalFooter>
-      </Modal>
-
-      <Modal
-        isOpen={showPricingModal}
-        onClose={() => setShowPricingModal(false)}
+        isOpen={Boolean(state.selected)}
+        onClose={() => state.setSelected(null)}
       >
         <ModalHeader>
           <ModalTitle>
-            Thiết lập giá bán
+            {state.selected?.title || "Chi tiết tài liệu"}
           </ModalTitle>
-          <ModalDescription>
-            Thay đổi giá bán (dl) cho tác phẩm{" "}
-            <span className="font-semibold text-ink">
-              {pricingDocTitle}
-            </span>
-          </ModalDescription>
         </ModalHeader>
         <ModalContent>
-          <div className="space-y-2">
-            <label className="text-[13px] font-medium text-ink">
-              Giá bán mới (dl)
-            </label>
-            <div className="relative">
-              <input
-                type="number"
-                min="0"
-                value={newPrice}
-                onChange={(e) => setNewPrice(Number(e.target.value))}
-                className="w-full h-[52px] pl-4 pr-12 rounded-control text-[15px] font-medium bg-surface-quiet focus:bg-white focus:border-brand outline-none transition-all"
-                placeholder=""
-              />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[15px] font-medium text-ink-muted">
-                dl
-              </span>
+          {state.processing && !state.analytics ? (
+            <PageLoader rows={3} />
+          ) : (
+            <div className="space-y-5">
+              <dl className="grid grid-cols-2 gap-3">
+                {[
+                  [
+                    "Lượt xem",
+                    state.analytics?.views ?? state.selected?.views ?? 0,
+                  ],
+                  ["Thời gian đọc", state.analytics?.avg_read_time ?? "0 phút"],
+                  ["Lượt lưu", state.analytics?.saves ?? 0],
+                  ["Bình luận", state.analytics?.comments ?? 0],
+                  ["Số từ", state.academic?.word_count ?? 0],
+                  ["Điểm dễ đọc", state.academic?.readability_score ?? 0],
+                ].map(([label, value]) => (
+                  <div
+                    key={String(label)}
+                    className="rounded-control bg-surface-quiet p-4"
+                  >
+                    <dt className="text-[12px] text-ink-muted">{label}</dt>
+                    <dd className="mt-1 text-[18px] font-semibold text-ink">
+                      {typeof value === "number" ? format.format(value) : value}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+              <div>
+                <label
+                  htmlFor="document-price"
+                  className="mb-2 block text-[13px] font-semibold text-ink"
+                >
+                  Giá bán bằng dl
+                </label>
+                <input
+                  id="document-price"
+                  type="number"
+                  min={0}
+                  value={price}
+                  onChange={(event) => setPrice(Number(event.target.value))}
+                  className="apple-input w-full"
+                />
+              </div>
             </div>
-            <p className="text-[13px] text-ink-muted mt-2">
-              Lưu ý: Nhập 0 để phát hành miễn phí.
-            </p>
-          </div>
+          )}
         </ModalContent>
         <ModalFooter>
-          <button
-            onClick={() => setShowPricingModal(false)}
-            className="px-6 py-3 rounded-full text-[15px] font-medium text-ink hover:bg-surface-quiet transition-colors"
+          <Button variant="secondary" onClick={() => state.setSelected(null)}>
+            Đóng
+          </Button>
+          <Button
+            disabled={price < 0 || state.processing}
+            onClick={() => state.setPrice(price)}
           >
-            Hủy
-          </button>
-          <button
-            onClick={handleSetPricing}
-            disabled={settingPrice}
-            className="px-6 py-3 rounded-full bg-brand text-white text-[15px] font-medium disabled:opacity-50 flex items-center gap-2 hover:bg-brand transition-colors"
-          >
-            {settingPrice ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <Banknote className="w-5 h-5" />
-            )}{" "}
-            Xác nhận
-          </button>
+            {state.processing ? "Đang lưu" : "Lưu giá"}
+          </Button>
         </ModalFooter>
       </Modal>
     </div>

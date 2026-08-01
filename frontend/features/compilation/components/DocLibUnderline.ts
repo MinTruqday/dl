@@ -3,7 +3,7 @@ import { API, InlineTool } from "@editorjs/editorjs";
 export default class DocLibUnderline implements InlineTool {
   static readonly feature = {
     id: "DocLibUnderline",
-    title: "DocLib Underline",
+    title: "Gạch chân",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="15e98a919845814a"><rect x="6" y="6" width="12" height="12" rx="3"/><polyline points="8,16 6,13 20,5 14,10 8,8 7,20"/></svg>',
     product: "doclib",
   } as const;

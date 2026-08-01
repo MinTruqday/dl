@@ -5,7 +5,10 @@ import {
 
 const authHeaders = () => {
   const token = getToken();
-  if (!token) throw new Error("MODULE AGENTIC_AI: Authentication token missing for finetuning job");
+  if (!token)
+    throw new Error(
+      "MODULE AGENTIC_AI: Authentication token missing for finetuning job",
+    );
   return {
     "Content-Type": "application/json",
     Authorization: `Bearer ${token}`,
@@ -23,7 +26,10 @@ export const createDatasetAPI = async (
     body: JSON.stringify({ name, description, source }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Failed to create dataset");
+  if (!res.ok)
+    throw new Error(
+      data.message || "MODULE AGENTIC_AI: Failed to create dataset",
+    );
   return data;
 };
 
@@ -32,7 +38,10 @@ export const listDatasetsAPI = async () => {
     headers: authHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Failed to fetch datasets");
+  if (!res.ok)
+    throw new Error(
+      data.message || "MODULE AGENTIC_AI: Failed to fetch datasets",
+    );
   return data;
 };
 
@@ -41,7 +50,10 @@ export const getDatasetAPI = async (datasetId: string) => {
     headers: authHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Failed to fetch dataset details");
+  if (!res.ok)
+    throw new Error(
+      data.message || "MODULE AGENTIC_AI: Failed to fetch dataset details",
+    );
   return data;
 };
 
@@ -51,7 +63,10 @@ export const deleteDatasetAPI = async (datasetId: string) => {
     headers: authHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Failed to delete dataset");
+  if (!res.ok)
+    throw new Error(
+      data.message || "MODULE AGENTIC_AI: Failed to delete dataset",
+    );
   return data;
 };
 
@@ -65,7 +80,10 @@ export const addSamplesAPI = async (datasetId: string, samples: any[]) => {
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Failed to add samples to dataset");
+  if (!res.ok)
+    throw new Error(
+      data.message || "MODULE AGENTIC_AI: Failed to add samples to dataset",
+    );
   return data;
 };
 
@@ -79,7 +97,10 @@ export const getSamplesAPI = async (
     { headers: authHeaders() },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Failed to fetch dataset samples");
+  if (!res.ok)
+    throw new Error(
+      data.message || "MODULE AGENTIC_AI: Failed to fetch dataset samples",
+    );
   return data;
 };
 
@@ -89,7 +110,10 @@ export const deleteSampleAPI = async (datasetId: string, sampleId: string) => {
     { method: "DELETE", headers: authHeaders() },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Failed to delete dataset sample");
+  if (!res.ok)
+    throw new Error(
+      data.message || "MODULE AGENTIC_AI: Failed to delete dataset sample",
+    );
   return data;
 };
 
@@ -99,7 +123,11 @@ export const importFromFeedbackAPI = async () => {
     headers: authHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Failed to import samples from feedback");
+  if (!res.ok)
+    throw new Error(
+      data.message ||
+        "MODULE AGENTIC_AI: Failed to import samples from feedback",
+    );
   return data;
 };
 
@@ -110,7 +138,11 @@ export const importFromDocumentsAPI = async (documentIds: string[]) => {
     body: JSON.stringify({ document_ids: documentIds }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Failed to import samples from documents");
+  if (!res.ok)
+    throw new Error(
+      data.message ||
+        "MODULE AGENTIC_AI: Failed to import samples from documents",
+    );
   return data;
 };
 
@@ -121,7 +153,10 @@ export const createJobAPI = async (config: any) => {
     body: JSON.stringify(config),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Failed to create finetuning job");
+  if (!res.ok)
+    throw new Error(
+      data.message || "MODULE AGENTIC_AI: Failed to create finetuning job",
+    );
   return data;
 };
 
@@ -131,7 +166,10 @@ export const startTrainingAPI = async (jobId: string) => {
     headers: authHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Failed to start finetuning job");
+  if (!res.ok)
+    throw new Error(
+      data.message || "MODULE AGENTIC_AI: Failed to start finetuning job",
+    );
   return data;
 };
 
@@ -140,7 +178,10 @@ export const listJobsAPI = async () => {
     headers: authHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Failed to fetch finetuning jobs");
+  if (!res.ok)
+    throw new Error(
+      data.message || "MODULE AGENTIC_AI: Failed to fetch finetuning jobs",
+    );
   return data;
 };
 
@@ -149,7 +190,10 @@ export const getJobAPI = async (jobId: string) => {
     headers: authHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Failed to fetch job details");
+  if (!res.ok)
+    throw new Error(
+      data.message || "MODULE AGENTIC_AI: Failed to fetch job details",
+    );
   return data;
 };
 
@@ -159,17 +203,24 @@ export const cancelJobAPI = async (jobId: string) => {
     headers: authHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Failed to cancel job");
+  if (!res.ok)
+    throw new Error(data.message || "MODULE AGENTIC_AI: Failed to cancel job");
   return data;
 };
 
 export const deployModelAPI = async (jobId: string) => {
-  const res = await fetch(`${API_URL}/tinh-chinh/tien-trinh/${jobId}/trien-khai`, {
-    method: "POST",
-    headers: authHeaders(),
-  });
+  const res = await fetch(
+    `${API_URL}/tinh-chinh/tien-trinh/${jobId}/trien-khai`,
+    {
+      method: "POST",
+      headers: authHeaders(),
+    },
+  );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Failed to deploy model");
+  if (!res.ok)
+    throw new Error(
+      data.message || "MODULE AGENTIC_AI: Failed to deploy model",
+    );
   return data;
 };
 
@@ -183,6 +234,9 @@ export const evaluateModelAPI = async (jobId: string, testSamples: any[]) => {
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Failed to evaluate model");
+  if (!res.ok)
+    throw new Error(
+      data.message || "MODULE AGENTIC_AI: Failed to evaluate model",
+    );
   return data;
 };

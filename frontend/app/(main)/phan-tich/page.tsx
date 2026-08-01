@@ -1,118 +1,132 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import {
-  Brain,
-  Sparkles,
-  Loader2,
-  Eye,
-  Star,
-  TrendingUp,
-  BarChart3,
-  Award,
-  BookOpen,
-} from "lucide-react";
-import { getMyDocumentsAPI } from "@/features/content/services/document.service";
-import { useToast } from "@/shared/contexts/ToastContext";
+import Link from "next/link";
+import EmptyState from "@/shared/components/common/EmptyState";
+import PageLoader from "@/shared/components/common/PageLoader";
+import { Button } from "@/shared/components/ui/Button";
+import InlineState from "@/app/_components/InlineState";
+import MetricStrip from "@/app/_components/MetricStrip";
+import PageHeader from "@/app/_components/PageHeader";
+import { useAuthorAnalytics } from "./useAuthorAnalytics";
+
+const number = new Intl.NumberFormat("vi-VN");
 
 export default function AuthorAnalyticsPage() {
-  const { showToast } = useToast();
-  const [documents, setDocuments] = useState<any[]>([]);
-  const [revenue, setRevenue] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, loading, error, reload } = useAuthorAnalytics();
 
-  const fetchData = useCallback(async () => {
-    try {
-      const docData = await getMyDocumentsAPI();
-      setDocuments(docData.data || docData || []);
-      setRevenue(null);
-    } catch (err: any) {
-      showToast("Không thể tải bộ sưu tập phân tích", "error");
-    } finally {
-      setLoading(false);
-    }
-  }, [showToast]);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  if (loading) {
-    return (
-      <div className="flex h-[80vh] items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-ink-muted" />
-      </div>
-    );
-  }
+  if (loading) return <PageLoader rows={4} />;
 
   return (
-    <div className="w-full h-full font-sans text-ink flex flex-col gap-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          {
-            label: "Lượt xem",
-            val: revenue?.total_views || 0,
-            icon: Eye,
-            color: "text-brand",
-            bg: "bg-brand/10",
-          },
-          {
-            label: "Lượt đánh giá",
-            val: 0,
-            icon: Star,
-            color: "text-warning",
-            bg: "bg-warning/10",
-          },
-          {
-            label: "Doanh thu (dl)",
-            val: revenue?.total_revenue || 0,
-            icon: TrendingUp,
-            color: "text-brand",
-            bg: "bg-brand/10",
-          },
-          {
-            label: "Tác phẩm",
-            val: documents.length,
-            icon: BookOpen,
-            color: "text-brand",
-            bg: "bg-brand/10",
-          },
-        ].map((item, i) => (
-          <div
-            key={i}
-            className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none border-border p-6 md:px-0 md:pt-6 flex flex-col gap-4"
-          >
-            <div
-              className={`w-12 h-12 rounded-control flex items-center justify-center ${item.bg}`}
-            >
-              <item.icon className={`w-6 h-6 ${item.color}`} />
-            </div>
-            <div>
-              <p className="text-[13px] font-medium text-ink-muted mb-4 tracking-tight leading-none mb-1">
-                {typeof item.val === "number" && item.val > 1000
-                  ? `${(item.val / 1000).toFixed(1)}K`
-                  : item.val}
-              </p>
-              <p className="text-[14px] text-ink-muted font-medium">
-                {item.label}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
+    <div className="w-full">
+      <PageHeader
+        title="Phân tích"
+        actions={
+          <Link href="/soan-thao" className="secondary-button">
+            Quản lý bản thảo
+          </Link>
+        }
+      />
 
-      <div className="flex-1 bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none border-border p-8 md:px-0 md:pt-8 flex flex-col items-center justify-center min-h-[300px] text-center">
-        <div className="w-20 h-20 bg-surface-quiet flex items-center justify-center rounded-workspace mb-4">
-          <BarChart3 className="w-10 h-10 text-ink-faint" />
+      {error && (
+        <div className="mb-6">
+          <InlineState
+            title="Không thể tải số liệu"
+            detail={error}
+            tone="danger"
+            action={
+              <Button variant="secondary" onClick={reload}>
+                Tải lại
+              </Button>
+            }
+          />
         </div>
-        <p className="text-[13px] font-medium text-ink-muted mb-2">
-          Đang phân tích dữ liệu chuyên sâu
-        </p>
-        <p className="text-[15px] text-ink-muted max-w-md">
-          Hệ thống AI đang thu thập và tính toán các chỉ số về tương tác và tăng
-          trưởng của tác phẩm. Vui lòng quay lại sau.
-        </p>
-      </div>
+      )}
+
+      <MetricStrip
+        items={[
+          { label: "Lượt xem", value: number.format(data.total_views) },
+          {
+            label: "Lượt mua",
+            value: number.format(
+              data.documents.reduce((sum, item) => sum + item.purchases, 0),
+            ),
+          },
+          {
+            label: "Doanh thu",
+            value: `${number.format(data.total_revenue)} dl`,
+          },
+          {
+            label: "Số dư",
+            value: `${number.format(data.available_balance)} dl`,
+          },
+        ]}
+      />
+
+      <section className="mt-8" aria-labelledby="document-performance">
+        <div className="mb-3 flex items-end justify-between gap-4">
+          <h2
+            id="document-performance"
+            className="text-[18px] font-semibold text-ink"
+          >
+            Theo tài liệu
+          </h2>
+          <p className="text-[13px] text-ink-muted">
+            {number.format(data.documents.length)} tài liệu
+          </p>
+        </div>
+
+        {data.documents.length === 0 ? (
+          <EmptyState
+            text="Chưa có số liệu tài liệu"
+            description="Xuất bản tài liệu đầu tiên để bắt đầu ghi nhận lượt xem và lượt mua"
+            actionLabel="Mở trình soạn thảo"
+            actionHref="/soan-thao/khoi-tao"
+          />
+        ) : (
+          <div className="overflow-x-auto rounded-panel border border-border bg-surface">
+            <table className="w-full min-w-[680px] border-collapse text-left">
+              <thead className="bg-surface-quiet text-[12px] font-semibold text-ink-muted">
+                <tr>
+                  <th className="px-4 py-3">Tài liệu</th>
+                  <th className="px-4 py-3 text-right">Lượt xem</th>
+                  <th className="px-4 py-3 text-right">Lượt mua</th>
+                  <th className="px-4 py-3 text-right">Giá</th>
+                  <th className="px-4 py-3 text-right">Doanh thu</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {data.documents.map((document) => (
+                  <tr
+                    key={document.id}
+                    className="text-[14px] hover:bg-surface-raised"
+                  >
+                    <td className="max-w-[28rem] px-4 py-3.5 font-medium text-ink">
+                      <Link
+                        href={`/tai-lieu/${document.slug || document.id}`}
+                        className="block truncate hover:text-brand"
+                      >
+                        {document.title}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3.5 text-right tabular-nums text-ink-muted">
+                      {number.format(document.views)}
+                    </td>
+                    <td className="px-4 py-3.5 text-right tabular-nums text-ink-muted">
+                      {number.format(document.purchases)}
+                    </td>
+                    <td className="px-4 py-3.5 text-right tabular-nums text-ink-muted">
+                      {number.format(document.price)} dl
+                    </td>
+                    <td className="px-4 py-3.5 text-right tabular-nums font-semibold text-ink">
+                      {number.format(document.revenue)} dl
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
     </div>
   );
 }

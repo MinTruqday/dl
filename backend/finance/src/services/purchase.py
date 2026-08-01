@@ -72,6 +72,7 @@ class PurchaseService:
             "documents": [
                 {
                     "id": str(document["_id"]),
+                    "slug": document.get("slug", str(document["_id"])),
                     "title": document.get("title", "Không có tiêu đề"),
                     "views": document.get("views", document.get("view_count", 0)),
                     "price": document.get("price_dl", document.get("price_dls", 0)),

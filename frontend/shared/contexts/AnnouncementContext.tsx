@@ -33,7 +33,9 @@ interface AnnouncementProps {
   markAsRead: (id: string) => Promise<void>;
 }
 
-const AnnouncementContext = createContext<AnnouncementProps | undefined>(undefined);
+const AnnouncementContext = createContext<AnnouncementProps | undefined>(
+  undefined,
+);
 
 export function AnnouncementProvider({
   children,
@@ -84,7 +86,9 @@ export function AnnouncementProvider({
     };
   }, [user, fetchAnnouncements]);
 
-  const unreadCount = Array.isArray(announcements) ? announcements.filter((n) => !n.is_read).length : 0;
+  const unreadCount = Array.isArray(announcements)
+    ? announcements.filter((n) => !n.is_read).length
+    : 0;
 
   return (
     <AnnouncementContext.Provider

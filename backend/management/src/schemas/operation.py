@@ -14,3 +14,6 @@ class ShadowbanUpdate(BaseModel):
 class KYCUpdate(BaseModel):
     status: str = Field(pattern=r"^(PENDING|VERIFIED|REJECTED)$")
 
+
+class ReportStatusUpdate(BaseModel):
+    status: str = Field(pattern=r"^(RESOLVED|DISMISSED)$")

@@ -17,6 +17,7 @@ interface User {
   avatar_url?: string;
   bio?: string;
   wallet_balance: number;
+  ai_tier?: string;
 }
 
 interface AuthProps {
@@ -25,6 +26,7 @@ interface AuthProps {
   isLoading: boolean;
   loginState: (token: string) => Promise<void>;
   logoutState: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthProps | undefined>(undefined);
@@ -80,8 +82,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await logoutAPI();
     } finally {
-    clearAuth();
-    router.push("/dang-nhap");
+      clearAuth();
+      router.push("/dang-nhap");
     }
   };
 
@@ -93,6 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         loginState,
         logoutState,
+        refreshUser: fetchUser,
       }}
     >
       {children}

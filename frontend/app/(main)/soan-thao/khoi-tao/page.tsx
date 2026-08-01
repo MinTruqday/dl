@@ -1,185 +1,162 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { createDocumentAPI } from "@/features/content/services/document.service";
-import {
-  Loader2,
-  BookOpen,
-  PenTool,
-  Globe,
-  Lock,
-  Code,
-  FileText,
-  ArrowRight,
-} from "lucide-react";
-import { useToast } from "@/shared/contexts/ToastContext";
-import { useAuth } from "@/features/authentication/contexts/AuthContext";
+import { FormEvent, useEffect, useState } from "react";
+import { Button } from "@/shared/components/ui/Button";
+import InlineState from "@/app/_components/InlineState";
+import PageHeader from "@/app/_components/PageHeader";
+import SegmentedTabs from "@/app/_components/SegmentedTabs";
+import { useCreateDocument } from "./useCreateDocument";
+import ComposerNavigation from "../_components/ComposerNavigation";
 
 export default function CreateDocumentPage() {
-  const router = useRouter();
-  const { user } = useAuth() as any;
-  const { showToast } = useToast();
-
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [authorName, setAuthorName] = useState("");
-  const [publisherName, setPublisherName] = useState("");
-  const [visibility, setVisibility] = useState("public");
-  const [contentFormat, setContentFormat] = useState("json");
-  const [loading, setLoading] = useState(false);
-
+  const [visibility, setVisibility] = useState<"public" | "private">("public");
+  const [contentFormat, setContentFormat] = useState<"doclib" | "doclibx">(
+    "doclib",
+  );
   useEffect(() => {
-    if (user) {
-      setAuthorName(user.full_name || user.name || "Ẩn danh");
-      setPublisherName(user.role === "admin" ? "DocLib" : user.full_name || "");
-    }
-  }, [user]);
+    const format = new URLSearchParams(window.location.search).get("dinh-dang");
+    if (format === "latex") setContentFormat("doclibx");
+    if (format === "json") setContentFormat("doclib");
+  }, []);
+  const {
+    user,
+    authorName,
+    setAuthorName,
+    publisherName,
+    setPublisherName,
+    submitting,
+    error,
+    submit,
+  } = useCreateDocument();
 
-  const slugify = (text: string) => {
-    return text
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[đĐ]/g, "d")
-      .replace(/[^a-z0-9]/g, "-")
-      .replace(/-+/g, "-")
-      .replace(/^-|-$/g, "");
-  };
-
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim()) return;
-    setLoading(true);
-    try {
-      const res = await createDocumentAPI({
-        title,
-        slug: `${slugify(title)}-${Date.now()}`,
-        description,
-        publisher_name: publisherName,
-        visibility,
-        content_format: contentFormat,
-        status: "draft",
-        author_name: authorName,
-      });
-      if (res) {
-        showToast("Khởi tạo dữ liệu tác phẩm hoàn tất", "success");
-        setTimeout(() => {
-          router.push(
-            `/soan-thao?tai-lieu=${res.data?.id || res.data?._id || res.id || res._id}`,
-          );
-        }, 1000);
-      }
-    } catch (err: any) {
-      showToast(err.message || "Không thể tạo dữ liệu tác phẩm", "error");
-    } finally {
-      setLoading(false);
-    }
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    submit({
+      title,
+      description,
+      authorName,
+      publisherName,
+      visibility,
+      contentFormat,
+    });
   };
 
   return (
-    <form
-      onSubmit={handleCreate}
-      className="bg-surface-quiet rounded-panel p-6 space-y-6 font-sans text-ink"
-    >
-      <h2 className="text-[20px] font-semibold text-ink mb-6">Khởi tạo</h2>
-      <div className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-[13px] font-medium text-ink-muted ml-1 block">
-              Tiêu đề tác phẩm <span className="text-danger">*</span>
+    <div className="mx-auto w-full max-w-3xl">
+      <ComposerNavigation />
+      <PageHeader title="Tạo tài liệu" />
+      {error && (
+        <div className="mb-6">
+          <InlineState
+            title="Không thể tạo tài liệu"
+            detail={error}
+            tone="danger"
+          />
+        </div>
+      )}
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-7 rounded-workspace border border-border bg-surface p-5 md:p-7"
+      >
+        <div>
+          <label
+            htmlFor="document-title"
+            className="mb-2 block text-[13px] font-semibold text-ink"
+          >
+            Tiêu đề
+          </label>
+          <input
+            id="document-title"
+            required
+            maxLength={200}
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            className="apple-input w-full"
+            autoFocus
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="document-description"
+            className="mb-2 block text-[13px] font-semibold text-ink"
+          >
+            Tóm tắt
+          </label>
+          <textarea
+            id="document-description"
+            maxLength={1200}
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
+            className="apple-input min-h-28 w-full resize-y"
+          />
+        </div>
+        <div className="grid gap-5 sm:grid-cols-2">
+          <div>
+            <label
+              htmlFor="document-author"
+              className="mb-2 block text-[13px] font-semibold text-ink"
+            >
+              Tác giả
             </label>
             <input
-              required
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder=""
-              className="apple-input w-full h-[48px]"
+              id="document-author"
+              value={authorName}
+              onChange={(event) => setAuthorName(event.target.value)}
+              className="apple-input w-full"
             />
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-[13px] font-medium text-ink-muted ml-1 block">
-                Người đăng
-              </label>
-              <input
-                type="text"
-                value={authorName}
-                onChange={(e) => setAuthorName(e.target.value)}
-                className="apple-input w-full h-[48px]"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[13px] font-medium text-ink-muted ml-1 block">
-                Nhà xuất bản
-              </label>
-              {user?.role === "admin" ? (
-                <div className="apple-input w-full h-[48px] bg-border border-transparent px-4 flex items-center text-ink-muted text-[15px] cursor-not-allowed">
-                  {publisherName}
-                </div>
-              ) : (
-                <input
-                  type="text"
-                  value={publisherName}
-                  onChange={(e) => setPublisherName(e.target.value)}
-                  className="apple-input w-full h-[48px]"
-                />
-              )}
-            </div>
-          </div>
-
-            <div className="space-y-2">
-              <label className="text-[13px] font-medium text-ink-muted ml-1 block">
-                Tóm tắt nội dung (Tùy chọn)
-              </label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder=""
-                className="apple-input w-full min-h-[100px] resize-none py-3"
-              />
-            </div>
-        </div>
-
-        <div className="space-y-4">
-          <label className="text-[15px] font-semibold text-ink ml-1 block pb-1">
-            Môi trường soạn thảo
-          </label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[
-              { id: "json", label: "Soạn thảo chuẩn" },
-              { id: "latex", label: "Soạn thảo LaTeX" },
-            ].map((opt) => {
-              const isSelected = contentFormat === opt.id;
-              return (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => setContentFormat(opt.id)}
-                  className={`h-[48px] rounded-full text-[15px] font-medium transition-colors ${isSelected ? "bg-brand text-white" : "bg-white text-ink hover:bg-border"}`}
-                >
-                  {opt.label}
-                </button>
-              );
-            })}
+          <div>
+            <label
+              htmlFor="document-publisher"
+              className="mb-2 block text-[13px] font-semibold text-ink"
+            >
+              Nhà xuất bản
+            </label>
+            <input
+              id="document-publisher"
+              value={publisherName}
+              onChange={(event) => setPublisherName(event.target.value)}
+              className="apple-input w-full"
+              disabled={user?.role === "admin"}
+            />
           </div>
         </div>
-
-      <div className="flex justify-end pt-4">
-        <button
-          type="submit"
-          disabled={loading || !title.trim()}
-          className="pill-button"
-        >
-          {loading ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
-          ) : (
-            "Bắt đầu soạn thảo"
-          )}
-        </button>
-      </div>
-    </form>
+        <fieldset>
+          <legend className="mb-2 text-[13px] font-semibold text-ink">
+            Định dạng
+          </legend>
+          <SegmentedTabs
+            label="Chọn định dạng"
+            value={contentFormat}
+            onChange={setContentFormat}
+            tabs={[
+              { id: "doclib", label: "Tài liệu chuẩn" },
+              { id: "doclibx", label: "LaTeX" },
+            ]}
+          />
+        </fieldset>
+        <fieldset>
+          <legend className="mb-2 text-[13px] font-semibold text-ink">
+            Quyền truy cập
+          </legend>
+          <SegmentedTabs
+            label="Chọn quyền truy cập"
+            value={visibility}
+            onChange={setVisibility}
+            tabs={[
+              { id: "public", label: "Công khai" },
+              { id: "private", label: "Riêng tư" },
+            ]}
+          />
+        </fieldset>
+        <div className="flex justify-end border-t border-border pt-5">
+          <Button type="submit" disabled={submitting || !title.trim()}>
+            {submitting ? "Đang tạo" : "Tạo tài liệu"}
+          </Button>
+        </div>
+      </form>
+    </div>
   );
 }

@@ -1,696 +1,415 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@/features/authentication/contexts/AuthContext";
-import { useToast } from "@/shared/contexts/ToastContext";
+import Link from "next/link";
+import { useState } from "react";
+import PageLoader from "@/shared/components/common/PageLoader";
+import { Button } from "@/shared/components/ui/Button";
 import {
   Modal,
-  ModalHeader,
-  ModalTitle,
   ModalContent,
   ModalFooter,
+  ModalHeader,
+  ModalTitle,
 } from "@/shared/components/ui/Modal";
-import {
-  getPrivacySettingsAPI,
-  updatePrivacySettingsAPI,
-  updateGeneralSettingsAPI,
-} from "@/features/management/services/setting.service";
-import {
-  getAnnouncementSettingsAPI,
-  updateAnnouncementSettingsAPI,
-} from "@/features/notification/services/announcement.service";
-import {
-  getMaintenanceModeAPI,
-  getAdminConfigAPI,
-  toggleMaintenanceModeAPI,
-  updateAdminConfigAPI,
-} from "@/features/management/services/health.service";
-import {
-  Shield,
-  Bell,
-  Lock,
-  ChevronRight,
-  Save,
-  Loader2,
-  Sparkles,
-  PenTool,
-  ShieldCheck,
-  Zap,
-  UserPlus,
-  Award,
-  Clock,
-  AlertCircle,
-  ShieldAlert,
-} from "lucide-react";
-import PageLoader from "@/shared/components/common/PageLoader";
-import { applyForAuthorAPI, deleteMyAccountAPI } from "@/features/management/services/account.service";
-import { removeToken } from "@/features/authentication/services/session.service";
+import InlineState from "@/app/_components/InlineState";
+import PageHeader from "@/app/_components/PageHeader";
+import SegmentedTabs from "@/app/_components/SegmentedTabs";
+import { useSettings } from "./useSettings";
 
-type TabKey =
-  | "privacy"
-  | "announcements"
-  | "account"
-  | "apply_author"
-  | "author"
-  | "admin";
+type Tab = "general" | "notifications" | "privacy" | "author" | "account";
+
+function ToggleRow({
+  label,
+  detail,
+  checked,
+  onChange,
+}: {
+  label: string;
+  detail: string;
+  checked: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  return (
+    <label className="flex cursor-pointer items-start justify-between gap-6 border-b border-border py-4 last:border-b-0">
+      <span>
+        <span className="block font-semibold text-ink">{label}</span>
+        <span className="mt-1 block text-[13px] leading-relaxed text-ink-muted">
+          {detail}
+        </span>
+      </span>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+        className="mt-1 h-5 w-5 shrink-0 accent-[hsl(var(--brand))]"
+      />
+    </label>
+  );
+}
 
 export default function SettingsPage() {
-  const { showToast } = useToast();
-  const { user, isLoading: authLoading, refreshUser } = useAuth() as any;
-  const [visible, setVisible] = useState(false);
-  const [activeSection, setActiveSection] = useState<TabKey>("privacy");
-  const [loading, setLoading] = useState(false);
-  const [confirmModal, setConfirmModal] = useState<{
-    type: "maintenance" | "registration";
-    value: boolean;
-  } | null>(null);
-
-  const [hideActivity, setHideActivity] = useState(false);
-  const [hideLibrary, setHideLibrary] = useState(false);
+  const [tab, setTab] = useState<Tab>("general");
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [motivation, setMotivation] = useState("");
   const [portfolio, setPortfolio] = useState("");
+  const settings = useSettings();
 
-  const [autoSave, setAutoSave] = useState(true);
-  const [defaultVisibility, setDefaultVisibility] = useState("public");
-  const [payoutInfo, setPayoutInfo] = useState("");
-
-  const [modNotifs, setModNotifs] = useState(true);
-  const [autoRefresh, setAutoRefresh] = useState(false);
-
-  const [maintenanceMode, setMaintenanceMode] = useState(false);
-  const [registrationEnabled, setRegistrationEnabled] = useState(true);
-  const [notifSettings, setNotifSettings] = useState<any>({});
-
-  const fetchData = useCallback(async () => {
-    try {
-      const privacyRes = await getPrivacySettingsAPI();
-      setHideActivity(privacyRes.data?.hide_reading_activity || false);
-      setHideLibrary(privacyRes.data?.hide_library || false);
-
-      try {
-        const notifRes = await getAnnouncementSettingsAPI();
-        setNotifSettings(notifRes.data || {});
-      } catch (e) {}
-
-      if (user?.role === "admin") {
-        const maintData = await getMaintenanceModeAPI();
-        setMaintenanceMode(
-          maintData.data?.enabled || maintData.enabled || false,
-        );
-        const configData = await getAdminConfigAPI();
-        setRegistrationEnabled(configData.data?.registration_enabled ?? true);
-      }
-
-      if (user?.settings) {
-        setModNotifs(user.settings.mod_notifs ?? true);
-        setAutoRefresh(user.settings.auto_refresh ?? false);
-        setAutoSave(user.settings.auto_save ?? true);
-        setDefaultVisibility(user.settings.default_visibility ?? "public");
-        setPayoutInfo(user.settings.payout_info || "");
-      }
-    } catch (err: any) {
-      showToast("Không thể đồng bộ dữ liệu cấu hình", "error");
-    }
-  }, [user, showToast]);
-
-  useEffect(() => {
-    if (user) {
-      requestAnimationFrame(() => setVisible(true));
-      fetchData();
-    }
-  }, [user, fetchData]);
-
-  const handleUpdateGeneral = async (newSettings: any) => {
-    try {
-      await updateGeneralSettingsAPI(newSettings);
-      refreshUser?.();
-      return true;
-    } catch (err: any) {
-      showToast("Không thể cập nhật thay đổi cấu hình", "error");
-      return false;
-    }
-  };
-
-  const handleSavePrivacy = async () => {
-    setLoading(true);
-    try {
-      await updatePrivacySettingsAPI({
-        hide_reading_activity: hideActivity,
-        hide_library: hideLibrary,
-      });
-      showToast("Cập nhật thiết lập quyền riêng tư hoàn tất", "success");
-    } catch (err: any) {
-      showToast("Không thể cập nhật thiết lập quyền riêng tư", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleApplyAuthor = async () => {
-    if (!motivation) return showToast("Dữ liệu lý do ứng tuyển không được để trống", "error");
-    setLoading(true);
-    try {
-      await applyForAuthorAPI(motivation, portfolio);
-      showToast("Gửi yêu cầu ứng tuyển hoàn tất", "success");
-      setMotivation("");
-      setPortfolio("");
-      refreshUser?.();
-    } catch (err: any) {
-      showToast("Lỗi gửi yêu cầu ứng tuyển tác giả", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleToggleMaintenance = async () => {
-    setLoading(true);
-    try {
-      await toggleMaintenanceModeAPI(!maintenanceMode);
-      setMaintenanceMode(!maintenanceMode);
-      showToast(
-        !maintenanceMode ? "Kích hoạt chế độ bảo trì hệ thống hoàn tất" : "Tắt chế độ bảo trì hệ thống hoàn tất",
-        "success",
-      );
-      setConfirmModal(null);
-    } catch (err: any) {
-      showToast("Không thể cập nhật trạng thái bảo trì", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleToggleRegistration = async () => {
-    setLoading(true);
-    try {
-      await updateAdminConfigAPI({
-        registration_enabled: !registrationEnabled,
-      });
-      setRegistrationEnabled(!registrationEnabled);
-      showToast(
-        !registrationEnabled ? "Kích hoạt đăng ký tài khoản hoàn tất" : "Vô hiệu hóa đăng ký tài khoản hoàn tất",
-        "success",
-      );
-      setConfirmModal(null);
-    } catch (err: any) {
-      showToast("Không thể cập nhật trạng thái đăng ký", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const CustomSwitch = ({
-    active,
-    onToggle,
-  }: {
-    active: boolean;
-    onToggle: () => void;
-  }) => (
-    <button
-      onClick={onToggle}
-      className={`w-[50px] h-[30px] rounded-full relative shrink-0 transition-colors duration-300 ${active ? "bg-brand" : "bg-border"}`}
-    >
-      <div
-        className={`absolute top-[2px] w-[26px] h-[26px] bg-white rounded-full transition-transform duration-300 ${active ? "translate-x-[22px]" : "translate-x-[2px]"}`}
+  if (settings.loading) return <PageLoader rows={5} />;
+  if (!settings.user)
+    return (
+      <InlineState
+        title="Cần đăng nhập"
+        detail="Đăng nhập để thay đổi cài đặt"
       />
-    </button>
-  );
+    );
 
-  if (authLoading) return <PageLoader />;
-
-  const sections = [
-    {
-      id: "privacy",
-      label: "Quyền riêng tư",
-      icon: Shield,
-      roles: ["reader", "potential_author", "author", "admin"],
-    },
-    {
-      id: "announcements",
-      label: "Thông báo",
-      icon: Bell,
-      roles: ["reader", "potential_author", "author", "admin"],
-    },
-    {
-      id: "account",
-      label: "Tài khoản & Bảo mật",
-      icon: Lock,
-      roles: ["reader", "potential_author", "author", "admin"],
-    },
-    ...(user?.role === "reader" &&
-    user?.author_status !== "pending" &&
-    user?.author_status !== "approved"
-      ? [
-          {
-            id: "apply_author",
-            label: "Tác giả tiềm năng",
-            icon: UserPlus,
-            roles: ["reader"],
-          },
-        ]
+  const tabs: { id: Tab; label: string }[] = [
+    { id: "general", label: "Chung" },
+    { id: "notifications", label: "Thông báo" },
+    { id: "privacy", label: "Riêng tư" },
+    ...(settings.user.role === "reader"
+      ? [{ id: "author" as Tab, label: "Ứng tuyển tác giả" }]
       : []),
-    {
-      id: "author",
-      label: "Cấu hình Tác giả",
-      icon: PenTool,
-      roles: ["author", "admin"],
-    },
-
-    { id: "admin", label: "Cấu hình hệ thống", icon: Zap, roles: ["admin"] },
-  ].filter((s) => !user || s.roles.includes(user.role));
+    { id: "account", label: "Tài khoản" },
+  ];
 
   return (
-    <div className="w-full h-full flex flex-col font-sans text-ink">
-      <div
-        className={`flex flex-col md:flex-row gap-6 transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}
-        style={{ transitionDelay: "100ms" }}
-      >
-        <aside className="w-full md:w-[320px] shrink-0 space-y-6 sticky top-0 h-fit">
-          <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6">
-            <p className="text-[13px] font-medium text-ink-muted mb-4">
-              Danh mục
-            </p>
-            <nav className="flex flex-col gap-1.5">
-              {sections.map((section) => {
-                const active = activeSection === section.id;
-                return (
-                  <button
-                    key={section.id}
-                    onClick={() => setActiveSection(section.id as TabKey)}
-                    className={`flex items-center justify-between px-4 py-3 text-[15px] rounded-control transition-colors ${active ? "bg-white text-brand font-medium" : "text-ink hover:bg-border"}`}
-                  >
-                    <span className="truncate text-left">{section.label}</span>
-                    {active && <ChevronRight className="w-4 h-4 shrink-0" />}
-                  </button>
-                );
-              })}
-            </nav>
-          </div>
-          <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6">
-            <div className="text-[13px] font-medium text-ink-muted mb-4">
-              Định danh hiện tại
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white rounded-control flex items-center justify-center text-[15px] font-semibold text-ink uppercase">
-                {user?.role?.slice(0, 3)}
-              </div>
-              <div>
-                <p className="text-[15px] font-medium text-ink">
-                  {user?.role === "admin"
-                    ? "Quản trị viên"
-                    : user?.role === "author"
-                      ? "Tác giả"
-                      : user?.role === "potential_author"
-                          ? "Tác giả tiềm năng"
-                          : "Độc giả"}
-                </p>
-                <p className="text-[13px] text-ink-muted mt-0.5">
-                  {user?.email || "Chưa định danh"}
-                </p>
-              </div>
-            </div>
-          </div>
-        </aside>
+    <div className="w-full">
+      <PageHeader
+        title="Cài đặt"
+        actions={
+          settings.user.role === "admin" && (
+            <Link href="/van-hanh" className="secondary-button">
+              Mở vận hành
+            </Link>
+          )
+        }
+      />
+      {settings.error && (
+        <div className="mb-6">
+          <InlineState
+            title="Không thể lưu cài đặt"
+            detail={settings.error}
+            tone="danger"
+            action={
+              <Button variant="secondary" onClick={settings.reload}>
+                Tải lại
+              </Button>
+            }
+          />
+        </div>
+      )}
+      {settings.notice && (
+        <div className="mb-6">
+          <InlineState title={settings.notice} />
+        </div>
+      )}
+      <div className="mb-6">
+        <SegmentedTabs<Tab>
+          label="Nhóm cài đặt"
+          value={tab}
+          onChange={setTab}
+          tabs={tabs}
+        />
+      </div>
 
-        <main className="flex-1 min-w-0 xl:col-span-8">
-          <div className="bg-surface-quiet md:bg-transparent rounded-panel md:rounded-none p-6 md:p-0 md:pt-6 min-h-[600px]">
-            {activeSection === "privacy" && (
-              <div className="space-y-8">
+      <div className="mx-auto max-w-3xl">
+        {tab === "general" && (
+          <section aria-labelledby="general-settings-title">
+            <h2
+              id="general-settings-title"
+              className="mb-4 text-[18px] font-semibold text-ink"
+            >
+              Cài đặt chung
+            </h2>
+            <div className="rounded-panel border border-border bg-surface px-5">
+              <ToggleRow
+                label="Tự động lưu"
+                detail="Lưu nội dung khi đang soạn thảo"
+                checked={settings.general.auto_save}
+                onChange={(value) =>
+                  settings.setGeneral({ ...settings.general, auto_save: value })
+                }
+              />
+              <ToggleRow
+                label="Tự động làm mới"
+                detail="Làm mới các danh sách dữ liệu khi quay lại ứng dụng"
+                checked={settings.general.auto_refresh}
+                onChange={(value) =>
+                  settings.setGeneral({
+                    ...settings.general,
+                    auto_refresh: value,
+                  })
+                }
+              />
+              <div className="py-4">
+                <label
+                  htmlFor="default-visibility"
+                  className="mb-2 block font-semibold text-ink"
+                >
+                  Quyền truy cập mặc định
+                </label>
+                <select
+                  id="default-visibility"
+                  className="apple-input w-full"
+                  value={settings.general.default_visibility}
+                  onChange={(event) =>
+                    settings.setGeneral({
+                      ...settings.general,
+                      default_visibility: event.target
+                        .value as typeof settings.general.default_visibility,
+                    })
+                  }
+                >
+                  <option value="public">Công khai</option>
+                  <option value="private">Riêng tư</option>
+                  <option value="unlisted">Không công bố</option>
+                </select>
+              </div>
+            </div>
+            <div className="mt-5 flex justify-end">
+              <Button
+                onClick={settings.saveGeneral}
+                disabled={Boolean(settings.processing)}
+              >
+                {settings.processing === "general"
+                  ? "Đang lưu"
+                  : "Lưu thay đổi"}
+              </Button>
+            </div>
+          </section>
+        )}
+
+        {tab === "notifications" && (
+          <section aria-labelledby="notification-settings-title">
+            <h2
+              id="notification-settings-title"
+              className="mb-4 text-[18px] font-semibold text-ink"
+            >
+              Thông báo
+            </h2>
+            <div className="rounded-panel border border-border bg-surface px-5">
+              <ToggleRow
+                label="Bình luận"
+                detail="Nhận thông báo khi có bình luận mới"
+                checked={settings.notifications.enable_comment_notifications}
+                onChange={(value) =>
+                  settings.setNotifications({
+                    ...settings.notifications,
+                    enable_comment_notifications: value,
+                  })
+                }
+              />
+              <ToggleRow
+                label="Lượt nhắc"
+                detail="Nhận thông báo khi có người nhắc đến bạn"
+                checked={settings.notifications.enable_mention_notifications}
+                onChange={(value) =>
+                  settings.setNotifications({
+                    ...settings.notifications,
+                    enable_mention_notifications: value,
+                  })
+                }
+              />
+              <ToggleRow
+                label="Hệ thống"
+                detail="Nhận thông báo vận hành và bảo mật"
+                checked={settings.notifications.enable_system_notifications}
+                onChange={(value) =>
+                  settings.setNotifications({
+                    ...settings.notifications,
+                    enable_system_notifications: value,
+                  })
+                }
+              />
+              <ToggleRow
+                label="Tổng hợp qua email"
+                detail="Nhận bản tổng hợp thông báo qua email"
+                checked={settings.notifications.enable_email_digest}
+                onChange={(value) =>
+                  settings.setNotifications({
+                    ...settings.notifications,
+                    enable_email_digest: value,
+                  })
+                }
+              />
+            </div>
+            <div className="mt-5 flex justify-end">
+              <Button
+                onClick={settings.saveNotifications}
+                disabled={Boolean(settings.processing)}
+              >
+                {settings.processing === "notifications"
+                  ? "Đang lưu"
+                  : "Lưu thay đổi"}
+              </Button>
+            </div>
+          </section>
+        )}
+
+        {tab === "privacy" && (
+          <section aria-labelledby="privacy-settings-title">
+            <h2
+              id="privacy-settings-title"
+              className="mb-4 text-[18px] font-semibold text-ink"
+            >
+              Quyền riêng tư
+            </h2>
+            <div className="rounded-panel border border-border bg-surface px-5">
+              <ToggleRow
+                label="Chế độ riêng tư"
+                detail="Hạn chế hiển thị hoạt động cá nhân trên hồ sơ công khai"
+                checked={settings.privacyMode}
+                onChange={settings.setPrivacyMode}
+              />
+            </div>
+            <div className="mt-5 flex justify-end">
+              <Button
+                onClick={settings.savePrivacy}
+                disabled={Boolean(settings.processing)}
+              >
+                {settings.processing === "privacy"
+                  ? "Đang lưu"
+                  : "Lưu thay đổi"}
+              </Button>
+            </div>
+          </section>
+        )}
+
+        {tab === "author" && (
+          <section aria-labelledby="author-application-title">
+            <h2
+              id="author-application-title"
+              className="mb-4 text-[18px] font-semibold text-ink"
+            >
+              Ứng tuyển tác giả
+            </h2>
+            {settings.user.creator_status === "PENDING" ? (
+              <InlineState
+                title="Đơn ứng tuyển đang được xem xét"
+                detail="Bạn sẽ nhận thông báo khi có kết quả"
+              />
+            ) : (
+              <div className="space-y-5 rounded-panel border border-border bg-surface p-5">
                 <div>
-                  <h2 className="text-[20px] font-semibold text-ink mb-1">
-                    Quyền riêng tư
-                  </h2>
-                  <p className="text-[15px] text-ink-muted">
-                    Thiết lập khả năng hiển thị cá nhân
+                  <label
+                    htmlFor="author-motivation"
+                    className="mb-2 block text-[13px] font-semibold text-ink"
+                  >
+                    Lý do ứng tuyển
+                  </label>
+                  <textarea
+                    id="author-motivation"
+                    className="apple-input min-h-32 w-full resize-y"
+                    value={motivation}
+                    onChange={(event) => setMotivation(event.target.value)}
+                    minLength={20}
+                    maxLength={2000}
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="author-portfolio"
+                    className="mb-2 block text-[13px] font-semibold text-ink"
+                  >
+                    Liên kết tác phẩm
+                  </label>
+                  <input
+                    id="author-portfolio"
+                    type="url"
+                    className="apple-input w-full"
+                    value={portfolio}
+                    onChange={(event) => setPortfolio(event.target.value)}
+                    maxLength={2048}
+                  />
+                </div>
+                <div className="flex justify-end">
+                  <Button
+                    onClick={() => settings.applyAuthor(motivation, portfolio)}
+                    disabled={
+                      Boolean(settings.processing) ||
+                      motivation.trim().length < 20
+                    }
+                  >
+                    {settings.processing === "author" ? "Đang gửi" : "Gửi đơn"}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </section>
+        )}
+
+        {tab === "account" && (
+          <section aria-labelledby="account-settings-title">
+            <h2
+              id="account-settings-title"
+              className="mb-4 text-[18px] font-semibold text-ink"
+            >
+              Tài khoản
+            </h2>
+            <div className="overflow-hidden rounded-panel border border-border bg-surface">
+              <div className="flex flex-col gap-4 border-b border-border p-5 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="font-semibold text-ink">Kết thúc mọi phiên</p>
+                  <p className="mt-1 text-[13px] text-ink-muted">
+                    Đăng xuất tài khoản trên tất cả thiết bị
                   </p>
                 </div>
-                <div className="bg-white rounded-panel divide-y divide-[hsl(var(--border))]">
-                  <div className="p-5 flex items-center justify-between">
-                    <div>
-                      <h4 className="text-[17px] font-medium text-ink">
-                        Chế độ đọc ẩn danh
-                      </h4>
-                      <p className="text-[14px] text-ink-muted mt-1">
-                        Không hiển thị lịch sử đọc trên bảng xếp hạng.
-                      </p>
-                    </div>
-                    <CustomSwitch
-                      active={hideActivity}
-                      onToggle={() => setHideActivity(!hideActivity)}
-                    />
-                  </div>
-                  <div className="p-5 flex items-center justify-between">
-                    <div>
-                      <h4 className="text-[17px] font-medium text-ink">
-                        Thư viện nội bộ
-                      </h4>
-                      <p className="text-[14px] text-ink-muted mt-1">
-                        Giới hạn truy cập bộ sưu tập cá nhân.
-                      </p>
-                    </div>
-                    <CustomSwitch
-                      active={hideLibrary}
-                      onToggle={() => setHideLibrary(!hideLibrary)}
-                    />
-                  </div>
-                </div>
-                <div className="flex justify-end pt-4">
-                  <button
-                    onClick={handleSavePrivacy}
-                    disabled={loading}
-                    className="pill-button"
-                  >
-                    {loading ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                      "Lưu thay đổi"
-                    )}
-                  </button>
-                </div>
+                <Button
+                  variant="secondary"
+                  onClick={settings.logoutAll}
+                  disabled={Boolean(settings.processing)}
+                >
+                  {settings.processing === "sessions"
+                    ? "Đang xử lý"
+                    : "Đăng xuất tất cả"}
+                </Button>
               </div>
-            )}
-
-            {activeSection === "author" && (
-              <div className="space-y-8">
+              <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <h2 className="text-[20px] font-semibold text-ink mb-1">
-                    Cấu hình Tác giả
-                  </h2>
-                  <p className="text-[15px] text-ink-muted">Quản lý sáng tác</p>
+                  <p className="font-semibold text-danger">
+                    Vô hiệu hóa tài khoản
+                  </p>
+                  <p className="mt-1 text-[13px] text-ink-muted">
+                    Tài khoản sẽ không thể đăng nhập hoặc hiển thị nội dung mới
+                  </p>
                 </div>
-                <div className="bg-white rounded-panel divide-y divide-[hsl(var(--border))]">
-                  <div className="p-5 flex items-center justify-between">
-                    <div>
-                      <h4 className="text-[17px] font-medium text-ink">
-                        Tự động sao lưu
-                      </h4>
-                      <p className="text-[14px] text-ink-muted">
-                        Sao lưu 30 giây.
-                      </p>
-                    </div>
-                    <CustomSwitch
-                      active={autoSave}
-                      onToggle={async () => {
-                        const s = await handleUpdateGeneral({
-                          auto_save: !autoSave,
-                        });
-                        if (s) setAutoSave(!autoSave);
-                      }}
-                    />
-                  </div>
-                  <div className="p-5 space-y-3">
-                    <h4 className="text-[17px] font-medium text-ink">
-                      Trạng thái xuất bản mặc định
-                    </h4>
-                    <div className="grid grid-cols-2 gap-4">
-                      {["public", "private"].map((m) => (
-                        <button
-                          key={m}
-                          onClick={async () => {
-                            const s = await handleUpdateGeneral({
-                              default_visibility: m,
-                            });
-                            if (s) setDefaultVisibility(m);
-                          }}
-                          className={`py-3 rounded-control font-medium transition-colors ${defaultVisibility === m ? "bg-brand text-white" : "bg-surface-quiet text-ink"}`}
-                        >
-                          {m === "public" ? "Công khai" : "Riêng tư"}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="p-5 space-y-3">
-                    <h4 className="text-[17px] font-medium text-ink">
-                      Thông tin thụ hưởng
-                    </h4>
-                    <textarea
-                      value={payoutInfo}
-                      onChange={(e) => setPayoutInfo(e.target.value)}
-                      className="apple-input w-full min-h-[100px] resize-none py-3"
-                      placeholder=""
-                    ></textarea>
-                  </div>
-                </div>
-                <div className="flex justify-end pt-4">
-                  <button
-                    onClick={async () => {
-                      setLoading(true);
-                      await handleUpdateGeneral({ payout_info: payoutInfo });
-                      setLoading(false);
-                      showToast("Lưu cấu hình hệ thống hoàn tất", "success");
-                    }}
-                    className="pill-button"
-                  >
-                    Lưu cấu hình
-                  </button>
-                </div>
+                <Button variant="danger" onClick={() => setDeleteOpen(true)}>
+                  Vô hiệu hóa
+                </Button>
               </div>
-            )}
-
-
-
-            {activeSection === "admin" && (
-              <div className="space-y-8">
-                <div>
-                  <h2 className="text-[20px] font-semibold text-ink mb-4">
-                    Cấu hình hệ thống
-                  </h2>
-                </div>
-                <div className="bg-white rounded-panel divide-y divide-[hsl(var(--border))]">
-                  <div className="p-5 flex items-center justify-between bg-danger-soft rounded-t-[18px]">
-                    <div>
-                      <h4 className="text-[17px] font-medium text-danger">
-                        Bảo trì hệ thống
-                      </h4>
-                      <p className="text-[14px] text-danger">
-                        Khóa ghi dữ liệu.
-                      </p>
-                    </div>
-                    <CustomSwitch
-                      active={maintenanceMode}
-                      onToggle={() =>
-                        setConfirmModal({
-                          type: "maintenance",
-                          value: !maintenanceMode,
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="p-5 flex items-center justify-between">
-                    <div>
-                      <h4 className="text-[17px] font-medium text-ink">
-                        Đăng ký mới
-                      </h4>
-                    </div>
-                    <CustomSwitch
-                      active={registrationEnabled}
-                      onToggle={() =>
-                        setConfirmModal({
-                          type: "registration",
-                          value: !registrationEnabled,
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeSection === "apply_author" && (
-              <div className="space-y-8">
-                <div>
-                  <h2 className="text-[20px] font-semibold text-ink mb-4">
-                    Tác giả tiềm năng
-                  </h2>
-                </div>
-                {user?.author_status === "pending" ? (
-                  <div className="py-12 text-center bg-white rounded-panel">
-                    <Clock className="w-12 h-12 text-ink-muted mx-auto mb-4" />
-                    <p className="text-[15px] font-medium text-ink">
-                      Đang xem xét
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    <div className="bg-white p-6 rounded-panel space-y-4">
-                      <div className="space-y-2">
-                        <label className="text-[13px] font-medium text-ink-muted">
-                          Lý do
-                        </label>
-                        <textarea
-                          value={motivation}
-                          onChange={(e) => setMotivation(e.target.value)}
-                          className="apple-input w-full min-h-[100px] resize-none"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[13px] font-medium text-ink-muted">
-                          Portfolio
-                        </label>
-                        <input
-                          type="text"
-                          value={portfolio}
-                          onChange={(e) => setPortfolio(e.target.value)}
-                          className="apple-input w-full"
-                        />
-                      </div>
-                    </div>
-                    <button
-                      onClick={handleApplyAuthor}
-                      disabled={loading}
-                      className="pill-button w-full"
-                    >
-                      {loading ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : (
-                        "Ứng tuyển"
-                      )}
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeSection === "announcements" && (
-              <div className="space-y-8">
-                <div>
-                  <h2 className="text-[20px] font-semibold text-ink mb-4">
-                    Thông báo
-                  </h2>
-                </div>
-                <div className="bg-white rounded-panel divide-y divide-[hsl(var(--border))]">
-                  {[
-                    { id: "notifyCommunity", label: "Cộng đồng" },
-                    { id: "notifyFinance", label: "Tài chính" },
-                    { id: "notifyUpdates", label: "Cập nhật" },
-                  ].map((item, i) => (
-                    <div
-                      key={i}
-                      className="p-5 flex items-center justify-between"
-                    >
-                      <div>
-                        <h4 className="text-[17px] font-medium text-ink">
-                          {item.label}
-                        </h4>
-                      </div>
-                      <div className="flex gap-6">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[13px] text-ink-muted">
-                            Email
-                          </span>
-                          <CustomSwitch
-                            active={notifSettings[item.id]?.email ?? false}
-                            onToggle={async () => {
-                              const newSettings = { ...notifSettings, [item.id]: { ...notifSettings[item.id], email: !(notifSettings[item.id]?.email ?? false) } };
-                              setNotifSettings(newSettings);
-                              try {
-                                await updateAnnouncementSettingsAPI(newSettings);
-                              } catch(e) {}
-                            }}
-                          />
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[13px] text-ink-muted">
-                            App
-                          </span>
-                          <CustomSwitch
-                            active={notifSettings[item.id]?.inapp ?? false}
-                            onToggle={async () => {
-                              const newSettings = { ...notifSettings, [item.id]: { ...notifSettings[item.id], inapp: !(notifSettings[item.id]?.inapp ?? false) } };
-                              setNotifSettings(newSettings);
-                              try {
-                                await updateAnnouncementSettingsAPI(newSettings);
-                              } catch(e) {}
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {activeSection === "account" && (
-              <div className="space-y-8">
-                <div>
-                  <h2 className="text-[20px] font-semibold text-ink mb-4">
-                    Tài khoản
-                  </h2>
-                </div>
-                <div className="bg-white rounded-panel divide-y divide-[hsl(var(--border))]">
-                  <div className="p-5 flex items-center justify-between">
-                    <div>
-                      <h4 className="text-[15px] font-medium text-ink">
-                        Email
-                      </h4>
-                      <p className="text-[14px] text-ink-muted">
-                        {user?.email}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-danger-soft rounded-panel p-6 mt-8">
-                  <h3 className="text-[17px] font-medium text-danger mb-4">
-                    Vùng nguy hiểm
-                  </h3>
-                  <button 
-                    onClick={async () => {
-                      if (!confirm("Xác nhận xóa tài khoản vĩnh viễn")) return;
-                      try {
-                        await deleteMyAccountAPI();
-                        removeToken();
-                        window.location.href = "/dang-nhap";
-                      } catch(e) {}
-                    }}
-                    className="py-2 px-4 bg-danger text-white rounded-control text-[15px] font-medium"
-                  >
-                    Xóa tài khoản
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </main>
+            </div>
+          </section>
+        )}
       </div>
 
       <Modal
-        isOpen={!!confirmModal}
-        onClose={() => !loading && setConfirmModal(null)}
-        className="max-w-sm"
+        isOpen={deleteOpen}
+        onClose={() => !settings.processing && setDeleteOpen(false)}
       >
         <ModalHeader>
-          <ModalTitle>
-            Xác nhận
-          </ModalTitle>
+          <ModalTitle>Vô hiệu hóa tài khoản</ModalTitle>
         </ModalHeader>
         <ModalContent>
-          <p className="text-[15px] text-ink-muted">
-            Bạn chắc chắn thay đổi hệ thống?
+          <p className="text-[14px] leading-relaxed text-ink-muted">
+            Bạn sẽ bị đăng xuất ngay sau khi tài khoản được vô hiệu hóa
           </p>
         </ModalContent>
         <ModalFooter>
-          <button
-            onClick={() => setConfirmModal(null)}
-            disabled={loading}
-            className="px-4 py-2 text-brand font-medium rounded-full hover:bg-surface-quiet"
+          <Button
+            variant="secondary"
+            onClick={() => setDeleteOpen(false)}
+            disabled={Boolean(settings.processing)}
           >
             Hủy
-          </button>
-          <button
-            onClick={() => {
-              if (confirmModal?.type === "maintenance")
-                handleToggleMaintenance();
-              else handleToggleRegistration();
-            }}
-            disabled={loading}
-            className="pill-button"
+          </Button>
+          <Button
+            variant="danger"
+            onClick={settings.deleteAccount}
+            disabled={Boolean(settings.processing)}
           >
-            {loading ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              "Xác nhận"
-            )}
-          </button>
+            {settings.processing === "delete" ? "Đang xử lý" : "Vô hiệu hóa"}
+          </Button>
         </ModalFooter>
       </Modal>
     </div>

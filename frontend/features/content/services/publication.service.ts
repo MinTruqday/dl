@@ -9,7 +9,8 @@ export async function publishDocumentAPI(documentId: string) {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi khởi chạy tiến trình xuất bản");
+  if (!res.ok)
+    throw new Error(data.message || "Lỗi khởi chạy tiến trình xuất bản");
   return data;
 }
 
@@ -23,7 +24,8 @@ export async function schedulePublishAPI(
     body: JSON.stringify({ publish_at: publishAt }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể cấu hình lịch trình xuất bản");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể cấu hình lịch trình xuất bản");
   return data;
 }
 
@@ -43,7 +45,10 @@ export async function updateSeoMetadataAPI(
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể cập nhật cấu trúc siêu dữ liệu tối ưu hóa tìm kiếm (SEO)");
+    throw new Error(
+      data.message ||
+        "Không thể cập nhật cấu trúc siêu dữ liệu tối ưu hóa tìm kiếm (SEO)",
+    );
   return data;
 }
 
@@ -53,6 +58,8 @@ export async function getReadabilityScoreAPI(documentId: string) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải chỉ số đo lường khả năng đọc hiểu");
+    throw new Error(
+      data.message || "Không thể tải chỉ số đo lường khả năng đọc hiểu",
+    );
   return data;
 }

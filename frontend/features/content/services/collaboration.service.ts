@@ -14,7 +14,8 @@ export async function inviteCollaboratorAPI(
     body: JSON.stringify({ document_id: documentId, email, role }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tạo yêu cầu cộng tác");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tạo yêu cầu cộng tác");
   return data;
 }
 
@@ -24,7 +25,9 @@ export async function getCollaboratorsAPI(documentId: string) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải danh sách tài khoản cộng tác");
+    throw new Error(
+      data.message || "Không thể tải danh sách tài khoản cộng tác",
+    );
   return data;
 }
 
@@ -34,7 +37,8 @@ export async function removeCollaboratorAPI(collaborationId: string) {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi thu hồi quyền truy cập cộng tác");
+  if (!res.ok)
+    throw new Error(data.message || "Lỗi thu hồi quyền truy cập cộng tác");
   return data;
 }
 
@@ -44,7 +48,9 @@ export async function getCollaborationInvitesAPI() {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải danh sách yêu cầu chờ xử lý");
+    throw new Error(
+      data.message || "Không thể tải danh sách yêu cầu chờ xử lý",
+    );
   return data;
 }
 
@@ -55,7 +61,8 @@ export async function respondToInviteAPI(inviteId: string, status: string) {
     body: JSON.stringify({ status }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi xử lý phản hồi yêu cầu cộng tác");
+  if (!res.ok)
+    throw new Error(data.message || "Lỗi xử lý phản hồi yêu cầu cộng tác");
   return data;
 }
 
@@ -82,7 +89,8 @@ export async function transferOwnershipAPI(documentId: string, userId: string) {
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi chuyển giao quyền sở hữu tài liệu");
+  if (!res.ok)
+    throw new Error(data.message || "Lỗi chuyển giao quyền sở hữu tài liệu");
   return data;
 }
 
@@ -92,7 +100,10 @@ export async function pingCollaborationStatusAPI(documentId: string) {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể đồng bộ tín hiệu nhịp tim kết nối");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể đồng bộ tín hiệu nhịp tim kết nối",
+    );
   return data;
 }
 
@@ -105,7 +116,9 @@ export async function getOnlineCollaboratorsAPI(documentId: string) {
   );
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải trạng thái hiện diện trực tuyến");
+    throw new Error(
+      data.message || "Không thể tải trạng thái hiện diện trực tuyến",
+    );
   return data;
 }
 
@@ -156,11 +169,14 @@ export async function updateCollabAccessAPI(
   documentId: string,
   accessLevel: string,
 ) {
-  const res = await fetch(`${API_URL}/cong-tac/tai-lieu/${documentId}/quyen-truy-cap`, {
-    method: "PATCH",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ access_level: accessLevel }),
-  });
+  const res = await fetch(
+    `${API_URL}/cong-tac/tai-lieu/${documentId}/quyen-truy-cap`,
+    {
+      method: "PATCH",
+      headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({ access_level: accessLevel }),
+    },
+  );
   const data = await res.json();
   if (!res.ok)
     throw new Error(data.message || "Không thể cấu hình tham số bảo mật luồng");
@@ -176,7 +192,9 @@ export async function getSentPendingInvitesAPI(documentId: string) {
   );
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải danh sách yêu cầu chờ duyệt");
+    throw new Error(
+      data.message || "Không thể tải danh sách yêu cầu chờ duyệt",
+    );
   return data;
 }
 
@@ -200,7 +218,9 @@ export async function getContributionStatsAPI(documentId: string) {
   );
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải số liệu phân tích tần suất đóng góp");
+    throw new Error(
+      data.message || "Không thể tải số liệu phân tích tần suất đóng góp",
+    );
   return data;
 }
 
@@ -218,7 +238,9 @@ export async function createSnapshotAPI(
   );
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể xuất bản sao phiên làm việc (Snapshot)");
+    throw new Error(
+      data.message || "Không thể xuất bản sao phiên làm việc (Snapshot)",
+    );
   return data;
 }
 
@@ -231,7 +253,9 @@ export async function getSnapshotsAPI(documentId: string) {
   );
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải bộ sưu tập lịch sử phiên bản");
+    throw new Error(
+      data.message || "Không thể tải bộ sưu tập lịch sử phiên bản",
+    );
   return data;
 }
 
@@ -241,7 +265,10 @@ export async function acquireLockAPI(documentId: string) {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi cấp phát luồng điều khiển độc quyền (Mutex Lock)");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Lỗi cấp phát luồng điều khiển độc quyền (Mutex Lock)",
+    );
   return data;
 }
 
@@ -254,7 +281,11 @@ export async function releaseLockAPI(documentId: string) {
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi giải phóng luồng điều khiển độc quyền (Mutex Unlock)");
+  if (!res.ok)
+    throw new Error(
+      data.message ||
+        "Lỗi giải phóng luồng điều khiển độc quyền (Mutex Unlock)",
+    );
   return data;
 }
 
@@ -266,7 +297,8 @@ export async function getLockStatusAPI(documentId: string) {
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải cờ tín hiệu đồng bộ phiên");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải cờ tín hiệu đồng bộ phiên");
   return data;
 }
 
@@ -276,7 +308,10 @@ export async function generateInviteCodeAPI(documentId: string) {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tạo token xác thực phiên kết nối");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể tạo token xác thực phiên kết nối",
+    );
   return data;
 }
 
@@ -306,7 +341,9 @@ export async function createCollabTaskAPI(
   );
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tạo cấu trúc công việc phân tán");
+    throw new Error(
+      data.message || "Không thể tạo cấu trúc công việc phân tán",
+    );
   return data;
 }
 
@@ -319,7 +356,9 @@ export async function getCollabTasksAPI(documentId: string) {
   );
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải ma trận công việc hiện hành");
+    throw new Error(
+      data.message || "Không thể tải ma trận công việc hiện hành",
+    );
   return data;
 }
 
@@ -330,7 +369,10 @@ export async function updateCollabTaskAPI(taskId: string, isDone: boolean) {
     body: JSON.stringify({ is_done: isDone }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể cập nhật cờ trạng thái xử lý tiến trình");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể cập nhật cờ trạng thái xử lý tiến trình",
+    );
   return data;
 }
 
@@ -342,7 +384,9 @@ export async function addTaskCommentAPI(taskId: string, commentText: string) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Lỗi đính kèm gói tin văn bản vào tiến trình");
+    throw new Error(
+      data.message || "Lỗi đính kèm gói tin văn bản vào tiến trình",
+    );
   return data;
 }
 
@@ -352,9 +396,7 @@ export async function getTaskCommentsAPI(taskId: string) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(
-      data.message || "Không thể tải chuỗi phản hồi liên kết",
-    );
+    throw new Error(data.message || "Không thể tải chuỗi phản hồi liên kết");
   return data;
 }
 
@@ -374,7 +416,8 @@ export async function createCommentAPI(payload: {
     }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể lưu nội dung phản hồi văn bản");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể lưu nội dung phản hồi văn bản");
   return data;
 }
 
@@ -405,11 +448,15 @@ export async function getCommentsByItemAPI(itemId: string) {
 }
 
 export async function deleteCommentAPI(commentId: string) {
-  const res = await fetch(`${API_URL}/soan-thao/binh-luan/${commentId}/giai-quyet`, {
-    method: "PUT",
-    headers: getAuthHeaders(),
-  });
+  const res = await fetch(
+    `${API_URL}/soan-thao/binh-luan/${commentId}/giai-quyet`,
+    {
+      method: "PUT",
+      headers: getAuthHeaders(),
+    },
+  );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi hủy bỏ node dữ liệu phản hồi");
+  if (!res.ok)
+    throw new Error(data.message || "Lỗi hủy bỏ node dữ liệu phản hồi");
   return data;
 }

@@ -49,7 +49,8 @@ export async function syncKeystrokeBufferAPI(documentId: string, payload: any) {
     body: JSON.stringify(payload),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể đồng bộ chuỗi sự kiện thao tác");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể đồng bộ chuỗi sự kiện thao tác");
   return data;
 }
 
@@ -60,7 +61,10 @@ export async function addInlineSuggestionAPI(documentId: string, payload: any) {
     body: JSON.stringify(payload),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tạo khối dữ liệu đề xuất nội tuyến");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể tạo khối dữ liệu đề xuất nội tuyến",
+    );
   return data;
 }
 
@@ -77,7 +81,10 @@ export async function resolveSuggestionAPI(
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể thực hiện phản hồi quyết định khối đề xuất");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể thực hiện phản hồi quyết định khối đề xuất",
+    );
   return data;
 }
 
@@ -89,34 +96,36 @@ export async function syncPomodoroSessionAPI(payload: any) {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể đồng bộ trạng thái phiên làm việc Pomodoro");
+    throw new Error(
+      data.message || "Không thể đồng bộ trạng thái phiên làm việc Pomodoro",
+    );
   return data;
 }
 
 export async function autoSaveDraftAPI(documentId: string, content: any) {
-  const res = await fetch(
-    `${API_URL}/soan-thao/${documentId}/tu-dong-luu`,
-    {
-      method: "POST",
-      headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-      body: JSON.stringify({ content }),
-    },
-  );
+  const res = await fetch(`${API_URL}/soan-thao/${documentId}/tu-dong-luu`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ content }),
+  });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể đồng bộ hóa dữ liệu bản nháp tự động");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể đồng bộ hóa dữ liệu bản nháp tự động",
+    );
   return data;
 }
 
 export async function submitForReviewAPI(documentId: string) {
-  const res = await fetch(
-    `${API_URL}/soan-thao/${documentId}/gui-danh-gia`,
-    {
-      method: "POST",
-      headers: getAuthHeaders(),
-    },
-  );
+  const res = await fetch(`${API_URL}/soan-thao/${documentId}/gui-danh-gia`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+  });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tạo luồng yêu cầu xét duyệt tài liệu");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể tạo luồng yêu cầu xét duyệt tài liệu",
+    );
   return data;
 }
 
@@ -135,7 +144,10 @@ export async function globalFindReplaceAPI(
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể thực hiện biểu thức thay thế chuỗi toàn cục");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể thực hiện biểu thức thay thế chuỗi toàn cục",
+    );
   return data;
 }
 
@@ -143,16 +155,14 @@ export async function addInlineCommentAPI(
   documentId: string,
   payload: { block_id: string; text: string; selected_text?: string },
 ) {
-  const res = await fetch(
-    `${API_URL}/soan-thao/${documentId}/binh-luan`,
-    {
-      method: "POST",
-      headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    },
-  );
+  const res = await fetch(`${API_URL}/soan-thao/${documentId}/binh-luan`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể lưu dữ liệu phản hồi nội dung");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể lưu dữ liệu phản hồi nội dung");
   return data.data;
 }
 
@@ -165,7 +175,10 @@ export async function resolveCommentAPI(commentId: string) {
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể cập nhật trạng thái dữ liệu phản hồi");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể cập nhật trạng thái dữ liệu phản hồi",
+    );
   return data.data;
 }
 
@@ -187,6 +200,8 @@ export async function getVersionDiffAPI(
   );
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "Không thể tải dữ liệu đối chiếu phiên bản");
+    throw new Error(
+      data.message || "Không thể tải dữ liệu đối chiếu phiên bản",
+    );
   return data.data;
 }

@@ -3,19 +3,20 @@ import {
   getToken,
 } from "@/features/authentication/services/session.service";
 
-
-
 export async function ingestDocumentAPI(documentId: string) {
   const token = getToken();
   const res = await fetch(`${API_URL}/tiep-nap`, {
     method: "POST",
-    headers: { 
+    headers: {
       Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({ document_id: documentId }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "MODULE AGENTIC_AI: Vector ingestion pipeline failed");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể lập chỉ mục tài liệu",
+    );
   return data;
 }

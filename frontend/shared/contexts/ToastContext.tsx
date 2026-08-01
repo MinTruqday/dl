@@ -1,100 +1,78 @@
 "use client";
 
-import React, {
+import {
   createContext,
-  useContext,
-  useState,
   useCallback,
+  useContext,
   useEffect,
+  useState,
 } from "react";
-import { X, AlertCircle, CheckCircle2, Info } from "lucide-react";
 
-export interface ToastItem {
+export type ToastItem = {
   id: string;
   message: string;
   type: "success" | "error" | "info";
-}
+};
 
-interface ToastProps {
-  showToast: (message: string, type?: "success" | "error" | "info") => void;
-}
+type ToastContextValue = {
+  showToast: (message: string, type?: ToastItem["type"]) => void;
+};
 
-const Toast = createContext<ToastProps | undefined>(undefined);
+const ToastContext = createContext<ToastContextValue | undefined>(undefined);
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
-  const [isClient, setIsClient] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setIsClient(true);
+  useEffect(() => setMounted(true), []);
+
+  const removeToast = useCallback((id: string) => {
+    setToasts((items) => items.filter((item) => item.id !== id));
   }, []);
 
   const showToast = useCallback(
-    (message: string, type: "success" | "error" | "info" = "info") => {
-      const id = Math.random().toString(36).substring(2, 9);
-      setToasts((prev) => [...prev, { id, message, type }]);
-      setTimeout(() => {
-        setToasts((prev) => prev.filter((t) => t.id !== id));
-      }, 4000);
+    (message: string, type: ToastItem["type"] = "info") => {
+      const id = crypto.randomUUID();
+      setToasts((items) => [...items, { id, message, type }]);
+      window.setTimeout(() => removeToast(id), 4000);
     },
-    [],
+    [removeToast],
   );
 
-  const removeToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  }, []);
-
   return (
-    <Toast.Provider value={{ showToast }}>
+    <ToastContext.Provider value={{ showToast }}>
       {children}
-      {isClient && (
-        <div className="fixed top-24 right-4 sm:right-6 z-[500] flex flex-col items-end gap-3 pointer-events-none font-sans">
-          {toasts.map((t) => {
-            let icon = null;
-            if (t.type === "error") {
-              icon = <AlertCircle className="w-4 h-4 text-danger" />;
-            } else if (t.type === "success") {
-              icon = <CheckCircle2 className="w-4 h-4 text-ink" />;
-            } else {
-              icon = <Info className="w-4 h-4 text-ink" />;
-            }
-
-            return (
-              <div
-                key={t.id}
-                className="relative bg-surface border border-border rounded-panel p-4 shadow-lg pointer-events-auto animate-in fade-in slide-in-from-bottom-4 [transition-duration:220ms] ease-out min-w-[300px] max-w-[400px] flex items-center gap-3"
+      {mounted && toasts.length > 0 && (
+        <div
+          className="pointer-events-none fixed bottom-5 right-4 z-[2500] flex w-[min(380px,calc(100vw-2rem))] flex-col gap-2 sm:right-6"
+          aria-live="polite"
+        >
+          {toasts.map((toast) => (
+            <div
+              key={toast.id}
+              className={`pointer-events-auto flex items-start gap-4 border bg-surface px-4 py-3 shadow-[0_12px_36px_rgba(32,32,30,0.12)] ${toast.type === "error" ? "border-danger/40" : toast.type === "success" ? "border-brand/40" : "border-border-strong"}`}
+              role={toast.type === "error" ? "alert" : "status"}
+            >
+              <p className="min-w-0 flex-1 text-[13px] font-medium leading-5 text-ink">
+                {toast.message}
+              </p>
+              <button
+                type="button"
+                onClick={() => removeToast(toast.id)}
+                className="shrink-0 text-[12px] font-semibold text-ink-muted hover:text-ink"
               >
-                <div className={`shrink-0 flex items-center justify-center w-8 h-8 rounded-full ${t.type === "error" ? "bg-danger-soft text-danger" : t.type === "success" ? "bg-brand-soft text-brand" : "bg-surface-quiet text-ink"}`}>
-                  {icon}
-                </div>
-
-                <div className="flex-1 min-w-0 flex items-center">
-                  <p className="text-sm font-medium text-ink break-words">
-                    {t.message}
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  aria-label="Đóng thông báo"
-                  onClick={() => removeToast(t.id)}
-                  className="shrink-0 flex items-center justify-center w-8 h-8 cursor-pointer rounded-xl text-ink-faint hover:text-ink hover:bg-surface-quiet transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            );
-          })}
+                Đóng
+              </button>
+            </div>
+          ))}
         </div>
       )}
-    </Toast.Provider>
+    </ToastContext.Provider>
   );
 }
 
 export function useToast() {
-  const context = useContext(Toast);
-  if (!context) {
-    throw new Error("useToast must be used within a ToastProvider");
-  }
+  const context = useContext(ToastContext);
+  if (!context) throw new Error("ToastProvider chưa được khởi tạo");
   return context;
 }

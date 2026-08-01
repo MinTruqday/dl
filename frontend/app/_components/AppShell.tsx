@@ -13,21 +13,27 @@ type AppShellProps = {
   requireAuth: boolean;
 };
 
-const fullWidthRoutes = ["/soan-thao", "/tin-nhan", "/tro-chuyen", "/tai-lieu/xem-truoc"];
+const fullWidthRoutes = ["/tin-nhan", "/tro-chuyen", "/tai-lieu/xem-truoc"];
 
 function NavigationList({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const { user } = useAuth() as any;
-  const groups = useMemo(() => availableNavigation(navigationGroups, user), [user]);
+  const groups = useMemo(
+    () => availableNavigation(navigationGroups, user),
+    [user],
+  );
 
   return (
     <div className="flex flex-col gap-6">
       {groups.map((group) => (
         <div key={group.label}>
-          <p className="mb-2 px-3 text-[12px] font-semibold text-ink-faint">{group.label}</p>
+          <p className="mb-2 px-3 text-[12px] font-semibold text-ink-faint">
+            {group.label}
+          </p>
           <div className="space-y-1">
             {group.items.map((item) => {
-              const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              const active =
+                pathname === item.href || pathname.startsWith(`${item.href}/`);
               return (
                 <Link
                   key={item.id}
@@ -68,7 +74,11 @@ export default function AppShell({ children, requireAuth }: AppShellProps) {
 
   useEffect(() => {
     const close = (event: MouseEvent) => {
-      if (accountRef.current && !accountRef.current.contains(event.target as Node)) setAccountOpen(false);
+      if (
+        accountRef.current &&
+        !accountRef.current.contains(event.target as Node)
+      )
+        setAccountOpen(false);
     };
     const escape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -109,8 +119,13 @@ export default function AppShell({ children, requireAuth }: AppShellProps) {
     );
   }
 
-  const fullWidth = fullWidthRoutes.some((route) => pathname.startsWith(route));
-  const initials = String(user?.full_name || user?.username || "D").trim().charAt(0).toUpperCase();
+  const fullWidth =
+    pathname.startsWith("/soan-thao/chinh-sua") ||
+    fullWidthRoutes.some((route) => pathname.startsWith(route));
+  const initials = String(user?.full_name || user?.username || "D")
+    .trim()
+    .charAt(0)
+    .toUpperCase();
 
   return (
     <div className="min-h-[100dvh] bg-canvas text-ink">
@@ -124,14 +139,19 @@ export default function AppShell({ children, requireAuth }: AppShellProps) {
           >
             <Menu size={20} strokeWidth={1.75} />
           </button>
-          <form onSubmit={handleSearch} className="relative hidden w-full max-w-[520px] md:block">
+          <form
+            onSubmit={handleSearch}
+            className="relative hidden w-full max-w-[520px] md:block"
+          >
             <Search
               aria-hidden="true"
               className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint"
               size={18}
               strokeWidth={1.75}
             />
-            <label htmlFor="workspace-search" className="sr-only">Tìm kiếm tài liệu</label>
+            <label htmlFor="workspace-search" className="sr-only">
+              Tìm kiếm tài liệu
+            </label>
             <input
               id="workspace-search"
               value={searchQuery}
@@ -146,10 +166,16 @@ export default function AppShell({ children, requireAuth }: AppShellProps) {
                 <Link
                   href="/thong-bao"
                   className="relative flex h-11 w-11 items-center justify-center rounded-control text-ink-muted hover:bg-surface-quiet hover:text-ink"
-                  aria-label={unreadCount ? `Thông báo, ${unreadCount} chưa đọc` : "Thông báo"}
+                  aria-label={
+                    unreadCount
+                      ? `Thông báo, ${unreadCount} chưa đọc`
+                      : "Thông báo"
+                  }
                 >
                   <Bell size={19} strokeWidth={1.75} />
-                  {unreadCount > 0 && <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-danger" />}
+                  {unreadCount > 0 && (
+                    <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-danger" />
+                  )}
                 </Link>
                 <div className="relative" ref={accountRef}>
                   <button
@@ -159,7 +185,15 @@ export default function AppShell({ children, requireAuth }: AppShellProps) {
                     aria-expanded={accountOpen}
                   >
                     <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-brand text-[13px] font-semibold text-white">
-                      {user.avatar_url ? <img src={user.avatar_url} alt="" className="h-full w-full object-cover" /> : initials}
+                      {user.avatar_url ? (
+                        <img
+                          src={user.avatar_url}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        initials
+                      )}
                     </span>
                     <span className="hidden max-w-36 truncate text-[13px] font-semibold md:block">
                       {user.full_name || user.username}
@@ -168,11 +202,25 @@ export default function AppShell({ children, requireAuth }: AppShellProps) {
                   {accountOpen && (
                     <div className="absolute right-0 top-12 w-60 rounded-panel border border-border bg-surface p-2 shadow-[0_18px_50px_rgba(48,47,42,0.12)]">
                       <div className="border-b border-border px-3 py-2.5">
-                        <p className="truncate text-[14px] font-semibold text-ink">{user.full_name || user.username}</p>
-                        <p className="truncate text-[12px] text-ink-muted">{user.email}</p>
+                        <p className="truncate text-[14px] font-semibold text-ink">
+                          {user.full_name || user.username}
+                        </p>
+                        <p className="truncate text-[12px] text-ink-muted">
+                          {user.email}
+                        </p>
                       </div>
-                      <Link href="/ho-so" className="mt-1 block rounded-control px-3 py-2 text-[14px] hover:bg-surface-quiet">Hồ sơ</Link>
-                      <Link href="/cai-dat" className="block rounded-control px-3 py-2 text-[14px] hover:bg-surface-quiet">Cài đặt</Link>
+                      <Link
+                        href="/ho-so"
+                        className="mt-1 block rounded-control px-3 py-2 text-[14px] hover:bg-surface-quiet"
+                      >
+                        Hồ sơ
+                      </Link>
+                      <Link
+                        href="/cai-dat"
+                        className="block rounded-control px-3 py-2 text-[14px] hover:bg-surface-quiet"
+                      >
+                        Cài đặt
+                      </Link>
                       <button
                         type="button"
                         onClick={logoutState}
@@ -186,8 +234,18 @@ export default function AppShell({ children, requireAuth }: AppShellProps) {
               </>
             ) : (
               <>
-                <Link href="/dang-nhap" className="rounded-control px-3 py-2 text-[14px] font-semibold text-ink hover:bg-surface-quiet">Đăng nhập</Link>
-                <Link href="/dang-ky" className="rounded-control bg-brand px-4 py-2 text-[14px] font-semibold text-white hover:bg-brand-hover">Đăng ký</Link>
+                <Link
+                  href="/dang-nhap"
+                  className="rounded-control px-3 py-2 text-[14px] font-semibold text-ink hover:bg-surface-quiet"
+                >
+                  Đăng nhập
+                </Link>
+                <Link
+                  href="/dang-ky"
+                  className="rounded-control bg-brand px-4 py-2 text-[14px] font-semibold text-white hover:bg-brand-hover"
+                >
+                  Đăng ký
+                </Link>
               </>
             )}
           </div>
@@ -196,20 +254,44 @@ export default function AppShell({ children, requireAuth }: AppShellProps) {
 
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-[224px] border-r border-border bg-surface lg:block">
         <div className="flex h-[60px] items-center border-b border-border px-5">
-          <Link href="/" className="text-[19px] font-semibold tracking-[-0.035em] text-ink">DocLib</Link>
+          <Link
+            href="/"
+            className="text-[19px] font-semibold tracking-[-0.035em] text-ink"
+          >
+            DocLib
+          </Link>
         </div>
-        <nav className="h-[calc(100dvh-60px)] overflow-y-auto px-3 py-5" aria-label="Điều hướng chính">
+        <nav
+          className="h-[calc(100dvh-60px)] overflow-y-auto px-3 py-5"
+          aria-label="Điều hướng chính"
+        >
           <NavigationList />
         </nav>
       </aside>
 
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <button type="button" className="absolute inset-0 bg-ink/30" onClick={() => setMobileOpen(false)} aria-label="Đóng điều hướng" />
+          <button
+            type="button"
+            className="absolute inset-0 bg-ink/30"
+            onClick={() => setMobileOpen(false)}
+            aria-label="Đóng điều hướng"
+          />
           <aside className="relative h-full w-[min(88vw,320px)] overflow-y-auto bg-surface p-4 shadow-[20px_0_60px_rgba(32,32,30,0.16)]">
             <div className="mb-6 flex h-11 items-center justify-between">
-              <Link href="/" onClick={() => setMobileOpen(false)} className="text-[19px] font-semibold tracking-[-0.035em]">DocLib</Link>
-              <button type="button" onClick={() => setMobileOpen(false)} className="flex h-11 w-11 items-center justify-center rounded-control hover:bg-surface-quiet" aria-label="Đóng điều hướng">
+              <Link
+                href="/"
+                onClick={() => setMobileOpen(false)}
+                className="text-[19px] font-semibold tracking-[-0.035em]"
+              >
+                DocLib
+              </Link>
+              <button
+                type="button"
+                onClick={() => setMobileOpen(false)}
+                className="flex h-11 w-11 items-center justify-center rounded-control hover:bg-surface-quiet"
+                aria-label="Đóng điều hướng"
+              >
                 <X size={20} strokeWidth={1.75} />
               </button>
             </div>
@@ -219,7 +301,15 @@ export default function AppShell({ children, requireAuth }: AppShellProps) {
       )}
 
       <main className="min-h-[100dvh] pt-[60px] lg:pl-[224px]">
-        <div className={fullWidth ? "flex min-h-[calc(100dvh-60px)] w-full flex-col" : "page-shell"}>{children}</div>
+        <div
+          className={
+            fullWidth
+              ? "flex min-h-[calc(100dvh-60px)] w-full flex-col"
+              : "page-shell"
+          }
+        >
+          {children}
+        </div>
       </main>
     </div>
   );

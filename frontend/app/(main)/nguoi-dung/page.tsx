@@ -1,506 +1,352 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
-import {
-  getUsersAPI,
-  updateUserRoleAPI,
-  updateUserStatusAPI,
-  deleteUserAPI,
-  createUserAPI,
-} from "@/features/management/services/profile.service";
-import {
-  Loader2,
-  Search,
-  RefreshCcw,
-  UserPlus,
-  Mail,
-  ChevronRight,
-  Lock,
-  Unlock,
-  AlertTriangle,
-  MoreVertical,
-  Trash2,
-  Users,
-  X
-} from "lucide-react";
-import { useAuth } from "@/features/authentication/contexts/AuthContext";
-import { useToast } from "@/shared/contexts/ToastContext";
+import { useState } from "react";
+import EmptyState from "@/shared/components/common/EmptyState";
+import PageLoader from "@/shared/components/common/PageLoader";
+import { Button } from "@/shared/components/ui/Button";
 import {
   Modal,
-  ModalHeader,
-  ModalTitle,
   ModalContent,
   ModalFooter,
+  ModalHeader,
+  ModalTitle,
 } from "@/shared/components/ui/Modal";
-import PageLoader from "@/shared/components/common/PageLoader";
+import InlineState from "@/app/_components/InlineState";
+import PageHeader from "@/app/_components/PageHeader";
+import SegmentedTabs from "@/app/_components/SegmentedTabs";
+import { ManagedUser, UserChange, useUsers } from "./useUsers";
 
-export default function UsersManagementPage() {
-  const { user, isLoading: authLoading } = useAuth() as any;
-  const { showToast } = useToast();
-  const [users, setUsers] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showSearch, setShowSearch] = useState(false);
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const [viewMode, setViewMode] = useState<"all" | "reader" | "author" | "admin">("all");
-  const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
-  const [newUserForm, setNewUserForm] = useState({
-    email: "",
+type RoleFilter = "all" | "reader" | "author" | "admin";
+
+const roleLabels: Record<string, string> = {
+  reader: "Độc giả",
+  author: "Tác giả",
+  admin: "Quản trị viên",
+};
+
+export default function UsersPage() {
+  const [role, setRole] = useState<RoleFilter>("all");
+  const [query, setQuery] = useState("");
+  const [change, setChange] = useState<UserChange | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [form, setForm] = useState({
     full_name: "",
+    email: "",
     password: "",
     role: "reader",
   });
+  const users = useUsers(query, role);
 
-  const [confirmModal, setConfirmModal] = useState<{
-    type: "role" | "status";
-    user: any;
-    value: any;
-  } | null>(null);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
-
-  const handleDeleteUser = async (user: any) => {
-    if (!window.confirm(`Xác nhận đưa tài khoản ${user.email} vào thùng rác?`))
-      return;
-    setIsUpdating(true);
-    try {
-      await deleteUserAPI(user._id);
-      showToast("Xóa dữ liệu tài khoản hoàn tất", "success");
-      fetchData();
-    } catch (err: any) {
-      showToast(err.message || "Lỗi xóa dữ liệu tài khoản", "error");
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
-  const handleCreateUser = async () => {
-    if (!newUserForm.email || !newUserForm.password || !newUserForm.full_name) {
-      showToast("Lỗi thiếu hụt trường dữ liệu bắt buộc", "error");
-      return;
-    }
-    setIsCreating(true);
-    try {
-      await createUserAPI(newUserForm);
-      showToast("Khởi tạo tài khoản hệ thống hoàn tất", "success");
-      setCreateModalOpen(false);
-      setNewUserForm({ email: "", full_name: "", password: "", role: "reader" });
-      fetchData();
-    } catch (e: any) {
-      showToast(e.message || "Không thể tạo tài khoản hệ thống", "error");
-    } finally {
-      setIsCreating(false);
-    }
-  };
-
-  const fetchData = useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      const data = await getUsersAPI(100, 0);
-      setUsers(data.data || data || []);
-    } catch (err: any) {
-      showToast("Không thể tải bộ sưu tập tài khoản", "error");
-    } finally {
-      setIsRefreshing(false);
-      setIsLoading(false);
-    }
-  }, [showToast]);
-
-  useEffect(() => {
-    if (!authLoading && user?.role === "admin") {
-      fetchData();
-    }
-  }, [user, authLoading, fetchData]);
-
-  const handleUpdateRole = async () => {
-    if (!confirmModal) return;
-    setIsUpdating(true);
-    try {
-      await updateUserRoleAPI(confirmModal.user._id, confirmModal.value);
-      showToast("Cập nhật phân quyền truy cập hoàn tất", "success");
-      fetchData();
-      setConfirmModal(null);
-    } catch (err: any) {
-      showToast(err.message || "Không thể cập nhật phân quyền truy cập", "error");
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
-  const handleUpdateStatus = async () => {
-    if (!confirmModal) return;
-    setIsUpdating(true);
-    try {
-      await updateUserStatusAPI(confirmModal.user._id, confirmModal.value);
-      showToast(
-        confirmModal.value
-          ? "Kích hoạt trạng thái tài khoản hoàn tất"
-          : "Vô hiệu hóa trạng thái tài khoản hoàn tất",
-        "success",
-      );
-      fetchData();
-      setConfirmModal(null);
-    } catch (err: any) {
-      showToast(err.message || "Không thể cập nhật trạng thái tài khoản", "error");
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
-  useEffect(() => {
-    if (showSearch && searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
-  }, [showSearch]);
-
-  const filteredUsers = users.filter((u) => {
-    const matchesSearch =
-      u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (u.full_name || "").toLowerCase().includes(searchQuery.toLowerCase());
-    
-    let matchesView = true;
-    const role = u.role || "reader";
-    if (viewMode === "reader") matchesView = role === "reader";
-    if (viewMode === "author") matchesView = role === "author";
-    if (viewMode === "admin") matchesView = role === "admin";
-    
-    return matchesSearch && matchesView;
-  });
-
-  if (authLoading || isLoading) return <PageLoader />;
-  if (user?.role !== "admin")
+  if (users.loading) return <PageLoader rows={7} />;
+  if (!users.allowed)
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-56px)] gap-6 font-sans text-center">
-        <div className="w-24 h-24 bg-surface-quiet flex items-center justify-center rounded-panel">
-          <AlertTriangle className="w-10 h-10 text-warning" />
-        </div>
-        <div className="space-y-2 max-w-[300px]">
-          <p className="text-[13px] font-medium text-ink-muted mb-4">
-            Truy cập bị hạn chế
-          </p>
-          <p className="text-[15px] text-ink-muted">
-            Bạn không có quyền quản trị để truy cập trang này.
-          </p>
-        </div>
-      </div>
+      <InlineState
+        title="Không có quyền truy cập"
+        detail="Trang này chỉ dành cho quản trị viên"
+        tone="danger"
+      />
     );
 
+  const confirmChange = async () => {
+    if (!change) return;
+    if (await users.update(change)) setChange(null);
+  };
+
+  const create = async () => {
+    if (!form.full_name.trim() || !form.email.trim() || !form.password) return;
+    if (await users.create(form)) {
+      setCreateOpen(false);
+      setForm({ full_name: "", email: "", password: "", role: "reader" });
+    }
+  };
+
+  const requestChange = (
+    user: ManagedUser,
+    field: UserChange["field"],
+    value: UserChange["value"],
+  ) => setChange({ user, field, value });
+
   return (
-    <div className="w-full h-full font-sans text-ink">
-      <div className="flex flex-col">
-        <main className="flex-1 min-w-0 space-y-8 pt-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex-1">
-              {!showSearch ? (
-                <div className="relative inline-block w-fit">
-                  <select
-                    value={viewMode}
-                    onChange={(e) => setViewMode(e.target.value as any)}
-                    className="w-full bg-transparent h-10 pr-8 text-[20px] font-semibold text-ink focus:outline-none appearance-none cursor-pointer"
-                  >
-                    <option value="all">Tất cả</option>
-                    <option value="reader">Độc giả</option>
-                    <option value="author">Tác giả</option>
-                    <option value="admin">Quản trị viên</option>
-                  </select>
-                  <ChevronRight className="absolute right-0 top-1/2 -translate-y-1/2 w-5 h-5 text-ink-muted pointer-events-none rotate-90" />
-                </div>
-              ) : (
-                <div className="relative w-full max-w-md">
-                  <input
-                    ref={searchInputRef}
-                    type="text"
-              placeholder="Tìm kiếm email, tên"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-surface-quiet h-10 px-4 pr-10 text-[15px] rounded-full focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all border border-transparent focus:border-brand/20"
-                  />
-                  <button
-                    onClick={() => {
-                      setShowSearch(false);
-                      setSearchQuery("");
-                    }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-ink-muted hover:text-ink rounded-full transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
-            </div>
-            
-            <div className="flex items-center gap-2">
-              {!showSearch && (
-                <button
-                  onClick={() => setShowSearch(true)}
-                  className="p-2 bg-surface-quiet text-ink hover:bg-border rounded-full transition-colors"
-                  title="Tìm kiếm"
-                >
-                  <Search className="w-4 h-4" />
-                </button>
-              )}
-              <button
-                onClick={fetchData}
-                disabled={isRefreshing}
-                className="p-2 bg-surface-quiet text-ink hover:bg-border rounded-full transition-colors disabled:opacity-50"
-                title="Làm mới"
-              >
-                <RefreshCcw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
-              </button>
-              <button
-                onClick={() => setCreateModalOpen(true)}
-                className="p-2 bg-surface-quiet text-ink hover:bg-border rounded-full transition-colors"
-                title="Thêm mới"
-              >
-                <UserPlus className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          <div className="w-full overflow-x-auto min-h-[400px] transition-colors">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="text-[13px] text-ink-muted border-b border-border">
-                  <th className="py-3 px-6 font-medium whitespace-nowrap text-center">Tên tài khoản</th>
-                  <th className="py-3 px-6 font-medium whitespace-nowrap text-center">Email</th>
-                  <th className="py-3 px-6 font-medium whitespace-nowrap text-center">Tên hiển thị</th>
-                  <th className="py-3 px-6 font-medium whitespace-nowrap text-center">Quyền hạn</th>
-                  <th className="py-3 px-6 font-medium whitespace-nowrap text-center hidden lg:table-cell">Tham gia</th>
-                  <th className="py-3 px-6 font-medium whitespace-nowrap text-center hidden md:table-cell">Trạng thái</th>
-                  <th className="py-3 px-6 font-medium whitespace-nowrap text-right">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.length === 0 ? (
-                  <tr>
-                    <td colSpan={7}>
-                      <div className="py-24 flex flex-col items-center justify-center bg-surface-quiet rounded-panel w-full text-center my-4">
-                        <p className="text-[17px] text-ink-muted">Chưa có dữ liệu</p>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  filteredUsers.map((u) => (
-                    <tr
-                      key={u._id}
-                      className="hover:bg-border/60 transition-colors group cursor-default"
-                    >
-                      <td className="py-3 px-6 text-center">
-                        <span className="font-medium text-[14px] text-ink">@{u.slug || u._id?.substring(0,8)}</span>
-                      </td>
-                      <td className="py-3 px-6 text-center">
-                        <span className="text-[14px] text-ink-muted">
-                          {u.email}
-                        </span>
-                      </td>
-                      <td className="py-3 px-6 text-center">
-                        <span className="font-medium text-[14px] text-ink truncate max-w-[200px] inline-block">
-                          {u.full_name || "Thành viên DocLib"}
-                        </span>
-                      </td>
-                      <td className="py-3 px-6 text-center">
-                        <div className="relative inline-block w-full max-w-[150px] text-left">
-                          <select
-                            value={u.role || "reader"}
-                            onChange={(e) =>
-                              setConfirmModal({
-                                type: "role",
-                                user: u,
-                                value: e.target.value,
-                              })
-                            }
-                            className={`w-full bg-transparent h-[32px] px-2 text-[13px] font-medium rounded-md focus:outline-none appearance-none transition-colors hover:bg-border/50 ${u.role === "admin" ? "text-brand" : "text-ink"}`}
-                          >
-                            <option value="reader">Độc giả</option>
-                            <option value="author">Tác giả</option>
-
-                            <option value="admin">Quản trị</option>
-                          </select>
-                          <ChevronRight className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ink-muted pointer-events-none" />
-                        </div>
-                      </td>
-                      <td className="py-3 px-6 text-ink-muted text-[13px] hidden md:table-cell text-center">
-                        {u.created_at
-                          ? new Date(u.created_at).toLocaleDateString("vi-VN")
-                          : "---"}
-                      </td>
-                      <td className="py-3 px-6 hidden md:table-cell text-center">
-                        <div
-                          className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-[12px] font-medium whitespace-nowrap ${u.is_active ? "bg-brand-soft text-brand" : "bg-danger/10 text-danger"}`}
-                        >
-                          {u.is_active ? "Hoạt động" : "Tạm khóa"}
-                        </div>
-                      </td>
-                      <td className="py-3 px-6 text-right relative">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenDropdownId(
-                              openDropdownId === u._id ? null : u._id,
-                            );
-                          }}
-                          className="p-2 text-ink-muted hover:text-ink hover:bg-border/50 rounded-full transition-colors opacity-0 group-hover:opacity-100"
-                        >
-                          <MoreVertical className="w-4 h-4" />
-                        </button>
-                        {openDropdownId === u._id && (
-                          <>
-                            <div
-                              className="fixed inset-0 z-40"
-                              onClick={() => setOpenDropdownId(null)}
-                            />
-                            <div className="absolute right-6 top-10 mt-1 w-44 bg-white shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-border rounded-control z-50 overflow-hidden py-1">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setOpenDropdownId(null);
-                                  setConfirmModal({
-                                    type: "status",
-                                    user: u,
-                                    value: !u.is_active,
-                                  });
-                                }}
-                                className="w-full text-left px-4 py-2 text-[14px] text-ink hover:bg-surface-quiet transition-colors flex items-center gap-2"
-                              >
-                                {u.is_active ? (
-                                  <Lock className="w-4 h-4 text-ink-muted" />
-                                ) : (
-                                  <Unlock className="w-4 h-4 text-ink-muted" />
-                                )}{" "}
-                                {u.is_active ? "Khóa tài khoản" : "Kích hoạt"}
-                              </button>
-                              <div className="w-full h-[1px] bg-border my-1"></div>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setOpenDropdownId(null);
-                                  handleDeleteUser(u);
-                                }}
-                                className="w-full text-left px-4 py-2 text-[14px] text-danger hover:bg-danger/10 transition-colors flex items-center gap-2"
-                              >
-                                <Trash2 className="w-4 h-4" /> Xóa dữ liệu
-                              </button>
-                            </div>
-                          </>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </main>
+    <div className="w-full">
+      <PageHeader
+        title="Người dùng"
+        meta={`${users.total} tài khoản`}
+        actions={
+          <>
+            <Button variant="secondary" onClick={users.reload}>
+              Làm mới
+            </Button>
+            <Button onClick={() => setCreateOpen(true)}>Thêm người dùng</Button>
+          </>
+        }
+      />
+      {users.error && (
+        <div className="mb-6">
+          <InlineState
+            title="Không thể cập nhật người dùng"
+            detail={users.error}
+            tone="danger"
+          />
+        </div>
+      )}
+      <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <SegmentedTabs<RoleFilter>
+          label="Lọc theo vai trò"
+          value={role}
+          onChange={setRole}
+          tabs={[
+            { id: "all", label: "Tất cả" },
+            { id: "reader", label: "Độc giả" },
+            { id: "author", label: "Tác giả" },
+            { id: "admin", label: "Quản trị" },
+          ]}
+        />
+        <div className="w-full lg:max-w-xs">
+          <label
+            htmlFor="user-search"
+            className="mb-2 block text-[12px] font-semibold text-ink-muted"
+          >
+            Tìm người dùng
+          </label>
+          <input
+            id="user-search"
+            type="search"
+            className="apple-input w-full"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+        </div>
       </div>
 
+      {!users.users.length ? (
+        <EmptyState
+          text="Không tìm thấy người dùng"
+          description="Thử vai trò hoặc từ khóa khác"
+        />
+      ) : (
+        <div className="overflow-x-auto rounded-panel border border-border bg-surface">
+          <table className="w-full min-w-[900px] border-collapse text-left">
+            <thead className="bg-surface-quiet text-[12px] font-semibold text-ink-muted">
+              <tr>
+                <th className="px-4 py-3">Người dùng</th>
+                <th className="px-4 py-3">Vai trò</th>
+                <th className="px-4 py-3">Xác minh</th>
+                <th className="px-4 py-3">Hiển thị</th>
+                <th className="px-4 py-3">Tài khoản</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {users.users.map((user) => {
+                const id = user._id || user.id || "";
+                return (
+                  <tr key={id} className="text-[13px] hover:bg-surface-raised">
+                    <td className="max-w-xs px-4 py-3.5">
+                      <p className="truncate font-semibold text-ink">
+                        {user.full_name || "Chưa có tên"}
+                      </p>
+                      <p className="mt-1 truncate text-ink-muted">
+                        {user.email}
+                      </p>
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <select
+                        aria-label={`Vai trò của ${user.full_name || user.email}`}
+                        className="apple-input min-h-9 py-1.5 text-[13px]"
+                        value={user.role || "reader"}
+                        onChange={(event) =>
+                          requestChange(user, "role", event.target.value)
+                        }
+                      >
+                        <option value="reader">Độc giả</option>
+                        <option value="author">Tác giả</option>
+                        <option value="admin">Quản trị viên</option>
+                      </select>
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <select
+                        aria-label={`Xác minh của ${user.full_name || user.email}`}
+                        className="apple-input min-h-9 py-1.5 text-[13px]"
+                        value={user.kyc_status || "PENDING"}
+                        onChange={(event) =>
+                          requestChange(user, "kyc_status", event.target.value)
+                        }
+                      >
+                        <option value="PENDING">Đang chờ</option>
+                        <option value="VERIFIED">Đã xác minh</option>
+                        <option value="REJECTED">Từ chối</option>
+                      </select>
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          requestChange(
+                            user,
+                            "is_shadowbanned",
+                            !user.is_shadowbanned,
+                          )
+                        }
+                      >
+                        {user.is_shadowbanned ? "Cho hiển thị" : "Ẩn nội dung"}
+                      </Button>
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <Button
+                        variant={
+                          user.is_active === false ? "secondary" : "ghost"
+                        }
+                        size="sm"
+                        onClick={() =>
+                          requestChange(
+                            user,
+                            "is_active",
+                            user.is_active === false,
+                          )
+                        }
+                      >
+                        {user.is_active === false ? "Kích hoạt" : "Tạm khóa"}
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
       <Modal
-        isOpen={!!confirmModal}
-        onClose={() => !isUpdating && setConfirmModal(null)}
+        isOpen={Boolean(change)}
+        onClose={() => !users.processing && setChange(null)}
       >
         <ModalHeader>
           <ModalTitle>Xác nhận thay đổi</ModalTitle>
         </ModalHeader>
         <ModalContent>
-          <p className="text-[15px] text-ink-muted leading-relaxed">
-            {confirmModal?.type === "role"
-              ? `Thay đổi quyền hạn của "${confirmModal.user.full_name || confirmModal.user.email}" thành "${confirmModal.value === "reader" ? "Độc giả" : confirmModal.value === "author" ? "Tác giả" : "Quản trị viên"}"?`
-              : `Bạn có chắc chắn muốn ${confirmModal?.value ? "kích hoạt" : "vô hiệu hóa"} tài khoản của "${confirmModal?.user.full_name || confirmModal?.user.email}"?`}
+          <p className="text-[14px] leading-relaxed text-ink-muted">
+            Thay đổi sẽ áp dụng cho{" "}
+            {change?.user.full_name || change?.user.email}
           </p>
         </ModalContent>
         <ModalFooter>
-          <button
-            onClick={() => setConfirmModal(null)}
-            disabled={isUpdating}
-            className="px-5 py-2 text-brand font-medium hover:bg-surface-quiet rounded-full disabled:opacity-50"
+          <Button
+            variant="secondary"
+            onClick={() => setChange(null)}
+            disabled={users.processing}
           >
             Hủy
-          </button>
-          <button
-            onClick={() => {
-              if (confirmModal?.type === "role") handleUpdateRole();
-              else if (confirmModal?.type === "status") handleUpdateStatus();
-            }}
-            disabled={isUpdating}
-            className="pill-button disabled:opacity-50 flex items-center gap-2"
-          >
-            {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Xác nhận"}
-          </button>
+          </Button>
+          <Button onClick={confirmChange} disabled={users.processing}>
+            {users.processing ? "Đang cập nhật" : "Xác nhận"}
+          </Button>
         </ModalFooter>
       </Modal>
 
       <Modal
-        isOpen={createModalOpen}
-        onClose={() => !isCreating && setCreateModalOpen(false)}
+        isOpen={createOpen}
+        onClose={() => !users.processing && setCreateOpen(false)}
       >
         <ModalHeader>
-          <ModalTitle>Thêm người dùng mới</ModalTitle>
+          <ModalTitle>Thêm người dùng</ModalTitle>
         </ModalHeader>
         <ModalContent>
-          <div className="space-y-4 text-ink">
+          <div className="space-y-4">
             <div>
-              <label className="block text-[13px] font-medium text-ink-muted mb-1">Họ và tên</label>
+              <label
+                htmlFor="new-user-name"
+                className="mb-2 block text-[13px] font-semibold text-ink"
+              >
+                Tên hiển thị
+              </label>
               <input
-                type="text"
-                placeholder="Nhập họ và tên"
-                value={newUserForm.full_name}
-                onChange={(e) => setNewUserForm({ ...newUserForm, full_name: e.target.value })}
-                className="w-full bg-surface-quiet h-10 px-4 text-[15px] rounded-control focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all border border-transparent focus:border-brand/20"
+                id="new-user-name"
+                className="apple-input w-full"
+                value={form.full_name}
+                onChange={(event) =>
+                  setForm({ ...form, full_name: event.target.value })
+                }
               />
             </div>
             <div>
-              <label className="block text-[13px] font-medium text-ink-muted mb-1">Email đăng nhập</label>
+              <label
+                htmlFor="new-user-email"
+                className="mb-2 block text-[13px] font-semibold text-ink"
+              >
+                Email
+              </label>
               <input
+                id="new-user-email"
                 type="email"
-                placeholder="example@doclib.com"
-                value={newUserForm.email}
-                onChange={(e) => setNewUserForm({ ...newUserForm, email: e.target.value })}
-                className="w-full bg-surface-quiet h-10 px-4 text-[15px] rounded-control focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all border border-transparent focus:border-brand/20"
+                className="apple-input w-full"
+                value={form.email}
+                onChange={(event) =>
+                  setForm({ ...form, email: event.target.value })
+                }
               />
             </div>
             <div>
-              <label className="block text-[13px] font-medium text-ink-muted mb-1">Mật khẩu</label>
+              <label
+                htmlFor="new-user-password"
+                className="mb-2 block text-[13px] font-semibold text-ink"
+              >
+                Mật khẩu
+              </label>
               <input
+                id="new-user-password"
                 type="password"
-                placeholder="Mật khẩu ít nhất 6 ký tự"
-                value={newUserForm.password}
-                onChange={(e) => setNewUserForm({ ...newUserForm, password: e.target.value })}
-                className="w-full bg-surface-quiet h-10 px-4 text-[15px] rounded-control focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all border border-transparent focus:border-brand/20"
+                minLength={12}
+                className="apple-input w-full"
+                value={form.password}
+                onChange={(event) =>
+                  setForm({ ...form, password: event.target.value })
+                }
               />
+              <p className="mt-2 text-[12px] text-ink-muted">
+                Tối thiểu 12 ký tự
+              </p>
             </div>
             <div>
-              <label className="block text-[13px] font-medium text-ink-muted mb-1">Quyền hạn</label>
-              <div className="relative inline-block w-full">
-                <select
-                  value={newUserForm.role}
-                  onChange={(e) => setNewUserForm({ ...newUserForm, role: e.target.value })}
-                  className="w-full bg-surface-quiet h-10 px-4 pr-10 text-[15px] rounded-control focus:outline-none appearance-none transition-all border border-transparent focus:border-brand/20"
-                >
-                  <option value="reader">Độc giả</option>
-                  <option value="author">Tác giả</option>
-
-                  <option value="admin">Quản trị viên</option>
-                </select>
-                <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted pointer-events-none" />
-              </div>
+              <label
+                htmlFor="new-user-role"
+                className="mb-2 block text-[13px] font-semibold text-ink"
+              >
+                Vai trò
+              </label>
+              <select
+                id="new-user-role"
+                className="apple-input w-full"
+                value={form.role}
+                onChange={(event) =>
+                  setForm({ ...form, role: event.target.value })
+                }
+              >
+                <option value="reader">Độc giả</option>
+                <option value="author">Tác giả</option>
+                <option value="admin">Quản trị viên</option>
+              </select>
             </div>
           </div>
         </ModalContent>
         <ModalFooter>
-          <button
-            onClick={() => setCreateModalOpen(false)}
-            disabled={isCreating}
-            className="px-5 py-2 text-brand font-medium hover:bg-surface-quiet rounded-full disabled:opacity-50"
+          <Button
+            variant="secondary"
+            onClick={() => setCreateOpen(false)}
+            disabled={users.processing}
           >
             Hủy
-          </button>
-          <button
-            onClick={handleCreateUser}
-            disabled={isCreating}
-            className="pill-button disabled:opacity-50 flex items-center gap-2"
+          </Button>
+          <Button
+            onClick={create}
+            disabled={
+              users.processing ||
+              !form.full_name ||
+              !form.email ||
+              form.password.length < 12
+            }
           >
-            {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Thêm mới"}
-          </button>
+            {users.processing ? "Đang tạo" : "Tạo tài khoản"}
+          </Button>
         </ModalFooter>
       </Modal>
     </div>

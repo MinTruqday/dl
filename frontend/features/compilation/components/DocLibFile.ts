@@ -3,7 +3,7 @@ import { API, BlockTool } from "@editorjs/editorjs";
 export default class DocLibFile implements BlockTool {
   static readonly feature = {
     id: "DocLibFile",
-    title: "DocLib File",
+    title: "Tệp đính kèm",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="211121415a48f55a"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="20,4 20,18 9,8 11,9 9,5 17,5"/></svg>',
     product: "doclib",
   } as const;
@@ -18,7 +18,7 @@ export default class DocLibFile implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "DocLib File Attachment",
+      title: "Tệp đính kèm",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="211121415a48f55a"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="20,4 20,18 9,8 11,9 9,5 17,5"/></svg>',
     };
   }
@@ -53,7 +53,7 @@ export default class DocLibFile implements BlockTool {
         .doclib-file-icon { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #e0f2fe; color: hsl(var(--brand)); border-radius: 8px; margin-right: 16px; font-weight: bold; font-size: 12px; text-transform: uppercase; }
         .doclib-file-info { flex-grow: 1; display: flex; flex-direction: column; gap: 4px; }
         .doclib-file-title { font-weight: 600; font-size: 1em; outline: none; }
-        .doclib-file-title:empty::before { content: 'DocLib Name'; color: hsl(var(--ink-faint)); pointer-events: none; }
+        .doclib-file-title:empty::before { content: 'Tên tệp'; color: hsl(var(--ink-faint)); pointer-events: none; }
         .doclib-file-meta { font-size: 0.85em; color: hsl(var(--ink-muted)); }
         .doclib-file-download { color: hsl(var(--brand)); cursor: pointer; padding: 8px; }
         .doclib-file-input-container { display: flex; align-items: center; gap: 8px; }
@@ -75,7 +75,7 @@ export default class DocLibFile implements BlockTool {
 
       const icon = document.createElement("div");
       icon.classList.add("doclib-file-icon");
-      icon.innerText = this.data.file.extension || "FILE";
+      icon.innerText = this.data.file.extension || "TỆP";
 
       const info = document.createElement("div");
       info.classList.add("doclib-file-info");
@@ -188,7 +188,7 @@ export default class DocLibFile implements BlockTool {
 
       uploader.addEventListener("contextmenu", (e) => {
         e.preventDefault();
-        const url = prompt("Enter a direct file URL");
+        const url = prompt("Nhập liên kết tệp");
         if (url) {
           const fileName = url.split("/").pop() || url;
           if (this.data.file) this.data.file.url = url;
