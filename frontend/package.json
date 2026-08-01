@@ -6,13 +6,11 @@
   "scripts": {
     "predev": "pnpm install",
     "dev": "next dev",
-    "prebuild": "pnpm audit:document-commands",
+    "prebuild": "pnpm install",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "format": "prettier --write .",
-    "generate:document-commands": "node scripts/generate-document-command-catalog.mjs",
-    "audit:document-commands": "node scripts/audit-document-components.mjs"
+    "format": "prettier --write ."
   },
   "dependencies": {
     "@codexteam/icons": "^0.3.3",
@@ -47,10 +45,5 @@
     "tailwindcss": "^3.3.0",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.9.3"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "unrs-resolver"
-    ]
   }
 }

@@ -1,10 +1,10 @@
 from src.core.logic_logger import log_logic_execution
-from src.services.user import UserDirectory
+from backend.cloud.src.services.user import UserDirectory
 from src.core.infrastructure.mongo import mongo
 from datetime import datetime, timezone
 from typing import List, Optional
 
-from fastapi import HTTPException, Query
+from fastapi import Query
 from loguru import logger
 from src.schemas.storage import StorageItemCreate, StorageItemInDB, StorageItemUpdate
 
