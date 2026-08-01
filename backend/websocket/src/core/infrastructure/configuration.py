@@ -3,17 +3,25 @@ import os
 from pydantic import BaseModel
 
 
+def get_service_url(service_name: str) -> str:
+    host = os.getenv(f"{service_name}_SERVICE_HOST")
+    port = os.getenv(f"{service_name}_SERVICE_PORT", "80")
+    return f"http://{host}:{port}" if host else f"http://{service_name.lower()}:8000"
+
+
 class Settings(BaseModel):
-    PROJECT_NAME: str = os.getenv("PROJECT_NAME", "DocLib")
-    VERSION: str = os.getenv("VERSION", "1.0.0")
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "")
-    CORS_ALLOWED_ORIGINS: str = os.getenv("CORS_ALLOWED_ORIGINS", "")
-    MONGODB_URI: str = os.getenv("MONGODB_URI", "mongodb://mongodb:27017/doclib")
-    REDIS_URI: str = os.getenv("REDIS_URI", "redis://redis:6379/0")
-    CONTENT_DB_NAME: str = os.getenv("CONTENT_DB_NAME", "doclib_content")
-    MESSAGING_DB_NAME: str = os.getenv("MESSAGING_DB_NAME", "doclib_messaging")
-    MAX_WS_MESSAGE_BYTES: int = int(os.getenv("MAX_WS_MESSAGE_BYTES", "262144"))
-    MAX_WS_FRAMES_PER_SECOND: int = int(os.getenv("MAX_WS_FRAMES_PER_SECOND", "20"))
-    MAX_WS_CONNECTIONS_PER_USER: int = int(os.getenv("MAX_WS_CONNECTIONS_PER_USER", "5"))
+    PROJECT_NAME: str = os.environ["PROJECT_NAME"]
+    VERSION: str = os.environ["VERSION"]
+    SECRET_KEY: str = os.environ["SECRET_KEY"]
+    CORS_ALLOWED_ORIGINS: str = os.environ["CORS_ALLOWED_ORIGINS"]
+    MONGODB_URI: str = os.environ["MONGODB_URI"]
+    REDIS_URI: str = os.environ["REDIS_URI"]
+    CONTENT_DB_NAME: str = os.environ["CONTENT_DB_NAME"]
+    MESSAGING_DB_NAME: str = os.environ["MESSAGING_DB_NAME"]
+    MAX_WS_MESSAGE_BYTES: int = int(os.environ["MAX_WS_MESSAGE_BYTES"])
+    MAX_WS_FRAMES_PER_SECOND: int = int(os.environ["MAX_WS_FRAMES_PER_SECOND"])
+    MAX_WS_CONNECTIONS_PER_USER: int = int(os.environ["MAX_WS_CONNECTIONS_PER_USER"])
+    CONTENT_URL: str = get_service_url("CONTENT")
+    MESSAGING_URL: str = get_service_url("MESSAGING")
 
 settings = Settings()

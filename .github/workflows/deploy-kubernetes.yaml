@@ -1,6 +1,7 @@
 name: Deploy Kubernetes
 
 on:
+  workflow_call:
   workflow_dispatch:
 
 concurrency:
@@ -17,18 +18,21 @@ env:
 jobs:
   update-kubernetes:
     runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 30
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Configure Kubernetes Credentials
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
         run: |
           mkdir -p ~/.kube
-          SECRET_VALUE="${{ secrets.KUBE_CONFIG }}"
-          if echo "$SECRET_VALUE" | base64 -d 2>/dev/null | grep -q 'apiVersion'; then
-            echo "$SECRET_VALUE" | base64 -d > ~/.kube/config
+          if printf '%s' "$KUBE_CONFIG" | base64 -d 2>/dev/null | grep -q 'apiVersion'; then
+            printf '%s' "$KUBE_CONFIG" | base64 -d > ~/.kube/config
           else
-            echo "$SECRET_VALUE" > ~/.kube/config
+            printf '%s\n' "$KUBE_CONFIG" > ~/.kube/config
           fi
           chmod 600 ~/.kube/config
 
@@ -37,42 +41,50 @@ jobs:
 
       - name: Lowercase repository
         run: |
-          echo "IMAGE_NAME_LOWER=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
+          echo "IMAGE_NAME_LOWER=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
 
       - name: Prepare environment file
+        env:
+          DOCLIB_ENV: ${{ secrets.DOCLIB_ENV }}
         run: |
-          echo "${{ secrets.DOCLIB_ENV }}" > ./k8s/.env
+          printf '%s\n' "$DOCLIB_ENV" > ./k8s/.env
+
+      - name: Validate deployment configuration
+        run: |
+          kubectl kustomize ./k8s > /tmp/doclib.yaml
+          python scripts/audit_kubernetes.py /tmp/doclib.yaml
 
       - name: Update image registries in manifests
         run: |
-          find ./k8s/apps -name "*.yaml" -exec sed -i "s|doclib-registry|${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}|g" {} +
+          find ./k8s/apps -name "*.yaml" -exec sed -i "s|doclib-registry|${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}|g; s|:latest|:${GITHUB_SHA}|g" {} +
 
       - name: Apply Kubernetes Manifests
         run: |
-          kubectl apply -k ./k8s/ --validate=false
+          kubectl apply -k ./k8s/
 
       - name: Wait for rollout to complete
         run: |
           DEPLOYMENTS=$(kubectl get deployments -n doclib-production -o jsonpath='{.items[*].metadata.name}')
-          for dep in $DEPLOYMENTS; do
-            kubectl rollout status deployment/$dep -n doclib-production --timeout=300s
+          read -ra DEPLOYMENT_NAMES <<< "$DEPLOYMENTS"
+          for dep in "${DEPLOYMENT_NAMES[@]}"; do
+            kubectl rollout status "deployment/$dep" -n doclib-production --timeout=300s
           done
 
       - name: Smoke test health endpoints
         shell: bash
         run: |
           declare -A SERVICE_PORTS
-          SERVICE_PORTS=([authentication]=8001 [humanity]=8002 [content]=8004 [cloud]=8012 [drm]=8013 [compilation]=8011 [messaging]=8009 [notification]=8007 [collection]=8005 [finance]=8006 [usage]=8014 [management]=8003 [agentic-ai]=8008 [websocket]=8010)
+          SERVICE_PORTS=([authentication]=8000 [humanity]=8000 [content]=8000 [cloud]=8000 [drm]=8000 [compilation]=8000 [messaging]=8000 [notification]=8000 [collection]=8000 [finance]=8000 [usage]=8000 [management]=8000 [agentic-ai]=8000 [websocket]=8000 [worker-service]=8000)
           FAILED_SERVICES=()
           for svc in "${!SERVICE_PORTS[@]}"; do
             port="${SERVICE_PORTS[$svc]}"
-            POD=$(kubectl get pods -n doclib-production -l app=$svc --field-selector=status.phase=Running -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+            POD=$(kubectl get pods -n doclib-production -l "app=$svc" --field-selector=status.phase=Running -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
             if [ -z "$POD" ]; then
               echo "WARNING: No running pod found for $svc, skipping health check"
               FAILED_SERVICES+=("$svc")
               continue
             fi
-            RESPONSE=$(kubectl exec "$POD" -n doclib-production -- curl -sf --max-time 10 http://localhost:$port/health 2>&1 || echo "failed")
+            RESPONSE=$(kubectl exec "$POD" -n doclib-production -- curl -sf --max-time 10 "http://localhost:$port/health" 2>&1 || echo "failed")
             if echo "$RESPONSE" | grep -q "failed"; then
               echo "Health check failed for $svc (pod: $POD)"
               FAILED_SERVICES+=("$svc")
@@ -80,7 +92,7 @@ jobs:
               echo "$svc: OK"
             fi
           done
-          if [ ${#FAILED_SERVICES[@]} -gt 0 ]; then
+          if [ "${#FAILED_SERVICES[@]}" -gt 0 ]; then
             echo "Failed services: ${FAILED_SERVICES[*]}"
             exit 1
           fi

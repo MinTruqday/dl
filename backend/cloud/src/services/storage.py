@@ -1,9 +1,10 @@
 from src.core.logic_logger import log_logic_execution
+from src.services.user import UserDirectory
 from src.core.infrastructure.mongo import mongo
 from datetime import datetime, timezone
 from typing import List, Optional
 
-from fastapi import Query
+from fastapi import HTTPException, Query
 from loguru import logger
 from src.schemas.storage import StorageItemCreate, StorageItemInDB, StorageItemUpdate
 
@@ -52,9 +53,7 @@ class StorageService:
     @staticmethod
     @log_logic_execution
     async def get_storage_quota(owner_id: str) -> dict:
-        user = await database.mongodb[settings.HUMANITY_DB_NAME].users.find_one(
-            {"_id": owner_id}
-        )
+        user = await UserDirectory.get_by_id(owner_id)
         limit = (
             user.get("storage_limit", 1 * 1024 * 1024 * 1024)
             if user
@@ -431,9 +430,7 @@ class StorageService:
         if role not in {"viewer", "editor"}:
             from fastapi import HTTPException
             raise HTTPException(status_code=422, detail="Vai trò chia sẻ không hợp lệ")
-        target_user = await database.mongodb[settings.HUMANITY_DB_NAME].users.find_one(
-            {"email": email}
-        )
+        target_user = await UserDirectory.get_by_email(email)
         if not target_user:
             from fastapi import HTTPException
 

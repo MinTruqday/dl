@@ -15,6 +15,7 @@ from src.core.infrastructure.mongo import mongo
 from src.core.infrastructure.redis import redis
 from src.core.logic_logger import log_logic_execution
 from src.schemas.wallet import TransactionType, TransferRequest
+from src.services.humanity_client import HumanityClient
 
 
 class TransferService:
@@ -22,17 +23,7 @@ class TransferService:
     @log_logic_execution
     async def verify_recipient(identifier: str) -> Dict[str, Any]:
         value = identifier.strip()
-        recipient = await database.mongodb[settings.HUMANITY_DB_NAME].users.find_one(
-            {
-                "$or": [
-                    {"_id": value},
-                    {"email": value},
-                    {"slug": value},
-                    {"account_number": value},
-                ],
-                "is_active": {"$ne": False},
-            }
-        )
+        recipient = await HumanityClient.find(value)
         if not recipient:
             raise HTTPException(
                 status_code=404,

@@ -1,8 +1,9 @@
 from src.core.infrastructure.redis import redis
 from typing import List, Optional
 
+import hmac
 import jwt
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, Header, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from loguru import logger
 
@@ -41,6 +42,13 @@ class CurrentUser(BaseModel):
     
 ALGORITHM = "HS256"
 SECRET_KEY = settings.SECRET_KEY
+
+async def verify_internal_token(x_internal_token: str = Header(default="")):
+    if not hmac.compare_digest(x_internal_token, settings.SECRET_KEY):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Mã xác thực nội bộ không hợp lệ",
+        )
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 

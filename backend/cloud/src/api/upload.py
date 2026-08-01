@@ -8,6 +8,7 @@ from typing import Any
 from uuid import UUID
 
 import aiofiles
+import httpx
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import RedirectResponse, Response
 
@@ -84,35 +85,17 @@ async def can_download(file_path: str, user_id: str, role: Role) -> bool:
     }
     if await db.storage_items.find_one(query, {"_id": 1}):
         return True
-    messaging = database.mongodb[settings.MESSAGING_DB_NAME]
-    groups = await messaging.message_groups.find(
-        {"members": user_id}, {"_id": 1}
-    ).to_list(length=None)
-    group_ids = [str(group["_id"]) for group in groups]
-    message = await messaging.messages.find_one(
-        {
-            "$and": [
-                {
-                    "$or": [
-                        {"image_url": file_path},
-                        {"audio_url": file_path},
-                        {"attachments.url": file_path},
-                        {"attachments.file_url": file_path},
-                    ]
-                },
-                {
-                    "$or": [
-                        {"sender_id": user_id},
-                        {"receiver_id": user_id},
-                        {"receiver_id": {"$in": group_ids}},
-                    ]
-                },
-            ]
-        },
-        {"_id": 1},
-    )
-    if message:
-        return True
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            response = await client.post(
+                f"{settings.MESSAGING_URL}/tin-nhan/noi-bo/quyen-truy-cap-tep",
+                json={"file_path": file_path, "user_id": user_id},
+                headers={"X-Internal-Token": settings.SECRET_KEY},
+            )
+        if response.status_code == 200 and response.json().get("allowed") is True:
+            return True
+    except (httpx.HTTPError, ValueError):
+        pass
     return role == Role.ADMIN and file_path.startswith("system/")
 
 

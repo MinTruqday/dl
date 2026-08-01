@@ -12,6 +12,7 @@ from uuid6 import uuid7
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 from src.repositories.announcement import AnnouncementRepository
+from src.services.humanity_client import HumanityClient
 
 class AnnouncementService:
 
@@ -79,10 +80,7 @@ class AnnouncementService:
             )
             if existing:
                 return {"id": str(existing["_id"]), "duplicate": True}
-        profile = await database.mongodb[settings.HUMANITY_DB_NAME].users.find_one(
-            {"_id": data.target_user_id},
-            {"_id": 1},
-        )
+        profile = await HumanityClient.get(data.target_user_id)
         if not profile:
             raise HTTPException(status_code=404, detail="Không tìm thấy người nhận thông báo")
         notif_id = str(uuid7())

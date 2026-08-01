@@ -1,3 +1,4 @@
+import hmac
 from enum import Enum
 from typing import Any, List, Optional
 
@@ -177,6 +178,13 @@ def require_permissions(required_permissions: List[str]):
     return permission_checker
 
 from fastapi import Header
+
+async def verify_internal_token(x_internal_token: str = Header(default="")):
+    if not hmac.compare_digest(x_internal_token, settings.SECRET_KEY):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Mã xác thực nội bộ không hợp lệ",
+        )
 
 class AuthenticatedUser:
     def __init__(self, user_id: str, user_name: str = "User"):

@@ -1,0 +1,11 @@
+**
+!frontend
+!frontend/**
+!packages
+!packages/**
+frontend/.next
+frontend/node_modules
+frontend/.pnpm-store
+frontend/tsconfig.tsbuildinfo
+**/__pycache__
+**/*.pyc

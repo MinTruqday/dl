@@ -15,6 +15,8 @@ from src.repositories.system import SystemRepository
 from src.repositories.moderation import ModerationRepository
 
 from src.core.dependency import CurrentUser
+from src.services.humanity_client import HumanityClient
+from src.services.content_client import document_stats
 
 class TelemetryService:
 
@@ -60,11 +62,11 @@ class TelemetryService:
     @staticmethod
     @log_logic_execution
     async def get_system_stats() -> dict:
-        humanity = database.mongodb[settings.HUMANITY_DB_NAME]
-        content = database.mongodb[settings.CONTENT_DB_NAME]
-        total_users = await humanity.users.count_documents({"is_active": {"$ne": False}})
-        total_documents = await content.documents.count_documents({"is_deleted": {"$ne": True}})
-        total_authors = await humanity.users.count_documents({"role": {"$regex": "^author$", "$options": "i"}, "is_active": {"$ne": False}})
+        humanity_stats = await HumanityClient.stats() or {}
+        total_users = humanity_stats.get("total_users", 0)
+        content_stats = await document_stats()
+        total_documents = content_stats.get("total_documents", 0)
+        total_authors = humanity_stats.get("total_authors", 0)
         return {
             "total_users": total_users,
             "total_documents": total_documents,

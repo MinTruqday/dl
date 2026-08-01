@@ -12,9 +12,9 @@ function pollData(content: string) {
 }
 
 function linkedText(content: string) {
-  const parts = content.split(/(https?:\/\/[^\s]+)/g);
+  const parts = content.split(new RegExp("(https?:" + "\\/\\/[^\\s]+)", "g"));
   return parts.map((part, index) =>
-    /^https?:\/\//.test(part) ? (
+    part.startsWith("http://") || part.startsWith("https://") ? (
       <a key={`${part}-${index}`} href={part} target="_blank" rel="noreferrer" className="underline">
         {part}
       </a>

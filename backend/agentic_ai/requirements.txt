@@ -13,7 +13,7 @@ langchain-community
 transformers>=4.51.0
 sentence-transformers==2.6.0
 rerankers
-qdrant-client==1.8.0
+qdrant-client==1.9.2
 tavily-python==0.3.1
 gunicorn==21.2.0
 python-multipart==0.0.9

@@ -3,21 +3,28 @@ import os
 from pydantic import BaseModel
 
 
+def get_service_url(service_name: str) -> str:
+    host = os.getenv(f"{service_name}_SERVICE_HOST")
+    port = os.getenv(f"{service_name}_SERVICE_PORT", "80")
+    return f"http://{host}:{port}" if host else f"http://{service_name.lower()}:8000"
+
+
 class Settings(BaseModel):
-    PROJECT_NAME: str = os.getenv("PROJECT_NAME", "DocLib")
-    VERSION: str = os.getenv("VERSION", "1.0.0")
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "")
-    MONGODB_URI: str = os.getenv("MONGODB_URI", "mongodb://mongodb:27017/doclib")
-    RABBITMQ_URI: str = os.getenv("RABBITMQ_URI", "amqp://guest:guest@rabbitmq:5672/")
-    CONTENT_DB_NAME: str = os.getenv("CONTENT_DB_NAME", "doclib_content")
-    WORKER_DB_NAME: str = os.getenv("WORKER_DB_NAME", "doclib_worker")
-    MINIO_ENDPOINT: str = os.getenv("MINIO_ENDPOINT", "http://minio:9000")
-    MINIO_ACCESS_KEY: str = os.getenv("MINIO_ACCESS_KEY", "")
-    MINIO_SECRET_KEY: str = os.getenv("MINIO_SECRET_KEY", "")
-    MINIO_PRIVATE_BUCKET: str = os.getenv("MINIO_PRIVATE_BUCKET", "doclib-private")
-    MAX_COMPILE_INPUT_BYTES: int = int(os.getenv("MAX_COMPILE_INPUT_BYTES", str(2 * 1024 * 1024)))
-    MAX_COMPILE_OUTPUT_BYTES: int = int(os.getenv("MAX_COMPILE_OUTPUT_BYTES", str(50 * 1024 * 1024)))
-    WORKER_MAX_RETRIES: int = int(os.getenv("WORKER_MAX_RETRIES", "3"))
+    PROJECT_NAME: str = os.environ["PROJECT_NAME"]
+    VERSION: str = os.environ["VERSION"]
+    SECRET_KEY: str = os.environ["SECRET_KEY"]
+    MONGODB_URI: str = os.environ["MONGODB_URI"]
+    RABBITMQ_URI: str = os.environ["RABBITMQ_URI"]
+    CONTENT_DB_NAME: str = os.environ["CONTENT_DB_NAME"]
+    WORKER_DB_NAME: str = os.environ["WORKER_DB_NAME"]
+    MINIO_ENDPOINT: str = os.environ["MINIO_ENDPOINT"]
+    MINIO_ACCESS_KEY: str = os.environ["MINIO_ACCESS_KEY"]
+    MINIO_SECRET_KEY: str = os.environ["MINIO_SECRET_KEY"]
+    MINIO_PRIVATE_BUCKET: str = os.environ["MINIO_PRIVATE_BUCKET"]
+    MAX_COMPILE_INPUT_BYTES: int = int(os.environ["MAX_COMPILE_INPUT_BYTES"])
+    MAX_COMPILE_OUTPUT_BYTES: int = int(os.environ["MAX_COMPILE_OUTPUT_BYTES"])
+    WORKER_MAX_RETRIES: int = int(os.environ["WORKER_MAX_RETRIES"])
+    CONTENT_URL: str = get_service_url("CONTENT")
 
 
 settings = Settings()

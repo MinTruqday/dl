@@ -11,6 +11,7 @@ from src.core.dependency import verify_internal_token
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 from src.core.infrastructure.redis import redis
+from src.services.humanity_client import HumanityClient
 
 router = APIRouter(
     prefix="/bao-ve",
@@ -59,10 +60,7 @@ async def check_network_anomaly(user_id: str, client_ip: str) -> Dict[str, Any]:
 async def get_user_trust_profile(
     user_id: str = Query(min_length=1, max_length=128),
 ) -> Dict[str, Any]:
-    user = await database.mongodb[settings.HUMANITY_DB_NAME].users.find_one(
-        {"_id": user_id},
-        {"is_active": 1, "ai_tier": 1, "role": 1},
-    )
+    user = await HumanityClient.get(user_id)
     if not user:
         raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")
     drm_db = database.mongodb[settings.DRM_DB_NAME]
@@ -176,10 +174,7 @@ async def issue_temporary_aes_key(
         {"_id": document_id, "is_deleted": {"$ne": True}},
         {"_id": 1},
     )
-    user = await database.mongodb[settings.HUMANITY_DB_NAME].users.find_one(
-        {"_id": user_id, "is_active": {"$ne": False}},
-        {"_id": 1},
-    )
+    user = await HumanityClient.get(user_id)
     if not document:
         raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
     if not user:

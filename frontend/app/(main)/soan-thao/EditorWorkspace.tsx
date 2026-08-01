@@ -2,7 +2,8 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import type EditorJS from "@editorjs/editorjs";
 import InlineState from "@/app/_components/InlineState";
 import SegmentedTabs from "@/app/_components/SegmentedTabs";
 import PageLoader from "@/shared/components/common/PageLoader";
@@ -26,11 +27,17 @@ const LatexEditor = dynamic(
   () => import("@/features/compilation/components/LatexEditor"),
   { ssr: false },
 );
+const DocumentCommandPalette = dynamic(
+  () => import("@/features/compilation/components/DocumentCommandPalette"),
+  { ssr: false },
+);
 
 export default function EditorWorkspace() {
   const editor = useEditorWorkspace();
   const [exportOpen, setExportOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
+  const [commandsOpen, setCommandsOpen] = useState(false);
+  const editorRef = useRef<EditorJS | null>(null);
 
   if (editor.loading) return <PageLoader rows={8} />;
 
@@ -84,6 +91,11 @@ export default function EditorWorkspace() {
           <Button size="sm" variant="secondary" onClick={() => setToolsOpen(true)}>
             Công cụ văn bản
           </Button>
+          {editor.selectedDocument?.content_format !== "doclibx" && (
+            <Button size="sm" variant="secondary" onClick={() => setCommandsOpen(true)}>
+              Chức năng tài liệu
+            </Button>
+          )}
           <Button
             size="sm"
             variant="secondary"
@@ -189,6 +201,7 @@ export default function EditorWorkspace() {
                   documentId={editor.documentId}
                   initialContent={editor.content}
                   onSave={editor.setContent}
+                  editorRef={editorRef}
                 />
               )}
             </div>
@@ -280,6 +293,12 @@ export default function EditorWorkspace() {
         </ModalFooter>
       </Modal>
       <EditorTextToolsModal open={toolsOpen} close={() => setToolsOpen(false)} content={editor.content} />
+      <DocumentCommandPalette
+        open={commandsOpen}
+        close={() => setCommandsOpen(false)}
+        editorRef={editorRef}
+        onSave={editor.setContent}
+      />
     </div>
   );
 }

@@ -8,6 +8,7 @@ from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 from src.core.logic_logger import log_logic_execution
 from src.schemas.wallet import Transaction, TransactionType
+from src.services.humanity_client import HumanityClient
 
 
 ALLOWED_WITHDRAWAL_QUEUE_STATUSES = {
@@ -183,10 +184,7 @@ class WithdrawalService:
             {"status": normalized_status}
         ).sort("created_at", -1).limit(limit).to_list(length=None)
         user_ids = list({row["user_id"] for row in rows})
-        profiles = await database.mongodb[settings.HUMANITY_DB_NAME].users.find(
-            {"_id": {"$in": user_ids}},
-            {"full_name": 1},
-        ).to_list(length=None)
+        profiles = await HumanityClient.get_many(user_ids) or []
         names = {str(profile["_id"]): profile.get("full_name", "Unknown") for profile in profiles}
         return [
             {

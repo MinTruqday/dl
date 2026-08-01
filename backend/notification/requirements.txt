@@ -7,3 +7,4 @@ motor==3.6.0
 uuid6==2024.1.12
 PyJWT==2.8.0
 redis==5.2.1
+httpx==0.27.2

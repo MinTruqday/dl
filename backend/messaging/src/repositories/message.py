@@ -2,6 +2,7 @@ from src.core.infrastructure.mongo import mongo
 from typing import Optional, Dict, Any, List
 from src.core.infrastructure.database import database
 from src.core.infrastructure.configuration import settings
+import httpx
 
 class MessageRepository:
     @staticmethod
@@ -59,7 +60,18 @@ class MessageRepository:
 
     @classmethod
     async def find_shared_document(cls, *args, **kwargs):
-        return await database.mongodb[settings.CONTENT_DB_NAME]["documents"].find_one(*args, **kwargs)
+        query = args[0] if args else kwargs.get("filter", {})
+        document_id = str(query.get("_id", ""))
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(
+                f"{settings.CONTENT_URL}/tai-lieu/noi-bo/truy-cap",
+                json={"document_id": document_id, "user_id": "", "is_admin": True},
+                headers={"X-Internal-Token": settings.SECRET_KEY},
+            )
+        if response.status_code == 404:
+            return None
+        response.raise_for_status()
+        return response.json()["data"]
 
     @classmethod
     async def get_user_controls(cls, user_id: str):

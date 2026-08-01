@@ -10,6 +10,7 @@ from contextlib import suppress
 from datetime import datetime, timedelta, timezone
 
 from loguru import logger
+import httpx
 
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database, record_job
@@ -31,6 +32,17 @@ UNSAFE_LATEX = [
 
 class PermanentTaskError(Exception):
     code = "permanent_task_error"
+
+
+async def content_job(action: str, **payload):
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        response = await client.post(
+            f"{settings.CONTENT_URL}/tai-lieu/noi-bo/cong-viec",
+            json={"action": action, **payload},
+            headers={"X-Internal-Token": settings.SECRET_KEY},
+        )
+    response.raise_for_status()
+    return response.json().get("data")
 
 
 def validate_identifier(value: str, field: str):
@@ -116,10 +128,7 @@ async def handle_compile(payload: dict):
     existing = await jobs.find_one({"_id": job_id}, {"status": 1, "result": 1})
     if existing and existing.get("status") == "completed":
         return existing.get("result")
-    document = await database.mongodb[settings.CONTENT_DB_NAME].documents.find_one(
-        {"_id": document_id},
-        {"creator_id": 1},
-    )
+    document = await content_job("get_creator", document_id=document_id)
     creator_id = str(payload.get("creator_id") or (document or {}).get("creator_id") or "system")
     validate_identifier(creator_id, "creator identifier")
     await record_job(
@@ -135,19 +144,8 @@ async def handle_compile(payload: dict):
     digest = hashlib.sha256(pdf).hexdigest()
     object_path = f"users/{creator_id}/compiled/{document_id}/{digest}.pdf"
     await upload_pdf(object_path, pdf)
-    if document:
-        await database.mongodb[settings.CONTENT_DB_NAME].documents.update_one(
-            {"_id": document_id, "creator_id": creator_id},
-            {
-                "$set": {
-                    "compiled_file_url": object_path,
-                    "compile_status": "completed",
-                    "compiled_at": datetime.now(timezone.utc),
-                    "updated_at": datetime.now(timezone.utc),
-                },
-                "$unset": {"compile_error": ""},
-            },
-        )
+    if document and document.get("exists"):
+        await content_job("compile_complete", document_id=document_id, creator_id=creator_id, file_url=object_path)
     result = {
         "document_id": document_id,
         "file_url": object_path,
@@ -182,34 +180,9 @@ async def handle_publish(payload: dict):
         },
     )
     now = datetime.now(timezone.utc)
-    result = await database.mongodb[settings.CONTENT_DB_NAME].documents.update_one(
-        {
-            "_id": document_id,
-            "creator_id": creator_id,
-            "publication_job_id": job_id,
-            "status": "processing_publish",
-            "is_deleted": {"$ne": True},
-        },
-        {
-            "$set": {
-                "status": "published",
-                "published_at": now,
-                "updated_at": now,
-            },
-            "$unset": {
-                "publication_job_id": "",
-                "publication_error": "",
-                "scheduled_publish_at": "",
-                "publish_at": "",
-            },
-        },
-    )
-    if result.modified_count == 0:
-        current = await database.mongodb[settings.CONTENT_DB_NAME].documents.find_one(
-            {"_id": document_id},
-            {"status": 1, "is_deleted": 1},
-        )
-        if current and current.get("status") == "published":
+    result = await content_job("publish_complete", document_id=document_id, creator_id=creator_id, job_id=job_id)
+    if not result.get("updated"):
+        if result.get("status") == "published":
             await record_job(
                 job_id,
                 {
@@ -246,38 +219,11 @@ async def mark_failed(queue_name: str, payload: dict, error: Exception):
             job_id = ""
         document_id = str(payload.get("document_id") or "")
         if IDENTIFIER_PATTERN.fullmatch(document_id):
-            await database.mongodb[settings.CONTENT_DB_NAME].documents.update_one(
-                {"_id": document_id},
-                {
-                    "$set": {
-                        "compile_status": "failed",
-                        "compile_error": message,
-                        "updated_at": datetime.now(timezone.utc),
-                    }
-                },
-            )
+            await content_job("compile_failed", document_id=document_id, error=message)
     if queue_name == "document_publish_queue":
         document_id = str(payload.get("document_id") or "")
         if IDENTIFIER_PATTERN.fullmatch(document_id) and IDENTIFIER_PATTERN.fullmatch(job_id):
-            await database.mongodb[settings.CONTENT_DB_NAME].documents.update_one(
-                {
-                    "_id": document_id,
-                    "publication_job_id": job_id,
-                    "status": "processing_publish",
-                },
-                {
-                    "$set": {
-                        "status": "draft",
-                        "publication_error": message,
-                        "updated_at": datetime.now(timezone.utc),
-                    },
-                    "$unset": {
-                        "publication_job_id": "",
-                        "scheduled_publish_at": "",
-                        "publish_at": "",
-                    },
-                },
-            )
+            await content_job("publish_failed", document_id=document_id, job_id=job_id, error=message)
     if IDENTIFIER_PATTERN.fullmatch(job_id):
         await record_job(
             job_id,
@@ -340,46 +286,23 @@ class WorkerRunner:
                 await asyncio.sleep(2)
 
     async def schedule_publications(self):
-        documents = database.mongodb[settings.CONTENT_DB_NAME].documents
         while True:
             try:
                 now = datetime.now(timezone.utc)
                 job_id = f"publish-{os.urandom(16).hex()}"
-                from pymongo import ReturnDocument
-                document = await documents.find_one_and_update(
-                    {
-                        "scheduled_publish_at": {"$lte": now},
-                        "status": {"$nin": ["processing_publish", "published"]},
-                        "is_deleted": {"$ne": True},
-                        "creator_id": {"$type": "string"},
-                    },
-                    {
-                        "$set": {
-                            "status": "processing_publish",
-                            "publication_job_id": job_id,
-                            "updated_at": now,
-                        }
-                    },
-                    return_document=ReturnDocument.AFTER,
-                )
+                document = await content_job("claim_scheduled", job_id=job_id)
                 if not document:
                     await asyncio.sleep(15)
                     continue
                 payload = {
                     "job_id": job_id,
-                    "document_id": str(document["_id"]),
+                    "document_id": str(document["document_id"]),
                     "creator_id": str(document["creator_id"]),
                 }
                 try:
                     await mq.publish("document_publish_queue", payload)
                 except Exception:
-                    await documents.update_one(
-                        {"_id": document["_id"], "publication_job_id": job_id},
-                        {
-                            "$set": {"status": "draft", "updated_at": now},
-                            "$unset": {"publication_job_id": ""},
-                        },
-                    )
+                    await content_job("release_scheduled", document_id=document["document_id"], job_id=job_id)
                     raise
             except asyncio.CancelledError:
                 raise

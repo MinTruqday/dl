@@ -18,6 +18,7 @@ from src.core.infrastructure.database import database
 from src.repositories.system import SystemRepository
 from src.repositories.policy import PolicyProposalRepository
 from src.repositories.moderation import ModerationRepository
+from src.services.humanity_client import HumanityClient
 
 PROCESS_STARTED_AT = time.monotonic()
 
@@ -32,58 +33,19 @@ class HealthService:
         offset: int = 0,
         cursor: str = None,
     ) -> list:
-        query = {}
-        if cursor and isinstance(cursor, str):
-            query["created_at"] = {
-                "$lt": datetime.fromisoformat(cursor.replace("Z", "+00:00"))
-            }
-        users = await database.mongodb[settings.HUMANITY_DB_NAME].users.find(query).sort("created_at", -1).skip(offset).limit(limit).to_list(length=limit)
-        return [
-            {
-                "_id": str(u["_id"]),
-                "email": u.get("email"),
-                "full_name": u.get("full_name"),
-                "role": u.get("role"),
-                "is_active": u.get("is_active", True),
-                "created_at": (
-                    u["created_at"].isoformat()
-                    if isinstance(u.get("created_at"), datetime)
-                    else u.get("created_at")
-                ),
-            }
-            for u in users
-        ]
+        return await HumanityClient.list(limit, offset) or []
 
     @staticmethod
     @log_logic_execution
     async def update_user_role(user_id: str, role: str) -> dict:
-        res = await database.mongodb[settings.HUMANITY_DB_NAME].users.update_one(
-            {"_id": user_id},
-            {"$set": {"role": role, "updated_at": datetime.now(timezone.utc)}},
-        )
-        if res.matched_count == 0:
-            raise HTTPException(
-                status_code=404, detail="Hệ thống không tìm thấy hồ sơ người dùng yêu cầu"
-            )
+        await HumanityClient.update(user_id, {"role": role})
         logger.info("Account access privileges updated")
         return {"message": "Cập nhật quyền truy cập hệ thống hoàn tất"}
 
     @staticmethod
     @log_logic_execution
     async def update_user_status(user_id: str, is_active: bool) -> dict:
-        res = await database.mongodb[settings.HUMANITY_DB_NAME].users.update_one(
-            {"_id": user_id},
-            {
-                "$set": {
-                    "is_active": is_active,
-                    "updated_at": datetime.now(timezone.utc),
-                }
-            },
-        )
-        if res.matched_count == 0:
-            raise HTTPException(
-                status_code=404, detail="Hệ thống không tìm thấy hồ sơ người dùng yêu cầu"
-            )
+        await HumanityClient.update(user_id, {"is_active": is_active})
         logger.info("Account status updated")
         return {"message": "Cập nhật trạng thái hoạt động tài khoản hoàn tất"}
 
@@ -395,9 +357,7 @@ class HealthService:
     @staticmethod
     @log_logic_execution
     async def update_shadowban(user_id: str, status: bool, current_user) -> dict:
-        result = await database.mongodb[settings.HUMANITY_DB_NAME].users.update_one({"_id": user_id}, {"$set": {"is_shadowbanned": status, "updated_at": datetime.now(timezone.utc)}})
-        if result.matched_count == 0:
-            raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản cần cập nhật")
+        await HumanityClient.update(user_id, {"is_shadowbanned": status})
         await HealthService._audit(current_user, "user.shadowban", user_id, {"status": status})
         return {"user_id": user_id, "is_shadowbanned": status}
 
@@ -411,9 +371,7 @@ class HealthService:
         values = {"kyc_status": normalized, "updated_at": now}
         if normalized == "VERIFIED":
             values["kyc_verified_at"] = now
-        result = await database.mongodb[settings.HUMANITY_DB_NAME].users.update_one({"_id": user_id}, {"$set": values})
-        if result.matched_count == 0:
-            raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản cần xác minh")
+        await HumanityClient.update(user_id, values)
         await HealthService._audit(current_user, "user.kyc", user_id, {"status": normalized})
         return {"user_id": user_id, "kyc_status": normalized}
 

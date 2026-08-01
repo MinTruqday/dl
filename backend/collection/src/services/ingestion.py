@@ -13,6 +13,7 @@ from src.core.infrastructure.mongo import mongo
 from src.core.infrastructure.redis import redis
 from src.core.logic_logger import log_logic_execution
 from src.schemas.ingestion import Collection
+from src.services.content_client import collector_document_stats
 
 
 SOURCE_QUEUES = {
@@ -129,27 +130,18 @@ async def get_active_jobs():
 
 @log_logic_execution
 async def get_collector_stats():
-    content = database.mongodb[settings.CONTENT_DB_NAME].documents
     collection = database.mongodb[settings.COLLECTION_DB_NAME].collection_jobs
     source_ids = ["annas-archive", "nxbst", "nxbgd", "ctan"]
-    total_docs = await content.count_documents({})
-    total_assets = await content.count_documents(
-        {"$or": [{"file_url": {"$type": "string"}}, {"pdf_url": {"$type": "string"}}]}
-    )
-    recent = await content.find(
-        {"creator_id": {"$in": source_ids}},
-        {"created_at": 1},
-    ).sort("created_at", -1).limit(1).to_list(length=1)
+    content_stats = await collector_document_stats(source_ids)
     active = await collection.count_documents({"status": {"$in": ["pending", "running"]}})
     failed = await collection.count_documents({"status": "failed"})
-    total_collected = await content.count_documents({"creator_id": {"$in": source_ids}})
     paused = await redis.get("stop_collection") == "1"
     return {
-        "total_documents": total_docs,
-        "total_assets": total_assets,
+        "total_documents": content_stats["total_documents"],
+        "total_assets": content_stats["total_assets"],
         "collector_status": "PAUSED" if paused else "RUNNING",
-        "last_crawl": recent[0]["created_at"].isoformat() if recent and recent[0].get("created_at") else None,
-        "total_documents_collected": total_collected,
+        "last_crawl": content_stats.get("last_run"),
+        "total_documents_collected": content_stats["total_collected"],
         "active_jobs": active,
         "failed_jobs": failed,
         "active_sources": ["AnnaArchive", "NXBST", "NXBGD", "CTAN"],

@@ -16,6 +16,7 @@ from src.core.security import (
     valid_internal_token,
 )
 from src.sockets.composition import composition_socket_manager
+from src.core.internal_services import document_exists
 
 
 router = APIRouter(prefix="/ws")
@@ -23,17 +24,7 @@ ROOM_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{1,128}$")
 
 
 async def can_edit_document(document_id: str, identity: SocketIdentity) -> bool:
-    query = {"_id": document_id}
-    if identity.role != "admin":
-        query["$or"] = [
-            {"creator_id": identity.user_id},
-            {"coauthors": identity.user_id},
-        ]
-    document = await database.mongodb[settings.CONTENT_DB_NAME].documents.find_one(
-        query,
-        {"_id": 1},
-    )
-    return document is not None
+    return await document_exists(document_id, identity.user_id, identity.role == "admin", True)
 
 
 @router.websocket("/crdt/{document_id}")
@@ -117,11 +108,7 @@ async def broadcast_message(
         raise HTTPException(status_code=403, detail="Invalid internal token")
     if not ROOM_PATTERN.fullmatch(request.document_id):
         raise HTTPException(status_code=422, detail="Invalid document identifier")
-    document = await database.mongodb[settings.CONTENT_DB_NAME].documents.find_one(
-        {"_id": request.document_id},
-        {"_id": 1},
-    )
-    if not document:
+    if not await document_exists(request.document_id, is_admin=True):
         raise HTTPException(status_code=404, detail="Document not found")
     raw = json.dumps(
         request.message,

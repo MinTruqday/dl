@@ -1,17 +1,22 @@
 name: CI
 
 on:
+  workflow_call:
   pull_request:
     branches:
       - main
 
 concurrency:
-  group: ci-${{ github.head_ref }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   source-policy:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout repository
@@ -28,8 +33,65 @@ jobs:
       - name: Audit compilation components
         run: python scripts/audit_compilation_components.py
 
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm --dir frontend install --frozen-lockfile
+
+      - name: Check types
+        run: pnpm --dir frontend exec tsc --noEmit
+
+      - name: Build frontend
+        run: pnpm --dir frontend build
+
+      - name: Check generated files
+        run: git diff --exit-code
+
+  kubernetes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare validation environment
+        run: |
+          python - <<'PY' > k8s/.env
+          import pathlib
+          import re
+          keys = set()
+          for path in pathlib.Path("backend").glob("*/src/core/infrastructure/configuration.py"):
+              keys.update(re.findall(r'os\.environ\["([A-Z0-9_]+)"\]', path.read_text()))
+          for key in sorted(keys):
+              print(f"{key}=validation")
+          PY
+
+      - name: Render Kubernetes manifests
+        run: kubectl kustomize k8s > /tmp/doclib.yaml
+
+      - name: Validate Kubernetes manifests
+        run: python scripts/audit_kubernetes.py /tmp/doclib.yaml
+
   lint-and-check:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
@@ -46,19 +108,23 @@ jobs:
           cache: pip
 
       - name: Install Ruff
-        run: pip install ruff
+        run: pip install ruff==0.9.10
 
       - name: Run Ruff lint check
         run: ruff check backend/${{ matrix.service }}/src/ --config ruff.toml
 
+      - name: Compile Python sources
+        run: python -m compileall -q backend/${{ matrix.service }}/src/
+
   security-scan:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Run Trivy vulnerability scan on repository
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           scan-type: fs
           scan-ref: ./backend

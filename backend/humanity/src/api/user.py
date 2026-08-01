@@ -55,6 +55,25 @@ async def get_users_by_ids(user_ids: list[str], db=Depends(get_db)):
         u["_id"] = str(u["_id"])
     return APIResponse(data=users, message="Trích xuất danh sách người dùng hoàn tất")
 
+@router.post("/noi-bo/tim", include_in_schema=False, dependencies=[Depends(verify_internal_token)])
+async def find_internal_user(req: dict, db=Depends(get_db)):
+    from src.repositories.user import UserRepository
+    value = str(req.get("identifier", "")).strip()
+    user = await UserRepository.find_by_identifier(value)
+    if not user:
+        raise HTTPException(status_code=404, detail="Không tìm thấy dữ liệu người dùng tương ứng")
+    user["_id"] = str(user["_id"])
+    return {"data": user}
+
+@router.get("/noi-bo/danh-sach", include_in_schema=False, dependencies=[Depends(verify_internal_token)])
+async def list_internal_users(limit: int = 100, offset: int = 0, db=Depends(get_db)):
+    return {"data": await UserService.get_all_users(min(limit, 100), max(offset, 0))}
+
+@router.get("/noi-bo/thong-ke", include_in_schema=False, dependencies=[Depends(verify_internal_token)])
+async def get_internal_stats(db=Depends(get_db)):
+    from src.repositories.user import UserRepository
+    return {"data": await UserRepository.get_stats()}
+
 @router.put("/{user_id}", response_model=APIResponse[Any], include_in_schema=False, dependencies=[Depends(verify_internal_token)])
 async def update_user(user_id: str, request: Request, db=Depends(get_db)):
     data = await request.json()

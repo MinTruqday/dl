@@ -3,6 +3,31 @@ from typing import Optional, Dict, Any, List
 
 class UserRepository:
     @staticmethod
+    async def find_by_identifier(identifier: str) -> Optional[Dict[str, Any]]:
+        return await mongo.find_one(
+            "users",
+            {
+                "$or": [
+                    {"_id": identifier},
+                    {"email": identifier.lower()},
+                    {"slug": identifier.lower()},
+                    {"account_number": identifier},
+                ],
+                "is_active": {"$ne": False},
+            },
+        )
+
+    @staticmethod
+    async def get_stats() -> Dict[str, int]:
+        db = mongo.get_db()
+        return {
+            "total_users": await db.users.count_documents({"is_active": {"$ne": False}}),
+            "total_authors": await db.users.count_documents(
+                {"role": {"$regex": "^author$", "$options": "i"}, "is_active": {"$ne": False}}
+            ),
+        }
+
+    @staticmethod
     async def get_user_by_id(user_id: str) -> Optional[Dict[str, Any]]:
         return await mongo.find_one(collection="users", query={"_id": user_id})
 

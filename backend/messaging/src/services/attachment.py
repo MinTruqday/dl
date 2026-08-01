@@ -8,6 +8,36 @@ from src.services.thread import ThreadService
 
 class AttachmentService:
     @staticmethod
+    async def can_access_file(file_path: str, user_id: str) -> bool:
+        groups = await MessageRepository.find_groups(
+            {"members": user_id}, {"_id": 1}
+        ).to_list(length=None)
+        group_ids = [str(group["_id"]) for group in groups]
+        message = await MessageRepository.find_one(
+            {
+                "$and": [
+                    {
+                        "$or": [
+                            {"image_url": file_path},
+                            {"audio_url": file_path},
+                            {"attachments.url": file_path},
+                            {"attachments.file_url": file_path},
+                        ]
+                    },
+                    {
+                        "$or": [
+                            {"sender_id": user_id},
+                            {"receiver_id": user_id},
+                            {"receiver_id": {"$in": group_ids}},
+                        ]
+                    },
+                ]
+            },
+            {"_id": 1},
+        )
+        return message is not None
+
+    @staticmethod
     @log_logic_execution
     async def share_document(receiver_id: str, document_id: str, current_user):
         doc = await MessageRepository.find_shared_document({"_id": document_id})

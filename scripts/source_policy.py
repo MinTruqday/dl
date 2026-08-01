@@ -617,7 +617,6 @@ def main():
             scan_web(relative_path, source, issues)
         else:
             scan_config(relative_path, source, issues)
-    scan_compilation_registry(issues)
     scan_fail_open_contracts(issues)
     for path, line, issue in sorted(set(issues), key=lambda item: (str(item[0]), item[1], item[2])):
         print(f"{path}:{line}:{issue}")

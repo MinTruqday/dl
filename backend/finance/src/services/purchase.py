@@ -11,6 +11,7 @@ from src.core.infrastructure.database import database
 from src.core.infrastructure.redis import redis
 from src.core.logic_logger import log_logic_execution
 from src.schemas.wallet import Transaction, TransactionType
+from src.services.humanity_client import HumanityClient
 
 
 class PurchaseService:
@@ -20,7 +21,6 @@ class PurchaseService:
         return (
             client[settings.FINANCE_DB_NAME],
             client[settings.CONTENT_DB_NAME],
-            client[settings.HUMANITY_DB_NAME],
             client[settings.USAGE_DB_NAME],
         )
 
@@ -47,7 +47,7 @@ class PurchaseService:
     @staticmethod
     @log_logic_execution
     async def get_revenue(current_user) -> dict:
-        finance_db, content_db, humanity_db, usage_db = PurchaseService._databases()
+        finance_db, content_db, usage_db = PurchaseService._databases()
         documents = await content_db.documents.find(
             {"creator_id": str(current_user.id), "is_deleted": {"$ne": True}}
         ).to_list(length=None)
@@ -63,7 +63,7 @@ class PurchaseService:
             for row in revenue_rows
         }
         wallet = await finance_db.wallets.find_one({"_id": str(current_user.id)})
-        profile = await humanity_db.users.find_one({"_id": str(current_user.id)})
+        profile = await HumanityClient.get(str(current_user.id))
         return {
             "total_revenue": sum(row["revenue"] for row in revenue_rows),
             "total_views": sum(document.get("views", document.get("view_count", 0)) for document in documents),
@@ -91,7 +91,7 @@ class PurchaseService:
         if tier not in {Tier.PRO.value, Tier.PREMIUM.value}:
             raise HTTPException(status_code=400, detail="Gói thành viên không hợp lệ")
         price = 750 if tier == Tier.PRO.value else 2500
-        finance_db, content_db, humanity_db, usage_db = PurchaseService._databases()
+        finance_db, content_db, usage_db = PurchaseService._databases()
         user_id = str(current_user.id)
         current_subscription = await usage_db.subscriptions.find_one({"user_id": user_id})
         if current_subscription and current_subscription.get("ai_tier") == tier:
@@ -150,7 +150,7 @@ class PurchaseService:
     @staticmethod
     @log_logic_execution
     async def purchase_document(document_id: str, current_user) -> dict:
-        finance_db, content_db, humanity_db, usage_db = PurchaseService._databases()
+        finance_db, content_db, usage_db = PurchaseService._databases()
         user_id = str(current_user.id)
         document = await content_db.documents.find_one(
             {

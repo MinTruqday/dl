@@ -6,11 +6,11 @@ from typing import List
 
 from bson import ObjectId
 from fastapi import HTTPException
+import httpx
 from loguru import logger
 from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import database
 from src.core.infrastructure.redis import redis
 from src.core.logic_logger import log_logic_execution
 from src.repositories.composition import CompositionRepository
@@ -19,31 +19,27 @@ from src.repositories.pomodoro import PomodoroRepository
 
 class CompositionService:
     @staticmethod
-    def content_db():
-        return database.mongodb[settings.CONTENT_DB_NAME]
-
-    @staticmethod
     def is_admin(current_user):
         return getattr(current_user.role, "value", current_user.role) == "admin"
 
     @staticmethod
     async def get_document(document_id: str, current_user, edit: bool = False):
         user_id = str(current_user.id)
-        access = [
-            {"creator_id": user_id},
-            {"coauthors": user_id},
-            {"collaborators.user_id": user_id},
-            {"shared_with.user_id": user_id},
-        ]
-        if not edit:
-            access.append({"visibility": "public", "status": "published"})
-        query = {"_id": document_id}
-        if not CompositionService.is_admin(current_user):
-            query["$or"] = access
-        document = await CompositionService.content_db().documents.find_one(query)
-        if not document:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(
+                f"{settings.CONTENT_URL}/tai-lieu/noi-bo/truy-cap",
+                json={
+                    "document_id": document_id,
+                    "user_id": user_id,
+                    "edit": edit,
+                    "is_admin": CompositionService.is_admin(current_user),
+                },
+                headers={"X-Internal-Token": settings.SECRET_KEY},
+            )
+        if response.status_code == 404:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu hoặc thiếu quyền truy cập")
-        return document
+        response.raise_for_status()
+        return response.json()["data"]
 
     @staticmethod
     @log_logic_execution

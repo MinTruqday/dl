@@ -132,6 +132,10 @@ class UserService:
             "settings",
             "updated_at",
             "blocked_users",
+            "role",
+            "is_active",
+            "is_shadowbanned",
+            "kyc_verified_at",
         }
         allowed_operators = {"$set", "$addToSet", "$pull"}
         if not isinstance(data, dict) or not data:

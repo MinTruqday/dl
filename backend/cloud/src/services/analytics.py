@@ -1,6 +1,7 @@
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 from src.core.logic_logger import log_logic_execution
+from src.services.user import UserDirectory
 
 class AnalyticsService:
     @staticmethod
@@ -27,6 +28,6 @@ class AnalyticsService:
                 breakdown["archives"] += size
             else:
                 breakdown["others"] += size
-        user = await database.mongodb[settings.HUMANITY_DB_NAME].users.find_one({"_id": owner_id})
+        user = await UserDirectory.get_by_id(owner_id)
         limit = user.get("storage_limit", 15 * 1024 * 1024 * 1024) if user else 15 * 1024 * 1024 * 1024
         return {"total_used_bytes": total_used, "limit_bytes": limit, "percentage_used": round((total_used / limit) * 100, 2), "breakdown_bytes": breakdown}

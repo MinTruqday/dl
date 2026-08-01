@@ -4,6 +4,11 @@ import { useEffect, useRef } from "react";
 import type EditorJS from "@editorjs/editorjs";
 import type { OutputData } from "@editorjs/editorjs";
 import { sanitizeEditorData } from "./editorjs-sanitizer";
+import {
+  attachDocumentCommandState,
+  registerDocumentCommandState,
+  type DocumentOutputData,
+} from "./document-command-engine";
 
 type StandardEditorProps = {
   initialContent?: string;
@@ -86,6 +91,14 @@ export default function StandardEditor({
         highlight,
         alignment,
         indent,
+        shape,
+        video,
+        aiText,
+        formDropdown,
+        formCheckBox,
+        macroButton,
+        labelConfig,
+        citation,
       ] = await Promise.all([
         import("./DocLibParagraph").then((module) => module.default),
         import("./DocLibHeader").then((module) => module.default),
@@ -110,6 +123,14 @@ export default function StandardEditor({
         import("./DocLibTextHighlight").then((module) => module.default),
         import("./DocLibAlignment").then((module) => module.default),
         import("./DocLibIndent").then((module) => module.default),
+        import("./DocLibShape").then((module) => module.default),
+        import("./DocLibVideo").then((module) => module.default),
+        import("./DocLibAiText").then((module) => module.default),
+        import("./DocLibFormDropdown").then((module) => module.default),
+        import("./DocLibFormCheckBox").then((module) => module.default),
+        import("./DocLibMacroButton").then((module) => module.default),
+        import("./DocLibLabelConfig").then((module) => module.default),
+        import("./DocLibCitation").then((module) => module.default),
       ]);
 
       if (cancelled) return;
@@ -145,6 +166,7 @@ export default function StandardEditor({
           code,
           raw,
           originalDelimiter: delimiter,
+          pageBreak: delimiter,
           image,
           attaches: file,
           alert: { class: alert, inlineToolbar: true },
@@ -159,13 +181,29 @@ export default function StandardEditor({
           textHighlight: highlight,
           alignment: { class: alignment },
           indent: { class: indent },
+          shape,
+          video,
+          aiText,
+          formDropdown,
+          formCheckBox,
+          macroButton,
+          labelConfig,
+          citation,
+          comment: { class: alert, inlineToolbar: true },
+          footnotes: {
+            class: paragraph,
+            inlineToolbar: true,
+            tunes: commonTunes,
+          },
         },
         onChange: () => {
           if (changeTimer.current) window.clearTimeout(changeTimer.current);
           setSaveStatus?.("Đang lưu");
           changeTimer.current = window.setTimeout(async () => {
             try {
-              const data = sanitizeEditorData(await editor.save());
+              const data = sanitizeEditorData(
+                attachDocumentCommandState(editor, await editor.save()),
+              );
               const text = data.blocks
                 .map((block) => block.data?.text || block.data?.code || "")
                 .join(" ");
@@ -196,6 +234,12 @@ export default function StandardEditor({
           }, 300);
         },
       });
+      let commandState;
+      try {
+        commandState = (JSON.parse(initialContent) as DocumentOutputData)
+          .documentCommandState;
+      } catch {}
+      registerDocumentCommandState(editor, commandState);
       activeEditorRef.current = editor;
     };
 

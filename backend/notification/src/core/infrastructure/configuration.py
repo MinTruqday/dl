@@ -6,18 +6,21 @@ def get_service_url(service_name_underscore: str) -> str:
     override = os.getenv(f"{service_name_underscore.upper()}_URL")
     if override: return override
     k8s_host = os.getenv(f"{service_name_underscore.upper()}_SERVICE_HOST")
-    if k8s_host: return f"http://{k8s_host}:8000"
+    if k8s_host:
+        k8s_port = os.getenv(f"{service_name_underscore.upper()}_SERVICE_PORT", "80")
+        return f"http://{k8s_host}:{k8s_port}"
     return f"http://{service_name_underscore.lower()}:8000"
 
 class Settings(BaseModel):
-    PROJECT_NAME: str = os.getenv("PROJECT_NAME", "DocLib")
-    VERSION: str = os.getenv("VERSION", "1.0.0")
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "")
-    CORS_ALLOWED_ORIGINS: str = os.getenv("CORS_ALLOWED_ORIGINS", "")
-    MONGODB_URI: str = os.getenv("MONGODB_URI", "mongodb://mongodb:27017/doclib")
-    REDIS_URI: str = os.getenv("REDIS_URI", "redis://redis:6379/0")
-    PLATFORM_SYSTEM_ID: str = os.getenv("PLATFORM_SYSTEM_ID", "")
-    NOTIFICATION_DB_NAME: str = os.getenv("NOTIFICATION_DB_NAME", "doclib_notification")
-    HUMANITY_DB_NAME: str = os.getenv("HUMANITY_DB_NAME", "doclib_humanity")
+    PROJECT_NAME: str = os.environ["PROJECT_NAME"]
+    VERSION: str = os.environ["VERSION"]
+    SECRET_KEY: str = os.environ["SECRET_KEY"]
+    CORS_ALLOWED_ORIGINS: str = os.environ["CORS_ALLOWED_ORIGINS"]
+    MONGODB_URI: str = os.environ["MONGODB_URI"]
+    REDIS_URI: str = os.environ["REDIS_URI"]
+    PLATFORM_SYSTEM_ID: str = os.environ["PLATFORM_SYSTEM_ID"]
+    NOTIFICATION_DB_NAME: str = os.environ["NOTIFICATION_DB_NAME"]
+    HUMANITY_DB_NAME: str = os.environ["HUMANITY_DB_NAME"]
+    HUMANITY_URL: str = get_service_url("HUMANITY")
 
 settings = Settings()

@@ -8,6 +8,7 @@ from fastapi import WebSocket
 from loguru import logger
 
 from src.core.infrastructure.configuration import settings
+from src.core.internal_services import allowed_contacts
 from src.core.infrastructure.database import database
 
 
@@ -142,21 +143,7 @@ class MessageSocket:
         }
         if not safe_ids:
             return set()
-        conversations = database.mongodb[settings.MESSAGING_DB_NAME].conversations
-        cursor = conversations.find(
-            {
-                "$and": [
-                    {"participants": user_id},
-                    {"participants": {"$in": list(safe_ids)}},
-                ],
-            },
-            {"participants": 1},
-        )
-        allowed = set()
-        async for conversation in cursor:
-            members = {str(value) for value in conversation.get("participants", [])}
-            allowed.update((members & safe_ids) - {user_id})
-        return allowed
+        return await allowed_contacts(user_id, list(safe_ids))
 
     async def handle_action(self, user_id: str, payload: dict, websocket: WebSocket):
         if not isinstance(payload, dict):
