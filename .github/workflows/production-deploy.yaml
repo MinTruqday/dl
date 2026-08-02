@@ -117,6 +117,7 @@ jobs:
           cache-to: type=gha,mode=max
 
   deploy:
+    if: vars.ENABLE_KUBERNETES_DEPLOYMENT == 'true'
     needs: [build-and-push-services, build-and-push-frontend]
     uses: ./.github/workflows/deploy-kubernetes.yaml
     secrets: inherit

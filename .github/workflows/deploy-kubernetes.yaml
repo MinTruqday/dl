@@ -28,6 +28,7 @@ jobs:
         env:
           KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
         run: |
+          test -n "$KUBE_CONFIG"
           mkdir -p ~/.kube
           if printf '%s' "$KUBE_CONFIG" | base64 -d 2>/dev/null | grep -q 'apiVersion'; then
             printf '%s' "$KUBE_CONFIG" | base64 -d > ~/.kube/config
@@ -47,6 +48,7 @@ jobs:
         env:
           DOCLIB_ENV: ${{ secrets.DOCLIB_ENV }}
         run: |
+          test -n "$DOCLIB_ENV"
           printf '%s\n' "$DOCLIB_ENV" > ./k8s/.env
 
       - name: Validate deployment configuration
