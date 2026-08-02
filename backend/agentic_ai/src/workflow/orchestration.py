@@ -1,5 +1,6 @@
 import json
 import time
+import uuid
 
 from langgraph.checkpoint.mongodb import MongoDBSaver
 from pymongo import MongoClient
@@ -613,7 +614,7 @@ class OrchestrationWorkflow:
         )
         yield {"type": "status", "code": "analyzing_request"}
 
-        session_id = req_data.get("session_id") or str(uuid7())
+        session_id = req_data.get("session_id") or str(uuid.uuid4())
         req_data["session_id"] = session_id
         user_id = str(req_data.get("user_id", ""))
         role = str(req_data.get("role", "reader"))

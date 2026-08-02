@@ -5,7 +5,6 @@ from datetime import datetime, timezone
 
 from fastapi import HTTPException, Query
 from loguru import logger
-from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
@@ -82,7 +81,7 @@ class BookmarkService:
     @log_logic_execution
     async def create_bookmark_folder(name: str, current_user) -> dict:
         folder = {
-            "_id": str(uuid7()),
+            "_id": str(uuid.uuid4()),
             "user_id": str(current_user.id),
             "name": name.strip()[:100],
             "bookmark_ids": [],

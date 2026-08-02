@@ -1,7 +1,7 @@
 from src.core.logic_logger import log_logic_execution
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
-from uuid6 import uuid7
+import uuid
 
 from fastapi import HTTPException
 from src.repositories.chat import ChatRepository
@@ -26,7 +26,7 @@ class HistoryService:
 
         title = first_query[:40]
         session = {
-            "_id": str(uuid7()),
+            "_id": str(uuid.uuid4()),
             "user_id": user_id,
             "document_id": document_id,
             "title": title,
@@ -111,7 +111,7 @@ class HistoryService:
         content = data.get("content")
         if not user_id or not role or not content:
             raise HTTPException(status_code=400, detail={"code": "required_message_fields_missing"})
-        message_id = str(uuid7())
+        message_id = str(uuid.uuid4())
         message = {
             "_id": message_id,
             "session_id": session_id,

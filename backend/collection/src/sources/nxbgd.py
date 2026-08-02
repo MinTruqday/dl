@@ -14,7 +14,6 @@ from src.core.database import database
 from src.core.cache import dedup
 from src.core.storage import storage
 from src.services.metadata import collected_metadata
-from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
 
@@ -90,7 +89,7 @@ class NxbgdSource:
     async def compile_and_upload(self, title: str, author: str = ""):
         slug = urllib.parse.quote(title.lower().replace(" ", "-"), safe="")[:50]
         safe_title = re.sub(r'[\\/*?:"<>|]', "", title).strip()
-        final_pdf_name = f"{safe_title}_{uuid7().hex[:6]}.pdf"
+        final_pdf_name = f"{safe_title}_{uuid.uuid4().hex[:12]}.pdf"
 
         pdf_path = os.path.join(self.temp_dir, final_pdf_name)
 
@@ -325,3 +324,4 @@ async def run_nxbgd_collector(target_class: str, job_id: str | None = None):
     logger.info("[NXBGD] Initializing data collection pipeline")
     collector = NxbgdSource(target_class=target_class)
     return await collector.execute(job_id)
+import uuid

@@ -2,7 +2,7 @@ from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from enum import Enum
 from datetime import datetime, timezone
-from uuid6 import uuid7
+import uuid
 
 class Role(str, Enum):
     GUEST = "guest"
@@ -54,7 +54,7 @@ class UserBase(BaseModel):
     })
 
 class UserInDB(UserBase):
-    id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     is_active: bool = True

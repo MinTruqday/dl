@@ -12,9 +12,22 @@ spec:
       labels:
         app: grafana
     spec:
+      automountServiceAccountToken: false
+      securityContext:
+        fsGroup: 472
+        runAsUser: 472
+        runAsGroup: 472
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
       - name: grafana
-        image: grafana/grafana:latest
+        image: grafana/grafana:13.1.0
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
         env:
         - name: GF_SECURITY_ADMIN_USER
           valueFrom:
@@ -28,6 +41,16 @@ spec:
               key: GF_SECURITY_ADMIN_PASSWORD
         - name: GF_PATHS_PROVISIONING
           value: /etc/grafana/provisioning
+        - name: GF_USERS_ALLOW_SIGN_UP
+          value: "false"
+        - name: GF_AUTH_ANONYMOUS_ENABLED
+          value: "false"
+        - name: GF_SECURITY_DISABLE_GRAVATAR
+          value: "true"
+        - name: GF_ANALYTICS_REPORTING_ENABLED
+          value: "false"
+        - name: GF_ANALYTICS_CHECK_FOR_UPDATES
+          value: "false"
         ports:
         - containerPort: 3000
         livenessProbe:
@@ -35,12 +58,15 @@ spec:
             path: /api/health
             port: 3000
           initialDelaySeconds: 60
-          timeoutSeconds: 30
-          failureThreshold: 10
+          periodSeconds: 15
+          timeoutSeconds: 5
+          failureThreshold: 3
         readinessProbe:
           httpGet:
             path: /api/health
             port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 10
         volumeMounts:
         - name: grafana-data
           mountPath: /var/lib/grafana

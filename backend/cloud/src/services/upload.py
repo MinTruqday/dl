@@ -1,8 +1,8 @@
 import os
+import uuid
 
 from fastapi import HTTPException
 from loguru import logger
-from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
 from src.core.logic_logger import log_logic_execution
@@ -42,13 +42,13 @@ class UploadService:
     def object_path(ext: str, content_type: str, owner_id: str | None, is_system: bool, is_message_attachment: bool, is_temporary: bool = False) -> str:
         kind = "images" if content_type.lower().startswith("image/") else "documents"
         if is_system:
-            return f"system/{kind}/{uuid7().hex}.{ext}"
+            return f"system/{kind}/{uuid.uuid4().hex}.{ext}"
         if owner_id and is_temporary:
-            return f"temp/{owner_id}/{uuid7().hex}.{ext}"
+            return f"temp/{owner_id}/{uuid.uuid4().hex}.{ext}"
         if owner_id:
             folder = "message_attachments" if is_message_attachment else kind
-            return f"users/{owner_id}/{folder}/{uuid7().hex}.{ext}"
-        return f"public/{kind}/{uuid7().hex}.{ext}"
+            return f"users/{owner_id}/{folder}/{uuid.uuid4().hex}.{ext}"
+        return f"public/{kind}/{uuid.uuid4().hex}.{ext}"
 
     @staticmethod
     @log_logic_execution

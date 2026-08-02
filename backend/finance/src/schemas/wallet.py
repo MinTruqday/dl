@@ -3,7 +3,6 @@ from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
-from uuid6 import uuid7
 
 class TransactionType(str, Enum):
     TOPUP = "topup"
@@ -16,7 +15,7 @@ class TransactionType(str, Enum):
     TRANSFER_IN = "transfer_in"
 
 class Transaction(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
     user_id: str
     type: TransactionType
     amount: int
@@ -25,7 +24,7 @@ class Transaction(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class PurchaseRecord(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
     user_id: str
     item_type: str = "document"
     item_id: str
@@ -54,3 +53,4 @@ class RecipientVerifyRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     recipient_identifier: str = Field(min_length=1, max_length=320)
+import uuid

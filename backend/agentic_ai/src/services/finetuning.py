@@ -2,6 +2,7 @@ from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
 import asyncio
 import threading
+import uuid
 from datetime import datetime, timezone
 
 from fastapi import HTTPException, Query
@@ -114,7 +115,7 @@ def _run_training_sync(job_id: str, config: dict, loop, cancel_event):
 async def create_dataset(req: dict):
     logger.info(f"Started fine-tuning dataset creation for user_id={req.get('user_id')}")
     doc = {
-        "_id": str(uuid7()),
+        "_id": str(uuid.uuid4()),
         "user_id": req.get("user_id"),
         "name": req.get("name"),
         "description": req.get("description", ""),
@@ -228,7 +229,7 @@ async def import_feedback(req: dict):
     feedbacks = await mongo.find("rag_feedback", {"user_id": user_id, "vote_type": "up"}).to_list(length=None)
     if not feedbacks:
         return {"imported": 0}
-    ds_id = str(uuid7())
+    ds_id = str(uuid.uuid4())
     await FinetuneRepository.insert_dataset(
         {
             "_id": ds_id,
@@ -334,7 +335,7 @@ async def import_documents(req: dict):
             status_code=503,
             detail={"code": "finetuning_sample_generation_failed"},
         )
-    dataset_id = str(uuid7())
+    dataset_id = str(uuid.uuid4())
     await FinetuneRepository.insert_dataset(
         {
             "_id": dataset_id,
@@ -370,7 +371,7 @@ async def create_job(req: dict):
         raise HTTPException(status_code=404, detail={"code": "finetuning_dataset_not_found"})
     if dataset.get("sample_count", 0) < 10:
         return {"error_code": "finetuning_dataset_too_small", "minimum_samples": 10}
-    job_id = str(uuid7())
+    job_id = str(uuid.uuid4())
     job = {
         "_id": job_id,
         "user_id": user_id,

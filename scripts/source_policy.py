@@ -14,6 +14,20 @@ WEB_SUFFIXES = {".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs", ".css", ".scss"}
 CONFIG_SUFFIXES = {".yaml", ".yml", ".sh"}
 TEXTUAL_ELLIPSIS = "." * 3
 UNICODE_ELLIPSIS = chr(0x2026)
+INTERNAL_UUID7_COUNTS = {
+    "backend/agentic_ai/src/core/infrastructure/mq.py": 1,
+    "backend/agentic_ai/src/loop/event.py": 3,
+    "backend/agentic_ai/src/memory/memo.py": 1,
+    "backend/agentic_ai/src/rag/chunk.py": 2,
+    "backend/agentic_ai/src/rag/pipeline.py": 1,
+    "backend/agentic_ai/src/services/finetuning.py": 3,
+    "backend/agentic_ai/src/workflow/orchestration.py": 1,
+    "backend/collection/src/sources/nxbst.py": 3,
+    "backend/finance/src/services/purchase.py": 1,
+    "backend/finance/src/services/transfer.py": 1,
+    "backend/management/src/services/health.py": 2,
+    "backend/management/src/services/telemetry.py": 1,
+}
 
 
 def tracked_files():
@@ -600,6 +614,30 @@ def scan_fail_open_contracts(issues):
                 if marker in source:
                     line = source[: source.index(marker)].count("\n") + 1
                     issues.append((path.relative_to(ROOT), line, issue))
+
+
+def scan_identifier_policy(issues):
+    observed = {}
+    for path in (ROOT / "backend").glob("*/src/**/*.py"):
+        source = path.read_text(encoding="utf-8")
+        count = source.count("uuid7(")
+        if count:
+            observed[str(path.relative_to(ROOT))] = count
+    for path in sorted(set(observed) | set(INTERNAL_UUID7_COUNTS)):
+        actual = observed.get(path, 0)
+        expected = INTERNAL_UUID7_COUNTS.get(path, 0)
+        if actual != expected:
+            issues.append((pathlib.Path(path), 1, f"uuid7_internal_boundary:{actual}:{expected}"))
+    required_secret_generators = {
+        "backend/cloud/src/api/storage.py": "secrets.token_urlsafe(",
+        "backend/cloud/src/services/share.py": "secrets.token_urlsafe(",
+        "backend/content/src/services/collaboration.py": "secrets.token_hex(",
+    }
+    for path, marker in required_secret_generators.items():
+        if marker not in (ROOT / path).read_text(encoding="utf-8"):
+            issues.append((pathlib.Path(path), 1, "public_capability_not_cryptographic"))
+
+
 def main():
     issues = []
     for path in tracked_files():
@@ -618,6 +656,7 @@ def main():
         else:
             scan_config(relative_path, source, issues)
     scan_fail_open_contracts(issues)
+    scan_identifier_policy(issues)
     for path, line, issue in sorted(set(issues), key=lambda item: (str(item[0]), item[1], item[2])):
         print(f"{path}:{line}:{issue}")
     if issues:

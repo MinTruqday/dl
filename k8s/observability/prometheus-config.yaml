@@ -12,56 +12,60 @@ data:
     scrape_configs:
       - job_name: authentication
         static_configs:
-          - targets: ['authentication:8000']
+          - targets: ['authentication:80']
 
       - job_name: humanity
         static_configs:
-          - targets: ['humanity:8000']
+          - targets: ['humanity:80']
 
       - job_name: content
         static_configs:
-          - targets: ['content:8000']
+          - targets: ['content:80']
 
       - job_name: cloud
         static_configs:
-          - targets: ['cloud:8000']
+          - targets: ['cloud:80']
 
       - job_name: drm
         static_configs:
-          - targets: ['drm:8000']
+          - targets: ['drm:80']
 
       - job_name: compilation
         static_configs:
-          - targets: ['compilation:8000']
+          - targets: ['compilation:80']
 
       - job_name: messaging
         static_configs:
-          - targets: ['messaging:8000']
+          - targets: ['messaging:80']
 
       - job_name: notification
         static_configs:
-          - targets: ['notification:8000']
+          - targets: ['notification:80']
 
       - job_name: collection
         static_configs:
-          - targets: ['collection:8000']
+          - targets: ['collection:80']
 
       - job_name: finance
         static_configs:
-          - targets: ['finance:8000']
+          - targets: ['finance:80']
 
       - job_name: usage
         static_configs:
-          - targets: ['usage:8000']
+          - targets: ['usage:80']
 
       - job_name: management
         static_configs:
-          - targets: ['management:8000']
+          - targets: ['management:80']
 
       - job_name: agentic-ai
         static_configs:
-          - targets: ['agentic-ai:8000']
+          - targets: ['agentic-ai:80']
 
       - job_name: websocket
         static_configs:
-          - targets: ['websocket:8000']
+          - targets: ['websocket:80']
+
+      - job_name: worker
+        static_configs:
+          - targets: ['worker-service:80']

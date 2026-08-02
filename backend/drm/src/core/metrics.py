@@ -29,7 +29,7 @@ class MetricsCollector:
         lines.append('# TYPE http_request_duration_seconds_total counter')
         for key, duration in self._request_duration.items():
             method, path = key.split('_', 1)
-            lines.append('http_request_duration_seconds_total{{service="{service_name}",method="{method}",path="{path}"}} {duration:.4f}')
+            lines.append(f'http_request_duration_seconds_total{{service="{service_name}",method="{method}",path="{path}"}} {duration:.4f}')
         lines.append('# HELP http_errors_total Total HTTP 5xx errors')
         lines.append('# TYPE http_errors_total counter')
         for key, count in self._error_count.items():

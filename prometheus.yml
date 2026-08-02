@@ -1,8 +1,24 @@
 global:
-  scrape_interval: 5s
+  scrape_interval: 15s
+  evaluation_interval: 15s
 
 scrape_configs:
-  - job_name: 'doclib-agentic-ai'
-    metrics_path: '/evaluate/metrics'
+  - job_name: doclib-services
+    metrics_path: /metrics
     static_configs:
-      - targets: ['agentic_ai:8000']
+      - targets:
+          - agentic_ai:8000
+          - authentication:8000
+          - cloud:8000
+          - collection:8000
+          - compilation:8000
+          - content:8000
+          - drm:8000
+          - finance:8000
+          - humanity:8000
+          - management:8000
+          - messaging:8000
+          - notification:8000
+          - usage:8000
+          - websocket:8000
+          - worker:8000

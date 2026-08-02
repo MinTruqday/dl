@@ -1,12 +1,12 @@
 from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
 import uuid
+import secrets
 from datetime import datetime, timezone
 
 import httpx
 from fastapi import HTTPException
 from loguru import logger
-from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
@@ -30,7 +30,7 @@ class CollaborationService:
     ):
         await CollaborationRepository.insert_activity(
             {
-                "_id": str(uuid7()),
+                "_id": str(uuid.uuid4()),
                 "document_id": document_id,
                 "user_name": user_name,
                 "action": action,
@@ -84,7 +84,7 @@ class CollaborationService:
                 status_code=400, detail="Tài khoản yêu cầu đã là thành viên cộng tác của tài liệu này"
             )
         invite = {
-            "_id": str(uuid7()),
+            "_id": str(uuid.uuid4()),
             "document_id": document_id,
             "document_title": doc.get("title", "Untitled Document"),
             "inviter_id": str(current_user.id),
@@ -428,7 +428,7 @@ class CollaborationService:
                 detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         memo = {
-            "_id": str(uuid7()),
+            "_id": str(uuid.uuid4()),
             "document_id": document_id,
             "sender_name": current_user.full_name,
             "sender_id": str(current_user.id),
@@ -605,7 +605,7 @@ class CollaborationService:
                 detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         snapshot = {
-            "_id": str(uuid7()),
+            "_id": str(uuid.uuid4()),
             "document_id": document_id,
             "version_name": version_name,
             "content": doc.get("content", ""),
@@ -764,7 +764,7 @@ class CollaborationService:
                 status_code=404,
                 detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
-        invite_code = str(uuid7())[:8].upper()
+        invite_code = secrets.token_hex(8).upper()
         await CollaborationRepository.update_invite_code(
             {"document_id": document_id},
             {
@@ -812,7 +812,7 @@ class CollaborationService:
         )
         await CollaborationRepository.insert_invite(
             {
-                "_id": str(uuid7()),
+                "_id": str(uuid.uuid4()),
                 "document_id": document_id,
                 "document_title": doc.get("title", "Untitled Document"),
                 "inviter_id": doc["creator_id"],
@@ -855,7 +855,7 @@ class CollaborationService:
                 detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
         task = {
-            "_id": str(uuid7()),
+            "_id": str(uuid.uuid4()),
             "document_id": document_id,
             "task_desc": task_desc,
             "is_done": False,
@@ -971,7 +971,7 @@ class CollaborationService:
                 status_code=403, detail="Bạn không có quyền tham gia thảo luận trong nhiệm vụ này"
             )
         comment = {
-            "_id": str(uuid7()),
+            "_id": str(uuid.uuid4()),
             "task_id": task_id,
             "sender_name": current_user.full_name,
             "comment_text": comment_text,

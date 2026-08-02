@@ -2,7 +2,6 @@
 
 import asyncio
 import json
-from uuid6 import uuid7
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Literal, Optional
@@ -164,7 +163,7 @@ class IssueDetector:
 
         if stats.get("failure_rate", 0) > self.FAILURE_RATE_THRESHOLD:
             issues.append(DetectedIssue(
-                issue_id=str(uuid7()),
+                issue_id=str(uuid.uuid4()),
                 category="execution_failure",
                 title="high_agent_failure_rate",
                 description=json.dumps(
@@ -182,7 +181,7 @@ class IssueDetector:
         for tool_name, failure_count in stats.get("tool_failures", {}).items():
             if failure_count >= self.TOOL_FAILURE_THRESHOLD:
                 issues.append(DetectedIssue(
-                    issue_id=str(uuid7()),
+                    issue_id=str(uuid.uuid4()),
                     category="tool_failure",
                     title="recurring_tool_failure",
                     description=json.dumps(
@@ -199,7 +198,7 @@ class IssueDetector:
 
         if stats.get("security_violations", 0) >= self.SECURITY_VIOLATION_THRESHOLD:
             issues.append(DetectedIssue(
-                issue_id=str(uuid7()),
+                issue_id=str(uuid.uuid4()),
                 category="security_violation",
                 title="security_violation_spike",
                 description=json.dumps(
@@ -215,7 +214,7 @@ class IssueDetector:
 
         if stats.get("avg_duration_ms", 0) > self.SLOW_DURATION_MS_THRESHOLD:
             issues.append(DetectedIssue(
-                issue_id=str(uuid7()),
+                issue_id=str(uuid.uuid4()),
                 category="performance",
                 title="high_average_response_time",
                 description=json.dumps(
@@ -265,7 +264,7 @@ class HarnessImprover:
             valid_issue_ids = {issue.issue_id for issue in issues}
             suggestions = [
                 ImprovementSuggestion(
-                    improvement_id=str(uuid7()),
+                    improvement_id=str(uuid.uuid4()),
                     issue_id=proposal.issue_id,
                     improvement_type=proposal.improvement_type,
                     title=proposal.title,
@@ -292,7 +291,7 @@ class PromptVersionControl:
         self._versions: Dict[str, List[Dict]] = {}
 
     def snapshot(self, prompt_type: str, content: str) -> str:
-        version_id = str(uuid7())[:8]
+        version_id = uuid.uuid4().hex[:12]
         if prompt_type not in self._versions:
             self._versions[prompt_type] = []
         self._versions[prompt_type].append({
@@ -601,3 +600,4 @@ class HillClimbingLoop:
 
 
 hill_climbing_loop = HillClimbingLoop(auto_apply=False)
+import uuid

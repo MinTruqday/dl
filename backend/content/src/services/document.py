@@ -16,7 +16,6 @@ from loguru import logger
 from passlib.context import CryptContext
 from src.core.publication import trigger_document_publish_job
 from src.schemas.document import DocumentContentUpdate, DocumentCreate, DocumentInDB, DocumentStatus
-from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
@@ -321,7 +320,7 @@ class DocumentService:
             slug = re.sub(r"[^a-z0-9]+", "-", normalized).strip("-") or "tai-lieu"
         existing_slug = await docs_collection.find_one({"slug": slug})
         if existing_slug:
-            slug = f"{slug}-{str(uuid7())[:8]}"
+            slug = f"{slug}-{uuid.uuid4().hex[:8]}"
 
         doc_dict = doc_in.model_dump(exclude={"password"})
         doc_dict["slug"] = slug

@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
-from uuid6 import uuid7
+import uuid
 
 class ShareAccess(BaseModel):
     user_id: str = Field(min_length=1, max_length=100)
@@ -59,13 +59,13 @@ class StorageItemUpdate(BaseModel):
     broken_links: Optional[List[str]] = None
 
 class FileVersion(BaseModel):
-    version_id: str = Field(default_factory=lambda: str(uuid7()))
+    version_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     url: str
     size: int = Field(ge=0, le=10 * 1024 * 1024 * 1024)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class StorageItemInDB(StorageItemBase):
-    id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
     owner_id: str
     is_folder: bool = False
     size: int = 0

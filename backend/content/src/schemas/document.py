@@ -4,7 +4,6 @@ from enum import Enum
 from typing import Any, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
-from uuid6 import uuid7
 
 class DocumentStatus(str, Enum):
     DRAFT = "draft"
@@ -76,7 +75,7 @@ class DocumentCreate(DocumentBase):
     password: Optional[str] = Field(default=None, min_length=8, max_length=200)
 
 class DocumentInDB(DocumentBase):
-    id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
     creator_id: str
     status: DocumentStatus = DocumentStatus.DRAFT
     drm_fingerprint: Optional[str] = None

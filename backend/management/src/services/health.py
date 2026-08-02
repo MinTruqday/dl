@@ -311,7 +311,7 @@ class HealthService:
     @staticmethod
     @log_logic_execution
     async def handle_bug_report(data: dict, current_user) -> dict:
-        report_id = str(uuid7())
+        report_id = str(uuid.uuid4())
         await ModerationRepository.insert_bug_report(
             {
                 "_id": report_id,
@@ -328,7 +328,7 @@ class HealthService:
     @staticmethod
     @log_logic_execution
     async def submit_policy_proposal(data: dict, current_user) -> dict:
-        proposal_id = str(uuid7())
+        proposal_id = str(uuid.uuid4())
         await PolicyProposalRepository.insert_one(
             {
                 "_id": proposal_id,
@@ -408,3 +408,4 @@ class HealthService:
     @staticmethod
     async def _audit(current_user, action: str, target_id: str, details: dict):
         await SystemRepository.insert_audit_log({"_id": str(uuid7()), "actor_id": str(current_user.id), "action": action, "target_id": target_id, "details": details, "timestamp": datetime.now(timezone.utc)})
+import uuid

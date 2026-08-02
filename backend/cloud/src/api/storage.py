@@ -1,3 +1,4 @@
+import secrets
 from typing import Any, List, Optional
 
 from src.core.logging_route import LoggingRoute
@@ -200,13 +201,11 @@ async def update_item(
     ),
     db=Depends(get_db),
 ):
-    from uuid6 import uuid7
-
     if data.is_public and data.is_public is True:
         current_item = await StorageService.get_item(item_id, current_user.id)
         if current_item and (not current_item.share_token):
             update_data_dict = data.model_dump(exclude_unset=True)
-            update_data_dict["share_token"] = str(uuid7())
+            update_data_dict["share_token"] = f"share_{secrets.token_urlsafe(32)}"
             item = await StorageService.update_item(
                 item_id, current_user.id, StorageItemUpdate(**update_data_dict)
             )
@@ -324,4 +323,3 @@ async def get_public_item(share_token: str, db=Depends(get_db)):
         message="Trích xuất thông tin tệp chia sẻ hoàn tất",
         status=200,
     )
-

@@ -1,4 +1,5 @@
 import secrets
+import uuid
 from src.core.logic_logger import log_logic_execution
 from datetime import datetime, timedelta, timezone
 
@@ -7,7 +8,6 @@ from fastapi import HTTPException, status
 from loguru import logger
 from src.repositories.identity import IdentityRepository as IdentityRepository
 from src.services.email import EmailService
-from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
 from src.schemas.identity import Role, UserCreate, UserInDB
@@ -152,7 +152,7 @@ class SessionService:
         if not is_active:
             raise HTTPException(status_code=403, detail="Tài khoản hiện đang bị khóa hoặc ở trạng thái không hoạt động")
 
-        session_id = str(uuid7())
+        session_id = str(uuid.uuid4())
         from src.core.infrastructure.redis import redis
         await redis.sadd(f"user_sessions:{user_id_str}", session_id)
         await redis.get_client().expire(
@@ -283,7 +283,7 @@ class SessionService:
             raise HTTPException(
                 status_code=403, detail="Tài khoản hiện đang bị khóa hoặc ở trạng thái không hoạt động"
             )
-        session_id = str(uuid7())
+        session_id = str(uuid.uuid4())
         user_id_str = str(user_doc["_id"])
         await IdentityRepository.register_session(user_id_str, session_id, client_ip)
         from src.core.infrastructure.redis import redis

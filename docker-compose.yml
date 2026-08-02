@@ -75,24 +75,30 @@ services:
       - doclib_network
 
   traefik:
-    image: traefik:latest
+    image: traefik:v3.7.6
     container_name: doclib_traefik
     restart: always
     command:
-      - --api.insecure=true
+      - --api.dashboard=false
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
       - --entrypoints.web.address=:8000
+      - --ping=true
+      - --ping.entrypoint=web
     ports:
       - 8000:8000
-      - 8081:8080
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8000/ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - doclib_network
 
   nginx:
-    image: fholzer/nginx-brotli:latest
+    image: fholzer/nginx-brotli@sha256:e0aa855b74b7cdd0bb13a8cb1599e3af9b6210a98fb6234081b551899bfb924c
     container_name: doclib_nginx
     restart: always
     volumes:
@@ -106,6 +112,11 @@ services:
       - doclib_network
     depends_on:
       - frontend
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/nginx-health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
   frontend:
     build:
@@ -230,26 +241,36 @@ services:
       - doclib_network
 
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v3.13.0
     container_name: doclib_prometheus
     restart: always
     ports:
-      - 9090:9090
+      - 127.0.0.1:9090:9090
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     networks:
       - doclib_network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:9090/-/healthy"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:13.1.0
     container_name: doclib_grafana
-    user: root
     restart: always
     ports:
-      - 3001:3000
+      - 127.0.0.1:3001:3000
     environment:
+      - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER}
       - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_SECURITY_DISABLE_GRAVATAR=true
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana_provisioning:/etc/grafana/provisioning
@@ -257,6 +278,11 @@ services:
       - prometheus
     networks:
       - doclib_network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
   collection:
     build:

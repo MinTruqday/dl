@@ -1,8 +1,8 @@
 from datetime import datetime, timezone
 from typing import List, Optional
+import uuid
 
 from pydantic import BaseModel, ConfigDict, Field
-from uuid6 import uuid7
 
 class Base(BaseModel):
     sender_id: str
@@ -41,7 +41,7 @@ class Creation(BaseModel):
     scheduled_at: Optional[datetime] = None
 
 class Record(Base):
-    id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class Response(Record):

@@ -5,7 +5,6 @@ from datetime import datetime, timezone
 
 from fastapi import HTTPException, Query
 from loguru import logger
-from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
@@ -25,7 +24,7 @@ class HighlightService:
         if color not in ALLOWED_HIGHLIGHT_COLORS:
             color = "#e4e4e7"
         highlight = {
-            "_id": str(uuid7()),
+            "_id": str(uuid.uuid4()),
             "user_id": str(current_user.id),
             "document_id": document_id,
             "text": data["text"],

@@ -1,11 +1,11 @@
 import asyncio
 import json
 import secrets
+import uuid
 from datetime import datetime, timezone
 
 from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
-from uuid6 import uuid7
 
 from src.core.infrastructure.redis import redis
 from src.core.logic_logger import log_logic_execution
@@ -44,7 +44,7 @@ class GroupService:
         if any(profile is None for profile in profiles):
             raise HTTPException(status_code=400, detail="Danh sách thành viên chứa tài khoản không tồn tại")
         group_doc = {
-            "_id": f"group_{uuid7()}",
+            "_id": f"group_{uuid.uuid4()}",
             "group_name": clean_name,
             "created_by": creator_id,
             "deputies": [],
@@ -291,5 +291,3 @@ class GroupService:
         await MessageRepository.delete_group({"_id": group_id})
         await ConversationRepository.delete_one({"_id": group_id})
         return {"status": "success", "group_id": group_id, "message": "Đã giải thể nhóm"}
-
-

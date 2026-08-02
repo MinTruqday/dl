@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
+import uuid
 
 from loguru import logger
-from uuid6 import uuid7
 
 from src.services.content_client import exchange_collected_document
 
@@ -10,7 +10,7 @@ class Database:
     async def insert_document(self, document_data: dict):
         now = datetime.now(timezone.utc)
         document = {
-            "_id": str(uuid7()),
+            "_id": str(uuid.uuid4()),
             "created_at": now,
             "updated_at": now,
             **document_data,

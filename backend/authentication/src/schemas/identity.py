@@ -4,7 +4,6 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
-from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
 
@@ -89,7 +88,7 @@ class UserCreate(UserBase):
         return value
 
 class UserInDB(UserBase):
-    id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
     last_read_date: Optional[datetime] = None
     password_hash: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

@@ -8,7 +8,6 @@ from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
 import httpx
 from loguru import logger
-from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.redis import redis
@@ -68,7 +67,7 @@ class CompositionService:
     @log_logic_execution
     async def add_inline_suggestion(document_id: str, payload: dict, current_user):
         await CompositionService.get_document(document_id, current_user)
-        suggestion_id = str(uuid7())
+        suggestion_id = str(uuid.uuid4())
         await CompositionRepository.insert_suggestion(
             {
                 "_id": suggestion_id,
@@ -118,7 +117,7 @@ class CompositionService:
     @log_logic_execution
     async def sync_pomodoro_session(payload: dict, current_user):
         await CompositionService.get_document(payload["document_id"], current_user)
-        session_id = str(uuid7())
+        session_id = str(uuid.uuid4())
         await PomodoroRepository.insert_session(
             {
                 "_id": session_id,
@@ -239,7 +238,7 @@ class CompositionService:
     @log_logic_execution
     async def add_inline_comment(document_id: str, data: dict, current_user) -> dict:
         await CompositionService.get_document(document_id, current_user)
-        comment_id = str(uuid7())
+        comment_id = str(uuid.uuid4())
         await CompositionRepository.insert_comment(
             {
                 "_id": comment_id,
@@ -322,3 +321,4 @@ class CompositionService:
             "timestamp_a": first.get("created_at"),
             "timestamp_b": second.get("created_at"),
         }
+import uuid

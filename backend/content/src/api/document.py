@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from typing import Any, List, Optional
+import uuid
 
 from bson import ObjectId
 from pymongo import ReturnDocument
@@ -18,7 +19,6 @@ from fastapi import (
 )
 from pydantic import BaseModel
 from loguru import logger
-from uuid6 import uuid7
 from src.api.dependency import get_current_user, get_current_user_optional, get_db, require_role
 from src.schemas.document import (
     DocumentContentUpdate,
@@ -313,7 +313,7 @@ async def exchange_internal_document(req: dict):
         if not identity:
             raise HTTPException(status_code=422, detail="Tài liệu thu thập thiếu định danh nguồn")
         now = datetime.now(timezone.utc)
-        payload.setdefault("_id", str(uuid7()))
+        payload.setdefault("_id", str(uuid.uuid4()))
         payload.setdefault("created_at", now)
         payload["updated_at"] = now
         query = {"source_url": identity} if payload.get("source_url") else {"file_url": identity}
@@ -359,7 +359,7 @@ async def exchange_internal_document(req: dict):
         now = datetime.now(timezone.utc)
         await database.mongodb[settings.CONTENT_DB_NAME].document_versions.insert_one(
             {
-                "_id": str(uuid7()),
+                "_id": str(uuid.uuid4()),
                 "document_id": document_id,
                 "creator_id": str(req.get("creator_id", "")),
                 "note": "Tìm và thay thế",

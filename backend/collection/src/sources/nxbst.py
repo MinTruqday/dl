@@ -113,7 +113,7 @@ class State:
         import tempfile
 
         slug = urllib.parse.quote(title.lower().replace(" ", "-"), safe="")[:50]
-        final_pdf_name = f"{slug}_{uuid7().hex[:6]}.pdf"
+        final_pdf_name = f"{slug}_{uuid.uuid4().hex[:12]}.pdf"
 
         temp_pdf_dir = tempfile.mkdtemp(prefix="nxbst_pdf_")
         pdf_path = os.path.join(temp_pdf_dir, final_pdf_name)
@@ -415,3 +415,4 @@ class NxbstSource:
             except Exception as e:
                 logger.exception("[NXBST] Document viewer synchronization failed")
                 raise
+import uuid

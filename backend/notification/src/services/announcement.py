@@ -7,7 +7,6 @@ from fastapi import HTTPException, status
 from loguru import logger
 from pymongo.errors import DuplicateKeyError
 from src.schemas.announcement import Announcement, AnnouncementCreate
-from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
@@ -83,7 +82,7 @@ class AnnouncementService:
         profile = await HumanityClient.get(data.target_user_id)
         if not profile:
             raise HTTPException(status_code=404, detail="Không tìm thấy người nhận thông báo")
-        notif_id = str(uuid7())
+        notif_id = str(uuid.uuid4())
         doc = {
             "_id": notif_id,
             "target_user_id": data.target_user_id,
@@ -110,3 +109,4 @@ class AnnouncementService:
         except Exception:
             logger.exception("Failed to distribute real-time notification")
         return {"id": notif_id}
+import uuid

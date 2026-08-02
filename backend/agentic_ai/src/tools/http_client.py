@@ -2,6 +2,7 @@ import asyncio
 from typing import Optional
 import httpx
 import jwt
+import uuid
 from loguru import logger
 from urllib.parse import urlsplit
 from src.core.infrastructure.configuration import settings
@@ -20,12 +21,10 @@ def get_client() -> httpx.AsyncClient:
     return _http_client
 
 async def make_api_request(method: str, url: str, **kwargs) -> httpx.Response:
-    from uuid6 import uuid7
-
     if method.upper() in ["POST", "PUT", "PATCH", "DELETE"]:
         headers = kwargs.get("headers", {})
         if "Idempotency-Key" not in headers:
-            headers["Idempotency-Key"] = str(uuid7())
+            headers["Idempotency-Key"] = str(uuid.uuid4())
         kwargs["headers"] = headers
 
     max_retries = 3 if method.upper() == "GET" else 1

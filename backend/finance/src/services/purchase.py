@@ -167,7 +167,7 @@ class PurchaseService:
             )
             if existing:
                 return {"message": "Tài liệu đã được mua", "status": "owned"}
-            purchase_id = str(uuid7())
+            purchase_id = str(uuid.uuid4())
             try:
                 async with await database.mongodb.start_session() as session:
                     async with session.start_transaction():
@@ -303,3 +303,4 @@ class PurchaseService:
                     session=session,
                 )
         return {"message": "Hoàn tiền hoàn tất", "refunded_amount": price}
+import uuid

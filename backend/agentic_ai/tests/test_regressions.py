@@ -645,38 +645,22 @@ def test_sensitive_routes_require_authentication():
 
 
 def test_recommend_documents_tool():
-    from unittest.mock import patch
+    from unittest.mock import AsyncMock, patch
     from src.tools.document import recommend_documents
 
     documents = [
         {
-            "_id": "doc-1",
+            "id": "doc-1",
             "title": "Especificación de comercio",
             "price_dl": 50,
             "summary": "Diseño de la plataforma",
         }
     ]
 
-    class FakeCursor:
-        def limit(self, value):
-            return self
-
-        async def to_list(self, length):
-            return documents
-
-    class FakeCollection:
-        def find(self, query):
-            return FakeCursor()
-
-    class FakeDatabase:
-        def __getitem__(self, name):
-            return FakeCollection()
-
-    class FakeMongo:
-        def __getitem__(self, name):
-            return FakeDatabase()
-
-    with patch("src.core.infrastructure.database.database.mongodb", FakeMongo()):
+    with patch(
+        "src.services.content_client.ContentClient.search",
+        new=AsyncMock(return_value=documents),
+    ):
         result = asyncio.run(recommend_documents.ainvoke({"query": "ABC project"}, config={"configurable": {"token": "Bearer test"}}))
         assert "Especificación de comercio" in result
         assert "RECOMMENDED_DOCS_PAYLOAD" in result

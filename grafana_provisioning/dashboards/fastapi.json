@@ -11,13 +11,13 @@
       "title": "Average Response Time (Latency)",
       "type": "timeseries",
       "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
-      "targets": [{"expr": "rate(http_request_duration_seconds_sum[1m]) / rate(http_request_duration_seconds_count[1m])", "legendFormat": "Avg Response Time (seconds)"}]
+      "targets": [{"expr": "sum by (service) (rate(http_request_duration_seconds_total[5m])) / clamp_min(sum by (service) (rate(http_requests_total[5m])), 1e-9)", "legendFormat": "{{service}}"}]
     },
     {
       "title": "Requests per Second by Handler",
       "type": "timeseries",
       "gridPos": {"h": 9, "w": 24, "x": 0, "y": 8},
-      "targets": [{"expr": "sum(rate(http_requests_total[1m])) by (handler)", "legendFormat": "{{handler}}"}]
+      "targets": [{"expr": "sum by (service) (rate(http_requests_total[5m]))", "legendFormat": "{{service}}"}]
     }
   ]
 }

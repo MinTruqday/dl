@@ -1,11 +1,11 @@
 import asyncio
 import json
 import os
+import uuid
 from datetime import datetime, timezone
 
 from fastapi import HTTPException
 from loguru import logger
-from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
@@ -31,7 +31,7 @@ SOURCE_QUEUES = {
 
 @log_logic_execution
 async def trigger_collection(req: Collection):
-    job_id = str(uuid7())
+    job_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc)
     payload = {
         "source": req.source,

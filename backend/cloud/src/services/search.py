@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 import re
+import uuid
 from typing import List, Optional
-from uuid6 import uuid7
 from fastapi import HTTPException
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
@@ -14,7 +14,7 @@ class SearchService:
         item = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one({"_id": item_id, "owner_id": owner_id})
         if not item or item.get("is_folder"):
             raise HTTPException(status_code=404, detail="Không tìm thấy tệp tin cần nhân bản")
-        new_id = f"item_{uuid7()}"
+        new_id = f"item_{uuid.uuid4()}"
         copy_doc = dict(item)
         copy_doc["_id"] = new_id
         copy_doc["name"] = f"Bản sao của {item.get('name', 'File')}"

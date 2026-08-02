@@ -3,7 +3,6 @@ from datetime import datetime, timezone
 
 from fastapi import HTTPException
 from loguru import logger
-from uuid6 import uuid7
 
 from src.repositories.document import DocumentRepository
 from src.services.document import DocumentService
@@ -102,7 +101,7 @@ class PublicationService:
             raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy tài liệu yêu cầu")
         from src.core.publication import trigger_document_publish_job
 
-        job_id = f"publish-{uuid7()}"
+        job_id = f"publish-{uuid.uuid4()}"
         now = datetime.now(timezone.utc)
         claimed = await docs_collection.update_one(
             {
@@ -134,3 +133,4 @@ class PublicationService:
             raise HTTPException(status_code=503, detail="Hàng đợi xuất bản tạm thời không khả dụng")
         logger.info("Document publication process initiated")
         return await docs_collection.find_one({"_id": document_id})
+import uuid

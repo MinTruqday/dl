@@ -1,5 +1,4 @@
 import asyncio
-from uuid6 import uuid7
 from typing import Literal
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
@@ -34,7 +33,7 @@ async def receive_webhook(body: WebhookPayload):
         event_type = event_type_map[event_type_str]
 
         event = AgentEvent(
-            event_id=str(uuid7()),
+            event_id=str(uuid.uuid4()),
             event_type=event_type,
             payload=body.payload,
             source=body.source,
@@ -73,7 +72,7 @@ async def document_uploaded_webhook(
 ):
     """Enqueue a document upload event for indexing and verification"""
     event = AgentEvent(
-        event_id=str(uuid7()),
+        event_id=str(uuid.uuid4()),
         event_type=EventType.DOCUMENT_UPLOADED,
         payload={"document_id": document_id, "user_id": user_id},
         source="content_service",
@@ -113,7 +112,7 @@ async def create_schedule(req: CreateScheduleRequest):
     event_type = event_type_map.get(req.event_type, EventType.SYSTEM_HEARTBEAT)
 
     schedule = CronSchedule(
-        schedule_id=str(uuid7()),
+        schedule_id=str(uuid.uuid4()),
         name=req.name,
         cron_expression=f"*/{req.interval_seconds // 60 or 1} * * * *",
         interval_seconds=req.interval_seconds,
@@ -221,7 +220,7 @@ async def manual_trigger(
     }
     et = event_type_map[event_type]
     event = AgentEvent(
-        event_id=str(uuid7()),
+        event_id=str(uuid.uuid4()),
         event_type=et,
         payload=req.payload,
         source="manual_trigger",
@@ -232,3 +231,4 @@ async def manual_trigger(
         "event_id": event.event_id,
         "result": result,
     }
+import uuid

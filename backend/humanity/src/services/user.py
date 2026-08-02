@@ -1,10 +1,10 @@
 from typing import Any, Dict, List
+import uuid
 from fastapi import HTTPException
 from pymongo.errors import DuplicateKeyError
 from src.repositories.user import UserRepository
 from src.schemas.user import CreateUserRequest, Role
 from src.core.logic_logger import log_logic_execution
-from uuid6 import uuid7
 from datetime import datetime, timedelta, timezone
 import re
 
@@ -43,7 +43,7 @@ class UserService:
         if existing_slug:
             raise HTTPException(status_code=400, detail="Tên miền cá nhân đã được sử dụng")
             
-        user_id = str(uuid7())
+        user_id = str(uuid.uuid4())
         user_doc = req.model_dump()
         user_doc["email"] = email
         user_doc["slug"] = slug

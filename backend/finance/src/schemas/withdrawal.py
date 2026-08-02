@@ -3,7 +3,6 @@ from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from uuid6 import uuid7
 
 
 class WithdrawalStatus(str, Enum):
@@ -42,10 +41,11 @@ class WithdrawalRequest(BaseModel):
 
 
 class WithdrawalInDB(WithdrawalRequest):
-    id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
     user_id: str
     status: WithdrawalStatus = WithdrawalStatus.PENDING
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     processed_at: Optional[datetime] = None
     processed_by: Optional[str] = None
     rejection_reason: Optional[str] = None
+import uuid

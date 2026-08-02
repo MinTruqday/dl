@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
 from fastapi import HTTPException
-from uuid6 import uuid7
 
 from src.core.dependency import Tier
 from src.core.infrastructure.configuration import settings
@@ -123,7 +122,7 @@ class WithdrawalService:
                 detail=f"Số dư khả dụng không đủ chi trả khoản rút {amount} dl cộng phí thuế {tax_amount} dl ({tax_percent}% cho lượt thứ {tax_percent} trong tuần). Tổng trừ: {total_deduction} dl"
             )
 
-        withdrawal_id = str(uuid7())
+        withdrawal_id = str(uuid.uuid4())
         async with await database.mongodb.start_session() as session:
             async with session.start_transaction():
                 deduction = await db.wallets.update_one(
@@ -341,3 +340,4 @@ class WithdrawalService:
                     session=session,
                 )
         return {"message": "Hủy yêu cầu rút tiền hoàn tất"}
+import uuid

@@ -5,7 +5,6 @@ from datetime import datetime, timezone
 
 from fastapi import HTTPException
 from loguru import logger
-from uuid6 import uuid7
 
 from src.core.infrastructure.database import database
 from src.repositories.document import DocumentRepository
@@ -17,7 +16,7 @@ class LibraryService:
     @log_logic_execution
     async def create_reading_list(data, current_user):
         new_list = {
-            "_id": str(uuid7()),
+            "_id": str(uuid.uuid4()),
             "user_id": str(current_user.id),
             "name": data.name,
             "description": data.description,
