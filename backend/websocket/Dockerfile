@@ -12,8 +12,8 @@ RUN pip install -q --no-cache-dir -r requirements.txt
 
 COPY websocket/src/ ./src/
 
-RUN useradd -m doclibuser && chown -R doclibuser:doclibuser /app
-USER doclibuser
+RUN groupadd --gid 10001 doclibuser && useradd --uid 10001 --gid doclibuser -m doclibuser && chown -R doclibuser:doclibuser /app
+USER 10001:10001
 
 EXPOSE 8000
 

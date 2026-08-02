@@ -1,5 +1,5 @@
 from src.core.logic_logger import log_logic_execution
-from backend.cloud.src.services.user import UserDirectory
+from src.services.user import UserDirectory
 from src.core.infrastructure.mongo import mongo
 from datetime import datetime, timezone
 from typing import List, Optional

@@ -14,7 +14,7 @@ COPY collection/src/ ./src/
 
 RUN mkdir -p /app/logs && chown -R pwuser:pwuser /app
 
-USER pwuser
+USER 1000:1000
 
 EXPOSE 8000
 

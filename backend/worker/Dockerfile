@@ -25,19 +25,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
+    HOME="/home/appuser" \
     PIP_CACHE_DIR="/tmp/pip-cache" \
     PATH="/home/appuser/.local/bin:${PATH}"
 
 WORKDIR /app
 
-RUN useradd -m -s /bin/bash appuser \
+RUN groupadd --gid 10001 appuser \
+    && useradd --uid 10001 --gid appuser -m -s /bin/bash appuser \
     && mkdir -p /tmp/pip-cache \
     && chown -R appuser:appuser /tmp/pip-cache
 
 COPY --from=builder --chown=appuser:appuser /root/.local /home/appuser/.local
 COPY --chown=appuser:appuser worker/src/ ./src/
 
-USER appuser
+USER 10001:10001
 
 EXPOSE 8000
 

@@ -6,7 +6,7 @@ from src.core.infrastructure.configuration import settings
 class ArchiveRepository:
     @staticmethod
     def _get_db():
-        db_name = settings.COLLECTION_DB_NAME if hasattr(settings, 'COLLECTION_DB_NAME') else 'doclib'
+        db_name = settings.COLLECTION_DB_NAME
         return database.mongodb.get_database(db_name)
 
     @classmethod

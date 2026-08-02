@@ -11,18 +11,15 @@ from src.core.infrastructure.database import database
 from src.core.infrastructure.redis import redis
 from src.core.logic_logger import log_logic_execution
 from src.schemas.wallet import Transaction, TransactionType
-from backend.finance.src.services.humanity_client import HumanityClient
+from src.services.content_client import ContentClient
+from src.services.humanity_client import HumanityClient
+from src.services.usage_client import UsageClient
 
 
 class PurchaseService:
     @staticmethod
-    def _databases():
-        client = database.mongodb
-        return (
-            client[settings.FINANCE_DB_NAME],
-            client[settings.CONTENT_DB_NAME],
-            client[settings.USAGE_DB_NAME],
-        )
+    def _database():
+        return database.mongodb[settings.FINANCE_DB_NAME]
 
     @staticmethod
     def _notification(target_user_id: str, title: str, body: str, event_type: str):
@@ -47,10 +44,8 @@ class PurchaseService:
     @staticmethod
     @log_logic_execution
     async def get_revenue(current_user) -> dict:
-        finance_db, content_db, usage_db = PurchaseService._databases()
-        documents = await content_db.documents.find(
-            {"creator_id": str(current_user.id), "is_deleted": {"$ne": True}}
-        ).to_list(length=None)
+        finance_db = PurchaseService._database()
+        documents = await ContentClient.list_creator(str(current_user.id))
         document_ids = [str(document["_id"]) for document in documents]
         revenue_rows = await finance_db.purchases.aggregate(
             [
@@ -91,15 +86,11 @@ class PurchaseService:
         if tier not in {Tier.PRO.value, Tier.PREMIUM.value}:
             raise HTTPException(status_code=400, detail="Gói thành viên không hợp lệ")
         price = 750 if tier == Tier.PRO.value else 2500
-        finance_db, content_db, usage_db = PurchaseService._databases()
+        finance_db = PurchaseService._database()
         user_id = str(current_user.id)
-        current_subscription = await usage_db.subscriptions.find_one({"user_id": user_id})
+        current_subscription = await UsageClient.get(user_id)
         if current_subscription and current_subscription.get("ai_tier") == tier:
-            expires_at = current_subscription.get("expires_at")
-            if isinstance(expires_at, datetime) and expires_at.tzinfo is None:
-                expires_at = expires_at.replace(tzinfo=timezone.utc)
-            if not expires_at or expires_at > datetime.now(timezone.utc):
-                raise HTTPException(status_code=409, detail="Tài khoản hiện đã sở hữu gói thành viên này")
+            raise HTTPException(status_code=409, detail="Tài khoản hiện đã sở hữu gói thành viên này")
         now = datetime.now(timezone.utc)
         async with await database.mongodb.start_session() as session:
             async with session.start_transaction():
@@ -110,21 +101,6 @@ class PurchaseService:
                 )
                 if deduction.modified_count != 1:
                     raise HTTPException(status_code=400, detail="Số dư ví không đủ để nâng cấp gói thành viên")
-                await usage_db.subscriptions.update_one(
-                    {"user_id": user_id},
-                    {
-                        "$set": {
-                            "ai_tier": tier,
-                            "is_premium": True,
-                            "purchased_at": now,
-                            "expires_at": now + timedelta(days=30),
-                            "updated_at": now,
-                        },
-                        "$setOnInsert": {"user_id": user_id, "created_at": now},
-                    },
-                    upsert=True,
-                    session=session,
-                )
                 transaction = Transaction(
                     user_id=user_id,
                     type=TransactionType.PURCHASE,
@@ -145,21 +121,24 @@ class PurchaseService:
                     ),
                     session=session,
                 )
+        try:
+            await UsageClient.update(user_id, tier)
+        except Exception:
+            await finance_db.wallets.update_one({"_id": user_id}, {"$inc": {"balance": price}})
+            await finance_db.transactions.update_one(
+                {"reference_id": f"membership:{tier}:{now.date().isoformat()}"},
+                {"$set": {"status": "COMPENSATED", "compensated_at": datetime.now(timezone.utc)}},
+            )
+            raise HTTPException(status_code=503, detail="Không thể kích hoạt gói thành viên")
         return {"tier": tier, "status": "active", "expires_at": now + timedelta(days=30)}
 
     @staticmethod
     @log_logic_execution
     async def purchase_document(document_id: str, current_user) -> dict:
-        finance_db, content_db, usage_db = PurchaseService._databases()
+        finance_db = PurchaseService._database()
         user_id = str(current_user.id)
-        document = await content_db.documents.find_one(
-            {
-                "_id": document_id,
-                "status": "published",
-                "is_deleted": {"$ne": True},
-            }
-        )
-        if not document:
+        document = await ContentClient.get(document_id)
+        if not document or document.get("status") != "published":
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu đang được phát hành")
         creator_id = str(document.get("creator_id", ""))
         if not creator_id:
@@ -261,7 +240,7 @@ class PurchaseService:
     @staticmethod
     @log_logic_execution
     async def cancel_purchase(purchase_id: str, current_user) -> dict:
-        finance_db, content_db, humanity_db, usage_db = PurchaseService._databases()
+        finance_db = PurchaseService._database()
         user_id = str(current_user.id)
         purchase = await finance_db.purchases.find_one(
             {"_id": purchase_id, "user_id": user_id, "status": "ACTIVE"}
@@ -273,7 +252,7 @@ class PurchaseService:
             purchased_at = purchased_at.replace(tzinfo=timezone.utc)
         if not isinstance(purchased_at, datetime) or datetime.now(timezone.utc) - purchased_at > timedelta(hours=48):
             raise HTTPException(status_code=400, detail="Yêu cầu hoàn tiền đã vượt quá thời hạn")
-        document = await content_db.documents.find_one({"_id": purchase["document_id"]})
+        document = await ContentClient.get(purchase["document_id"])
         creator_id = str(document.get("creator_id", "")) if document else ""
         if not creator_id:
             raise HTTPException(status_code=409, detail="Không thể xác định tài khoản người bán")

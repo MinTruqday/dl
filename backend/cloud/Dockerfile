@@ -12,9 +12,9 @@ RUN pip install -q --no-cache-dir -r requirements.txt
 
 COPY cloud/src/ ./src/
 
-RUN groupadd --system app && useradd --system --gid app --create-home --home-dir /home/app --shell /usr/sbin/nologin app && mkdir -p /app/storage/chunks /app/storage/tmp && chown -R app:app /app
+RUN groupadd --gid 10001 app && useradd --uid 10001 --gid app --create-home --home-dir /home/app --shell /usr/sbin/nologin app && mkdir -p /app/storage/chunks /app/storage/tmp && chown -R app:app /app
 
-USER app
+USER 10001:10001
 
 EXPOSE 8000
 

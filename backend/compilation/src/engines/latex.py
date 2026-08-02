@@ -18,7 +18,7 @@ def limit_process():
     resource.setrlimit(resource.RLIMIT_AS, (4 * 1024 * 1024 * 1024, 4 * 1024 * 1024 * 1024))
     resource.setrlimit(resource.RLIMIT_FSIZE, (settings.MAX_COMPILE_OUTPUT_BYTES, settings.MAX_COMPILE_OUTPUT_BYTES))
     resource.setrlimit(resource.RLIMIT_NOFILE, (64, 64))
-    resource.setrlimit(resource.RLIMIT_NPROC, (128, 128))
+    resource.setrlimit(resource.RLIMIT_NPROC, (4096, 4096))
 
 
 async def run_process(arguments: list[str], working_directory: str):

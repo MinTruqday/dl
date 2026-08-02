@@ -1,4 +1,5 @@
 import httpx
+from fastapi.encoders import jsonable_encoder
 
 from src.core.infrastructure.configuration import settings
 
@@ -18,7 +19,7 @@ async def exchange_collected_document(action: str, **values) -> dict:
     async with httpx.AsyncClient(timeout=20.0) as client:
         response = await client.post(
             f"{settings.CONTENT_URL}/tai-lieu/noi-bo/trao-doi",
-            json={"action": action, **values},
+            json=jsonable_encoder({"action": action, **values}),
             headers={"X-Internal-Token": settings.SECRET_KEY},
         )
     response.raise_for_status()

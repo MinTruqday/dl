@@ -224,6 +224,51 @@ async def exchange_internal_document(req: dict):
             {"$set": {**dict(req.get("values") or {}), "updated_at": datetime.now(timezone.utc)}},
         )
         return {"data": {"updated": result.modified_count == 1}}
+    if action == "auto_save_draft":
+        result = await documents.update_one(
+            {"_id": document_id, "is_deleted": {"$ne": True}},
+            {"$set": {
+                "draft_content": dict(req.get("content") or {}),
+                "toc": list(req.get("toc") or []),
+                "reading_time_minutes": max(1, int(req.get("reading_time_minutes", 1))),
+                "updated_at": datetime.now(timezone.utc),
+            }},
+        )
+        return {"data": {"updated": result.matched_count == 1}}
+    if action == "submit_for_review":
+        result = await documents.update_one(
+            {"_id": document_id, "status": {"$nin": ["pending_review", "published"]}, "is_deleted": {"$ne": True}},
+            {"$set": {"status": "pending_review", "updated_at": datetime.now(timezone.utc)}},
+        )
+        return {"data": {"updated": result.modified_count == 1}}
+    if action == "global_find_replace":
+        current = await documents.find_one({"_id": document_id, "is_deleted": {"$ne": True}}, {"_id": 1})
+        if not current:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+        now = datetime.now(timezone.utc)
+        await database.mongodb[settings.CONTENT_DB_NAME].document_versions.insert_one(
+            {
+                "_id": str(uuid7()),
+                "document_id": document_id,
+                "creator_id": str(req.get("creator_id", "")),
+                "note": "Tìm và thay thế",
+                "snapshot": dict(req.get("snapshot") or {}),
+                "created_at": now,
+            }
+        )
+        values = dict(req.get("update") or {})
+        values["updated_at"] = now
+        await documents.update_one({"_id": document_id}, {"$set": values})
+        return {"data": {"updated": True}}
+    if action == "get_versions":
+        version_ids = [str(value) for value in req.get("version_ids", [])]
+        object_ids = [ObjectId(value) for value in version_ids if ObjectId.is_valid(value)]
+        rows = await database.mongodb[settings.CONTENT_DB_NAME].document_versions.find(
+            {"document_id": document_id, "_id": {"$in": version_ids + object_ids}}
+        ).limit(len(version_ids)).to_list(length=len(version_ids))
+        for row in rows:
+            row["_id"] = str(row["_id"])
+        return {"data": rows}
     if action == "search_documents":
         text = str(req.get("query", "")).strip()
         search_filter = {"status": "published", "is_deleted": {"$ne": True}}

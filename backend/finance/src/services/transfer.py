@@ -15,7 +15,7 @@ from src.core.infrastructure.mongo import mongo
 from src.core.infrastructure.redis import redis
 from src.core.logic_logger import log_logic_execution
 from src.schemas.wallet import TransactionType, TransferRequest
-from backend.finance.src.services.humanity_client import HumanityClient
+from src.services.humanity_client import HumanityClient
 
 
 class TransferService:

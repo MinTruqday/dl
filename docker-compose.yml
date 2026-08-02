@@ -123,11 +123,11 @@ services:
       - /app/node_modules
       - ./packages:/packages
       - /app/.next
-    env_file:
-      - .env
     environment:
-      - WATCHPACK_POLLING=true
-      - CHOKIDAR_USEPOLLING=true
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL}
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
       interval: 30s
@@ -303,7 +303,7 @@ services:
       - minio
     volumes:
       - ./backend/compilation/src:/app/src
-      - tectonic_cache:/home/doclibuser/.cache/Tectonic
+      - tectonic_cache_v2:/home/doclibuser/.cache/Tectonic
     networks:
       - doclib_network
 
@@ -549,7 +549,7 @@ services:
         condition: service_started
     volumes:
       - ./backend/worker/src:/app/src
-      - tectonic_cache:/home/appuser/.cache/Tectonic
+      - tectonic_cache_v2:/home/appuser/.cache/Tectonic
     networks:
       - doclib_network
 
@@ -567,4 +567,4 @@ volumes:
   grafana_data: null
   hf_cache: null
   finetune_data: null
-  tectonic_cache: null
+  tectonic_cache_v2: null

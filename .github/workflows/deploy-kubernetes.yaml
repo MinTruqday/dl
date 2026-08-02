@@ -80,12 +80,11 @@ jobs:
             port="${SERVICE_PORTS[$svc]}"
             POD=$(kubectl get pods -n doclib-production -l "app=$svc" --field-selector=status.phase=Running -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
             if [ -z "$POD" ]; then
-              echo "WARNING: No running pod found for $svc, skipping health check"
+              echo "No running pod found for $svc"
               FAILED_SERVICES+=("$svc")
               continue
             fi
-            RESPONSE=$(kubectl exec "$POD" -n doclib-production -- curl -sf --max-time 10 "http://localhost:$port/health" 2>&1 || echo "failed")
-            if echo "$RESPONSE" | grep -q "failed"; then
+            if ! kubectl exec "$POD" -n doclib-production -- python -c "import urllib.request; urllib.request.urlopen('http://localhost:$port/health', timeout=10).read()" >/dev/null 2>&1; then
               echo "Health check failed for $svc (pod: $POD)"
               FAILED_SERVICES+=("$svc")
             else

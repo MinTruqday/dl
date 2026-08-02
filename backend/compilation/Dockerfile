@@ -2,6 +2,8 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
+ENV HOME=/home/doclibuser
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl ca-certificates fontconfig pandoc ghostscript \
     fonts-wine \
@@ -24,10 +26,10 @@ RUN pip install -q --no-cache-dir -r requirements.txt
 
 COPY compilation/src/ ./src/
 
-RUN useradd -m doclibuser && \
+RUN groupadd --gid 10001 doclibuser && useradd --uid 10001 --gid doclibuser -m doclibuser && \
     mkdir -p /home/doclibuser/.cache/Tectonic && \
     chown -R doclibuser:doclibuser /home/doclibuser /app
-USER doclibuser
+USER 10001:10001
 
 EXPOSE 8000
 

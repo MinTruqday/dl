@@ -33,6 +33,12 @@ jobs:
       - name: Audit compilation components
         run: python scripts/audit_compilation_components.py
 
+      - name: Audit microservice database boundaries
+        run: python scripts/audit_service_boundaries.py
+
+      - name: Audit container security contracts
+        run: python scripts/audit_container_security.py
+
   frontend:
     runs-on: ubuntu-latest
     timeout-minutes: 20

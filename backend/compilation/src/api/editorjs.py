@@ -48,8 +48,8 @@ async def compile_editorjs(req: CompileRequest, current_user=Depends(get_current
     try:
         pdf_bytes = await EditorjsEngine.compile_to_pdf(req.content)
         return Response(content=pdf_bytes, media_type="application/pdf")
-    except ValueError:
-        logger.warning("Rejected invalid EditorJS compilation request")
+    except ValueError as error:
+        logger.warning("Rejected invalid EditorJS compilation request: {}", error)
         raise HTTPException(status_code=400, detail="Quá trình biên dịch tài liệu thất bại")
 
 @router.post("/ket-xuat/{format}", dependencies=[Depends(RateLimiting(10, 60))])
@@ -67,6 +67,6 @@ async def export_editorjs(
         out_bytes = await EditorjsEngine.export_to_format(req.content, format)
         media_type = "text/html" if format == "html" else "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         return Response(content=out_bytes, media_type=media_type)
-    except ValueError:
-        logger.warning("Rejected invalid EditorJS export request")
+    except ValueError as error:
+        logger.warning("Rejected invalid EditorJS export request: {}", error)
         raise HTTPException(status_code=400, detail="Quá trình kết xuất tài liệu thất bại")

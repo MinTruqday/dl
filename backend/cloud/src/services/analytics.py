@@ -1,7 +1,7 @@
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 from src.core.logic_logger import log_logic_execution
-from backend.cloud.src.services.user import UserDirectory
+from src.services.user import UserDirectory
 
 class AnalyticsService:
     @staticmethod

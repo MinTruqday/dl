@@ -9,14 +9,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 COPY notification/requirements.txt .
 
 RUN pip install --no-cache-dir --disable-pip-version-check -r requirements.txt \
-    && groupadd --system app \
-    && useradd --system --gid app --create-home --home-dir /home/app --shell /usr/sbin/nologin app
+    && groupadd --gid 10001 app \
+    && useradd --uid 10001 --gid app --create-home --home-dir /home/app --shell /usr/sbin/nologin app
 
 COPY notification/src/ ./src/
 
 RUN chown -R app:app /app
 
-USER app
+USER 10001:10001
 
 EXPOSE 8000
 

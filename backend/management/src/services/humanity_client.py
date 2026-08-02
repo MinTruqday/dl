@@ -1,4 +1,5 @@
 import httpx
+from fastapi.encoders import jsonable_encoder
 
 from src.core.infrastructure.configuration import settings
 
@@ -6,6 +7,8 @@ from src.core.infrastructure.configuration import settings
 class HumanityClient:
     @staticmethod
     async def request(method: str, path: str, **kwargs):
+        if "json" in kwargs:
+            kwargs["json"] = jsonable_encoder(kwargs["json"])
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.request(
                 method,

@@ -6,7 +6,7 @@ from src.services.content_client import ContentClient
 class FinetuneRepository:
     @staticmethod
     def _get_db():
-        db_name = settings.AGENTIC_AI_DB_NAME if hasattr(settings, 'AGENTIC_AI_DB_NAME') else 'doclib'
+        db_name = settings.AGENTIC_AI_DB_NAME
         return database.mongodb.get_database(db_name)
 
     @classmethod

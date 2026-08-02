@@ -4,8 +4,8 @@ import re
 from datetime import datetime, timezone
 from typing import List
 
-from bson import ObjectId
 from fastapi import HTTPException
+from fastapi.encoders import jsonable_encoder
 import httpx
 from loguru import logger
 from uuid6 import uuid7
@@ -21,6 +21,19 @@ class CompositionService:
     @staticmethod
     def is_admin(current_user):
         return getattr(current_user.role, "value", current_user.role) == "admin"
+
+    @staticmethod
+    async def content_action(action: str, **payload):
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(
+                f"{settings.CONTENT_URL}/tai-lieu/noi-bo/trao-doi",
+                json=jsonable_encoder({"action": action, **payload}),
+                headers={"X-Internal-Token": settings.SECRET_KEY},
+            )
+        if response.status_code == 404:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+        response.raise_for_status()
+        return response.json().get("data")
 
     @staticmethod
     async def get_document(document_id: str, current_user, edit: bool = False):
@@ -144,18 +157,15 @@ class CompositionService:
                 )
             words += len(str(data.get("text", "")).split())
         now = datetime.now(timezone.utc)
-        result = await CompositionService.content_db().documents.update_one(
-            {"_id": document["_id"]},
-            {
-                "$set": {
-                    "draft_content": content,
-                    "toc": toc,
-                    "reading_time_minutes": max(1, (words + 199) // 200),
-                    "updated_at": now,
-                }
-            },
+        result = await CompositionService.content_action(
+            "auto_save_draft",
+            document_id=str(document["_id"]),
+            content=content,
+            toc=toc,
+            reading_time_minutes=max(1, (words + 199) // 200),
+            updated_at=now,
         )
-        if result.modified_count != 1:
+        if not result.get("updated"):
             raise HTTPException(status_code=409, detail="Bản nháp không có thay đổi")
         return {"timestamp": now.isoformat()}
 
@@ -168,11 +178,12 @@ class CompositionService:
             and not CompositionService.is_admin(current_user)
         ):
             raise HTTPException(status_code=403, detail="Chỉ chủ sở hữu mới có thể gửi xét duyệt")
-        result = await CompositionService.content_db().documents.update_one(
-            {"_id": document_id, "status": {"$nin": ["pending_review", "published"]}},
-            {"$set": {"status": "pending_review", "updated_at": datetime.now(timezone.utc)}},
+        result = await CompositionService.content_action(
+            "submit_for_review",
+            document_id=document_id,
+            updated_at=datetime.now(timezone.utc),
         )
-        if result.modified_count != 1:
+        if not result.get("updated"):
             raise HTTPException(status_code=409, detail="Tài liệu không thể chuyển sang trạng thái xét duyệt")
         return {"status": "pending_review"}
 
@@ -208,26 +219,19 @@ class CompositionService:
                         for item in data["items"]
                     ]
             update["content"] = new_content
-        await CompositionService.content_db().document_versions.insert_one(
-            {
-                "_id": str(uuid7()),
-                "document_id": document_id,
-                "creator_id": str(current_user.id),
-                "note": "Tìm và thay thế",
-                "snapshot": {
-                    "title": document.get("title"),
-                    "description": document.get("description"),
-                    "content": document.get("content"),
-                    "cover_url": document.get("cover_url"),
-                    "tags": document.get("tags", []),
-                    "categories": document.get("categories", []),
-                },
-                "created_at": datetime.now(timezone.utc),
-            }
-        )
-        await CompositionService.content_db().documents.update_one(
-            {"_id": document_id},
-            {"$set": update},
+        await CompositionService.content_action(
+            "global_find_replace",
+            document_id=document_id,
+            creator_id=str(current_user.id),
+            snapshot={
+                "title": document.get("title"),
+                "description": document.get("description"),
+                "content": document.get("content"),
+                "cover_url": document.get("cover_url"),
+                "tags": document.get("tags", []),
+                "categories": document.get("categories", []),
+            },
+            update=update,
         )
         return {"affected_fields": list(update)}
 
@@ -302,13 +306,11 @@ class CompositionService:
     ) -> dict:
         await CompositionService.get_document(document_id, current_user)
         ids = [version_id_a, version_id_b]
-        object_ids = [ObjectId(value) for value in ids if ObjectId.is_valid(value)]
-        versions = await CompositionService.content_db().document_versions.find(
-            {
-                "document_id": document_id,
-                "_id": {"$in": ids + object_ids},
-            }
-        ).to_list(length=2)
+        versions = await CompositionService.content_action(
+            "get_versions",
+            document_id=document_id,
+            version_ids=ids,
+        )
         by_id = {str(version["_id"]): version for version in versions}
         if version_id_a not in by_id or version_id_b not in by_id:
             raise HTTPException(status_code=404, detail="Không tìm thấy đủ hai phiên bản")

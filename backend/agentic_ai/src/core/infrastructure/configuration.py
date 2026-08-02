@@ -61,7 +61,6 @@ class Settings(BaseModel):
     WEBSOCKET_URL: str = get_service_url("WEBSOCKET")
     AGENTIC_AI_DB_NAME: str = os.environ["AGENTIC_AI_DB_NAME"]
     CONTENT_URL: str = get_service_url("CONTENT")
-    DRM_URL: str = get_service_url("DRM")
     AGENT_FAILURE_RATE_THRESHOLD: float = float(os.environ["AGENT_FAILURE_RATE_THRESHOLD"])
     AGENT_TOOL_FAILURE_THRESHOLD: int = int(os.environ["AGENT_TOOL_FAILURE_THRESHOLD"])
     AGENT_SECURITY_VIOLATION_THRESHOLD: int = int(os.environ["AGENT_SECURITY_VIOLATION_THRESHOLD"])
