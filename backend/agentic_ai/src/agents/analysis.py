@@ -27,6 +27,7 @@ class AnalysisAgent:
                 file_data = req.get("file_data")
                 image_data = req.get("image_data")
                 user_preferences = req.get("user_preferences", "")
+                mode_directive = req.get("mode_directive", "")
             else:
                 query = getattr(req, "query", "")
                 user_id = getattr(req, "user_id", "")
@@ -43,6 +44,7 @@ class AnalysisAgent:
                 file_data = getattr(req, "file_data", None)
                 image_data = getattr(req, "image_data", None)
                 user_preferences = getattr(req, "user_preferences", "")
+                mode_directive = getattr(req, "mode_directive", "")
 
             result = await knowledge_app.ainvoke(
                 {
@@ -55,6 +57,7 @@ class AnalysisAgent:
                     "file_data": file_data,
                     "image_data": image_data,
                     "user_preferences": user_preferences,
+                    "mode_directive": mode_directive,
                 }
             )
             generation = result.get("generation")

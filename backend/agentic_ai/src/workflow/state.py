@@ -83,6 +83,7 @@ class AgentState(TypedDict):
     current_node: str
     artifacts: Dict[str, Any]
     dynamic_injections: List[Any]
+    mode_directive: str
 
 class ActingState(TypedDict):
     """

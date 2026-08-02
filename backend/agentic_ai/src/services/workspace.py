@@ -15,6 +15,28 @@ MODE_DIRECTIVES = {
 
 class WorkspaceService:
     @staticmethod
+    async def mode_context(session_id: str, user_id: str, mode: str) -> str:
+        directive = MODE_DIRECTIVES.get(mode, "")
+        if not directive or not session_id:
+            return directive
+        row = await WorkspaceService.get(session_id, user_id)
+        if not row:
+            return directive
+        objective = str(row.get("objective", "")).strip()
+        pending_steps = [
+            str(step.get("task") or step.get("action") or "").strip()
+            for step in row.get("steps", [])
+            if step.get("status", "pending") not in {"completed", "skipped"}
+        ]
+        parts = [directive]
+        if objective:
+            parts.append(f"Persistent objective\n{objective}")
+        if pending_steps:
+            parts.append("Incomplete verified steps\n" + "\n".join(pending_steps[:20]))
+        parts.append("Respond in the language used by the user unless the user requests another language")
+        return "\n\n".join(parts)
+
+    @staticmethod
     async def start(
         session_id: str, user_id: str, mode: str, objective: str, approval_policy: str
     ) -> None:

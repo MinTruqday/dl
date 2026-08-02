@@ -17,7 +17,7 @@ from src.harness.security import security
 from src.schemas.interaction import ChatRequest, UserInstructionsRequest
 from src.core.dependency import CurrentUser, get_current_user
 from src.workflow.orchestration import supervisor
-from src.services.workspace import MODE_DIRECTIVES, workspace
+from src.services.workspace import workspace
 from src.services.token_accounting import current_usage, start_accounting
 
 router = APIRouter(route_class=LoggingRoute, prefix="/tro-chuyen")
@@ -49,11 +49,11 @@ async def chat_endpoint(
 
     original_query = scan.sanitized_text
     req.query = original_query
-    if req.mode != "chat":
-        req.query = f"{MODE_DIRECTIVES[req.mode]}\n\nUser request\n{original_query}"
     await workspace.start(
         req.session_id or "", req.user_id, req.mode, original_query, req.approval_policy
     )
+    mode_directive = await workspace.mode_context(req.session_id or "", req.user_id, req.mode)
+    execution_data = {**req.model_dump(), "mode_directive": mode_directive}
 
     try:
         quota_ok, quota_code = await _reserve_ai_quota(req)
@@ -97,6 +97,8 @@ async def chat_endpoint(
             route = "plan"
         elif req.mode in {"work", "goal"} or req.thinking:
             route = "supervisor"
+        elif req.mode == "learn":
+            route = "knowledge"
         elif req.document_ids or req.file_data or req.folder_data:
             route = "knowledge"
         else:
@@ -108,7 +110,7 @@ async def chat_endpoint(
         if route == "plan":
             from src.agents.planning import planner
 
-            steps = await planner.create_plan({**req.model_dump(), "dry_run": True})
+            steps = await planner.create_plan({**execution_data, "dry_run": True})
             await workspace.save_plan(req.session_id or "", req.user_id, steps)
             final_answer = "\n".join(
                 f"{index + 1} {step.get('task', '')}" for index, step in enumerate(steps)
@@ -141,9 +143,9 @@ async def chat_endpoint(
         elif route == "knowledge":
             from src.agents.analysis import researcher
 
-            final_answer = await researcher.execute(req.model_dump())
+            final_answer = await researcher.execute(execution_data)
         else:
-            async for event in supervisor.execute_plan(req.model_dump()):
+            async for event in supervisor.execute_plan(execution_data):
                 if event["type"] == "message":
                     final_answer += event.get("chunk", "")
                 elif event["type"] == "plan":
@@ -284,11 +286,10 @@ async def stream_endpoint(
 
         original_query = scan.sanitized_text
         req.query = original_query
-        if req.mode != "chat":
-            req.query = f"{MODE_DIRECTIVES[req.mode]}\n\nUser request\n{original_query}"
         await workspace.start(session_id, user_id, req.mode, original_query, req.approval_policy)
+        mode_directive = await workspace.mode_context(session_id, user_id, req.mode)
 
-        agentops.record_session_start(session_id, user_id, req.query)
+        agentops.record_session_start(session_id, user_id, original_query)
 
         try:
             quota_ok, quota_code = await _reserve_ai_quota(req)
@@ -337,12 +338,15 @@ async def stream_endpoint(
                 document_ids=req.document_ids,
             )
             req.conversation_history = ctx.chat_history
+            execution_data = {**req.model_dump(), "mode_directive": mode_directive}
 
             route_data = {}
             if req.mode == "plan":
                 route = "plan"
             elif req.mode in {"work", "goal"} or req.thinking:
                 route = "supervisor"
+            elif req.mode == "learn":
+                route = "knowledge"
             elif req.document_ids or req.file_data or req.folder_data:
                 route = "knowledge"
             else:
@@ -354,7 +358,7 @@ async def stream_endpoint(
             if route == "plan":
                 from src.agents.planning import planner
 
-                steps = await planner.create_plan({**req.model_dump(), "dry_run": True})
+                steps = await planner.create_plan({**execution_data, "dry_run": True})
                 await workspace.save_plan(session_id, user_id, steps)
                 final_answer = "\n".join(
                     f"{index + 1} {step.get('task', '')}" for index, step in enumerate(steps)
@@ -411,7 +415,7 @@ async def stream_endpoint(
             elif route == "knowledge":
                 from src.agents.analysis import researcher
 
-                final_answer = await researcher.execute(req.model_dump())
+                final_answer = await researcher.execute(execution_data)
                 yield "event: message\ndata: " + json.dumps({"chunk": final_answer}) + "\n\n"
 
             else:
@@ -428,7 +432,7 @@ async def stream_endpoint(
 
                 async def drain_supervisor():
                     try:
-                        req_dict = req.model_dump()
+                        req_dict = execution_data.copy()
 
                         from src.agents.planning import planner
 

@@ -89,6 +89,9 @@ class PlanAgent:
             )
 
         format_instructions = self.parser.get_format_instructions()
+        mode_directive = str(req_data.get("mode_directive", "")).strip()
+        if mode_directive:
+            system_prompt = f"{system_prompt}\n\n{mode_directive}"
         messages = [
             SystemMessage(
                 content=system_prompt.format(
@@ -127,6 +130,8 @@ class PlanAgent:
                 "query": query,
                 "history": req_data.get("conversation_history", []),
                 "context": req_data.get("context", ""),
+                "mode": req_data.get("mode", "chat"),
+                "mode_directive": req_data.get("mode_directive", ""),
             },
             ensure_ascii=False,
             sort_keys=True,

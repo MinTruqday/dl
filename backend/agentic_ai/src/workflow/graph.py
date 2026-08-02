@@ -11,7 +11,7 @@ DocLib Orchestration Graph configuring the state machine nodes, edges, and condi
 import asyncio
 
 import langchain
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.prompts import PromptTemplate
 from langgraph.graph import END, StateGraph
 from loguru import logger
@@ -292,7 +292,12 @@ async def generate_direct(state: AgentState):
             f"{user_preferences[:12000]}"
         )
     try:
-        response = await llm_generate.ainvoke(prompt)
+        mode_directive = str(state.get("mode_directive", "")).strip()
+        messages = []
+        if mode_directive:
+            messages.append(SystemMessage(content=mode_directive))
+        messages.append(HumanMessage(content=prompt))
+        response = await llm_generate.ainvoke(messages)
         return {"generation": response.content}
     except Exception:
         logger.exception("AI response synthesis and generation encountered an error")
@@ -346,7 +351,12 @@ async def generate(state: AgentState):
         content = prompt_text
 
     try:
-        response = await llm_generate.ainvoke([HumanMessage(content=content)])
+        messages = []
+        mode_directive = str(state.get("mode_directive", "")).strip()
+        if mode_directive:
+            messages.append(SystemMessage(content=mode_directive))
+        messages.append(HumanMessage(content=content))
+        response = await llm_generate.ainvoke(messages)
         generation = response.content
         return {"generation": generation}
     except Exception:

@@ -34,14 +34,14 @@ class StorageService:
             if existing:
                 from fastapi import HTTPException
                 raise HTTPException(status_code=409, detail="Tệp đã được đăng ký trong kho lưu trữ")
-            from src.core.storage import get_bucket, get_storage_client
+            from src.core.storage import get_bucket, get_storage_client, original_content_length
             try:
                 client = await get_storage_client()
                 metadata = await client.head_object(Bucket=get_bucket(item.url), Key=item.url)
             except Exception:
                 from fastapi import HTTPException
                 raise HTTPException(status_code=400, detail="Không tìm thấy dữ liệu tệp trong kho đối tượng")
-            if metadata.get("ContentLength") != item.size:
+            if original_content_length(metadata) != item.size:
                 from fastapi import HTTPException
                 raise HTTPException(status_code=400, detail="Kích thước tệp không khớp dữ liệu lưu trữ")
         db_item = StorageItemInDB(**item.model_dump(), owner_id=owner_id)
@@ -272,7 +272,7 @@ class StorageService:
         await database.mongodb[settings.CLOUD_DB_NAME].storage_items.delete_many(
             {"target_id": {"$in": ids}}
         )
-        from src.core.storage import get_bucket, get_storage_client
+        from src.core.storage import get_bucket, get_storage_client, original_content_length
         storage_client = await get_storage_client()
         for entry in items:
             urls = []
@@ -351,7 +351,7 @@ class StorageService:
                 status_code=400,
                 detail="Đường dẫn phiên bản không thuộc người dùng hiện tại",
             )
-        from src.core.storage import get_bucket, get_storage_client
+        from src.core.storage import get_bucket, get_storage_client, original_content_length
         try:
             client = await get_storage_client()
             metadata = await client.head_object(Bucket=get_bucket(url), Key=url)
@@ -360,7 +360,7 @@ class StorageService:
                 status_code=503,
                 detail="Dịch vụ lưu trữ tạm thời không khả dụng",
             )
-        if metadata.get("ContentLength") != size:
+        if original_content_length(metadata) != size:
             raise HTTPException(
                 status_code=409,
                 detail="Kích thước phiên bản không khớp với dữ liệu đã tải lên",

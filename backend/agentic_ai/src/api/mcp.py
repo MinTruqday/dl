@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from pymongo.errors import DuplicateKeyError
 from pydantic import BaseModel, Field
 
 from src.repositories.mcp import MCPRepository
@@ -25,34 +26,16 @@ router = APIRouter(route_class=LoggingRoute, prefix="/mcp")
 @router.post("/servers", dependencies=[Depends(require_role([Role.ADMIN]))])
 async def register_mcp_server(req: RegisterServerRequest):
     """Register an administrator managed MCP server connection"""
-    from urllib.parse import urlparse
-
-    from src.core.infrastructure.configuration import settings
-
-    if req.server_type == "stdio":
-        allowed_commands = {
-            item.strip() for item in settings.MCP_ALLOWED_STDIO_COMMANDS.split(",") if item.strip()
-        }
-        if req.command not in allowed_commands:
-            raise HTTPException(status_code=422, detail={"code": "mcp_stdio_command_not_allowed"})
-    else:
-        parsed = urlparse(req.url or "")
-        allowed_hosts = {
-            item.strip().lower()
-            for item in settings.MCP_ALLOWED_SSE_HOSTS.split(",")
-            if item.strip()
-        }
-        if (
-            parsed.scheme not in {"http", "https"}
-            or not parsed.hostname
-            or parsed.username
-            or parsed.password
-            or parsed.hostname.lower() not in allowed_hosts
-        ):
-            raise HTTPException(status_code=422, detail={"code": "mcp_sse_endpoint_not_allowed"})
     doc = req.model_dump()
+    try:
+        await MCPService.validate_connector(doc)
+    except (ConnectionError, PermissionError, ValueError) as error:
+        raise HTTPException(status_code=422, detail={"code": str(error)})
     doc["is_connected"] = False
-    result = await MCPRepository.insert_connector(doc)
+    try:
+        result = await MCPRepository.insert_connector(doc)
+    except DuplicateKeyError:
+        raise HTTPException(status_code=409, detail={"code": "mcp_connector_already_exists"})
     connector_id = str(result.inserted_id)
     try:
         tools = await MCPService.list_tools(connector_id)

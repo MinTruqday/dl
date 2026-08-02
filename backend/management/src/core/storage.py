@@ -1,3 +1,5 @@
+import asyncio
+
 import aioboto3
 import brotli
 from botocore.exceptions import ClientError
@@ -11,6 +13,22 @@ MINIO_SECRET_KEY = settings.MINIO_SECRET_KEY
 MINIO_PRIVATE_BUCKET = settings.MINIO_PRIVATE_BUCKET
 MINIO_PUBLIC_BUCKET = settings.MINIO_PUBLIC_BUCKET
 MINIO_PUBLIC_URL = settings.MINIO_PUBLIC_URL
+TEXT_EXTENSIONS = {"txt", "csv", "json", "md", "doclib", "doclibx"}
+MIN_BROTLI_BYTES = 1024
+
+
+def should_brotli_compress(
+    object_name: str, content_type: str, content_length: int, requested: bool = False
+) -> bool:
+    extension = object_name.rsplit(".", 1)[-1].lower() if "." in object_name else ""
+    text_type = content_type.lower().startswith("text/") or content_type.lower() in {
+        "application/json",
+        "application/ld+json",
+        "application/xml",
+    }
+    return content_length >= MIN_BROTLI_BYTES and (
+        requested or text_type or extension in TEXT_EXTENSIONS
+    )
 
 def get_bucket(path: str) -> str:
     if path.startswith("system/"):
@@ -53,24 +71,19 @@ async def upload_file(
     content_type: str = "application/pdf",
     compress: bool = False,
 ) -> str:
+    original_size = len(file_content)
     kwargs = {
         "Bucket": get_bucket(object_name),
         "Key": object_name,
         "ContentType": content_type,
     }
 
-    if (
-        compress
-        or content_type.startswith("text/")
-        or content_type == "application/json"
-    ):
-        import asyncio
-
-        loop = asyncio.get_event_loop()
-        file_content = await loop.run_in_executor(
-            None, lambda: brotli.compress(file_content, quality=11)
-        )
-        kwargs["ContentEncoding"] = "br"
+    if should_brotli_compress(object_name, content_type, len(file_content), compress):
+        compressed = await asyncio.to_thread(brotli.compress, file_content, quality=5)
+        if len(compressed) < len(file_content) * 0.95:
+            file_content = compressed
+            kwargs["ContentEncoding"] = "br"
+            kwargs["Metadata"] = {"original-size": str(original_size)}
 
     kwargs["Body"] = file_content
 
@@ -100,7 +113,7 @@ async def download_file(object_name: str) -> tuple[bytes, str]:
     content = await response["Body"].read()
 
     if response.get("ContentEncoding") == "br":
-        content = brotli.decompress(content)
+        content = await asyncio.to_thread(brotli.decompress, content)
 
     return content, response.get("ContentType", "application/octet-stream")
 

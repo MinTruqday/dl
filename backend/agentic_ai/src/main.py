@@ -186,6 +186,14 @@ async def startup_event():
             await db["finetune_jobs"].create_index(
                 [("dataset_id", 1), ("status", 1)], background=True
             )
+            from src.services.mcp import MCPService
+
+            connector_statuses = await MCPService.bootstrap_connectors()
+            logger.info(
+                "MCP bootstrap completed connectors={} connected={}",
+                len(connector_statuses),
+                sum(1 for item in connector_statuses if item["is_connected"]),
+            )
             logger.info("MongoDB indexing initialized")
     except Exception:
         logger.exception("MongoDB indexing error")

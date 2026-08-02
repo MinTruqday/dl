@@ -728,6 +728,76 @@ def test_prompts_do_not_force_a_single_language():
     assert "language of the latest user request" in brain_prompt
 
 
+def test_advanced_mode_context_keeps_persistent_objective():
+    from unittest.mock import AsyncMock, patch
+
+    from src.services.workspace import WorkspaceService
+
+    with patch.object(
+        WorkspaceService,
+        "get",
+        new=AsyncMock(
+            return_value={
+                "objective": "Build a verified import pipeline",
+                "steps": [
+                    {"task": "Inspect sources", "status": "completed"},
+                    {"task": "Verify ingestion", "status": "pending"},
+                ],
+            }
+        ),
+    ):
+        mode_context = asyncio.run(
+            WorkspaceService.mode_context("session-1", "user-1", "goal")
+        )
+    assert "Build a verified import pipeline" in mode_context
+    assert "Verify ingestion" in mode_context
+    assert "Inspect sources" not in mode_context
+    assert "language used by the user" in mode_context
+
+
+def test_mcp_stdio_allowlist_matches_complete_command():
+    from unittest.mock import patch
+
+    from src.core.infrastructure.configuration import settings
+    from src.services.mcp import MCPService
+
+    with patch.object(settings, "MCP_ALLOWED_STDIO_COMMANDS", "npx -y approved-server"):
+        asyncio.run(
+            MCPService.validate_connector(
+                {"server_type": "stdio", "command": "npx", "args": ["-y", "approved-server"]}
+            )
+        )
+        denied = False
+        try:
+            asyncio.run(
+                MCPService.validate_connector(
+                    {"server_type": "stdio", "command": "npx", "args": ["-y", "other-server"]}
+                )
+            )
+        except PermissionError:
+            denied = True
+    assert denied is True
+
+
+def test_mcp_remote_connector_requires_https_allowlist():
+    from unittest.mock import patch
+
+    from src.core.infrastructure.configuration import settings
+    from src.services.mcp import MCPService
+
+    with patch.object(settings, "MCP_ALLOWED_REMOTE_HOSTS", "developers.openai.com"):
+        denied = False
+        try:
+            asyncio.run(
+                MCPService.validate_connector(
+                    {"server_type": "streamable_http", "url": "http://developers.openai.com/mcp"}
+                )
+            )
+        except PermissionError:
+            denied = True
+    assert denied is True
+
+
 def test_file_chunk_reader_is_confined_to_configured_root(tmp_path, monkeypatch):
     import json
 
