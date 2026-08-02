@@ -191,10 +191,53 @@ export default function ConfigurationPage() {
                   change={state.setDisableCopy}
                 />
                 <Toggle
+                  label="Không cho in nội dung"
+                  checked={state.disablePrint}
+                  change={state.setDisablePrint}
+                />
+                <Toggle
                   label="Ẩn khỏi kết quả tìm kiếm"
                   checked={state.hideFromSearch}
                   change={state.setHideFromSearch}
                 />
+                <Toggle
+                  label="Gắn dấu nhận dạng khi đọc"
+                  checked={state.watermarkEnabled}
+                  change={state.setWatermarkEnabled}
+                />
+                <Toggle
+                  label="Cho phép AI nội bộ xử lý"
+                  checked={state.allowInternalAi}
+                  change={state.setAllowInternalAi}
+                />
+                <div className="grid grid-cols-2 gap-3 pt-4">
+                  <label className="text-[13px] font-medium text-ink">
+                    Hiệu lực ngày
+                    <input
+                      type="number"
+                      min={1}
+                      max={365}
+                      value={state.licenseValidDays}
+                      onChange={(event) =>
+                        state.setLicenseValidDays(Number(event.target.value))
+                      }
+                      className="apple-input mt-2 w-full"
+                    />
+                  </label>
+                  <label className="text-[13px] font-medium text-ink">
+                    Số lần mở
+                    <input
+                      type="number"
+                      min={1}
+                      max={10000}
+                      value={state.maxOpenCount}
+                      onChange={(event) =>
+                        state.setMaxOpenCount(Number(event.target.value))
+                      }
+                      className="apple-input mt-2 w-full"
+                    />
+                  </label>
+                </div>
               </div>
             </section>
             <section className="rounded-panel border border-border bg-surface p-5">

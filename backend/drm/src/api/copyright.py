@@ -4,13 +4,18 @@ from fastapi import APIRouter, Depends
 from src.core.dependency import Role, get_current_user, require_role
 from src.core.response import APIResponse
 from src.services.copyright import CopyrightService
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 router = APIRouter(route_class=LoggingRoute, prefix="/ban-quyen")
 
 class DRMSettingsUpdate(BaseModel):
-    disable_copy: bool = False
-    hide_from_search: bool = False
+    disable_copy: bool = True
+    disable_print: bool = True
+    hide_from_search: bool = True
+    watermark_enabled: bool = True
+    allow_internal_ai: bool = True
+    license_valid_days: int = Field(default=30, ge=1, le=365)
+    max_open_count: int = Field(default=100, ge=1, le=10000)
 
 @router.put(
     "/{document_id}",
@@ -23,8 +28,7 @@ async def update_drm_settings(
 ):
     result = await CopyrightService.update_drm_settings(
         document_id,
-        req.disable_copy,
-        req.hide_from_search,
+        req.model_dump(),
         current_user,
     )
     return APIResponse(

@@ -17,6 +17,8 @@ from src.harness.security import security
 from src.schemas.interaction import ChatRequest, UserInstructionsRequest
 from src.core.dependency import CurrentUser, get_current_user
 from src.workflow.orchestration import supervisor
+from src.services.workspace import MODE_DIRECTIVES, workspace
+from src.services.token_accounting import current_usage, start_accounting
 
 router = APIRouter(route_class=LoggingRoute, prefix="/tro-chuyen")
 
@@ -29,6 +31,7 @@ async def chat_endpoint(
     """Execute one authenticated bounded chat or agent workflow"""
     req.user_id = str(current_user.id)
     req.role = current_user.role.value
+    req.ai_tier = current_user.ai_tier.value
     logger.info("Chat request started query_chars={}", len(req.query))
     token = request.headers.get("Authorization")
     if token:
@@ -43,9 +46,23 @@ async def chat_endpoint(
             "error_code": "input_security_blocked",
         }
 
-    req.query = scan.sanitized_text
+    original_query = scan.sanitized_text
+    req.query = original_query
+    if req.mode != "chat":
+        req.query = f"{MODE_DIRECTIVES[req.mode]}\n\nYêu cầu\n{original_query}"
+    await workspace.start(
+        req.session_id or "",
+        req.user_id,
+        req.mode,
+        original_query,
+        req.approval_policy,
+    )
 
     try:
+        quota_ok, quota_code = await _reserve_ai_quota(req)
+        if not quota_ok:
+            return {"answer": "", "route": "error", "error_code": quota_code}
+        start_accounting()
         is_quota_ok, quota_code = await _reserve_upload_quota(req)
         if not is_quota_ok:
             return {
@@ -80,7 +97,9 @@ async def chat_endpoint(
                     }
 
         route_data = {}
-        if req.thinking:
+        if req.mode == "plan":
+            route = "plan"
+        elif req.mode in {"work", "goal"} or req.thinking:
             route = "supervisor"
         elif req.document_ids or req.file_data or req.folder_data:
             route = "knowledge"
@@ -90,7 +109,16 @@ async def chat_endpoint(
             
         final_answer = ""
 
-        if route == "chat":
+        if route == "plan":
+            from src.agents.planning import planner
+
+            steps = await planner.create_plan({**req.model_dump(), "dry_run": True})
+            await workspace.save_plan(req.session_id or "", req.user_id, steps)
+            final_answer = "\n".join(
+                f"{index + 1} {step.get('task', '')}"
+                for index, step in enumerate(steps)
+            )
+        elif route == "chat":
             final_answer = route_data.get("answer", "")
             if not final_answer:
                 from huggingface_hub import AsyncInferenceClient
@@ -128,8 +156,25 @@ async def chat_endpoint(
             async for event in supervisor.execute_plan(req.model_dump()):
                 if event["type"] == "message":
                     final_answer += event.get("chunk", "")
+                elif event["type"] == "plan":
+                    await workspace.save_plan(
+                        req.session_id or "",
+                        req.user_id,
+                        event.get("steps", []),
+                        status="running",
+                    )
+                elif event["type"] == "tool_result":
+                    await workspace.update_steps(
+                        req.session_id or "",
+                        req.user_id,
+                        event.get("task_status", {}),
+                    )
 
         final_answer = await security.ascan_output(final_answer)
+        await _consume_ai_quota(req, original_query, final_answer, current_usage())
+        await workspace.finish(
+            req.session_id or "", req.user_id, req.mode, bool(final_answer)
+        )
         return {
             "answer": final_answer,
             "route": "agentic_ai",
@@ -171,6 +216,68 @@ async def _reserve_upload_quota(req: ChatRequest):
         logger.exception("Upload quota reservation error")
         return False, "upload_quota_verification_failed"
 
+
+async def _reserve_ai_quota(req: ChatRequest):
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(
+                f"{settings.USAGE_URL}/han-muc/xac-minh",
+                params={
+                    "user_id": req.user_id,
+                    "role": req.role,
+                    "ai_tier": req.ai_tier,
+                    "feature": "chat",
+                },
+                headers={"X-Internal-Token": settings.SECRET_KEY},
+            )
+        if response.status_code == 429:
+            return False, "ai_quota_exceeded"
+        if response.status_code != 200:
+            return False, "quota_service_unavailable"
+        return True, None
+    except Exception:
+        logger.exception("AI quota reservation error")
+        return False, "quota_service_unavailable"
+
+
+async def _consume_ai_quota(
+    req: ChatRequest,
+    query: str,
+    answer: str,
+    usage: dict[str, int] | None = None,
+):
+    usage = usage or {}
+    measured = any(int(value or 0) > 0 for value in usage.values())
+    input_tokens = (
+        int(usage.get("input_tokens", 0))
+        if measured
+        else max(1, len(query) // 4)
+    )
+    output_tokens = (
+        int(usage.get("output_tokens", 0))
+        if measured
+        else max(0, len(answer) // 4)
+    )
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(
+                f"{settings.USAGE_URL}/han-muc/su-dung",
+                json={
+                    "user_id": req.user_id,
+                    "feature": "chat",
+                    "role": req.role,
+                    "ai_tier": req.ai_tier,
+                    "input_tokens": input_tokens,
+                    "output_tokens": output_tokens,
+                    "cached_tokens": int(usage.get("cached_tokens", 0)),
+                    "tool_tokens": int(usage.get("tool_tokens", 0)),
+                },
+                headers={"X-Internal-Token": settings.SECRET_KEY},
+            )
+        response.raise_for_status()
+    except Exception:
+        logger.exception("AI quota consumption error")
+
 @router.post("/phat-truc-tiep")
 async def stream_endpoint(
     req: ChatRequest,
@@ -180,6 +287,7 @@ async def stream_endpoint(
     """Stream authenticated chat planning execution and verification events"""
     req.user_id = str(current_user.id)
     req.role = current_user.role.value
+    req.ai_tier = current_user.ai_tier.value
     logger.info("Chat stream started query_chars={}", len(req.query))
     token = request.headers.get("Authorization")
     bearer_token = token.replace("Bearer ", "") if token else None
@@ -205,11 +313,28 @@ async def stream_endpoint(
                 session_id, "pii_redacted", scan.risk_score, scan.violations
             )
 
-        req.query = scan.sanitized_text
+        original_query = scan.sanitized_text
+        req.query = original_query
+        if req.mode != "chat":
+            req.query = f"{MODE_DIRECTIVES[req.mode]}\n\nYêu cầu\n{original_query}"
+        await workspace.start(
+            session_id,
+            user_id,
+            req.mode,
+            original_query,
+            req.approval_policy,
+        )
 
         agentops.record_session_start(session_id, user_id, req.query)
 
         try:
+            quota_ok, quota_code = await _reserve_ai_quota(req)
+            if not quota_ok:
+                yield f"event: error\ndata: {json.dumps({'code': quota_code})}\n\n"
+                yield "event: done\ndata: [DONE]\n\n"
+                agentops.record_session_end(session_id, "failed")
+                return
+            start_accounting()
             is_quota_ok, quota_code = await _reserve_upload_quota(req)
             if not is_quota_ok:
                 yield f"event: error\ndata: {json.dumps({'code': quota_code})}\n\n"
@@ -248,7 +373,9 @@ async def stream_endpoint(
             req.conversation_history = ctx.chat_history
 
             route_data = {}
-            if req.thinking:
+            if req.mode == "plan":
+                route = "plan"
+            elif req.mode in {"work", "goal"} or req.thinking:
                 route = "supervisor"
             elif req.document_ids or req.file_data or req.folder_data:
                 route = "knowledge"
@@ -258,7 +385,24 @@ async def stream_endpoint(
                 
             final_answer = ""
 
-            if route == "chat":
+            if route == "plan":
+                from src.agents.planning import planner
+
+                steps = await planner.create_plan(
+                    {**req.model_dump(), "dry_run": True}
+                )
+                await workspace.save_plan(session_id, user_id, steps)
+                final_answer = "\n".join(
+                    f"{index + 1} {step.get('task', '')}"
+                    for index, step in enumerate(steps)
+                )
+                yield "event: plan\ndata: " + json.dumps(
+                    {"steps": steps}
+                ) + "\n\n"
+                yield "event: message\ndata: " + json.dumps(
+                    {"chunk": final_answer}
+                ) + "\n\n"
+            elif route == "chat":
                 fast_answer = route_data.get("answer", "")
                 if fast_answer:
                     yield f"event: message\ndata: {json.dumps({'chunk': fast_answer})}\n\n"
@@ -332,6 +476,12 @@ async def stream_endpoint(
                         async for chunk in planner.stream_plan(req_dict):
                             if chunk["type"] == "plan":
                                 req_dict["plan"] = chunk["nodes"]
+                                await workspace.save_plan(
+                                    session_id,
+                                    user_id,
+                                    chunk["nodes"],
+                                    status="running",
+                                )
                                 await heartbeat_queue.put({"type": "plan", "steps": chunk["nodes"]})
                             elif chunk["type"] == "error":
                                 await heartbeat_queue.put(chunk)
@@ -364,16 +514,31 @@ async def stream_endpoint(
                         elif event_type == "status":
                             yield f"event: status\ndata: {json.dumps({'code': event.get('code', 'processing')})}\n\n"
                         elif event_type == "plan":
+                            task_status = event.get("task_status", {})
+                            normalized_status = {
+                                str(key): value for key, value in task_status.items()
+                            }
+                            await workspace.update_steps(
+                                session_id, user_id, task_status
+                            )
                             public_steps = [
                                 {
                                     "id": str(step.get("id", index + 1)),
                                     "index": index + 1,
-                                    "status": "pending",
+                                    "status": normalized_status.get(
+                                        str(step.get("id", index + 1)), "pending"
+                                    ),
+                                    "task": str(step.get("task", "")),
                                 }
                                 for index, step in enumerate(event.get("steps", []))
                             ]
                             yield f"event: plan\ndata: {json.dumps({'steps': public_steps})}\n\n"
                         elif event_type == "tool_result":
+                            await workspace.update_steps(
+                                session_id,
+                                user_id,
+                                event.get("task_status", {}),
+                            )
                             agentops.record_tool_call(
                                 session_id,
                                 event.get("agent", "unknown"),
@@ -381,7 +546,7 @@ async def stream_endpoint(
                                 success=True,
                             )
                             agent_name = event.get('agent', 'unknown')
-                            yield f"event: tool\ndata: {json.dumps({'agent': agent_name, 'status': 'completed'})}\n\n"
+                            yield f"event: tool\ndata: {json.dumps({'agent': agent_name, 'status': 'completed', 'task_status': event.get('task_status', {})})}\n\n"
                         elif event_type == "message":
                             message_chunk = str(event.get("chunk", ""))
                             final_answer += message_chunk
@@ -397,9 +562,12 @@ async def stream_endpoint(
 
             if final_answer:
                 final_answer = await security.ascan_output(final_answer, session_id=session_id)
+            await _consume_ai_quota(
+                req, original_query, final_answer, current_usage()
+            )
 
             if session_id and final_answer:
-                await context.save_turn(session_id, "user", req.query)
+                await context.save_turn(session_id, "user", original_query)
                 await context.save_turn(session_id, "assistant", final_answer)
                 
                 try:
@@ -409,7 +577,7 @@ async def stream_endpoint(
                     user_msg = {
                         "user_id": user_id,
                         "role": "user",
-                        "content": req.query
+                        "content": original_query
                     }
                     if req.attachments:
                         user_msg["attachments"] = req.attachments
@@ -422,7 +590,7 @@ async def stream_endpoint(
                     })
 
                     mem_data = [
-                        {"role": "user", "content": req.query},
+                        {"role": "user", "content": original_query},
                         {"role": "assistant", "content": final_answer}
                     ]
                     from src.utils.background import create_background_task
@@ -435,16 +603,31 @@ async def stream_endpoint(
                 except Exception:
                     logger.exception("Chat history persistence to database error")
 
+            await workspace.finish(
+                session_id, user_id, req.mode, bool(final_answer)
+            )
             agentops.record_session_end(session_id, "done")
 
         except Exception:
             logger.exception("Chat stream execution unexpected error")
+            await workspace.finish(session_id, user_id, req.mode, False)
             agentops.record_session_end(session_id, "failed")
             yield f"event: error\ndata: {json.dumps({'code': 'chat_stream_failed'})}\n\n"
 
         yield "event: done\ndata: [DONE]\n\n"
 
     return StreamingResponse(response_generator(), media_type="text/event-stream")
+
+
+@router.get("/khong-gian/{session_id}")
+async def get_workspace(
+    session_id: str,
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    row = await workspace.get(session_id, str(current_user.id))
+    if not row:
+        return {"status": "success", "data": None}
+    return {"status": "success", "data": row}
 
 @router.get("/tuy-chon-ca-nhan")
 async def get_user_instructions(

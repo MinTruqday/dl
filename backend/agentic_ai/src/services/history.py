@@ -30,6 +30,7 @@ class HistoryService:
             "user_id": user_id,
             "document_id": document_id,
             "title": title,
+            "mode": data.get("mode", "chat"),
             "messages": [],
             "created_at": datetime.now(timezone.utc),
             "updated_at": datetime.now(timezone.utc),

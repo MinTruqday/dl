@@ -82,7 +82,8 @@ async def main():
             results = list(executor.map(lambda _: request("GET", f"/han-muc/xac-minh?{query}")[0], range(15)))
         assert results.count(200) == 10, results
         assert results.count(429) == 5, results
-        assert int(await cache.get(f"quota:{USER_ID}:chat:req")) == 10
+        day = datetime.now(timezone.utc).date().isoformat()
+        assert int(await cache.get(f"quota:{USER_ID}:chat:daily:{day}:req")) == 10
 
         status, _ = request(
             "POST",
@@ -115,7 +116,7 @@ async def main():
             )
         assert upload_results.count(200) == 1, upload_results
         assert upload_results.count(429) == 7, upload_results
-        assert int(await cache.get(f"quota:{UPLOAD_USER_ID}:upload_document")) == 1
+        assert int(await cache.get(f"quota:{UPLOAD_USER_ID}:upload_document:{day}")) == 1
         assert request(
             "GET",
             "/han-muc/tai-len/xac-minh?item_type=document",

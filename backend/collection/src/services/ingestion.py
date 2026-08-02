@@ -1,4 +1,5 @@
 import asyncio
+import json
 import os
 from datetime import datetime, timezone
 
@@ -14,6 +15,7 @@ from src.core.infrastructure.redis import redis
 from src.core.logic_logger import log_logic_execution
 from src.schemas.ingestion import Collection
 from src.services.content_client import collector_document_stats
+from src.sources.anna import AnnaSource
 
 
 SOURCE_QUEUES = {
@@ -42,6 +44,9 @@ async def trigger_collection(req: Collection):
         "parameters": {"pages": req.pages},
         "status": "pending",
         "progress": 0,
+        "completed_items": 0,
+        "failed_items": 0,
+        "discovery_complete": False,
         "created_at": now,
         "updated_at": now,
     }
@@ -93,7 +98,7 @@ async def stop_collection():
 
         await restart_workers()
         await database.mongodb[settings.COLLECTION_DB_NAME].collection_jobs.update_many(
-            {"status": {"$in": ["pending", "running"]}},
+            {"status": {"$in": ["pending", "discovering", "running"]}},
             {
                 "$set": {
                     "status": "stopped",
@@ -112,7 +117,7 @@ async def stop_collection():
 async def get_active_jobs():
     jobs = await mongo.find(
         "collection_jobs",
-        {"status": {"$in": ["running", "pending"]}},
+        {"status": {"$in": ["running", "discovering", "pending"]}},
         sort=[("created_at", -1)],
         limit=100,
     ).to_list(length=100)
@@ -122,6 +127,11 @@ async def get_active_jobs():
             "source": job.get("source"),
             "progress": job.get("progress", 0),
             "status": job["status"],
+            "parameters": job.get("parameters", {}),
+            "pages_scanned": job.get("pages_scanned", 0),
+            "documents_detected": job.get("documents_detected", 0),
+            "completed_items": job.get("completed_items", 0),
+            "failed_items": job.get("failed_items", 0),
             "created_at": job.get("created_at"),
         }
         for job in jobs
@@ -132,20 +142,32 @@ async def get_active_jobs():
 async def get_collector_stats():
     collection = database.mongodb[settings.COLLECTION_DB_NAME].collection_jobs
     source_ids = ["annas-archive", "nxbst", "nxbgd", "ctan"]
-    content_stats = await collector_document_stats(source_ids)
-    active = await collection.count_documents({"status": {"$in": ["pending", "running"]}})
+    source_names = ["Anna Archive", "NXBST", "NXBGD", "CTAN"]
+    content_stats = await collector_document_stats(source_ids, source_names)
+    active = await collection.count_documents(
+        {"status": {"$in": ["pending", "discovering", "running"]}}
+    )
     failed = await collection.count_documents({"status": "failed"})
     paused = await redis.get("stop_collection") == "1"
+    cached_health = await redis.get("collector:health:anna")
+    if cached_health:
+        anna_health = json.loads(cached_health)
+    else:
+        anna_health = await AnnaSource.probe_list_source()
+        anna_health["checked_at"] = datetime.now(timezone.utc).isoformat()
+        await redis.setex("collector:health:anna", 300, json.dumps(anna_health))
+    operational = not paused and bool(anna_health.get("reachable"))
     return {
         "total_documents": content_stats["total_documents"],
         "total_assets": content_stats["total_assets"],
-        "collector_status": "PAUSED" if paused else "RUNNING",
+        "collector_status": "PAUSED" if paused else "RUNNING" if operational else "DEGRADED",
         "last_crawl": content_stats.get("last_run"),
         "total_documents_collected": content_stats["total_collected"],
         "active_jobs": active,
         "failed_jobs": failed,
-        "active_sources": ["AnnaArchive", "NXBST", "NXBGD", "CTAN"],
-        "status": "paused" if paused else "operational",
+        "active_sources": ["AnnaArchive"] if anna_health.get("reachable") else [],
+        "source_health": [anna_health],
+        "status": "paused" if paused else "operational" if operational else "degraded",
     }
 
 

@@ -88,6 +88,10 @@ async def setup_indexes():
             "history_events": [
                 IndexModel([("created_at", DESCENDING)]),
             ],
+            "ai_workspaces": [
+                IndexModel([("user_id", ASCENDING), ("updated_at", DESCENDING)]),
+                IndexModel([("user_id", ASCENDING), ("status", ASCENDING)]),
+            ],
         }
         for collection_name, indexes in index_sets.items():
             await db[collection_name].create_indexes(indexes)

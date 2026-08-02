@@ -72,6 +72,7 @@ class FakeActionTool:
         user_id,
         token,
         auto_approve=False,
+        approval_policy="manual",
         session_id="",
         approval_id=None,
     ):

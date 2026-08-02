@@ -87,6 +87,13 @@ class HFInferenceChat(BaseChatModel):
         }
         response = await self.client.chat_completion(**chat_kwargs)
         content = response.choices[0].message.content
+        from src.services.token_accounting import record_usage
+
+        record_usage(
+            response,
+            sum(len(str(message.get("content", ""))) for message in hf_messages),
+            len(str(content or "")),
+        )
         return ChatResult(
             generations=[ChatGeneration(message=AIMessage(content=content))]
         )

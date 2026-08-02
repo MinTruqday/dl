@@ -225,6 +225,29 @@ class InterventionHarness:
             logger.exception("Approved intervention lookup failed")
             return False
 
+    async def wait_for_approval(
+        self,
+        intervention_id: str,
+        session_id: str,
+        user_id: str,
+        action_type: str,
+        timeout_seconds: int = 300,
+    ) -> bool:
+        loop = asyncio.get_running_loop()
+        deadline = loop.time() + timeout_seconds
+        while loop.time() < deadline:
+            if await self.consume_approval(
+                intervention_id,
+                session_id,
+                user_id,
+                action_type,
+            ):
+                return True
+            if not await self.check_pending(intervention_id):
+                return False
+            await asyncio.sleep(0.5)
+        return False
+
     def _record_audit(self, request: InterventionRequest):
         duration = None
         if request.resolved_at:

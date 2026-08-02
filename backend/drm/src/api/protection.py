@@ -246,3 +246,44 @@ async def get_internal_document_settings(document_id: str) -> Dict[str, Any]:
         raise HTTPException(status_code=404, detail="Không tìm thấy cấu hình DRM")
     settings_doc["_id"] = str(settings_doc["_id"])
     return {"data": settings_doc}
+
+
+@router.get("/noi-bo/noi-dung-ai")
+async def get_internal_ai_content(
+    document_id: str = Query(min_length=1, max_length=128),
+    user_id: str = Query(min_length=1, max_length=128),
+    purpose: str = Query(default="answer", pattern=r"^(answer|index|summarize|learn)$"),
+    is_admin: bool = False,
+) -> Dict[str, Any]:
+    document = await ContentClient.get_accessible(
+        document_id, user_id, is_admin, edit=False
+    )
+    if not document:
+        raise HTTPException(status_code=403, detail="Không có quyền đọc tài liệu")
+    drm_db = database.mongodb[settings.DRM_DB_NAME]
+    policy = await drm_db.document_drm_settings.find_one(
+        {"document_id": document_id}
+    )
+    if policy and not policy.get("allow_internal_ai", True):
+        raise HTTPException(status_code=403, detail="Tài liệu không cho phép xử lý AI")
+    now = datetime.datetime.now(datetime.timezone.utc)
+    await drm_db.audit_logs.insert_one(
+        {
+            "event": "internal_ai_content_granted",
+            "document_id": document_id,
+            "user_id": user_id,
+            "purpose": purpose,
+            "created_at": now,
+        }
+    )
+    return {
+        "data": {
+            "document_id": document_id,
+            "title": document.get("title", ""),
+            "content": document.get("content"),
+            "content_format": document.get("content_format"),
+            "file_url": document.get("file_url") or document.get("pdf_url"),
+            "profile": "doclib-drm-2026",
+            "rights": {"internal_ai": True, "external_export": False},
+        }
+    }

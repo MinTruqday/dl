@@ -1,12 +1,14 @@
 import asyncio
 import json
 import os
+import tempfile
 import urllib.error
 import urllib.request
 import uuid
 from datetime import datetime, timedelta, timezone
 
 import jwt
+import fitz
 from motor.motor_asyncio import AsyncIOMotorClient
 import redis.asyncio as redis
 
@@ -100,6 +102,44 @@ async def main():
         from src.core.infrastructure.mq import mq
 
         infrastructure.mongodb = mongo
+        from src.services import metadata as metadata_service
+
+        class MetadataStorage:
+            async def upload_local_file(
+                self,
+                object_name,
+                local_file_path,
+                content_type="application/pdf",
+            ):
+                assert os.path.getsize(local_file_path) > 0
+                return object_name
+
+        metadata_service.storage = MetadataStorage()
+        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as stream:
+            pdf_path = stream.name
+        pdf = fitz.open()
+        page = pdf.new_page()
+        page.insert_text((72, 72), "DocLib")
+        pdf.save(pdf_path)
+        pdf.close()
+        metadata = await metadata_service.anna_metadata(
+            {
+                "title": "Collected document",
+                "author": "Collected author",
+                "source_url": source_url,
+            },
+            pdf_path,
+            "system/collection/integration/metadata.pdf",
+            "pdf",
+        )
+        os.unlink(pdf_path)
+        assert metadata["description"] == ""
+        assert metadata["publisher_name"] == "DocLib"
+        assert metadata["visibility"] == "private"
+        assert metadata["status"] == "draft"
+        assert metadata["collection_status"] == "ready_for_review"
+        assert metadata["pages_count"] == 1
+        assert metadata["cover_url"].endswith("cover.png")
         first_id = await document_database.insert_document(
             {
                 "title": "Idempotent Integration",

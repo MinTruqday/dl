@@ -1,25 +1,49 @@
 "use client";
 
-import { FormEvent, useRef, useState } from "react";
-import { Paperclip, Send, Settings, Trash2 } from "lucide-react";
+import { FormEvent, useEffect, useRef, useState } from "react";
+import {
+  Check,
+  Circle,
+  LoaderCircle,
+  Paperclip,
+  Send,
+  Settings,
+  Square,
+  Trash2,
+  X,
+} from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import InlineState from "@/app/_components/InlineState";
 import PageLoader from "@/shared/components/common/PageLoader";
 import { Button } from "@/shared/components/ui/Button";
 import ChatInstructionsModal from "./ChatInstructionsModal";
-import { useChat } from "./useChat";
+import { ChatMode, useChat } from "./useChat";
+
+const modes: Array<{ value: ChatMode; label: string }> = [
+  { value: "chat", label: "Chat" },
+  { value: "work", label: "Work" },
+  { value: "goal", label: "Goal" },
+  { value: "learn", label: "Learn" },
+  { value: "plan", label: "Plan" },
+];
 
 export default function ChatPage() {
   const chat = useChat();
   const fileInput = useRef<HTMLInputElement>(null);
   const [input, setInput] = useState("");
   const [file, setFile] = useState<File | null>(null);
-  const [thinking, setThinking] = useState(false);
+  const [mode, setMode] = useState<ChatMode>("chat");
+  const [approvalPolicy, setApprovalPolicy] = useState<"manual" | "auto_safe">(
+    "manual",
+  );
   const [instructionsOpen, setInstructionsOpen] = useState(false);
+  useEffect(() => {
+    if (chat.openedMode) setMode(chat.openedMode);
+  }, [chat.openedMode]);
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    if (await chat.send(input, thinking, file)) {
+    if (await chat.send(input, mode, approvalPolicy, file)) {
       setInput("");
       setFile(null);
     }
@@ -33,9 +57,10 @@ export default function ChatPage() {
         detail="Đăng nhập để sử dụng trợ lý AI"
       />
     );
-  const quota = chat.quota as any;
-  const used = quota?.used ?? quota?.used_tokens ?? 0;
-  const limit = quota?.limit ?? quota?.token_limit ?? 0;
+  const daily = chat.quota?.windows?.find((window) => window.name === "daily");
+  const weekly = chat.quota?.windows?.find(
+    (window) => window.name === "weekly",
+  );
   return (
     <div className="flex h-[calc(100dvh-60px)] overflow-hidden bg-surface">
       <aside className="hidden w-[304px] shrink-0 flex-col border-r border-border md:flex">
@@ -72,10 +97,16 @@ export default function ChatPage() {
           </ul>
         </div>
         <div className="border-t border-border p-4">
-          <p className="text-[12px] text-ink-muted">
-            Hạn mức {used.toLocaleString("vi-VN")}
-            {limit ? ` / ${limit.toLocaleString("vi-VN")}` : ""}
-          </p>
+          <div className="space-y-1 text-[12px] text-ink-muted">
+            <p>
+              Ngày {(daily?.used_tokens ?? 0).toLocaleString("vi-VN")} /{" "}
+              {(daily?.limit_tokens ?? 0).toLocaleString("vi-VN")}
+            </p>
+            <p>
+              Tuần {(weekly?.used_tokens ?? 0).toLocaleString("vi-VN")} /{" "}
+              {(weekly?.limit_tokens ?? 0).toLocaleString("vi-VN")}
+            </p>
+          </div>
           <Button
             className="mt-3 w-full"
             variant="secondary"
@@ -132,6 +163,64 @@ export default function ChatPage() {
           </div>
         )}
         <div className="min-h-0 flex-1 overflow-y-auto bg-surface-quiet px-5 py-8 md:px-10">
+          {chat.planSteps.length > 0 && (
+            <div className="mx-auto mb-5 max-w-3xl rounded-panel border border-border bg-surface px-4 py-3">
+              <ol className="space-y-2">
+                {chat.planSteps.map((step) => (
+                  <li
+                    key={step.id}
+                    className="flex items-start gap-2 text-[13px] leading-5 text-ink"
+                  >
+                    {step.status === "completed" ? (
+                      <Check className="mt-0.5 shrink-0 text-brand" size={14} />
+                    ) : step.status === "running" ? (
+                      <LoaderCircle
+                        className="mt-0.5 shrink-0 animate-spin text-brand"
+                        size={14}
+                      />
+                    ) : step.status === "failed" ? (
+                      <X className="mt-0.5 shrink-0 text-danger" size={14} />
+                    ) : (
+                      <Circle className="mt-0.5 shrink-0 text-ink-muted" size={14} />
+                    )}
+                    <span>{step.task}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+          {chat.approvals.map((approval) => (
+            <div
+              key={approval.intervention_id}
+              className="mx-auto mb-5 max-w-3xl rounded-panel border border-warning/40 bg-surface px-4 py-3"
+            >
+              <p className="text-[13px] font-semibold text-ink">
+                {approval.action_type}
+              </p>
+              <p className="mt-1 text-[13px] leading-5 text-ink-muted">
+                {approval.description}
+              </p>
+              <div className="mt-3 flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={() =>
+                    chat.resolveApproval(approval.intervention_id, "APPROVED")
+                  }
+                >
+                  Xác nhận
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() =>
+                    chat.resolveApproval(approval.intervention_id, "REJECTED")
+                  }
+                >
+                  Từ chối
+                </Button>
+              </div>
+            </div>
+          ))}
           {chat.messages.length ? (
             <div className="mx-auto max-w-3xl space-y-7">
               {chat.messages.map((message) => (
@@ -185,7 +274,7 @@ export default function ChatPage() {
               </p>
             )}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
+              <div className="flex min-w-0 items-center gap-2">
                 <input
                   ref={fileInput}
                   type="file"
@@ -201,24 +290,53 @@ export default function ChatPage() {
                 >
                   <Paperclip size={17} />
                 </Button>
-                <label className="flex items-center gap-2 text-[12px] text-ink-muted">
-                  <input
-                    type="checkbox"
-                    checked={thinking}
-                    onChange={(event) => setThinking(event.target.checked)}
-                    className="accent-[hsl(var(--brand))]"
-                  />
-                  Phân tích sâu
-                </label>
+                <div className="flex max-w-[55vw] gap-1 overflow-x-auto rounded-control bg-surface-quiet p-1">
+                  {modes.map((item) => (
+                    <button
+                      key={item.value}
+                      type="button"
+                      onClick={() => setMode(item.value)}
+                      className={`shrink-0 rounded-control px-2.5 py-1 text-[12px] font-medium ${mode === item.value ? "bg-surface text-ink shadow-sm" : "text-ink-muted"}`}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+                {(mode === "work" || mode === "goal") && (
+                  <select
+                    value={approvalPolicy}
+                    onChange={(event) =>
+                      setApprovalPolicy(
+                        event.target.value as "manual" | "auto_safe",
+                      )
+                    }
+                    className="rounded-control border border-border bg-surface px-2 py-1 text-[12px] text-ink"
+                    aria-label="Quyền công cụ"
+                  >
+                    <option value="manual">Xác nhận</option>
+                    <option value="auto_safe">Tự động an toàn</option>
+                  </select>
+                )}
               </div>
-              <Button
-                type="submit"
-                size="icon"
-                aria-label="Gửi"
-                disabled={chat.sending || (!input.trim() && !file)}
-              >
-                <Send size={17} />
-              </Button>
+              {chat.sending ? (
+                <Button
+                  type="button"
+                  size="icon"
+                  aria-label="Dừng"
+                  onClick={chat.stop}
+                >
+                  <Square size={15} fill="currentColor" />
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  size="icon"
+                  aria-label="Gửi"
+                  disabled={!input.trim() && !file}
+                >
+                  <Send size={17} />
+                </Button>
+              )}
             </div>
           </div>
         </form>

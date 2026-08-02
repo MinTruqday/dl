@@ -177,6 +177,36 @@ export default function CollectorPage() {
               </Button>
             )}
           </div>
+          {collector.jobs.length > 0 && (
+            <div className="mt-4 overflow-hidden rounded-panel border border-border bg-surface">
+              {collector.jobs.map((job: any) => {
+                const target =
+                  job.source === "CTAN"
+                    ? String(job.parameters?.pages || "").toUpperCase()
+                    : String(job.parameters?.pages || 0);
+                return (
+                  <div
+                    key={job.id}
+                    className="border-b border-border px-4 py-3 text-[13px] last:border-b-0"
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="font-semibold text-ink">
+                        {job.source} {target}
+                      </span>
+                      <span className="tabular-nums text-ink-muted">
+                        {Number(job.progress || 0)}%
+                      </span>
+                    </div>
+                    <div className="mt-1 flex gap-4 text-[12px] text-ink-faint">
+                      <span>Phát hiện {Number(job.documents_detected || 0)}</span>
+                      <span>Đã lưu {Number(job.completed_items || 0)}</span>
+                      <span>Lỗi {Number(job.failed_items || 0)}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </section>
 
         <section aria-labelledby="collector-log-title">

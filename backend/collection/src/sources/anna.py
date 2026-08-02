@@ -1,6 +1,7 @@
 import os
 import random
 import re
+import hashlib
 import tempfile
 import urllib.parse
 
@@ -19,12 +20,39 @@ from src.core.database import database
 from src.core.infrastructure.mq import mq as mq_client
 from src.core.cache import dedup
 from src.core.storage import storage
+from src.services.metadata import anna_metadata
 
 from src.core.infrastructure.configuration import settings
 
 class AnnaSource:
     @staticmethod
-    async def run_list_collector(search_query: str = "", pages: int = 0):
+    async def probe_list_source() -> dict:
+        url = "https://annas-archive.gl/search?index=journals&q="
+        try:
+            timeout = aiohttp.ClientTimeout(total=20)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                async with session.get(url, allow_redirects=True) as response:
+                    body = await response.text(errors="ignore")
+                    detected = len(set(re.findall(r'href=["\']([^"\']*/md5/[^"\']+)', body)))
+                    reachable = response.status == 200 and detected > 0
+                    return {
+                        "source": "AnnaArchive",
+                        "reachable": reachable,
+                        "http_status": response.status,
+                        "documents_detected": detected,
+                        "reason": None if reachable else "Nguồn không trả về danh sách tài liệu hợp lệ",
+                    }
+        except Exception as error:
+            return {
+                "source": "AnnaArchive",
+                "reachable": False,
+                "http_status": None,
+                "documents_detected": 0,
+                "reason": str(error)[:200],
+            }
+
+    @staticmethod
+    async def run_list_collector(search_query: str = "", pages: int = 1, job_id: str | None = None):
         if search_query:
             logger.info("[AnnaSource] Searching information from external source")
         else:
@@ -38,6 +66,8 @@ class AnnaSource:
 
             try:
                 page_num = 1
+                documents_detected = 0
+                documents_queued = 0
 
                 while True:
                     search_url = f"https://annas-archive.gl/search?index=journals&sort=&lang=en&lang=anti__zh&lang=la&lang=vi&display=&q={encoded}&page={page_num}"
@@ -71,7 +101,7 @@ class AnnaSource:
                     list_selector = 'a[href*="/md5/"]'
                     try:
                         await page.wait_for_selector(list_selector, timeout=15000)
-                    except Exception as e:
+                    except Exception:
                         logger.exception("[AnnaSource] Link extraction failed due to UI changes")
 
                     document_nodes = await page.query_selector_all(list_selector)
@@ -92,24 +122,36 @@ class AnnaSource:
                             )
                             document_urls.add(full_url)
 
+                    documents_detected += len(document_urls)
+
                     logger.info("[AnnaSource] Document links extracted")
                     new_urls_found = 0
 
                     for url in document_urls:
                         if not await dedup.is_collected("anna_url", url):
-                            await mq_client.publish(
-                                "collect_detail_queue", {"url": url}
+                            published = await mq_client.publish(
+                                "collect_detail_queue",
+                                {"url": url, "source": "AnnaArchive", "job_id": job_id},
                             )
+                            if not published:
+                                raise RuntimeError("RabbitMQ rejected a document detail task")
                             await dedup.mark_collected("anna_url", url)
                             new_urls_found += 1
+                            documents_queued += 1
 
                     logger.info("[AnnaSource] Document links added to queue")
                     if page_num >= pages:
                         logger.info("[AnnaSource] Page limit reached, stopping scan")
                         break
                     page_num += 1
-            except Exception as e:
+                return {
+                    "pages_scanned": page_num,
+                    "documents_detected": documents_detected,
+                    "documents_queued": documents_queued,
+                }
+            except Exception:
                 logger.exception("[AnnaSource] Failed to load document list from external source")
+                raise
 
     @staticmethod
     async def get_flare_cleared_context(browser, url: str, logger):
@@ -145,12 +187,12 @@ class AnnaSource:
                         if formatted_cookies:
                             await context.add_cookies(formatted_cookies)
                         return context
-        except Exception as e:
+        except Exception:
             logger.exception("[AnnaSource] Firewall bypass failed")
         return await get_stealth_context(browser)
 
     @staticmethod
-    async def run_detail_collector(document_url: str):
+    async def run_detail_collector(document_url: str, job_id: str | None = None):
         logger.info("[AnnaSource] Processing detailed document information")
 
         async with managed_browser() as browser:
@@ -176,6 +218,7 @@ class AnnaSource:
 
                 payload = {}
                 payload["source_url"] = document_url
+                payload["job_id"] = job_id
 
                 title_el = (
                     await page.query_selector("div.text-3xl.font-bold")
@@ -189,9 +232,13 @@ class AnnaSource:
                 )
                 payload["title"] = raw_title
 
-                author_el = await page.query_selector("div.italic")
+                author_el = (
+                    await page.query_selector('a[href*="/search?q="].line-clamp-\\[2\\].mt-2')
+                    or await page.query_selector('a[href*="/search?q="]')
+                    or await page.query_selector("div.italic")
+                )
                 payload["author"] = (
-                    await author_el.inner_text() if author_el else "Unknown"
+                    await author_el.inner_text() if author_el else "Không rõ tác giả"
                 )
 
                 logger.info("[AnnaSource] Document information extracted")
@@ -271,26 +318,27 @@ class AnnaSource:
                                 payload["title"].lower().replace(" ", "-"),
                                 safe="",
                             )[:50]
-                            payload["filename"] = f"{slug}.{ext}"
+                            source_digest = hashlib.sha256(document_url.encode()).hexdigest()[:12]
+                            payload["filename"] = f"{slug}-{source_digest}.{ext}"
                             payload["content_format"] = ext
 
-                            await mq_client.publish("download_processor_queue", payload)
+                            published = await mq_client.publish("download_processor_queue", payload)
+                            if not published:
+                                raise RuntimeError("RabbitMQ rejected a document download task")
                         else:
-                            logger.warning("[AnnaSource] Security verification timeout")
-                    except Exception as e:
+                            raise RuntimeError("Download link verification timed out")
+                    except Exception:
                         logger.exception("[AnnaSource] Error monitoring download link generation")
+                        raise
                 if not slow_link_el:
                     logger.warning("[AnnaSource] Download button not found")
                     await page.screenshot(
                         path="/app/logs/anna_error.png", full_page=True
                     )
-                    links = await page.evaluate(
-                        "Array.from(document.querySelectorAll('a, button')).map(el => el.innerText.trim()).filter(t => t.length > 0)"
-                    )
                     logger.warning("[AnnaSource] Recording page elements for debugging")
                     await page.close()
                     raise RuntimeError("Download link not found")
-            except Exception as e:
+            except Exception:
                 logger.exception("[AnnaSource] Document extraction failed")
                 raise
 
@@ -300,17 +348,17 @@ class AnnaSource:
         title = payload.get("title", "document")
 
         if not url:
-            logger.error("[AnnaSource] Invalid download URL")
-            return
+            raise ValueError("Invalid download URL")
 
         logger.info("[AnnaSource] Downloading document to temporary storage")
 
-        slug = urllib.parse.quote(title.lower().replace(" ", "-"), safe="")[:50]
         ext = payload.get("content_format", "pdf")
-        filename = payload.get("filename") or f"{slug}.{ext}"
+        source_digest = hashlib.sha256(str(payload.get("source_url", url)).encode()).hexdigest()[:12]
+        filename = payload.get("filename") or f"document-{source_digest}.{ext}"
 
         minio_url = None
 
+        target_local = None
         try:
             with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
                 target_local = tmp_file.name
@@ -321,31 +369,15 @@ class AnnaSource:
                 minio_url = await storage.upload_local_file(
                     f"system/collection/anna_archive/{filename}", target_local
                 )
-
-            if os.path.exists(target_local):
-                os.unlink(target_local)
-        except Exception as e:
+            else:
+                raise RuntimeError("Document download failed")
+            logger.info("[AnnaSource] Downloaded document transferred to permanent storage")
+            metadata = await anna_metadata(payload, target_local, minio_url, ext)
+            doc_id = await database.insert_document(metadata)
+            return {"document_id": doc_id, "metadata": metadata}
+        except Exception:
             logger.exception("[AnnaSource] Document download and storage failed")
             raise
-
-        if minio_url:
-            logger.info("[AnnaSource] Downloaded document transferred to permanent storage")
-
-            metadata = {
-                "title": title,
-                "slug": slug,
-                "description": "Trích xuất tự động hoàn tất",
-                "file_url": minio_url,
-                "source_url": payload.get("source_url"),
-                "pdf_url": minio_url if ext.lower() == "pdf" else None,
-                "tags": ["AnnaSource's Archive", payload.get("author", "Unknown")],
-                "content": None,
-                "content_format": ext,
-                "price": 0.0,
-                "visibility": "public",
-                "creator_id": "annas-archive",
-                "status": "published",
-                "views": 0,
-            }
-
-            doc_id = await database.insert_document(metadata)
+        finally:
+            if target_local and os.path.exists(target_local):
+                os.unlink(target_local)

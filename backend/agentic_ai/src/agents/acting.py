@@ -22,6 +22,14 @@ _REQUIRES_APPROVAL_TOOLS = frozenset({
     "update_document_metadata",
 })
 
+_AUTO_SAFE_TOOLS = frozenset({
+    "create_document",
+    "edit_document_block",
+    "edit_document_text",
+    "propose_document_edits",
+    "update_document_metadata",
+})
+
 def _is_validation_error(exc: Exception) -> bool:
     return (
         "validation error" in str(exc).lower()
@@ -66,6 +74,7 @@ class ActingAgent:
         user_id: str,
         token: str = None,
         auto_approve: bool = False,
+        approval_policy: str = "manual",
         session_id: str = "",
         approval_id: str = None,
     ) -> str:
@@ -156,7 +165,10 @@ class ActingAgent:
                     return json.dumps({"status": "tool_unavailable"})
 
                 selected_tool = self.tool_map[tool_name]
-                if tool_name in _REQUIRES_APPROVAL_TOOLS and not auto_approve:
+                approved_automatically = auto_approve or (
+                    approval_policy == "auto_safe" and tool_name in _AUTO_SAFE_TOOLS
+                )
+                if tool_name in _REQUIRES_APPROVAL_TOOLS and not approved_automatically:
                     from src.loop.intervention import intervention
 
                     if approval_id:
@@ -195,13 +207,19 @@ class ActingAgent:
                                 else "medium"
                             ),
                         )
-                        return json.dumps(
-                            {
-                                "status": "approval_required",
-                                "tool_name": tool_name,
-                                "approval_id": approval.intervention_id,
-                            }
+                        approved = await intervention.wait_for_approval(
+                            approval.intervention_id,
+                            session_id,
+                            str(user_id),
+                            tool_name,
                         )
+                        if not approved:
+                            return json.dumps(
+                                {
+                                    "status": "approval_rejected",
+                                    "tool_name": tool_name,
+                                }
+                            )
 
                 logger.info("Tool execution started tool={}", tool_name)
                 try:

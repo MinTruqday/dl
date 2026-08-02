@@ -62,6 +62,21 @@ export default function DocumentReaderPage() {
       ["pdf", "html"].includes(String(document.content_format).toLowerCase()));
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-surface">
+      {document.drm_settings?.watermark_enabled && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none fixed inset-0 z-[70] grid grid-cols-3 content-around overflow-hidden opacity-[0.09]"
+        >
+          {Array.from({ length: 18 }, (_, index) => (
+            <span
+              key={index}
+              className="-rotate-12 whitespace-nowrap text-center text-[13px] font-semibold text-ink"
+            >
+              {document.drm_settings.watermark_text || "DocLib"}
+            </span>
+          ))}
+        </div>
+      )}
       <header className="flex h-[60px] shrink-0 items-center justify-between gap-4 border-b border-border bg-surface px-4">
         <div className="flex min-w-0 items-center gap-3">
           <Button size="sm" variant="ghost" onClick={() => router.back()}>

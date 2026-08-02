@@ -2,6 +2,7 @@ import asyncio
 from datetime import datetime, timezone
 
 from loguru import logger
+from pymongo import ReturnDocument
 
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
@@ -43,12 +44,86 @@ async def update_job(job_id: str | None, status: str, progress: int, error: str 
     )
 
 
+async def register_batch(job_id: str | None, result: dict | None):
+    if not job_id:
+        return
+    result = result or {}
+    detected = max(0, int(result.get("documents_detected", 0)))
+    queued = max(0, int(result.get("documents_queued", 0)))
+    values = {
+        "pages_scanned": max(0, int(result.get("pages_scanned", 0))),
+        "documents_detected": detected,
+        "expected_items": queued,
+        "discovery_complete": True,
+        "updated_at": datetime.now(timezone.utc),
+    }
+    if detected == 0:
+        values.update({"status": "failed", "progress": 100, "error": "Nguồn không trả về tài liệu", "finished_at": datetime.now(timezone.utc)})
+    elif queued == 0:
+        values.update({"status": "completed", "progress": 100, "finished_at": datetime.now(timezone.utc)})
+    else:
+        values.update({"status": "running", "progress": 25})
+    collection = database.mongodb[settings.COLLECTION_DB_NAME].collection_jobs
+    await collection.update_one(
+        {"_id": job_id},
+        {"$set": values},
+    )
+    row = await collection.find_one({"_id": job_id})
+    if row and queued > 0:
+        await finalize_batch(collection, row)
+
+
+async def finalize_batch(collection, row: dict):
+    expected = max(0, int(row.get("expected_items", 0)))
+    completed = max(0, int(row.get("completed_items", 0)))
+    failed = max(0, int(row.get("failed_items", 0)))
+    finished = completed + failed
+    if not row.get("discovery_complete") or expected == 0:
+        return
+    progress = min(99, 25 + int(75 * min(finished, expected) / expected))
+    values = {"progress": progress, "updated_at": datetime.now(timezone.utc)}
+    if finished >= expected:
+        values.update(
+            {
+                "status": "completed" if completed > 0 else "failed",
+                "progress": 100,
+                "finished_at": datetime.now(timezone.utc),
+            }
+        )
+    await collection.update_one({"_id": row["_id"]}, {"$set": values})
+
+
+async def complete_batch_item(job_id: str | None, success: bool, error: str | None = None):
+    if not job_id:
+        return
+    collection = database.mongodb[settings.COLLECTION_DB_NAME].collection_jobs
+    increment = {"completed_items": 1} if success else {"failed_items": 1}
+    update = {
+        "$inc": increment,
+        "$set": {"updated_at": datetime.now(timezone.utc)},
+    }
+    if error:
+        update["$set"]["last_error"] = error[:500]
+    row = await collection.find_one_and_update(
+        {"_id": job_id, "status": {"$in": ["discovering", "running"]}},
+        update,
+        return_document=ReturnDocument.AFTER,
+    )
+    if not row:
+        return
+    await finalize_batch(collection, row)
+
+
 @log_logic_execution
 async def run_worker():
     logger.info("Starting background message consumers")
 
     async def route_anna_collector(payload):
-        await AnnaSource.run_list_collector(search_query="", pages=parse_pages(payload.get("pages")))
+        return await AnnaSource.run_list_collector(
+            search_query="",
+            pages=parse_pages(payload.get("pages")),
+            job_id=payload.get("job_id"),
+        )
 
     async def route_ctan_collector(payload):
         letter = str(payload.get("pages", "a")).lower()
@@ -74,7 +149,7 @@ async def run_worker():
         elif source == "CTAN":
             await CtanSource.run_detail_collector(url)
         else:
-            await AnnaSource.run_detail_collector(url)
+            await AnnaSource.run_detail_collector(url, payload.get("job_id"))
 
     async def route_download_processor(payload):
         source = payload.get("source", "AnnaArchive")
@@ -108,11 +183,19 @@ async def run_worker():
                 else:
                     payload = result
                 job_id = payload.get("job_id") if isinstance(payload, dict) else None
-                await update_job(job_id, "running", 10)
-                await handler_func(payload)
+                if queue_name == "anna_archive_queue":
+                    await update_job(job_id, "discovering", 10)
+                elif queue_name not in {"collect_detail_queue", "download_processor_queue"}:
+                    await update_job(job_id, "running", 10)
+                result = await handler_func(payload)
                 if delivery_tag:
                     await mq.ack(delivery_tag)
-                await update_job(job_id, "completed", 100)
+                if queue_name == "anna_archive_queue":
+                    await register_batch(job_id, result)
+                elif queue_name == "download_processor_queue":
+                    await complete_batch_item(job_id, True)
+                elif queue_name not in {"collect_detail_queue"}:
+                    await update_job(job_id, "completed", 100)
             except asyncio.CancelledError:
                 if delivery_tag:
                     await mq.nack(delivery_tag, requeue=False)
@@ -121,7 +204,10 @@ async def run_worker():
                 job_id = payload.get("job_id") if isinstance(payload, dict) else None
                 if delivery_tag:
                     await mq.nack(delivery_tag, requeue=False)
-                await update_job(job_id, "failed", 100, str(error))
+                if queue_name in {"collect_detail_queue", "download_processor_queue"}:
+                    await complete_batch_item(job_id, False, str(error))
+                else:
+                    await update_job(job_id, "failed", 100, str(error))
                 logger.exception(f"Failed to process queue {queue_name}")
                 await asyncio.sleep(1)
 

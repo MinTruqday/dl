@@ -4,8 +4,12 @@ from typing import Dict
 from pydantic import BaseModel, Field
 
 class QuotaLimit(BaseModel):
+    session_requests: int = Field(default=0, ge=-1, le=1_000_000)
+    session_tokens: int = Field(default=0, ge=-1, le=1_000_000_000)
     daily_requests: int = Field(default=0, ge=-1, le=1_000_000)
     daily_tokens: int = Field(default=0, ge=-1, le=1_000_000_000)
+    weekly_requests: int = Field(default=0, ge=-1, le=10_000_000)
+    weekly_tokens: int = Field(default=0, ge=-1, le=10_000_000_000)
     req_reset_hours: int = Field(default=24, ge=1, le=720)
     max_docs: int = Field(default=1, ge=-1, le=1_000_000)
     model: str = Field(default="", max_length=300)
@@ -30,6 +34,12 @@ class ConsumeQuotaRequest(BaseModel):
     feature: str = Field(default="chat", pattern=r"^[a-zA-Z0-9_-]{1,50}$")
     req_reset_hours: int = Field(default=24, ge=1, le=720)
     tokens: int = Field(default=0, ge=0, le=10_000_000)
+    input_tokens: int = Field(default=0, ge=0, le=10_000_000)
+    output_tokens: int = Field(default=0, ge=0, le=10_000_000)
+    cached_tokens: int = Field(default=0, ge=0, le=10_000_000)
+    tool_tokens: int = Field(default=0, ge=0, le=10_000_000)
+    role: str = Field(default="reader", pattern=r"^(guest|reader|author|admin)$")
+    ai_tier: str = Field(default="BASIC", pattern=r"^(BASIC|PRO|PREMIUM)$")
 
 from enum import Enum
 class Tier(str, Enum):

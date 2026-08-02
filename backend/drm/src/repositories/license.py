@@ -33,6 +33,12 @@ class LicenseRepository:
         return await FinanceClient.get_purchase(user_id, item_id)
 
     @classmethod
+    async def get_drm_settings(cls, document_id: str) -> Optional[Dict[str, Any]]:
+        return await mongo.find_one(
+            "document_drm_settings", {"document_id": document_id}
+        )
+
+    @classmethod
     async def claim_access(
         cls,
         license_id: Any,
@@ -44,10 +50,26 @@ class LicenseRepository:
             {
                 "_id": license_id,
                 "status": "ACTIVE",
-                "$or": [
-                    {"hardware_signature": {"$exists": False}},
-                    {"hardware_signature": None},
-                    {"hardware_signature": hardware_signature},
+                "$and": [
+                    {
+                        "$or": [
+                            {"hardware_signature": {"$exists": False}},
+                            {"hardware_signature": None},
+                            {"hardware_signature": hardware_signature},
+                        ]
+                    },
+                    {
+                        "$or": [
+                            {"expires_at": {"$exists": False}},
+                            {"expires_at": {"$gt": accessed_at}},
+                        ]
+                    },
+                    {
+                        "$or": [
+                            {"max_open_count": {"$exists": False}},
+                            {"$expr": {"$lt": ["$open_count", "$max_open_count"]}},
+                        ]
+                    },
                 ],
             },
             {

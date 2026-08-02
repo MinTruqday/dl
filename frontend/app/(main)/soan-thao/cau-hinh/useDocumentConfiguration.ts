@@ -9,6 +9,7 @@ import {
 } from "@/features/content/services/collaboration.service";
 import {
   getFoldersAPI,
+  getDocumentDraftAPI,
   getMyDocumentsAPI,
   transferDocumentAPI,
   updateDocumentAPI,
@@ -23,7 +24,12 @@ export function useDocumentConfiguration() {
   const [collaborators, setCollaborators] = useState<any[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [disableCopy, setDisableCopy] = useState(false);
+  const [disablePrint, setDisablePrint] = useState(false);
   const [hideFromSearch, setHideFromSearch] = useState(false);
+  const [watermarkEnabled, setWatermarkEnabled] = useState(false);
+  const [allowInternalAi, setAllowInternalAi] = useState(true);
+  const [licenseValidDays, setLicenseValidDays] = useState(30);
+  const [maxOpenCount, setMaxOpenCount] = useState(100);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -68,10 +74,26 @@ export function useDocumentConfiguration() {
   }, [documentId]);
   useEffect(() => {
     setTags(document?.tags ?? []);
-    setDisableCopy(Boolean(document?.drm_settings?.disable_copy));
-    setHideFromSearch(Boolean(document?.drm_settings?.hide_from_search));
     void loadCollaborators();
-  }, [document, loadCollaborators]);
+    if (!documentId) return;
+    let active = true;
+    void getDocumentDraftAPI(documentId)
+      .then((response) => {
+        if (!active) return;
+        const settings = (response.data ?? response).drm_settings ?? {};
+        setDisableCopy(Boolean(settings.disable_copy));
+        setDisablePrint(Boolean(settings.disable_print));
+        setHideFromSearch(Boolean(settings.hide_from_search));
+        setWatermarkEnabled(Boolean(settings.watermark_enabled));
+        setAllowInternalAi(settings.allow_internal_ai !== false);
+        setLicenseValidDays(Number(settings.license_valid_days ?? 30));
+        setMaxOpenCount(Number(settings.max_open_count ?? 100));
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [document, documentId, loadCollaborators]);
 
   const run = async (
     key: string,
@@ -125,7 +147,12 @@ export function useDocumentConfiguration() {
       () =>
         updateDRMSettingsAPI(documentId, {
           disable_copy: disableCopy,
+          disable_print: disablePrint,
           hide_from_search: hideFromSearch,
+          watermark_enabled: watermarkEnabled,
+          allow_internal_ai: allowInternalAi,
+          license_valid_days: Math.max(1, Math.min(365, licenseValidDays || 30)),
+          max_open_count: Math.max(1, Math.min(10000, maxOpenCount || 100)),
         }),
       "Đã cập nhật bảo vệ nội dung",
     );
@@ -171,8 +198,18 @@ export function useDocumentConfiguration() {
     tags,
     disableCopy,
     setDisableCopy,
+    disablePrint,
+    setDisablePrint,
     hideFromSearch,
     setHideFromSearch,
+    watermarkEnabled,
+    setWatermarkEnabled,
+    allowInternalAi,
+    setAllowInternalAi,
+    licenseValidDays,
+    setLicenseValidDays,
+    maxOpenCount,
+    setMaxOpenCount,
     loading,
     processing,
     error,

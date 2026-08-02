@@ -49,7 +49,7 @@ async def update_role_quota(
     current_user: CurrentUser = Depends(require_role([Role.ADMIN])),
     db=Depends(get_db),
 ):
-    await QuotaService.update_role_quota(role, limits.model_dump())
+    await QuotaService.update_role_quota(role, limits.model_dump(exclude_unset=True))
     return APIResponse(
         data={},
         message="Cập nhật cấu hình giới hạn tài nguyên hệ thống hoàn tất",
@@ -67,9 +67,26 @@ async def get_global_config(
 
 @router.post("/su-dung", response_model=APIResponse[Any], include_in_schema=False, dependencies=[Depends(verify_internal_token)])
 async def consume_quota(req: ConsumeQuotaRequest, db=Depends(get_db)):
-    if req.tokens > 0:
+    if any(
+        value > 0
+        for value in [
+            req.tokens,
+            req.input_tokens,
+            req.output_tokens,
+            req.cached_tokens,
+            req.tool_tokens,
+        ]
+    ):
         await QuotaService.consume_tokens(
-            req.user_id, req.tokens, req.feature, req.req_reset_hours
+            req.user_id,
+            req.tokens,
+            req.feature,
+            req.role,
+            req.ai_tier,
+            req.input_tokens,
+            req.output_tokens,
+            req.cached_tokens,
+            req.tool_tokens,
         )
     return APIResponse(
         data=None, message="Ghi nhận mức tiêu thụ tài nguyên hệ thống hoàn tất", status=200

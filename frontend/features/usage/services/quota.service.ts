@@ -10,6 +10,17 @@ export interface QuotaUsage {
   used_tokens: number;
   remaining_requests: number;
   remaining_tokens: number;
+  unit: "capacity";
+  windows: Array<{
+    name: "session" | "daily" | "weekly";
+    limit_requests: number;
+    limit_tokens: number;
+    used_requests: number;
+    used_tokens: number;
+    remaining_requests: number;
+    remaining_tokens: number;
+    reset_at: string | null;
+  }>;
 }
 
 export async function getMyQuotaAPI(): Promise<QuotaUsage> {

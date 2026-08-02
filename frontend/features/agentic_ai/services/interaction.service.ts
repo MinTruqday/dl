@@ -58,11 +58,16 @@ export async function getAiSessionsAPI(documentId?: string, userId?: string) {
 export async function createAiSessionAPI(
   documentId: string = "",
   firstQuery: string = "",
+  mode: "chat" | "work" | "goal" | "learn" | "plan" = "chat",
 ) {
   const res = await fetch(`${API_URL}/lich-su`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ document_id: documentId, first_query: firstQuery }),
+    body: JSON.stringify({
+      document_id: documentId || null,
+      first_query: firstQuery,
+      mode,
+    }),
   });
   const data = await res.json();
   if (!res.ok)
@@ -79,6 +84,15 @@ export async function getAiSessionAPI(sessionId: string) {
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Không thể tải cuộc trò chuyện");
   return data;
+}
+
+export async function getAiWorkspaceAPI(sessionId: string) {
+  const res = await fetch(`${API_URL}/tro-chuyen/khong-gian/${sessionId}`, {
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải tiến trình");
+  return data.data;
 }
 
 export async function updateAiSessionTitleAPI(
@@ -110,7 +124,7 @@ export async function deleteAiSessionAPI(sessionId: string) {
     );
   return data;
 }
-export async function streamAiChatAPI(payload: any) {
+export async function streamAiChatAPI(payload: any, signal?: AbortSignal) {
   const token = getToken();
   return await fetch(`${API_URL}/tro-chuyen/phat-truc-tiep`, {
     method: "POST",
@@ -120,7 +134,45 @@ export async function streamAiChatAPI(payload: any) {
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(payload),
+    signal,
   });
+}
+
+export async function cancelAiExecutionAPI(sessionId: string) {
+  const res = await fetch(`${API_URL}/ngat-qua-trinh/${sessionId}`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể dừng tiến trình");
+  return data;
+}
+
+export async function getPendingAiApprovalsAPI(sessionId: string) {
+  const res = await fetch(
+    `${API_URL}/ngat-qua-trinh/phe-duyet/${sessionId}`,
+    { headers: getAuthHeaders() },
+  );
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải yêu cầu xác nhận");
+  return data.data ?? [];
+}
+
+export async function resolveAiApprovalAPI(
+  approvalId: string,
+  status: "APPROVED" | "REJECTED",
+) {
+  const res = await fetch(
+    `${API_URL}/ngat-qua-trinh/phe-duyet/phan-hoi/${approvalId}`,
+    {
+      method: "POST",
+      headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    },
+  );
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể gửi lựa chọn xác nhận");
+  return data.data;
 }
 
 export async function queryRagAPI(

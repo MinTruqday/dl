@@ -223,10 +223,31 @@ async def main():
             "drm",
             "PUT",
             f"/ban-quyen/{DOCUMENT_ID}",
-            {"disable_copy": True, "hide_from_search": True},
+            {
+                "disable_copy": True,
+                "disable_print": True,
+                "hide_from_search": True,
+                "watermark_enabled": True,
+                "allow_internal_ai": True,
+                "license_valid_days": 7,
+                "max_open_count": 12,
+            },
             bearer=user_token,
         )
         assert status == 200 and drm_settings["data"]["disable_copy"] is True
+        assert drm_settings["data"]["profile"] == "doclib-drm-2026"
+        synced_document = await content.documents.find_one({"_id": DOCUMENT_ID})
+        assert synced_document["drm_settings"]["disable_print"] is True
+        assert synced_document["drm_settings"]["license_valid_days"] == 7
+        status, search_result = call(
+            "content",
+            "POST",
+            "/tai-lieu/noi-bo/trao-doi",
+            {"action": "search_documents", "query": "Platform DRM"},
+            internal=True,
+        )
+        assert status == 200
+        assert DOCUMENT_ID not in {row["id"] for row in search_result["data"]}
         assert call(
             "drm",
             "PUT",

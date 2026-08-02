@@ -145,6 +145,19 @@ export function useDocumentReader(
       window.removeEventListener("contextmenu", prevent);
     };
   }, [document]);
+  useEffect(() => {
+    if (!document?.drm_settings?.disable_print) return;
+    const preventPrint = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "p")
+        event.preventDefault();
+    };
+    globalThis.document.documentElement.classList.add("drm-print-disabled");
+    window.addEventListener("keydown", preventPrint);
+    return () => {
+      globalThis.document.documentElement.classList.remove("drm-print-disabled");
+      window.removeEventListener("keydown", preventPrint);
+    };
+  }, [document]);
 
   const ask = async (question: string, thinking: boolean) => {
     if (!question.trim()) return;

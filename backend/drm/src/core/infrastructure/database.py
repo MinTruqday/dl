@@ -28,6 +28,7 @@ async def setup_indexes():
         await db["drm_licenses"].create_index("file_id", unique=True)
         await db["drm_licenses"].create_index([("user_id", 1), ("document_id", 1)])
         await db["drm_licenses"].create_index([("status", 1), ("created_at", -1)])
+        await db["drm_licenses"].create_index("expires_at")
         await db["document_drm_settings"].create_index("document_id", unique=True)
         await db["copyright_disputes"].create_index([("status", 1), ("created_at", -1)])
         await db["audit_logs"].create_index([("user_id", 1), ("created_at", -1)])

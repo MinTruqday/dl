@@ -117,12 +117,18 @@ async def update_document_job(req: dict):
 async def get_internal_document_stats(req: dict):
     documents = database.mongodb[settings.CONTENT_DB_NAME].documents
     source_ids = [str(value) for value in req.get("source_ids", [])]
+    source_names = [str(value) for value in req.get("source_names", [])]
     total_documents = await documents.count_documents({"is_deleted": {"$ne": True}})
     result = {"total_documents": total_documents}
-    if source_ids:
+    if source_ids or source_names:
+        collected_filter = {"$or": []}
+        if source_ids:
+            collected_filter["$or"].append({"creator_id": {"$in": source_ids}})
+        if source_names:
+            collected_filter["$or"].append({"source_name": {"$in": source_names}})
         result["total_assets"] = await documents.count_documents({"$or": [{"file_url": {"$type": "string"}}, {"pdf_url": {"$type": "string"}}]})
-        result["total_collected"] = await documents.count_documents({"creator_id": {"$in": source_ids}})
-        recent = await documents.find({"creator_id": {"$in": source_ids}}, {"created_at": 1}).sort("created_at", -1).limit(1).to_list(length=1)
+        result["total_collected"] = await documents.count_documents(collected_filter)
+        recent = await documents.find(collected_filter, {"created_at": 1}).sort("created_at", -1).limit(1).to_list(length=1)
         result["last_run"] = recent[0].get("created_at") if recent else None
     return {"data": result}
 
@@ -201,6 +207,28 @@ async def exchange_internal_document(req: dict):
             }},
         )
         return {"data": {"updated": result.matched_count == 1}}
+    if action == "update_drm_policy":
+        allowed = {
+            "disable_copy",
+            "disable_print",
+            "hide_from_search",
+            "watermark_enabled",
+            "allow_internal_ai",
+            "license_valid_days",
+            "max_open_count",
+        }
+        values = {
+            key: value
+            for key, value in dict(req.get("values") or {}).items()
+            if key in allowed
+        }
+        result = await documents.update_one(
+            {"_id": document_id, "is_deleted": {"$ne": True}},
+            {"$set": {"drm_settings": values, "updated_at": datetime.now(timezone.utc)}},
+        )
+        if result.matched_count != 1:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+        return {"data": {"document_id": document_id, "drm_settings": values}}
     if action == "upsert_collected":
         payload = dict(req.get("document") or {})
         identity = payload.get("source_url") or payload.get("file_url")
@@ -271,7 +299,11 @@ async def exchange_internal_document(req: dict):
         return {"data": rows}
     if action == "search_documents":
         text = str(req.get("query", "")).strip()
-        search_filter = {"status": "published", "is_deleted": {"$ne": True}}
+        search_filter = {
+            "status": "published",
+            "is_deleted": {"$ne": True},
+            "drm_settings.hide_from_search": {"$ne": True},
+        }
         if text:
             search_filter["$or"] = [
                 {"title": {"$regex": text, "$options": "i"}},
@@ -281,7 +313,11 @@ async def exchange_internal_document(req: dict):
         rows = await documents.find(search_filter).limit(3).to_list(length=3)
         if not rows and text:
             rows = await documents.find(
-                {"status": "published", "is_deleted": {"$ne": True}}
+                {
+                    "status": "published",
+                    "is_deleted": {"$ne": True},
+                    "drm_settings.hide_from_search": {"$ne": True},
+                }
             ).limit(3).to_list(length=3)
         result = []
         for row in rows:

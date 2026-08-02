@@ -427,7 +427,15 @@ export async function getAcademicMetricsAPI(id: string) {
 
 export async function updateDRMSettingsAPI(
   documentId: string,
-  settings: { disable_copy: boolean; hide_from_search: boolean },
+  settings: {
+    disable_copy: boolean;
+    disable_print: boolean;
+    hide_from_search: boolean;
+    watermark_enabled: boolean;
+    allow_internal_ai: boolean;
+    license_valid_days: number;
+    max_open_count: number;
+  },
 ) {
   const token = getToken();
   const res = await fetch(`${API_URL}/ban-quyen/${documentId}`, {

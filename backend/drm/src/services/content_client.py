@@ -30,3 +30,11 @@ class ContentClient:
             is_admin=is_admin,
             edit=edit,
         )
+
+    @classmethod
+    async def update_drm_policy(cls, document_id: str, values: dict):
+        return await cls.exchange(
+            "update_drm_policy",
+            document_id=document_id,
+            values=values,
+        )

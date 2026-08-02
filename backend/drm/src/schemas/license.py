@@ -1,4 +1,6 @@
-from pydantic import BaseModel
+from datetime import datetime
+
+from pydantic import BaseModel, Field
 
 class Registration(BaseModel):
     document_id: str
@@ -15,3 +17,6 @@ class Acquisition(BaseModel):
 
 class Token(BaseModel):
     encrypted_aes_key: str
+    expires_at: datetime | None = None
+    rights: dict[str, bool] = Field(default_factory=dict)
+    profile: str = "doclib-drm-2026"

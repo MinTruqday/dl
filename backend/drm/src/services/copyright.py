@@ -30,7 +30,9 @@ class CopyrightService:
     
     @staticmethod
     @log_logic_execution
-    async def update_drm_settings(document_id: str, disable_copy: bool, hide_from_search: bool, current_user) -> dict:
+    async def update_drm_settings(
+        document_id: str, values: dict, current_user
+    ) -> dict:
         user_id = str(current_user.id)
         from src.core.dependency import Role
         is_admin = getattr(current_user.role, "value", current_user.role) == Role.ADMIN.value
@@ -41,12 +43,21 @@ class CopyrightService:
             {"document_id": document_id},
             {
                 "$set": {
-                    "disable_copy": disable_copy,
-                    "hide_from_search": hide_from_search,
+                    **values,
+                    "profile": "doclib-drm-2026",
+                    "content_encryption": "AES-256-GCM",
+                    "text_delivery": "encrypted_or_rendered",
                     "updated_by": str(current_user.id),
                     "updated_at": datetime.now(timezone.utc)
                 }
             },
             upsert=True
         )
-        return {"document_id": document_id, "disable_copy": disable_copy, "hide_from_search": hide_from_search}
+        await ContentClient.update_drm_policy(document_id, values)
+        return {
+            "document_id": document_id,
+            **values,
+            "profile": "doclib-drm-2026",
+            "content_encryption": "AES-256-GCM",
+            "text_delivery": "encrypted_or_rendered",
+        }

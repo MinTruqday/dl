@@ -27,16 +27,11 @@ class PipelineRag:
     async def authorize_document(
         self, document_id: str, user_id: str, is_admin: bool = False
     ) -> Dict:
-        document = await ContentClient.accessible(document_id, user_id, is_admin)
+        document = await ContentClient.drm_content(
+            document_id, user_id, "index", is_admin
+        )
         if not document:
             raise ValueError("Document not found or access denied")
-        if not is_admin:
-            allowed_users = {
-                str(document.get("creator_id", "")),
-                *[str(value) for value in document.get("coauthors", [])],
-            }
-            if user_id not in allowed_users:
-                raise PermissionError("Document not found or access denied")
         return document
 
     async def ingest_document(

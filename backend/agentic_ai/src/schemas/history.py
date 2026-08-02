@@ -8,6 +8,7 @@ class HistoryRequest(BaseModel):
 class SessionCreate(HistoryRequest):
     document_id: Optional[str] = Field(default=None, min_length=1, max_length=128, description="<input_context>Optional document associated with the conversation.</input_context>")
     first_query: str = Field(default="", max_length=100000, description="<input_context>Initial user request used to derive the session title.</input_context>")
+    mode: Literal["chat", "work", "goal", "learn", "plan"] = "chat"
 
 class SessionTitleUpdate(HistoryRequest):
     title: str = Field(min_length=1, max_length=200, description="<input_context>New conversation title.</input_context>")

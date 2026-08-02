@@ -396,6 +396,7 @@ class DocumentService:
                 "status": b.get("status", "draft"),
                 "content_format": b.get("content_format", "doclib"),
                 "cover_url": b.get("cover_url"),
+                "drm_settings": b.get("drm_settings", {}),
                 "views": b.get("views", 0),
                 "created_at": (
                     b["created_at"].isoformat()
@@ -552,7 +553,12 @@ class DocumentService:
     ):
         
         docs_collection = DocumentRepository
-        query = {"status": DocumentStatus.PUBLISHED, "is_deleted": {"$ne": True}, "visibility": "public"}
+        query = {
+            "status": DocumentStatus.PUBLISHED,
+            "is_deleted": {"$ne": True},
+            "visibility": "public",
+            "drm_settings.hide_from_search": {"$ne": True},
+        }
         if q:
             query["$or"] = [
                 {"title": {"$regex": q, "$options": "i"}},
@@ -656,7 +662,13 @@ class DocumentService:
             if drm_doc:
                 document["drm_settings"] = {
                     "disable_copy": drm_doc.get("disable_copy", False),
+                    "disable_print": drm_doc.get("disable_print", False),
                     "hide_from_search": drm_doc.get("hide_from_search", False),
+                    "watermark_enabled": drm_doc.get("watermark_enabled", False),
+                    "allow_internal_ai": drm_doc.get("allow_internal_ai", True),
+                    "license_valid_days": drm_doc.get("license_valid_days", 30),
+                    "max_open_count": drm_doc.get("max_open_count", 100),
+                    "watermark_text": f"DocLib {user_id or 'guest'}",
                 }
         except Exception:
             logger.exception("Failed to retrieve DRM settings")

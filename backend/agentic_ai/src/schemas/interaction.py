@@ -1,4 +1,4 @@
-from typing import Annotated, Optional
+from typing import Annotated, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -22,6 +22,9 @@ class ChatRequest(BaseModel):
     conversation_history: list[dict] = Field(default_factory=list, max_length=100, description="<input_context>Previous messages in the thread.</input_context>")
     token: Optional[str] = Field(default=None, max_length=8192, description="<critical_instructions>Authentication token of the user.</critical_instructions>")
     attachments: list[dict] = Field(default_factory=list, max_length=100, description="<input_context>List of attached files.</input_context>")
+    mode: Literal["chat", "work", "goal", "learn", "plan"] = "chat"
+    approval_policy: Literal["manual", "auto_safe"] = "manual"
+    ai_tier: Literal["BASIC", "PRO", "PREMIUM"] = "BASIC"
 
 
 class UserInstructionsRequest(BaseModel):

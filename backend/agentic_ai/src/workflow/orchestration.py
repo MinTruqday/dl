@@ -216,6 +216,9 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
                         user_id,
                         token,
                         auto_approve=bool(req_data.get("approve_tools", False)),
+                        approval_policy=str(
+                            req_data.get("approval_policy", "manual")
+                        ),
                         session_id=session_id,
                         approval_id=req_data.get("approval_id"),
                     )
@@ -270,6 +273,9 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
             return json.dumps({"status": "execution_step_failed"})
 
     task_results = await asyncio.gather(*[_exec_task(t) for t in my_tasks])
+    from src.services.token_accounting import add_tool_usage
+
+    add_tool_usage(sum(max(1, len(str(result)) // 4) for result in task_results))
 
     for task, result in zip(my_tasks, task_results):
         succeeded = _result_succeeded(result)
@@ -626,7 +632,11 @@ class OrchestrationWorkflow:
                     if node_name == "supervisor":
                         steps = state_update.get("steps")
                         if steps and state_update.get("current_step_index") == 0:
-                            yield {"type": "plan", "steps": steps}
+                            yield {
+                                "type": "plan",
+                                "steps": steps,
+                                "task_status": state_update.get("task_status", {}),
+                            }
                     elif node_name in [
                         "interpreter",
                         "search_engine",
@@ -642,6 +652,7 @@ class OrchestrationWorkflow:
                                 "type": "tool_result",
                                 "agent": node_name,
                                 "status": "completed",
+                                "task_status": state_update.get("task_status", {}),
                             }
                     elif node_name == "aggregator":
                         yield {"type": "status", "code": "synthesizing_response"}

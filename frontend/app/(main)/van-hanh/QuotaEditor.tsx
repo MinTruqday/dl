@@ -27,10 +27,12 @@ export default function QuotaEditor({
 
   return (
     <div className="overflow-x-auto rounded-panel border border-border bg-surface">
-      <table className="w-full min-w-[700px] border-collapse text-left">
+      <table className="w-full min-w-[980px] border-collapse text-left">
         <thead className="bg-surface-quiet text-[12px] font-semibold text-ink-muted">
           <tr>
             <th className="px-4 py-3">Gói</th>
+            <th className="px-4 py-3">Yêu cầu mỗi tuần</th>
+            <th className="px-4 py-3">Token mỗi tuần</th>
             <th className="px-4 py-3">Yêu cầu mỗi ngày</th>
             <th className="px-4 py-3">Token mỗi ngày</th>
             <th className="px-4 py-3">Tài liệu tối đa</th>
@@ -52,6 +54,32 @@ export default function QuotaEditor({
               <tr key={role} className="text-[13px]">
                 <td className="px-4 py-3.5 font-semibold text-ink">
                   {labels[role]}
+                </td>
+                <td className="px-4 py-3.5">
+                  <input
+                    aria-label={`Yêu cầu tuần của ${labels[role]}`}
+                    type="number"
+                    min={0}
+                    readOnly={admin}
+                    value={admin ? 0 : drafts[role].weekly_requests || 0}
+                    onChange={(event) =>
+                      update("weekly_requests", event.target.value)
+                    }
+                    className="apple-input min-h-9 w-32 py-1.5 text-[13px]"
+                  />
+                </td>
+                <td className="px-4 py-3.5">
+                  <input
+                    aria-label={`Token tuần của ${labels[role]}`}
+                    type="number"
+                    min={0}
+                    readOnly={admin}
+                    value={admin ? 0 : drafts[role].weekly_tokens || 0}
+                    onChange={(event) =>
+                      update("weekly_tokens", event.target.value)
+                    }
+                    className="apple-input min-h-9 w-36 py-1.5 text-[13px]"
+                  />
                 </td>
                 <td className="px-4 py-3.5">
                   <input
