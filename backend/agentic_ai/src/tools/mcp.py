@@ -19,7 +19,13 @@ async def search_mcp_connectors(
     ],
     config: RunnableConfig,
 ) -> list[dict]:
-    """Search the current user's approved MCP connectors by capability"""
+    """Search only the authenticated user's approved MCP registry before choosing a connector
+
+    Use this when an external capability may be needed and no connector identifier is known
+    Returns matching connector identifiers names descriptions and declared capabilities
+    An empty list means no approved match and must not be treated as permission to invent one
+    Raises authentication_required when user context is absent
+    """
     user_id = str(config.get("configurable", {}).get("user_id", ""))
     if not user_id:
         raise PermissionError("authentication_required")
@@ -38,7 +44,12 @@ async def suggest_mcp_connectors(
     ],
     config: RunnableConfig,
 ) -> dict:
-    """Present approved MCP connectors for explicit user review"""
+    """Load connector metadata for an explicit user selection step
+
+    Use only with identifiers returned by search_mcp_connectors for the same user
+    Returns reviewable connector metadata without connecting or executing a remote tool
+    Unknown inaccessible or cross-user identifiers are rejected by the registry service
+    """
     user_id = str(config.get("configurable", {}).get("user_id", ""))
     if not user_id:
         raise PermissionError("authentication_required")
@@ -63,7 +74,13 @@ async def execute_mcp_tool(
     ],
     config: RunnableConfig,
 ) -> dict:
-    """Execute one tool on an approved connected MCP server after user approval"""
+    """Execute one named tool on one connected user-owned MCP server
+
+    Use only after connector discovery exact tool inspection and configured user approval
+    Pass the exact server tool name and arguments accepted by that server
+    Returns the server result or a structured MCP error without fabricating success
+    Never retry a rejected approval or a state-changing call whose prior outcome is unknown
+    """
     user_id = str(config.get("configurable", {}).get("user_id", ""))
     if not user_id:
         raise PermissionError("authentication_required")

@@ -11,6 +11,7 @@ async def cancel_execution(
     session_id: str,
     current_user: CurrentUser = Depends(get_current_user),
 ):
+    """Cancel one authenticated session and persist its cancelled workspace state"""
     from src.harness.orchestration import orchestration
     from src.services.history import HistoryService
     from src.services.workspace import workspace

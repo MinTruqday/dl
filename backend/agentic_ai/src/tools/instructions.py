@@ -1,7 +1,9 @@
 import json
+from typing import Annotated
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from loguru import logger
+from pydantic import Field
 from src.tools.http_client import (
     INTERNAL_API_URL,
     make_api_request,
@@ -9,7 +11,9 @@ from src.tools.http_client import (
 
 @tool
 async def manage_user_instructions(
-    action: str, instruction: str = "", config: RunnableConfig = None
+    action: Annotated[str, Field(description="Instruction operation: get, set, or clear")],
+    instruction: Annotated[str, Field(description="Preference text required for set and ignored for get or clear")] = "",
+    config: RunnableConfig = None,
 ) -> str:
     """
     <module_purpose>

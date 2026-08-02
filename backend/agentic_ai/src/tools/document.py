@@ -1,17 +1,18 @@
 import json
-from typing import Optional
+from typing import Annotated, Optional
 
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from loguru import logger
+from pydantic import Field
 from src.tools.http_client import INTERNAL_API_URL, check_system_access, make_api_request
 
 
 @tool
 async def search_editorjs_capabilities(
-    query: str = "",
-    offset: int = 0,
-    limit: int = 50,
+    query: Annotated[str, Field(description="Capability name, EditorJS block key, or Word control to find")] = "",
+    offset: Annotated[int, Field(ge=0, description="Zero-based result offset for pagination")] = 0,
+    limit: Annotated[int, Field(ge=1, le=200, description="Maximum number of capabilities to return")] = 50,
     config: RunnableConfig = None,
 ) -> str:
     """
@@ -75,10 +76,10 @@ async def _get_doc_text(document_id: str, token: str) -> str:
 
 @tool
 async def create_document(
-    title: str,
-    content_format: str = "doclib",
-    content: str = "",
-    description: str = "",
+    title: Annotated[str, Field(min_length=1, description="User-visible document title")],
+    content_format: Annotated[str, Field(description="Document format: doclib for EditorJS JSON or doclibx for LaTeX source")] = "doclib",
+    content: Annotated[str, Field(description="Complete initial EditorJS JSON or LaTeX source; empty creates a valid starter document")] = "",
+    description: Annotated[str, Field(description="Optional document description stored with its metadata")] = "",
     config: RunnableConfig = None,
 ) -> str:
     """
@@ -154,11 +155,11 @@ async def create_document(
 
 @tool
 async def update_document_metadata(
-    document_id: str,
-    title: Optional[str] = None,
-    description: Optional[str] = None,
-    category: Optional[str] = None,
-    tags: Optional[list[str]] = None,
+    document_id: Annotated[str, Field(description="Exact identifier of the document to update")],
+    title: Annotated[Optional[str], Field(description="Replacement title; omit to preserve the current title")] = None,
+    description: Annotated[Optional[str], Field(description="Replacement description; omit to preserve it")] = None,
+    category: Annotated[Optional[str], Field(description="Replacement category; omit to preserve it")] = None,
+    tags: Annotated[Optional[list[str]], Field(description="Complete replacement tag list; omit to preserve current tags")] = None,
     config: RunnableConfig = None,
 ) -> str:
     """
@@ -205,9 +206,9 @@ async def update_document_metadata(
 
 @tool
 async def replace_document_content(
-    document_id: str,
-    content: str,
-    content_format: str,
+    document_id: Annotated[str, Field(description="Exact identifier of the document whose complete content will be replaced")],
+    content: Annotated[str, Field(description="Complete replacement EditorJS JSON or LaTeX source")],
+    content_format: Annotated[str, Field(description="Replacement format: doclib for EditorJS JSON or doclibx for LaTeX source")],
     config: RunnableConfig = None,
 ) -> str:
     """
@@ -342,7 +343,9 @@ async def get_trash_documents(config: RunnableConfig) -> str:
         return json.dumps({"status": "document_service_unavailable"})
 
 @tool
-async def delete_document(document_id: str, config: RunnableConfig) -> str:
+async def delete_document(
+    document_id: Annotated[str, Field(description="Exact identifier of the document to move to trash")], config: RunnableConfig
+) -> str:
     """
     <module_purpose>
     Delete a document by ID, moving it to the trash bin.
@@ -379,7 +382,9 @@ async def delete_document(document_id: str, config: RunnableConfig) -> str:
         return json.dumps({"status": "document_service_unavailable"})
 
 @tool
-async def restore_document(document_id: str, config: RunnableConfig) -> str:
+async def restore_document(
+    document_id: Annotated[str, Field(description="Exact identifier of the deleted document to restore")], config: RunnableConfig
+) -> str:
     """
     <module_purpose>
     Restore a document from the trash bin by its ID.
@@ -410,7 +415,9 @@ async def restore_document(document_id: str, config: RunnableConfig) -> str:
         return json.dumps({"status": "document_service_unavailable"})
 
 @tool
-async def get_document_analytics(document_id: str, config: RunnableConfig) -> str:
+async def get_document_analytics(
+    document_id: Annotated[str, Field(description="Exact identifier of the document whose analytics are requested")], config: RunnableConfig
+) -> str:
     """
     <module_purpose>
     View detailed analytics including read count and drop-off rate for a document.
@@ -452,7 +459,9 @@ async def get_document_analytics(document_id: str, config: RunnableConfig) -> st
         return json.dumps({"status": "document_service_unavailable"})
 
 @tool
-async def read_document(document_id: str, config: RunnableConfig) -> str:
+async def read_document(
+    document_id: Annotated[str, Field(description="Exact identifier of the document to read")], config: RunnableConfig
+) -> str:
     """
     <module_purpose>
     Read full text content of a document by document ID.
@@ -472,7 +481,9 @@ async def read_document(document_id: str, config: RunnableConfig) -> str:
     return text
 
 @tool
-async def recommend_documents(query: str, config: RunnableConfig) -> str:
+async def recommend_documents(
+    query: Annotated[str, Field(min_length=1, description="Topic, project need, or search phrase used to rank document recommendations")], config: RunnableConfig
+) -> str:
     """
     <module_purpose>
     Search and recommend the top 3 most relevant documents for a project request or query.

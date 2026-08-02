@@ -28,6 +28,45 @@ def require_mode_tier(mode: str, tier: str) -> None:
         raise HTTPException(status_code=403, detail={"code": "advanced_mode_requires_pro"})
 
 
+async def _persist_conversation_turns(
+    session_id: str,
+    user_id: str,
+    user_content: str,
+    assistant_content: str,
+    attachments: list[dict],
+) -> None:
+    """Persist one verified exchange to short-term history durable history and long-term memory"""
+    if not session_id or not assistant_content:
+        return
+    await context.save_turn(session_id, "user", user_content)
+    await context.save_turn(session_id, "assistant", assistant_content)
+    try:
+        from src.memory.memo import memo_manager
+        from src.services.history import HistoryService
+        from src.utils.background import create_background_task
+
+        user_message = {"user_id": user_id, "role": "user", "content": user_content}
+        if attachments:
+            user_message["attachments"] = attachments
+        await HistoryService.add_message(session_id, user_message)
+        await HistoryService.add_message(
+            session_id,
+            {"user_id": user_id, "role": "assistant", "content": assistant_content},
+        )
+        create_background_task(
+            memo_manager.add_memory(
+                [
+                    {"role": "user", "content": user_content},
+                    {"role": "assistant", "content": assistant_content},
+                ],
+                user_id,
+            ),
+            f"chat-memory-{session_id}",
+        )
+    except Exception:
+        logger.exception("Chat history persistence to database error")
+
+
 @router.post("")
 async def chat_endpoint(
     req: ChatRequest, request: Request, current_user: CurrentUser = Depends(get_current_user)
@@ -63,6 +102,18 @@ async def chat_endpoint(
         is_quota_ok, quota_code = await _reserve_upload_quota(req)
         if not is_quota_ok:
             return {"answer": "", "route": "error", "error_code": quota_code}
+        ctx = await context.build_context(
+            session_id=req.session_id or "",
+            user_id=req.user_id,
+            query=req.query,
+            document_ids=req.document_ids,
+        )
+        req.conversation_history = ctx.chat_history
+        execution_data = {
+            **req.model_dump(),
+            "mode_directive": mode_directive,
+            "user_preferences": ctx.user_preferences,
+        }
         if req.document_ids:
             from src.tools.http_client import (
                 INTERNAL_API_URL,
@@ -159,6 +210,13 @@ async def chat_endpoint(
 
         final_answer = await security.ascan_output(final_answer)
         await _consume_ai_quota(req, original_query, final_answer, current_usage())
+        await _persist_conversation_turns(
+            req.session_id or "",
+            req.user_id,
+            original_query,
+            final_answer,
+            req.attachments,
+        )
         await workspace.finish(req.session_id or "", req.user_id, req.mode, bool(final_answer))
         return {
             "answer": final_answer,
@@ -338,7 +396,11 @@ async def stream_endpoint(
                 document_ids=req.document_ids,
             )
             req.conversation_history = ctx.chat_history
-            execution_data = {**req.model_dump(), "mode_directive": mode_directive}
+            execution_data = {
+                **req.model_dump(),
+                "mode_directive": mode_directive,
+                "user_preferences": ctx.user_preferences,
+            }
 
             route_data = {}
             if req.mode == "plan":
@@ -517,36 +579,13 @@ async def stream_endpoint(
                 final_answer = await security.ascan_output(final_answer, session_id=session_id)
             await _consume_ai_quota(req, original_query, final_answer, current_usage())
 
-            if session_id and final_answer:
-                await context.save_turn(session_id, "user", original_query)
-                await context.save_turn(session_id, "assistant", final_answer)
-
-                try:
-                    from src.services.history import HistoryService
-                    from src.memory.memo import memo_manager
-
-                    user_msg = {"user_id": user_id, "role": "user", "content": original_query}
-                    if req.attachments:
-                        user_msg["attachments"] = req.attachments
-
-                    await HistoryService.add_message(session_id, user_msg)
-                    await HistoryService.add_message(
-                        session_id,
-                        {"user_id": user_id, "role": "assistant", "content": final_answer},
-                    )
-
-                    mem_data = [
-                        {"role": "user", "content": original_query},
-                        {"role": "assistant", "content": final_answer},
-                    ]
-                    from src.utils.background import create_background_task
-
-                    create_background_task(
-                        memo_manager.add_memory(mem_data, user_id), f"chat-memory-{session_id}"
-                    )
-
-                except Exception:
-                    logger.exception("Chat history persistence to database error")
+            await _persist_conversation_turns(
+                session_id,
+                user_id,
+                original_query,
+                final_answer,
+                req.attachments,
+            )
 
             await workspace.finish(session_id, user_id, req.mode, bool(final_answer))
             agentops.record_session_end(session_id, "done")
@@ -564,6 +603,7 @@ async def stream_endpoint(
 
 @router.get("/khong-gian/{session_id}")
 async def get_workspace(session_id: str, current_user: CurrentUser = Depends(get_current_user)):
+    """Return the authenticated user's persistent execution workspace for one session"""
     row = await workspace.get(session_id, str(current_user.id))
     if not row:
         return {"status": "success", "data": None}

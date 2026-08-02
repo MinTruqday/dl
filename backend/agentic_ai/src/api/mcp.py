@@ -79,6 +79,7 @@ async def probe_mcp_server(
     server_id: str,
     current_user: CurrentUser = Depends(get_current_user),
 ):
+    """Probe one user-owned MCP server and persist its current connection and tool state"""
     from bson import ObjectId
 
     require_mcp_tier(current_user)

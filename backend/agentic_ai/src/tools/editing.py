@@ -1,8 +1,10 @@
 import json
 import httpx
+from typing import Annotated, Optional
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from loguru import logger
+from pydantic import Field
 
 from src.core.infrastructure.configuration import settings
 
@@ -27,9 +29,9 @@ async def _broadcast_update(document_id: str, new_content: str):
 
 @tool
 async def read_document_section(
-    document_id: str,
-    start_index: int = 0,
-    limit: int = 50,
+    document_id: Annotated[str, Field(description="Exact identifier of the document to read")],
+    start_index: Annotated[int, Field(ge=0, description="Zero-based EditorJS block index or LaTeX line index")] = 0,
+    limit: Annotated[int, Field(ge=1, le=200, description="Maximum number of blocks or lines to return")] = 50,
     config: RunnableConfig = None
 ) -> str:
     """
@@ -95,10 +97,10 @@ async def read_document_section(
 
 @tool
 async def edit_document_text(
-    document_id: str,
-    old_string: str,
-    new_string: str,
-    replace_all: bool = False,
+    document_id: Annotated[str, Field(description="Exact identifier of the document to edit")],
+    old_string: Annotated[str, Field(min_length=1, description="Exact text to locate in the stored document content")],
+    new_string: Annotated[str, Field(description="Replacement text, which may be empty to remove the match")],
+    replace_all: Annotated[bool, Field(description="Replace every exact match when true, otherwise only the first match")] = False,
     config: RunnableConfig = None
 ) -> str:
     """
@@ -178,11 +180,11 @@ async def edit_document_text(
 
 @tool
 async def edit_document_block(
-    document_id: str,
-    block_index: int = -1,
-    action: str = "replace",
-    new_block_json: str = None,
-    block_id: str = None,
+    document_id: Annotated[str, Field(description="Exact identifier of the EditorJS document to edit")],
+    block_index: Annotated[int, Field(description="Zero-based target block index; block_id takes precedence when provided")] = -1,
+    action: Annotated[str, Field(description="Block operation: insert, replace, or delete")] = "replace",
+    new_block_json: Annotated[Optional[str], Field(description="One valid EditorJS block as JSON, required for insert and replace")] = None,
+    block_id: Annotated[Optional[str], Field(description="Stable EditorJS block identifier used instead of block_index when provided")] = None,
     config: RunnableConfig = None
 ) -> str:
     """
@@ -286,8 +288,8 @@ async def edit_document_block(
 
 @tool
 async def propose_document_edits(
-    document_id: str,
-    proposed_text: str,
+    document_id: Annotated[str, Field(description="Exact identifier of the document that will receive the proposal")],
+    proposed_text: Annotated[str, Field(min_length=1, description="Text to append as a visible proposed change for user review")],
     config: RunnableConfig = None
 ) -> str:
     """

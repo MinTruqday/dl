@@ -1,9 +1,10 @@
 import json
-from typing import TypedDict
+from typing import Annotated, TypedDict
 
 from langchain_core.tools import tool
 from langgraph.graph import END, StateGraph
 from langgraph.types import Send
+from pydantic import Field
 
 
 BATCH_SIZE = 5
@@ -77,7 +78,10 @@ mr_graph.add_edge("reduce", END)
 map_reduce_app = mr_graph.compile()
 
 @tool
-async def agent_summarize_long_document(document_id: str, config: dict) -> str:
+async def agent_summarize_long_document(
+    document_id: Annotated[str, Field(description="Exact identifier of the long document to summarize completely")],
+    config: dict,
+) -> str:
     """
     <module_purpose>Use this tool to read and summarize an entire large document using a Map-Reduce workflow. Use this when the user asks for a comprehensive summary, overview, or tl;dr of a very long document where simple reading might exceed token limits.</module_purpose>
     <contract>Requires the exact document ID.</contract>

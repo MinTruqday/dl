@@ -1,4 +1,5 @@
 import json
+from typing import Annotated
 
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
@@ -55,7 +56,10 @@ def _to_mermaid(tree: dict) -> str:
 
 
 @tool
-async def generate_mindmap(topic: str, config: RunnableConfig) -> str:
+async def generate_mindmap(
+    topic: Annotated[str, Field(min_length=1, description="Topic or concept to organize into a hierarchical mind map")],
+    config: RunnableConfig,
+) -> str:
     """
     <module_purpose>
     Generate a structured interactive mind map for a topic.

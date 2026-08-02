@@ -94,9 +94,12 @@ async def setup_indexes():
                 IndexModel([("user_id", ASCENDING), ("status", ASCENDING)]),
             ],
         }
-        legacy_mcp_index = await db["mcp_registry"].index_information()
-        if legacy_mcp_index.get("name_1", {}).get("key") == [("name", 1)]:
-            await db["mcp_registry"].drop_index("name_1")
+        mcp_registry = db["mcp_registry"]
+        index_information = getattr(mcp_registry, "index_information", None)
+        if callable(index_information):
+            legacy_mcp_index = await index_information()
+            if legacy_mcp_index.get("name_1", {}).get("key") == [("name", 1)]:
+                await mcp_registry.drop_index("name_1")
         for collection_name, indexes in index_sets.items():
             await db[collection_name].create_indexes(indexes)
         logger.info("MongoDB index creation completed")

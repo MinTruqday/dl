@@ -601,6 +601,18 @@ def test_registered_tools_have_unique_names_and_descriptions():
     assert all(registered.args_schema is not None for registered in tools)
 
 
+def test_registered_tool_arguments_have_descriptions():
+    from src.tools import tools
+
+    missing = []
+    for registered in tools:
+        properties = registered.args_schema.model_json_schema().get("properties", {})
+        for field_name, field_schema in properties.items():
+            if field_name != "config" and not field_schema.get("description"):
+                missing.append(f"{registered.name}.{field_name}")
+    assert missing == []
+
+
 def test_current_user_has_ai_tier():
     user = CurrentUser(_id="user-1", email="user@example.com")
     assert user.ai_tier is Tier.BASIC
@@ -1200,6 +1212,7 @@ def test_database_setup_creates_operational_indexes():
         "global_project_context",
         "episodic_memory",
         "history_events",
+        "ai_workspaces",
     } == set(created)
 
 
