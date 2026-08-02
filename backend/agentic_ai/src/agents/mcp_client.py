@@ -15,6 +15,7 @@ class MCPClientAgent:
         directory_uuid: str,
         tool_name: str,
         arguments: dict,
+        owner_id: str,
     ):
         logger.info(f"MCPAgent invoking registered tool {tool_name}")
         try:
@@ -24,6 +25,7 @@ class MCPClientAgent:
                 directory_uuid,
                 tool_name,
                 arguments,
+                owner_id,
             )
         except Exception as exc:
             logger.exception("MCPAgent execution failed")

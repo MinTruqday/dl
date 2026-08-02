@@ -785,17 +785,72 @@ def test_mcp_remote_connector_requires_https_allowlist():
     from src.core.infrastructure.configuration import settings
     from src.services.mcp import MCPService
 
-    with patch.object(settings, "MCP_ALLOWED_REMOTE_HOSTS", "developers.openai.com"):
+    with patch.object(settings, "MCP_ALLOWED_REMOTE_HOSTS", "connector.example.com"):
         denied = False
         try:
             asyncio.run(
                 MCPService.validate_connector(
-                    {"server_type": "streamable_http", "url": "http://developers.openai.com/mcp"}
+                    {"server_type": "streamable_http", "url": "http://connector.example.com/mcp"}
                 )
             )
         except PermissionError:
             denied = True
     assert denied is True
+
+
+def test_mcp_user_remote_connector_accepts_public_https_without_global_allowlist():
+    import socket
+    from unittest.mock import patch
+
+    from src.core.infrastructure.configuration import settings
+    from src.services.mcp import MCPService
+
+    addresses = [
+        (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("93.184.216.34", 443))
+    ]
+    with (
+        patch.object(settings, "MCP_ALLOWED_REMOTE_HOSTS", ""),
+        patch("src.services.mcp.socket.getaddrinfo", return_value=addresses),
+    ):
+        asyncio.run(
+            MCPService.validate_connector(
+                {"server_type": "streamable_http", "url": "https://connector.example.com/mcp"}
+            )
+        )
+
+
+def test_mcp_secret_is_encrypted_and_bound_to_owner():
+    from src.services.mcp import MCPService
+
+    encrypted = MCPService.seal_secret("private-token", "user-1")
+    assert "private-token" not in encrypted
+    assert MCPService._open_secret(encrypted, "user-1") == "private-token"
+    denied = False
+    try:
+        MCPService._open_secret(encrypted, "user-2")
+    except Exception:
+        denied = True
+    assert denied is True
+
+
+def test_mcp_connector_lookup_is_owner_scoped():
+    from unittest.mock import AsyncMock, patch
+
+    from src.repositories.mcp import MCPRepository
+    from src.services.mcp import MCPService
+
+    connector_id = "507f1f77bcf86cd799439011"
+    lookup = AsyncMock(return_value=None)
+    with patch.object(MCPRepository, "find_connector", new=lookup):
+        denied = False
+        try:
+            asyncio.run(MCPService._get_connector(connector_id, "user-1"))
+        except LookupError:
+            denied = True
+    assert denied is True
+    query = lookup.await_args.args[0]
+    assert str(query["_id"]) == connector_id
+    assert query["owner_id"] == "user-1"
 
 
 def test_file_chunk_reader_is_confined_to_configured_root(tmp_path, monkeypatch):

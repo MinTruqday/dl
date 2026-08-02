@@ -73,7 +73,8 @@ async def setup_indexes():
                 IndexModel([("user_id", ASCENDING), ("status", ASCENDING)]),
             ],
             "mcp_registry": [
-                IndexModel([("name", ASCENDING)], unique=True),
+                IndexModel([("owner_id", ASCENDING), ("name", ASCENDING)], unique=True),
+                IndexModel([("owner_id", ASCENDING), ("is_connected", ASCENDING)]),
             ],
             "global_preferences": [
                 IndexModel([("key", ASCENDING)], unique=True),
@@ -93,6 +94,9 @@ async def setup_indexes():
                 IndexModel([("user_id", ASCENDING), ("status", ASCENDING)]),
             ],
         }
+        legacy_mcp_index = await db["mcp_registry"].index_information()
+        if legacy_mcp_index.get("name_1", {}).get("key") == [("name", 1)]:
+            await db["mcp_registry"].drop_index("name_1")
         for collection_name, indexes in index_sets.items():
             await db[collection_name].create_indexes(indexes)
         logger.info("MongoDB index creation completed")

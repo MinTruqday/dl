@@ -1,6 +1,7 @@
 import asyncio
+import base64
+import hashlib
 import ipaddress
-import json
 import os
 import shlex
 import socket
@@ -17,58 +18,21 @@ from src.repositories.mcp import MCPRepository
 
 class MCPService:
     @staticmethod
-    async def bootstrap_connectors() -> list[dict[str, Any]]:
-        raw = settings.MCP_BOOTSTRAP_CONNECTORS.strip()
-        if not raw:
-            return []
-        payload = json.loads(raw)
-        if not isinstance(payload, list) or len(payload) > 20:
-            raise ValueError("mcp_bootstrap_configuration_invalid")
-        from src.schemas.mcp import RegisterServerRequest
+    def seal_secret(secret: str, owner_id: str) -> str:
+        from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
-        statuses = []
-        for item in payload:
-            connector = RegisterServerRequest.model_validate(item).model_dump()
-            await MCPService.validate_connector(connector)
-            existing = await MCPRepository.find_connector({"name": connector["name"]})
-            if existing:
-                connector_id = str(existing["_id"])
-                await MCPRepository.update_connector(
-                    {"_id": existing["_id"]},
-                    {"$set": {**connector, "is_connected": False}},
-                )
-            else:
-                result = await MCPRepository.insert_connector(
-                    {**connector, "is_connected": False}
-                )
-                connector_id = str(result.inserted_id)
-            try:
-                tools = await asyncio.wait_for(
-                    MCPService.list_tools(connector_id), timeout=30
-                )
-                await MCPRepository.update_connector(
-                    {"_id": ObjectId(connector_id)},
-                    {
-                        "$set": {
-                            "is_connected": True,
-                            "tool_names": [tool["name"] for tool in tools],
-                        },
-                        "$unset": {"last_error": ""},
-                    },
-                )
-                statuses.append({"id": connector_id, "is_connected": True})
-            except Exception as exc:
-                await MCPRepository.update_connector(
-                    {"_id": ObjectId(connector_id)},
-                    {
-                        "$set": {
-                            "is_connected": False,
-                            "last_error": str(exc)[:500],
-                        }
-                    },
-                )
-                statuses.append({"id": connector_id, "is_connected": False})
-        return statuses
+        key = hashlib.sha256(settings.SECRET_KEY.encode()).digest()
+        nonce = os.urandom(12)
+        encrypted = AESGCM(key).encrypt(nonce, secret.encode(), owner_id.encode())
+        return base64.urlsafe_b64encode(nonce + encrypted).decode()
+
+    @staticmethod
+    def _open_secret(value: str, owner_id: str) -> str:
+        from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
+        payload = base64.urlsafe_b64decode(value.encode())
+        key = hashlib.sha256(settings.SECRET_KEY.encode()).digest()
+        return AESGCM(key).decrypt(payload[:12], payload[12:], owner_id.encode()).decode()
 
     @staticmethod
     def _allowed_remote_hosts() -> set[str]:
@@ -92,13 +56,14 @@ class MCPService:
     async def _validate_remote_url(url: str) -> None:
         parsed = urlparse(url)
         hostname = (parsed.hostname or "").lower().rstrip(".")
+        allowed_hosts = MCPService._allowed_remote_hosts()
         if (
             parsed.scheme != "https"
             or not hostname
             or parsed.username
             or parsed.password
             or parsed.fragment
-            or hostname not in MCPService._allowed_remote_hosts()
+            or (allowed_hosts and hostname not in allowed_hosts)
             or parsed.port not in {None, 443}
         ):
             raise PermissionError("mcp_remote_endpoint_not_allowed")
@@ -137,20 +102,15 @@ class MCPService:
             if not url:
                 raise ValueError("mcp_remote_url_missing")
             await MCPService._validate_remote_url(url)
-            auth_env = connector.get("auth_env")
-            if auth_env and not os.environ.get(str(auth_env)):
-                raise PermissionError("mcp_remote_authentication_missing")
             return
         raise ValueError("mcp_server_type_unsupported")
 
     @staticmethod
     def _remote_headers(connector: dict) -> dict[str, str] | None:
-        auth_env = connector.get("auth_env")
-        if not auth_env:
+        encrypted = str(connector.get("auth_secret") or "")
+        if not encrypted:
             return None
-        token = os.environ.get(str(auth_env), "")
-        if not token:
-            raise PermissionError("mcp_remote_authentication_missing")
+        token = MCPService._open_secret(encrypted, str(connector["owner_id"]))
         return {"Authorization": f"Bearer {token}"}
 
     @staticmethod
@@ -192,18 +152,20 @@ class MCPService:
                 yield session
 
     @staticmethod
-    async def _get_connector(directory_uuid: str) -> dict:
+    async def _get_connector(directory_uuid: str, owner_id: str) -> dict:
         if not ObjectId.is_valid(directory_uuid):
             raise LookupError("mcp_connector_not_found")
-        connector = await MCPRepository.find_connector({"_id": ObjectId(directory_uuid)})
+        connector = await MCPRepository.find_connector(
+            {"_id": ObjectId(directory_uuid), "owner_id": owner_id}
+        )
         if not connector:
             raise LookupError("mcp_connector_not_found")
         return connector
 
     @staticmethod
     @log_logic_execution
-    async def search_registry(keyword: str) -> List[Dict[str, Any]]:
-        query = {"is_connected": True}
+    async def search_registry(keyword: str, owner_id: str) -> List[Dict[str, Any]]:
+        query = {"is_connected": True, "owner_id": owner_id}
         if keyword:
             regex = {"$regex": keyword, "$options": "i"}
             query["$or"] = [{"name": regex}, {"description": regex}, {"tags": regex}]
@@ -222,19 +184,31 @@ class MCPService:
 
     @staticmethod
     @log_logic_execution
-    async def suggest_connector(directory_uuids: List[str]) -> Dict[str, Any]:
+    async def suggest_connector(
+        directory_uuids: List[str], owner_id: str
+    ) -> Dict[str, Any]:
+        object_ids = [ObjectId(value) for value in directory_uuids if ObjectId.is_valid(value)]
+        cursor = MCPRepository.search_connectors(
+            {"_id": {"$in": object_ids}, "owner_id": owner_id, "is_connected": True},
+            limit=10,
+        )
+        owned = {str(item["_id"]) for item in await cursor.to_list(length=None)}
         return {
             "type": "suggest_connectors",
             "connectors": [
-                {"directoryUuid": directory_uuid} for directory_uuid in directory_uuids
+                {"directoryUuid": directory_uuid}
+                for directory_uuid in directory_uuids
+                if directory_uuid in owned
             ],
             "message_code": "connector_review_required",
         }
 
     @staticmethod
     @log_logic_execution
-    async def execute_tool(directory_uuid: str, tool_name: str, arguments: dict) -> Any:
-        connector = await MCPService._get_connector(directory_uuid)
+    async def execute_tool(
+        directory_uuid: str, tool_name: str, arguments: dict, owner_id: str
+    ) -> Any:
+        connector = await MCPService._get_connector(directory_uuid, owner_id)
         if not connector.get("is_connected", False):
             raise ConnectionError("mcp_connector_not_connected")
         known_tools = set(connector.get("tool_names", []))
@@ -250,8 +224,8 @@ class MCPService:
 
     @staticmethod
     @log_logic_execution
-    async def list_tools(directory_uuid: str) -> list[dict]:
-        connector = await MCPService._get_connector(directory_uuid)
+    async def list_tools(directory_uuid: str, owner_id: str) -> list[dict]:
+        connector = await MCPService._get_connector(directory_uuid, owner_id)
         try:
             async with MCPService._session(connector) as session:
                 result = await session.list_tools()

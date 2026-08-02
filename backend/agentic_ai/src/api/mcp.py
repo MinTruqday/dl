@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from src.repositories.mcp import MCPRepository
 from src.core.logging_route import LoggingRoute
 from src.schemas.mcp import RegisterServerRequest
-from src.core.dependency import Role, require_role, verify_internal_token
+from src.core.dependency import CurrentUser, get_current_user, verify_internal_token
 from src.services.mcp import MCPService
 
 
@@ -23,10 +23,27 @@ class CallbackRequest(BaseModel):
 router = APIRouter(route_class=LoggingRoute, prefix="/mcp")
 
 
-@router.post("/servers", dependencies=[Depends(require_role([Role.ADMIN]))])
-async def register_mcp_server(req: RegisterServerRequest):
-    """Register an administrator managed MCP server connection"""
+def require_mcp_tier(current_user: CurrentUser) -> None:
+    if current_user.ai_tier.value not in {"PRO", "PREMIUM"}:
+        raise HTTPException(status_code=403, detail={"code": "mcp_requires_pro"})
+
+
+@router.post("/servers")
+async def register_mcp_server(
+    req: RegisterServerRequest,
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    """Register an MCP server owned exclusively by the authenticated user"""
+    require_mcp_tier(current_user)
+    if req.server_type == "stdio" and current_user.role.value != "admin":
+        raise HTTPException(status_code=403, detail={"code": "mcp_stdio_requires_admin"})
     doc = req.model_dump()
+    auth_token = doc.pop("auth_token", None)
+    doc["owner_id"] = current_user.id
+    if auth_token:
+        doc["auth_secret"] = MCPService.seal_secret(
+            auth_token.get_secret_value(), current_user.id
+        )
     try:
         await MCPService.validate_connector(doc)
     except (ConnectionError, PermissionError, ValueError) as error:
@@ -38,7 +55,7 @@ async def register_mcp_server(req: RegisterServerRequest):
         raise HTTPException(status_code=409, detail={"code": "mcp_connector_already_exists"})
     connector_id = str(result.inserted_id)
     try:
-        tools = await MCPService.list_tools(connector_id)
+        tools = await MCPService.list_tools(connector_id, current_user.id)
     except Exception as error:
         await MCPRepository.update_connector(
             {"_id": result.inserted_id},
@@ -57,15 +74,21 @@ async def register_mcp_server(req: RegisterServerRequest):
     return {"status": "success", "id": connector_id, "tools": tools}
 
 
-@router.post("/servers/{server_id}/kiem-tra", dependencies=[Depends(require_role([Role.ADMIN]))])
-async def probe_mcp_server(server_id: str):
+@router.post("/servers/{server_id}/kiem-tra")
+async def probe_mcp_server(
+    server_id: str,
+    current_user: CurrentUser = Depends(get_current_user),
+):
     from bson import ObjectId
 
+    require_mcp_tier(current_user)
+    if not ObjectId.is_valid(server_id):
+        raise HTTPException(status_code=404, detail={"code": "mcp_connector_not_found"})
     try:
         object_id = ObjectId(server_id)
-        tools = await MCPService.list_tools(server_id)
+        tools = await MCPService.list_tools(server_id, current_user.id)
         await MCPRepository.update_connector(
-            {"_id": object_id},
+            {"_id": object_id, "owner_id": current_user.id},
             {
                 "$set": {"is_connected": True, "tool_names": [tool["name"] for tool in tools]},
                 "$unset": {"last_error": ""},
@@ -75,20 +98,41 @@ async def probe_mcp_server(server_id: str):
     except Exception as error:
         if "object_id" in locals():
             await MCPRepository.update_connector(
-                {"_id": object_id},
+                {"_id": object_id, "owner_id": current_user.id},
                 {"$set": {"is_connected": False, "last_error": str(error)[:500]}},
             )
         raise HTTPException(status_code=502, detail={"code": "mcp_connection_failed"})
 
 
-@router.get("/servers", dependencies=[Depends(require_role([Role.ADMIN]))])
-async def list_mcp_servers():
-    """List registered MCP server connections and their status"""
-    cursor = MCPRepository.search_connectors({}, limit=100)
+@router.get("/servers")
+async def list_mcp_servers(current_user: CurrentUser = Depends(get_current_user)):
+    """List MCP server connections owned by the authenticated user"""
+    require_mcp_tier(current_user)
+    cursor = MCPRepository.search_connectors({"owner_id": current_user.id}, limit=100)
     docs = await cursor.to_list(length=None)
     for d in docs:
         d["_id"] = str(d["_id"])
+        d.pop("auth_secret", None)
     return {"status": "success", "servers": docs}
+
+
+@router.delete("/servers/{server_id}")
+async def delete_mcp_server(
+    server_id: str,
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    """Delete one MCP server owned by the authenticated user"""
+    from bson import ObjectId
+
+    require_mcp_tier(current_user)
+    if not ObjectId.is_valid(server_id):
+        raise HTTPException(status_code=404, detail={"code": "mcp_connector_not_found"})
+    result = await MCPRepository.delete_connector(
+        {"_id": ObjectId(server_id), "owner_id": current_user.id}
+    )
+    if result.deleted_count != 1:
+        raise HTTPException(status_code=404, detail={"code": "mcp_connector_not_found"})
+    return {"status": "success"}
 
 
 @router.post("/callback", dependencies=[Depends(verify_internal_token)])

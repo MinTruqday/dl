@@ -5,7 +5,3 @@ metadata:
 data:
   MONGODB_URI: "mongodb://mongodb:27017/doclib"
   REDIS_URI: "redis://redis:6379/0"
-  MCP_ALLOWED_REMOTE_HOSTS: "developers.openai.com"
-  MCP_ALLOW_PRIVATE_NETWORKS: "false"
-  MCP_ALLOWED_STDIO_COMMANDS: ""
-  MCP_BOOTSTRAP_CONNECTORS: '[{"name":"OpenAI Developer Documentation","description":"Official OpenAI developer documentation search and retrieval","server_type":"streamable_http","url":"https://developers.openai.com/mcp","args":[]}]'
