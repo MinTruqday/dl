@@ -99,28 +99,36 @@ async def main():
         SECRET_KEY,
         algorithm="HS256",
     )
+    pro_token = jwt.encode(
+        {
+            "uid": "reader",
+            "sub": "reader@example.com",
+            "role": "reader",
+            "sid": "agentic-integration-session",
+            "ai_tier": "PRO",
+        },
+        SECRET_KEY,
+        algorithm="HS256",
+    )
     from src.core.infrastructure.redis import redis
+
     await redis.sadd("user_sessions:reader", "agentic-integration-session")
     await redis.sadd("user_sessions:admin", "agentic-admin-session")
     assert check_system_access(f"Bearer {admin_token}") is True
     assert check_system_access(reader_token) is False
     assert check_system_access("invalid") is False
+    assert call("GET", "/mcp/servers", bearer=reader_token)[0] == 403
+    assert call("GET", "/mcp/servers", bearer=admin_token)[0] == 200
 
     status, premium_error = call(
-        "POST",
-        "/suy-luan/kiem-tra-ngu-phap",
-        {"text": "DOCLIB_PRIVATE_SENTINEL"},
-        internal=False,
+        "POST", "/suy-luan/kiem-tra-ngu-phap", {"text": "DOCLIB_PRIVATE_SENTINEL"}, internal=False
     )
     assert status == 401, premium_error
 
     request = urllib.request.Request(
         "http://127.0.0.1:8000/suy-luan/kiem-tra-ngu-phap",
         data=json.dumps({"text": "DOCLIB_PRIVATE_SENTINEL"}).encode("utf-8"),
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {reader_token}",
-        },
+        headers={"Content-Type": "application/json", "Authorization": f"Bearer {reader_token}"},
         method="POST",
     )
     try:
@@ -180,28 +188,12 @@ async def main():
         },
         upsert=True,
     )
-    status, policy = call(
-        "POST",
-        "/drm-ai/danh-gia",
-        drm_request,
-        internal=True,
-    )
+    status, policy = call("POST", "/drm-ai/danh-gia", drm_request, internal=True)
     assert status == 200, policy
-    assert policy["data"]["decision"] in {
-        "LEVEL_0",
-        "LEVEL_1",
-        "LEVEL_2",
-        "LEVEL_3",
-        "BLOCKED",
-    }
+    assert policy["data"]["decision"] in {"LEVEL_0", "LEVEL_1", "LEVEL_2", "LEVEL_3", "BLOCKED"}
     missing_fingerprint = dict(drm_request)
     missing_fingerprint.pop("device_fingerprint")
-    status, blocked_policy = call(
-        "POST",
-        "/drm-ai/danh-gia",
-        missing_fingerprint,
-        internal=True,
-    )
+    status, blocked_policy = call("POST", "/drm-ai/danh-gia", missing_fingerprint, internal=True)
     assert status == 200, blocked_policy
     assert blocked_policy["data"]["decision"] == "BLOCKED"
     assert blocked_policy["data"]["enable_aes_encryption"] is False
@@ -209,18 +201,11 @@ async def main():
     await content.documents.delete_one({"_id": drm_request["document_id"]})
     await drm.drm_licenses.delete_one({"_id": "agentic-drm-license"})
 
-    assert call(
-        "POST",
-        "/tinh-chinh/tap-du-lieu",
-        {"name": "Denied dataset"},
-        bearer=reader_token,
-    )[0] == 403
-    assert call(
-        "POST",
-        "/tinh-chinh/tap-du-lieu",
-        {},
-        bearer=admin_token,
-    )[0] == 422
+    assert (
+        call("POST", "/tinh-chinh/tap-du-lieu", {"name": "Denied dataset"}, bearer=reader_token)[0]
+        == 403
+    )
+    assert call("POST", "/tinh-chinh/tap-du-lieu", {}, bearer=admin_token)[0] == 422
     status, dataset = call(
         "POST",
         "/tinh-chinh/tap-du-lieu",
@@ -233,10 +218,7 @@ async def main():
     status, session = call(
         "POST",
         "/lich-su",
-        {
-            "document_id": "integration-document",
-            "first_query": "Integration history",
-        },
+        {"document_id": "integration-document", "first_query": "Integration history"},
         bearer=reader_token,
     )
     assert status == 200, session
@@ -244,33 +226,35 @@ async def main():
     status, message = call(
         "POST",
         f"/lich-su/{session_id}/tin-nhan",
-        {
-            "content": "Bounded integration message",
-            "attachments": [{"name": "evidence.txt"}],
-        },
+        {"content": "Bounded integration message", "attachments": [{"name": "evidence.txt"}]},
         bearer=reader_token,
     )
     assert status == 200, message
-    assert call(
-        "PUT",
-        f"/lich-su/{session_id}/tieu-de",
-        {"title": "Verified history"},
-        bearer=reader_token,
-    )[0] == 200
-    status, detail = call(
-        "GET",
-        f"/lich-su/{session_id}",
-        bearer=reader_token,
+    assert (
+        call(
+            "PUT",
+            f"/lich-su/{session_id}/tieu-de",
+            {"title": "Verified history"},
+            bearer=reader_token,
+        )[0]
+        == 200
     )
+    status, detail = call("GET", f"/lich-su/{session_id}", bearer=reader_token)
     assert status == 200, detail
     assert detail["title"] == "Verified history"
     assert detail["messages"][0]["attachments"][0]["name"] == "evidence.txt"
-    assert call(
-        "DELETE",
-        f"/lich-su/{session_id}",
-        bearer=reader_token,
-    )[0] == 200
+    assert call("DELETE", f"/lich-su/{session_id}", bearer=reader_token)[0] == 200
     assert await agentic.ai_messages.count_documents({"session_id": session_id}) == 0
+    status, mode_error = call(
+        "POST", "/lich-su", {"first_query": "Basic work", "mode": "work"}, bearer=reader_token
+    )
+    assert status == 403, mode_error
+    assert mode_error["detail"] == {"code": "advanced_mode_requires_pro"}
+    status, pro_session = call(
+        "POST", "/lich-su", {"first_query": "Pro work", "mode": "work"}, bearer=pro_token
+    )
+    assert status == 200, pro_session
+    await agentic.ai_sessions.delete_one({"_id": pro_session["_id"]})
     await agentic.finetune_datasets.delete_one({"_id": dataset_id})
 
     from src.main import app
@@ -282,6 +266,7 @@ async def main():
         ("/tinh-chinh/tap-du-lieu", "post"),
         ("/toi-uu/cau-hinh", "patch"),
         ("/lich-su", "post"),
+        ("/mcp/servers", "post"),
     ]:
         assert schema["paths"][path][method].get("security")
 
@@ -304,14 +289,8 @@ async def main():
         return FakeResponse(200, {"data": {}})
 
     with (
-        patch(
-            "src.tools.http_client.make_api_request",
-            side_effect=fake_request,
-        ),
-        patch(
-            "src.tools.editing._broadcast_update",
-            new=AsyncMock(),
-        ) as broadcast,
+        patch("src.tools.http_client.make_api_request", side_effect=fake_request),
+        patch("src.tools.editing._broadcast_update", new=AsyncMock()) as broadcast,
     ):
         result = await edit_document_text.ainvoke(
             {
@@ -322,10 +301,7 @@ async def main():
             },
             config={"configurable": {"token": "Bearer integration"}},
         )
-        assert json.loads(result) == {
-            "status": "success",
-            "document_id": "agentic-edit-document",
-        }
+        assert json.loads(result) == {"status": "success", "document_id": "agentic-edit-document"}
         assert [item[0] for item in calls] == ["GET", "PUT"]
         assert calls[1][2]["json"]["content"].find("new text") >= 0
         broadcast.assert_awaited_once()

@@ -54,6 +54,7 @@ const streamErrors: Record<string, string> = {
   orchestration_failed: "Không thể thực hiện kế hoạch",
   response_verification_failed: "Kết quả không vượt qua bước kiểm chứng",
   chat_stream_failed: "Luồng phản hồi bị gián đoạn",
+  advanced_mode_requires_pro: "Chế độ này cần gói Pro hoặc Premium",
 };
 export function useChat(documentId?: string | null) {
   const { user, isLoading: authLoading } = useAuth();

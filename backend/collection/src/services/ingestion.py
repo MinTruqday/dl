@@ -16,6 +16,9 @@ from src.core.logic_logger import log_logic_execution
 from src.schemas.ingestion import Collection
 from src.services.content_client import collector_document_stats
 from src.sources.anna import AnnaSource
+from src.sources.ctan import CtanSource
+from src.sources.nxbgd import NxbgdSource
+from src.sources.nxbst import NxbstSource
 
 
 SOURCE_QUEUES = {
@@ -75,7 +78,9 @@ async def trigger_collection(req: Collection):
             },
         )
         logger.exception("Failed to activate background data collection process")
-        raise HTTPException(status_code=503, detail="Không thể khởi tạo tiến trình thu thập dữ liệu")
+        raise HTTPException(
+            status_code=503, detail="Không thể khởi tạo tiến trình thu thập dữ liệu"
+        )
 
 
 @log_logic_execution
@@ -99,12 +104,7 @@ async def stop_collection():
         await restart_workers()
         await database.mongodb[settings.COLLECTION_DB_NAME].collection_jobs.update_many(
             {"status": {"$in": ["pending", "discovering", "running"]}},
-            {
-                "$set": {
-                    "status": "stopped",
-                    "updated_at": datetime.now(timezone.utc),
-                }
-            },
+            {"$set": {"status": "stopped", "updated_at": datetime.now(timezone.utc)}},
         )
         logger.info("Data collection process paused")
         return {"status": "success", "message": "Đã dừng toàn bộ tiến trình thu thập dữ liệu"}
@@ -149,14 +149,30 @@ async def get_collector_stats():
     )
     failed = await collection.count_documents({"status": "failed"})
     paused = await redis.get("stop_collection") == "1"
-    cached_health = await redis.get("collector:health:anna")
-    if cached_health:
-        anna_health = json.loads(cached_health)
-    else:
-        anna_health = await AnnaSource.probe_list_source()
-        anna_health["checked_at"] = datetime.now(timezone.utc).isoformat()
-        await redis.setex("collector:health:anna", 300, json.dumps(anna_health))
-    operational = not paused and bool(anna_health.get("reachable"))
+    probes = {
+        "AnnaArchive": AnnaSource.probe_list_source,
+        "NXBST": NxbstSource.probe_list_source,
+        "NXBGD": NxbgdSource.probe_list_source,
+        "CTAN": CtanSource.probe_list_source,
+    }
+
+    async def source_health(source: str, probe):
+        cache_key = f"collector:health:{source.lower()}"
+        cached = await redis.get(cache_key)
+        if cached:
+            return json.loads(cached)
+        result = await probe()
+        result["checked_at"] = datetime.now(timezone.utc).isoformat()
+        await redis.setex(cache_key, 300, json.dumps(result))
+        return result
+
+    health_rows = await asyncio.gather(
+        *(source_health(source, probe) for source, probe in probes.items())
+    )
+    active_sources = [
+        source for source, health in zip(probes, health_rows) if health.get("reachable")
+    ]
+    operational = not paused and len(active_sources) == len(probes)
     return {
         "total_documents": content_stats["total_documents"],
         "total_assets": content_stats["total_assets"],
@@ -165,8 +181,8 @@ async def get_collector_stats():
         "total_documents_collected": content_stats["total_collected"],
         "active_jobs": active,
         "failed_jobs": failed,
-        "active_sources": ["AnnaArchive"] if anna_health.get("reachable") else [],
-        "source_health": [anna_health],
+        "active_sources": active_sources,
+        "source_health": health_rows,
         "status": "paused" if paused else "operational" if operational else "degraded",
     }
 
@@ -176,21 +192,12 @@ async def get_collector_logs():
     log_file = "logs/backend.log"
     if not os.path.isfile(log_file):
         return []
-    whitelist = [
-        "nxbgd",
-        "anna",
-        "nxbst",
-        "ctan",
-        "collection",
-        "rabbitmq",
-    ]
+    whitelist = ["nxbgd", "anna", "nxbst", "ctan", "collection", "rabbitmq"]
     with open(log_file, "rb") as stream:
         stream.seek(0, os.SEEK_END)
         size = stream.tell()
         stream.seek(max(0, size - 256 * 1024))
         text = stream.read().decode("utf-8", errors="ignore")
     return [
-        line
-        for line in text.splitlines()
-        if any(keyword in line.lower() for keyword in whitelist)
+        line for line in text.splitlines() if any(keyword in line.lower() for keyword in whitelist)
     ][-50:]

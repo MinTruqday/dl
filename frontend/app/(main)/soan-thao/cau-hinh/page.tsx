@@ -178,39 +178,106 @@ export default function ConfigurationPage() {
                 </h2>
                 <Button
                   size="sm"
-                  disabled={Boolean(state.processing)}
+                  disabled={Boolean(state.processing) || state.tier === "BASIC"}
                   onClick={state.saveDrm}
                 >
                   {state.processing === "drm" ? "Đang lưu" : "Lưu"}
                 </Button>
               </div>
               <div className="mt-3">
-                <Toggle
-                  label="Không cho sao chép nội dung"
-                  checked={state.disableCopy}
-                  change={state.setDisableCopy}
-                />
-                <Toggle
-                  label="Không cho in nội dung"
-                  checked={state.disablePrint}
-                  change={state.setDisablePrint}
-                />
-                <Toggle
-                  label="Ẩn khỏi kết quả tìm kiếm"
-                  checked={state.hideFromSearch}
-                  change={state.setHideFromSearch}
-                />
-                <Toggle
-                  label="Gắn dấu nhận dạng khi đọc"
-                  checked={state.watermarkEnabled}
-                  change={state.setWatermarkEnabled}
-                />
-                <Toggle
-                  label="Cho phép AI nội bộ xử lý"
-                  checked={state.allowInternalAi}
-                  change={state.setAllowInternalAi}
-                />
-                <div className="grid grid-cols-2 gap-3 pt-4">
+                {state.tier === "BASIC" ? (
+                  <p className="py-4 text-[13px] text-ink-muted">
+                    Bảo vệ nội dung cần gói Pro hoặc Premium
+                  </p>
+                ) : (
+                  <Toggle
+                    label="Gắn dấu nhận dạng khi đọc"
+                    checked={state.watermarkEnabled}
+                    change={state.setWatermarkEnabled}
+                  />
+                )}
+                {state.tier === "PREMIUM" && (
+                  <>
+                    <Toggle
+                      label="Không cho sao chép nội dung"
+                      checked={state.disableCopy}
+                      change={state.setDisableCopy}
+                    />
+                    <Toggle
+                      label="Không cho in nội dung"
+                      checked={state.disablePrint}
+                      change={state.setDisablePrint}
+                    />
+                    <Toggle
+                      label="Ẩn khỏi kết quả tìm kiếm"
+                      checked={state.hideFromSearch}
+                      change={state.setHideFromSearch}
+                    />
+                    <Toggle
+                      label="Cho phép AI nội bộ xử lý"
+                      checked={state.allowInternalAi}
+                      change={state.setAllowInternalAi}
+                    />
+                    <Toggle
+                      label="Ghost font"
+                      checked={state.ghostFontEnabled}
+                      change={state.setGhostFontEnabled}
+                    />
+                    {state.ghostFontEnabled && (
+                      <div className="border-b border-border py-4">
+                        <label className="text-[13px] font-medium text-ink">
+                          Người đọc không dùng ghost font
+                          <select
+                            value={state.ghostFontExemptionScope}
+                            onChange={(event) =>
+                              state.setGhostFontExemptionScope(
+                                event.target.value as
+                                  | "owner_only"
+                                  | "private_link"
+                                  | "selected_users"
+                                  | "everyone",
+                              )
+                            }
+                            className="apple-input mt-2 w-full"
+                          >
+                            <option value="owner_only">Chỉ tác giả</option>
+                            <option value="private_link">Liên kết riêng</option>
+                            <option value="selected_users">Người được chọn</option>
+                            <option value="everyone">Tất cả người đọc</option>
+                          </select>
+                        </label>
+                        {state.ghostFontExemptionScope === "selected_users" && (
+                          <label className="mt-3 block text-[13px] font-medium text-ink">
+                            Mã người dùng
+                            <input
+                              value={state.ghostFontExemptUserIds.join(", ")}
+                              onChange={(event) =>
+                                state.setGhostFontExemptUserIds(
+                                  event.target.value
+                                    .split(",")
+                                    .map((value) => value.trim())
+                                    .filter(Boolean),
+                                )
+                              }
+                              className="apple-input mt-2 w-full"
+                            />
+                          </label>
+                        )}
+                        {state.ghostFontExemptionScope === "private_link" &&
+                          state.ghostFontPrivateLink && (
+                            <label className="mt-3 block text-[13px] font-medium text-ink">
+                              Liên kết riêng
+                              <input
+                                readOnly
+                                value={state.ghostFontPrivateLink}
+                                className="apple-input mt-2 w-full"
+                                onFocus={(event) => event.currentTarget.select()}
+                              />
+                            </label>
+                          )}
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 gap-3 pt-4">
                   <label className="text-[13px] font-medium text-ink">
                     Hiệu lực ngày
                     <input
@@ -237,7 +304,9 @@ export default function ConfigurationPage() {
                       className="apple-input mt-2 w-full"
                     />
                   </label>
-                </div>
+                    </div>
+                  </>
+                )}
               </div>
             </section>
             <section className="rounded-panel border border-border bg-surface p-5">

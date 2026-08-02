@@ -29,18 +29,13 @@ def parse_pages(value, default=1):
 async def update_job(job_id: str | None, status: str, progress: int, error: str | None = None):
     if not job_id:
         return
-    update = {
-        "status": status,
-        "progress": progress,
-        "updated_at": datetime.now(timezone.utc),
-    }
+    update = {"status": status, "progress": progress, "updated_at": datetime.now(timezone.utc)}
     if error:
         update["error"] = error[:500]
     if status in {"completed", "failed", "stopped"}:
         update["finished_at"] = datetime.now(timezone.utc)
     await database.mongodb[settings.COLLECTION_DB_NAME].collection_jobs.update_one(
-        {"_id": job_id},
-        {"$set": update},
+        {"_id": job_id}, {"$set": update}
     )
 
 
@@ -50,24 +45,34 @@ async def register_batch(job_id: str | None, result: dict | None):
     result = result or {}
     detected = max(0, int(result.get("documents_detected", 0)))
     queued = max(0, int(result.get("documents_queued", 0)))
+    completed = max(0, int(result.get("documents_completed", 0)))
+    failed = max(0, int(result.get("failed_items", 0)))
     values = {
         "pages_scanned": max(0, int(result.get("pages_scanned", 0))),
         "documents_detected": detected,
         "expected_items": queued,
+        "completed_items": completed,
+        "failed_items": failed,
         "discovery_complete": True,
         "updated_at": datetime.now(timezone.utc),
     }
     if detected == 0:
-        values.update({"status": "failed", "progress": 100, "error": "Nguồn không trả về tài liệu", "finished_at": datetime.now(timezone.utc)})
+        values.update(
+            {
+                "status": "failed",
+                "progress": 100,
+                "error": "Nguồn không trả về tài liệu",
+                "finished_at": datetime.now(timezone.utc),
+            }
+        )
     elif queued == 0:
-        values.update({"status": "completed", "progress": 100, "finished_at": datetime.now(timezone.utc)})
+        values.update(
+            {"status": "completed", "progress": 100, "finished_at": datetime.now(timezone.utc)}
+        )
     else:
         values.update({"status": "running", "progress": 25})
     collection = database.mongodb[settings.COLLECTION_DB_NAME].collection_jobs
-    await collection.update_one(
-        {"_id": job_id},
-        {"$set": values},
-    )
+    await collection.update_one({"_id": job_id}, {"$set": values})
     row = await collection.find_one({"_id": job_id})
     if row and queued > 0:
         await finalize_batch(collection, row)
@@ -98,10 +103,7 @@ async def complete_batch_item(job_id: str | None, success: bool, error: str | No
         return
     collection = database.mongodb[settings.COLLECTION_DB_NAME].collection_jobs
     increment = {"completed_items": 1} if success else {"failed_items": 1}
-    update = {
-        "$inc": increment,
-        "$set": {"updated_at": datetime.now(timezone.utc)},
-    }
+    update = {"$inc": increment, "$set": {"updated_at": datetime.now(timezone.utc)}}
     if error:
         update["$set"]["last_error"] = error[:500]
     row = await collection.find_one_and_update(
@@ -120,36 +122,42 @@ async def run_worker():
 
     async def route_anna_collector(payload):
         return await AnnaSource.run_list_collector(
-            search_query="",
-            pages=parse_pages(payload.get("pages")),
-            job_id=payload.get("job_id"),
+            search_query="", pages=parse_pages(payload.get("pages")), job_id=payload.get("job_id")
         )
 
     async def route_ctan_collector(payload):
         letter = str(payload.get("pages", "a")).lower()
-        await CtanSource.run_list_collector(letter)
+        return await CtanSource.run_list_collector(letter, payload.get("job_id"))
 
     async def route_list_collector(payload):
         source = payload.get("source", "AnnaArchive")
         pages = parse_pages(payload.get("pages"))
         if source == "NXBST":
-            await NxbstSource.run_list_collector(pages)
+            return await NxbstSource.run_list_collector(pages, payload.get("job_id"))
         elif source == "CTAN":
-            await CtanSource.run_list_collector(str(payload.get("pages", "a")).lower())
+            return await CtanSource.run_list_collector(
+                str(payload.get("pages", "a")).lower(), payload.get("job_id")
+            )
         else:
-            await AnnaSource.run_list_collector(search_query="", pages=pages)
+            return await AnnaSource.run_list_collector(
+                search_query="", pages=pages, job_id=payload.get("job_id")
+            )
 
     async def route_detail_collector(payload):
         url = payload.get("url")
         if not isinstance(url, str) or not url.startswith(("http://", "https://")):
             raise ValueError("Invalid detail collection URL")
         source = payload.get("source", "AnnaArchive")
+        collection_scope = payload.get("collection_scope")
         if source == "NXBST":
-            await NxbstSource.run_detail_collector(url)
+            await NxbstSource.run_detail_collector(url, payload.get("job_id"), collection_scope)
+            return {"terminal": True}
         elif source == "CTAN":
-            await CtanSource.run_detail_collector(url)
+            await CtanSource.run_detail_collector(url, payload.get("job_id"), collection_scope)
+            return {"terminal": False}
         else:
-            await AnnaSource.run_detail_collector(url, payload.get("job_id"))
+            await AnnaSource.run_detail_collector(url, payload.get("job_id"), collection_scope)
+            return {"terminal": False}
 
     async def route_download_processor(payload):
         source = payload.get("source", "AnnaArchive")
@@ -161,13 +169,16 @@ async def run_worker():
     async def route_nxbst_collector(payload):
         url = payload.get("url")
         if url:
-            await NxbstSource.run_detail_collector(url)
+            await NxbstSource.run_detail_collector(url, payload.get("job_id"))
+            return {"documents_detected": 1, "documents_queued": 1, "documents_completed": 1}
         else:
-            await NxbstSource.run_list_collector(parse_pages(payload.get("pages")))
+            return await NxbstSource.run_list_collector(
+                parse_pages(payload.get("pages")), payload.get("job_id")
+            )
 
     async def route_nxbgd_collector(payload):
         target_class = str(payload.get("target_class", payload.get("pages", "-1")))
-        await NxbgdSource(target_class).execute()
+        return await NxbgdSource(target_class).execute(payload.get("job_id"))
 
     async def poll_queue(queue_name, handler_func):
         while True:
@@ -183,16 +194,24 @@ async def run_worker():
                 else:
                     payload = result
                 job_id = payload.get("job_id") if isinstance(payload, dict) else None
-                if queue_name == "anna_archive_queue":
+                source_queue_names = {
+                    "anna_archive_queue",
+                    "nxbst_queue",
+                    "nxbgd_queue",
+                    "ctan_queue",
+                }
+                if queue_name in source_queue_names:
                     await update_job(job_id, "discovering", 10)
                 elif queue_name not in {"collect_detail_queue", "download_processor_queue"}:
                     await update_job(job_id, "running", 10)
                 result = await handler_func(payload)
                 if delivery_tag:
                     await mq.ack(delivery_tag)
-                if queue_name == "anna_archive_queue":
+                if queue_name in source_queue_names:
                     await register_batch(job_id, result)
                 elif queue_name == "download_processor_queue":
+                    await complete_batch_item(job_id, True)
+                elif queue_name == "collect_detail_queue" and result and result.get("terminal"):
                     await complete_batch_item(job_id, True)
                 elif queue_name not in {"collect_detail_queue"}:
                     await update_job(job_id, "completed", 100)
@@ -244,10 +263,7 @@ async def start_workers():
     global WORKER_MANAGER_TASK
     if WORKER_MANAGER_TASK and not WORKER_MANAGER_TASK.done():
         return
-    WORKER_MANAGER_TASK = asyncio.create_task(
-        run_worker(),
-        name="collection:worker-manager",
-    )
+    WORKER_MANAGER_TASK = asyncio.create_task(run_worker(), name="collection:worker-manager")
     await asyncio.sleep(0)
 
 

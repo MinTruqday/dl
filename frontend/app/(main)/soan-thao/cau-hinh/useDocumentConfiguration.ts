@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ingestDocumentAPI } from "@/features/agentic_ai/services/ingestion.service";
+import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import {
   getCollaboratorsAPI,
   inviteCollaboratorAPI,
@@ -18,6 +19,7 @@ import {
 } from "@/features/content/services/document.service";
 
 export function useDocumentConfiguration() {
+  const { user } = useAuth();
   const [documents, setDocuments] = useState<any[]>([]);
   const [folders, setFolders] = useState<any[]>([]);
   const [documentId, setDocumentId] = useState("");
@@ -30,6 +32,12 @@ export function useDocumentConfiguration() {
   const [allowInternalAi, setAllowInternalAi] = useState(true);
   const [licenseValidDays, setLicenseValidDays] = useState(30);
   const [maxOpenCount, setMaxOpenCount] = useState(100);
+  const [ghostFontEnabled, setGhostFontEnabled] = useState(true);
+  const [ghostFontExemptionScope, setGhostFontExemptionScope] = useState<
+    "owner_only" | "private_link" | "selected_users" | "everyone"
+  >("owner_only");
+  const [ghostFontExemptUserIds, setGhostFontExemptUserIds] = useState<string[]>([]);
+  const [ghostFontPrivateLink, setGhostFontPrivateLink] = useState("");
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -88,6 +96,11 @@ export function useDocumentConfiguration() {
         setAllowInternalAi(settings.allow_internal_ai !== false);
         setLicenseValidDays(Number(settings.license_valid_days ?? 30));
         setMaxOpenCount(Number(settings.max_open_count ?? 100));
+        setGhostFontEnabled(settings.ghost_font_enabled !== false);
+        setGhostFontExemptionScope(
+          settings.ghost_font_exemption_scope ?? "owner_only",
+        );
+        setGhostFontExemptUserIds(settings.ghost_font_exempt_user_ids ?? []);
       })
       .catch(() => undefined);
     return () => {
@@ -105,10 +118,10 @@ export function useDocumentConfiguration() {
     setError("");
     setNotice("");
     try {
-      await task();
+      const result = await task();
       setNotice(success);
       if (refresh) await reload();
-      return true;
+      return result ?? true;
     } catch (cause) {
       setError(
         cause instanceof Error ? cause.message : "Không thể cập nhật tài liệu",
@@ -141,8 +154,8 @@ export function useDocumentConfiguration() {
       () => updateDocumentAPI(documentId, { folder_id: folderId || null }),
       "Đã chuyển thư mục",
     );
-  const saveDrm = () =>
-    run(
+  const saveDrm = async () => {
+    const result: any = await run(
       "drm",
       () =>
         updateDRMSettingsAPI(documentId, {
@@ -153,9 +166,21 @@ export function useDocumentConfiguration() {
           allow_internal_ai: allowInternalAi,
           license_valid_days: Math.max(1, Math.min(365, licenseValidDays || 30)),
           max_open_count: Math.max(1, Math.min(10000, maxOpenCount || 100)),
+          ghost_font_enabled: ghostFontEnabled,
+          ghost_font_exemption_scope: ghostFontExemptionScope,
+          ghost_font_exempt_user_ids: ghostFontExemptUserIds,
         }),
       "Đã cập nhật bảo vệ nội dung",
     );
+    const token =
+      result?.data?.ghost_font_private_link_token ??
+      result?.ghost_font_private_link_token;
+    if (token)
+      setGhostFontPrivateLink(
+        `${window.location.origin}/tai-lieu/xem-truoc/${documentId}?drm=${encodeURIComponent(token)}`,
+      );
+    return result;
+  };
   const ingest = () =>
     run(
       "ingest",
@@ -210,6 +235,14 @@ export function useDocumentConfiguration() {
     setLicenseValidDays,
     maxOpenCount,
     setMaxOpenCount,
+    ghostFontEnabled,
+    setGhostFontEnabled,
+    ghostFontExemptionScope,
+    setGhostFontExemptionScope,
+    ghostFontExemptUserIds,
+    setGhostFontExemptUserIds,
+    ghostFontPrivateLink,
+    tier: String(user?.ai_tier || "BASIC").toUpperCase(),
     loading,
     processing,
     error,

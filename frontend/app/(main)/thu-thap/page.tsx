@@ -75,6 +75,33 @@ export default function CollectorPage() {
           { label: "Bản ghi", value: collector.logs.length },
         ]}
       />
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {sources.map((item) => {
+          const health = (collector.stats?.source_health || []).find(
+            (row: any) => row.source === item.id,
+          );
+          return (
+            <div
+              key={item.id}
+              className="rounded-panel border border-border bg-surface px-4 py-3"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <p className="truncate text-[13px] font-semibold text-ink">
+                  {item.label}
+                </p>
+                <span
+                  className={`text-[12px] font-semibold ${health?.reachable ? "text-brand" : "text-danger"}`}
+                >
+                  {health?.reachable ? "Sẵn sàng" : "Không sẵn sàng"}
+                </span>
+              </div>
+              <p className="mt-1 text-[12px] text-ink-muted">
+                Phát hiện {Number(health?.documents_detected || 0)}
+              </p>
+            </div>
+          );
+        })}
+      </div>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[20rem_minmax(0,1fr)]">
         <section aria-labelledby="collector-form-title">
@@ -131,6 +158,29 @@ export default function CollectorPage() {
                       {letter.toUpperCase()}
                     </option>
                   ))}
+                </select>
+              </div>
+            ) : source === "NXBGD" ? (
+              <div>
+                <label
+                  htmlFor="collector-grade"
+                  className="mb-2 block text-[13px] font-semibold text-ink"
+                >
+                  Lớp
+                </label>
+                <select
+                  id="collector-grade"
+                  className="apple-input w-full"
+                  value={pages}
+                  onChange={(event) => setPages(Number(event.target.value))}
+                >
+                  {Array.from({ length: 12 }, (_, index) => index + 1).map(
+                    (grade) => (
+                      <option key={grade} value={grade}>
+                        {grade}
+                      </option>
+                    ),
+                  )}
                 </select>
               </div>
             ) : (

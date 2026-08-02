@@ -10,35 +10,40 @@ from src.core.infrastructure.configuration import settings
 
 _MAX_ATTEMPTS = 3
 
-_REQUIRES_APPROVAL_TOOLS = frozenset({
-    "create_document",
-    "delete_document",
-    "edit_document_block",
-    "edit_document_text",
-    "manage_user_instructions",
-    "propose_document_edits",
-    "replace_document_content",
-    "restore_document",
-    "update_document_metadata",
-})
+_REQUIRES_APPROVAL_TOOLS = frozenset(
+    {
+        "create_document",
+        "delete_document",
+        "edit_document_block",
+        "edit_document_text",
+        "manage_user_instructions",
+        "propose_document_edits",
+        "replace_document_content",
+        "restore_document",
+        "update_document_metadata",
+        "execute_mcp_tool",
+    }
+)
 
-_AUTO_SAFE_TOOLS = frozenset({
-    "create_document",
-    "edit_document_block",
-    "edit_document_text",
-    "propose_document_edits",
-    "update_document_metadata",
-})
+_AUTO_SAFE_TOOLS = frozenset(
+    {
+        "create_document",
+        "edit_document_block",
+        "edit_document_text",
+        "propose_document_edits",
+        "update_document_metadata",
+    }
+)
+
 
 def _is_validation_error(exc: Exception) -> bool:
-    return (
-        "validation error" in str(exc).lower()
-        or "validation" in str(type(exc)).lower()
-    )
+    return "validation error" in str(exc).lower() or "validation" in str(type(exc)).lower()
+
 
 def _is_transient_error(exc: Exception) -> bool:
     s = str(exc)
     return any(code in s for code in ("504", "503", "500")) or "timeout" in s.lower()
+
 
 class ActingAgent:
     """
@@ -51,6 +56,7 @@ class ActingAgent:
     - Error Handling: Handles exceptions locally and communicates failures contextually.
     </contract>
     """
+
     def __init__(self):
         self.base_url = settings.INTERNAL_API_URL
         self.tool_map = {t.name: t for t in tools}
@@ -61,9 +67,7 @@ class ActingAgent:
             if hasattr(t, "args_schema") and t.args_schema:
                 schema = t.args_schema.model_json_schema()
                 props = schema.get("properties", {})
-                args = ", ".join(
-                    [f"{k} type {v.get('type')}" for k, v in props.items()]
-                )
+                args = ", ".join([f"{k} type {v.get('type')}" for k, v in props.items()])
             tool_descriptions.append(f"- {t.name}({args}) {t.description}")
         self.tools_prompt = "\n".join(tool_descriptions)
 
@@ -77,6 +81,7 @@ class ActingAgent:
         approval_policy: str = "manual",
         session_id: str = "",
         approval_id: str = None,
+        ai_tier: str = "BASIC",
     ) -> str:
         if not token and action != "public_query":
             return json.dumps({"status": "authentication_required"})
@@ -88,10 +93,7 @@ class ActingAgent:
                 SystemMessage(content=system_prompt),
                 HumanMessage(
                     content=json.dumps(
-                        {
-                            "action": action,
-                            "supplied_parameters": params,
-                        },
+                        {"action": action, "supplied_parameters": params},
                         ensure_ascii=False,
                         default=str,
                     )
@@ -111,16 +113,16 @@ class ActingAgent:
                             attempt + 1,
                             type(e).__name__,
                         )
-                        messages.append(HumanMessage(
-                            content=(
-                                "The previous response failed schema validation. "
-                                "Return exactly one registered tool call with a JSON object for arguments."
+                        messages.append(
+                            HumanMessage(
+                                content=(
+                                    "The previous response failed schema validation. "
+                                    "Return exactly one registered tool call with a JSON object for arguments."
+                                )
                             )
-                        ))
+                        )
                         if is_last(attempt):
-                            return json.dumps(
-                                {"status": "tool_selection_validation_failed"}
-                            )
+                            return json.dumps({"status": "tool_selection_validation_failed"})
                         continue
                     raise
 
@@ -131,17 +133,17 @@ class ActingAgent:
                         attempt + 1,
                         len(invalid_calls),
                     )
-                    messages.append(HumanMessage(
-                        content=(
-                            f"Your tool calls were invalid: {invalid_calls}. "
-                            "This often happens if you pass a JSON list instead of a JSON object for tool arguments. "
-                            "YOU MUST generate a valid JSON dictionary for the tool arguments."
+                    messages.append(
+                        HumanMessage(
+                            content=(
+                                f"Your tool calls were invalid: {invalid_calls}. "
+                                "This often happens if you pass a JSON list instead of a JSON object for tool arguments. "
+                                "YOU MUST generate a valid JSON dictionary for the tool arguments."
+                            )
                         )
-                    ))
+                    )
                     if is_last(attempt):
-                        return json.dumps(
-                            {"status": "tool_selection_validation_failed"}
-                        )
+                        return json.dumps({"status": "tool_selection_validation_failed"})
                     continue
 
                 if not res.tool_calls:
@@ -150,9 +152,11 @@ class ActingAgent:
                         attempt + 1,
                         len(str(res.content)),
                     )
-                    messages.append(HumanMessage(
-                        content="You did not call any tools. You MUST respond by invoking exactly ONE tool from the provided list. Do not respond with plain text."
-                    ))
+                    messages.append(
+                        HumanMessage(
+                            content="You did not call any tools. You MUST respond by invoking exactly ONE tool from the provided list. Do not respond with plain text."
+                        )
+                    )
                     if is_last(attempt):
                         return json.dumps({"status": "tool_selection_failed"})
                     continue
@@ -165,6 +169,12 @@ class ActingAgent:
                     return json.dumps({"status": "tool_unavailable"})
 
                 selected_tool = self.tool_map[tool_name]
+                if tool_name in {
+                    "search_mcp_connectors",
+                    "suggest_mcp_connectors",
+                    "execute_mcp_tool",
+                } and str(ai_tier).upper() not in {"PRO", "PREMIUM"}:
+                    return json.dumps({"status": "advanced_mode_requires_pro"})
                 approved_automatically = auto_approve or (
                     approval_policy == "auto_safe" and tool_name in _AUTO_SAFE_TOOLS
                 )
@@ -180,10 +190,7 @@ class ActingAgent:
                         )
                         if not approved:
                             return json.dumps(
-                                {
-                                    "status": "approval_invalid",
-                                    "tool_name": tool_name,
-                                }
+                                {"status": "approval_invalid", "tool_name": tool_name}
                             )
                     else:
                         approval = await intervention.request_approval(
@@ -192,9 +199,7 @@ class ActingAgent:
                             action_type=tool_name,
                             description=selected_tool.description,
                             proposed_action=json.dumps(
-                                tool_params,
-                                ensure_ascii=False,
-                                default=str,
+                                tool_params, ensure_ascii=False, default=str
                             ),
                             risk_level=(
                                 "high"
@@ -208,17 +213,11 @@ class ActingAgent:
                             ),
                         )
                         approved = await intervention.wait_for_approval(
-                            approval.intervention_id,
-                            session_id,
-                            str(user_id),
-                            tool_name,
+                            approval.intervention_id, session_id, str(user_id), tool_name
                         )
                         if not approved:
                             return json.dumps(
-                                {
-                                    "status": "approval_rejected",
-                                    "tool_name": tool_name,
-                                }
+                                {"status": "approval_rejected", "tool_name": tool_name}
                             )
 
                 logger.info("Tool execution started tool={}", tool_name)
@@ -234,16 +233,21 @@ class ActingAgent:
                     return str(tool_result)
                 except Exception:
                     messages.append(res)
-                    messages.append(ToolMessage(
-                        content="The system encountered an error while executing the utility and requests a verification of the input data",
-                        tool_call_id=tool_call["id"],
-                    ))
-                    logger.exception("Data processing issue encountered, system is automatically retrying")
+                    messages.append(
+                        ToolMessage(
+                            content="The system encountered an error while executing the utility and requests a verification of the input data",
+                            tool_call_id=tool_call["id"],
+                        )
+                    )
+                    logger.exception(
+                        "Data processing issue encountered, system is automatically retrying"
+                    )
                     if is_last(attempt):
                         return json.dumps({"status": "tool_execution_failed"})
 
         except Exception:
             logger.exception("Execution process interrupted")
             return json.dumps({"status": "action_execution_failed"})
+
 
 actor = ActingAgent()

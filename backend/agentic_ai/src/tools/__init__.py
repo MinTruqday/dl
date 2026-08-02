@@ -4,11 +4,7 @@ from src.tools.editing import (
     edit_document_block,
     propose_document_edits,
 )
-from src.tools.billing import (
-    get_user_balance,
-    get_transaction_history,
-    get_revenue_report,
-)
+from src.tools.billing import get_user_balance, get_transaction_history, get_revenue_report
 from src.tools.document import (
     search_editorjs_capabilities,
     create_document,
@@ -24,7 +20,7 @@ from src.tools.document import (
 )
 from src.tools.mindmap import generate_mindmap
 from src.tools.instructions import manage_user_instructions
-from src.tools.mcp import search_mcp_connectors, suggest_mcp_connectors
+from src.tools.mcp import execute_mcp_tool, search_mcp_connectors, suggest_mcp_connectors
 from src.workflow.reduction import agent_summarize_long_document
 
 tools = [
@@ -51,4 +47,5 @@ tools = [
     propose_document_edits,
     search_mcp_connectors,
     suggest_mcp_connectors,
+    execute_mcp_tool,
 ]

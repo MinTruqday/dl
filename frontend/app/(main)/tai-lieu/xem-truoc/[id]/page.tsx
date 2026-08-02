@@ -7,6 +7,8 @@ import InlineState from "@/app/_components/InlineState";
 import PageLoader from "@/shared/components/common/PageLoader";
 import { Button } from "@/shared/components/ui/Button";
 import ReaderPanel from "./ReaderPanel";
+import GhostTextCanvas from "./GhostTextCanvas";
+import ProtectedPdfViewer from "./ProtectedPdfViewer";
 import { useDocumentReader } from "./useDocumentReader";
 
 export default function DocumentReaderPage() {
@@ -18,6 +20,7 @@ export default function DocumentReaderPage() {
     search.get("url"),
     search.get("name"),
     search.get("pwd"),
+    search.get("drm"),
   );
   const [password, setPassword] = useState("");
   const [zoom, setZoom] = useState(100);
@@ -142,7 +145,14 @@ export default function DocumentReaderPage() {
       )}
       <div className="flex min-h-0 flex-1">
         <main className="min-w-0 flex-1 overflow-auto bg-surface-quiet p-4 md:p-8">
-          {document.content_format === "zip" ? (
+          {document.drm_settings?.protected_pdf ? (
+            <ProtectedPdfViewer
+              documentId={id}
+              password={password || search.get("pwd") || undefined}
+              shareToken={search.get("drm") || undefined}
+              zoom={zoom}
+            />
+          ) : document.content_format === "zip" ? (
             <div className="mx-auto min-h-full max-w-4xl rounded-workspace border border-border bg-surface p-6">
               <h1 className="mb-5 text-[18px] font-semibold text-ink">
                 {reader.archiveFile?.name || "Chọn tệp từ bảng công cụ"}
@@ -167,9 +177,15 @@ export default function DocumentReaderPage() {
               <h1 className="mb-8 text-[26px] font-semibold tracking-[-0.02em] text-ink">
                 {document.title}
               </h1>
-              <div className="whitespace-pre-wrap text-[16px] leading-8 text-ink">
-                {reader.content || "Tài liệu chưa có nội dung"}
-              </div>
+              {document.drm_settings?.ghost_font_active ? (
+                <GhostTextCanvas
+                  content={reader.content || "Tài liệu chưa có nội dung"}
+                />
+              ) : (
+                <div className="whitespace-pre-wrap text-[16px] leading-8 text-ink">
+                  {reader.content || "Tài liệu chưa có nội dung"}
+                </div>
+              )}
             </article>
           )}
         </main>

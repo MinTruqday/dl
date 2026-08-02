@@ -67,6 +67,13 @@ async def main():
         assert call("GET", "/thu-thap/thong-ke", reader_token)[0] == 403
         status, before = call("GET", "/thu-thap/thong-ke", admin_token)
         assert status == 200, before
+        assert {row["source"] for row in before["source_health"]} == {
+            "AnnaArchive",
+            "NXBST",
+            "NXBGD",
+            "CTAN",
+        }
+        assert set(before["active_sources"]).issubset({"AnnaArchive", "NXBST", "NXBGD", "CTAN"})
         await content.documents.insert_one(
             {
                 "_id": f"collection-document-{uuid.uuid4()}",
@@ -106,10 +113,7 @@ async def main():
 
         class MetadataStorage:
             async def upload_local_file(
-                self,
-                object_name,
-                local_file_path,
-                content_type="application/pdf",
+                self, object_name, local_file_path, content_type="application/pdf"
             ):
                 assert os.path.getsize(local_file_path) > 0
                 return object_name
@@ -123,11 +127,7 @@ async def main():
         pdf.save(pdf_path)
         pdf.close()
         metadata = await metadata_service.anna_metadata(
-            {
-                "title": "Collected document",
-                "author": "Collected author",
-                "source_url": source_url,
-            },
+            {"title": "Collected document", "author": "Collected author", "source_url": source_url},
             pdf_path,
             "system/collection/integration/metadata.pdf",
             "pdf",
@@ -140,6 +140,39 @@ async def main():
         assert metadata["collection_status"] == "ready_for_review"
         assert metadata["pages_count"] == 1
         assert metadata["cover_url"].endswith("cover.png")
+        for source_name, storage_key in [
+            ("Nhà Xuất bản Chính trị quốc gia Sự thật", "nxbst"),
+            ("Nhà Xuất bản Giáo dục Việt Nam", "nxbgd"),
+            ("CTAN", "ctan"),
+        ]:
+            with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as stream:
+                source_pdf_path = stream.name
+            source_pdf = fitz.open()
+            source_page = source_pdf.new_page()
+            source_page.insert_text((72, 72), source_name)
+            source_pdf.save(source_pdf_path)
+            source_pdf.close()
+            source_metadata = await metadata_service.collected_metadata(
+                {
+                    "title": f"Collected {storage_key}",
+                    "authors": ["Collected author"],
+                    "source_url": f"{source_url}/{storage_key}",
+                    "collection_scope": {"type": "page", "value": 2},
+                },
+                source_pdf_path,
+                f"system/collection/integration/{storage_key}.pdf",
+                "pdf",
+                source_name,
+                storage_key,
+            )
+            os.unlink(source_pdf_path)
+            assert source_metadata["source_name"] == source_name
+            assert source_metadata["creator_id"] == os.environ["PLATFORM_SYSTEM_ID"]
+            assert source_metadata["description"] == ""
+            assert source_metadata["visibility"] == "private"
+            assert source_metadata["status"] == "draft"
+            assert source_metadata["pages_count"] == 1
+            assert source_metadata["collection_scope"] == {"type": "page", "value": 2}
         first_id = await document_database.insert_document(
             {
                 "title": "Idempotent Integration",

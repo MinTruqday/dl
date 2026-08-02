@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 
 import httpx
 from src.core.logging_route import LoggingRoute
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from loguru import logger
 from src.agents.routing import semantic_router
@@ -22,16 +22,21 @@ from src.services.token_accounting import current_usage, start_accounting
 
 router = APIRouter(route_class=LoggingRoute, prefix="/tro-chuyen")
 
+
+def require_mode_tier(mode: str, tier: str) -> None:
+    if mode != "chat" and str(tier).upper() not in {"PRO", "PREMIUM"}:
+        raise HTTPException(status_code=403, detail={"code": "advanced_mode_requires_pro"})
+
+
 @router.post("")
 async def chat_endpoint(
-    req: ChatRequest,
-    request: Request,
-    current_user: CurrentUser = Depends(get_current_user),
+    req: ChatRequest, request: Request, current_user: CurrentUser = Depends(get_current_user)
 ):
     """Execute one authenticated bounded chat or agent workflow"""
     req.user_id = str(current_user.id)
     req.role = current_user.role.value
     req.ai_tier = current_user.ai_tier.value
+    require_mode_tier(req.mode, req.ai_tier)
     logger.info("Chat request started query_chars={}", len(req.query))
     token = request.headers.get("Authorization")
     if token:
@@ -40,22 +45,14 @@ async def chat_endpoint(
     scan = await security.ascan_input(req.query, user_id=req.user_id or "")
     if not scan.passed:
         logger.warning("Query execution blocked due to security policy violation")
-        return {
-            "answer": "",
-            "route": "blocked",
-            "error_code": "input_security_blocked",
-        }
+        return {"answer": "", "route": "blocked", "error_code": "input_security_blocked"}
 
     original_query = scan.sanitized_text
     req.query = original_query
     if req.mode != "chat":
-        req.query = f"{MODE_DIRECTIVES[req.mode]}\n\nYêu cầu\n{original_query}"
+        req.query = f"{MODE_DIRECTIVES[req.mode]}\n\nUser request\n{original_query}"
     await workspace.start(
-        req.session_id or "",
-        req.user_id,
-        req.mode,
-        original_query,
-        req.approval_policy,
+        req.session_id or "", req.user_id, req.mode, original_query, req.approval_policy
     )
 
     try:
@@ -65,13 +62,12 @@ async def chat_endpoint(
         start_accounting()
         is_quota_ok, quota_code = await _reserve_upload_quota(req)
         if not is_quota_ok:
-            return {
-                "answer": "",
-                "route": "error",
-                "error_code": quota_code,
-            }
+            return {"answer": "", "route": "error", "error_code": quota_code}
         if req.document_ids:
-            from src.tools.http_client import INTERNAL_API_URL, make_api_request as _make_api_request
+            from src.tools.http_client import (
+                INTERNAL_API_URL,
+                make_api_request as _make_api_request,
+            )
 
             for doc_id in req.document_ids:
                 try:
@@ -106,7 +102,7 @@ async def chat_endpoint(
         else:
             route_data = await semantic_router.execute(req.query)
             route = route_data.get("route", "knowledge")
-            
+
         final_answer = ""
 
         if route == "plan":
@@ -115,8 +111,7 @@ async def chat_endpoint(
             steps = await planner.create_plan({**req.model_dump(), "dry_run": True})
             await workspace.save_plan(req.session_id or "", req.user_id, steps)
             final_answer = "\n".join(
-                f"{index + 1} {step.get('task', '')}"
-                for index, step in enumerate(steps)
+                f"{index + 1} {step.get('task', '')}" for index, step in enumerate(steps)
             )
         elif route == "chat":
             final_answer = route_data.get("answer", "")
@@ -130,13 +125,9 @@ async def chat_endpoint(
                 llama_client = AsyncInferenceClient(
                     model=settings.LLM_MODEL, token=settings.HF_TOKEN
                 )
-                chat_llm = HFInferenceChat(
-                    client=llama_client, model=settings.LLM_MODEL
-                )
+                chat_llm = HFInferenceChat(client=llama_client, model=settings.LLM_MODEL)
 
-                text_prompt = registry.get(PromptType.CHAT_ASSISTANT).format(
-                    query=req.query
-                )
+                text_prompt = registry.get(PromptType.CHAT_ASSISTANT).format(query=req.query)
                 if req.image_data:
                     content = [
                         {"type": "text", "text": text_prompt},
@@ -145,12 +136,11 @@ async def chat_endpoint(
                 else:
                     content = text_prompt
 
-                res = await chat_llm.ainvoke(
-                    [HumanMessage(content=content)], max_tokens=256
-                )
+                res = await chat_llm.ainvoke([HumanMessage(content=content)], max_tokens=256)
                 final_answer = res.content
         elif route == "knowledge":
             from src.agents.analysis import researcher
+
             final_answer = await researcher.execute(req.model_dump())
         else:
             async for event in supervisor.execute_plan(req.model_dump()):
@@ -158,23 +148,16 @@ async def chat_endpoint(
                     final_answer += event.get("chunk", "")
                 elif event["type"] == "plan":
                     await workspace.save_plan(
-                        req.session_id or "",
-                        req.user_id,
-                        event.get("steps", []),
-                        status="running",
+                        req.session_id or "", req.user_id, event.get("steps", []), status="running"
                     )
                 elif event["type"] == "tool_result":
                     await workspace.update_steps(
-                        req.session_id or "",
-                        req.user_id,
-                        event.get("task_status", {}),
+                        req.session_id or "", req.user_id, event.get("task_status", {})
                     )
 
         final_answer = await security.ascan_output(final_answer)
         await _consume_ai_quota(req, original_query, final_answer, current_usage())
-        await workspace.finish(
-            req.session_id or "", req.user_id, req.mode, bool(final_answer)
-        )
+        await workspace.finish(req.session_id or "", req.user_id, req.mode, bool(final_answer))
         return {
             "answer": final_answer,
             "route": "agentic_ai",
@@ -182,11 +165,8 @@ async def chat_endpoint(
         }
     except Exception:
         logger.exception("AI agent workflow execution error")
-        return {
-            "answer": "",
-            "route": "error",
-            "error_code": "agent_workflow_failed",
-        }
+        return {"answer": "", "route": "error", "error_code": "agent_workflow_failed"}
+
 
 async def _reserve_upload_quota(req: ChatRequest):
     item_type = None
@@ -196,10 +176,10 @@ async def _reserve_upload_quota(req: ChatRequest):
         item_type = "document"
     elif req.image_data:
         item_type = "image"
-        
+
     if not item_type:
         return True, None
-        
+
     try:
         async with httpx.AsyncClient(timeout=10.0) as c:
             resp = await c.post(
@@ -241,23 +221,12 @@ async def _reserve_ai_quota(req: ChatRequest):
 
 
 async def _consume_ai_quota(
-    req: ChatRequest,
-    query: str,
-    answer: str,
-    usage: dict[str, int] | None = None,
+    req: ChatRequest, query: str, answer: str, usage: dict[str, int] | None = None
 ):
     usage = usage or {}
     measured = any(int(value or 0) > 0 for value in usage.values())
-    input_tokens = (
-        int(usage.get("input_tokens", 0))
-        if measured
-        else max(1, len(query) // 4)
-    )
-    output_tokens = (
-        int(usage.get("output_tokens", 0))
-        if measured
-        else max(0, len(answer) // 4)
-    )
+    input_tokens = int(usage.get("input_tokens", 0)) if measured else max(1, len(query) // 4)
+    output_tokens = int(usage.get("output_tokens", 0)) if measured else max(0, len(answer) // 4)
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.post(
@@ -278,16 +247,16 @@ async def _consume_ai_quota(
     except Exception:
         logger.exception("AI quota consumption error")
 
+
 @router.post("/phat-truc-tiep")
 async def stream_endpoint(
-    req: ChatRequest,
-    request: Request,
-    current_user: CurrentUser = Depends(get_current_user),
+    req: ChatRequest, request: Request, current_user: CurrentUser = Depends(get_current_user)
 ):
     """Stream authenticated chat planning execution and verification events"""
     req.user_id = str(current_user.id)
     req.role = current_user.role.value
     req.ai_tier = current_user.ai_tier.value
+    require_mode_tier(req.mode, req.ai_tier)
     logger.info("Chat stream started query_chars={}", len(req.query))
     token = request.headers.get("Authorization")
     bearer_token = token.replace("Bearer ", "") if token else None
@@ -316,14 +285,8 @@ async def stream_endpoint(
         original_query = scan.sanitized_text
         req.query = original_query
         if req.mode != "chat":
-            req.query = f"{MODE_DIRECTIVES[req.mode]}\n\nYêu cầu\n{original_query}"
-        await workspace.start(
-            session_id,
-            user_id,
-            req.mode,
-            original_query,
-            req.approval_policy,
-        )
+            req.query = f"{MODE_DIRECTIVES[req.mode]}\n\nUser request\n{original_query}"
+        await workspace.start(session_id, user_id, req.mode, original_query, req.approval_policy)
 
         agentops.record_session_start(session_id, user_id, req.query)
 
@@ -343,7 +306,10 @@ async def stream_endpoint(
                 return
 
             if req.document_ids:
-                from src.tools.http_client import INTERNAL_API_URL, make_api_request as _make_api_request
+                from src.tools.http_client import (
+                    INTERNAL_API_URL,
+                    make_api_request as _make_api_request,
+                )
 
                 for doc_id in req.document_ids:
                     try:
@@ -382,26 +348,19 @@ async def stream_endpoint(
             else:
                 route_data = await semantic_router.execute(req.query)
                 route = route_data.get("route", "knowledge")
-                
+
             final_answer = ""
 
             if route == "plan":
                 from src.agents.planning import planner
 
-                steps = await planner.create_plan(
-                    {**req.model_dump(), "dry_run": True}
-                )
+                steps = await planner.create_plan({**req.model_dump(), "dry_run": True})
                 await workspace.save_plan(session_id, user_id, steps)
                 final_answer = "\n".join(
-                    f"{index + 1} {step.get('task', '')}"
-                    for index, step in enumerate(steps)
+                    f"{index + 1} {step.get('task', '')}" for index, step in enumerate(steps)
                 )
-                yield "event: plan\ndata: " + json.dumps(
-                    {"steps": steps}
-                ) + "\n\n"
-                yield "event: message\ndata: " + json.dumps(
-                    {"chunk": final_answer}
-                ) + "\n\n"
+                yield "event: plan\ndata: " + json.dumps({"steps": steps}) + "\n\n"
+                yield "event: message\ndata: " + json.dumps({"chunk": final_answer}) + "\n\n"
             elif route == "chat":
                 fast_answer = route_data.get("answer", "")
                 if fast_answer:
@@ -417,13 +376,9 @@ async def stream_endpoint(
                     llama_client = AsyncInferenceClient(
                         model=settings.LLM_MODEL, token=settings.HF_TOKEN
                     )
-                    chat_llm = HFInferenceChat(
-                        client=llama_client, model=settings.LLM_MODEL
-                    )
+                    chat_llm = HFInferenceChat(client=llama_client, model=settings.LLM_MODEL)
 
-                    text_prompt = registry.get(PromptType.CHAT_ASSISTANT).format(
-                        query=req.query
-                    )
+                    text_prompt = registry.get(PromptType.CHAT_ASSISTANT).format(query=req.query)
                     if req.image_data:
                         content = [
                             {"type": "text", "text": text_prompt},
@@ -438,23 +393,26 @@ async def stream_endpoint(
                         )
                         final_answer = await security.ascan_output(response.content)
                         if final_answer:
-                            yield "event: message\ndata: " + json.dumps(
-                                {"chunk": final_answer}
-                            ) + "\n\n"
+                            yield (
+                                "event: message\ndata: "
+                                + json.dumps({"chunk": final_answer})
+                                + "\n\n"
+                            )
                     except RuntimeError:
                         logger.exception("Runtime error during LLM chat stream")
-                        yield "event: error\ndata: " + json.dumps(
-                            {"code": "model_generation_failed"}
-                        ) + "\n\n"
+                        yield (
+                            "event: error\ndata: "
+                            + json.dumps({"code": "model_generation_failed"})
+                            + "\n\n"
+                        )
                     except Exception:
                         logger.exception("Unexpected error during LLM chat stream")
 
             elif route == "knowledge":
                 from src.agents.analysis import researcher
+
                 final_answer = await researcher.execute(req.model_dump())
-                yield "event: message\ndata: " + json.dumps(
-                    {"chunk": final_answer}
-                ) + "\n\n"
+                yield "event: message\ndata: " + json.dumps({"chunk": final_answer}) + "\n\n"
 
             else:
                 import asyncio
@@ -473,14 +431,12 @@ async def stream_endpoint(
                         req_dict = req.model_dump()
 
                         from src.agents.planning import planner
+
                         async for chunk in planner.stream_plan(req_dict):
                             if chunk["type"] == "plan":
                                 req_dict["plan"] = chunk["nodes"]
                                 await workspace.save_plan(
-                                    session_id,
-                                    user_id,
-                                    chunk["nodes"],
-                                    status="running",
+                                    session_id, user_id, chunk["nodes"], status="running"
                                 )
                                 await heartbeat_queue.put({"type": "plan", "steps": chunk["nodes"]})
                             elif chunk["type"] == "error":
@@ -493,10 +449,7 @@ async def stream_endpoint(
                             await heartbeat_queue.put(event)
                     except Exception:
                         logger.exception("Error in drain_supervisor")
-                        await heartbeat_queue.put({
-                            "type": "error",
-                            "code": "orchestration_failed",
-                        })
+                        await heartbeat_queue.put({"type": "error", "code": "orchestration_failed"})
                     finally:
                         await heartbeat_queue.put({"type": "__done__"})
 
@@ -518,9 +471,7 @@ async def stream_endpoint(
                             normalized_status = {
                                 str(key): value for key, value in task_status.items()
                             }
-                            await workspace.update_steps(
-                                session_id, user_id, task_status
-                            )
+                            await workspace.update_steps(session_id, user_id, task_status)
                             public_steps = [
                                 {
                                     "id": str(step.get("id", index + 1)),
@@ -535,9 +486,7 @@ async def stream_endpoint(
                             yield f"event: plan\ndata: {json.dumps({'steps': public_steps})}\n\n"
                         elif event_type == "tool_result":
                             await workspace.update_steps(
-                                session_id,
-                                user_id,
-                                event.get("task_status", {}),
+                                session_id, user_id, event.get("task_status", {})
                             )
                             agentops.record_tool_call(
                                 session_id,
@@ -545,7 +494,7 @@ async def stream_endpoint(
                                 duration_ms=0,
                                 success=True,
                             )
-                            agent_name = event.get('agent', 'unknown')
+                            agent_name = event.get("agent", "unknown")
                             yield f"event: tool\ndata: {json.dumps({'agent': agent_name, 'status': 'completed', 'task_status': event.get('task_status', {})})}\n\n"
                         elif event_type == "message":
                             message_chunk = str(event.get("chunk", ""))
@@ -562,50 +511,40 @@ async def stream_endpoint(
 
             if final_answer:
                 final_answer = await security.ascan_output(final_answer, session_id=session_id)
-            await _consume_ai_quota(
-                req, original_query, final_answer, current_usage()
-            )
+            await _consume_ai_quota(req, original_query, final_answer, current_usage())
 
             if session_id and final_answer:
                 await context.save_turn(session_id, "user", original_query)
                 await context.save_turn(session_id, "assistant", final_answer)
-                
+
                 try:
                     from src.services.history import HistoryService
                     from src.memory.memo import memo_manager
-                    
-                    user_msg = {
-                        "user_id": user_id,
-                        "role": "user",
-                        "content": original_query
-                    }
+
+                    user_msg = {"user_id": user_id, "role": "user", "content": original_query}
                     if req.attachments:
                         user_msg["attachments"] = req.attachments
 
                     await HistoryService.add_message(session_id, user_msg)
-                    await HistoryService.add_message(session_id, {
-                        "user_id": user_id,
-                        "role": "assistant",
-                        "content": final_answer
-                    })
+                    await HistoryService.add_message(
+                        session_id,
+                        {"user_id": user_id, "role": "assistant", "content": final_answer},
+                    )
 
                     mem_data = [
                         {"role": "user", "content": original_query},
-                        {"role": "assistant", "content": final_answer}
+                        {"role": "assistant", "content": final_answer},
                     ]
                     from src.utils.background import create_background_task
 
                     create_background_task(
-                        memo_manager.add_memory(mem_data, user_id),
-                        f"chat-memory-{session_id}",
+                        memo_manager.add_memory(mem_data, user_id), f"chat-memory-{session_id}"
                     )
 
                 except Exception:
                     logger.exception("Chat history persistence to database error")
 
-            await workspace.finish(
-                session_id, user_id, req.mode, bool(final_answer)
-            )
+            await workspace.finish(session_id, user_id, req.mode, bool(final_answer))
             agentops.record_session_end(session_id, "done")
 
         except Exception:
@@ -620,19 +559,15 @@ async def stream_endpoint(
 
 
 @router.get("/khong-gian/{session_id}")
-async def get_workspace(
-    session_id: str,
-    current_user: CurrentUser = Depends(get_current_user),
-):
+async def get_workspace(session_id: str, current_user: CurrentUser = Depends(get_current_user)):
     row = await workspace.get(session_id, str(current_user.id))
     if not row:
         return {"status": "success", "data": None}
     return {"status": "success", "data": row}
 
+
 @router.get("/tuy-chon-ca-nhan")
-async def get_user_instructions(
-    current_user: CurrentUser = Depends(get_current_user),
-):
+async def get_user_instructions(current_user: CurrentUser = Depends(get_current_user)):
     """Return the authenticated user instruction text"""
     user_id = str(current_user.id)
     db = database.mongodb[settings.AGENTIC_AI_DB_NAME]
@@ -640,10 +575,10 @@ async def get_user_instructions(
     instructions = doc.get("instructions", "") if doc else ""
     return {"status": "success", "data": {"instructions": instructions}}
 
+
 @router.post("/tuy-chon-ca-nhan")
 async def save_user_instructions(
-    req: UserInstructionsRequest,
-    current_user: CurrentUser = Depends(get_current_user),
+    req: UserInstructionsRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
     """Persist bounded instruction text for the authenticated user"""
     user_id = str(current_user.id)
@@ -651,12 +586,7 @@ async def save_user_instructions(
     db = database.mongodb[settings.AGENTIC_AI_DB_NAME]
     await db.user_instructions.update_one(
         {"_id": user_id},
-        {
-            "$set": {
-                "instructions": instructions,
-                "updated_at": datetime.now(timezone.utc),
-            }
-        },
+        {"$set": {"instructions": instructions, "updated_at": datetime.now(timezone.utc)}},
         upsert=True,
     )
     return {
@@ -665,15 +595,11 @@ async def save_user_instructions(
         "data": {"instructions": instructions},
     }
 
+
 @router.delete("/tuy-chon-ca-nhan")
-async def clear_user_instructions(
-    current_user: CurrentUser = Depends(get_current_user),
-):
+async def clear_user_instructions(current_user: CurrentUser = Depends(get_current_user)):
     """Delete instruction text owned by the authenticated user"""
     user_id = str(current_user.id)
     db = database.mongodb[settings.AGENTIC_AI_DB_NAME]
     await db.user_instructions.delete_one({"_id": user_id})
-    return {
-        "status": "success",
-        "message_code": "user_instructions_cleared",
-    }
+    return {"status": "success", "message_code": "user_instructions_cleared"}

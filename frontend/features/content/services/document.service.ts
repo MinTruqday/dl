@@ -68,13 +68,17 @@ export async function exportProtectedDocumentAPI(documentId: string) {
 export async function getDocumentWithPasswordAPI(
   documentId: string,
   password?: string,
+  shareToken?: string,
 ) {
   const token = getToken();
   const headers: Record<string, string> = token
     ? { Authorization: `Bearer ${token}` }
     : {};
   if (password) headers["x-document-password"] = password;
-  const res = await fetch(`${API_URL}/tai-lieu/${documentId}`, { headers });
+  const params = new URLSearchParams();
+  if (shareToken) params.set("share_token", shareToken);
+  const suffix = params.size ? `?${params.toString()}` : "";
+  const res = await fetch(`${API_URL}/tai-lieu/${documentId}${suffix}`, { headers });
   if (res.status === 401 || res.status === 403) {
     return { status: res.status, data: null };
   }
@@ -91,6 +95,35 @@ export async function getDocumentDecryptionKeyAPI(documentId: string) {
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Không thể xác thực tài liệu");
   return data.data?.key || data.key;
+}
+
+export async function getProtectedDocumentPageAPI(
+  documentId: string,
+  pageNumber: number,
+  password?: string,
+  shareToken?: string,
+) {
+  const headers = getAuthHeaders();
+  if (password) headers["x-document-password"] = password;
+  const params = new URLSearchParams();
+  if (shareToken) params.set("share_token", shareToken);
+  const suffix = params.size ? `?${params.toString()}` : "";
+  const response = await fetch(
+    `${API_URL}/tai-lieu/${documentId}/trang-bao-ve/${pageNumber}${suffix}`,
+    { headers },
+  );
+  if (!response.ok) {
+    let detail = "Không thể kết xuất trang tài liệu";
+    try {
+      const data = await response.json();
+      detail = data.detail || detail;
+    } catch {}
+    throw new Error(detail);
+  }
+  return {
+    blob: await response.blob(),
+    pageCount: Number(response.headers.get("x-page-count") || 1),
+  };
 }
 
 export async function getDocumentsAPI(
@@ -435,6 +468,13 @@ export async function updateDRMSettingsAPI(
     allow_internal_ai: boolean;
     license_valid_days: number;
     max_open_count: number;
+    ghost_font_enabled: boolean;
+    ghost_font_exemption_scope:
+      | "owner_only"
+      | "private_link"
+      | "selected_users"
+      | "everyone";
+    ghost_font_exempt_user_ids: string[];
   },
 ) {
   const token = getToken();

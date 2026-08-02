@@ -14,13 +14,11 @@ from src.core.logging_route import summarize_payload
 from src.core.model_runtime import run_chat_completion
 from src.core.registry import PromptType, RegistryCore, registry
 from src.harness.failure import failure
-from src.loop.hill_climbing import (
-    ImprovementSuggestion,
-    IssueDetector,
-    PromptOptimizer,
-)
+from src.loop.hill_climbing import ImprovementSuggestion, IssueDetector, PromptOptimizer
 from src.schemas.inference import StyleImitationRequest
 from src.workflow.orchestration import execute_tool_node, sanitizer_node, supervisor
+from src.api.interaction import require_mode_tier
+from fastapi import HTTPException
 
 
 ROOT = Path("/app")
@@ -47,12 +45,9 @@ class FakePlanModel:
             reasoning="Knowledge retrieval is required",
             nodes=[
                 PlanNode(
-                    id="one",
-                    agent="Knowledge",
-                    task="Retrieve relevant documents",
-                    dependencies=[],
+                    id="one", agent="Knowledge", task="Retrieve relevant documents", dependencies=[]
                 )
-            ]
+            ],
         )
 
 
@@ -75,8 +70,10 @@ class FakeActionTool:
         approval_policy="manual",
         session_id="",
         approval_id=None,
+        ai_tier="BASIC",
     ):
         assert auto_approve is True
+        assert ai_tier == "BASIC"
         return "Action completed"
 
 
@@ -100,6 +97,7 @@ async def verify_planner_privacy():
     planner.llm = FakePlanModel()
     from langchain_core.output_parsers import JsonOutputParser
     from src.schemas.planning import ExecutionPlan
+
     planner.parser = JsonOutputParser(pydantic_object=ExecutionPlan)
     planner.structured_llm = FakePlanModel()
     planner._redis = None
@@ -125,9 +123,7 @@ async def verify_planner_privacy():
                 {"query": "test", "user_id": "user", "conversation_history": []}
             )
         ]
-    assert failed_events == [
-        {"type": "error", "code": "planning_model_failed"}
-    ]
+    assert failed_events == [{"type": "error", "code": "planning_model_failed"}]
 
     from pydantic import ValidationError
     from src.schemas.planning import ExecutionPlan, PlanNode
@@ -137,10 +133,7 @@ async def verify_planner_privacy():
             reasoning="Invalid dependency order",
             nodes=[
                 PlanNode(
-                    id="one",
-                    agent="Knowledge",
-                    task="Retrieve documents",
-                    dependencies=["two"],
+                    id="one", agent="Knowledge", task="Retrieve documents", dependencies=["two"]
                 )
             ],
         )
@@ -170,20 +163,11 @@ async def verify_routing():
 async def verify_action_workflow():
     state = {
         "steps": [
-            {
-                "id": "action-one",
-                "agent": "Action",
-                "task": "Read a document",
-                "dependencies": [],
-            }
+            {"id": "action-one", "agent": "Action", "task": "Read a document", "dependencies": []}
         ],
         "task_status": {"action-one": "running"},
         "completed_tasks": [],
-        "req_data": {
-            "user_id": "user",
-            "token": "token",
-            "approve_tools": True,
-        },
+        "req_data": {"user_id": "user", "token": "token", "approve_tools": True},
     }
     with patch("src.workflow.graph.llm", FakeEvaluationModel()):
         result = await execute_tool_node(state, FakeActionTool(), "Action")
@@ -195,10 +179,7 @@ async def verify_action_workflow():
 
 async def verify_trimmed_results():
     result = await sanitizer_node(
-        {
-            "consolidated_results": ["old" * 20000, "trimmed result"],
-            "results_trimmed": True,
-        }
+        {"consolidated_results": ["old" * 20000, "trimmed result"], "results_trimmed": True}
     )
     assert result["consolidated_results"] == ["trimmed result"]
 
@@ -219,20 +200,14 @@ def verify_registry():
         if prompt_type is PromptType.MEMORY_BANK_PHASE1:
             continue
         fields = [
-            field_name
-            for _, field_name, _, _ in string.Formatter().parse(prompt)
-            if field_name
+            field_name for _, field_name, _, _ in string.Formatter().parse(prompt) if field_name
         ]
         assert not any(
-            field_name.startswith('"')
-            or field_name.startswith("{")
-            or "\n" in field_name
+            field_name.startswith('"') or field_name.startswith("{") or "\n" in field_name
             for field_name in fields
         )
     style_request = StyleImitationRequest(
-        text="Target",
-        style_sample="Reference",
-        target_length=100,
+        text="Target", style_sample="Reference", target_length=100
     )
     assert style_request.style_sample == "Reference"
 
@@ -280,6 +255,18 @@ def verify_source_contracts():
     security_source = (SOURCE / "harness" / "security.py").read_text()
     assert "review_markers" not in security_source
     assert "requires_ai_review = bool(sanitized.strip())" in security_source
+
+    workspace_source = (SOURCE / "services" / "workspace.py").read_text()
+    assert not any("À" <= character <= "ỹ" for character in workspace_source)
+    tools_source = (SOURCE / "tools" / "__init__.py").read_text()
+    assert "execute_mcp_tool" in tools_source
+    require_mode_tier("work", "PRO")
+    require_mode_tier("learn", "PREMIUM")
+    try:
+        require_mode_tier("goal", "BASIC")
+        raise AssertionError("Basic tier was allowed to use an advanced mode")
+    except HTTPException as error:
+        assert error.status_code == 403
 
 
 async def verify_failure_and_improvement_contracts():

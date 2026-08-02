@@ -10,7 +10,7 @@ import SegmentedTabs from "@/app/_components/SegmentedTabs";
 import QuotaEditor from "./QuotaEditor";
 import { useOperations } from "./useOperations";
 
-type Tab = "overview" | "quotas";
+type Tab = "overview" | "quotas" | "mcp";
 
 function formatBytes(value: number) {
   if (!value) return "0 B";
@@ -31,6 +31,9 @@ function statusLabel(value?: string) {
 export default function OperationsPage() {
   const [tab, setTab] = useState<Tab>("overview");
   const operations = useOperations();
+  const [mcpName, setMcpName] = useState("");
+  const [mcpDescription, setMcpDescription] = useState("");
+  const [mcpUrl, setMcpUrl] = useState("");
 
   if (operations.loading) return <PageLoader rows={6} />;
   if (!operations.allowed)
@@ -74,6 +77,7 @@ export default function OperationsPage() {
           tabs={[
             { id: "overview", label: "Tổng quan" },
             { id: "quotas", label: "Hạn mức AI" },
+            { id: "mcp", label: "MCP" },
           ]}
         />
       </div>
@@ -247,7 +251,7 @@ export default function OperationsPage() {
             />
           </section>
         </div>
-      ) : (
+      ) : tab === "quotas" ? (
         <section aria-labelledby="quota-title">
           <h2
             id="quota-title"
@@ -261,6 +265,101 @@ export default function OperationsPage() {
             onSave={operations.updateQuota}
           />
         </section>
+      ) : (
+        <div className="grid gap-8 lg:grid-cols-[20rem_minmax(0,1fr)]">
+          <section>
+            <h2 className="mb-4 text-[18px] font-semibold text-ink">
+              Kết nối mới
+            </h2>
+            <div className="space-y-3 rounded-panel border border-border bg-surface p-5">
+              <input
+                value={mcpName}
+                onChange={(event) => setMcpName(event.target.value)}
+                className="apple-input w-full"
+                placeholder="Tên máy chủ"
+              />
+              <textarea
+                value={mcpDescription}
+                onChange={(event) => setMcpDescription(event.target.value)}
+                className="apple-input min-h-24 w-full resize-y"
+                placeholder="Khả năng được cấp"
+              />
+              <input
+                value={mcpUrl}
+                onChange={(event) => setMcpUrl(event.target.value)}
+                className="apple-input w-full"
+                placeholder="Địa chỉ SSE"
+              />
+              <Button
+                className="w-full"
+                disabled={
+                  !mcpName.trim() ||
+                  !mcpDescription.trim() ||
+                  !mcpUrl.trim() ||
+                  Boolean(operations.processing)
+                }
+                onClick={async () => {
+                  if (
+                    await operations.registerMcp({
+                      name: mcpName.trim(),
+                      description: mcpDescription.trim(),
+                      url: mcpUrl.trim(),
+                    })
+                  ) {
+                    setMcpName("");
+                    setMcpDescription("");
+                    setMcpUrl("");
+                  }
+                }}
+              >
+                {operations.processing === "mcp-register"
+                  ? "Đang kết nối"
+                  : "Kết nối"}
+              </Button>
+            </div>
+          </section>
+          <section>
+            <h2 className="mb-4 text-[18px] font-semibold text-ink">
+              Máy chủ MCP
+            </h2>
+            <div className="overflow-hidden rounded-panel border border-border bg-surface">
+              {operations.mcpServers.length ? (
+                operations.mcpServers.map((server: any) => {
+                  const id = server._id ?? server.id;
+                  return (
+                    <div
+                      key={id}
+                      className="flex items-center justify-between gap-4 border-b border-border px-4 py-4 last:border-b-0"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-[14px] font-semibold text-ink">
+                          {server.name}
+                        </p>
+                        <p className="mt-1 text-[12px] text-ink-muted">
+                          {server.is_connected
+                            ? `${server.tool_names?.length || 0} công cụ`
+                            : server.last_error || "Chưa kết nối"}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        disabled={Boolean(operations.processing)}
+                        onClick={() => operations.probeMcp(id)}
+                      >
+                        Kiểm tra
+                      </Button>
+                    </div>
+                  );
+                })
+              ) : (
+                <p className="p-5 text-[13px] text-ink-muted">
+                  Chưa có máy chủ MCP
+                </p>
+              )}
+            </div>
+          </section>
+        </div>
       )}
     </div>
   );

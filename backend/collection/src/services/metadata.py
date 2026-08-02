@@ -35,9 +35,7 @@ async def pdf_cover(local_path: str, object_prefix: str) -> tuple[str | None, in
             stream.write(pixmap.tobytes("png"))
         try:
             cover_url = await storage.upload_local_file(
-                f"{object_prefix}/cover.png",
-                cover_path,
-                content_type="image/png",
+                f"{object_prefix}/cover.png", cover_path, content_type="image/png"
             )
         finally:
             if os.path.exists(cover_path):
@@ -47,20 +45,30 @@ async def pdf_cover(local_path: str, object_prefix: str) -> tuple[str | None, in
         document.close()
 
 
-async def anna_metadata(payload: dict, local_path: str, file_url: str, extension: str) -> dict:
+async def collected_metadata(
+    payload: dict,
+    local_path: str | None,
+    file_url: str,
+    extension: str,
+    source_name: str,
+    storage_key: str,
+    pdf_url: str | None = None,
+    markdown_url: str | None = None,
+) -> dict:
     title = clean_text(payload.get("title")) or "Tài liệu chưa có tiêu đề"
-    author = clean_text(payload.get("author")) or "Không rõ tác giả"
+    authors = payload.get("authors") or [payload.get("author")]
+    normalized_authors = [clean_text(author) for author in authors]
+    normalized_authors = [author for author in normalized_authors if author]
+    author = ", ".join(normalized_authors) or "Không rõ tác giả"
     source_url = clean_text(payload.get("source_url"))
     slug = document_slug(title, source_url or file_url)
     cover_url = None
     pages_count = 0
-    if extension.lower() == "pdf":
+    if local_path and os.path.isfile(local_path) and local_path.lower().endswith(".pdf"):
         cover_url, pages_count = await pdf_cover(
-            local_path,
-            f"system/collection/anna_archive/{slug}",
+            local_path, f"system/collection/{storage_key}/{slug}"
         )
-    tags = ["Anna Archive"]
-    tags.append(author)
+    tags = [source_name, *normalized_authors]
     return {
         "title": title,
         "slug": slug,
@@ -69,8 +77,10 @@ async def anna_metadata(payload: dict, local_path: str, file_url: str, extension
         "publisher_name": "DocLib",
         "file_url": file_url,
         "source_url": source_url,
-        "source_name": "Anna Archive",
-        "pdf_url": file_url if extension.lower() == "pdf" else None,
+        "source_name": source_name,
+        "collection_scope": payload.get("collection_scope"),
+        "pdf_url": pdf_url or (file_url if extension.lower() == "pdf" else None),
+        "markdown_url": markdown_url,
         "cover_url": cover_url,
         "tags": tags,
         "content": None,
@@ -84,3 +94,9 @@ async def anna_metadata(payload: dict, local_path: str, file_url: str, extension
         "views": 0,
         "collected_at": datetime.now(timezone.utc),
     }
+
+
+async def anna_metadata(payload: dict, local_path: str, file_url: str, extension: str) -> dict:
+    return await collected_metadata(
+        payload, local_path, file_url, extension, "Anna Archive", "anna_archive"
+    )

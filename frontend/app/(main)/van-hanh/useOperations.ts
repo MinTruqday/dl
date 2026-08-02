@@ -16,6 +16,11 @@ import {
   getGlobalQuotaConfigAPI,
   updateRoleQuotaAPI,
 } from "@/features/usage/services/quota.service";
+import {
+  getMcpServersAPI,
+  probeMcpServerAPI,
+  registerMcpServerAPI,
+} from "@/features/agentic_ai/services/mcp.service";
 
 export function useOperations() {
   const { user, isLoading: authLoading } = useAuth() as any;
@@ -26,6 +31,7 @@ export function useOperations() {
   const [config, setConfig] = useState<any>({ registration_enabled: true });
   const [maintenance, setMaintenance] = useState(false);
   const [quotas, setQuotas] = useState<Record<string, any>>({});
+  const [mcpServers, setMcpServers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState("");
   const [error, setError] = useState("");
@@ -44,6 +50,7 @@ export function useOperations() {
       getAdminConfigAPI(),
       getMaintenanceModeAPI(),
       getGlobalQuotaConfigAPI(),
+      getMcpServersAPI(),
     ]);
     const value = (index: number) =>
       results[index].status === "fulfilled"
@@ -57,6 +64,7 @@ export function useOperations() {
     setConfig(value(3));
     setMaintenance(Boolean(value(4).enabled));
     setQuotas(value(5));
+    setMcpServers(Array.isArray(value(6)) ? value(6) : []);
     setError(
       results.some((result) => result.status === "rejected")
         ? "Một phần dữ liệu vận hành chưa tải được"
@@ -127,6 +135,28 @@ export function useOperations() {
     if (success) setQuotas((current) => ({ ...current, [role]: values }));
     return success;
   };
+  const registerMcp = async (values: {
+    name: string;
+    description: string;
+    url: string;
+  }) => {
+    const success = await mutate(
+      "mcp-register",
+      () => registerMcpServerAPI(values),
+      "Đã kết nối MCP",
+    );
+    if (success) await load();
+    return success;
+  };
+  const probeMcp = async (id: string) => {
+    const success = await mutate(
+      `mcp-${id}`,
+      () => probeMcpServerAPI(id),
+      "Đã kiểm tra MCP",
+    );
+    await load();
+    return success;
+  };
 
   return {
     health,
@@ -135,6 +165,7 @@ export function useOperations() {
     config,
     maintenance,
     quotas,
+    mcpServers,
     allowed,
     loading: authLoading || loading,
     processing,
@@ -145,5 +176,7 @@ export function useOperations() {
     backup,
     toggleRegistration,
     updateQuota,
+    registerMcp,
+    probeMcp,
   };
 }

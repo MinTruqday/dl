@@ -24,7 +24,9 @@ FILE_ID = f"plat-file-{uuid.uuid4()}"
 LICENSE_ID = f"plat-license-{uuid.uuid4()}"
 
 
-def create_token(user_id: str, session_id: str, role: str = "author") -> str:
+def create_token(
+    user_id: str, session_id: str, role: str = "author", ai_tier: str = "BASIC"
+) -> str:
     now = datetime.now(timezone.utc)
     return jwt.encode(
         {
@@ -32,7 +34,7 @@ def create_token(user_id: str, session_id: str, role: str = "author") -> str:
             "uid": user_id,
             "sid": session_id,
             "role": role,
-            "ai_tier": "BASIC",
+            "ai_tier": ai_tier,
             "iat": now,
             "exp": now + timedelta(minutes=15),
         },
@@ -76,7 +78,7 @@ async def main():
     notification = mongo[os.getenv("NOTIFICATION_DB_NAME", "doclib_notification")]
     content = mongo[os.getenv("CONTENT_DB_NAME", "doclib_content")]
     drm = mongo[os.getenv("DRM_DB_NAME", "doclib_drm")]
-    user_token = create_token(USER_ID, USER_SESSION)
+    user_token = create_token(USER_ID, USER_SESSION, ai_tier="PREMIUM")
     other_token = create_token(OTHER_USER_ID, OTHER_SESSION)
     raw_key = os.urandom(32)
     notification_id = None
@@ -91,13 +93,7 @@ async def main():
             "role": "author",
         }
         assert call("humanity", "POST", "/nguoi-dung/", user_payload)[0] == 403
-        status, created = call(
-            "humanity",
-            "POST",
-            "/nguoi-dung/",
-            user_payload,
-            internal=True,
-        )
+        status, created = call("humanity", "POST", "/nguoi-dung/", user_payload, internal=True)
         assert status == 201, created
         created_user_id = created["data"]["user_id"]
         assert created_user_id
@@ -140,12 +136,7 @@ async def main():
 
         await cache.sadd(f"user_sessions:{USER_ID}", USER_SESSION)
         await cache.sadd(f"user_sessions:{OTHER_USER_ID}", OTHER_SESSION)
-        status, profile = call(
-            "humanity",
-            "GET",
-            "/ho-so/ca-nhan",
-            bearer=user_token,
-        )
+        status, profile = call("humanity", "GET", "/ho-so/ca-nhan", bearer=user_token)
         assert status == 200 and profile["data"]["_id"] == USER_ID, profile
         status, profile = call(
             "humanity",
@@ -155,11 +146,7 @@ async def main():
             bearer=user_token,
         )
         assert status == 200 and profile["data"]["bio"], profile
-        status, public_profile = call(
-            "humanity",
-            "GET",
-            f"/nguoi-dung/ten-mien/{USER_ID}",
-        )
+        status, public_profile = call("humanity", "GET", f"/nguoi-dung/ten-mien/{USER_ID}")
         assert status == 200 and "email" not in public_profile["data"], public_profile
 
         announcement = {
@@ -171,42 +158,32 @@ async def main():
         }
         assert call("notification", "POST", "/thong-bao/gui-di", announcement)[0] == 403
         status, first = call(
-            "notification",
-            "POST",
-            "/thong-bao/gui-di",
-            announcement,
-            internal=True,
+            "notification", "POST", "/thong-bao/gui-di", announcement, internal=True
         )
         assert status == 201, first
         notification_id = first["data"]["id"]
         status, duplicate = call(
-            "notification",
-            "POST",
-            "/thong-bao/gui-di",
-            announcement,
-            internal=True,
+            "notification", "POST", "/thong-bao/gui-di", announcement, internal=True
         )
         assert status == 201 and duplicate["data"]["duplicate"] is True, duplicate
         assert duplicate["data"]["id"] == notification_id
-        status, inbox = call(
-            "notification",
-            "GET",
-            "/thong-bao",
-            bearer=user_token,
-        )
+        status, inbox = call("notification", "GET", "/thong-bao", bearer=user_token)
         assert status == 200 and inbox["data"]["unread"] == 1, inbox
-        assert call(
-            "notification",
-            "PATCH",
-            f"/thong-bao/{notification_id}/doc-hieu",
-            bearer=other_token,
-        )[0] == 404
-        assert call(
-            "notification",
-            "PATCH",
-            f"/thong-bao/{notification_id}/doc-hieu",
-            bearer=user_token,
-        )[0] == 200
+        assert (
+            call(
+                "notification",
+                "PATCH",
+                f"/thong-bao/{notification_id}/doc-hieu",
+                bearer=other_token,
+            )[0]
+            == 404
+        )
+        assert (
+            call(
+                "notification", "PATCH", f"/thong-bao/{notification_id}/doc-hieu", bearer=user_token
+            )[0]
+            == 200
+        )
 
         await content.documents.insert_one(
             {
@@ -216,6 +193,7 @@ async def main():
                 "title": "Platform DRM",
                 "status": "published",
                 "visibility": "public",
+                "content": "Protected platform content",
                 "is_deleted": False,
             }
         )
@@ -231,11 +209,15 @@ async def main():
                 "allow_internal_ai": True,
                 "license_valid_days": 7,
                 "max_open_count": 12,
+                "ghost_font_exemption_scope": "private_link",
             },
             bearer=user_token,
         )
         assert status == 200 and drm_settings["data"]["disable_copy"] is True
         assert drm_settings["data"]["profile"] == "doclib-drm-2026"
+        assert drm_settings["data"]["ghost_font_enabled"] is True
+        private_link_token = drm_settings["data"]["ghost_font_private_link_token"]
+        assert private_link_token
         synced_document = await content.documents.find_one({"_id": DOCUMENT_ID})
         assert synced_document["drm_settings"]["disable_print"] is True
         assert synced_document["drm_settings"]["license_valid_days"] == 7
@@ -248,13 +230,54 @@ async def main():
         )
         assert status == 200
         assert DOCUMENT_ID not in {row["id"] for row in search_result["data"]}
-        assert call(
+        status, protected_view = call(
+            "content", "GET", f"/tai-lieu/{DOCUMENT_ID}", bearer=other_token
+        )
+        assert status == 200, protected_view
+        assert protected_view["data"]["drm_settings"]["ghost_font_active"] is True
+        status, private_link_view = call(
+            "content", "GET", f"/tai-lieu/{DOCUMENT_ID}?share_token={private_link_token}"
+        )
+        assert status == 200, private_link_view
+        assert private_link_view["data"]["drm_settings"]["ghost_font_active"] is False
+        assert private_link_view["data"]["content"] == "Protected platform content"
+        assert (
+            call(
+                "drm",
+                "PUT",
+                f"/ban-quyen/{DOCUMENT_ID}",
+                {"disable_copy": False, "hide_from_search": False},
+                bearer=other_token,
+            )[0]
+            == 403
+        )
+
+        pro_token = create_token(USER_ID, USER_SESSION, ai_tier="PRO")
+        status, pro_settings = call(
             "drm",
             "PUT",
             f"/ban-quyen/{DOCUMENT_ID}",
-            {"disable_copy": False, "hide_from_search": False},
-            bearer=other_token,
-        )[0] == 403
+            {"disable_copy": True, "watermark_enabled": True, "ghost_font_enabled": True},
+            bearer=pro_token,
+        )
+        assert status == 200, pro_settings
+        assert pro_settings["data"]["profile"] == "doclib-watermark"
+        assert pro_settings["data"]["watermark_enabled"] is True
+        assert pro_settings["data"]["disable_copy"] is False
+        assert pro_settings["data"]["ghost_font_enabled"] is False
+
+        basic_token = create_token(USER_ID, USER_SESSION, ai_tier="BASIC")
+        status, basic_settings = call(
+            "drm",
+            "PUT",
+            f"/ban-quyen/{DOCUMENT_ID}",
+            {"watermark_enabled": True, "ghost_font_enabled": True},
+            bearer=basic_token,
+        )
+        assert status == 200, basic_settings
+        assert basic_settings["data"]["profile"] == "doclib-standard"
+        assert basic_settings["data"]["watermark_enabled"] is False
+        assert basic_settings["data"]["ghost_font_enabled"] is False
 
         await drm.drm_licenses.insert_one(
             {
@@ -269,10 +292,13 @@ async def main():
             }
         )
         private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-        public_key = private_key.public_key().public_bytes(
-            serialization.Encoding.PEM,
-            serialization.PublicFormat.SubjectPublicKeyInfo,
-        ).decode("ascii")
+        public_key = (
+            private_key.public_key()
+            .public_bytes(
+                serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo
+            )
+            .decode("ascii")
+        )
         status, license_token = call(
             "drm",
             "POST",
@@ -288,23 +314,24 @@ async def main():
         decrypted = private_key.decrypt(
             base64.b64decode(license_token["encrypted_aes_key"]),
             padding.OAEP(
-                mgf=padding.MGF1(algorithm=hashes.SHA256()),
-                algorithm=hashes.SHA256(),
-                label=None,
+                mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None
             ),
         )
         assert decrypted == raw_key
-        assert call(
-            "drm",
-            "POST",
-            "/drm/kiem-tra",
-            {
-                "file_id": FILE_ID,
-                "client_public_key": public_key,
-                "hardware_signature": "platform-device-b",
-            },
-            bearer=user_token,
-        )[0] == 403
+        assert (
+            call(
+                "drm",
+                "POST",
+                "/drm/kiem-tra",
+                {
+                    "file_id": FILE_ID,
+                    "client_public_key": public_key,
+                    "hardware_signature": "platform-device-b",
+                },
+                bearer=user_token,
+            )[0]
+            == 403
+        )
         print("platform services integration passed")
     finally:
         await humanity.users.delete_many({"_id": {"$in": [USER_ID, OTHER_USER_ID]}})
@@ -314,10 +341,7 @@ async def main():
         await drm.drm_licenses.delete_one({"_id": LICENSE_ID})
         await drm.document_drm_settings.delete_many({"document_id": DOCUMENT_ID})
         await drm.audit_logs.delete_many({"document_id": DOCUMENT_ID})
-        await cache.delete(
-            f"user_sessions:{USER_ID}",
-            f"user_sessions:{OTHER_USER_ID}",
-        )
+        await cache.delete(f"user_sessions:{USER_ID}", f"user_sessions:{OTHER_USER_ID}")
         async for key in cache.scan_iter(match=f"drm:*:{USER_ID}:*"):
             await cache.delete(key)
         await cache.aclose()

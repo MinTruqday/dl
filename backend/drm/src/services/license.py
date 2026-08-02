@@ -7,6 +7,7 @@ from datetime import timedelta
 from src.core.logic_logger import log_logic_execution
 from src.repositories.license import LicenseRepository
 
+
 class LicenseService:
     @staticmethod
     @log_logic_execution
@@ -14,11 +15,19 @@ class LicenseService:
         file_id = str(uuid.uuid4())
         raw_key = os.urandom(32)
         encoded_key = base64.b64encode(raw_key).decode("utf-8")
-        
+
         now = datetime.datetime.now(datetime.timezone.utc)
         settings_doc = await LicenseRepository.get_drm_settings(document_id) or {}
         valid_days = max(1, min(int(settings_doc.get("license_valid_days", 30)), 365))
         max_open_count = max(1, min(int(settings_doc.get("max_open_count", 100)), 10000))
+        protection_tier = str(settings_doc.get("protection_tier", "BASIC")).upper()
+        profile = (
+            "doclib-drm-2026"
+            if protection_tier == "PREMIUM"
+            else "doclib-watermark"
+            if protection_tier == "PRO"
+            else "doclib-standard"
+        )
         await LicenseRepository.create_license(
             {
                 "file_id": file_id,
@@ -31,12 +40,16 @@ class LicenseService:
                 "open_count": 0,
                 "max_open_count": max_open_count,
                 "payload_format": "pdf",
-                "profile": "doclib-drm-2026",
+                "profile": profile,
                 "content_encryption": "AES-256-GCM",
                 "rights": {
                     "copy": not settings_doc.get("disable_copy", True),
                     "print": not settings_doc.get("disable_print", True),
                     "internal_ai": settings_doc.get("allow_internal_ai", True),
+                },
+                "ghost_font": {
+                    "enabled": settings_doc.get("ghost_font_enabled", False),
+                    "exemption_scope": settings_doc.get("ghost_font_exemption_scope", "owner_only"),
                 },
             }
         )

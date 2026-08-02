@@ -41,6 +41,12 @@ export default function ChatPage() {
   useEffect(() => {
     if (chat.openedMode) setMode(chat.openedMode);
   }, [chat.openedMode]);
+  const advancedModesEnabled = ["PRO", "PREMIUM"].includes(
+    String(chat.user?.ai_tier || "BASIC").toUpperCase(),
+  );
+  useEffect(() => {
+    if (!advancedModesEnabled && mode !== "chat") setMode("chat");
+  }, [advancedModesEnabled, mode]);
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (await chat.send(input, mode, approvalPolicy, file)) {
@@ -291,7 +297,11 @@ export default function ChatPage() {
                   <Paperclip size={17} />
                 </Button>
                 <div className="flex max-w-[55vw] gap-1 overflow-x-auto rounded-control bg-surface-quiet p-1">
-                  {modes.map((item) => (
+                  {modes
+                    .filter(
+                      (item) => item.value === "chat" || advancedModesEnabled,
+                    )
+                    .map((item) => (
                     <button
                       key={item.value}
                       type="button"
@@ -300,7 +310,7 @@ export default function ChatPage() {
                     >
                       {item.label}
                     </button>
-                  ))}
+                    ))}
                 </div>
                 {(mode === "work" || mode === "goal") && (
                   <select

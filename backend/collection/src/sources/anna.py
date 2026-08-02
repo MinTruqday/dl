@@ -131,7 +131,12 @@ class AnnaSource:
                         if not await dedup.is_collected("anna_url", url):
                             published = await mq_client.publish(
                                 "collect_detail_queue",
-                                {"url": url, "source": "AnnaArchive", "job_id": job_id},
+                                {
+                                    "url": url,
+                                    "source": "AnnaArchive",
+                                    "job_id": job_id,
+                                    "collection_scope": {"type": "page", "value": page_num},
+                                },
                             )
                             if not published:
                                 raise RuntimeError("RabbitMQ rejected a document detail task")
@@ -192,7 +197,11 @@ class AnnaSource:
         return await get_stealth_context(browser)
 
     @staticmethod
-    async def run_detail_collector(document_url: str, job_id: str | None = None):
+    async def run_detail_collector(
+        document_url: str,
+        job_id: str | None = None,
+        collection_scope: dict | None = None,
+    ):
         logger.info("[AnnaSource] Processing detailed document information")
 
         async with managed_browser() as browser:
@@ -219,6 +228,7 @@ class AnnaSource:
                 payload = {}
                 payload["source_url"] = document_url
                 payload["job_id"] = job_id
+                payload["collection_scope"] = collection_scope
 
                 title_el = (
                     await page.query_selector("div.text-3xl.font-bold")

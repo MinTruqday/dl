@@ -22,10 +22,39 @@ from src.core.infrastructure.mq import mq as mq_client
 from src.core.cache import dedup
 from src.core.storage import storage
 from src.core.infrastructure.configuration import settings
+from src.services.metadata import collected_metadata
+
 
 class CtanSource:
     @staticmethod
-    async def run_list_collector(letter: str = "a"):
+    async def probe_list_source() -> dict:
+        url = "https://www.ctan.org/pkg/:A"
+        try:
+            timeout = aiohttp.ClientTimeout(total=20)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                async with session.get(url, allow_redirects=True) as response:
+                    body = await response.text(errors="ignore")
+                    links = set(re.findall(r'href=["\'](/pkg/(?!:)[^"\']+)', body))
+                    detected = len(links)
+                    reachable = response.status == 200 and detected > 0
+                    return {
+                        "source": "CTAN",
+                        "reachable": reachable,
+                        "http_status": response.status,
+                        "documents_detected": detected,
+                        "reason": None if reachable else "Source returned no package records",
+                    }
+        except Exception as error:
+            return {
+                "source": "CTAN",
+                "reachable": False,
+                "http_status": None,
+                "documents_detected": 0,
+                "reason": str(error)[:200],
+            }
+
+    @staticmethod
+    async def run_list_collector(letter: str = "a", job_id: str | None = None):
         logger.info("[CTAN] Starting alphabetical list collection process")
 
         async with managed_browser() as browser:
@@ -44,7 +73,7 @@ class CtanSource:
                     await page.goto(search_url, timeout=60000)
                     await page.wait_for_timeout(2000)
 
-                    list_css = 'main a[href*="/pkg/"]'
+                    list_css = 'main .pkg-cols .dt a[href^="/pkg/"]'
 
                     try:
                         await page.wait_for_selector("main", timeout=15000)
@@ -59,26 +88,46 @@ class CtanSource:
                         href = await node.get_attribute("href")
                         if href:
                             full_url = (
-                                "https://www.ctan.org" + href
-                                if href.startswith("/")
-                                else href
+                                "https://www.ctan.org" + href if href.startswith("/") else href
                             )
                             book_urls.add(full_url)
 
                     logger.info("[CTAN] Category data collected")
+                    queued = 0
                     for url in book_urls:
                         if not await dedup.is_collected("ctan_url", url):
-                            await mq_client.publish(
-                                "collect_detail_queue", {"url": url, "source": "CTAN"}
+                            published = await mq_client.publish(
+                                "collect_detail_queue",
+                                {
+                                    "url": url,
+                                    "source": "CTAN",
+                                    "job_id": job_id,
+                                    "collection_scope": {
+                                        "type": "letter",
+                                        "value": current_letter,
+                                    },
+                                },
                             )
+                            if not published:
+                                raise RuntimeError("RabbitMQ rejected a CTAN detail task")
                             await dedup.mark_collected("ctan_url", url)
+                            queued += 1
+                    return {
+                        "pages_scanned": 1,
+                        "documents_detected": len(book_urls),
+                        "documents_queued": queued,
+                    }
 
             except Exception as e:
                 logger.exception("[CTAN] Failed to get alphabetical data list")
                 raise
 
     @staticmethod
-    async def run_detail_collector(book_url: str):
+    async def run_detail_collector(
+        book_url: str,
+        job_id: str | None = None,
+        collection_scope: dict | None = None,
+    ):
         logger.info("[CTAN] Processing software package data")
 
         async with managed_browser() as browser:
@@ -92,31 +141,25 @@ class CtanSource:
 
                 payload = {}
                 payload["source_url"] = book_url
+                payload["job_id"] = job_id
+                payload["collection_scope"] = collection_scope
 
                 title_el = await page.query_selector("main h1")
-                raw_title = (
-                    await title_el.inner_text() if title_el else book_url.split("/")[-1]
-                )
+                raw_title = await title_el.inner_text() if title_el else book_url.split("/")[-1]
                 payload["title"] = raw_title.strip()
 
                 desc_el = await page.query_selector("main p")
                 payload["description"] = (
-                    await desc_el.inner_text()
-                    if desc_el
-                    else "No description available"
+                    await desc_el.inner_text() if desc_el else "No description available"
                 )
 
-                author_el = await page.query_selector(
-                    'main table td a[href*="/author/"]'
-                )
+                author_nodes = await page.query_selector_all('main table td a[href*="/author/"]')
                 authors_list = []
-                if author_el:
-                    raw_authors = await author_el.inner_text()
-                    split_authors = re.split(r"\n|,", raw_authors)
-                    authors_list = [a.strip() for a in split_authors if a.strip()]
-                payload["authors"] = (
-                    authors_list if authors_list else ["Unknown Author"]
-                )
+                for author_node in author_nodes:
+                    raw_author = (await author_node.inner_text()).strip()
+                    if raw_author and raw_author not in authors_list:
+                        authors_list.append(raw_author)
+                payload["authors"] = authors_list if authors_list else ["Unknown Author"]
 
                 download_el = await page.query_selector(
                     'main a[href$=".zip"], main a:has-text("Download")'
@@ -135,19 +178,21 @@ class CtanSource:
                         logger.info("[CTAN] Download URL created")
 
                         slug = urllib.parse.quote(
-                            payload["title"].lower().replace(" ", "-"),
-                            safe="",
+                            payload["title"].lower().replace(" ", "-"), safe=""
                         )[:50]
                         payload["filename"] = f"{slug}.zip"
                         payload["content_format"] = "zip"
 
-                        await mq_client.publish(
+                        published = await mq_client.publish(
                             "download_processor_queue", {**payload, "source": "CTAN"}
                         )
+                        if not published:
+                            raise RuntimeError("RabbitMQ rejected a CTAN download task")
+                        return True
                     else:
                         logger.warning("[CTAN] Download link contains no data")
                 else:
-                    logger.warning("[CTAN] Download button not found on page")
+                    raise RuntimeError("CTAN package download link was not found")
 
             except Exception as e:
                 logger.exception("[CTAN] Compressed file data processing failed")
@@ -175,6 +220,7 @@ class CtanSource:
         extracted_folder_path = os.path.join(temp_base, "extracted", slug)
 
         minio_url_book = None
+        document_id = None
 
         try:
             success = await download_file_with_retry(url, target_zip_local)
@@ -249,11 +295,11 @@ class CtanSource:
                             file_path = os.path.join(root_dir, f)
                             rel_path = os.path.relpath(file_path, search_root)
                             try:
-                                with open(
-                                    file_path, "r", encoding="utf-8"
-                                ) as text_file:
+                                with open(file_path, "r", encoding="utf-8") as text_file:
                                     content = text_file.read()
-                                    md_content += f"## File: {rel_path}\n```latex\n{content}\n```\n\n"
+                                    md_content += (
+                                        f"## File: {rel_path}\n```latex\n{content}\n```\n\n"
+                                    )
                             except UnicodeDecodeError:
                                 continue
                             except Exception as e:
@@ -271,37 +317,27 @@ class CtanSource:
                 payload["markdown_url"] = minio_url_md
 
                 logger.info("[CTAN] Compressed file processed")
+                metadata = await collected_metadata(
+                    payload,
+                    found_pdf,
+                    minio_url_book,
+                    "zip",
+                    "CTAN",
+                    "ctan",
+                    pdf_url=payload.get("pdf_url"),
+                    markdown_url=payload.get("markdown_url"),
+                )
+                metadata["rag_status"] = "pending"
+                document_id = await database.insert_document(metadata)
             else:
-                logger.error("[CTAN] Compressed file download from remote server failed")
-                return
-        except Exception as e:
+                raise RuntimeError("CTAN package download failed")
+        except Exception:
             logger.exception("[CTAN] Compressed file processing failed")
             raise
         finally:
             shutil.rmtree(temp_base, ignore_errors=True)
 
-        if minio_url_book:
-            logger.info("[CTAN] Compressed file saved permanently")
-
-            book_document = {
-                "title": title,
-                "slug": slug,
-                "description": payload.get(
-                    "description", "Trích xuất tự động hoàn tất"
-                ),
-                "file_url": minio_url_book,
-                "source_url": payload.get("source_url"),
-                "pdf_url": payload.get("pdf_url"),
-                "markdown_url": payload.get("markdown_url"),
-                "tags": ["CTAN"]
-                + (payload.get("authors") if payload.get("authors") else ["Unknown"]),
-                "content_format": "zip",
-                "price": 0.0,
-                "visibility": "private",
-                "creator_id": "ctan",
-                "status": "published",
-                "rag_status": "pending",
-                "views": 0,
-            }
-
-            doc_id = await database.insert_document(book_document)
+        if not document_id:
+            raise RuntimeError("CTAN package was not persisted")
+        logger.info("[CTAN] Compressed file saved permanently")
+        return document_id

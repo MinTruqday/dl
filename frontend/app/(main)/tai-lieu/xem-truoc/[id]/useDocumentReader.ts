@@ -59,6 +59,7 @@ export function useDocumentReader(
   rawUrl: string | null,
   rawName: string | null,
   initialPassword: string | null,
+  shareToken: string | null,
 ) {
   const [document, setDocument] = useState<any>(null);
   const [content, setContent] = useState("");
@@ -93,6 +94,7 @@ export function useDocumentReader(
         const response = await getDocumentWithPasswordAPI(
           id,
           password || initialPassword || undefined,
+          shareToken || undefined,
         );
         if (response.status === 401) {
           setError("Đăng nhập để mở tài liệu");
@@ -132,7 +134,7 @@ export function useDocumentReader(
         setLoading(false);
       }
     },
-    [id, rawUrl, rawName, initialPassword],
+    [id, rawUrl, rawName, initialPassword, shareToken],
   );
   useEffect(() => void load(), [load]);
   useEffect(() => {

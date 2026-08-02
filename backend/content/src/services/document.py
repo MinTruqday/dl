@@ -15,12 +15,7 @@ from fastapi import HTTPException, Query, status
 from loguru import logger
 from passlib.context import CryptContext
 from src.core.publication import trigger_document_publish_job
-from src.schemas.document import (
-    DocumentContentUpdate,
-    DocumentCreate,
-    DocumentInDB,
-    DocumentStatus,
-)
+from src.schemas.document import DocumentContentUpdate, DocumentCreate, DocumentInDB, DocumentStatus
 from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
@@ -29,6 +24,7 @@ from src.repositories.document import DocumentRepository
 from src.repositories.reading import ReadingRepository
 from src.services.drm_client import DrmClient
 from src.services.finance_client import FinanceClient
+
 
 def serialize_document(document):
     if not document:
@@ -44,11 +40,13 @@ def serialize_document(document):
     document.pop("access_password_hash", None)
     return document
 
+
 class DocumentService:
     @staticmethod
     def _is_admin(current_user) -> bool:
         role = getattr(current_user, "role", "") if current_user else ""
         from src.core.dependency import Role
+
         return str(getattr(role, "value", role)).lower() == Role.ADMIN.value
 
     @staticmethod
@@ -76,6 +74,7 @@ class DocumentService:
             return []
         import base64
         import os
+
         try:
             from cryptography.hazmat.primitives.ciphers.aead import AESGCM
         except ImportError:
@@ -84,33 +83,28 @@ class DocumentService:
         if key and AESGCM:
             aesgcm = AESGCM(key)
             chunk_size = 50000
-            chunks = [content[i:i+chunk_size] for i in range(0, len(content), chunk_size)]
+            chunks = [content[i : i + chunk_size] for i in range(0, len(content), chunk_size)]
             fragments = []
             for chunk in chunks:
                 nonce = os.urandom(12)
-                ct = aesgcm.encrypt(nonce, chunk.encode('utf-8'), None)
-                encoded = base64.b64encode(nonce + ct).decode('utf-8')
+                ct = aesgcm.encrypt(nonce, chunk.encode("utf-8"), None)
+                encoded = base64.b64encode(nonce + ct).decode("utf-8")
                 fragments.append(encoded)
             return fragments
         else:
             chunk_size = 50
-            chunks = [content[i:i+chunk_size] for i in range(0, len(content), chunk_size)]
+            chunks = [content[i : i + chunk_size] for i in range(0, len(content), chunk_size)]
             fragments = []
             for chunk in chunks:
-                encoded = base64.b64encode(chunk.encode('utf-8')).decode('utf-8')
+                encoded = base64.b64encode(chunk.encode("utf-8")).decode("utf-8")
                 fragments.append(encoded)
             return fragments
 
     @staticmethod
     @log_logic_execution
     async def get_tags_categories():
-        
         docs_col = DocumentRepository
-        pipeline_tags = [
-            {"$unwind": "$tags"},
-            {"$group": {"_id": "$tags"}},
-            {"$sort": {"_id": 1}},
-        ]
+        pipeline_tags = [{"$unwind": "$tags"}, {"$group": {"_id": "$tags"}}, {"$sort": {"_id": 1}}]
         pipeline_categories = [
             {"$match": {"category": {"$type": "string"}}},
             {"$group": {"_id": "$category"}},
@@ -125,16 +119,15 @@ class DocumentService:
 
     @staticmethod
     @log_logic_execution
-    async def get_trending_documents(
-        limit: int = Query(
-            default=20, le=100
-        )
-    ) -> List[dict]:
-        
+    async def get_trending_documents(limit: int = Query(default=20, le=100)) -> List[dict]:
         docs_col = DocumentRepository
         cursor = (
             docs_col.find(
-                {"status": DocumentStatus.PUBLISHED, "is_deleted": {"$ne": True}, "visibility": "public"}
+                {
+                    "status": DocumentStatus.PUBLISHED,
+                    "is_deleted": {"$ne": True},
+                    "visibility": "public",
+                }
             )
             .sort("views", -1)
             .limit(limit)
@@ -144,26 +137,18 @@ class DocumentService:
 
     @staticmethod
     @log_logic_execution
-    async def get_personalized_recommendations(
-        user_id: str,
-        limit: int,
-    ) -> List[dict]:
+    async def get_personalized_recommendations(user_id: str, limit: int) -> List[dict]:
         history = await (
             ReadingRepository.find({"user_id": user_id})
             .sort("last_read_at", -1)
             .limit(100)
             .to_list(length=100)
         )
-        read_ids = {
-            str(item.get("document_id"))
-            for item in history
-            if item.get("document_id")
-        }
+        read_ids = {str(item.get("document_id")) for item in history if item.get("document_id")}
         if not read_ids:
             return []
         read_documents = await DocumentRepository.find(
-            {"_id": {"$in": list(read_ids)}},
-            {"tags": 1, "category": 1},
+            {"_id": {"$in": list(read_ids)}}, {"tags": 1, "category": 1}
         ).to_list(length=100)
         tag_weights: dict[str, float] = {}
         category_weights: dict[str, float] = {}
@@ -211,22 +196,13 @@ class DocumentService:
             )
         ranked.sort(key=lambda item: (-item[0], -item[1], item[2]))
         return [
-            {
-                **serialize_document(document),
-                "personalization_score": round(score, 6),
-            }
+            {**serialize_document(document), "personalization_score": round(score, 6)}
             for score, _, _, document in ranked[:limit]
         ]
 
     @staticmethod
     @log_logic_execution
-    async def get_text_search(
-        query: str,
-        limit: int = Query(
-            default=20, le=100
-        ),
-    ) -> List[dict]:
-        
+    async def get_text_search(query: str, limit: int = Query(default=20, le=100)) -> List[dict]:
         docs_col = DocumentRepository
         cursor = docs_col.find(
             {
@@ -241,10 +217,7 @@ class DocumentService:
 
     @staticmethod
     @log_logic_execution
-    async def get_ranked_public_documents(
-        ranked_results: List[dict],
-        limit: int,
-    ) -> List[dict]:
+    async def get_ranked_public_documents(ranked_results: List[dict], limit: int) -> List[dict]:
         document_ids = [
             str(result["document_id"])
             for result in ranked_results
@@ -267,10 +240,7 @@ class DocumentService:
             if isinstance(result, dict) and result.get("document_id")
         }
         return [
-            {
-                **serialize_document(by_id[document_id]),
-                "semantic_score": scores.get(document_id, 0),
-            }
+            {**serialize_document(by_id[document_id]), "semantic_score": scores.get(document_id, 0)}
             for document_id in document_ids
             if document_id in by_id
         ]
@@ -283,54 +253,55 @@ class DocumentService:
         import base64
         from cryptography.hazmat.primitives.ciphers.aead import AESGCM
         from src.core.infrastructure.mongo import mongo
-        
+
         content_bytes = await file.read()
         if len(content_bytes) < 60:
             raise ValueError("Tệp tin không hợp lệ hoặc bị hỏng")
-            
+
         file_id_bytes = content_bytes[:16]
         file_hash = content_bytes[16:48]
         nonce = content_bytes[48:60]
         ciphertext = content_bytes[60:]
-        
+
         file_id = str(uuid.UUID(bytes=file_id_bytes))
-        
+
         license_doc = await DrmClient.license_by_file(file_id)
         if not license_doc:
             raise ValueError("Không tìm thấy giấy phép hợp lệ cho tài liệu này")
         if license_doc.get("status") != "ACTIVE":
             raise ValueError("Giấy phép tài liệu đã hết hiệu lực")
-        if license_doc.get("user_id") != str(current_user.id) and not DocumentService._is_admin(current_user):
+        if license_doc.get("user_id") != str(current_user.id) and not DocumentService._is_admin(
+            current_user
+        ):
             raise ValueError("Bạn không có quyền truy cập tài liệu này")
-            
+
         encoded_key = license_doc.get("aes_key")
         if not encoded_key:
             raise ValueError("Giấy phép tài liệu bị hỏng (thiếu khóa giải mã)")
-            
+
         aes_key = base64.b64decode(encoded_key)
-        
+
         try:
             aesgcm = AESGCM(aes_key)
             decrypted_data = aesgcm.decrypt(nonce, ciphertext, None)
         except Exception:
             raise ValueError("Giải mã tài liệu thất bại, tệp tin có thể đã bị can thiệp")
-            
+
         if hashlib.sha256(decrypted_data).digest() != file_hash:
             raise ValueError("Dữ liệu tài liệu không toàn vẹn")
-            
+
         raw_content = decrypted_data.decode("utf-8")
         ext = file.filename.split(".")[-1].lower() if file.filename else "doclib"
         content_format = "doclibx" if ext == "doclibx" else "doclib"
-        
+
         from src.schemas.document import DocumentCreate
-        
+
         doc_in = DocumentCreate(
             title=file.filename.split(".")[0] if file.filename else "Imported Document",
             content=raw_content,
-            content_format=content_format
+            content_format=content_format,
         )
         return await DocumentService.create_document(doc_in, current_user)
-
 
     @staticmethod
     @log_logic_execution
@@ -341,7 +312,12 @@ class DocumentService:
 
         slug = doc_in.slug
         if not slug:
-            normalized = unicodedata.normalize("NFKD", doc_in.title).encode("ascii", "ignore").decode("ascii").lower()
+            normalized = (
+                unicodedata.normalize("NFKD", doc_in.title)
+                .encode("ascii", "ignore")
+                .decode("ascii")
+                .lower()
+            )
             slug = re.sub(r"[^a-z0-9]+", "-", normalized).strip("-") or "tai-lieu"
         existing_slug = await docs_collection.find_one({"slug": slug})
         if existing_slug:
@@ -365,14 +341,8 @@ class DocumentService:
     @staticmethod
     @log_logic_execution
     async def get_my_documents(
-        current_user,
-        q: str = None,
-        cursor: str = None,
-        limit: int = Query(
-            default=20, le=100
-        ),
+        current_user, q: str = None, cursor: str = None, limit: int = Query(default=20, le=100)
     ) -> list:
-        
         query = {"creator_id": str(current_user.id), "is_deleted": {"$ne": True}}
         if q:
             query["$or"] = [
@@ -382,12 +352,7 @@ class DocumentService:
         if cursor:
             query["_id"] = {"$lt": cursor}
 
-        docs = await (
-            DocumentRepository
-            .find(query)
-            .sort("_id", -1)
-            .to_list(length=limit)
-        )
+        docs = await DocumentRepository.find(query).sort("_id", -1).to_list(length=limit)
         return [
             {
                 "_id": str(b["_id"]),
@@ -412,7 +377,6 @@ class DocumentService:
     async def update_document_content(
         document_id: str, content_in: DocumentContentUpdate, current_user
     ):
-        
         docs_collection = DocumentRepository
         document = await docs_collection.find_one(
             {"_id": document_id, "creator_id": str(current_user.id)}
@@ -424,8 +388,7 @@ class DocumentService:
             db_updated = document.get("updated_at")
             if (
                 db_updated
-                and str(db_updated).split("+")[0]
-                != str(content_in.expected_version).split("+")[0]
+                and str(db_updated).split("+")[0] != str(content_in.expected_version).split("+")[0]
             ):
                 raise HTTPException(
                     status_code=409,
@@ -483,40 +446,32 @@ class DocumentService:
     @staticmethod
     @log_logic_execution
     async def update_document(document_id: str, doc_update, current_user) -> dict:
-        
         docs_col = DocumentRepository
         doc = await docs_col.find_one({"_id": document_id})
         if not doc:
-            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
-        if (
-            doc.get("creator_id") != str(current_user.id)
-            and not DocumentService._is_admin(current_user)
-        ):
             raise HTTPException(
-                status_code=403, detail="Bạn không có quyền chỉnh sửa tài liệu này"
+                status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn"
             )
+        if doc.get("creator_id") != str(current_user.id) and not DocumentService._is_admin(
+            current_user
+        ):
+            raise HTTPException(status_code=403, detail="Bạn không có quyền chỉnh sửa tài liệu này")
 
         if hasattr(doc_update, "expected_version") and doc_update.expected_version:
             db_updated = doc.get("updated_at")
             if (
                 db_updated
-                and str(db_updated).split("+")[0]
-                != str(doc_update.expected_version).split("+")[0]
+                and str(db_updated).split("+")[0] != str(doc_update.expected_version).split("+")[0]
             ):
                 raise HTTPException(
-                    status_code=409,
-                    detail="Không thể chỉnh sửa do đã có phiên bản mới hơn",
+                    status_code=409, detail="Không thể chỉnh sửa do đã có phiên bản mới hơn"
                 )
 
-        update_data = {
-            k: v for k, v in doc_update.model_dump().items() if v is not None
-        }
+        update_data = {k: v for k, v in doc_update.model_dump().items() if v is not None}
         if "slug" in update_data and update_data["slug"] != doc.get("slug"):
             existing = await docs_col.find_one({"slug": update_data["slug"]})
             if existing:
-                raise HTTPException(
-                    status_code=400, detail="Đường dẫn định tuyến đã được sử dụng"
-                )
+                raise HTTPException(status_code=400, detail="Đường dẫn định tuyến đã được sử dụng")
 
         if update_data:
             if doc.get("content") and "content" in update_data:
@@ -544,14 +499,8 @@ class DocumentService:
     @staticmethod
     @log_logic_execution
     async def list_documents(
-        limit: int,
-        cursor: str,
-        q: str,
-        sort_by: str,
-        category: str = None,
-        tag: str = None,
+        limit: int, cursor: str, q: str, sort_by: str, category: str = None, tag: str = None
     ):
-        
         docs_collection = DocumentRepository
         query = {
             "status": DocumentStatus.PUBLISHED,
@@ -569,10 +518,7 @@ class DocumentService:
         if tag:
             query["tags"] = tag
 
-        sort_mapping = {
-            "latest": ("created_at", -1),
-            "views": ("views", -1),
-        }
+        sort_mapping = {"latest": ("created_at", -1), "views": ("views", -1)}
         sort_field, sort_dir = sort_mapping.get(sort_by, ("created_at", -1))
 
         if cursor:
@@ -585,31 +531,55 @@ class DocumentService:
 
     @staticmethod
     @log_logic_execution
-    async def get_document_by_id(document_id: str, current_user, password: str = None):
-        
+    async def get_document_by_id(
+        document_id: str, current_user, password: str = None, share_token: str | None = None
+    ):
         docs_collection = DocumentRepository
         user_id = str(current_user.id) if current_user else None
 
         document = await docs_collection.find_one({"_id": document_id})
         if not document:
-            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
+            raise HTTPException(
+                status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn"
+            )
 
-        if document.get("is_deleted") is True and document.get("creator_id") != user_id and not DocumentService._is_admin(current_user):
-            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
+        drm_doc = None
+        try:
+            drm_doc = await DrmClient.document_settings(str(document["_id"]))
+        except Exception:
+            logger.exception("Failed to retrieve DRM settings")
+        share_token_valid = False
+        if drm_doc and share_token and drm_doc.get("ghost_font_exemption_scope") == "private_link":
+            import hashlib
+            import hmac
+
+            expected_hash = str(drm_doc.get("ghost_font_private_link_hash") or "")
+            supplied_hash = hashlib.sha256(share_token.encode("utf-8")).hexdigest()
+            share_token_valid = bool(
+                expected_hash and hmac.compare_digest(supplied_hash, expected_hash)
+            )
+
+        if (
+            document.get("is_deleted") is True
+            and document.get("creator_id") != user_id
+            and not DocumentService._is_admin(current_user)
+        ):
+            raise HTTPException(
+                status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn"
+            )
 
         if (
             document.get("creator_id") != user_id
             and document.get("status") != DocumentStatus.PUBLISHED
+            and not share_token_valid
         ):
             if not DocumentService._is_admin(current_user):
                 raise HTTPException(
-                    status_code=403, detail="Tài liệu hiện đang ở trạng thái nháp và chưa được công bố"
+                    status_code=403,
+                    detail="Tài liệu hiện đang ở trạng thái nháp và chưa được công bố",
                 )
 
-        if (
-            document.get("is_password_protected")
-            and document.get("creator_id") != user_id
-        ):
+        if document.get("is_password_protected") and document.get("creator_id") != user_id:
             if not password:
                 return {
                     "_id": str(document["_id"]),
@@ -640,7 +610,9 @@ class DocumentService:
             if rl_key and redis:
                 await redis.delete(rl_key)
 
-        can_read_full = await DocumentService._can_read_full(document, current_user)
+        can_read_full = share_token_valid or await DocumentService._can_read_full(
+            document, current_user
+        )
         if not can_read_full and document.get("status") == DocumentStatus.PUBLISHED:
             raw_content = document.get("content") or ""
             limit = max(0, int(document.get("preview_pages", 5) or 0))
@@ -651,15 +623,15 @@ class DocumentService:
 
         from cryptography.hazmat.primitives.ciphers.aead import AESGCM
         import base64
+
         aes_key = AESGCM.generate_key(bit_length=256)
         b64_key = base64.b64encode(aes_key).decode("utf-8")
         if redis and can_read_full:
             uid_str = user_id or "guest"
             await redis.setex(f"aes_key:{document['_id']}:{uid_str}", 300, b64_key)
 
-        try:
-            drm_doc = await DrmClient.document_settings(document["_id"])
-            if drm_doc:
+        if drm_doc:
+            try:
                 document["drm_settings"] = {
                     "disable_copy": drm_doc.get("disable_copy", False),
                     "disable_print": drm_doc.get("disable_print", False),
@@ -668,14 +640,42 @@ class DocumentService:
                     "allow_internal_ai": drm_doc.get("allow_internal_ai", True),
                     "license_valid_days": drm_doc.get("license_valid_days", 30),
                     "max_open_count": drm_doc.get("max_open_count", 100),
+                    "ghost_font_enabled": drm_doc.get("ghost_font_enabled", False),
+                    "ghost_font_exemption_scope": drm_doc.get(
+                        "ghost_font_exemption_scope", "owner_only"
+                    ),
+                    "protection_tier": drm_doc.get("protection_tier", "BASIC"),
                     "watermark_text": f"DocLib {user_id or 'guest'}",
                 }
-        except Exception:
-            logger.exception("Failed to retrieve DRM settings")
+                ghost_scope = drm_doc.get("ghost_font_exemption_scope", "owner_only")
+                ghost_exempt = user_id == document.get("creator_id")
+                if ghost_scope == "everyone":
+                    ghost_exempt = True
+                elif ghost_scope == "selected_users":
+                    ghost_exempt = user_id in set(drm_doc.get("ghost_font_exempt_user_ids") or [])
+                elif ghost_scope == "private_link":
+                    ghost_exempt = share_token_valid
+                document["drm_settings"]["ghost_font_active"] = bool(
+                    drm_doc.get("ghost_font_enabled", False) and not ghost_exempt
+                )
+                document["drm_settings"]["text_delivery"] = (
+                    "canvas" if document["drm_settings"]["ghost_font_active"] else "text"
+                )
+                if (
+                    document["drm_settings"]["ghost_font_active"]
+                    and str(document.get("content_format", "")).lower() == "pdf"
+                ):
+                    document.pop("file_url", None)
+                    document.pop("pdf_url", None)
+                    document["drm_settings"]["protected_pdf"] = True
+            except Exception:
+                logger.exception("Failed to apply DRM settings")
 
         if document.get("content"):
-            if user_id != document.get("creator_id") and can_read_full:
-                document["content_fragments"] = DocumentService._fragment_document_content(document.get("content"), aes_key)
+            if user_id != document.get("creator_id") and can_read_full and not share_token_valid:
+                document["content_fragments"] = DocumentService._fragment_document_content(
+                    document.get("content"), aes_key
+                )
                 del document["content"]
 
         return document
@@ -683,17 +683,14 @@ class DocumentService:
     @staticmethod
     @log_logic_execution
     async def soft_delete_document(document_id: str, current_user) -> dict:
-        
         res = await DocumentRepository.update_one(
-            {
-                "_id": document_id,
-                "creator_id": str(current_user.id),
-                "is_deleted": {"$ne": True},
-            },
+            {"_id": document_id, "creator_id": str(current_user.id), "is_deleted": {"$ne": True}},
             {"$set": {"is_deleted": True, "deleted_at": datetime.now(timezone.utc)}},
         )
         if res.modified_count == 0:
-            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
+            raise HTTPException(
+                status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn"
+            )
 
         logger.info("Document moved to the recycle bin")
         return {"message": "Tài liệu đã được di chuyển vào thùng rác hệ thống"}
@@ -701,13 +698,8 @@ class DocumentService:
     @staticmethod
     @log_logic_execution
     async def restore_document(document_id: str, current_user) -> dict:
-        
         res = await DocumentRepository.update_one(
-            {
-                "_id": document_id,
-                "creator_id": str(current_user.id),
-                "is_deleted": True,
-            },
+            {"_id": document_id, "creator_id": str(current_user.id), "is_deleted": True},
             {"$set": {"is_deleted": False, "deleted_at": None}},
         )
         if res.modified_count == 0:
@@ -721,10 +713,8 @@ class DocumentService:
     @staticmethod
     @log_logic_execution
     async def get_trash(current_user) -> list:
-        
         docs = await (
-            DocumentRepository
-            .find({"creator_id": str(current_user.id), "is_deleted": True})
+            DocumentRepository.find({"creator_id": str(current_user.id), "is_deleted": True})
             .sort("deleted_at", -1)
             .to_list(length=100)
         )
@@ -743,15 +733,14 @@ class DocumentService:
 
     @staticmethod
     @log_logic_execution
-    async def set_document_password(
-        document_id: str, password: str, current_user
-    ) -> dict:
-        
+    async def set_document_password(document_id: str, password: str, current_user) -> dict:
         doc = await DocumentRepository.find_one(
             {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
+            raise HTTPException(
+                status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn"
+            )
         pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
         hashed = pwd_context.hash(password)
         await DocumentRepository.update_one(
@@ -770,12 +759,13 @@ class DocumentService:
     @staticmethod
     @log_logic_execution
     async def invite_coauthor(document_id: str, email: str, current_user):
-        
         document = await DocumentRepository.find_one(
             {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not document:
-            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
+            raise HTTPException(
+                status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn"
+            )
 
         target_user = None
         try:
@@ -791,7 +781,8 @@ class DocumentService:
 
         if not target_user:
             raise HTTPException(
-                status_code=404, detail="Hệ thống không tìm thấy tài khoản liên kết với địa chỉ email cung cấp"
+                status_code=404,
+                detail="Hệ thống không tìm thấy tài khoản liên kết với địa chỉ email cung cấp",
             )
 
         if str(target_user["_id"]) in document.get("coauthors", []):
@@ -806,7 +797,6 @@ class DocumentService:
     @staticmethod
     @log_logic_execution
     async def get_document_by_slug(slug: str, current_user=None):
-        
         docs_collection = DocumentRepository
         document = await docs_collection.find_one(
             {
@@ -817,7 +807,9 @@ class DocumentService:
             }
         )
         if not document:
-            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
+            raise HTTPException(
+                status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn"
+            )
 
         user_id = str(current_user.id) if current_user else None
         has_purchased = False
@@ -855,9 +847,7 @@ class DocumentService:
                 await redis.setex(cache_key, 600, "1")
 
         if should_increment:
-            await docs_collection.update_one(
-                {"_id": document["_id"]}, {"$inc": {"views": 1}}
-            )
+            await docs_collection.update_one({"_id": document["_id"]}, {"$inc": {"views": 1}})
             document["views"] = document.get("views", 0) + 1
         document = serialize_document(document)
 
@@ -882,17 +872,22 @@ class DocumentService:
         document["has_purchased"] = has_purchased
         from cryptography.hazmat.primitives.ciphers.aead import AESGCM
         import base64
+
         aes_key = AESGCM.generate_key(bit_length=256)
         b64_key = base64.b64encode(aes_key).decode("utf-8")
         if redis and (has_purchased or not requires_purchase or is_privileged):
             uid_str = user_id or "guest"
             await redis.setex(f"aes_key:{document['_id']}:{uid_str}", 300, b64_key)
-        
+
         if document.get("content"):
-            if user_id != document.get("creator_id") and (has_purchased or not requires_purchase or is_privileged):
-                document["content_fragments"] = DocumentService._fragment_document_content(document.get("content"), aes_key)
+            if user_id != document.get("creator_id") and (
+                has_purchased or not requires_purchase or is_privileged
+            ):
+                document["content_fragments"] = DocumentService._fragment_document_content(
+                    document.get("content"), aes_key
+                )
                 del document["content"]
-            
+
         return document
 
     @staticmethod
@@ -905,13 +900,14 @@ class DocumentService:
         if redis:
             b64_key = await redis.get(f"aes_key:{document_id}:{user_id}")
             if b64_key:
-                return {"key": b64_key.decode('utf-8') if isinstance(b64_key, bytes) else b64_key}
-        raise HTTPException(status_code=403, detail="Khóa giải mã tài liệu không hợp lệ hoặc đã quá hạn sử dụng")
+                return {"key": b64_key.decode("utf-8") if isinstance(b64_key, bytes) else b64_key}
+        raise HTTPException(
+            status_code=403, detail="Khóa giải mã tài liệu không hợp lệ hoặc đã quá hạn sử dụng"
+        )
 
     @staticmethod
     @log_logic_execution
     async def get_document_preview(slug: str) -> dict:
-        
         doc = await DocumentRepository.find_one(
             {
                 "slug": slug,
@@ -921,7 +917,9 @@ class DocumentService:
             }
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
+            raise HTTPException(
+                status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn"
+            )
 
         limit = doc.get("preview_pages", 5)
         raw_content = doc.get("content", "")
@@ -950,16 +948,16 @@ class DocumentService:
     @staticmethod
     @log_logic_execution
     async def get_document_audit_logs(document_id: str, current_user) -> list:
-        
         document = await DocumentRepository.find_one(
             {"_id": document_id, "creator_id": str(current_user.id)}, projection={"_id": 1}
         )
         if not document:
-            raise HTTPException(status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn")
+            raise HTTPException(
+                status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn"
+            )
 
         logs = (
-            await mongo
-            .find("audit_logs", {"document_id": document_id})
+            await mongo.find("audit_logs", {"document_id": document_id})
             .sort("timestamp", -1)
             .limit(100)
             .to_list(length=100)
@@ -981,11 +979,7 @@ class DocumentService:
 
     @staticmethod
     @log_logic_execution
-    async def get_approval_queue(
-        cursor: str = None,
-        limit: int = 50,
-    ) -> list:
-        
+    async def get_approval_queue(cursor: str = None, limit: int = 50) -> list:
         query = {"status": "processing_publish"}
         if cursor:
             import datetime as dt_mod
@@ -1009,11 +1003,7 @@ class DocumentService:
             {"$unwind": {"path": "$author", "preserveNullAndEmptyArrays": True}},
         ]
 
-        documents = (
-            await DocumentRepository
-            .aggregate(pipeline)
-            .to_list(length=limit)
-        )
+        documents = await DocumentRepository.aggregate(pipeline).to_list(length=limit)
 
         def format_date(val):
             if isinstance(val, datetime):
@@ -1039,12 +1029,7 @@ class DocumentService:
 
     @staticmethod
     @log_logic_execution
-    async def get_trending_tags(
-        limit: int = Query(
-            default=20, le=100
-        )
-    ) -> List[str]:
-        
+    async def get_trending_tags(limit: int = Query(default=20, le=100)) -> List[str]:
         docs_col = DocumentRepository
         pipeline = [
             {"$unwind": "$tags"},
@@ -1058,12 +1043,11 @@ class DocumentService:
     @staticmethod
     @log_logic_execution
     async def get_folders(parent_id: str, current_user):
-        
         query = {"creator_id": str(current_user.id)}
         if parent_id:
             query["parent_id"] = parent_id
         cursor = mongo.query("workspace_folders").filter(query).sort("created_at", 1)
-        folders = await cursor 
+        folders = await cursor
         for f in folders:
             f["_id"] = str(f["_id"])
         return folders
@@ -1071,7 +1055,6 @@ class DocumentService:
     @staticmethod
     @log_logic_execution
     async def create_folder(name: str, parent_id: str, current_user):
-        
         folder_doc = {
             "name": name,
             "parent_id": parent_id,
@@ -1086,7 +1069,6 @@ class DocumentService:
     @staticmethod
     @log_logic_execution
     async def delete_folder(folder_id: str, current_user):
-        
         folder = await mongo.find_one(
             "workspace_folders", {"_id": folder_id, "creator_id": str(current_user.id)}
         )
@@ -1101,31 +1083,26 @@ class DocumentService:
     @staticmethod
     @log_logic_execution
     async def toggle_star_document(document_id: str, current_user):
-        
         doc = await mongo.find_one(
             "documents", {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not doc:
-            raise HTTPException(
-                status_code=404, detail="Không tìm thấy tài liệu trong kho chính"
-            )
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu trong kho chính")
         current_starred = doc.get("is_starred", False)
-        await mongo.update_one("documents", 
-            {"_id": document_id}, {"$set": {"is_starred": not current_starred}}
+        await mongo.update_one(
+            "documents", {"_id": document_id}, {"$set": {"is_starred": not current_starred}}
         )
         return {"starred": not current_starred}
 
     @staticmethod
     @log_logic_execution
     async def transfer_document(document_id: str, new_owner_id: str, current_user):
-        
-        doc = await mongo.find_one("documents", 
-            {"_id": document_id, "creator_id": str(current_user.id)}
+        doc = await mongo.find_one(
+            "documents", {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not doc:
             raise HTTPException(
-                status_code=404,
-                detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
+                status_code=404, detail="Không tìm thấy tài liệu hoặc không có quyền truy cập"
             )
         target = None
         try:
@@ -1138,38 +1115,37 @@ class DocumentService:
                     target = resp.json().get("data")
         except Exception:
             logger.exception("Failed to verify ownership transfer target")
-            raise HTTPException(status_code=503, detail="Dịch vụ hồ sơ người dùng tạm thời không khả dụng")
-        if not target:
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy tài khoản chuyển nhượng"
+                status_code=503, detail="Dịch vụ hồ sơ người dùng tạm thời không khả dụng"
             )
-        await mongo.update_one("documents", 
+        if not target:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản chuyển nhượng")
+        await mongo.update_one(
+            "documents",
             {"_id": document_id},
-            {
-                "$set": {
-                    "creator_id": new_owner_id,
-                    "updated_at": datetime.now(timezone.utc),
-                }
-            },
+            {"$set": {"creator_id": new_owner_id, "updated_at": datetime.now(timezone.utc)}},
         )
         return {"status": "transferred", "new_owner_id": new_owner_id}
 
     @staticmethod
     @log_logic_execution
     async def get_document_analytics(document_id: str, current_user):
-        
         doc = await mongo.find_one(collection="documents", query={"_id": document_id})
         if not doc:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu trong kho chính")
+        if doc.get("creator_id") != str(current_user.id) and not DocumentService._is_admin(
+            current_user
+        ):
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy tài liệu trong kho chính"
+                status_code=403, detail="Bạn không có quyền xem dữ liệu phân tích tài liệu này"
             )
-        if doc.get("creator_id") != str(current_user.id) and not DocumentService._is_admin(current_user):
-            raise HTTPException(status_code=403, detail="Bạn không có quyền xem dữ liệu phân tích tài liệu này")
         views = doc.get("views", 0)
         content = doc.get("content", "")
         total_words = len(content.split()) if content else 0
         avg_read_time_min = max(1, total_words // 200)
-        bookmark_count = await mongo.count_documents(collection="bookmarks", filter={"document_id": document_id})
+        bookmark_count = await mongo.count_documents(
+            collection="bookmarks", filter={"document_id": document_id}
+        )
         purchase_count = await FinanceClient.purchase_count(document_id)
         return {
             "views": views,
@@ -1183,19 +1159,20 @@ class DocumentService:
     @staticmethod
     @log_logic_execution
     async def get_document_academic(document_id: str, current_user):
-        
         doc = await mongo.find_one(collection="documents", query={"_id": document_id})
         if not doc:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu trong kho chính")
+        if (
+            doc.get("creator_id") != str(current_user.id)
+            and not DocumentService._is_admin(current_user)
+            and doc.get("status") != DocumentStatus.PUBLISHED
+        ):
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy tài liệu trong kho chính"
+                status_code=403, detail="Bạn không có quyền xem chỉ số tài liệu này"
             )
-        if doc.get("creator_id") != str(current_user.id) and not DocumentService._is_admin(current_user) and doc.get("status") != DocumentStatus.PUBLISHED:
-            raise HTTPException(status_code=403, detail="Bạn không có quyền xem chỉ số tài liệu này")
         content = doc.get("content", "")
         word_count = len(content.split()) if content else 0
-        sentences = (
-            content.count(".") + content.count("!") + content.count("?") if content else 0
-        )
+        sentences = content.count(".") + content.count("!") + content.count("?") if content else 0
         avg_sentence_len = round(word_count / max(sentences, 1), 1)
         readability_score = max(0, min(100, 100 - (avg_sentence_len - 15) * 3))
         return {
@@ -1208,14 +1185,15 @@ class DocumentService:
 
     @staticmethod
     @log_logic_execution
-    async def get_suggested_documents(
-        limit: int = Query(
-            default=20, le=100
-        )
-    ) -> List[dict]:
-        
+    async def get_suggested_documents(limit: int = Query(default=20, le=100)) -> List[dict]:
         docs_col = DocumentRepository
-        cursor = docs_col.find({"status": "published", "is_deleted": {"$ne": True}, "visibility": "public"}).sort("views", -1).limit(limit)
+        cursor = (
+            docs_col.find(
+                {"status": "published", "is_deleted": {"$ne": True}, "visibility": "public"}
+            )
+            .sort("views", -1)
+            .limit(limit)
+        )
         documents = await cursor.to_list(length=limit)
         return [
             {
