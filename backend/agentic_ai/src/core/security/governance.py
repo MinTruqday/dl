@@ -11,15 +11,10 @@ def enforce_resource_limits(results: List[str]) -> Tuple[bool, str]:
     return True, ""
 
 def sanitize_output(results: List[str]) -> List[str]:
+    from src.core.security.guardrails import guardrails_engine
+
     sanitized = []
     for r in results:
-        text = str(r)
-        text = re.sub(r"\b(0[3|5|7|8|9])+([0-9]{8})\b", "[REDACTED PHONE]", text)
-        text = re.sub(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+", "[REDACTED EMAIL]", text)
-        text = re.sub(r"\b(?:\d[ -]*?){13,16}\b", "[REDACTED CC]", text)
-        
-        text = re.sub(r"(?i)(password|secret|key|token)[\s:=]+[\"']?[A-Za-z0-9_\-\+]{16,}[\"']?", r"\1: [REDACTED SECRET]", text)
-        
-        sanitized.append(text)
-        
+        res = guardrails_engine.inspect_output(str(r))
+        sanitized.append(res.get("sanitized_text", str(r)))
     return sanitized

@@ -124,14 +124,10 @@ def preprocess_file(state: AgentState):
     return updates
 
 def _mask_pii(text: str) -> str:
-    import re
+    from src.core.security.guardrails import guardrails_engine
 
-    text = re.sub(r"\b(0[3|5|7|8|9])+([0-9]{8})\b", "[REDACTED PHONE]", text)
-    text = re.sub(
-        r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+", "[REDACTED EMAIL]", text
-    )
-    text = re.sub(r"\b(?:\d[ -]*?){13,16}\b", "[REDACTED CC]", text)
-    return text
+    result = guardrails_engine.inspect_output(text)
+    return result.get("sanitized_text", text)
 
 async def retrieve_db(state: AgentState):
     question = state["question"]

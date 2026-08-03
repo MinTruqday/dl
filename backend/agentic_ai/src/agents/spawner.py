@@ -74,17 +74,16 @@ class AgentSpawner:
             return f"{METIS_SYSTEM_BASE}\n<system_identity>\nYou are a highly specialized expert in {role}.\n</system_identity>\n<objective>\nComplete the given task with precision and depth.\n</objective>"
 
     async def spawn(self, role: str, task: str) -> str:
+        from src.core.security.guardrails import guardrails_engine
+
         normalized_role = role.strip()
-        if (
-            not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9 ._/-]{2,79}", normalized_role)
-            or re.search(
-                r"\b(ignore|instruction|override|prompt|system)\b",
-                normalized_role,
-                re.IGNORECASE,
-            )
-            or len(task) > 20000
-        ):
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9 ._/-]{2,79}", normalized_role) or len(task) > 20000:
             raise ValueError("spawn_request_invalid")
+
+        role_assessment = await guardrails_engine.async_inspect_input(normalized_role)
+        if not role_assessment.get("is_safe", False):
+            raise ValueError("spawn_request_unsafe_role")
+
         system_prompt = await self._generate_system_prompt(normalized_role)
         async with SpawnedAgent(llm=self.llm, role=normalized_role, system_prompt=system_prompt) as agent:
             return await agent.run(task)

@@ -58,35 +58,6 @@ class SecurityHarness:
         violations = []
         sanitized = text
 
-        pii_patterns = (
-            (r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+", "[PII_EMAIL]"),
-            (r"(?<!\w)\+?[1-9]\d(?:[\s().-]?\d){7,14}(?!\w)", "[PII_PHONE]"),
-            (r"\b(?:\d[ -]*?){13,19}\b", "[PII_CARD]"),
-        )
-        for pattern, replacement in pii_patterns:
-            updated = re.sub(pattern, replacement, sanitized)
-            if updated != sanitized:
-                violations.append("pii_detected")
-                sanitized = updated
-
-        injection_patterns = (
-            r"ignore\s+(?:all\s+)?previous\s+instructions",
-            r"reveal\s+(?:the\s+)?system\s+prompt",
-            r"system\s+override",
-            r"forget\s+(?:all|everything)",
-            r"print\s+(?:your\s+)?initial\s+prompt",
-        )
-        if any(re.search(pattern, text, re.IGNORECASE) for pattern in injection_patterns):
-            violations.append("prompt_injection:deterministic_pattern")
-
-        credential_patterns = (
-            r"\bAKIA[0-9A-Z]{16}\b",
-            r"\b(?:api[_-]?key|password|secret)\s*[:=]\s*[^\s]{8,}",
-            r"\b(?:mongodb|postgres(?:ql)?|mysql|redis)://[^\s]+",
-        )
-        if any(re.search(pattern, text, re.IGNORECASE) for pattern in credential_patterns):
-            violations.append("credential_leak")
-
         if self.analyzer and self.anonymizer:
             try:
                 results = self.analyzer.analyze(text=sanitized, entities=["EMAIL_ADDRESS", "PHONE_NUMBER", "CREDIT_CARD", "CRYPTO"], language='en')

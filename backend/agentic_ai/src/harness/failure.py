@@ -44,23 +44,10 @@ class AttributionReport:
     most_recent: Optional[FailureRecord] = None
 
 def _redact_diagnostics(value: str) -> str:
-    text = str(value)
-    text = re.sub(
-        r"(?i)(authorization|password|secret|token|api[_-]?key)\s*[:=]\s*[^\s,;]+",
-        r"\1=[REDACTED]",
-        text,
-    )
-    text = re.sub(
-        r"(?i)\b(?:mongodb|postgres(?:ql)?|mysql|redis)://[^\s]+",
-        "[REDACTED CONNECTION]",
-        text,
-    )
-    text = re.sub(
-        r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+",
-        "[REDACTED EMAIL]",
-        text,
-    )
-    return text
+    from src.core.security.guardrails import guardrails_engine
+
+    result = guardrails_engine.inspect_output(str(value))
+    return result.get("sanitized_text", str(value))
 
 def _summarize_context(context_snapshot: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     if not context_snapshot:

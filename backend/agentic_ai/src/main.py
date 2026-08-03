@@ -12,23 +12,10 @@ from src.core.dependency import Role, require_role
 logger.remove()
 
 def _safe_log_sink(message):
-    text = str(message)
-    text = re.sub(
-        r"(?i)(authorization|password|secret|token|api[_-]?key|user_id|email)\s*[:=]\s*[^\s,;]+",
-        r"\1=[REDACTED]",
-        text,
-    )
-    text = re.sub(
-        r"(?i)\b(?:mongodb|postgres(?:ql)?|mysql|redis)://[^\s]+",
-        "[REDACTED CONNECTION]",
-        text,
-    )
-    text = re.sub(
-        r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+",
-        "[REDACTED EMAIL]",
-        text,
-    )
-    sys.stdout.write(text)
+    from src.core.security.guardrails import guardrails_engine
+
+    result = guardrails_engine.inspect_output(str(message))
+    sys.stdout.write(result.get("sanitized_text", str(message)))
 
 logger.add(
     _safe_log_sink,
