@@ -101,7 +101,7 @@ class WatermarkService:
         try:
             async with httpx.AsyncClient() as client:
                 agent_res = await client.post(
-                    f"{settings.INTERNAL_API_URL}/drm-ai/danh-gia",
+                    f"{settings.INTERNAL_API_URL}/drm/danh-gia",
                     json={
                         "user_id": user_id,
                         "document_id": str(document["_id"]),
@@ -154,9 +154,9 @@ class WatermarkService:
                 try:
                     async with httpx.AsyncClient() as client:
                         r = await client.post(
-                            f"{settings.INTERNAL_API_URL}/ket-xuat/latex-pdf",
-                            content=watermarked_latex.encode("utf-8"),
-                            headers={"Content-Type": "application/octet-stream", "X-Internal-Token": settings.SECRET_KEY},
+                            f"{settings.INTERNAL_API_URL}/soan-thao/latex/ket-xuat/pdf",
+                            json={"content": watermarked_latex},
+                            headers={"X-Internal-Token": settings.SECRET_KEY},
                             timeout=10.0
                         )
                         r.raise_for_status()
@@ -169,8 +169,8 @@ class WatermarkService:
             try:
                 async with httpx.AsyncClient() as client:
                     r = await client.post(
-                        f"{settings.INTERNAL_API_URL}/ket-xuat/editorjs-pdf",
-                        json={"content": watermarked_raw_content, "format": "pdf"},
+                        f"{settings.INTERNAL_API_URL}/soan-thao/editorjs/ket-xuat/pdf",
+                        json={"content": watermarked_raw_content},
                         headers={"X-Internal-Token": settings.SECRET_KEY},
                         timeout=10.0
                     )

@@ -4,7 +4,7 @@ from loguru import logger
 from src.agents.drm import evaluate_drm_policy
 from src.core.infrastructure.configuration import settings
 
-router = APIRouter(prefix="/drm-ai")
+router = APIRouter(prefix="/drm")
 
 from src.schemas.drm import DRMContextRequest
 @router.post("/danh-gia")

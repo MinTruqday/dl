@@ -302,7 +302,7 @@ async def main():
         status, license_token = call(
             "drm",
             "POST",
-            "/drm/kiem-tra",
+            "/giay-phep/kiem-tra",
             {
                 "file_id": FILE_ID,
                 "client_public_key": public_key,
@@ -322,7 +322,7 @@ async def main():
             call(
                 "drm",
                 "POST",
-                "/drm/kiem-tra",
+                "/giay-phep/kiem-tra",
                 {
                     "file_id": FILE_ID,
                     "client_public_key": public_key,

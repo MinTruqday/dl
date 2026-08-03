@@ -9,9 +9,9 @@ from src.services.watermark import WatermarkService
 from src.core.response import APIResponse
 from src.core.dependency import CurrentUser, Role, require_role
 
-router = APIRouter(route_class=LoggingRoute, prefix="/ket-xuat")
+router = APIRouter(route_class=LoggingRoute, prefix="/thuy-an")
 
-@router.get("/{document_id}/drm")
+@router.get("/{document_id}")
 async def export_document_pdf(
     document_id: str,
     request: Request,

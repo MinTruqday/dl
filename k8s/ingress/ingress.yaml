@@ -148,14 +148,7 @@ spec:
             port:
               number: 80
 
-      - path: /drm(/|$)(.*)
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: drm
-            port:
-              number: 80
-      - path: /ket-xuat(/|$)(.*)
+      - path: /thuy-an(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
@@ -352,7 +345,7 @@ spec:
             name: agentic-ai
             port:
               number: 80
-      - path: /drm-ai(/|$)(.*)
+      - path: /drm(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:

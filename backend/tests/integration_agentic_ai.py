@@ -145,7 +145,7 @@ async def main():
         "client_ip": "10.10.10.10",
         "device_fingerprint": "agentic-device-fingerprint",
     }
-    assert call("POST", "/drm-ai/danh-gia", drm_request)[0] == 403
+    assert call("POST", "/drm/danh-gia", drm_request)[0] == 403
     from motor.motor_asyncio import AsyncIOMotorClient
 
     mongo = AsyncIOMotorClient(os.environ["MONGODB_URI"])
@@ -188,12 +188,12 @@ async def main():
         },
         upsert=True,
     )
-    status, policy = call("POST", "/drm-ai/danh-gia", drm_request, internal=True)
+    status, policy = call("POST", "/drm/danh-gia", drm_request, internal=True)
     assert status == 200, policy
     assert policy["data"]["decision"] in {"LEVEL_0", "LEVEL_1", "LEVEL_2", "LEVEL_3", "BLOCKED"}
     missing_fingerprint = dict(drm_request)
     missing_fingerprint.pop("device_fingerprint")
-    status, blocked_policy = call("POST", "/drm-ai/danh-gia", missing_fingerprint, internal=True)
+    status, blocked_policy = call("POST", "/drm/danh-gia", missing_fingerprint, internal=True)
     assert status == 200, blocked_policy
     assert blocked_policy["data"]["decision"] == "BLOCKED"
     assert blocked_policy["data"]["enable_aes_encryption"] is False

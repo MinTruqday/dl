@@ -12,7 +12,7 @@ from src.core.logging_route import LoggingRoute
 from src.repositories.license import LicenseRepository
 from src.schemas.license import Acquisition, Token
 
-router = APIRouter(route_class=LoggingRoute, prefix="/drm")
+router = APIRouter(route_class=LoggingRoute, prefix="/giay-phep")
 
 
 async def owned_license(file_id: str, current_user: CurrentUser):

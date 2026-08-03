@@ -207,7 +207,7 @@ services:
       - 8008:8000
     labels:
       - traefik.enable=true
-      - traefik.http.routers.ai.rule=PathPrefix(`/lich-su`) || PathPrefix(`/phan-hoi`) || PathPrefix(`/suy-luan`) || PathPrefix(`/nap-du-lieu`) || PathPrefix(`/tinh-chinh`) || PathPrefix(`/tro-chuyen`) || PathPrefix(`/huan-luyen`) || PathPrefix(`/nhap-lieu`) || PathPrefix(`/su-kien`) || PathPrefix(`/toi-uu`) || PathPrefix(`/tiep-nap`) || PathPrefix(`/drm-ai`) || PathPrefix(`/mcp`)
+      - traefik.http.routers.ai.rule=PathPrefix(`/lich-su`) || PathPrefix(`/phan-hoi`) || PathPrefix(`/suy-luan`) || PathPrefix(`/nap-du-lieu`) || PathPrefix(`/tinh-chinh`) || PathPrefix(`/tro-chuyen`) || PathPrefix(`/huan-luyen`) || PathPrefix(`/nhap-lieu`) || PathPrefix(`/su-kien`) || PathPrefix(`/toi-uu`) || PathPrefix(`/tiep-nap`) || PathPrefix(`/drm`) || PathPrefix(`/mcp`)
       - traefik.http.services.ai.loadbalancer.server.port=8000
     env_file:
       - .env
@@ -555,7 +555,7 @@ services:
       - 8013:8000
     labels:
       - traefik.enable=true
-      - traefik.http.routers.drm.rule=PathPrefix(`/drm`) || PathPrefix(`/ket-xuat`) || PathPrefix(`/ban-quyen`) || PathPrefix(`/giay-phep`) || PathPrefix(`/bao-ve`)
+      - traefik.http.routers.drm.rule=PathPrefix(`/thuy-an`) || PathPrefix(`/ban-quyen`) || PathPrefix(`/giay-phep`) || PathPrefix(`/bao-ve`)
       - traefik.http.routers.drm.priority=2
       - traefik.http.services.drm.loadbalancer.server.port=8000
     env_file:
