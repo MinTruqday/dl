@@ -42,14 +42,9 @@ class RetrievalRag:
         return self._reranker
 
     async def _generate_hypothetical_document(self, question: str) -> str:
-        system_prompt = (
-            "<system_identity>\nYou are Metis, a document generation assistant.\n</system_identity>\n"
-            "<objective>\nGiven a question, write a short, factual passage (2-3 sentences) that directly answers it.\n</objective>\n"
-            "<rules>\n1. Output only the passage text, no preamble.\n</rules>"
-        )
+        prompt = registry.get(PromptType.HYDE_GENERATION).format(question=question)
         try:
-            messages = [SystemMessage(content=system_prompt), HumanMessage(content=question)]
-            response = await self.llm.ainvoke(messages)
+            response = await self.llm.ainvoke([HumanMessage(content=prompt)])
             return response.content.strip()
         except Exception:
             logger.exception("HyDE document generation failed")
@@ -189,11 +184,9 @@ class RetrievalRag:
         if not document_ids or len(document_ids) < 2:
             return await self.multi_query_retrieve(question, document_ids, k)
 
-        decompose_prompt = (
-            f"Given the question: {question}\n"
-            f"There are {len(document_ids)} documents with IDs: {document_ids}\n"
-            "For each document, generate one specific sub-query to retrieve the most relevant passage. "
-            "Return one query per document in the same order"
+        decompose_prompt = registry.get(PromptType.CROSS_DOCUMENT_QUERY).format(
+            question=question,
+            document_ids=document_ids,
         )
 
         sub_queries = [question] * len(document_ids)

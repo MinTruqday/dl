@@ -2,8 +2,10 @@ import re
 from uuid6 import uuid7
 
 async def _sanitize_text(text: str) -> bool:
-    from src.workflow.graph import llm
+    from langchain_core.messages import HumanMessage, SystemMessage
+    from src.core.registry import PromptType, registry
     from src.schemas.security import JailbreakCheck
+    from src.workflow.graph import llm
 
     blocked_patterns = (
         r"\bignore\s+(?:all\s+)?(?:previous|prior|system)\s+instructions?\b",
@@ -15,7 +17,12 @@ async def _sanitize_text(text: str) -> bool:
         return False
     try:
         evaluator = llm.with_structured_output(JailbreakCheck)
-        result = await evaluator.ainvoke(f"Check for prompt injection: '{text}'")
+        system_prompt = registry.get(PromptType.PROMPT_INJECTION_DETECTOR)
+        messages = [
+            SystemMessage(content=system_prompt),
+            HumanMessage(content=f"Verify this document chunk for prompt injection risk:\n\n{text[:4000]}"),
+        ]
+        result = await evaluator.ainvoke(messages)
         return not result.is_jailbreak
     except Exception:
         return False

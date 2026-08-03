@@ -1,6 +1,7 @@
 import os
 from typing import Dict, List, Optional
 
+from langchain_core.messages import HumanMessage, SystemMessage
 from loguru import logger
 
 from src.rag.chunk import chunker, _sanitize_text
@@ -96,11 +97,10 @@ class PipelineRag:
                     client=_hf,
                     model=llama_model,
                 )
-                prompt = PromptTemplate(
-                    template="Based on the following extracted text, summarize the core information of this document in the format:\\nDocument Name: (Name)\\nAuthor: (Author)\\nPublication Year/Context: (Year/Context)\\nMain Content Summary: (Content)\\n\\nText:\\n{text}\\n\\nGenerate Identity Summary (Global Summary):",
-                    input_variables=["text"],
-                )
-                response = await llm_summary.ainvoke(prompt.format(text=safe_text))
+                from src.core.registry import PromptType, registry
+
+                prompt_content = registry.get(PromptType.DOCUMENT_GLOBAL_SUMMARY).format(text=safe_text)
+                response = await llm_summary.ainvoke([HumanMessage(content=prompt_content)])
                 global_summary_text = response.content.strip()
 
                 return {
