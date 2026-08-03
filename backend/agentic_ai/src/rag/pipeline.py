@@ -3,7 +3,7 @@ from typing import Dict, List, Optional
 
 from loguru import logger
 
-from src.rag.chunk import chunker
+from src.rag.chunk import chunker, _sanitize_text
 from src.rag.embedding import embedder
 from src.store.vector import vector_store
 from uuid6 import uuid7
@@ -11,11 +11,18 @@ from uuid6 import uuid7
 from src.core.infrastructure.configuration import settings
 from src.services.content_client import ContentClient
 
+
+def _resolve_bucket(object_key: str, visibility: str) -> str:
+    if visibility in ("private", "restricted"):
+        return settings.MINIO_PRIVATE_BUCKET
+    return settings.MINIO_PUBLIC_BUCKET
+
+
 class PipelineRag:
     """
     <module_purpose>
     <purpose>Manages the end-to-end data ingestion and vector indexing pipeline.</purpose>
-    <metis_behavior>Extracts raw data robustly across formats. Never drops exceptions silently; routes errors to system logs. Integrates Neo4j for GraphRAG entity extraction.</metis_behavior>
+    <metis_behavior>Extracts raw data robustly across formats. Never drops exceptions silently; routes errors to system logs. Integrates GraphRAG entity extraction via Redis edge store.</metis_behavior>
     </module_purpose>
     """
     def __init__(self):
@@ -23,7 +30,7 @@ class PipelineRag:
         self._minio_base = minio_endpoint.rstrip("/")
         self._minio_private_bucket = settings.MINIO_PRIVATE_BUCKET
         self._minio_public_bucket = settings.MINIO_PUBLIC_BUCKET
-        
+
     async def authorize_document(
         self, document_id: str, user_id: str, is_admin: bool = False
     ) -> Dict:
@@ -42,6 +49,8 @@ class PipelineRag:
         file_url = document.get("file_url", "")
         title = document.get("title", "Untitled")
         author = document.get("author", "Unknown")
+        visibility = document.get("visibility", "public")
+        content_source = document.get("source") or document.get("content_source") or "user_upload"
 
         if not file_url:
             raise ValueError("Missing file path parameter")
@@ -53,7 +62,8 @@ class PipelineRag:
             "title": title,
             "author": author,
             "content_format": document.get("content_format", "unknown"),
-            "source": "anna_archive",
+            "source": content_source,
+            "visibility": visibility,
             "file_url": file_url,
         }
 
@@ -62,10 +72,15 @@ class PipelineRag:
 
         from src.rag.conversion import document_parser
 
-        doc_chunks = await document_parser.get_doc_chunks_for_ingestion(file_url)
+        doc_chunks = await document_parser.get_doc_chunks_for_ingestion(file_url, visibility=visibility)
 
-        async def get_summary_chunk(first_pages, extract_method):
+        async def get_summary_chunk(first_pages: str, extract_method: str):
             try:
+                safe_text = first_pages
+                if not await _sanitize_text(safe_text):
+                    logger.warning("Summary input failed sanitization check, skipping summary chunk")
+                    return None
+
                 from langchain_core.prompts import PromptTemplate
                 from huggingface_hub import AsyncInferenceClient
                 from src.utils.huggingface import HFInferenceChat
@@ -82,15 +97,15 @@ class PipelineRag:
                     model=llama_model,
                 )
                 prompt = PromptTemplate(
-                    template="Based on the following extracted text, summarize the core information of this document in the format:\nDocument Name: (Name)\nAuthor: (Author)\nPublication Year/Context: (Year/Context)\nMain Content Summary: (Content)\n\nText:\n{text}\n\nGenerate Identity Summary (Global Summary):",
+                    template="Based on the following extracted text, summarize the core information of this document in the format:\\nDocument Name: (Name)\\nAuthor: (Author)\\nPublication Year/Context: (Year/Context)\\nMain Content Summary: (Content)\\n\\nText:\\n{text}\\n\\nGenerate Identity Summary (Global Summary):",
                     input_variables=["text"],
                 )
-                response = await llm_summary.ainvoke(prompt.format(text=first_pages))
+                response = await llm_summary.ainvoke(prompt.format(text=safe_text))
                 global_summary_text = response.content.strip()
 
                 return {
                     "id": f"{document_id}_global_summary",
-                    "text": f"[GLOBAL METADATA - SUMMARY CHUNK]\nDocument: {title}\nAuthor: {author}\n{global_summary_text}",
+                    "text": f"[GLOBAL METADATA - SUMMARY CHUNK]\\nDocument: {title}\\nAuthor: {author}\\n{global_summary_text}",
                     "metadata": {
                         **metadata,
                         "chunk_id": "summary_001",
@@ -103,14 +118,25 @@ class PipelineRag:
                 logger.exception("Document summary generation error")
                 return None
 
+        await vector_store.delete_by_document(document_id)
+
+        _entity_text = ""
         if doc_chunks:
             extraction_method = "ade"
             first_few_pages = " ".join([ac["text"] for ac in doc_chunks[:5]])[:15000]
+            _entity_text = first_few_pages[:8000]
             summary_chunk = await get_summary_chunk(first_few_pages, "ade_llm")
             if summary_chunk:
                 chunks.append(summary_chunk)
 
-            for i, ac in enumerate(doc_chunks):
+            import asyncio
+
+            async def process_docling_chunk(i: int, ac: Dict):
+                chunk_text = ac.get("text", "").strip()
+                if len(chunk_text) < 30:
+                    return None
+                if not await _sanitize_text(chunk_text):
+                    return None
                 chunk_id = str(uuid7())[:12]
                 chunk_meta = {
                     **metadata,
@@ -119,27 +145,32 @@ class PipelineRag:
                     "chunk_index": i,
                     "extraction_method": "ade",
                 }
-                chunks.append(
-                    {
-                        "id": f"{document_id}_{chunk_id}",
-                        "text": ac["text"],
-                        "metadata": chunk_meta,
-                    }
-                )
+                return {
+                    "id": f"{document_id}_{chunk_id}",
+                    "text": chunk_text,
+                    "metadata": chunk_meta,
+                }
+
+            results = await asyncio.gather(*(process_docling_chunk(i, ac) for i, ac in enumerate(doc_chunks)))
+            chunks.extend([r for r in results if r is not None])
         else:
-            raw_text = await self._extract_text(file_url)
+            raw_text = await self._extract_text(file_url, visibility=visibility)
             if not raw_text or len(raw_text.strip()) < 100:
                 raise ValueError("Insufficient extracted text to proceed")
 
             first_few_pages = raw_text[:15000]
+            _entity_text = raw_text[:8000]
             summary_chunk = await get_summary_chunk(first_few_pages, "local")
             if summary_chunk:
                 chunks.append(summary_chunk)
 
             extracted_chunks = await chunker.chunk_document(raw_text, metadata)
             chunks.extend(extracted_chunks)
-            
-        await self._extract_entities_and_relations(first_few_pages, document_id)
+
+        ast_chunks = await self._index_ast_if_code(file_url, visibility, document_id, metadata)
+        chunks.extend(ast_chunks)
+
+        await self._extract_entities_and_relations(_entity_text, document_id)
 
         if not chunks:
             raise ValueError("Document chunking error")
@@ -164,8 +195,64 @@ class PipelineRag:
             "status": "indexed",
         }
 
-    async def _extract_text(self, file_url: str) -> str:
-        file_bytes = await self._download_file(file_url)
+    async def _index_ast_if_code(
+        self,
+        file_url: str,
+        visibility: str,
+        document_id: str,
+        metadata: Dict,
+    ) -> List[Dict]:
+        code_exts = {".py", ".js", ".ts", ".java", ".go", ".c", ".cpp", ".rs"}
+        raw_path = file_url.split("?")[0]
+        ext = os.path.splitext(raw_path)[1].lower()
+        if ext not in code_exts:
+            return []
+        try:
+            import tempfile
+            from pathlib import Path
+            from src.rag.ast_indexer import ASTIndexer
+
+            file_bytes = await self._download_file(file_url, visibility=visibility)
+            if not file_bytes:
+                return []
+
+            with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tmp:
+                tmp.write(file_bytes)
+                tmp_path = tmp.name
+
+            try:
+                indexer = ASTIndexer()
+                ast_nodes = indexer.index_file(tmp_path)
+            finally:
+                Path(tmp_path).unlink(missing_ok=True)
+
+            chunks = []
+            for node in ast_nodes:
+                snippet = node.get("snippet", "").strip()
+                if len(snippet) < 30:
+                    continue
+                chunk_id = str(uuid7())[:12]
+                chunks.append({
+                    "id": f"{document_id}_{chunk_id}",
+                    "text": f"[{node.get('type', 'code')}] {node.get('name', '')}\n{snippet}",
+                    "metadata": {
+                        **metadata,
+                        "chunk_id": chunk_id,
+                        "chunk_type": "ast_code",
+                        "chunk_index": node.get("line", 0),
+                        "extraction_method": "ast",
+                        "ast_node_type": node.get("type", ""),
+                        "ast_node_name": node.get("name", ""),
+                    },
+                })
+            logger.info(f"AST indexing produced {len(chunks)} code chunks for document {document_id}")
+            return chunks
+        except Exception:
+            logger.exception("AST indexing failed")
+            return []
+
+    async def _extract_text(self, file_url: str, visibility: str = "public") -> str:
+        file_bytes = await self._download_file(file_url, visibility=visibility)
         if not file_bytes:
             return ""
 
@@ -278,7 +365,7 @@ class PipelineRag:
 
         return await asyncio.to_thread(extract_archive)
 
-    async def _download_file(self, url: str) -> Optional[bytes]:
+    async def _download_file(self, url: str, visibility: str = "public") -> Optional[bytes]:
         try:
             from urllib.parse import urlparse
 
@@ -291,8 +378,8 @@ class PipelineRag:
                 object_key = path_parts[1] if len(path_parts) == 2 else parsed.path.lstrip("/")
             else:
                 object_key = url
-                
-            bucket = self._minio_private_bucket if object_key.startswith("system/") else self._minio_public_bucket
+
+            bucket = _resolve_bucket(object_key, visibility)
 
             logger.info("Downloading file from cloud storage")
 
@@ -339,6 +426,9 @@ class PipelineRag:
             return ""
 
     async def _extract_entities_and_relations(self, text: str, document_id: str):
+        if not text or not text.strip():
+            return
+
         from src.core.registry import PromptType, registry
         from src.workflow.graph import llm
         from src.memory.management import memory_manager
@@ -353,15 +443,18 @@ class PipelineRag:
 
         class ExtractedGraph(BaseModel):
             relations: List[GraphRelation]
-        
+
         logger.info(f"Extracting GraphRAG entities for document {document_id}")
         system_prompt = registry.get(PromptType.GRAPHRAG_ENTITY_EXTRACTION)
         human_msg = f"Extract key entities and relationships from this text:\n\n{text[:8000]}"
-        
+
         try:
             msg = [SystemMessage(content=system_prompt), HumanMessage(content=human_msg)]
             response = await llm.with_structured_output(ExtractedGraph).ainvoke(msg)
-            if memory_manager._redis:
+            if memory_manager._redis and response.relations:
+                edge_key = f"graphrag:edges:{document_id}"
+                node_key = f"graphrag:nodes:{document_id}"
+                nodes: set = set()
                 for relation in response.relations:
                     edge_data = json.dumps(
                         {
@@ -372,11 +465,19 @@ class PipelineRag:
                         },
                         ensure_ascii=False,
                     )
-                    await memory_manager._redis.sadd(
-                        f"graphrag:edges:{document_id}", edge_data
-                    )
-                logger.info("Pushed entities to GraphRAG store")
+                    await memory_manager._redis.lpush(edge_key, edge_data)
+                    nodes.add(relation.source)
+                    nodes.add(relation.target)
+
+                await memory_manager._redis.expire(edge_key, 86400 * 30)
+
+                if nodes:
+                    await memory_manager._redis.sadd(node_key, *nodes)
+                    await memory_manager._redis.expire(node_key, 86400 * 30)
+
+                logger.info(f"Pushed {len(response.relations)} GraphRAG edges and {len(nodes)} nodes for document {document_id}")
         except Exception:
             logger.exception("GraphRAG entity extraction failed")
+
 
 ingestion_pipeline = PipelineRag()

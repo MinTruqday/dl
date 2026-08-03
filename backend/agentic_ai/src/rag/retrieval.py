@@ -55,7 +55,7 @@ class RetrievalRag:
             logger.exception("HyDE document generation failed")
             return question
 
-    def get_citations(self, results: List[Dict]) -> List[str]:
+    def get_citations(self, results: List[Dict]) -> List[Dict]:
         seen = set()
         citations = []
         for doc in results:
@@ -63,10 +63,17 @@ class RetrievalRag:
             doc_id = meta.get("document_id") or meta.get("source", "")
             title = meta.get("title", "")
             chunk_idx = meta.get("chunk_index", "")
+            chunk_id = meta.get("chunk_id", "")
             if doc_id and doc_id not in seen:
                 seen.add(doc_id)
                 label = f"{title} (ID: {doc_id}, chunk {chunk_idx})" if title else f"ID: {doc_id}, chunk {chunk_idx}"
-                citations.append(label)
+                citations.append({
+                    "chunk_id": chunk_id,
+                    "document_id": doc_id,
+                    "title": title,
+                    "chunk_index": chunk_idx,
+                    "label": label,
+                })
         return citations
 
     async def multi_query_retrieve(
@@ -106,6 +113,18 @@ class RetrievalRag:
             if d["text"] not in seen_texts:
                 unique_documents.append(d)
                 seen_texts.add(d["text"])
+
+        if document_ids:
+            try:
+                graph_context = await self.graph_expand(document_ids, question)
+                if graph_context:
+                    unique_documents.append({
+                        "text": graph_context,
+                        "metadata": {"chunk_type": "graphrag_context", "source": "graphrag"},
+                        "score": 0.0,
+                    })
+            except Exception:
+                logger.exception("GraphRAG context augmentation failed")
 
         return unique_documents[:k]
 
@@ -224,6 +243,53 @@ class RetrievalRag:
                 result[right] = doc
                 right -= 1
         return [d for d in result if d is not None]
+
+    async def graph_expand(
+        self, document_ids: List[str], seed_query: str
+    ) -> str:
+        try:
+            from src.memory.management import memory_manager
+            import json
+
+            if not memory_manager._redis:
+                return ""
+
+            all_edges = []
+            for doc_id in document_ids:
+                raw = await memory_manager._redis.lrange(f"graphrag:edges:{doc_id}", 0, -1)
+                for item in raw:
+                    try:
+                        edge = json.loads(item)
+                        all_edges.append(edge)
+                    except Exception:
+                        pass
+
+            if not all_edges:
+                return ""
+
+            seed_lower = seed_query.lower()
+            relevant = [
+                e for e in all_edges
+                if seed_lower in e.get("source", "").lower()
+                or seed_lower in e.get("target", "").lower()
+                or any(
+                    word in e.get("source", "").lower() or word in e.get("target", "").lower()
+                    for word in seed_lower.split()
+                    if len(word) > 3
+                )
+            ]
+
+            if not relevant:
+                relevant = all_edges[:10]
+
+            lines = [
+                f"{e.get('source')} --[{e.get('relation')}]--> {e.get('target')}"
+                for e in relevant[:20]
+            ]
+            return "Knowledge graph context:\n" + "\n".join(lines)
+        except Exception:
+            logger.exception("GraphRAG expansion error")
+            return ""
 
 
 retriever = RetrievalRag()

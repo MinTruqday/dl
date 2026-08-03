@@ -40,14 +40,20 @@ class VectorStore:
 
     async def _upsert_worker(self):
         while True:
+            task = None
             try:
                 task = await self._upsert_queue.get()
                 await self.client.upsert(**task)
-                self._upsert_queue.task_done()
             except asyncio.CancelledError:
                 break
             except Exception:
                 logger.exception("Search index payload upsert queue error")
+            finally:
+                if task is not None:
+                    try:
+                        self._upsert_queue.task_done()
+                    except ValueError:
+                        pass
 
     async def ensure_collection(self):
         try:

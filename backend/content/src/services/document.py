@@ -493,6 +493,24 @@ class DocumentService:
             if doc.get("slug"):
                 await redis.delete(f"document:slug:{doc.get('slug')}")
 
+        if update_data and "file_url" in update_data and update_data["file_url"]:
+            creator_id = doc.get("creator_id", "")
+            try:
+                import asyncio
+                async def _fire_ingest():
+                    try:
+                        async with httpx.AsyncClient(timeout=5.0) as client:
+                            await client.post(
+                                f"{settings.AGENTIC_AI_URL}/su-kien/webhook/tai-lieu-dang-tai",
+                                params={"document_id": document_id, "user_id": creator_id},
+                                headers={"X-Internal-Token": settings.SECRET_KEY},
+                            )
+                    except Exception:
+                        logger.warning(f"Ingest webhook dispatch failed for document_id={document_id}")
+                asyncio.create_task(_fire_ingest())
+            except Exception:
+                logger.warning(f"Could not schedule ingest webhook for document_id={document_id}")
+
         return serialize_document(await docs_col.find_one({"_id": document_id}))
 
     @staticmethod

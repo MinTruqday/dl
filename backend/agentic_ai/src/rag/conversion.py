@@ -50,6 +50,11 @@ class ConversionRag:
         self._docling: Optional[_DoclingModel] = None
         logger.info("Document analysis tool initialized")
 
+    def _resolve_bucket(self, object_key: str, visibility: str) -> str:
+        if visibility in ("private", "restricted"):
+            return self._minio_private_bucket
+        return self._minio_public_bucket
+
     def _get_docling(self) -> _DoclingModel:
         if self._docling is None:
             logger.info("Loading Docling document converter engine")
@@ -114,8 +119,8 @@ class ConversionRag:
                 "page_count": 1,
             }
 
-    async def parse_document(self, file_url: str) -> Dict:
-        file_bytes, file_ext = await self._download_from_minio(file_url)
+    async def parse_document(self, file_url: str, visibility: str = "public") -> Dict:
+        file_bytes, file_ext = await self._download_from_minio(file_url, visibility=visibility)
         if not file_bytes:
             return {"error": "File load failed"}
 
@@ -169,8 +174,8 @@ class ConversionRag:
         finally:
             await asyncio.to_thread(tmp_path.unlink, missing_ok=True)
 
-    async def extract_tables(self, file_url: str) -> List[Dict]:
-        file_bytes, file_ext = await self._download_from_minio(file_url)
+    async def extract_tables(self, file_url: str, visibility: str = "public") -> List[Dict]:
+        file_bytes, file_ext = await self._download_from_minio(file_url, visibility=visibility)
         if not file_bytes:
             return []
 
@@ -287,8 +292,8 @@ class ConversionRag:
 
         return chunks
 
-    async def get_doc_chunks_for_ingestion(self, file_url: str) -> List[Dict]:
-        parse_result = await self.parse_document(file_url)
+    async def get_doc_chunks_for_ingestion(self, file_url: str, visibility: str = "public") -> List[Dict]:
+        parse_result = await self.parse_document(file_url, visibility=visibility)
         if parse_result.get("error"):
             logger.warning("Document parsing error")
             return []
@@ -301,7 +306,7 @@ class ConversionRag:
 
         doc_exts = [".pdf", ".docx", ".epub", ".pptx", ".xlsx", ".html", ".adoc"]
         if file_ext in doc_exts:
-            table_chunks = await self.extract_tables(file_url)
+            table_chunks = await self.extract_tables(file_url, visibility=visibility)
             if table_chunks:
                 chunks.extend(table_chunks)
 
@@ -325,7 +330,7 @@ class ConversionRag:
         parse_result = await self.parse_document(file_url)
         return parse_result.get("markdown", "")
 
-    async def _download_from_minio(self, file_url: str) -> tuple:
+    async def _download_from_minio(self, file_url: str, visibility: str = "public") -> tuple:
         try:
             from urllib.parse import urlparse
 
@@ -336,7 +341,7 @@ class ConversionRag:
             else:
                 object_key = file_url
 
-            bucket = self._minio_private_bucket if object_key.startswith("system/") else self._minio_public_bucket
+            bucket = self._resolve_bucket(object_key, visibility)
 
             if ".." in object_key:
                 logger.error("Prevented path traversal attempt")

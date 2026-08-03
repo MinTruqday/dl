@@ -32,9 +32,9 @@ class Settings(BaseModel):
     QDRANT_URL: str = os.environ["QDRANT_URL"]
     QDRANT_HOST: str = os.environ["QDRANT_HOST"]
     QDRANT_PORT: int = int(os.environ["QDRANT_PORT"])
-    NEO4J_URI: str = os.environ["NEO4J_URI"]
-    NEO4J_USER: str = os.environ["NEO4J_USER"]
-    NEO4J_PASSWORD: str = os.environ["NEO4J_PASSWORD"]
+    NEO4J_URI: Optional[str] = os.environ.get("NEO4J_URI")
+    NEO4J_USER: Optional[str] = os.environ.get("NEO4J_USER")
+    NEO4J_PASSWORD: Optional[str] = os.environ.get("NEO4J_PASSWORD")
     DOCKER_HOST: str = os.environ["DOCKER_HOST"]
     PAYOS_API_URL: str = os.environ["PAYOS_API_URL"]
     MINIO_ENDPOINT: str = os.environ["MINIO_ENDPOINT"]

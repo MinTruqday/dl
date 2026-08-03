@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from typing import Any, List, Optional
 import uuid
+import httpx
 
 from bson import ObjectId
 from pymongo import ReturnDocument
@@ -320,7 +321,21 @@ async def exchange_internal_document(req: dict):
         row = await documents.find_one_and_update(
             query, {"$setOnInsert": payload}, upsert=True, return_document=ReturnDocument.AFTER
         )
-        return {"data": {"document_id": str(row["_id"])}}
+        collected_doc_id = str(row["_id"])
+        if payload.get("file_url"):
+            import asyncio
+            async def _fire_collected_ingest():
+                try:
+                    async with httpx.AsyncClient(timeout=5.0) as client:
+                        await client.post(
+                            f"{settings.AGENTIC_AI_URL}/su-kien/webhook/tai-lieu-dang-tai",
+                            params={"document_id": collected_doc_id, "user_id": ""},
+                            headers={"X-Internal-Token": settings.SECRET_KEY},
+                        )
+                except Exception:
+                    logger.warning(f"Collected document ingest webhook failed for document_id={collected_doc_id}")
+            asyncio.create_task(_fire_collected_ingest())
+        return {"data": {"document_id": collected_doc_id}}
     if action == "update_collected":
         result = await documents.update_one(
             {"_id": document_id},

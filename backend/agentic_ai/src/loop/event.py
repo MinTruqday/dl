@@ -327,10 +327,27 @@ async def _handle_system_heartbeat(event: AgentEvent) -> Optional[str]:
 
 async def _handle_document_uploaded(event: AgentEvent) -> Optional[str]:
     doc_id = event.payload.get("document_id")
+    user_id = event.payload.get("user_id", "")
     if not doc_id:
         return None
     logger.info(f"EventDrivenLoop document uploaded event for doc_id={doc_id}")
-    return f"Document {doc_id} upload event processed"
+
+    async def _run_ingest():
+        try:
+            from src.rag.pipeline import ingestion_pipeline
+            result = await ingestion_pipeline.ingest_document(
+                doc_id,
+                user_id=user_id,
+                is_admin=True,
+            )
+            logger.info(
+                f"Auto-ingest completed doc_id={doc_id} chunks={result.get('chunks', 0)} method={result.get('extraction_method')}"
+            )
+        except Exception:
+            logger.exception(f"Auto-ingest failed for doc_id={doc_id}")
+
+    create_background_task(_run_ingest(), f"auto-ingest-{doc_id}")
+    return f"Document {doc_id} queued for ingestion"
 
 
 async def _handle_user_query_event(event: AgentEvent) -> Optional[str]:
