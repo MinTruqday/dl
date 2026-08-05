@@ -4,7 +4,7 @@ import re
 import shutil
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 from uuid import UUID
 
 import aiofiles
@@ -266,3 +266,37 @@ async def upload_chunk(file: UploadFile = File(...), upload_id: str = Form(...),
     finally:
         shutil.rmtree(chunk_dir, ignore_errors=True)
     return APIResponse(data=result, message="Truyền tải tệp tin hoàn tất", status=201)
+
+@router.post("/yeu-cau/{token}", response_model=APIResponse[Any], status_code=201)
+async def upload_via_request(
+    token: str,
+    file: UploadFile = File(...),
+    password: Optional[str] = Form(None),
+    db=Depends(get_db)
+) -> Any:
+    from src.services.file_request import FileRequestService
+    req_info = await FileRequestService.validate_request(token, password)
+    if not req_info or "error" in req_info:
+        raise HTTPException(status_code=403, detail="Liên kết không hợp lệ, hết hạn hoặc sai mật khẩu")
+    
+    size = await file_size(file)
+    owner_id = req_info["owner_id"]
+    target_folder_id = req_info["target_folder_id"]
+    
+    await enforce_quota(owner_id, size)
+    result = await UploadService.upload_document(file, owner_id=owner_id)
+    
+    from src.schemas.storage import StorageItemCreate
+    item = await StorageService.create_item(
+        StorageItemCreate(
+            name=result["filename"],
+            is_folder=False,
+            url=result["url"],
+            size=result["size"],
+            mime_type=result["content_type"],
+            parent_id=target_folder_id
+        ),
+        owner_id,
+    )
+    result["item_id"] = item.id
+    return APIResponse(data=result, message="Truyền tải tệp tin qua yêu cầu hoàn tất", status=201)

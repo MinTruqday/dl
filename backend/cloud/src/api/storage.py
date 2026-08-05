@@ -9,8 +9,11 @@ from src.schemas.storage import (
     StorageItemCreate,
     StorageItemResponse,
     StorageItemUpdate,
+    BulkActionRequest,
+    ItemActivityResponse,
 )
 from src.services.storage import StorageService
+from src.services.activity import ActivityService
 
 from src.core.infrastructure.configuration import settings
 from src.core.response import APIResponse
@@ -152,8 +155,7 @@ async def download_zip(
 
     from fastapi.responses import StreamingResponse
 
-    from src.core.infrastructure.configuration import settings
-    from src.core.storage import get_storage_client, get_bucket
+    from src.core.storage import download_file
 
     item_ids = list(dict.fromkeys(i.strip() for i in ids.split(",") if i.strip()))
     if not item_ids or len(item_ids) > 50:
@@ -161,7 +163,6 @@ async def download_zip(
             status_code=400, detail="Số lượng tệp yêu cầu không hợp lệ"
         )
     zip_buffer = io.BytesIO()
-    storage_client = await get_storage_client()
     with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
         total_size = 0
         used_names = set()
@@ -177,8 +178,7 @@ async def download_zip(
                 safe_name = f"{item.id}_{safe_name}"
             used_names.add(safe_name)
             try:
-                resp = await storage_client.get_object(Bucket=get_bucket(item.url), Key=item.url)
-                file_data = await resp["Body"].read()
+                file_data, _ = await download_file(item.url)
                 zip_file.writestr(safe_name, file_data)
             except HTTPException:
                 raise
@@ -320,6 +320,103 @@ async def get_public_item(share_token: str, db=Depends(get_db)):
         data.update(await UploadService.get_presigned_url(item.url))
     return APIResponse(
         data=data,
-        message="Trích xuất thông tin tệp chia sẻ hoàn tất",
+        message="Trích xuất thông tin chia sẻ hoàn tất",
         status=200,
+    )
+
+@router.post("/thao-tac-hang-loat", response_model=APIResponse[Any])
+async def bulk_action(
+    req: BulkActionRequest = Body(...),
+    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    db=Depends(get_db),
+):
+    result = await StorageService.bulk_action(
+        action=req.action,
+        item_ids=req.item_ids,
+        target_parent_id=req.target_parent_id,
+        owner_id=current_user.id
+    )
+    return APIResponse(
+        data=result,
+        message=f"Thao tác {req.action} hàng loạt hoàn tất",
+        status=200
+    )
+
+@router.post("/tap-tin/{item_id}/khoa", response_model=APIResponse[StorageItemResponse])
+async def lock_item(
+    item_id: str,
+    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    db=Depends(get_db),
+):
+    item = await StorageService.lock_item(item_id, current_user.id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Không tìm thấy tệp tin")
+    return APIResponse(
+        data=StorageItemResponse(**item.dict()),
+        message="Khóa tệp tin hoàn tất",
+        status=200
+    )
+
+@router.post("/tap-tin/{item_id}/mo-khoa", response_model=APIResponse[StorageItemResponse])
+async def unlock_item(
+    item_id: str,
+    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    db=Depends(get_db),
+):
+    item = await StorageService.unlock_item(item_id, current_user.id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Không tìm thấy tệp tin")
+    return APIResponse(
+        data=StorageItemResponse(**item.dict()),
+        message="Mở khóa tệp tin hoàn tất",
+        status=200
+    )
+
+@router.get("/tap-tin/{item_id}/xem-truoc", response_model=APIResponse[Any])
+async def get_preview_url(
+    item_id: str,
+    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    db=Depends(get_db),
+):
+    item = await StorageService.get_accessible_item(item_id, current_user.id)
+    if not item or item.is_folder or not item.url:
+        raise HTTPException(status_code=404, detail="Không tìm thấy tệp tin hoặc không hỗ trợ xem trước")
+    
+    from src.core.storage import get_bucket, get_storage_client
+    try:
+        client = await get_storage_client()
+        # Create presigned URL with inline content disposition
+        url = await client.generate_presigned_url(
+            "get_object",
+            Params={
+                "Bucket": get_bucket(item.url),
+                "Key": item.url,
+                "ResponseContentDisposition": "inline"
+            },
+            ExpiresIn=3600
+        )
+        return APIResponse(
+            data={"preview_url": url},
+            message="Tạo liên kết xem trước hoàn tất",
+            status=200
+        )
+    except Exception as e:
+        logger.error(f"Error generating preview url: {e}")
+        raise HTTPException(status_code=500, detail="Lỗi khi tạo liên kết xem trước")
+
+@router.get("/tap-tin/{item_id}/nhat-ky", response_model=APIResponse[List[ItemActivityResponse]])
+async def get_item_activities(
+    item_id: str,
+    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    db=Depends(get_db),
+):
+    item = await StorageService.get_accessible_item(item_id, current_user.id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Không tìm thấy tệp tin hoặc không có quyền truy cập")
+    
+    activities = await ActivityService.get_item_activities(item_id)
+    return APIResponse(
+        data=activities,
+        message="Trích xuất nhật ký hoạt động của tệp tin hoàn tất",
+        status=200
     )

@@ -13,6 +13,7 @@ from src.api.share import router as share
 from src.api.star import router as star
 from src.api.analytics import router as analytics
 from src.api.search import router as search
+from src.api.file_request import router as file_request
 
 from src.core.metrics import PrometheusMiddleware, metrics_endpoint
 from src.core.infrastructure.database import database
@@ -54,6 +55,7 @@ app.include_router(share)
 app.include_router(star)
 app.include_router(analytics)
 app.include_router(search)
+app.include_router(file_request)
 
 @app.get("/health", include_in_schema=False)
 async def health_check():

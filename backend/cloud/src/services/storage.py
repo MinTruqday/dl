@@ -205,6 +205,11 @@ class StorageService:
         item = await StorageService.get_item(item_id, owner_id)
         if not item:
             return None
+        
+        if item.is_locked and item.locked_by != owner_id:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=403, detail="Tệp đang bị khóa bởi người dùng khác")
+
         update_dict = update_data.model_dump(exclude_unset=True)
         if "parent_id" in update_dict and update_dict["parent_id"]:
             if update_dict["parent_id"] == item_id:
@@ -251,6 +256,10 @@ class StorageService:
         item = await StorageService.get_item(item_id, owner_id)
         if not item:
             return False
+
+        if item.is_locked and item.locked_by != owner_id:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=403, detail="Tệp đang bị khóa bởi người dùng khác, không thể xóa")
 
         items = [item]
         if item.is_folder:
@@ -488,3 +497,65 @@ class StorageService:
         )
         items = await cursor.to_list(length=limit)
         return [StorageItemInDB(**item) for item in items]
+
+    @staticmethod
+    @log_logic_execution
+    async def lock_item(item_id: str, owner_id: str) -> Optional[StorageItemInDB]:
+        item = await StorageService.get_item(item_id, owner_id)
+        if not item or item.is_folder:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=400, detail="Chỉ có thể khóa tệp tin, không áp dụng cho thư mục")
+        if item.is_locked:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=400, detail="Tệp tin đã bị khóa")
+        
+        result = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one_and_update(
+            {"_id": item_id, "owner_id": owner_id},
+            {"$set": {"is_locked": True, "locked_by": owner_id, "locked_at": datetime.now(timezone.utc)}},
+            return_document=True,
+        )
+        return StorageItemInDB(**result) if result else None
+
+    @staticmethod
+    @log_logic_execution
+    async def unlock_item(item_id: str, owner_id: str) -> Optional[StorageItemInDB]:
+        item = await StorageService.get_item(item_id, owner_id)
+        if not item or item.is_folder:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=400, detail="Không tìm thấy tệp tin")
+        if not item.is_locked:
+            return item
+        if item.locked_by != owner_id:
+            # Optionally check if user is Admin here, but restricting to owner for now
+            from fastapi import HTTPException
+            raise HTTPException(status_code=403, detail="Chỉ người đã khóa tệp mới có quyền mở khóa")
+        
+        result = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one_and_update(
+            {"_id": item_id, "owner_id": owner_id},
+            {"$set": {"is_locked": False, "locked_by": None, "locked_at": None}},
+            return_document=True,
+        )
+        return StorageItemInDB(**result) if result else None
+
+    @staticmethod
+    @log_logic_execution
+    async def bulk_action(action: str, item_ids: List[str], target_parent_id: Optional[str], owner_id: str) -> dict:
+        success_count = 0
+        failed_count = 0
+        for i_id in item_ids:
+            try:
+                if action == "delete":
+                    res = await StorageService.update_item(i_id, owner_id, StorageItemUpdate(is_trashed=True))
+                    if res: success_count += 1
+                    else: failed_count += 1
+                elif action == "move":
+                    res = await StorageService.update_item(i_id, owner_id, StorageItemUpdate(parent_id=target_parent_id))
+                    if res: success_count += 1
+                    else: failed_count += 1
+                elif action == "copy":
+                    res = await StorageService.copy_item(i_id, owner_id, target_parent_id)
+                    if res: success_count += 1
+                    else: failed_count += 1
+            except Exception:
+                failed_count += 1
+        return {"success": success_count, "failed": failed_count}

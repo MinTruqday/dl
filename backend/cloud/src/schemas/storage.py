@@ -16,7 +16,6 @@ class ProtectedShareCreate(BaseModel):
 
 class StorageItemBase(BaseModel):
     model_config = ConfigDict(extra="forbid")
-
     name: str = Field(min_length=1, max_length=255)
     parent_id: Optional[str] = None
     description: Optional[str] = None
@@ -31,6 +30,9 @@ class StorageItemBase(BaseModel):
     ai_processed: Optional[bool] = False
     entities: Optional[dict] = Field(default_factory=dict)
     broken_links: Optional[List[str]] = Field(default_factory=list)
+    is_locked: bool = False
+    locked_by: Optional[str] = None
+    locked_at: Optional[datetime] = None
 
 class StorageItemCreate(StorageItemBase):
     is_folder: bool = False
@@ -57,6 +59,38 @@ class StorageItemUpdate(BaseModel):
     ai_processed: Optional[bool] = None
     entities: Optional[dict] = None
     broken_links: Optional[List[str]] = None
+
+    is_locked: Optional[bool] = None
+    locked_by: Optional[str] = None
+    locked_at: Optional[datetime] = None
+
+class BulkActionRequest(BaseModel):
+    action: str = Field(pattern=r"^(delete|move|copy)$")
+    item_ids: List[str] = Field(min_length=1, max_length=100)
+    target_parent_id: Optional[str] = None
+
+class FileRequestCreate(BaseModel):
+    target_folder_id: str = Field(min_length=1, max_length=128)
+    password: Optional[str] = Field(default=None, max_length=128)
+    expires_in_hours: int = Field(default=168, ge=1, le=720) # max 30 days
+    description: Optional[str] = None
+
+class FileRequestResponse(BaseModel):
+    token: str
+    target_folder_id: str
+    owner_id: str
+    description: Optional[str]
+    expires_at: datetime
+    is_protected: bool
+
+class ItemActivityResponse(BaseModel):
+    id: str
+    item_id: str
+    actor_id: str
+    action: str
+    ip_address: Optional[str] = None
+    user_agent: Optional[str] = None
+    timestamp: datetime
 
 class FileVersion(BaseModel):
     version_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -96,3 +130,5 @@ class StorageItemResponse(StorageItemBase):
     versions: List[FileVersion] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime
+    thumbnail_url: Optional[str] = None
+    preview_url: Optional[str] = None
