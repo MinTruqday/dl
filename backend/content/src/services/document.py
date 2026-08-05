@@ -24,6 +24,7 @@ from src.repositories.reading import ReadingRepository
 from src.repositories.collaboration import CollaborationRepository
 from src.services.drm_client import DrmClient
 from src.services.finance_client import FinanceClient
+from src.services.collaboration import CollaborationService
 
 
 def serialize_document(document):
@@ -404,6 +405,20 @@ class DocumentService:
         if not (is_owner or is_admin or is_coauthor):
             raise HTTPException(status_code=403, detail="Bạn không có quyền chỉnh sửa nội dung tài liệu này")
 
+        status_info = CollaborationService.get_effective_collaboration_status(
+            document, user_id=user_id, is_admin=is_admin
+        )
+        if not status_info["can_edit"]:
+            if status_info["is_effective_closed"]:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Tài liệu đã đóng hoàn toàn và không cho phép chỉnh sửa nội dung",
+                )
+            raise HTTPException(
+                status_code=403,
+                detail="Tài liệu hiện đang ở chế độ chỉ xem hoặc đã hết thời gian cho phép chỉnh sửa",
+            )
+
         if is_coauthor and not (is_owner or is_admin):
             invite = await CollaborationRepository.find_invite(
                 {"document_id": document_id, "invitee_id": user_id, "status": "ACCEPTED"}
@@ -609,6 +624,15 @@ class DocumentService:
             )
 
         is_coauthor = user_id in document.get("coauthors", [])
+
+        status_info = CollaborationService.get_effective_collaboration_status(
+            document, user_id=user_id, is_admin=DocumentService._is_admin(current_user)
+        )
+        if not status_info["can_view"]:
+            raise HTTPException(
+                status_code=403,
+                detail="Tài liệu đã đóng hoàn toàn hoặc đã hết thời hạn cho phép truy cập",
+            )
 
         if (
             document.get("is_deleted") is True

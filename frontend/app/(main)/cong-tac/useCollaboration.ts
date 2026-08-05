@@ -31,6 +31,10 @@ import {
   updateCollabAccessAPI,
   updateCollabTaskAPI,
   updateCollaboratorRoleAPI,
+  getCollaborationModeAPI,
+  updateCollaborationModeAPI,
+  getCollaborationSchedulesAPI,
+  updateCollaborationSchedulesAPI,
 } from "@/features/content/services/collaboration.service";
 
 export function useCollaboration() {
@@ -47,6 +51,9 @@ export function useCollaboration() {
   const [inviteCode, setInviteCode] = useState("");
   const [shareConfig, setShareConfig] = useState<any>(null);
   const [accessRequests, setAccessRequests] = useState<any[]>([]);
+  const [collabMode, setCollabMode] = useState<string>("OPEN");
+  const [collabSchedules, setCollabSchedules] = useState<any[]>([]);
+  const [effectiveStatus, setEffectiveStatus] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -84,6 +91,8 @@ export function useCollaboration() {
         getLockStatusAPI(documentId),
         getShareLinkConfigAPI(documentId).catch(() => ({ data: null })),
         getMyIncomingAccessRequestsAPI().catch(() => ({ data: [] })),
+        getCollaborationModeAPI(documentId).catch(() => ({ data: null })),
+        getCollaborationSchedulesAPI(documentId).catch(() => ({ data: null })),
       ]);
       const value = (result: any) => result.data ?? result ?? [];
       setCollaborators(value(results[0]));
@@ -95,7 +104,11 @@ export function useCollaboration() {
       setLock(value(results[6]));
       setShareConfig(results[7]?.data ?? null);
       setAccessRequests(value(results[8]));
+      setCollabMode(results[9]?.data?.collaboration_mode ?? "OPEN");
+      setEffectiveStatus(results[9]?.data?.effective_status ?? null);
+      setCollabSchedules(results[10]?.data?.schedules ?? []);
     } catch (cause) {
+
       setError(
         cause instanceof Error
           ? cause.message
@@ -255,6 +268,18 @@ export function useCollaboration() {
       () => reviewAccessRequestAPI(requestId, { status, role }),
       status === "ACCEPTED" ? "Đã duyệt yêu cầu" : "Đã từ chối yêu cầu",
     );
+  const updateCollaborationMode = (mode: string) =>
+    run(
+      "update_mode",
+      () => updateCollaborationModeAPI(documentId, mode),
+      "Đã cập nhật chế độ đóng mở tài liệu",
+    );
+  const updateCollaborationSchedules = (schedules: any[]) =>
+    run(
+      "update_schedules",
+      () => updateCollaborationSchedulesAPI(documentId, schedules),
+      "Đã cập nhật lịch hẹn giờ quyền hạn cộng tác",
+    );
   return {
     documents,
     documentId,
@@ -270,6 +295,9 @@ export function useCollaboration() {
     inviteCode,
     shareConfig,
     accessRequests,
+    collabMode,
+    collabSchedules,
+    effectiveStatus,
     loading,
     processing,
     error,
@@ -292,6 +320,9 @@ export function useCollaboration() {
     joinViaShareLink,
     requestAccess,
     reviewAccessRequest,
+    updateCollaborationMode,
+    updateCollaborationSchedules,
   };
 }
+
 

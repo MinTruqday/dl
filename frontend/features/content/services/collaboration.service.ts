@@ -593,3 +593,66 @@ export async function reviewAccessRequestAPI(
   return data;
 }
 
+export async function updateCollaborationModeAPI(
+  documentId: string,
+  collaboration_mode: string,
+) {
+  const res = await fetch(
+    `${API_URL}/cong-tac/tai-lieu/${documentId}/che-do-truy-cap`,
+    {
+      method: "POST",
+      headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({ collaboration_mode }),
+    },
+  );
+  const data = await res.json();
+  if (!res.ok)
+    throw new Error(data.message || "Không thể cập nhật chế độ đóng mở tài liệu");
+  return data;
+}
+
+export async function getCollaborationModeAPI(documentId: string) {
+  const res = await fetch(
+    `${API_URL}/cong-tac/tai-lieu/${documentId}/che-do-truy-cap`,
+    {
+      headers: getAuthHeaders(),
+    },
+  );
+  const data = await res.json();
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải chế độ đóng mở tài liệu");
+  return data;
+}
+
+export async function updateCollaborationSchedulesAPI(
+  documentId: string,
+  schedules: any[],
+) {
+  const res = await fetch(
+    `${API_URL}/cong-tac/tai-lieu/${documentId}/lich-hen-gio`,
+    {
+      method: "POST",
+      headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({ schedules }),
+    },
+  );
+  const data = await res.json();
+  if (!res.ok)
+    throw new Error(data.message || "Không thể cập nhật lịch hẹn giờ cộng tác");
+  return data;
+}
+
+export async function getCollaborationSchedulesAPI(documentId: string) {
+  const res = await fetch(
+    `${API_URL}/cong-tac/tai-lieu/${documentId}/lich-hen-gio`,
+    {
+      headers: getAuthHeaders(),
+    },
+  );
+  const data = await res.json();
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải lịch hẹn giờ cộng tác");
+  return data;
+}
+
+

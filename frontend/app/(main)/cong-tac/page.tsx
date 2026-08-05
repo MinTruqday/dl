@@ -11,11 +11,12 @@ import { useCollaboration } from "./useCollaboration";
 
 type Tab =
   | "people"
+  | "settings"
+  | "share_link"
+  | "requests"
   | "tasks"
   | "notes"
-  | "invites"
-  | "share_link"
-  | "requests";
+  | "invites";
 
 export default function CollaborationPage() {
   const state = useCollaboration();
@@ -36,6 +37,17 @@ export default function CollaborationPage() {
   const [reqDocId, setReqDocId] = useState("");
   const [reqRole, setReqRole] = useState("editor");
   const [reqMessage, setReqMessage] = useState("");
+  const [selectedMode, setSelectedMode] = useState<string>("");
+  const [localSchedules, setLocalSchedules] = useState<any[]>([]);
+  const [schedTitle, setSchedTitle] = useState("");
+  const [schedStart, setSchedStart] = useState("");
+  const [schedEnd, setSchedEnd] = useState("");
+  const [schedMode, setSchedMode] = useState("EDIT");
+  const [schedFallback, setSchedFallback] = useState("READ_ONLY");
+
+  const currentMode = selectedMode || state.collabMode || "OPEN";
+  const activeSchedulesList = localSchedules.length > 0 ? localSchedules : state.collabSchedules;
+
 
   if (state.loading && !state.documents.length) return <PageLoader rows={7} />;
   return (
@@ -124,8 +136,15 @@ export default function CollaborationPage() {
               { label: "Cộng tác viên", value: state.collaborators.length },
               { label: "Đang trực tuyến", value: state.online.length },
               {
-                label: "Công việc mở",
-                value: state.tasks.filter((item) => !item.is_done).length,
+                label: "Chế độ truy cập",
+                value:
+                  state.collabMode === "CLOSED"
+                    ? "Đóng hoàn toàn"
+                    : state.collabMode === "READ_ONLY"
+                    ? "Chỉ xem"
+                    : state.collabMode === "COMMENT_ONLY"
+                    ? "Chỉ bình luận"
+                    : "Mở đầy đủ",
               },
               { label: "Yêu cầu xin quyền", value: state.accessRequests.length },
             ]}
@@ -137,6 +156,7 @@ export default function CollaborationPage() {
               onChange={setTab}
               tabs={[
                 { id: "people", label: "Thành viên" },
+                { id: "settings", label: "Đóng mở & Hẹn giờ" },
                 { id: "share_link", label: "Liên kết chia sẻ" },
                 { id: "requests", label: "Yêu cầu xin quyền" },
                 { id: "tasks", label: "Công việc" },
@@ -145,7 +165,218 @@ export default function CollaborationPage() {
               ]}
             />
           </div>
+          {tab === "settings" && (
+            <div className="space-y-6">
+              <section className="rounded-panel border border-border bg-surface p-5">
+                <div className="mb-4">
+                  <h2 className="text-[16px] font-semibold text-ink">
+                    Trạng thái đóng mở tài liệu
+                  </h2>
+                  <p className="mt-1 text-[13px] text-ink-muted">
+                    Kiểm soát quyền truy cập và thao tác của tất cả cộng tác viên và liên kết chia sẻ
+                  </p>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  {[
+                    {
+                      id: "OPEN",
+                      title: "Mở đầy đủ (Open)",
+                      desc: "Cho phép xem, bình luận và chỉnh sửa nội dung theo vai trò",
+                    },
+                    {
+                      id: "COMMENT_ONLY",
+                      title: "Chỉ bình luận (Comment Only)",
+                      desc: "Chỉ cho phép đọc và để lại bình luận, không cho chỉnh sửa",
+                    },
+                    {
+                      id: "READ_ONLY",
+                      title: "Chỉ xem (Read-Only)",
+                      desc: "Khóa toàn bộ thao tác nhập, chỉ cho phép đọc nội dung",
+                    },
+                    {
+                      id: "CLOSED",
+                      title: "Đóng hoàn toàn (Closed)",
+                      desc: "Khóa không gian, liên kết ngoài không thể truy cập",
+                    },
+                  ].map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setSelectedMode(item.id)}
+                      className={`flex flex-col text-left rounded-xl border p-4 transition ${
+                        currentMode === item.id
+                          ? "border-primary bg-primary/5 text-primary ring-2 ring-primary/20"
+                          : "border-border bg-surface-hover/30 hover:border-ink/20"
+                      }`}
+                    >
+                      <span className="font-semibold text-[14px] text-ink">{item.title}</span>
+                      <span className="mt-1 text-[12px] text-ink-muted">{item.desc}</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
+                  <div className="text-[13px] text-ink-muted">
+                    Trạng thái thực thi hiện tại:{" "}
+                    <span className="font-semibold text-ink">
+                      {state.effectiveStatus?.effective_mode ?? state.collabMode ?? "OPEN"}
+                    </span>
+                  </div>
+                  <Button
+                    disabled={Boolean(state.processing)}
+                    onClick={() => state.updateCollaborationMode(currentMode)}
+                  >
+                    Lưu chế độ truy cập
+                  </Button>
+                </div>
+              </section>
+
+              <section className="rounded-panel border border-border bg-surface p-5">
+                <div className="mb-4">
+                  <h2 className="text-[16px] font-semibold text-ink">
+                    Lịch hẹn giờ quyền hạn cộng tác
+                  </h2>
+                  <p className="mt-1 text-[13px] text-ink-muted">
+                    Thiết lập nhiều khung giờ cho phép chỉnh sửa hoặc bình luận, tự động chuyển về chỉ xem hoặc đóng khi hết giờ
+                  </p>
+                </div>
+
+                <div className="space-y-3 mb-6">
+                  {activeSchedulesList.length === 0 ? (
+                    <div className="rounded-lg border border-dashed border-border p-4 text-center text-[13px] text-ink-muted">
+                      Chưa thiết lập khung giờ hẹn. Tài liệu sẽ áp dụng chế độ đóng mở mặc định.
+                    </div>
+                  ) : (
+                    activeSchedulesList.map((sch: any, idx: number) => (
+                      <div
+                        key={sch.id || idx}
+                        className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-surface-hover/40 p-3"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-[14px] text-ink">{sch.title || "Khung giờ hẹn"}</p>
+                          <p className="mt-0.5 text-[12px] text-ink-muted">
+                            {sch.start_at ? `Từ ${new Date(sch.start_at).toLocaleString("vi-VN")} ` : "Bắt đầu ngay "}
+                            đến {new Date(sch.end_at).toLocaleString("vi-VN")}
+                          </p>
+                          <div className="mt-1 flex items-center gap-2 text-[11px]">
+                            <span className="rounded bg-primary/10 px-2 py-0.5 font-medium text-primary">
+                              Trong giờ: {sch.mode === "EDIT" ? "Chỉnh sửa" : sch.mode === "COMMENT_ONLY" ? "Chỉ bình luận" : "Chỉ xem"}
+                            </span>
+                            <span className="rounded bg-amber-500/10 px-2 py-0.5 font-medium text-amber-700">
+                              Hết giờ: {sch.fallback_mode === "CLOSED" ? "Đóng hoàn toàn" : "Chỉ xem"}
+                            </span>
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            const updated = activeSchedulesList.filter((_: any, i: number) => i !== idx);
+                            setLocalSchedules(updated);
+                          }}
+                        >
+                          Xóa
+                        </Button>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <div className="rounded-lg border border-border bg-surface-hover/20 p-4">
+                  <h3 className="mb-3 text-[14px] font-semibold text-ink">Thêm khung giờ mới</h3>
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <div>
+                      <label className="mb-1 block text-[12px] text-ink-muted">Tên khung giờ</label>
+                      <input
+                        type="text"
+                        placeholder="Ví dụ: Giờ sửa bài tập"
+                        value={schedTitle}
+                        onChange={(e) => setSchedTitle(e.target.value)}
+                        className="apple-input w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-[12px] text-ink-muted">Bắt đầu (tùy chọn)</label>
+                      <input
+                        type="datetime-local"
+                        value={schedStart}
+                        onChange={(e) => setSchedStart(e.target.value)}
+                        className="apple-input w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-[12px] text-ink-muted">Kết thúc (bắt buộc)</label>
+                      <input
+                        type="datetime-local"
+                        value={schedEnd}
+                        onChange={(e) => setSchedEnd(e.target.value)}
+                        className="apple-input w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-[12px] text-ink-muted">Quyền hạn trong khung giờ</label>
+                      <select
+                        value={schedMode}
+                        onChange={(e) => setSchedMode(e.target.value)}
+                        className="apple-input w-full"
+                      >
+                        <option value="EDIT">Cho phép chỉnh sửa (Edit)</option>
+                        <option value="COMMENT_ONLY">Chỉ cho phép bình luận (Comment Only)</option>
+                        <option value="READ_ONLY">Chỉ cho phép xem (Read-Only)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-[12px] text-ink-muted">Hành vi sau khi hết giờ</label>
+                      <select
+                        value={schedFallback}
+                        onChange={(e) => setSchedFallback(e.target.value)}
+                        className="apple-input w-full"
+                      >
+                        <option value="READ_ONLY">Chuyển sang chỉ xem (Read-Only)</option>
+                        <option value="CLOSED">Đóng hoàn toàn tài liệu (Closed)</option>
+                      </select>
+                    </div>
+                    <div className="flex items-end">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        className="w-full"
+                        disabled={!schedEnd}
+                        onClick={() => {
+                          if (!schedEnd) return;
+                          const newRule = {
+                            id: Math.random().toString(36).substring(2, 9),
+                            title: schedTitle.trim() || "Khung giờ hẹn",
+                            start_at: schedStart ? new Date(schedStart).toISOString() : null,
+                            end_at: new Date(schedEnd).toISOString(),
+                            mode: schedMode,
+                            fallback_mode: schedFallback,
+                            is_active: true,
+                          };
+                          setLocalSchedules([...activeSchedulesList, newRule]);
+                          setSchedTitle("");
+                          setSchedStart("");
+                          setSchedEnd("");
+                        }}
+                      >
+                        Thêm khung giờ
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-5 flex justify-end">
+                  <Button
+                    disabled={Boolean(state.processing)}
+                    onClick={() => state.updateCollaborationSchedules(activeSchedulesList)}
+                  >
+                    Lưu toàn bộ lịch hẹn giờ
+                  </Button>
+                </div>
+              </section>
+            </div>
+          )}
           {tab === "people" && (
+
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
               <section className="overflow-hidden rounded-panel border border-border bg-surface">
                 <ul>

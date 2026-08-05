@@ -170,3 +170,22 @@ class CollaborationAccessRequestReview(BaseModel):
     status: str
     role: Optional[str] = None
 
+
+class CollaborationScheduleRule(BaseModel):
+    id: Optional[str] = None
+    title: Optional[str] = None
+    start_at: Optional[datetime] = None
+    end_at: datetime
+    mode: str = "EDIT"
+    fallback_mode: str = "READ_ONLY"
+    is_active: bool = True
+
+
+class CollaborationModeUpdate(BaseModel):
+    collaboration_mode: str
+
+
+class CollaborationScheduleUpdate(BaseModel):
+    schedules: List[CollaborationScheduleRule]
+
+

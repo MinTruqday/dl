@@ -18,6 +18,8 @@ from src.schemas.document import (
     CollaborationShareLinkJoin,
     CollaborationAccessRequestCreate,
     CollaborationAccessRequestReview,
+    CollaborationModeUpdate,
+    CollaborationScheduleUpdate,
 )
 from src.services.collaboration import CollaborationService
 
@@ -516,4 +518,59 @@ async def review_access_request(
         ),
         message="Xử lý phản hồi yêu cầu xin quyền hoàn tất",
     )
+
+
+@router.post("/tai-lieu/{document_id}/che-do-truy-cap", response_model=APIResponse[Any])
+async def update_collaboration_mode(
+    document_id: str,
+    data: CollaborationModeUpdate,
+    current_user: CurrentUser = Depends(require_role(OWNER_ROLES)),
+    db=Depends(get_db),
+):
+    return APIResponse(
+        data=await CollaborationService.update_collaboration_mode(
+            document_id, data.collaboration_mode, current_user
+        ),
+        message="Cập nhật chế độ đóng mở tài liệu hoàn tất",
+    )
+
+
+@router.get("/tai-lieu/{document_id}/che-do-truy-cap", response_model=APIResponse[Any])
+async def get_collaboration_mode(
+    document_id: str,
+    current_user: CurrentUser = Depends(require_role(MEMBER_ROLES)),
+    db=Depends(get_db),
+):
+    return APIResponse(
+        data=await CollaborationService.get_collaboration_mode(document_id, current_user),
+        message="Trích xuất thông tin chế độ đóng mở tài liệu hoàn tất",
+    )
+
+
+@router.post("/tai-lieu/{document_id}/lich-hen-gio", response_model=APIResponse[Any])
+async def update_collaboration_schedules(
+    document_id: str,
+    data: CollaborationScheduleUpdate,
+    current_user: CurrentUser = Depends(require_role(OWNER_ROLES)),
+    db=Depends(get_db),
+):
+    return APIResponse(
+        data=await CollaborationService.update_collaboration_schedules(
+            document_id, [s.model_dump() for s in data.schedules], current_user
+        ),
+        message="Cập nhật lịch hẹn giờ quyền hạn cộng tác hoàn tất",
+    )
+
+
+@router.get("/tai-lieu/{document_id}/lich-hen-gio", response_model=APIResponse[Any])
+async def get_collaboration_schedules(
+    document_id: str,
+    current_user: CurrentUser = Depends(require_role(MEMBER_ROLES)),
+    db=Depends(get_db),
+):
+    return APIResponse(
+        data=await CollaborationService.get_collaboration_schedules(document_id, current_user),
+        message="Trích xuất danh sách lịch hẹn giờ cộng tác hoàn tất",
+    )
+
 
