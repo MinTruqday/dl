@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
+from src.api.analytics import router as analytics
 from src.api.audit import router as audit
 from src.api.health import router as operation
 from src.api.telemetry import router as telemetry
@@ -37,6 +38,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.include_router(analytics)
 app.include_router(audit)
 app.include_router(telemetry)
 app.include_router(operation)

@@ -40,5 +40,8 @@ class Settings(BaseModel):
     HUMANITY_URL: str = get_service_url("HUMANITY")
     CONTENT_URL: str = get_service_url("CONTENT")
     MANAGEMENT_DB_NAME: str = os.environ["MANAGEMENT_DB_NAME"]
+    CONTENT_DB_NAME: str = os.environ["CONTENT_DB_NAME"]
+    FINANCE_DB_NAME: str = os.environ["FINANCE_DB_NAME"]
+    HUMANITY_DB_NAME: str = os.environ["HUMANITY_DB_NAME"]
 
 settings = Settings()

@@ -428,7 +428,7 @@ services:
       - 8003:8000
     labels:
       - traefik.enable=true
-      - traefik.http.routers.management.rule=PathPrefix(`/giam-sat`) || PathPrefix(`/kiem-toan`) || PathPrefix(`/quang-cao`) || PathPrefix(`/van-hanh`) || PathPrefix(`/do-luong`)
+      - traefik.http.routers.management.rule=PathPrefix(`/giam-sat`) || PathPrefix(`/kiem-toan`) || PathPrefix(`/quang-cao`) || PathPrefix(`/van-hanh`) || PathPrefix(`/do-luong`) || PathPrefix(`/phan-tich`)
       - traefik.http.services.management.loadbalancer.server.port=8000
     env_file:
       - .env
