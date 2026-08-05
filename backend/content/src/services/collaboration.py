@@ -2,7 +2,8 @@ from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
 import uuid
 import secrets
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+from passlib.context import CryptContext
 
 import httpx
 from fastapi import HTTPException
@@ -12,14 +13,8 @@ from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 from src.repositories.document import DocumentRepository
 from src.repositories.collaboration import CollaborationRepository
-from src.repositories.collaboration import CollaborationRepository
-from src.repositories.collaboration import CollaborationRepository
-from src.repositories.collaboration import CollaborationRepository
-from src.repositories.collaboration import CollaborationRepository
-from src.repositories.collaboration import CollaborationRepository
-from src.repositories.collaboration import CollaborationRepository
-from src.repositories.collaboration import CollaborationRepository
-from src.repositories.collaboration import CollaborationRepository
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 class CollaborationService:
 
@@ -1024,3 +1019,445 @@ class CollaborationService:
             }
             for c in comments
         ]
+
+    @staticmethod
+    @log_logic_execution
+    async def configure_share_link(
+        document_id: str,
+        is_active: bool,
+        password: str | None,
+        default_role: str,
+        expires_in_hours: int | None,
+        current_user,
+    ) -> dict:
+        doc = await DocumentRepository.find_one(
+            {"_id": document_id, "creator_id": str(current_user.id)}
+        )
+        if not doc:
+            raise HTTPException(
+                status_code=404,
+                detail="Không tìm thấy tài liệu hoặc bạn không có quyền cấu hình liên kết",
+            )
+        existing = await CollaborationRepository.find_share_link(
+            {"document_id": document_id}
+        )
+        share_token = (
+            existing.get("share_token") if existing else secrets.token_urlsafe(16)
+        )
+        password_hash = existing.get("password_hash") if existing else None
+        is_pw_protected = (
+            existing.get("is_password_protected", False) if existing else False
+        )
+        if password is not None:
+            if password.strip():
+                password_hash = pwd_context.hash(password.strip())
+                is_pw_protected = True
+            else:
+                password_hash = None
+                is_pw_protected = False
+
+        expires_at = None
+        if expires_in_hours and expires_in_hours > 0:
+            expires_at = datetime.now(timezone.utc) + timedelta(hours=expires_in_hours)
+        elif existing and existing.get("expires_at") and expires_in_hours is None:
+            expires_at = existing.get("expires_at")
+
+        link_record = {
+            "document_id": document_id,
+            "share_token": share_token,
+            "is_active": is_active,
+            "is_password_protected": is_pw_protected,
+            "password_hash": password_hash,
+            "default_role": default_role,
+            "expires_at": expires_at,
+            "updated_at": datetime.now(timezone.utc),
+        }
+        if not existing:
+            link_record["created_at"] = datetime.now(timezone.utc)
+
+        await CollaborationRepository.update_share_link(
+            {"document_id": document_id},
+            {"$set": link_record},
+            upsert=True,
+        )
+
+        await CollaborationService.log_activity(
+            document_id,
+            current_user.full_name,
+            "Configure share link",
+            "Updated collaboration share link settings and access requirements",
+        )
+
+        return {
+            "document_id": document_id,
+            "share_token": share_token,
+            "is_active": is_active,
+            "is_password_protected": is_pw_protected,
+            "default_role": default_role,
+            "expires_at": (
+                expires_at.isoformat()
+                if isinstance(expires_at, datetime)
+                else None
+            ),
+        }
+
+    @staticmethod
+    @log_logic_execution
+    async def get_share_link_config(document_id: str, current_user) -> dict:
+        doc = await DocumentRepository.find_one(
+            {"_id": document_id, "creator_id": str(current_user.id)}
+        )
+        if not doc:
+            raise HTTPException(
+                status_code=404,
+                detail="Không tìm thấy tài liệu hoặc bạn không có quyền xem cấu hình liên kết",
+            )
+        existing = await CollaborationRepository.find_share_link(
+            {"document_id": document_id}
+        )
+        if not existing:
+            return {
+                "document_id": document_id,
+                "share_token": None,
+                "is_active": False,
+                "is_password_protected": False,
+                "default_role": "editor",
+                "expires_at": None,
+            }
+        expires_at = existing.get("expires_at")
+        return {
+            "document_id": document_id,
+            "share_token": existing.get("share_token"),
+            "is_active": existing.get("is_active", True),
+            "is_password_protected": existing.get("is_password_protected", False),
+            "default_role": existing.get("default_role", "editor"),
+            "expires_at": (
+                expires_at.isoformat()
+                if isinstance(expires_at, datetime)
+                else None
+            ),
+        }
+
+    @staticmethod
+    @log_logic_execution
+    async def get_public_share_link_info(share_token: str) -> dict:
+        link = await CollaborationRepository.find_share_link(
+            {"share_token": share_token}
+        )
+        if not link or not link.get("is_active"):
+            raise HTTPException(
+                status_code=404,
+                detail="Liên kết chia sẻ cộng tác không tồn tại hoặc đã bị tắt",
+            )
+        expires_at = link.get("expires_at")
+        if expires_at:
+            exp_ts = (
+                expires_at.timestamp()
+                if isinstance(expires_at, datetime)
+                else 0
+            )
+            if exp_ts < datetime.now(timezone.utc).timestamp():
+                raise HTTPException(
+                    status_code=400,
+                    detail="Liên kết chia sẻ cộng tác đã quá thời hạn sử dụng",
+                )
+        doc = await DocumentRepository.find_one({"_id": link["document_id"]})
+        if not doc:
+            raise HTTPException(
+                status_code=404, detail="Không tìm thấy tài liệu liên kết"
+            )
+        return {
+            "document_id": link["document_id"],
+            "document_title": doc.get("title", "Untitled Document"),
+            "is_password_protected": link.get("is_password_protected", False),
+            "default_role": link.get("default_role", "editor"),
+        }
+
+    @staticmethod
+    @log_logic_execution
+    async def join_via_share_link(
+        share_token: str, password: str | None, current_user
+    ) -> dict:
+        link = await CollaborationRepository.find_share_link(
+            {"share_token": share_token}
+        )
+        if not link or not link.get("is_active"):
+            raise HTTPException(
+                status_code=404,
+                detail="Liên kết chia sẻ cộng tác không tồn tại hoặc đã bị vô hiệu hóa",
+            )
+        expires_at = link.get("expires_at")
+        if expires_at:
+            exp_ts = (
+                expires_at.timestamp()
+                if isinstance(expires_at, datetime)
+                else 0
+            )
+            if exp_ts < datetime.now(timezone.utc).timestamp():
+                raise HTTPException(
+                    status_code=400,
+                    detail="Liên kết chia sẻ cộng tác đã hết hạn sử dụng",
+                )
+        if link.get("is_password_protected"):
+            if not password:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Vui lòng cung cấp mật khẩu để tham gia không gian cộng tác",
+                )
+            if not pwd_context.verify(password, link.get("password_hash", "")):
+                raise HTTPException(
+                    status_code=403,
+                    detail="Mật khẩu truy cập không gian cộng tác không chính xác",
+                )
+        document_id = link["document_id"]
+        doc = await DocumentRepository.find_one({"_id": document_id})
+        if not doc:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+        if doc.get("creator_id") == str(current_user.id):
+            return {
+                "message": "Bạn là chủ sở hữu chính của tài liệu này",
+                "document_id": document_id,
+                "role": "owner",
+            }
+        role = link.get("default_role", "editor")
+        user_id = str(current_user.id)
+        if user_id not in doc.get("coauthors", []):
+            await DocumentRepository.update_one(
+                {"_id": document_id},
+                {
+                    "$push": {"coauthors": user_id},
+                    "$set": {"updated_at": datetime.now(timezone.utc)},
+                },
+            )
+        await CollaborationRepository.update_invite(
+            {"document_id": document_id, "invitee_id": user_id},
+            {
+                "$set": {
+                    "document_id": document_id,
+                    "document_title": doc.get("title", "Untitled Document"),
+                    "inviter_id": doc["creator_id"],
+                    "inviter_name": "Shared Link",
+                    "invitee_id": user_id,
+                    "role": role,
+                    "status": "ACCEPTED",
+                    "responded_at": datetime.now(timezone.utc),
+                },
+                "$setOnInsert": {
+                    "_id": str(uuid.uuid4()),
+                    "created_at": datetime.now(timezone.utc),
+                },
+            },
+            upsert=True,
+        )
+        await CollaborationService.log_activity(
+            document_id,
+            current_user.full_name,
+            "Join via share link",
+            f"Joined collaboration room with role {role}",
+        )
+        return {
+            "message": "Gia nhập không gian cộng tác thành công",
+            "document_id": document_id,
+            "role": role,
+        }
+
+    @staticmethod
+    @log_logic_execution
+    async def create_access_request(
+        document_id: str, requested_role: str, message: str | None, current_user
+    ) -> dict:
+        doc = await DocumentRepository.find_one({"_id": document_id})
+        if not doc:
+            raise HTTPException(
+                status_code=404, detail="Không tìm thấy tài liệu yêu cầu"
+            )
+        user_id = str(current_user.id)
+        if doc.get("creator_id") == user_id:
+            raise HTTPException(
+                status_code=400, detail="Bạn là chủ sở hữu chính của tài liệu này"
+            )
+        if user_id in doc.get("coauthors", []):
+            raise HTTPException(
+                status_code=400,
+                detail="Bạn đã là thành viên trong không gian cộng tác của tài liệu này",
+            )
+        pending = await CollaborationRepository.find_access_request(
+            {"document_id": document_id, "user_id": user_id, "status": "PENDING"}
+        )
+        if pending:
+            raise HTTPException(
+                status_code=400,
+                detail="Yêu cầu xin quyền cộng tác của bạn đang chờ chủ tài liệu phê duyệt",
+            )
+        req_doc = {
+            "_id": str(uuid.uuid4()),
+            "document_id": document_id,
+            "document_title": doc.get("title", "Untitled Document"),
+            "creator_id": doc["creator_id"],
+            "user_id": user_id,
+            "user_name": current_user.full_name,
+            "user_email": getattr(current_user, "email", ""),
+            "requested_role": requested_role,
+            "message": message or "",
+            "status": "PENDING",
+            "created_at": datetime.now(timezone.utc),
+        }
+        await CollaborationRepository.insert_access_request(req_doc)
+        await CollaborationService.log_activity(
+            document_id,
+            current_user.full_name,
+            "Request collaboration access",
+            f"Requested {requested_role} role access to document",
+        )
+        return {
+            "message": "Gửi yêu cầu xin tham gia cộng tác hoàn tất",
+            "request_id": req_doc["_id"],
+        }
+
+    @staticmethod
+    @log_logic_execution
+    async def get_document_access_requests(document_id: str, current_user) -> list:
+        doc = await DocumentRepository.find_one(
+            {"_id": document_id, "creator_id": str(current_user.id)}
+        )
+        if not doc:
+            raise HTTPException(
+                status_code=404,
+                detail="Không tìm thấy tài liệu hoặc bạn không có quyền xem yêu cầu",
+            )
+        cursor = CollaborationRepository.find_access_requests(
+            {"document_id": document_id, "status": "PENDING"}
+        ).sort("created_at", -1)
+        items = await cursor.to_list(length=None)
+        return [
+            {
+                "id": str(item["_id"]),
+                "document_id": item["document_id"],
+                "document_title": item.get("document_title", ""),
+                "user_id": item["user_id"],
+                "user_name": item.get("user_name", "Anonymous"),
+                "user_email": item.get("user_email", ""),
+                "requested_role": item.get("requested_role", "editor"),
+                "message": item.get("message", ""),
+                "status": item["status"],
+                "created_at": (
+                    item["created_at"].isoformat()
+                    if isinstance(item.get("created_at"), datetime)
+                    else item.get("created_at")
+                ),
+            }
+            for item in items
+        ]
+
+    @staticmethod
+    @log_logic_execution
+    async def get_my_incoming_access_requests(current_user) -> list:
+        cursor = CollaborationRepository.find_access_requests(
+            {"creator_id": str(current_user.id), "status": "PENDING"}
+        ).sort("created_at", -1)
+        items = await cursor.to_list(length=None)
+        return [
+            {
+                "id": str(item["_id"]),
+                "document_id": item["document_id"],
+                "document_title": item.get("document_title", ""),
+                "user_id": item["user_id"],
+                "user_name": item.get("user_name", "Anonymous"),
+                "user_email": item.get("user_email", ""),
+                "requested_role": item.get("requested_role", "editor"),
+                "message": item.get("message", ""),
+                "status": item["status"],
+                "created_at": (
+                    item["created_at"].isoformat()
+                    if isinstance(item.get("created_at"), datetime)
+                    else item.get("created_at")
+                ),
+            }
+            for item in items
+        ]
+
+    @staticmethod
+    @log_logic_execution
+    async def review_access_request(
+        request_id: str, status: str, role: str | None, current_user
+    ) -> dict:
+        req = await CollaborationRepository.find_access_request(
+            {"_id": request_id}
+        )
+        if not req:
+            raise HTTPException(
+                status_code=404,
+                detail="Yêu cầu xin quyền không tồn tại hoặc đã được xử lý",
+            )
+        if req.get("creator_id") != str(current_user.id):
+            raise HTTPException(
+                status_code=403,
+                detail="Bạn không có quyền phê duyệt yêu cầu cho tài liệu này",
+            )
+        if req.get("status") != "PENDING":
+            raise HTTPException(
+                status_code=400, detail="Yêu cầu này đã được phản hồi trước đó"
+            )
+        if status not in ["ACCEPTED", "REJECTED"]:
+            raise HTTPException(
+                status_code=400, detail="Trạng thái phản hồi không hợp lệ"
+            )
+        final_role = role or req.get("requested_role", "editor")
+        await CollaborationRepository.update_access_request(
+            {"_id": request_id},
+            {
+                "$set": {
+                    "status": status,
+                    "granted_role": final_role if status == "ACCEPTED" else None,
+                    "reviewed_at": datetime.now(timezone.utc),
+                }
+            },
+        )
+        if status == "ACCEPTED":
+            user_id = req["user_id"]
+            document_id = req["document_id"]
+            doc = await DocumentRepository.find_one({"_id": document_id})
+            if doc and user_id not in doc.get("coauthors", []):
+                await DocumentRepository.update_one(
+                    {"_id": document_id},
+                    {
+                        "$push": {"coauthors": user_id},
+                        "$set": {"updated_at": datetime.now(timezone.utc)},
+                    },
+                )
+            await CollaborationRepository.update_invite(
+                {"document_id": document_id, "invitee_id": user_id},
+                {
+                    "$set": {
+                        "document_id": document_id,
+                        "document_title": req.get("document_title", ""),
+                        "inviter_id": req["creator_id"],
+                        "inviter_name": current_user.full_name,
+                        "invitee_id": user_id,
+                        "role": final_role,
+                        "status": "ACCEPTED",
+                        "responded_at": datetime.now(timezone.utc),
+                    },
+                    "$setOnInsert": {
+                        "_id": str(uuid.uuid4()),
+                        "created_at": datetime.now(timezone.utc),
+                    },
+                },
+                upsert=True,
+            )
+        await CollaborationService.log_activity(
+            req["document_id"],
+            current_user.full_name,
+            f"Review access request: {status}",
+            f"Access request from {req.get('user_name')} was {status} with role {final_role}",
+        )
+        return {
+            "message": (
+                "Phê duyệt yêu cầu tham gia cộng tác hoàn tất"
+                if status == "ACCEPTED"
+                else "Từ chối yêu cầu tham gia cộng tác hoàn tất"
+            ),
+            "status": status,
+            "role": final_role if status == "ACCEPTED" else None,
+        }
+

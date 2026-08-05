@@ -120,3 +120,28 @@ class CollaborationRepository:
     @classmethod
     def query(cls, *args, **kwargs):
         return mongo.query("collaboration_activities", *args, **kwargs)
+
+    @classmethod
+    async def find_share_link(cls, *args, **kwargs):
+        return await mongo.find_one("collaboration_share_links", *args, **kwargs)
+
+    @classmethod
+    async def update_share_link(cls, *args, **kwargs):
+        return await mongo.update_one("collaboration_share_links", *args, **kwargs)
+
+    @classmethod
+    async def insert_access_request(cls, *args, **kwargs):
+        return await mongo.insert_one("collaboration_access_requests", *args, **kwargs)
+
+    @classmethod
+    async def find_access_request(cls, *args, **kwargs):
+        return await mongo.find_one("collaboration_access_requests", *args, **kwargs)
+
+    @classmethod
+    def find_access_requests(cls, *args, **kwargs):
+        return mongo.find("collaboration_access_requests", *args, **kwargs)
+
+    @classmethod
+    async def update_access_request(cls, *args, **kwargs):
+        return await mongo.update_one("collaboration_access_requests", *args, **kwargs)
+

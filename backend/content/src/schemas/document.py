@@ -148,3 +148,25 @@ class TagsUpdate(BaseModel):
 
 class ScheduleUpdate(BaseModel):
     publish_at: datetime
+
+
+class CollaborationShareLinkConfig(BaseModel):
+    is_active: bool = True
+    password: Optional[str] = None
+    default_role: str = "editor"
+    expires_in_hours: Optional[int] = None
+
+
+class CollaborationShareLinkJoin(BaseModel):
+    password: Optional[str] = None
+
+
+class CollaborationAccessRequestCreate(BaseModel):
+    requested_role: str = "editor"
+    message: Optional[str] = None
+
+
+class CollaborationAccessRequestReview(BaseModel):
+    status: str
+    role: Optional[str] = None
+

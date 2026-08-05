@@ -14,6 +14,10 @@ from src.schemas.document import (
     UpdateCollabAccessRequest,
     UpdateCollaboratorRoleRequest,
     UpdateTaskStatusRequest,
+    CollaborationShareLinkConfig,
+    CollaborationShareLinkJoin,
+    CollaborationAccessRequestCreate,
+    CollaborationAccessRequestReview,
 )
 from src.services.collaboration import CollaborationService
 
@@ -398,3 +402,118 @@ async def get_task_comments(
         data=await CollaborationService.get_task_comments(task_id, current_user),
         message="Trích xuất danh sách bình luận thảo luận nhiệm vụ hoàn tất",
     )
+
+
+@router.post("/tai-lieu/{document_id}/lien-ket-chia-se", response_model=APIResponse[Any])
+async def configure_share_link(
+    document_id: str,
+    data: CollaborationShareLinkConfig,
+    current_user: CurrentUser = Depends(require_role(OWNER_ROLES)),
+    db=Depends(get_db),
+):
+    return APIResponse(
+        data=await CollaborationService.configure_share_link(
+            document_id,
+            data.is_active,
+            data.password,
+            data.default_role,
+            data.expires_in_hours,
+            current_user,
+        ),
+        message="Cấu hình liên kết chia sẻ cộng tác hoàn tất",
+    )
+
+
+@router.get("/tai-lieu/{document_id}/lien-ket-chia-se", response_model=APIResponse[Any])
+async def get_share_link_config(
+    document_id: str,
+    current_user: CurrentUser = Depends(require_role(OWNER_ROLES)),
+    db=Depends(get_db),
+):
+    return APIResponse(
+        data=await CollaborationService.get_share_link_config(document_id, current_user),
+        message="Trích xuất thông tin cấu hình liên kết chia sẻ hoàn tất",
+    )
+
+
+@router.get("/thong-tin-lien-ket/{share_token}", response_model=APIResponse[Any])
+async def get_public_share_link_info(
+    share_token: str,
+    db=Depends(get_db),
+):
+    return APIResponse(
+        data=await CollaborationService.get_public_share_link_info(share_token),
+        message="Trích xuất thông tin phòng cộng tác liên kết hoàn tất",
+    )
+
+
+@router.post("/tham-gia-lien-ket/{share_token}", response_model=APIResponse[Any])
+async def join_via_share_link(
+    share_token: str,
+    data: CollaborationShareLinkJoin,
+    current_user: CurrentUser = Depends(require_role(MEMBER_ROLES)),
+    db=Depends(get_db),
+):
+    return APIResponse(
+        data=await CollaborationService.join_via_share_link(
+            share_token, data.password, current_user
+        ),
+        message="Xử lý gia nhập không gian cộng tác hoàn tất",
+    )
+
+
+@router.post("/tai-lieu/{document_id}/xin-quyen", response_model=APIResponse[Any], status_code=201)
+async def create_access_request(
+    document_id: str,
+    data: CollaborationAccessRequestCreate,
+    current_user: CurrentUser = Depends(require_role(MEMBER_ROLES)),
+    db=Depends(get_db),
+):
+    return APIResponse(
+        data=await CollaborationService.create_access_request(
+            document_id, data.requested_role, data.message, current_user
+        ),
+        message="Gửi yêu cầu xin tham gia cộng tác hoàn tất",
+        status=201,
+    )
+
+
+@router.get("/tai-lieu/{document_id}/yeu-cau-xin-quyen", response_model=APIResponse[Any])
+async def get_document_access_requests(
+    document_id: str,
+    current_user: CurrentUser = Depends(require_role(OWNER_ROLES)),
+    db=Depends(get_db),
+):
+    return APIResponse(
+        data=await CollaborationService.get_document_access_requests(
+            document_id, current_user
+        ),
+        message="Trích xuất danh sách yêu cầu xin quyền hoàn tất",
+    )
+
+
+@router.get("/yeu-cau-xin-quyen-cua-toi", response_model=APIResponse[Any])
+async def get_my_incoming_access_requests(
+    current_user: CurrentUser = Depends(require_role(OWNER_ROLES)),
+    db=Depends(get_db),
+):
+    return APIResponse(
+        data=await CollaborationService.get_my_incoming_access_requests(current_user),
+        message="Trích xuất danh sách yêu cầu xin quyền gửi tới tài liệu của bạn hoàn tất",
+    )
+
+
+@router.patch("/yeu-cau-xin-quyen/{request_id}", response_model=APIResponse[Any])
+async def review_access_request(
+    request_id: str,
+    data: CollaborationAccessRequestReview,
+    current_user: CurrentUser = Depends(require_role(OWNER_ROLES)),
+    db=Depends(get_db),
+):
+    return APIResponse(
+        data=await CollaborationService.review_access_request(
+            request_id, data.status, data.role, current_user
+        ),
+        message="Xử lý phản hồi yêu cầu xin quyền hoàn tất",
+    )
+

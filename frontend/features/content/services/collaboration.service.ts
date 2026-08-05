@@ -460,3 +460,136 @@ export async function deleteCommentAPI(commentId: string) {
     throw new Error(data.message || "Lỗi hủy bỏ node dữ liệu phản hồi");
   return data;
 }
+
+export async function configureShareLinkAPI(
+  documentId: string,
+  payload: {
+    is_active: boolean;
+    password?: string;
+    default_role: string;
+    expires_in_hours?: number;
+  },
+) {
+  const res = await fetch(
+    `${API_URL}/cong-tac/tai-lieu/${documentId}/lien-ket-chia-se`,
+    {
+      method: "POST",
+      headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    },
+  );
+  const data = await res.json();
+  if (!res.ok)
+    throw new Error(data.message || "Không thể cấu hình liên kết chia sẻ");
+  return data;
+}
+
+export async function getShareLinkConfigAPI(documentId: string) {
+  const res = await fetch(
+    `${API_URL}/cong-tac/tai-lieu/${documentId}/lien-ket-chia-se`,
+    {
+      headers: getAuthHeaders(),
+    },
+  );
+  const data = await res.json();
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải cấu hình liên kết chia sẻ");
+  return data;
+}
+
+export async function getPublicShareLinkInfoAPI(shareToken: string) {
+  const res = await fetch(
+    `${API_URL}/cong-tac/thong-tin-lien-ket/${shareToken}`,
+    {
+      headers: getAuthHeaders(),
+    },
+  );
+  const data = await res.json();
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể tải thông tin liên kết phòng cộng tác",
+    );
+  return data;
+}
+
+export async function joinViaShareLinkAPI(
+  shareToken: string,
+  password?: string,
+) {
+  const res = await fetch(
+    `${API_URL}/cong-tac/tham-gia-lien-ket/${shareToken}`,
+    {
+      method: "POST",
+      headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({ password: password || null }),
+    },
+  );
+  const data = await res.json();
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể tham gia không gian cộng tác qua liên kết",
+    );
+  return data;
+}
+
+export async function createAccessRequestAPI(
+  documentId: string,
+  payload: { requested_role: string; message?: string },
+) {
+  const res = await fetch(
+    `${API_URL}/cong-tac/tai-lieu/${documentId}/xin-quyen`,
+    {
+      method: "POST",
+      headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    },
+  );
+  const data = await res.json();
+  if (!res.ok)
+    throw new Error(data.message || "Không thể gửi yêu cầu xin quyền cộng tác");
+  return data;
+}
+
+export async function getDocumentAccessRequestsAPI(documentId: string) {
+  const res = await fetch(
+    `${API_URL}/cong-tac/tai-lieu/${documentId}/yeu-cau-xin-quyen`,
+    {
+      headers: getAuthHeaders(),
+    },
+  );
+  const data = await res.json();
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải danh sách yêu cầu xin quyền");
+  return data;
+}
+
+export async function getMyIncomingAccessRequestsAPI() {
+  const res = await fetch(`${API_URL}/cong-tac/yeu-cau-xin-quyen-cua-toi`, {
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể tải danh sách yêu cầu xin quyền tới tài liệu",
+    );
+  return data;
+}
+
+export async function reviewAccessRequestAPI(
+  requestId: string,
+  payload: { status: "ACCEPTED" | "REJECTED"; role?: string },
+) {
+  const res = await fetch(
+    `${API_URL}/cong-tac/yeu-cau-xin-quyen/${requestId}`,
+    {
+      method: "PATCH",
+      headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    },
+  );
+  const data = await res.json();
+  if (!res.ok)
+    throw new Error(data.message || "Không thể phản hồi yêu cầu xin quyền");
+  return data;
+}
+

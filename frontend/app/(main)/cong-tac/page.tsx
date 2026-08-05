@@ -9,7 +9,14 @@ import PageLoader from "@/shared/components/common/PageLoader";
 import { Button } from "@/shared/components/ui/Button";
 import { useCollaboration } from "./useCollaboration";
 
-type Tab = "people" | "tasks" | "notes" | "invites";
+type Tab =
+  | "people"
+  | "tasks"
+  | "notes"
+  | "invites"
+  | "share_link"
+  | "requests";
+
 export default function CollaborationPage() {
   const state = useCollaboration();
   const [tab, setTab] = useState<Tab>("people");
@@ -20,6 +27,16 @@ export default function CollaborationPage() {
   const [memo, setMemo] = useState("");
   const [snapshot, setSnapshot] = useState("");
   const [joinCode, setJoinCode] = useState("");
+  const [sharePassword, setSharePassword] = useState("");
+  const [shareRole, setShareRole] = useState("editor");
+  const [shareActive, setShareActive] = useState(true);
+  const [shareExpiresHours, setShareExpiresHours] = useState("");
+  const [joinLinkToken, setJoinLinkToken] = useState("");
+  const [joinLinkPassword, setJoinLinkPassword] = useState("");
+  const [reqDocId, setReqDocId] = useState("");
+  const [reqRole, setReqRole] = useState("editor");
+  const [reqMessage, setReqMessage] = useState("");
+
   if (state.loading && !state.documents.length) return <PageLoader rows={7} />;
   return (
     <div className="w-full">
@@ -110,7 +127,7 @@ export default function CollaborationPage() {
                 label: "Công việc mở",
                 value: state.tasks.filter((item) => !item.is_done).length,
               },
-              { label: "Bản chụp", value: state.snapshots.length },
+              { label: "Yêu cầu xin quyền", value: state.accessRequests.length },
             ]}
           />
           <div className="my-6">
@@ -120,6 +137,8 @@ export default function CollaborationPage() {
               onChange={setTab}
               tabs={[
                 { id: "people", label: "Thành viên" },
+                { id: "share_link", label: "Liên kết chia sẻ" },
+                { id: "requests", label: "Yêu cầu xin quyền" },
                 { id: "tasks", label: "Công việc" },
                 { id: "notes", label: "Ghi chú" },
                 { id: "invites", label: "Lời mời" },
@@ -181,6 +200,7 @@ export default function CollaborationPage() {
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     className="apple-input mt-4 w-full"
+                    placeholder="Email người nhận"
                   />
                   <select
                     value={role}
@@ -199,19 +219,245 @@ export default function CollaborationPage() {
                     Gửi lời mời
                   </Button>
                 </div>
-                <div className="rounded-panel border border-border bg-surface p-5">
-                  <h2 className="text-[16px] font-semibold text-ink">
-                    Quyền truy cập
-                  </h2>
-                  <select
-                    className="apple-input mt-4 w-full"
-                    defaultValue="invite_only"
-                    onChange={(event) => state.updateAccess(event.target.value)}
+              </aside>
+            </div>
+          )}
+          {tab === "share_link" && (
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+              <section className="rounded-panel border border-border bg-surface p-5 space-y-4">
+                <h2 className="text-[16px] font-semibold text-ink">
+                  Cấu hình liên kết cộng tác
+                </h2>
+                {state.shareConfig?.share_token && (
+                  <div className="rounded-card border border-border bg-subtle p-4 space-y-2">
+                    <p className="text-[13px] font-semibold text-ink">
+                      Mã liên kết phòng cộng tác:
+                    </p>
+                    <p className="font-mono text-[13px] text-ink break-all select-all">
+                      {state.shareConfig.share_token}
+                    </p>
+                    <div className="flex flex-wrap gap-2 text-[12px] text-ink-muted">
+                      <span>
+                        Trạng thái:{" "}
+                        {state.shareConfig.is_active ? "Đang bật" : "Đã tắt"}
+                      </span>
+                      <span>•</span>
+                      <span>
+                        Bảo vệ mật khẩu:{" "}
+                        {state.shareConfig.is_password_protected ? "Có" : "Không"}
+                      </span>
+                      <span>•</span>
+                      <span>Vai trò mặc định: {state.shareConfig.default_role}</span>
+                    </div>
+                  </div>
+                )}
+                <div className="space-y-3">
+                  <label className="flex items-center gap-2 text-[13px] text-ink cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={shareActive}
+                      onChange={(e) => setShareActive(e.target.checked)}
+                      className="h-4 w-4 accent-[hsl(var(--brand))]"
+                    />
+                    <span>Kích hoạt liên kết chia sẻ</span>
+                  </label>
+                  <div>
+                    <label className="block text-[13px] font-semibold text-ink mb-1">
+                      Mật khẩu truy cập phòng cộng tác (để trống nếu không cần)
+                    </label>
+                    <input
+                      type="password"
+                      value={sharePassword}
+                      onChange={(e) => setSharePassword(e.target.value)}
+                      placeholder="Nhập mật khẩu riêng cho link..."
+                      className="apple-input w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[13px] font-semibold text-ink mb-1">
+                      Vai trò được cấp mặc định
+                    </label>
+                    <select
+                      value={shareRole}
+                      onChange={(e) => setShareRole(e.target.value)}
+                      className="apple-input w-full"
+                    >
+                      <option value="editor">Người biên tập (Editor)</option>
+                      <option value="commenter">Người bình luận (Commenter)</option>
+                      <option value="viewer">Người xem (Viewer)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[13px] font-semibold text-ink mb-1">
+                      Thời hạn hiệu lực (giờ, để trống nếu vô hạn)
+                    </label>
+                    <input
+                      type="number"
+                      value={shareExpiresHours}
+                      onChange={(e) => setShareExpiresHours(e.target.value)}
+                      placeholder="Ví dụ: 24"
+                      className="apple-input w-full"
+                    />
+                  </div>
+                  <Button
+                    onClick={() =>
+                      state.configureShareLink({
+                        is_active: shareActive,
+                        password: sharePassword || undefined,
+                        default_role: shareRole,
+                        expires_in_hours: shareExpiresHours
+                          ? parseInt(shareExpiresHours, 10)
+                          : undefined,
+                      })
+                    }
                   >
-                    <option value="invite_only">Chỉ người được mời</option>
-                    <option value="anyone_with_link">Người có liên kết</option>
+                    Lưu cấu hình liên kết
+                  </Button>
+                </div>
+              </section>
+              <aside className="rounded-panel border border-border bg-surface p-5 space-y-4">
+                <h2 className="text-[16px] font-semibold text-ink">
+                  Tham gia qua liên kết
+                </h2>
+                <div>
+                  <label className="block text-[13px] font-semibold text-ink mb-1">
+                    Mã liên kết phòng
+                  </label>
+                  <input
+                    value={joinLinkToken}
+                    onChange={(e) => setJoinLinkToken(e.target.value)}
+                    placeholder="Dán mã liên kết..."
+                    className="apple-input w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[13px] font-semibold text-ink mb-1">
+                    Mật khẩu phòng (nếu có)
+                  </label>
+                  <input
+                    type="password"
+                    value={joinLinkPassword}
+                    onChange={(e) => setJoinLinkPassword(e.target.value)}
+                    placeholder="Nhập mật khẩu..."
+                    className="apple-input w-full"
+                  />
+                </div>
+                <Button
+                  className="w-full"
+                  disabled={!joinLinkToken.trim()}
+                  onClick={() =>
+                    state.joinViaShareLink(joinLinkToken, joinLinkPassword)
+                  }
+                >
+                  Tham gia phòng cộng tác
+                </Button>
+              </aside>
+            </div>
+          )}
+          {tab === "requests" && (
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+              <section className="overflow-hidden rounded-panel border border-border bg-surface">
+                <div className="p-4 border-b border-border font-semibold text-ink">
+                  Yêu cầu xin quyền tới tài liệu của bạn
+                </div>
+                {state.accessRequests.length === 0 ? (
+                  <div className="p-6 text-center text-ink-muted text-[14px]">
+                    Không có yêu cầu xin quyền nào đang chờ duyệt
+                  </div>
+                ) : (
+                  <ul>
+                    {state.accessRequests.map((req) => (
+                      <li
+                        key={req.id}
+                        className="flex items-center justify-between gap-4 border-b border-border p-4 last:border-b-0"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-[14px] font-semibold text-ink">
+                            {req.user_name || req.user_email || req.user_id}
+                          </p>
+                          <p className="text-[12px] text-ink-muted mt-1">
+                            Tài liệu: {req.document_title || req.document_id} • Vai trò xin:{" "}
+                            <span className="font-semibold text-ink">
+                              {req.requested_role}
+                            </span>
+                          </p>
+                          {req.message && (
+                            <p className="text-[13px] text-ink mt-1 italic">
+                              &ldquo;{req.message}&rdquo;
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() =>
+                              state.reviewAccessRequest(req.id, "ACCEPTED")
+                            }
+                          >
+                            Duyệt
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() =>
+                              state.reviewAccessRequest(req.id, "REJECTED")
+                            }
+                          >
+                            Từ chối
+                          </Button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+              <aside className="rounded-panel border border-border bg-surface p-5 space-y-4">
+                <h2 className="text-[16px] font-semibold text-ink">
+                  Gửi yêu cầu xin tham gia
+                </h2>
+                <div>
+                  <label className="block text-[13px] font-semibold text-ink mb-1">
+                    Mã tài liệu (Document ID)
+                  </label>
+                  <input
+                    value={reqDocId}
+                    onChange={(e) => setReqDocId(e.target.value)}
+                    placeholder="Nhập ID tài liệu..."
+                    className="apple-input w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[13px] font-semibold text-ink mb-1">
+                    Vai trò mong muốn
+                  </label>
+                  <select
+                    value={reqRole}
+                    onChange={(e) => setReqRole(e.target.value)}
+                    className="apple-input w-full"
+                  >
+                    <option value="editor">Người biên tập (Editor)</option>
+                    <option value="commenter">Người bình luận (Commenter)</option>
+                    <option value="viewer">Người xem (Viewer)</option>
                   </select>
                 </div>
+                <div>
+                  <label className="block text-[13px] font-semibold text-ink mb-1">
+                    Lời nhắn gửi chủ tài liệu
+                  </label>
+                  <textarea
+                    value={reqMessage}
+                    onChange={(e) => setReqMessage(e.target.value)}
+                    placeholder="Lý do xin tham gia..."
+                    className="apple-input min-h-20 w-full"
+                  />
+                </div>
+                <Button
+                  className="w-full"
+                  disabled={!reqDocId.trim()}
+                  onClick={() => state.requestAccess(reqDocId, reqRole, reqMessage)}
+                >
+                  Gửi yêu cầu
+                </Button>
               </aside>
             </div>
           )}
@@ -401,3 +647,4 @@ export default function CollaborationPage() {
     </div>
   );
 }
+

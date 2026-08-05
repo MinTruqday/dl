@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { getMyDocumentsAPI } from "@/features/content/services/document.service";
 import {
   acquireLockAPI,
+  configureShareLinkAPI,
+  createAccessRequestAPI,
   createCollabTaskAPI,
   createSnapshotAPI,
   generateInviteCodeAPI,
@@ -13,14 +15,18 @@ import {
   getCollaboratorsAPI,
   getLockStatusAPI,
   getMemosAPI,
+  getMyIncomingAccessRequestsAPI,
   getOnlineCollaboratorsAPI,
+  getShareLinkConfigAPI,
   getSnapshotsAPI,
   inviteCollaboratorAPI,
   joinViaInviteCodeAPI,
+  joinViaShareLinkAPI,
   pingCollaborationStatusAPI,
   releaseLockAPI,
   removeCollaboratorAPI,
   respondToInviteAPI,
+  reviewAccessRequestAPI,
   sendMemoAPI,
   updateCollabAccessAPI,
   updateCollabTaskAPI,
@@ -39,6 +45,8 @@ export function useCollaboration() {
   const [snapshots, setSnapshots] = useState<any[]>([]);
   const [lock, setLock] = useState<any>({ is_locked: false });
   const [inviteCode, setInviteCode] = useState("");
+  const [shareConfig, setShareConfig] = useState<any>(null);
+  const [accessRequests, setAccessRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -74,6 +82,8 @@ export function useCollaboration() {
         getMemosAPI(documentId),
         getSnapshotsAPI(documentId),
         getLockStatusAPI(documentId),
+        getShareLinkConfigAPI(documentId).catch(() => ({ data: null })),
+        getMyIncomingAccessRequestsAPI().catch(() => ({ data: [] })),
       ]);
       const value = (result: any) => result.data ?? result ?? [];
       setCollaborators(value(results[0]));
@@ -83,6 +93,8 @@ export function useCollaboration() {
       setMemos(value(results[4]));
       setSnapshots(value(results[5]));
       setLock(value(results[6]));
+      setShareConfig(results[7]?.data ?? null);
+      setAccessRequests(value(results[8]));
     } catch (cause) {
       setError(
         cause instanceof Error
@@ -206,6 +218,43 @@ export function useCollaboration() {
       () => joinViaInviteCodeAPI(code.trim()),
       "Đã tham gia tài liệu",
     );
+  const configureShareLink = (payload: {
+    is_active: boolean;
+    password?: string;
+    default_role: string;
+    expires_in_hours?: number;
+  }) =>
+    run(
+      "share_link",
+      () => configureShareLinkAPI(documentId, payload),
+      "Đã cấu hình liên kết chia sẻ",
+    );
+  const joinViaShareLink = (token: string, password?: string) =>
+    run(
+      "join_link",
+      () => joinViaShareLinkAPI(token.trim(), password?.trim()),
+      "Đã tham gia không gian cộng tác",
+    );
+  const requestAccess = (docId: string, role: string, message?: string) =>
+    run(
+      "request_access",
+      () =>
+        createAccessRequestAPI(docId, {
+          requested_role: role,
+          message: message?.trim(),
+        }),
+      "Đã gửi yêu cầu xin tham gia",
+    );
+  const reviewAccessRequest = (
+    requestId: string,
+    status: "ACCEPTED" | "REJECTED",
+    role?: string,
+  ) =>
+    run(
+      "review_request",
+      () => reviewAccessRequestAPI(requestId, { status, role }),
+      status === "ACCEPTED" ? "Đã duyệt yêu cầu" : "Đã từ chối yêu cầu",
+    );
   return {
     documents,
     documentId,
@@ -219,6 +268,8 @@ export function useCollaboration() {
     snapshots,
     lock,
     inviteCode,
+    shareConfig,
+    accessRequests,
     loading,
     processing,
     error,
@@ -237,5 +288,10 @@ export function useCollaboration() {
     updateAccess,
     generateCode,
     join,
+    configureShareLink,
+    joinViaShareLink,
+    requestAccess,
+    reviewAccessRequest,
   };
 }
+
