@@ -31,6 +31,9 @@ export interface StorageItem {
     amounts?: string[];
   };
   broken_links?: string[];
+  is_locked?: boolean;
+  locked_by?: string;
+  locked_at?: string;
   created_at: string;
   updated_at: string;
 }
@@ -127,6 +130,9 @@ export const deleteStorageItemAPI = async (
     throw new Error(data.message || "Không thể xóa thực thể lưu trữ");
   return data.data;
 };
+
+export const moveToTrashAPI = async (id: string) => deleteStorageItemAPI(id, false);
+
 
 export const uploadStorageFileAPI = async (file: File, parent_id?: string) => {
   const token = getAuthToken();
@@ -390,65 +396,6 @@ export const downloadZipAPI = async (ids: string[]) => {
   window.URL.revokeObjectURL(downloadUrl);
 };
 
-export const getFileVersionsAPI = async (id: string) => {
-  const token = getAuthToken();
-  const res = await fetch(`${API_URL}/luu-tru/phien-ban/${id}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const data = await res.json();
-  if (!res.ok)
-    throw new Error(data.message || "Không thể tải lịch sử phiên bản tệp");
-  return data.data;
-};
-
-export const restoreFileVersionAPI = async (id: string, version_id: string) => {
-  const token = getAuthToken();
-  const res = await fetch(
-    `${API_URL}/luu-tru/phien-ban/${id}/khoi-phuc/${version_id}`,
-    {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-    },
-  );
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi khôi phục phiên bản tệp");
-  return data.data;
-};
-
-export const moveToTrashAPI = async (id: string) => {
-  const token = getAuthToken();
-  const res = await fetch(`${API_URL}/luu-tru/thung-rac/chuyen-vao/${id}`, {
-    method: "DELETE",
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi chuyển tệp vào Thùng rác");
-  return data.data;
-};
-
-export const restoreFromTrashAPI = async (id: string) => {
-  const token = getAuthToken();
-  const res = await fetch(`${API_URL}/luu-tru/thung-rac/khoi-phuc/${id}`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const data = await res.json();
-  if (!res.ok)
-    throw new Error(data.message || "Lỗi khôi phục tệp từ Thùng rác");
-  return data.data;
-};
-
-export const emptyTrashAPI = async () => {
-  const token = getAuthToken();
-  const res = await fetch(`${API_URL}/luu-tru/thung-rac/don-sach`, {
-    method: "DELETE",
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi dọn sạch Thùng rác");
-  return data.data;
-};
-
 export const createProtectedShareLinkAPI = async (
   item_id: string,
   password?: string,
@@ -587,3 +534,215 @@ export const getPreviewPayloadAPI = async (item_id: string) => {
     throw new Error(data.message || "Không thể tải dữ liệu xem trước");
   return data.data;
 };
+
+export interface FileVersionItem {
+  version_id: string;
+  url: string;
+  size: number;
+  created_at: string;
+  is_active: boolean;
+}
+
+export interface QuotaAnalyticsData {
+  total_quota_bytes: number;
+  used_quota_bytes: number;
+  free_quota_bytes: number;
+  usage_percentage: number;
+  total_files_count: number;
+  total_folders_count: number;
+  trashed_files_count: number;
+  trashed_bytes: number;
+  breakdown: Record<
+    string,
+    {
+      count: number;
+      size: number;
+      percentage: number;
+    }
+  >;
+}
+
+export const getFileVersionsAPI = async (itemId: string): Promise<FileVersionItem[]> => {
+  const token = getAuthToken();
+  const res = await fetch(`${API_URL}/luu-tru/tap-tin/${itemId}/phien-ban`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải lịch sử phiên bản");
+  return data.data;
+};
+
+export const rollbackFileVersionAPI = async (itemId: string, versionId: string): Promise<StorageItem> => {
+  const token = getAuthToken();
+  const res = await fetch(`${API_URL}/luu-tru/tap-tin/${itemId}/phien-ban/${versionId}/khoi-phuc`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể khôi phục phiên bản");
+  return mapItem(data.data);
+};
+
+export const setStarredAPI = async (itemId: string, isStarred: boolean): Promise<StorageItem> => {
+  const token = getAuthToken();
+  const res = await fetch(`${API_URL}/luu-tru/tap-tin/${itemId}/yeu-thich`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ is_starred: isStarred }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể cập nhật trạng thái yêu thích");
+  return mapItem(data.data);
+};
+
+export const setTagsAndColorAPI = async (
+  itemId: string,
+  tags?: string[],
+  color?: string
+): Promise<StorageItem> => {
+  const token = getAuthToken();
+  const res = await fetch(`${API_URL}/luu-tru/tap-tin/${itemId}/nhan-dan`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ tags, color }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể cập nhật nhãn dán và màu");
+  return mapItem(data.data);
+};
+
+export const getTrashedItemsAPI = async (): Promise<StorageItem[]> => {
+  const token = getAuthToken();
+  const res = await fetch(`${API_URL}/luu-tru/thung-rac`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách thùng rác");
+  return data.data.map(mapItem);
+};
+
+export const restoreFromTrashAPI = async (itemId: string): Promise<StorageItem> => {
+  const token = getAuthToken();
+  const res = await fetch(`${API_URL}/luu-tru/thung-rac/${itemId}/khoi-phuc`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể khôi phục tệp");
+  return mapItem(data.data);
+};
+
+export const emptyTrashAPI = async (): Promise<{ deleted_count: number }> => {
+  const token = getAuthToken();
+  const res = await fetch(`${API_URL}/luu-tru/thung-rac/don-sach`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể dọn sạch thùng rác");
+  return data.data;
+};
+
+export const getStorageQuotaAnalyticsAPI = async (): Promise<QuotaAnalyticsData> => {
+  const token = getAuthToken();
+  const res = await fetch(`${API_URL}/luu-tru/dung-luong/phan-tich`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải phân tích dung lượng");
+  return data.data;
+};
+
+export const shareInternalAPI = async (
+  itemId: string,
+  email: string,
+  role: string = "viewer"
+): Promise<{ message: string }> => {
+  const token = getAuthToken();
+  const res = await fetch(`${API_URL}/luu-tru/tap-tin/${itemId}/chia-se-noi-bo`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ email, role }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể chia sẻ tệp");
+  return data;
+};
+
+export const revokeInternalShareAPI = async (
+  itemId: string,
+  targetUserId: string
+): Promise<void> => {
+  const token = getAuthToken();
+  const res = await fetch(
+    `${API_URL}/luu-tru/tap-tin/${itemId}/chia-se-noi-bo/${targetUserId}`,
+    {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể thu hồi quyền chia sẻ");
+};
+
+export const getSharedWithMeAPI = async (): Promise<StorageItem[]> => {
+  const token = getAuthToken();
+  const res = await fetch(`${API_URL}/luu-tru/duoc-chia-se-voi-toi`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải tệp được chia sẻ");
+  return data.data.map(mapItem);
+};
+
+export const lockStorageItemAPI = async (itemId: string): Promise<StorageItem> => {
+  const token = getAuthToken();
+  const res = await fetch(`${API_URL}/luu-tru/tap-tin/${itemId}/khoa`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể khóa tệp");
+  return mapItem(data.data);
+};
+
+export const unlockStorageItemAPI = async (itemId: string): Promise<StorageItem> => {
+  const token = getAuthToken();
+  const res = await fetch(`${API_URL}/luu-tru/tap-tin/${itemId}/mo-khoa`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể mở khóa tệp");
+  return mapItem(data.data);
+};
+
+export const getInlinePreviewUrlAPI = async (itemId: string): Promise<string> => {
+  const token = getAuthToken();
+  const res = await fetch(`${API_URL}/luu-tru/tap-tin/${itemId}/xem-truoc`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể lấy liên kết xem trước");
+  return data.data.preview_url;
+};
+
+export const getItemActivitiesAPI = async (itemId: string): Promise<any[]> => {
+  const token = getAuthToken();
+  const res = await fetch(`${API_URL}/luu-tru/tap-tin/${itemId}/nhat-ky`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải nhật ký hoạt động");
+  return data.data;
+};
+

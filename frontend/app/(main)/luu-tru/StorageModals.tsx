@@ -1,9 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import type {
+import { useEffect, useState } from "react";
+import {
+  FileVersionItem,
   ProtectedShareResult,
+  QuotaAnalyticsData,
   StorageItem,
+  getFileVersionsAPI,
+  getItemActivitiesAPI,
+  getStorageQuotaAnalyticsAPI,
 } from "@/features/cloud/services/storage.service";
 import { Button } from "@/shared/components/ui/Button";
 import {
@@ -13,12 +18,35 @@ import {
   ModalHeader,
   ModalTitle,
 } from "@/shared/components/ui/Modal";
+import {
+  BarChart3,
+  Clock,
+  History,
+  Palette,
+  RotateCcw,
+  Tag,
+  Trash2,
+  Upload,
+  User,
+  X,
+} from "lucide-react";
+
+function formatBytes(bytes: number) {
+  if (!bytes || bytes <= 0) return "0 B";
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  const i = Math.min(
+    Math.floor(Math.log(bytes) / Math.log(1024)),
+    units.length - 1
+  );
+  return `${(bytes / 1024 ** i).toFixed(i ? 1 : 0)} ${units[i]}`;
+}
 
 export function StorageTextModal({
   open,
   close,
   title,
   label,
+  initialValue = "",
   processing,
   submit,
 }: {
@@ -26,16 +54,23 @@ export function StorageTextModal({
   close: () => void;
   title: string;
   label: string;
+  initialValue?: string;
   processing: boolean;
   submit: (value: string) => Promise<boolean>;
 }) {
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState(initialValue);
+
+  useEffect(() => {
+    setValue(initialValue);
+  }, [initialValue, open]);
+
   const save = async () => {
     if (await submit(value)) {
       setValue("");
       close();
     }
   };
+
   return (
     <Modal isOpen={open} onClose={close}>
       <ModalHeader>
@@ -53,6 +88,7 @@ export function StorageTextModal({
           value={value}
           onChange={(event) => setValue(event.target.value)}
           className="apple-input w-full"
+          autoFocus
         />
       </ModalContent>
       <ModalFooter>
@@ -60,26 +96,29 @@ export function StorageTextModal({
           Hủy
         </Button>
         <Button disabled={!value.trim() || processing} onClick={save}>
-          {processing ? "Đang lưu" : "Lưu"}
+          {processing ? "Đang lưu..." : "Lưu"}
         </Button>
       </ModalFooter>
     </Modal>
   );
 }
+
 export function StorageShareModal({
   item,
   close,
   processing,
   submit,
+  revokeShare,
   createLink,
 }: {
   item: StorageItem | null;
   close: () => void;
   processing: boolean;
   submit: (email: string, role: string) => Promise<boolean>;
+  revokeShare?: (targetUserId: string) => Promise<boolean>;
   createLink: (
     password: string,
-    expiresInHours: number,
+    expiresInHours: number
   ) => Promise<ProtectedShareResult>;
 }) {
   const [email, setEmail] = useState("");
@@ -89,12 +128,13 @@ export function StorageShareModal({
   const [link, setLink] = useState("");
   const [linkError, setLinkError] = useState("");
   const [creatingLink, setCreatingLink] = useState(false);
+
   const save = async () => {
     if (await submit(email, role)) {
       setEmail("");
-      close();
     }
   };
+
   const generateLink = async () => {
     setCreatingLink(true);
     setLinkError("");
@@ -103,94 +143,115 @@ export function StorageShareModal({
       setLink(`${window.location.origin}/chia-se/${result.share_token}`);
     } catch (cause) {
       setLinkError(
-        cause instanceof Error ? cause.message : "Không thể tạo liên kết",
+        cause instanceof Error ? cause.message : "Không thể tạo liên kết"
       );
     } finally {
       setCreatingLink(false);
     }
   };
+
   return (
     <Modal isOpen={Boolean(item)} onClose={close}>
       <ModalHeader>
-        <ModalTitle>Chia sẻ {item?.name}</ModalTitle>
+        <ModalTitle>Chia sẻ &quot;{item?.name}&quot;</ModalTitle>
       </ModalHeader>
       <ModalContent>
-        <div className="space-y-5">
-          <section className="space-y-4">
+        <div className="space-y-6">
+          {/* Internal User Share */}
+          <section className="space-y-3">
             <p className="text-[13px] font-semibold text-ink">
-              Cấp quyền cho tài khoản
+              Chia sẻ nội bộ với người dùng
             </p>
-            <div>
-              <label
-                htmlFor="share-email"
-                className="mb-2 block text-[13px] font-semibold text-ink"
-              >
-                Email
-              </label>
-              <input
-                id="share-email"
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                className="apple-input w-full"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="share-role"
-                className="mb-2 block text-[13px] font-semibold text-ink"
-              >
-                Quyền
-              </label>
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <input
+                  type="email"
+                  placeholder="Nhập email người nhận..."
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="apple-input w-full"
+                />
+              </div>
               <select
-                id="share-role"
                 value={role}
-                onChange={(event) => setRole(event.target.value)}
-                className="apple-input w-full"
+                onChange={(e) => setRole(e.target.value)}
+                className="apple-input w-28"
               >
                 <option value="viewer">Xem</option>
                 <option value="editor">Chỉnh sửa</option>
               </select>
+              <Button
+                disabled={!email.trim() || processing}
+                onClick={save}
+              >
+                {processing ? "..." : "Thêm"}
+              </Button>
             </div>
-            <Button disabled={!email.trim() || processing} onClick={save}>
-              {processing ? "Đang chia sẻ" : "Cấp quyền"}
-            </Button>
+
+            {/* List of currently shared users */}
+            {item?.shared_with && item.shared_with.length > 0 && (
+              <div className="mt-3 space-y-2 rounded-xl bg-surface-muted p-3">
+                <p className="text-[12px] font-medium text-ink-muted">
+                  Người đã được cấp quyền:
+                </p>
+                <div className="space-y-1.5">
+                  {item.shared_with.map((member) => (
+                    <div
+                      key={member.user_id}
+                      className="flex items-center justify-between rounded-lg bg-surface px-3 py-1.5 text-xs shadow-xs"
+                    >
+                      <div className="flex items-center gap-2">
+                        <User className="h-3.5 w-3.5 text-ink-muted" />
+                        <span className="font-medium text-ink">
+                          {member.user_id}
+                        </span>
+                        <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                          {member.role === "editor" ? "Chỉnh sửa" : "Xem"}
+                        </span>
+                      </div>
+                      {revokeShare && (
+                        <button
+                          type="button"
+                          onClick={() => revokeShare(member.user_id)}
+                          className="text-danger hover:underline text-[11px]"
+                        >
+                          Thu hồi
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </section>
+
+          {/* Public Link Share */}
           <section className="space-y-4 border-t border-border pt-5">
             <p className="text-[13px] font-semibold text-ink">
-              Tạo liên kết bảo vệ
+              Tạo liên kết chia sẻ ngoài
             </p>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <label
-                  htmlFor="share-password"
-                  className="mb-2 block text-[13px] text-ink-muted"
-                >
-                  Mật khẩu tùy chọn
+                <label className="mb-1 block text-[12px] text-ink-muted">
+                  Mật khẩu bảo vệ (tùy chọn)
                 </label>
                 <input
-                  id="share-password"
                   type="password"
-                  minLength={8}
+                  minLength={6}
+                  placeholder="Tối thiểu 6 ký tự"
                   value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  className="apple-input w-full"
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="apple-input w-full text-xs"
                 />
               </div>
               <div>
-                <label
-                  htmlFor="share-expiry"
-                  className="mb-2 block text-[13px] text-ink-muted"
-                >
-                  Thời hạn
+                <label className="mb-1 block text-[12px] text-ink-muted">
+                  Thời hạn hiệu lực
                 </label>
                 <select
-                  id="share-expiry"
                   value={expiresInHours}
-                  onChange={(event) =>
-                    setExpiresInHours(Number(event.target.value))
-                  }
-                  className="apple-input w-full"
+                  onChange={(e) => setExpiresInHours(Number(e.target.value))}
+                  className="apple-input w-full text-xs"
                 >
                   <option value={24}>24 giờ</option>
                   <option value={72}>3 ngày</option>
@@ -199,15 +260,17 @@ export function StorageShareModal({
                 </select>
               </div>
             </div>
+
             {linkError && (
-              <p className="text-[13px] text-danger">{linkError}</p>
+              <p className="text-[12px] text-danger">{linkError}</p>
             )}
+
             {link && (
               <div className="flex gap-2">
                 <input
                   readOnly
                   value={link}
-                  className="apple-input min-w-0 flex-1"
+                  className="apple-input min-w-0 flex-1 text-xs"
                 />
                 <Button
                   variant="secondary"
@@ -217,23 +280,504 @@ export function StorageShareModal({
                 </Button>
               </div>
             )}
+
             <Button
               variant="secondary"
               disabled={
-                creatingLink || (password.length > 0 && password.length < 8)
+                creatingLink || (password.length > 0 && password.length < 6)
               }
               onClick={generateLink}
+              className="w-full"
             >
-              {creatingLink ? "Đang tạo" : "Tạo liên kết"}
+              {creatingLink ? "Đang tạo liên kết..." : "Tạo liên kết công khai"}
             </Button>
           </section>
         </div>
       </ModalContent>
       <ModalFooter>
         <Button variant="secondary" onClick={close}>
-          Hủy
+          Đóng
         </Button>
       </ModalFooter>
     </Modal>
   );
 }
+
+export function StorageVersionModal({
+  item,
+  close,
+  onRollback,
+  onUploadNew,
+  processing,
+}: {
+  item: StorageItem | null;
+  close: () => void;
+  onRollback: (versionId: string) => Promise<boolean>;
+  onUploadNew?: () => void;
+  processing: boolean;
+}) {
+  const [versions, setVersions] = useState<FileVersionItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!item || item.is_folder) return;
+    setLoading(true);
+    setError("");
+    getFileVersionsAPI(item._id)
+      .then(setVersions)
+      .catch((err) =>
+        setError(err instanceof Error ? err.message : "Lỗi khi tải phiên bản")
+      )
+      .finally(() => setLoading(false));
+  }, [item]);
+
+  return (
+    <Modal isOpen={Boolean(item)} onClose={close}>
+      <ModalHeader>
+        <div className="flex items-center gap-2">
+          <History className="h-5 w-5 text-primary" />
+          <ModalTitle>Lịch sử phiên bản: {item?.name}</ModalTitle>
+        </div>
+      </ModalHeader>
+      <ModalContent>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-ink-muted">
+              Lưu giữ tối đa 10 phiên bản gần nhất
+            </span>
+            {onUploadNew && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  close();
+                  onUploadNew();
+                }}
+              >
+                <Upload className="mr-1 h-3.5 w-3.5" />
+                Tải lên bản mới
+              </Button>
+            )}
+          </div>
+
+          {loading ? (
+            <div className="py-8 text-center text-xs text-ink-muted">
+              Đang tải lịch sử phiên bản...
+            </div>
+          ) : error ? (
+            <div className="rounded-lg bg-danger/10 p-3 text-xs text-danger">
+              {error}
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              {versions.map((ver, idx) => (
+                <div
+                  key={ver.version_id || idx}
+                  className={`flex items-center justify-between rounded-xl border p-3 transition-colors ${
+                    ver.is_active
+                      ? "border-primary/40 bg-primary/5"
+                      : "border-border bg-surface"
+                  }`}
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-ink">
+                        {ver.is_active
+                          ? "Phiên bản hiện tại"
+                          : `Phiên bản #${versions.length - idx}`}
+                      </span>
+                      {ver.is_active && (
+                        <span className="rounded bg-primary px-1.5 py-0.2 text-[10px] font-bold text-white">
+                          Đang dùng
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 text-[11px] text-ink-muted">
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {new Date(ver.created_at).toLocaleString("vi-VN")}
+                      </span>
+                      <span>•</span>
+                      <span>{formatBytes(ver.size)}</span>
+                    </div>
+                  </div>
+
+                  {!ver.is_active && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      disabled={processing}
+                      onClick={() => onRollback(ver.version_id)}
+                      className="text-xs"
+                    >
+                      <RotateCcw className="mr-1 h-3.5 w-3.5" />
+                      Khôi phục
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </ModalContent>
+      <ModalFooter>
+        <Button variant="secondary" onClick={close}>
+          Đóng
+        </Button>
+      </ModalFooter>
+    </Modal>
+  );
+}
+
+const PALETTE_COLORS = [
+  { name: "Mặc định", value: "" },
+  { name: "Đỏ", value: "#EF4444" },
+  { name: "Cam", value: "#F97316" },
+  { name: "Vàng", value: "#F59E0B" },
+  { name: "Xanh lá", value: "#10B981" },
+  { name: "Xanh dương", value: "#3B82F6" },
+  { name: "Tím", value: "#8B5CF6" },
+  { name: "Hồng", value: "#EC4899" },
+  { name: "Xám", value: "#64748B" },
+];
+
+export function StorageTagColorModal({
+  item,
+  close,
+  onSave,
+  processing,
+}: {
+  item: StorageItem | null;
+  close: () => void;
+  onSave: (tags: string[], color?: string) => Promise<boolean>;
+  processing: boolean;
+}) {
+  const [tags, setTags] = useState<string[]>([]);
+  const [inputTag, setInputTag] = useState("");
+  const [color, setColor] = useState<string>("");
+
+  useEffect(() => {
+    if (item) {
+      setTags(item.tags || []);
+      setColor(item.color || "");
+    }
+  }, [item]);
+
+  const addTag = () => {
+    const trimmed = inputTag.trim();
+    if (trimmed && !tags.includes(trimmed)) {
+      setTags([...tags, trimmed]);
+      setInputTag("");
+    }
+  };
+
+  const removeTag = (t: string) => {
+    setTags(tags.filter((x) => x !== t));
+  };
+
+  const save = async () => {
+    if (await onSave(tags, color)) {
+      close();
+    }
+  };
+
+  return (
+    <Modal isOpen={Boolean(item)} onClose={close}>
+      <ModalHeader>
+        <div className="flex items-center gap-2">
+          <Tag className="h-5 w-5 text-primary" />
+          <ModalTitle>Gắn thẻ & Đổi màu: {item?.name}</ModalTitle>
+        </div>
+      </ModalHeader>
+      <ModalContent>
+        <div className="space-y-5">
+          {/* Color palette */}
+          <div>
+            <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-ink">
+              <Palette className="h-3.5 w-3.5" />
+              Chọn màu nhận diện
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {PALETTE_COLORS.map((c) => (
+                <button
+                  key={c.name}
+                  type="button"
+                  onClick={() => setColor(c.value)}
+                  className={`h-7 w-7 rounded-full border-2 transition-transform hover:scale-110 ${
+                    color === c.value
+                      ? "border-primary ring-2 ring-primary/30"
+                      : "border-border"
+                  }`}
+                  style={{ backgroundColor: c.value || "#ffffff" }}
+                  title={c.name}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Tags list */}
+          <div className="space-y-2">
+            <label className="block text-xs font-semibold text-ink">
+              Thẻ phân loại (Tags)
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Nhập thẻ mới (vd: Quan trọng, Dự án A)..."
+                value={inputTag}
+                onChange={(e) => setInputTag(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addTag();
+                  }
+                }}
+                className="apple-input flex-1 text-xs"
+              />
+              <Button variant="secondary" size="sm" onClick={addTag}>
+                Thêm
+              </Button>
+            </div>
+
+            <div className="flex flex-wrap gap-1.5 pt-2">
+              {tags.map((t) => (
+                <span
+                  key={t}
+                  className="inline-flex items-center gap-1 rounded-full bg-surface-muted px-2.5 py-1 text-xs font-medium text-ink"
+                >
+                  #{t}
+                  <button
+                    type="button"
+                    onClick={() => removeTag(t)}
+                    className="hover:text-danger"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+              {tags.length === 0 && (
+                <span className="text-xs text-ink-muted">Chưa có thẻ nào</span>
+              )}
+            </div>
+          </div>
+        </div>
+      </ModalContent>
+      <ModalFooter>
+        <Button variant="secondary" onClick={close}>
+          Hủy
+        </Button>
+        <Button disabled={processing} onClick={save}>
+          {processing ? "Đang lưu..." : "Lưu thay đổi"}
+        </Button>
+      </ModalFooter>
+    </Modal>
+  );
+}
+
+export function StorageAnalyticsModal({
+  open,
+  close,
+}: {
+  open: boolean;
+  close: () => void;
+}) {
+  const [data, setData] = useState<QuotaAnalyticsData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!open) return;
+    setLoading(true);
+    setError("");
+    getStorageQuotaAnalyticsAPI()
+      .then(setData)
+      .catch((err) =>
+        setError(err instanceof Error ? err.message : "Không thể tải báo cáo")
+      )
+      .finally(() => setLoading(false));
+  }, [open]);
+
+  return (
+    <Modal isOpen={open} onClose={close}>
+      <ModalHeader>
+        <div className="flex items-center gap-2">
+          <BarChart3 className="h-5 w-5 text-primary" />
+          <ModalTitle>Phân tích & Thống kê dung lượng</ModalTitle>
+        </div>
+      </ModalHeader>
+      <ModalContent>
+        {loading ? (
+          <div className="py-12 text-center text-xs text-ink-muted">
+            Đang tổng hợp dữ liệu dung lượng...
+          </div>
+        ) : error ? (
+          <div className="rounded-lg bg-danger/10 p-3 text-xs text-danger">
+            {error}
+          </div>
+        ) : data ? (
+          <div className="space-y-6">
+            {/* Overall storage bar */}
+            <div className="space-y-2 rounded-2xl bg-surface-muted p-4">
+              <div className="flex justify-between text-xs font-semibold text-ink">
+                <span>Dung lượng đã sử dụng</span>
+                <span>
+                  {formatBytes(data.used_quota_bytes)} /{" "}
+                  {formatBytes(data.total_quota_bytes)} ({data.usage_percentage}
+                  %)
+                </span>
+              </div>
+              <div className="h-3 w-full overflow-hidden rounded-full bg-border">
+                <div
+                  className={`h-full transition-all duration-500 ${
+                    data.usage_percentage > 90
+                      ? "bg-danger"
+                      : data.usage_percentage > 75
+                      ? "bg-amber-500"
+                      : "bg-primary"
+                  }`}
+                  style={{ width: `${Math.min(100, data.usage_percentage)}%` }}
+                />
+              </div>
+              <div className="flex justify-between text-[11px] text-ink-muted">
+                <span>Còn trống: {formatBytes(data.free_quota_bytes)}</span>
+                <span>
+                  {data.total_files_count} tệp • {data.total_folders_count} thư
+                  mục
+                </span>
+              </div>
+            </div>
+
+            {/* Category breakdown */}
+            <div className="space-y-3">
+              <p className="text-xs font-semibold text-ink">
+                Phân bố theo thể loại
+              </p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {Object.entries(data.breakdown || {}).map(([key, info]) => {
+                  const labels: Record<string, string> = {
+                    documents: "Tài liệu văn bản",
+                    images: "Hình ảnh",
+                    videos: "Video",
+                    audio: "Âm thanh",
+                    archives: "Tệp nén / Lưu trữ",
+                    code: "Mã nguồn & Code",
+                    others: "Khác",
+                  };
+                  return (
+                    <div
+                      key={key}
+                      className="flex items-center justify-between rounded-xl border border-border bg-surface p-3 text-xs"
+                    >
+                      <div className="space-y-0.5">
+                        <span className="font-medium text-ink">
+                          {labels[key] || key}
+                        </span>
+                        <p className="text-[11px] text-ink-muted">
+                          {info.count} tệp • {info.percentage}%
+                        </p>
+                      </div>
+                      <span className="font-semibold text-primary">
+                        {formatBytes(info.size)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Trash summary */}
+            <div className="flex items-center justify-between rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 text-xs">
+              <div className="flex items-center gap-2">
+                <Trash2 className="h-4 w-4 text-amber-500" />
+                <span className="text-ink">Thùng rác đang chiếm:</span>
+              </div>
+              <span className="font-semibold text-ink">
+                {data.trashed_files_count} tệp ({formatBytes(data.trashed_bytes)})
+              </span>
+            </div>
+          </div>
+        ) : null}
+      </ModalContent>
+      <ModalFooter>
+        <Button variant="secondary" onClick={close}>
+          Đóng
+        </Button>
+      </ModalFooter>
+    </Modal>
+  );
+}
+
+export function StorageActivitiesModal({
+  item,
+  close,
+}: {
+  item: StorageItem | null;
+  close: () => void;
+}) {
+  const [activities, setActivities] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!item) return;
+    setLoading(true);
+    getItemActivitiesAPI(item._id)
+      .then(setActivities)
+      .catch(() => setActivities([]))
+      .finally(() => setLoading(false));
+  }, [item]);
+
+  return (
+    <Modal isOpen={Boolean(item)} onClose={close}>
+      <ModalHeader>
+        <div className="flex items-center gap-2">
+          <Clock className="h-5 w-5 text-primary" />
+          <ModalTitle>Nhật ký hoạt động: {item?.name}</ModalTitle>
+        </div>
+      </ModalHeader>
+      <ModalContent>
+        {loading ? (
+          <div className="py-8 text-center text-xs text-ink-muted">
+            Đang tải nhật ký...
+          </div>
+        ) : activities.length === 0 ? (
+          <div className="py-8 text-center text-xs text-ink-muted">
+            Chưa có ghi nhận hoạt động nào
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {activities.map((act, i) => (
+              <div
+                key={act.id || i}
+                className="flex items-start gap-3 rounded-xl border border-border bg-surface p-3 text-xs"
+              >
+                <div className="mt-0.5 rounded-full bg-primary/10 p-1 text-primary">
+                  <Clock className="h-3.5 w-3.5" />
+                </div>
+                <div className="flex-1 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-ink">
+                      {act.action}
+                    </span>
+                    <span className="text-[11px] text-ink-muted">
+                      {new Date(act.timestamp).toLocaleString("vi-VN")}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-ink-muted">
+                    Thực hiện bởi: {act.user_id}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </ModalContent>
+      <ModalFooter>
+        <Button variant="secondary" onClick={close}>
+          Đóng
+        </Button>
+      </ModalFooter>
+    </Modal>
+  );
+}
+

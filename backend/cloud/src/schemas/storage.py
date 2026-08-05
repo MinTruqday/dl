@@ -132,3 +132,37 @@ class StorageItemResponse(StorageItemBase):
     updated_at: datetime
     thumbnail_url: Optional[str] = None
     preview_url: Optional[str] = None
+
+class StarredUpdateRequest(BaseModel):
+    is_starred: bool
+
+class TagColorUpdateRequest(BaseModel):
+    tags: Optional[List[str]] = None
+    color: Optional[str] = None
+
+class InternalShareRequest(BaseModel):
+    email: str
+    role: str = Field(default="viewer", pattern=r"^(viewer|editor)$")
+
+class CategoryBreakdown(BaseModel):
+    count: int = 0
+    size: int = 0
+    percentage: float = 0.0
+
+class QuotaAnalyticsResponse(BaseModel):
+    total_quota_bytes: int
+    used_quota_bytes: int
+    free_quota_bytes: int
+    usage_percentage: float
+    total_files_count: int
+    total_folders_count: int
+    trashed_files_count: int
+    trashed_bytes: int
+    breakdown: dict
+
+class FileVersionResponse(BaseModel):
+    version_id: str
+    url: str
+    size: int
+    created_at: datetime
+    is_active: bool = False

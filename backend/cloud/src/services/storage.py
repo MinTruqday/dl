@@ -132,6 +132,7 @@ class StorageService:
         owner_id: str,
         is_trashed: bool = False,
         is_starred: Optional[bool] = None,
+        tag: Optional[str] = None,
     ) -> List[StorageItemInDB]:
         access_query = {"$or": [{"owner_id": owner_id}, {"shared_with.user_id": owner_id}]}
         if parent_id:
@@ -142,6 +143,8 @@ class StorageService:
         query = {**access_query, "parent_id": parent_id, "is_trashed": is_trashed}
         if is_starred is not None:
             query["is_starred"] = is_starred
+        if tag:
+            query["tags"] = tag
         cursor = (
             database.mongodb[settings.CLOUD_DB_NAME]
             .storage_items.find(query)
@@ -559,3 +562,312 @@ class StorageService:
             except Exception:
                 failed_count += 1
         return {"success": success_count, "failed": failed_count}
+
+    @staticmethod
+    @log_logic_execution
+    async def get_versions(item_id: str, user_id: str) -> List[dict]:
+        item = await StorageService.get_accessible_item(item_id, user_id)
+        if not item or item.is_folder:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tệp tin hoặc thư mục không hỗ trợ phiên bản")
+        
+        results = [
+            {
+                "version_id": "current",
+                "url": item.url,
+                "size": item.size,
+                "created_at": item.updated_at or item.created_at,
+                "is_active": True,
+            }
+        ]
+        for v in (item.versions or []):
+            results.append({
+                "version_id": v.version_id,
+                "url": v.url,
+                "size": v.size,
+                "created_at": v.created_at,
+                "is_active": False,
+            })
+        return results
+
+    @staticmethod
+    @log_logic_execution
+    async def rollback_version(item_id: str, version_id: str, owner_id: str) -> Optional[StorageItemInDB]:
+        item = await StorageService.get_item(item_id, owner_id)
+        if not item or item.is_folder:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tệp tin")
+        if item.is_locked and item.locked_by != owner_id:
+            raise HTTPException(status_code=403, detail="Tệp đang bị khóa bởi người dùng khác")
+        
+        target_version = None
+        remaining_versions = []
+        for v in (item.versions or []):
+            if v.version_id == version_id:
+                target_version = v
+            else:
+                remaining_versions.append(v)
+        
+        if not target_version:
+            raise HTTPException(status_code=404, detail="Không tìm thấy phiên bản yêu cầu khôi phục")
+        
+        from src.schemas.storage import FileVersion
+        archived_current = FileVersion(
+            url=item.url,
+            size=item.size,
+            created_at=item.updated_at or item.created_at
+        )
+        remaining_versions.insert(0, archived_current)
+        
+        now = datetime.now(timezone.utc)
+        result = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one_and_update(
+            {"_id": item_id, "owner_id": owner_id},
+            {
+                "$set": {
+                    "url": target_version.url,
+                    "size": target_version.size,
+                    "versions": [v.model_dump() for v in remaining_versions[:10]],
+                    "updated_at": now
+                }
+            },
+            return_document=True
+        )
+        from src.services.activity import ActivityService
+        await ActivityService.log_activity(item_id, owner_id, "ROLLBACK_VERSION")
+        return StorageItemInDB(**result) if result else None
+
+    @staticmethod
+    @log_logic_execution
+    async def set_starred(item_id: str, is_starred: bool, owner_id: str) -> Optional[StorageItemInDB]:
+        item = await StorageService.get_item(item_id, owner_id)
+        if not item:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tệp hoặc thư mục")
+        
+        result = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one_and_update(
+            {"_id": item_id, "owner_id": owner_id},
+            {"$set": {"is_starred": is_starred, "updated_at": datetime.now(timezone.utc)}},
+            return_document=True
+        )
+        from src.services.activity import ActivityService
+        await ActivityService.log_activity(item_id, owner_id, "STAR" if is_starred else "UNSTAR")
+        return StorageItemInDB(**result) if result else None
+
+    @staticmethod
+    @log_logic_execution
+    async def set_tags_and_color(
+        item_id: str,
+        tags: Optional[List[str]],
+        color: Optional[str],
+        owner_id: str
+    ) -> Optional[StorageItemInDB]:
+        item = await StorageService.get_item(item_id, owner_id)
+        if not item:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tệp hoặc thư mục")
+        
+        update_set = {"updated_at": datetime.now(timezone.utc)}
+        if tags is not None:
+            update_set["tags"] = tags
+        if color is not None:
+            update_set["color"] = color
+        
+        result = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one_and_update(
+            {"_id": item_id, "owner_id": owner_id},
+            {"$set": update_set},
+            return_document=True
+        )
+        from src.services.activity import ActivityService
+        if tags is not None:
+            await ActivityService.log_activity(item_id, owner_id, "TAG")
+        if color is not None:
+            await ActivityService.log_activity(item_id, owner_id, "COLOR")
+        return StorageItemInDB(**result) if result else None
+
+    @staticmethod
+    @log_logic_execution
+    async def get_trashed_items(owner_id: str) -> List[StorageItemInDB]:
+        cursor = (
+            database.mongodb[settings.CLOUD_DB_NAME]
+            .storage_items.find({"owner_id": owner_id, "is_trashed": True})
+            .sort([("updated_at", -1)])
+        )
+        items = await cursor.to_list(length=None)
+        return [StorageItemInDB(**item) for item in items]
+
+    @staticmethod
+    @log_logic_execution
+    async def restore_from_trash(item_id: str, owner_id: str) -> Optional[StorageItemInDB]:
+        item = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one(
+            {"_id": item_id, "owner_id": owner_id, "is_trashed": True}
+        )
+        if not item:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tệp trong thùng rác")
+        
+        parsed = StorageItemInDB(**item)
+        items_to_restore = [parsed.id]
+        if parsed.is_folder:
+            pending = [parsed.id]
+            while pending:
+                children = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find(
+                    {"owner_id": owner_id, "parent_id": {"$in": pending}}, {"_id": 1, "is_folder": 1}
+                ).to_list(length=None)
+                pending = [child["_id"] for child in children if child.get("is_folder")]
+                items_to_restore.extend(child["_id"] for child in children)
+        
+        await database.mongodb[settings.CLOUD_DB_NAME].storage_items.update_many(
+            {"_id": {"$in": items_to_restore}, "owner_id": owner_id},
+            {"$set": {"is_trashed": False, "updated_at": datetime.now(timezone.utc)}}
+        )
+        from src.services.activity import ActivityService
+        await ActivityService.log_activity(item_id, owner_id, "RESTORE_TRASH")
+        return await StorageService.get_item(item_id, owner_id)
+
+    @staticmethod
+    @log_logic_execution
+    async def empty_trash(owner_id: str) -> dict:
+        cursor = database.mongodb[settings.CLOUD_DB_NAME].storage_items.find(
+            {"owner_id": owner_id, "is_trashed": True}
+        )
+        items = await cursor.to_list(length=None)
+        if not items:
+            return {"deleted_count": 0}
+        
+        parsed_items = [StorageItemInDB(**i) for i in items]
+        ids = [i.id for i in parsed_items]
+        
+        await database.mongodb[settings.CLOUD_DB_NAME].storage_items.delete_many(
+            {"_id": {"$in": ids}, "owner_id": owner_id}
+        )
+        await database.mongodb[settings.CLOUD_DB_NAME].storage_items.delete_many(
+            {"target_id": {"$in": ids}}
+        )
+        
+        from src.core.storage import get_bucket, get_storage_client
+        storage_client = await get_storage_client()
+        for entry in parsed_items:
+            urls = []
+            if not entry.is_folder and not entry.is_shortcut and entry.url:
+                urls.append(entry.url)
+                urls.extend(version.url for version in entry.versions if version.url != entry.url)
+            for url in urls:
+                references = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.count_documents({"url": url})
+                if references == 0:
+                    try:
+                        await storage_client.delete_object(Bucket=get_bucket(url), Key=url)
+                    except Exception:
+                        logger.exception("Failed to cleanup physical storage file from trash")
+        
+        from src.services.activity import ActivityService
+        await ActivityService.log_activity("system", owner_id, "EMPTY_TRASH")
+        return {"deleted_count": len(ids)}
+
+    @staticmethod
+    @log_logic_execution
+    async def get_quota_analytics(owner_id: str) -> dict:
+        quota = await StorageService.get_storage_quota(owner_id)
+        total_limit = quota["limit"]
+        total_used = quota["used"]
+        free_bytes = max(0, total_limit - total_used)
+        usage_pct = round((total_used / total_limit * 100) if total_limit > 0 else 0.0, 2)
+        
+        categories = {
+            "documents": {"extensions": [".pdf", ".doc", ".docx", ".txt", ".odt", ".rtf", ".pages", ".md"], "count": 0, "size": 0},
+            "images": {"extensions": [".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".bmp", ".ico"], "count": 0, "size": 0},
+            "videos": {"extensions": [".mp4", ".mkv", ".mov", ".avi", ".webm"], "count": 0, "size": 0},
+            "audio": {"extensions": [".mp3", ".wav", ".aac", ".flac", ".ogg", ".m4a"], "count": 0, "size": 0},
+            "archives": {"extensions": [".zip", ".rar", ".7z", ".tar", ".gz"], "count": 0, "size": 0},
+            "code": {"extensions": [".py", ".ts", ".js", ".json", ".html", ".css", ".cpp", ".java", ".sql", ".sh", ".yml", ".yaml"], "count": 0, "size": 0},
+            "others": {"extensions": [], "count": 0, "size": 0}
+        }
+        
+        cursor = database.mongodb[settings.CLOUD_DB_NAME].storage_items.find(
+            {"owner_id": owner_id, "is_folder": False, "is_trashed": False}
+        )
+        files = await cursor.to_list(length=None)
+        total_files = len(files)
+        
+        for f in files:
+            name = (f.get("name") or "").lower()
+            size = f.get("size") or 0
+            for v in f.get("versions", []):
+                size += (v.get("size") or 0)
+            
+            matched = False
+            for cat_name, cat_data in categories.items():
+                if cat_name == "others": continue
+                if any(name.endswith(ext) for ext in cat_data["extensions"]):
+                    cat_data["count"] += 1
+                    cat_data["size"] += size
+                    matched = True
+                    break
+            if not matched:
+                categories["others"]["count"] += 1
+                categories["others"]["size"] += size
+        
+        breakdown_result = {}
+        for cat_name, cat_data in categories.items():
+            breakdown_result[cat_name] = {
+                "count": cat_data["count"],
+                "size": cat_data["size"],
+                "percentage": round((cat_data["size"] / total_used * 100) if total_used > 0 else 0.0, 2)
+            }
+        
+        total_folders = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.count_documents(
+            {"owner_id": owner_id, "is_folder": True, "is_trashed": False}
+        )
+        
+        trashed_cursor = database.mongodb[settings.CLOUD_DB_NAME].storage_items.find(
+            {"owner_id": owner_id, "is_trashed": True, "is_folder": False}
+        )
+        trashed_files = await trashed_cursor.to_list(length=None)
+        trashed_bytes = sum((t.get("size") or 0) for t in trashed_files)
+        
+        return {
+            "total_quota_bytes": total_limit,
+            "used_quota_bytes": total_used,
+            "free_quota_bytes": free_bytes,
+            "usage_percentage": usage_pct,
+            "total_files_count": total_files,
+            "total_folders_count": total_folders,
+            "trashed_files_count": len(trashed_files),
+            "trashed_bytes": trashed_bytes,
+            "breakdown": breakdown_result
+        }
+
+    @staticmethod
+    @log_logic_execution
+    async def share_internal(
+        item_id: str, email: str, role: str, owner_id: str
+    ) -> dict:
+        return await StorageService.share_item(item_id, email, role, owner_id)
+
+    @staticmethod
+    @log_logic_execution
+    async def revoke_internal_share(
+        item_id: str, target_user_id: str, owner_id: str
+    ) -> bool:
+        item = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one(
+            {"_id": item_id, "owner_id": owner_id}
+        )
+        if not item:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tệp hoặc thiếu quyền")
+        
+        res = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.update_one(
+            {"_id": item_id, "owner_id": owner_id},
+            {"$pull": {"shared_with": {"user_id": target_user_id}}}
+        )
+        from src.services.activity import ActivityService
+        await ActivityService.log_activity(item_id, owner_id, "REVOKE_SHARE")
+        return res.modified_count > 0
+
+    @staticmethod
+    @log_logic_execution
+    async def get_shared_with_me_items(user_id: str) -> List[StorageItemInDB]:
+        cursor = (
+            database.mongodb[settings.CLOUD_DB_NAME]
+            .storage_items.find({
+                "shared_with.user_id": user_id,
+                "is_trashed": False
+            })
+            .sort([("updated_at", -1)])
+        )
+        items = await cursor.to_list(length=None)
+        return [StorageItemInDB(**item) for item in items]
+

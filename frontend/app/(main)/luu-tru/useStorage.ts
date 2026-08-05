@@ -9,15 +9,23 @@ import {
   createProtectedShareLinkAPI,
   deleteStorageItemAPI,
   downloadZipAPI,
+  emptyTrashAPI,
   getRecentStorageItemsAPI,
+  getSharedWithMeAPI,
   getStarredItemsAPI,
   getStorageQuotaAPI,
+  getTrashedItemsAPI,
   listStorageItemsAPI,
+  lockStorageItemAPI,
   moveToTrashAPI,
   restoreFromTrashAPI,
+  revokeInternalShareAPI,
+  rollbackFileVersionAPI,
   searchStorageItemsAPI,
-  shareStorageItemAPI,
-  toggleStarItemAPI,
+  setStarredAPI,
+  setTagsAndColorAPI,
+  shareInternalAPI,
+  unlockStorageItemAPI,
   updateStorageItemAPI,
   uploadFileVersionAPI,
   uploadStorageFileAPI,
@@ -25,50 +33,61 @@ import {
 
 export type { StorageItem } from "@/features/cloud/services/storage.service";
 
-export type StorageView = "files" | "recent" | "starred" | "trash";
+export type StorageView = "files" | "recent" | "starred" | "shared" | "trash";
+
 export function useStorage() {
   const [items, setItems] = useState<StorageItem[]>([]);
   const [path, setPath] = useState<StorageItem[]>([]);
   const [view, setView] = useState<StorageView>("files");
   const [query, setQuery] = useState("");
+  const [selectedTag, setSelectedTag] = useState<string>("");
   const [quota, setQuota] = useState({ used: 0, limit: 0 });
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const folderId = path.at(-1)?._id;
+
   const reload = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const [rows, quotaValue] = await Promise.all([
-        query.trim()
-          ? searchStorageItemsAPI(query.trim())
-          : view === "recent"
-            ? getRecentStorageItemsAPI(50)
-            : view === "starred"
-              ? getStarredItemsAPI()
-              : listStorageItemsAPI(
-                  view === "files" ? folderId : undefined,
-                  view === "trash",
-                ),
-        getStorageQuotaAPI(),
-      ]);
+      let rows: StorageItem[] = [];
+      if (query.trim()) {
+        rows = await searchStorageItemsAPI(query.trim());
+      } else if (view === "recent") {
+        rows = await getRecentStorageItemsAPI(50);
+      } else if (view === "starred") {
+        rows = await getStarredItemsAPI();
+      } else if (view === "shared") {
+        rows = await getSharedWithMeAPI();
+      } else if (view === "trash") {
+        rows = await getTrashedItemsAPI();
+      } else {
+        rows = await listStorageItemsAPI(folderId, false);
+        if (selectedTag) {
+          rows = rows.filter((item) => item.tags?.includes(selectedTag));
+        }
+      }
+
+      const quotaValue = await getStorageQuotaAPI();
       setItems(rows);
       setQuota(quotaValue);
     } catch (cause) {
       setError(
-        cause instanceof Error ? cause.message : "Không thể tải kho lưu trữ",
+        cause instanceof Error ? cause.message : "Không thể tải kho lưu trữ"
       );
     } finally {
       setLoading(false);
     }
-  }, [query, view, folderId]);
+  }, [query, view, folderId, selectedTag]);
+
   useEffect(() => void reload(), [reload]);
+
   const run = async (
     key: string,
     task: () => Promise<unknown>,
-    success: string,
+    success: string
   ) => {
     setProcessing(key);
     setError("");
@@ -79,19 +98,21 @@ export function useStorage() {
       return true;
     } catch (cause) {
       setError(
-        cause instanceof Error ? cause.message : "Không thể hoàn tất thao tác",
+        cause instanceof Error ? cause.message : "Không thể hoàn tất thao tác"
       );
       return false;
     } finally {
       setProcessing(null);
     }
   };
+
   const createFolder = (name: string) =>
     run(
       "folder",
       () => createFolderAPI(name.trim(), folderId),
-      "Thư mục đã được tạo",
+      "Thư mục đã được tạo"
     );
+
   const upload = async (files: FileList | File[]) =>
     run(
       "upload",
@@ -99,38 +120,79 @@ export function useStorage() {
         for (const file of Array.from(files))
           await uploadStorageFileAPI(file, folderId);
       },
-      "Tệp đã được tải lên",
+      "Tệp đã được tải lên"
     );
+
   const rename = (item: StorageItem, name: string) =>
     run(
       "rename",
       () => updateStorageItemAPI(item._id, { name: name.trim() }),
-      "Đã đổi tên",
+      "Đã đổi tên"
     );
+
   const share = (item: StorageItem, email: string, role: string) =>
     run(
       "share",
-      () => shareStorageItemAPI(item._id, email.trim(), role),
-      "Đã cấp quyền truy cập",
+      () => shareInternalAPI(item._id, email.trim(), role),
+      "Đã cấp quyền truy cập cho người dùng"
     );
+
+  const revokeShare = (item: StorageItem, targetUserId: string) =>
+    run(
+      "revokeShare",
+      () => revokeInternalShareAPI(item._id, targetUserId),
+      "Đã thu hồi quyền chia sẻ"
+    );
+
   const createProtectedLink = (
     item: StorageItem,
     password: string,
-    expiresInHours: number,
+    expiresInHours: number
   ) =>
     createProtectedShareLinkAPI(
       item._id,
       password.trim() || undefined,
-      expiresInHours,
+      expiresInHours
     );
+
   const uploadVersion = (item: StorageItem, file: File) =>
     run(
       "version",
       () => uploadFileVersionAPI(item._id, file),
-      "Đã tải lên phiên bản mới",
+      "Đã tải lên phiên bản mới"
     );
+
+  const rollbackVersion = (item: StorageItem, versionId: string) =>
+    run(
+      "rollback",
+      () => rollbackFileVersionAPI(item._id, versionId),
+      "Đã khôi phục phiên bản được chọn"
+    );
+
   const toggleStar = (item: StorageItem) =>
-    run("star", () => toggleStarItemAPI(item._id), "Đã cập nhật dấu sao");
+    run(
+      "star",
+      () => setStarredAPI(item._id, !item.is_starred),
+      item.is_starred ? "Đã gỡ dấu sao" : "Đã thêm vào mục yêu thích"
+    );
+
+  const updateTagAndColor = (
+    item: StorageItem,
+    tags?: string[],
+    color?: string
+  ) =>
+    run(
+      "tagColor",
+      () => setTagsAndColorAPI(item._id, tags, color),
+      "Đã cập nhật nhãn dán và màu sắc"
+    );
+
+  const lock = (item: StorageItem) =>
+    run("lock", () => lockStorageItemAPI(item._id), "Đã khóa tệp tin");
+
+  const unlock = (item: StorageItem) =>
+    run("unlock", () => unlockStorageItemAPI(item._id), "Đã mở khóa tệp tin");
+
   const remove = (item: StorageItem) =>
     run(
       "delete",
@@ -138,10 +200,15 @@ export function useStorage() {
         view === "trash"
           ? deleteStorageItemAPI(item._id, true)
           : moveToTrashAPI(item._id),
-      view === "trash" ? "Đã xóa vĩnh viễn" : "Đã chuyển vào thùng rác",
+      view === "trash" ? "Đã xóa vĩnh viễn" : "Đã chuyển vào thùng rác"
     );
+
   const restore = (item: StorageItem) =>
     run("restore", () => restoreFromTrashAPI(item._id), "Đã khôi phục mục");
+
+  const emptyTrash = () =>
+    run("emptyTrash", () => emptyTrashAPI(), "Đã dọn sạch toàn bộ thùng rác");
+
   const advancedSearch = async (filters: StorageSearchFilters) => {
     setLoading(true);
     setError("");
@@ -150,15 +217,17 @@ export function useStorage() {
       return true;
     } catch (cause) {
       setError(
-        cause instanceof Error ? cause.message : "Không thể tìm kiếm tệp",
+        cause instanceof Error ? cause.message : "Không thể tìm kiếm tệp"
       );
       return false;
     } finally {
       setLoading(false);
     }
   };
+
   const downloadSelected = (ids: string[]) =>
-    run("download", () => downloadZipAPI(ids), "Đã tạo tệp tải xuống");
+    run("download", () => downloadZipAPI(ids), "Đã tạo tệp tải xuống ZIP");
+
   return {
     items,
     path,
@@ -167,6 +236,8 @@ export function useStorage() {
     setView,
     query,
     setQuery,
+    selectedTag,
+    setSelectedTag,
     quota,
     loading,
     processing,
@@ -178,11 +249,17 @@ export function useStorage() {
     upload,
     rename,
     share,
+    revokeShare,
     createProtectedLink,
     uploadVersion,
+    rollbackVersion,
     toggleStar,
+    updateTagAndColor,
+    lock,
+    unlock,
     remove,
     restore,
+    emptyTrash,
     advancedSearch,
     downloadSelected,
   };
