@@ -477,7 +477,7 @@ async def import_document_from_file(
 async def update_document_content(
     document_id: str,
     content_in: DocumentContentUpdate,
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN])),
+    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.READER, Role.ADMIN])),
 ) -> Any:
     return APIResponse(
         data=await DocumentService.update_document_content(document_id, content_in, current_user),
@@ -490,13 +490,14 @@ async def update_document_content(
 async def update_document(
     document_id: str,
     doc_update: DocumentUpdate,
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN])),
+    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.READER, Role.ADMIN])),
 ) -> Any:
     return APIResponse(
         data=await DocumentService.update_document(document_id, doc_update, current_user),
         message="Cập nhật dữ liệu siêu dữ liệu (metadata) tài liệu hoàn tất",
         status=status.HTTP_200_OK,
     )
+
 
 
 @router.get("", response_model=APIResponse[List[DocumentResponse]])

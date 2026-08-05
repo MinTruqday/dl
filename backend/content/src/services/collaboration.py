@@ -44,6 +44,8 @@ class CollaborationService:
     async def send_collaboration_invite(
         document_id: str, invitee_email: str, role: str, current_user
     ) -> dict:
+        if role not in ["editor", "commenter", "viewer"]:
+            raise HTTPException(status_code=400, detail="Phân quyền truy cập cung cấp không hợp lệ")
         doc = await DocumentRepository.find_one(
             {"_id": document_id, "creator_id": str(current_user.id)}
         )
@@ -397,7 +399,7 @@ class CollaborationService:
                 status_code=403,
                 detail="Không có quyền quản lý người tham gia",
             )
-        if role not in ["editor", "viewer"]:
+        if role not in ["editor", "commenter", "viewer"]:
             raise HTTPException(status_code=400, detail="Phân quyền truy cập cung cấp không hợp lệ")
         await CollaborationRepository.update_invite(
             {"_id": collaboration_id}, {"$set": {"role": role}}

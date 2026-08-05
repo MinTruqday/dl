@@ -9,7 +9,6 @@ class TransactionType(str, Enum):
     PURCHASE = "purchase"
     RECEIVE = "receive"
     WITHDRAW = "withdraw"
-    TIP = "tip"
     REFUND = "refund"
     TRANSFER_OUT = "transfer_out"
     TRANSFER_IN = "transfer_in"

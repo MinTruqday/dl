@@ -21,6 +21,7 @@ from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 from src.repositories.document import DocumentRepository
 from src.repositories.reading import ReadingRepository
+from src.repositories.collaboration import CollaborationRepository
 from src.services.drm_client import DrmClient
 from src.services.finance_client import FinanceClient
 
@@ -57,7 +58,11 @@ class DocumentService:
     @staticmethod
     async def _can_read_full(document: dict, current_user) -> bool:
         user_id = str(current_user.id) if current_user else None
-        if user_id == document.get("creator_id") or DocumentService._is_admin(current_user):
+        if (
+            user_id == document.get("creator_id")
+            or DocumentService._is_admin(current_user)
+            or (user_id and user_id in document.get("coauthors", []))
+        ):
             return True
         if document.get("status") != DocumentStatus.PUBLISHED or document.get("is_deleted") is True:
             return False
@@ -342,12 +347,22 @@ class DocumentService:
     async def get_my_documents(
         current_user, q: str = None, cursor: str = None, limit: int = Query(default=20, le=100)
     ) -> list:
-        query = {"creator_id": str(current_user.id), "is_deleted": {"$ne": True}}
+        user_id = str(current_user.id)
+        base_match = {"$or": [{"creator_id": user_id}, {"coauthors": user_id}], "is_deleted": {"$ne": True}}
         if q:
-            query["$or"] = [
-                {"title": {"$regex": q, "$options": "i"}},
-                {"description": {"$regex": q, "$options": "i"}},
-            ]
+            query = {
+                "$and": [
+                    base_match,
+                    {
+                        "$or": [
+                            {"title": {"$regex": q, "$options": "i"}},
+                            {"description": {"$regex": q, "$options": "i"}},
+                        ]
+                    },
+                ]
+            }
+        else:
+            query = base_match
         if cursor:
             query["_id"] = {"$lt": cursor}
 
@@ -377,11 +392,27 @@ class DocumentService:
         document_id: str, content_in: DocumentContentUpdate, current_user
     ):
         docs_collection = DocumentRepository
-        document = await docs_collection.find_one(
-            {"_id": document_id, "creator_id": str(current_user.id)}
-        )
+        user_id = str(current_user.id)
+        document = await docs_collection.find_one({"_id": document_id})
         if not document:
             raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy tài liệu yêu cầu")
+
+        is_owner = user_id == document.get("creator_id")
+        is_admin = DocumentService._is_admin(current_user)
+        is_coauthor = user_id in document.get("coauthors", [])
+
+        if not (is_owner or is_admin or is_coauthor):
+            raise HTTPException(status_code=403, detail="Bạn không có quyền chỉnh sửa nội dung tài liệu này")
+
+        if is_coauthor and not (is_owner or is_admin):
+            invite = await CollaborationRepository.find_invite(
+                {"document_id": document_id, "invitee_id": user_id, "status": "ACCEPTED"}
+            )
+            if invite and invite.get("role") in ["viewer", "commenter"]:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Tài khoản với vai trò chỉ xem hoặc bình luận không có quyền chỉnh sửa nội dung",
+                )
 
         if content_in.expected_version:
             db_updated = document.get("updated_at")
@@ -451,9 +482,10 @@ class DocumentService:
             raise HTTPException(
                 status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn"
             )
-        if doc.get("creator_id") != str(current_user.id) and not DocumentService._is_admin(
-            current_user
-        ):
+        is_owner = doc.get("creator_id") == str(current_user.id)
+        is_admin = DocumentService._is_admin(current_user)
+        is_coauthor = str(current_user.id) in doc.get("coauthors", [])
+        if not (is_owner or is_admin or is_coauthor):
             raise HTTPException(status_code=403, detail="Bạn không có quyền chỉnh sửa tài liệu này")
 
         if hasattr(doc_update, "expected_version") and doc_update.expected_version:
@@ -576,9 +608,12 @@ class DocumentService:
                 expected_hash and hmac.compare_digest(supplied_hash, expected_hash)
             )
 
+        is_coauthor = user_id in document.get("coauthors", [])
+
         if (
             document.get("is_deleted") is True
             and document.get("creator_id") != user_id
+            and not is_coauthor
             and not DocumentService._is_admin(current_user)
         ):
             raise HTTPException(
@@ -587,6 +622,7 @@ class DocumentService:
 
         if (
             document.get("creator_id") != user_id
+            and not is_coauthor
             and document.get("status") != DocumentStatus.PUBLISHED
             and not share_token_valid
         ):
@@ -596,7 +632,7 @@ class DocumentService:
                     detail="Tài liệu hiện đang ở trạng thái nháp và chưa được công bố",
                 )
 
-        if document.get("is_password_protected") and document.get("creator_id") != user_id:
+        if document.get("is_password_protected") and document.get("creator_id") != user_id and not is_coauthor:
             if not password:
                 return {
                     "_id": str(document["_id"]),

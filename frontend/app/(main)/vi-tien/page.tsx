@@ -16,7 +16,6 @@ const typeLabels: Record<string, string> = {
   PURCHASE: "Mua tài liệu",
   RECEIVE: "Nhận doanh thu",
   WITHDRAW: "Rút tiền",
-  TIP: "Ủng hộ tác giả",
   REFUND: "Hoàn tiền",
   TRANSFER_OUT: "Chuyển tiền",
   TRANSFER_IN: "Nhận chuyển tiền",

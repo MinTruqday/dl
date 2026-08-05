@@ -47,7 +47,6 @@ class WalletService:
             "purchase": "Document Purchase",
             "receive": "Funds Received",
             "withdraw": "Withdrawal",
-            "tip": "Author Tip",
             "refund": "Refund",
             "transfer_out": "Transfer Sent",
             "transfer_in": "Transfer Received",

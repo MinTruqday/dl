@@ -155,6 +155,7 @@ export default function CollaborationPage() {
                             className="apple-input"
                           >
                             <option value="viewer">Xem</option>
+                            <option value="commenter">Bình luận</option>
                             <option value="editor">Sửa</option>
                           </select>
                           <Button
@@ -187,6 +188,7 @@ export default function CollaborationPage() {
                     className="apple-input mt-3 w-full"
                   >
                     <option value="editor">Chỉnh sửa</option>
+                    <option value="commenter">Bình luận</option>
                     <option value="viewer">Chỉ xem</option>
                   </select>
                   <Button
