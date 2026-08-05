@@ -5,11 +5,13 @@ import {
   StorageItem,
   StorageSearchFilters,
   advancedSearchStorageItemsAPI,
+  autoPurgeTrashAPI,
   createFolderAPI,
   createProtectedShareLinkAPI,
   deleteStorageItemAPI,
   downloadZipAPI,
   emptyTrashAPI,
+  getInlinePreviewUrlAPI,
   getRecentStorageItemsAPI,
   getSharedWithMeAPI,
   getStarredItemsAPI,
@@ -27,6 +29,7 @@ import {
   shareInternalAPI,
   unlockStorageItemAPI,
   updateStorageItemAPI,
+  uploadFileChunkedAPI,
   uploadFileVersionAPI,
   uploadStorageFileAPI,
 } from "@/features/cloud/services/storage.service";
@@ -44,9 +47,13 @@ export function useStorage() {
   const [quota, setQuota] = useState({ used: 0, limit: 0 });
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [previewItem, setPreviewItem] = useState<StorageItem | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const folderId = path.at(-1)?._id;
+
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -113,15 +120,34 @@ export function useStorage() {
       "Thư mục đã được tạo"
     );
 
-  const upload = async (files: FileList | File[]) =>
-    run(
-      "upload",
-      async () => {
-        for (const file of Array.from(files))
-          await uploadStorageFileAPI(file, folderId);
-      },
-      "Tệp đã được tải lên"
-    );
+  const upload = async (files: FileList | File[]) => {
+    setProcessing("upload");
+    setUploadProgress(0);
+    setError("");
+    try {
+      const fileList = Array.from(files);
+      for (let i = 0; i < fileList.length; i++) {
+        const file = fileList[i];
+        await uploadFileChunkedAPI(file, folderId, (pct) => {
+          const overallPct = Math.round(
+            ((i + pct / 100) / fileList.length) * 100
+          );
+          setUploadProgress(overallPct);
+        });
+      }
+      setNotice("Tất cả tệp đã được truyền tải hoàn tất");
+      await reload();
+      return true;
+    } catch (cause) {
+      setError(
+        cause instanceof Error ? cause.message : "Lỗi khi truyền tải tệp"
+      );
+      return false;
+    } finally {
+      setProcessing(null);
+      setUploadProgress(null);
+    }
+  };
 
   const rename = (item: StorageItem, name: string) =>
     run(
@@ -209,6 +235,33 @@ export function useStorage() {
   const emptyTrash = () =>
     run("emptyTrash", () => emptyTrashAPI(), "Đã dọn sạch toàn bộ thùng rác");
 
+  const autoPurgeTrash = (days: number = 30) =>
+    run(
+      "autoPurge",
+      () => autoPurgeTrashAPI(days),
+      `Đã tự động dọn dẹp các mục quá hạn ${days} ngày`
+    );
+
+  const openPreview = async (item: StorageItem) => {
+    setPreviewItem(item);
+    setPreviewUrl(null);
+    try {
+      const url = await getInlinePreviewUrlAPI(item._id);
+      setPreviewUrl(url);
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "Không thể tạo liên kết xem trước"
+      );
+    }
+  };
+
+  const closePreview = () => {
+    setPreviewItem(null);
+    setPreviewUrl(null);
+  };
+
   const advancedSearch = async (filters: StorageSearchFilters) => {
     setLoading(true);
     setError("");
@@ -241,6 +294,11 @@ export function useStorage() {
     quota,
     loading,
     processing,
+    uploadProgress,
+    previewItem,
+    previewUrl,
+    openPreview,
+    closePreview,
     error,
     notice,
     clearNotice: () => setNotice(""),
@@ -260,7 +318,9 @@ export function useStorage() {
     remove,
     restore,
     emptyTrash,
+    autoPurgeTrash,
     advancedSearch,
     downloadSelected,
   };
 }
+

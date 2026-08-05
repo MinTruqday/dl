@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   BarChart3,
   Clock,
+  Download,
+  Eye,
   File,
   Folder,
   History,
@@ -12,10 +14,12 @@ import {
   Palette,
   RotateCcw,
   Share2,
+  Sparkles,
   Star,
   Trash2,
   Unlock,
   Upload,
+  UploadCloud,
 } from "lucide-react";
 import InlineState from "@/app/_components/InlineState";
 import MetricStrip from "@/app/_components/MetricStrip";
@@ -26,6 +30,7 @@ import { Button } from "@/shared/components/ui/Button";
 import {
   StorageActivitiesModal,
   StorageAnalyticsModal,
+  StoragePreviewModal,
   StorageShareModal,
   StorageTagColorModal,
   StorageTextModal,
@@ -58,6 +63,13 @@ export default function StoragePage() {
   const [targetUploadVersionItem, setTargetUploadVersionItem] =
     useState<StorageItem | null>(null);
 
+  const [isDragging, setIsDragging] = useState(false);
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    item: StorageItem;
+  } | null>(null);
+
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [filters, setFilters] = useState({
@@ -78,8 +90,104 @@ export default function StoragePage() {
     new Set(state.items.flatMap((item) => item.tags || []))
   );
 
+  useEffect(() => {
+    const handleOutside = () => setContextMenu(null);
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setContextMenu(null);
+    };
+    window.addEventListener("click", handleOutside);
+    window.addEventListener("keydown", handleKey);
+    return () => {
+      window.removeEventListener("click", handleOutside);
+      window.removeEventListener("keydown", handleKey);
+    };
+  }, []);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isDragging) setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      state.upload(e.dataTransfer.files);
+    }
+  };
+
+  const handleContextMenu = (e: React.MouseEvent, item: StorageItem) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const x = Math.min(e.clientX, window.innerWidth - 220);
+    const y = Math.min(e.clientY, window.innerHeight - 340);
+    setContextMenu({ x, y, item });
+  };
+
+  const downloadItem = (item: StorageItem) => {
+    if (item.url) {
+      const link = document.createElement("a");
+      link.href = item.url;
+      link.download = item.name;
+      link.target = "_blank";
+      link.click();
+    } else {
+      state.openPreview(item);
+    }
+  };
+
   return (
-    <div className="w-full">
+    <div
+      className="relative w-full min-h-[85vh]"
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {isDragging && (
+        <div className="pointer-events-none fixed inset-0 z-50 flex flex-col items-center justify-center bg-primary/15 backdrop-blur-md transition-all duration-300">
+          <div className="flex flex-col items-center gap-4 rounded-3xl border-2 border-dashed border-primary bg-surface/90 p-10 shadow-2xl animate-bounce">
+            <div className="rounded-full bg-primary/10 p-5 text-primary">
+              <UploadCloud className="h-14 w-14" />
+            </div>
+            <div className="text-center">
+              <h3 className="text-lg font-bold text-ink">
+                Thả tệp vào đây để tải lên
+              </h3>
+              <p className="text-xs text-ink-muted mt-1">
+                Tự động chia nhỏ phân đoạn cho tệp lớn và lưu trữ an toàn
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {state.uploadProgress !== null && (
+        <div className="mb-4 overflow-hidden rounded-2xl border border-primary/30 bg-primary/5 p-4 shadow-sm backdrop-blur-md">
+          <div className="flex items-center justify-between text-xs font-semibold text-primary">
+            <div className="flex items-center gap-2">
+              <UploadCloud className="h-4 w-4 animate-pulse" />
+              <span>Đang truyền tải tệp tin lên Đám mây...</span>
+            </div>
+            <span>{state.uploadProgress}%</span>
+          </div>
+          <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-primary/20">
+            <div
+              className="h-full bg-primary transition-all duration-300"
+              style={{ width: `${state.uploadProgress}%` }}
+            />
+          </div>
+        </div>
+      )}
+
       <PageHeader
         title="Lưu trữ đám mây"
         actions={
@@ -99,8 +207,9 @@ export default function StoragePage() {
               className="hidden"
               onChange={(event) => {
                 const file = event.target.files?.[0];
-                if (targetUploadVersionItem && file) {
+                if (file && targetUploadVersionItem) {
                   state.uploadVersion(targetUploadVersionItem, file);
+                  setTargetUploadVersionItem(null);
                 }
               }}
             />
@@ -108,94 +217,48 @@ export default function StoragePage() {
             <Button
               variant="secondary"
               onClick={() => setAnalyticsOpen(true)}
+              className="gap-1.5"
             >
-              <BarChart3 className="mr-1.5 h-4 w-4" />
-              Thống kê dung lượng
+              <BarChart3 className="h-4 w-4" />
+              Phân tích dung lượng
             </Button>
-
-            {state.view === "trash" ? (
-              <Button
-                variant="secondary"
-                disabled={
-                  state.items.length === 0 || state.processing === "emptyTrash"
-                }
-                onClick={() => {
-                  if (
-                    confirm(
-                      "Bạn có chắc chắn muốn dọn sạch toàn bộ thùng rác? Thao tác này không thể hoàn tác!"
-                    )
-                  ) {
-                    state.emptyTrash();
-                  }
-                }}
-              >
-                <Trash2 className="mr-1.5 h-4 w-4 text-danger" />
-                Dọn sạch thùng rác
-              </Button>
-            ) : (
-              <>
-                <Button
-                  variant="secondary"
-                  onClick={() => setFolderOpen(true)}
-                >
-                  Tạo thư mục
-                </Button>
-                <Button
-                  onClick={() => input.current?.click()}
-                >
-                  <Upload className="mr-1.5 h-4 w-4" />
-                  Tải lên
-                </Button>
-              </>
-            )}
-          </div>
-        }
-        meta={
-          <nav className="flex flex-wrap items-center gap-2 text-xs">
-            <button
-              className={`font-semibold transition-colors ${
-                state.path.length === 0 ? "text-primary" : "text-ink hover:text-primary"
-              }`}
-              onClick={() => state.setPath([])}
+            <Button
+              variant="secondary"
+              onClick={() => setFolderOpen(true)}
+              className="gap-1.5"
             >
-              Thư mục gốc
-            </button>
-            {state.path.map((folder, index) => (
-              <span key={folder._id} className="flex items-center gap-2">
-                <span className="text-ink-muted">/</span>
-                <button
-                  className={`font-medium transition-colors ${
-                    index === state.path.length - 1
-                      ? "text-primary font-semibold"
-                      : "text-ink hover:text-primary"
-                  }`}
-                  onClick={() => state.setPath(state.path.slice(0, index + 1))}
-                >
-                  {folder.name}
-                </button>
-              </span>
-            ))}
-          </nav>
+              <Folder className="h-4 w-4" />
+              Thư mục mới
+            </Button>
+            <Button
+              onClick={() => input.current?.click()}
+              disabled={state.processing === "upload"}
+              className="gap-1.5"
+            >
+              <Upload className="h-4 w-4" />
+              {state.processing === "upload" ? "Đang tải lên..." : "Tải tệp lên"}
+            </Button>
+          </div>
         }
       />
       {state.error && (
-        <div className="mb-6">
+        <div className="mb-4">
           <InlineState
-            title="Không thể xử lý kho lưu trữ"
+            title="Đã xảy ra lỗi"
             detail={state.error}
-            tone="danger"
             action={
-              <Button variant="secondary" onClick={state.reload}>
-                Tải lại
+              <Button variant="secondary" onClick={() => void state.reload()}>
+                Thử lại
               </Button>
             }
           />
         </div>
       )}
       {state.notice && (
-        <div className="mb-6">
+        <div className="mb-4">
           <InlineState
-            title={state.notice}
+            title="Thành công"
+            detail={state.notice}
             action={
               <Button variant="ghost" onClick={state.clearNotice}>
                 Đóng
@@ -240,6 +303,35 @@ export default function StoragePage() {
           Lọc nâng cao
         </Button>
       </div>
+
+      {state.path.length > 0 && state.view === "files" && (
+        <div className="mb-4 flex items-center gap-2 rounded-xl bg-surface-muted px-4 py-2 text-xs font-medium text-ink">
+          <button
+            type="button"
+            onClick={() => state.setPath([])}
+            className="text-primary hover:underline"
+          >
+            Gốc (Root)
+          </button>
+          {state.path.map((folder, idx) => (
+            <span key={folder._id} className="flex items-center gap-2">
+              <span className="text-ink-muted">/</span>
+              {idx === state.path.length - 1 ? (
+                <span className="font-semibold text-ink">{folder.name}</span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => state.setPath(state.path.slice(0, idx + 1))}
+                  className="text-primary hover:underline"
+                >
+                  {folder.name}
+                </button>
+              )}
+            </span>
+          ))}
+        </div>
+      )}
+
       {allTags.length > 0 && state.view === "files" && (
         <div className="mb-4 flex flex-wrap items-center gap-1.5">
           <span className="mr-1 text-xs font-semibold text-ink-muted">
@@ -331,6 +423,38 @@ export default function StoragePage() {
           <Button type="submit">Áp dụng lọc</Button>
         </form>
       )}
+
+      {state.view === "trash" && state.items.length > 0 && (
+        <div className="mb-3 flex items-center justify-between rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-2.5">
+          <p className="text-[13px] font-semibold text-ink">
+            Thùng rác ({state.items.length} mục)
+          </p>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => state.autoPurgeTrash(30)}
+              disabled={state.processing === "autoPurge"}
+              title="Tự động xóa vĩnh viễn các mục rác tồn tại trên 30 ngày"
+              className="text-xs"
+            >
+              <Sparkles className="mr-1 h-3.5 w-3.5 text-amber-500" />
+              Tự động dọn rác 30 ngày
+            </Button>
+            <Button
+              size="sm"
+              variant="danger"
+              onClick={() => state.emptyTrash()}
+              disabled={state.processing === "emptyTrash"}
+              className="text-xs"
+            >
+              <Trash2 className="mr-1 h-3.5 w-3.5" />
+              Dọn sạch toàn bộ
+            </Button>
+          </div>
+        </div>
+      )}
+
       {selectedIds.length > 0 && state.view !== "trash" && (
         <div className="mb-3 flex items-center justify-between rounded-xl border border-border bg-surface-muted px-4 py-2.5">
           <p className="text-[13px] font-semibold text-ink">
@@ -362,6 +486,7 @@ export default function StoragePage() {
           {state.items.map((item) => (
             <li
               key={item._id}
+              onContextMenu={(e) => handleContextMenu(e, item)}
               className="flex flex-col gap-3 border-b border-border px-5 py-3.5 last:border-b-0 transition-colors hover:bg-surface-muted/40 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="flex min-w-0 items-center gap-3">
@@ -427,14 +552,12 @@ export default function StoragePage() {
                         {item.name}
                       </button>
                     ) : (
-                      <Link
-                        href={`/tai-lieu/xem-truoc/${item._id}?url=${encodeURIComponent(
-                          item.url || ""
-                        )}&name=${encodeURIComponent(item.name)}`}
-                        className="truncate text-[14px] font-semibold text-ink hover:text-primary transition-colors"
+                      <button
+                        onClick={() => state.openPreview(item)}
+                        className="truncate text-left text-[14px] font-semibold text-ink hover:text-primary transition-colors"
                       >
                         {item.name}
-                      </Link>
+                      </button>
                     )}
                     {item.is_locked && (
                       <span className="inline-flex items-center gap-1 rounded bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-600">
@@ -483,6 +606,17 @@ export default function StoragePage() {
                   </Button>
                 ) : (
                   <>
+                    {!item.is_folder && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        aria-label="Xem trước"
+                        onClick={() => state.openPreview(item)}
+                        title="Xem trước trực tuyến (PDF, Ảnh, Video, Code)"
+                      >
+                        <Eye size={15} />
+                      </Button>
+                    )}
                     <Button
                       size="icon"
                       variant="ghost"
@@ -556,7 +690,11 @@ export default function StoragePage() {
                   aria-label="Xóa"
                   onClick={() => state.remove(item)}
                   className="text-ink-muted hover:text-danger hover:bg-danger/10"
-                  title={state.view === "trash" ? "Xóa vĩnh viễn" : "Chuyển vào thùng rác"}
+                  title={
+                    state.view === "trash"
+                      ? "Xóa vĩnh viễn"
+                      : "Chuyển vào thùng rác"
+                  }
                 >
                   <Trash2 size={15} />
                 </Button>
@@ -578,6 +716,147 @@ export default function StoragePage() {
           }
         />
       )}
+
+      {contextMenu && (
+        <div
+          className="fixed z-50 min-w-[200px] rounded-2xl border border-border bg-surface/95 p-1.5 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95"
+          style={{ top: contextMenu.y, left: contextMenu.x }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="px-2 py-1.5 text-[11px] font-semibold text-ink-muted truncate border-b border-border/60 mb-1">
+            {contextMenu.item.name}
+          </div>
+          {!contextMenu.item.is_folder && (
+            <button
+              onClick={() => {
+                state.openPreview(contextMenu.item);
+                setContextMenu(null);
+              }}
+              className="flex w-full items-center gap-2 rounded-xl px-2.5 py-1.5 text-xs font-medium text-ink hover:bg-primary hover:text-white transition-colors"
+            >
+              <Eye className="h-3.5 w-3.5" /> Xem trước trực tiếp
+            </button>
+          )}
+          {contextMenu.item.is_folder && (
+            <button
+              onClick={() => {
+                state.setPath([...state.path, contextMenu.item]);
+                setContextMenu(null);
+              }}
+              className="flex w-full items-center gap-2 rounded-xl px-2.5 py-1.5 text-xs font-medium text-ink hover:bg-primary hover:text-white transition-colors"
+            >
+              <Folder className="h-3.5 w-3.5" /> Mở thư mục
+            </button>
+          )}
+          <button
+            onClick={() => {
+              state.toggleStar(contextMenu.item);
+              setContextMenu(null);
+            }}
+            className="flex w-full items-center gap-2 rounded-xl px-2.5 py-1.5 text-xs font-medium text-ink hover:bg-primary hover:text-white transition-colors"
+          >
+            <Star className="h-3.5 w-3.5" />{" "}
+            {contextMenu.item.is_starred ? "Gỡ dấu sao" : "Gắn dấu sao"}
+          </button>
+          <button
+            onClick={() => {
+              setShareItem(contextMenu.item);
+              setContextMenu(null);
+            }}
+            className="flex w-full items-center gap-2 rounded-xl px-2.5 py-1.5 text-xs font-medium text-ink hover:bg-primary hover:text-white transition-colors"
+          >
+            <Share2 className="h-3.5 w-3.5" /> Chia sẻ & Tạo liên kết
+          </button>
+          <button
+            onClick={() => {
+              setTagColorItem(contextMenu.item);
+              setContextMenu(null);
+            }}
+            className="flex w-full items-center gap-2 rounded-xl px-2.5 py-1.5 text-xs font-medium text-ink hover:bg-primary hover:text-white transition-colors"
+          >
+            <Palette className="h-3.5 w-3.5" /> Gán nhãn & Đổi màu
+          </button>
+          {!contextMenu.item.is_folder && (
+            <>
+              <button
+                onClick={() => {
+                  setVersionItem(contextMenu.item);
+                  setContextMenu(null);
+                }}
+                className="flex w-full items-center gap-2 rounded-xl px-2.5 py-1.5 text-xs font-medium text-ink hover:bg-primary hover:text-white transition-colors"
+              >
+                <History className="h-3.5 w-3.5" /> Lịch sử phiên bản
+              </button>
+              <button
+                onClick={() => {
+                  contextMenu.item.is_locked
+                    ? state.unlock(contextMenu.item)
+                    : state.lock(contextMenu.item);
+                  setContextMenu(null);
+                }}
+                className="flex w-full items-center gap-2 rounded-xl px-2.5 py-1.5 text-xs font-medium text-ink hover:bg-primary hover:text-white transition-colors"
+              >
+                {contextMenu.item.is_locked ? (
+                  <>
+                    <Unlock className="h-3.5 w-3.5" /> Mở khóa tệp
+                  </>
+                ) : (
+                  <>
+                    <Lock className="h-3.5 w-3.5" /> Khóa tệp
+                  </>
+                )}
+              </button>
+            </>
+          )}
+          <button
+            onClick={() => {
+              setActivityItem(contextMenu.item);
+              setContextMenu(null);
+            }}
+            className="flex w-full items-center gap-2 rounded-xl px-2.5 py-1.5 text-xs font-medium text-ink hover:bg-primary hover:text-white transition-colors"
+          >
+            <Clock className="h-3.5 w-3.5" /> Nhật ký hoạt động
+          </button>
+          <button
+            onClick={() => {
+              setRenameItem(contextMenu.item);
+              setContextMenu(null);
+            }}
+            className="flex w-full items-center gap-2 rounded-xl px-2.5 py-1.5 text-xs font-medium text-ink hover:bg-primary hover:text-white transition-colors"
+          >
+            <File className="h-3.5 w-3.5" /> Đổi tên
+          </button>
+          {!contextMenu.item.is_folder && (
+            <button
+              onClick={() => {
+                downloadItem(contextMenu.item);
+                setContextMenu(null);
+              }}
+              className="flex w-full items-center gap-2 rounded-xl px-2.5 py-1.5 text-xs font-medium text-ink hover:bg-primary hover:text-white transition-colors"
+            >
+              <Download className="h-3.5 w-3.5" /> Tải xuống máy
+            </button>
+          )}
+          <div className="h-px bg-border my-1" />
+          <button
+            onClick={() => {
+              state.remove(contextMenu.item);
+              setContextMenu(null);
+            }}
+            className="flex w-full items-center gap-2 rounded-xl px-2.5 py-1.5 text-xs font-medium text-danger hover:bg-danger hover:text-white transition-colors"
+          >
+            <Trash2 className="h-3.5 w-3.5" />{" "}
+            {state.view === "trash" ? "Xóa vĩnh viễn" : "Chuyển vào thùng rác"}
+          </button>
+        </div>
+      )}
+
+      <StoragePreviewModal
+        item={state.previewItem}
+        previewUrl={state.previewUrl}
+        close={state.closePreview}
+        downloadItem={downloadItem}
+      />
       <StorageTextModal
         open={folderOpen}
         close={() => setFolderOpen(false)}
@@ -598,9 +877,13 @@ export default function StoragePage() {
       <StorageShareModal
         item={shareItem}
         close={() => setShareItem(null)}
-        processing={state.processing === "share" || state.processing === "revokeShare"}
+        processing={
+          state.processing === "share" || state.processing === "revokeShare"
+        }
         submit={(email, role) => state.share(shareItem!, email, role)}
-        revokeShare={(targetUserId) => state.revokeShare(shareItem!, targetUserId)}
+        revokeShare={(targetUserId) =>
+          state.revokeShare(shareItem!, targetUserId)
+        }
         createLink={(password, expiresInHours) =>
           state.createProtectedLink(shareItem!, password, expiresInHours)
         }
@@ -609,7 +892,9 @@ export default function StoragePage() {
         item={versionItem}
         close={() => setVersionItem(null)}
         processing={state.processing === "rollback"}
-        onRollback={(versionId) => state.rollbackVersion(versionItem!, versionId)}
+        onRollback={(versionId) =>
+          state.rollbackVersion(versionItem!, versionId)
+        }
         onUploadNew={() => {
           if (versionItem) {
             setTargetUploadVersionItem(versionItem);
@@ -621,7 +906,9 @@ export default function StoragePage() {
         item={tagColorItem}
         close={() => setTagColorItem(null)}
         processing={state.processing === "tagColor"}
-        onSave={(tags, color) => state.updateTagAndColor(tagColorItem!, tags, color)}
+        onSave={(tags, color) =>
+          state.updateTagAndColor(tagColorItem!, tags, color)
+        }
       />
       <StorageAnalyticsModal
         open={analyticsOpen}

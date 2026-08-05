@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
@@ -32,3 +32,24 @@ class TrashService:
     async def empty_trash(owner_id: str) -> dict:
         res = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.delete_many({"owner_id": owner_id, "is_trashed": True})
         return {"status": "success", "deleted_count": res.deleted_count, "message": "Đã dọn sạch Thùng rác"}
+
+    @staticmethod
+    @log_logic_execution
+    async def auto_purge_expired_trash(owner_id: str, days: int = 30) -> dict:
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        query = {
+            "owner_id": owner_id,
+            "is_trashed": True,
+            "$or": [
+                {"trashed_at": {"$lte": cutoff}},
+                {"trashed_at": None, "updated_at": {"$lte": cutoff}}
+            ]
+        }
+        res = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.delete_many(query)
+        return {
+            "status": "success",
+            "purged_count": res.deleted_count,
+            "days_threshold": days,
+            "message": f"Đã tự động dọn {res.deleted_count} mục trong Thùng rác đã quá hạn {days} ngày"
+        }
+

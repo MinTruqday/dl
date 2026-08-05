@@ -30,3 +30,12 @@ async def empty_trash(
 ):
     result = await TrashService.empty_trash(current_user.id)
     return APIResponse(data=result, message="Đã dọn sạch Thùng rác thành công")
+
+@router.post("/thung-rac/tu-dong-don-dep", response_model=APIResponse[Any])
+async def auto_purge_trash(
+    days: int = 30,
+    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+):
+    result = await TrashService.auto_purge_expired_trash(current_user.id, days=days)
+    return APIResponse(data=result, message="Tự động dọn dẹp Thùng rác hoàn tất")
+

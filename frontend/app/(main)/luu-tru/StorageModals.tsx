@@ -20,15 +20,28 @@ import {
 } from "@/shared/components/ui/Modal";
 import {
   BarChart3,
+  Check,
   Clock,
+  Code,
+  Copy,
+  Download,
+  ExternalLink,
+  Eye,
+  FileText,
+  Film,
   History,
+  Image as ImageIcon,
+  Music,
   Palette,
   RotateCcw,
+  RotateCw,
   Tag,
   Trash2,
   Upload,
   User,
   X,
+  ZoomIn,
+  ZoomOut,
 } from "lucide-react";
 
 function formatBytes(bytes: number) {
@@ -780,4 +793,278 @@ export function StorageActivitiesModal({
     </Modal>
   );
 }
+
+export function StoragePreviewModal({
+  item,
+  previewUrl,
+  close,
+  downloadItem,
+}: {
+  item: StorageItem | null;
+  previewUrl: string | null;
+  close: () => void;
+  downloadItem?: (item: StorageItem) => void;
+}) {
+  const [zoom, setZoom] = useState(100);
+  const [rotation, setRotation] = useState(0);
+  const [textContent, setTextContent] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [loadingText, setLoadingText] = useState(false);
+
+  const ext = item?.name.split(".").pop()?.toLowerCase() || "";
+  const mime = item?.mime_type || "";
+
+  const isImage =
+    mime.startsWith("image/") ||
+    ["jpg", "jpeg", "png", "webp", "gif", "svg", "bmp"].includes(ext);
+  const isPdf = mime === "application/pdf" || ext === "pdf";
+  const isVideo =
+    mime.startsWith("video/") || ["mp4", "webm", "ogg", "mov"].includes(ext);
+  const isAudio =
+    mime.startsWith("audio/") || ["mp3", "wav", "ogg", "m4a", "flac"].includes(ext);
+  const isCodeOrText =
+    mime.startsWith("text/") ||
+    mime.includes("json") ||
+    [
+      "txt",
+      "md",
+      "json",
+      "py",
+      "js",
+      "ts",
+      "tsx",
+      "jsx",
+      "html",
+      "css",
+      "csv",
+      "yaml",
+      "yml",
+      "sh",
+      "sql",
+    ].includes(ext);
+
+  useEffect(() => {
+    setZoom(100);
+    setRotation(0);
+    setTextContent(null);
+    setCopied(false);
+
+    if (item && isCodeOrText && previewUrl) {
+      setLoadingText(true);
+      fetch(previewUrl)
+        .then((res) => res.text())
+        .then((text) => setTextContent(text))
+        .catch(() => setTextContent("Không thể tải nội dung xem trước"))
+        .finally(() => setLoadingText(false));
+    }
+  }, [item, previewUrl, isCodeOrText]);
+
+  const copyToClipboard = () => {
+    if (!textContent) return;
+    navigator.clipboard.writeText(textContent);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  if (!item) return null;
+
+  return (
+    <Modal isOpen={Boolean(item)} onClose={close}>
+      <ModalHeader>
+        <div className="flex w-full items-center justify-between gap-4">
+          <div className="flex items-center gap-2 truncate">
+            {isImage ? (
+              <ImageIcon className="h-5 w-5 text-emerald-500 shrink-0" />
+            ) : isPdf ? (
+              <FileText className="h-5 w-5 text-rose-500 shrink-0" />
+            ) : isVideo ? (
+              <Film className="h-5 w-5 text-indigo-500 shrink-0" />
+            ) : isAudio ? (
+              <Music className="h-5 w-5 text-amber-500 shrink-0" />
+            ) : isCodeOrText ? (
+              <Code className="h-5 w-5 text-sky-500 shrink-0" />
+            ) : (
+              <FileText className="h-5 w-5 text-primary shrink-0" />
+            )}
+            <ModalTitle className="truncate">{item.name}</ModalTitle>
+          </div>
+          <div className="flex items-center gap-2">
+            {previewUrl && (
+              <a
+                href={previewUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-1 rounded-lg border border-border px-2.5 py-1 text-xs font-medium text-ink hover:bg-surface-muted transition-colors"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                Mở tab mới
+              </a>
+            )}
+          </div>
+        </div>
+      </ModalHeader>
+
+      <ModalContent className="max-h-[75vh] overflow-y-auto p-4">
+        {!previewUrl ? (
+          <div className="py-16 text-center text-xs text-ink-muted">
+            Đang tạo liên kết xem trước trực tiếp...
+          </div>
+        ) : isImage ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-center gap-2 rounded-xl bg-surface-muted p-2 text-xs">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setZoom((z) => Math.max(25, z - 25))}
+              >
+                <ZoomOut className="h-4 w-4" />
+              </Button>
+              <span className="w-12 text-center font-medium">{zoom}%</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setZoom((z) => Math.min(300, z + 25))}
+              >
+                <ZoomIn className="h-4 w-4" />
+              </Button>
+              <div className="h-4 w-px bg-border mx-1" />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setRotation((r) => (r + 90) % 360)}
+              >
+                <RotateCw className="h-4 w-4 mr-1" /> Xoay
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setZoom(100);
+                  setRotation(0);
+                }}
+              >
+                Đặt lại
+              </Button>
+            </div>
+            <div className="flex min-h-[300px] items-center justify-center overflow-auto rounded-2xl bg-neutral-950/5 p-4 dark:bg-neutral-900">
+              <img
+                src={previewUrl}
+                alt={item.name}
+                className="max-h-[60vh] object-contain transition-transform duration-200"
+                style={{
+                  transform: `scale(${zoom / 100}) rotate(${rotation}deg)`,
+                }}
+              />
+            </div>
+          </div>
+        ) : isPdf ? (
+          <div className="space-y-2">
+            <iframe
+              src={`${previewUrl}#toolbar=1`}
+              title={item.name}
+              className="h-[65vh] w-full rounded-2xl border border-border bg-white shadow-sm"
+            />
+          </div>
+        ) : isVideo ? (
+          <div className="space-y-2">
+            <video
+              controls
+              autoPlay={false}
+              className="max-h-[65vh] w-full rounded-2xl bg-black shadow-lg"
+              src={previewUrl}
+            >
+              Trình duyệt của bạn không hỗ trợ thẻ video HTML5.
+            </video>
+          </div>
+        ) : isAudio ? (
+          <div className="flex flex-col items-center justify-center space-y-6 rounded-2xl bg-surface-muted py-12 px-6">
+            <div className="rounded-full bg-amber-500/10 p-6 text-amber-500 shadow-inner">
+              <Music className="h-12 w-12" />
+            </div>
+            <div className="text-center">
+              <h4 className="text-sm font-semibold text-ink">{item.name}</h4>
+              <p className="text-xs text-ink-muted mt-1">{formatBytes(item.size)}</p>
+            </div>
+            <audio controls className="w-full max-w-md" src={previewUrl}>
+              Trình duyệt của bạn không hỗ trợ thẻ audio HTML5.
+            </audio>
+          </div>
+        ) : isCodeOrText ? (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between text-xs text-ink-muted">
+              <span>Định dạng: {ext.toUpperCase() || "TEXT"}</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={copyToClipboard}
+                className="h-7 text-xs"
+              >
+                {copied ? (
+                  <>
+                    <Check className="h-3.5 w-3.5 text-emerald-500 mr-1" /> Đã sao chép
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-3.5 w-3.5 mr-1" /> Sao chép mã
+                  </>
+                )}
+              </Button>
+            </div>
+            {loadingText ? (
+              <div className="py-12 text-center text-xs text-ink-muted">
+                Đang tải văn bản...
+              </div>
+            ) : (
+              <pre className="max-h-[55vh] overflow-auto rounded-2xl border border-border bg-neutral-950 p-4 text-xs font-mono text-neutral-200 shadow-inner">
+                <code>{textContent}</code>
+              </pre>
+            )}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center space-y-4 rounded-2xl bg-surface-muted py-16 px-4 text-center">
+            <div className="rounded-full bg-primary/10 p-5 text-primary">
+              <FileText className="h-10 w-10" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="text-sm font-semibold text-ink">{item.name}</h4>
+              <p className="text-xs text-ink-muted">
+                Định dạng {ext.toUpperCase()} không hỗ trợ xem trước trực tuyến.
+              </p>
+              <p className="text-xs font-medium text-ink">
+                Kích thước: {formatBytes(item.size)}
+              </p>
+            </div>
+            {downloadItem && (
+              <Button onClick={() => downloadItem(item)} className="gap-2">
+                <Download className="h-4 w-4" /> Tải tệp xuống
+              </Button>
+            )}
+          </div>
+        )}
+      </ModalContent>
+
+      <ModalFooter>
+        <div className="flex w-full items-center justify-between">
+          <span className="text-xs text-ink-muted">{formatBytes(item.size)}</span>
+          <div className="flex items-center gap-2">
+            {downloadItem && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => downloadItem(item)}
+                className="gap-1.5"
+              >
+                <Download className="h-3.5 w-3.5" /> Tải xuống
+              </Button>
+            )}
+            <Button variant="secondary" size="sm" onClick={close}>
+              Đóng
+            </Button>
+          </div>
+        </div>
+      </ModalFooter>
+    </Modal>
+  );
+}
+
 

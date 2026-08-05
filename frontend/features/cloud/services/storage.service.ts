@@ -746,3 +746,73 @@ export const getItemActivitiesAPI = async (itemId: string): Promise<any[]> => {
   return data.data;
 };
 
+export const autoPurgeTrashAPI = async (
+  days: number = 30
+): Promise<{ purged_count: number; message: string }> => {
+  const token = getAuthToken();
+  const res = await fetch(`${API_URL}/luu-tru/thung-rac/tu-dong-don-dep?days=${days}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tự động dọn dẹp Thùng rác");
+  return data.data;
+};
+
+export const uploadFileChunkedAPI = async (
+  file: File,
+  parentId?: string,
+  onProgress?: (percent: number) => void
+): Promise<StorageItem> => {
+  const CHUNK_SIZE = 2 * 1024 * 1024; // 2MB chunks
+  if (file.size <= CHUNK_SIZE) {
+    const res = await uploadStorageFileAPI(file, parentId);
+    if (onProgress) onProgress(100);
+    return res;
+  }
+
+  const token = getAuthToken();
+  const uploadId = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+
+  const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+  let lastData: any = null;
+
+  for (let i = 0; i < totalChunks; i++) {
+    const start = i * CHUNK_SIZE;
+    const end = Math.min(file.size, start + CHUNK_SIZE);
+    const chunkBlob = file.slice(start, end);
+
+    const formData = new FormData();
+    formData.append("file", chunkBlob, file.name);
+    formData.append("upload_id", uploadId);
+    formData.append("chunk_index", i.toString());
+    formData.append("total_chunks", totalChunks.toString());
+    formData.append("filename", file.name);
+
+    const res = await fetch(`${API_URL}/tai-len/phan-doan`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message || `Lỗi tải lên phân đoạn ${i + 1}/${totalChunks}`);
+    }
+
+    lastData = data.data;
+    if (onProgress) {
+      onProgress(Math.round(((i + 1) / totalChunks) * 100));
+    }
+  }
+
+  return mapItem(lastData);
+};
+
+
