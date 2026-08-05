@@ -341,6 +341,29 @@ class DocumentService:
             stored_document["is_password_protected"] = True
         await docs_collection.insert_one(stored_document)
         logger.info("Document created in the system")
+
+        created_file_url = doc_dict.get("file_url") or ""
+        if created_file_url:
+            try:
+                import asyncio
+                _doc_id = stored_document["_id"]
+                _creator_id = str(current_user.id)
+
+                async def _fire_create_ingest():
+                    try:
+                        async with httpx.AsyncClient(timeout=5.0) as client:
+                            await client.post(
+                                f"{settings.AGENTIC_AI_URL}/su-kien/webhook/tai-lieu-dang-tai",
+                                params={"document_id": _doc_id, "user_id": _creator_id},
+                                headers={"X-Internal-Token": settings.SECRET_KEY},
+                            )
+                    except Exception:
+                        logger.warning(f"Create ingest webhook failed for document_id={_doc_id}")
+
+                asyncio.create_task(_fire_create_ingest())
+            except Exception:
+                logger.warning(f"Could not schedule create ingest webhook for document_id={stored_document.get('_id')}")
+
         return doc_doc
 
     @staticmethod

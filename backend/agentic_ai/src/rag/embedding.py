@@ -13,7 +13,7 @@ class EmbeddingRag:
         self._model_name = settings.EMBEDDING_MODEL
         self._dimensions = 1024
         self._batch_size = 32
-        self._model = SentenceTransformer(self._model_name)
+        self._model = None
 
         redis_url = settings.REDIS_URI
         try:
@@ -21,6 +21,11 @@ class EmbeddingRag:
             self._cache.ping()
         except Exception:
             self._cache = None
+
+    def _get_model(self) -> SentenceTransformer:
+        if self._model is None:
+            self._model = SentenceTransformer(self._model_name)
+        return self._model
 
     def _cache_key(self, text: str) -> str:
         return f"emb:local:{self._model_name}:{hashlib.sha256(text.encode()).hexdigest()[:24]}"
@@ -31,7 +36,7 @@ class EmbeddingRag:
             if cached:
                 return json.loads(cached)
 
-        embedding = self._model.encode(text, convert_to_numpy=True).tolist()
+        embedding = self._get_model().encode(text, convert_to_numpy=True).tolist()
 
         if self._cache:
             self._cache.setex(self._cache_key(text), 86400 * 7, json.dumps(embedding))
@@ -58,7 +63,7 @@ class EmbeddingRag:
         if uncached_texts:
             for batch_start in range(0, len(uncached_texts), self._batch_size):
                 batch = uncached_texts[batch_start : batch_start + self._batch_size]
-                batch_embeddings = self._model.encode(batch, convert_to_numpy=True)
+                batch_embeddings = self._get_model().encode(batch, convert_to_numpy=True)
 
                 for j, emb in enumerate(batch_embeddings):
                     real_idx = uncached_indices[batch_start + j]
