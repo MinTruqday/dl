@@ -11,7 +11,8 @@ from src.api.conversation import router as conversation_router
 from src.api.enhancement import router as enhancement_router
 from src.api.group import router as group_router
 from src.api.interaction import router as interaction_router
-from src.api.pin import router as pin_router
+from src.api.pinning import router as pinning_router
+from src.api.passcode import router as passcode_router
 from src.api.privacy import router as privacy_router
 from src.api.thread import router as thread_router
 from src.core.http import ai_http_client
@@ -67,7 +68,8 @@ app.include_router(conversation_router)
 app.include_router(thread_router)
 app.include_router(group_router)
 app.include_router(interaction_router)
-app.include_router(pin_router)
+app.include_router(pinning_router)
+app.include_router(passcode_router)
 app.include_router(privacy_router)
 app.include_router(attachment_router)
 app.include_router(enhancement_router)

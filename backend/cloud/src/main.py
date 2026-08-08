@@ -7,6 +7,10 @@ from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import close_db, init_db
 from src.api.storage import router as storage
 from src.api.upload import router as upload
+from src.api.folder import router as folder
+from src.api.file import router as file_router
+from src.api.chunk import router as chunk
+from src.api.download import router as download
 from src.api.version import router as version
 from src.api.trash import router as trash
 from src.api.share import router as share
@@ -49,6 +53,10 @@ app.add_middleware(
 )
 app.include_router(storage)
 app.include_router(upload)
+app.include_router(folder)
+app.include_router(file_router)
+app.include_router(chunk)
+app.include_router(download)
 app.include_router(version)
 app.include_router(trash)
 app.include_router(share)
