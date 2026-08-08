@@ -267,12 +267,8 @@ async def shutdown_event():
     except Exception:
         logger.exception("Vector store shutdown failed")
     try:
-        from src.memory.memo import memo_manager
-        await memo_manager.close()
-    except Exception:
-        logger.exception("Memo manager shutdown failed")
-    try:
         from src.memory.management import memory_manager
+        await memory_manager.close()
         if memory_manager._redis:
             await memory_manager._redis.aclose()
     except Exception:

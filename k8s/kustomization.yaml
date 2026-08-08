@@ -23,6 +23,7 @@ resources:
   - apps/compilation.yaml
   - apps/messaging.yaml
   - apps/content.yaml
+  - apps/collaboration.yaml
   - apps/drm.yaml
   - apps/finance.yaml
   - apps/management.yaml

@@ -434,7 +434,7 @@ def test_context_loads_persistent_instructions_and_relevant_memory():
     with (
         patch("src.core.infrastructure.database.database", fake_database),
         patch(
-            "src.memory.memo.memo_manager.get_memories",
+            "src.memory.management.memory_manager.get_memories",
             new=AsyncMock(return_value="The user prefers examples"),
         ),
     ):

@@ -22,6 +22,10 @@ data:
         static_configs:
           - targets: ['content:80']
 
+      - job_name: collaboration
+        static_configs:
+          - targets: ['collaboration:80']
+
       - job_name: cloud
         static_configs:
           - targets: ['cloud:80']

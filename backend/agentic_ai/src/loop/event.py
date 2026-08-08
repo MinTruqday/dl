@@ -10,7 +10,7 @@ from typing import Any, Callable, Coroutine, Dict, List, Optional
 from loguru import logger
 from src.utils.background import create_background_task
 
-from src.memory.memo import memo_manager
+from src.memory.management import memory_manager
 from src.repositories.chat import ChatRepository
 
 
@@ -445,7 +445,7 @@ async def _handle_nightly_memory_extraction(event: AgentEvent) -> Optional[str]:
                 )
 
         if len(formatted_messages) > 1:
-            await memo_manager.add_memory(formatted_messages, user_id)
+            await memory_manager.add_memory(formatted_messages, user_id)
             processed_count += 1
 
     return f"Extracted and stored memories for {processed_count} sessions"

@@ -3,7 +3,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from src.api.bookmark import router as bookmark
-from src.api.collaboration import router as collaboration
 from src.api.discovery import router as discovery
 from src.api.document import router as document
 from src.api.highlight import router as highlight
@@ -48,7 +47,6 @@ app.include_router(reading)
 app.include_router(bookmark)
 app.include_router(library)
 app.include_router(discovery)
-app.include_router(collaboration)
 app.include_router(publication)
 app.include_router(highlight)
 app.include_router(pin)

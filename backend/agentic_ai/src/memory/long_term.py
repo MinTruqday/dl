@@ -1,23 +1,33 @@
 import asyncio
 import hashlib
-import math
 import json
+import math
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
 from uuid6 import uuid7
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from loguru import logger
 from qdrant_client import AsyncQdrantClient
-from qdrant_client.http.models import Distance, FieldCondition, Filter, MatchValue, PointStruct, Range, VectorParams, MatchAny, MatchExcept
+from qdrant_client.http.models import (
+    Distance,
+    FieldCondition,
+    Filter,
+    MatchAny,
+    MatchExcept,
+    MatchValue,
+    PointStruct,
+    Range,
+    VectorParams,
+)
 from rank_bm25 import BM25Okapi
 
 from src.core.infrastructure.configuration import settings
+from src.core.registry import PromptType, registry
+from src.memory.short_term import short_term_memory
+from src.schemas.memory import ExtractedGraph, MemoryOperation
 from src.utils.background import create_background_task
 from src.utils.huggingface import create_chat_model
-from src.core.registry import PromptType, registry
-from src.schemas.memory import MemoryOperation
-from src.memory.management import memory_manager
 
 class EntityStore:
     def __init__(self, memory_manager_ref):
@@ -25,10 +35,10 @@ class EntityStore:
 
     async def _upsert_entity(self, entity_text: str, entity_type: str, memory_id: str, user_id: str):
         try:
-            if not memory_manager._redis:
+            if not short_term_memory._redis:
                 return
             edge_data = json.dumps({"source_id": memory_id, "text": entity_text, "type": entity_type, "created_at": datetime.now(timezone.utc).isoformat()})
-            await memory_manager._redis.sadd(f"entity:graph:{user_id}:edges", edge_data)
+            await short_term_memory._redis.sadd(f"entity:graph:{user_id}:edges", edge_data)
             logger.info("Memory entity upserted type={}", entity_type)
         except Exception:
             logger.exception("Memory entity upsert failed")
@@ -36,14 +46,6 @@ class EntityStore:
     async def _link_entities_for_memory(self, memory_id: str, text: str, user_id: str):
         system_prompt = registry.get(PromptType.GRAPHRAG_ENTITY_EXTRACTION)
         try:
-            from pydantic import BaseModel, Field
-            class EntityRelation(BaseModel):
-                source: str = Field(description="Source entity name")
-                relation: str = Field(description="Action or relationship verb")
-                target: str = Field(description="Target entity name")
-            class ExtractedGraph(BaseModel):
-                relations: List[EntityRelation]
-
             structured_llm = self.mm.llm.with_structured_output(ExtractedGraph)
             res = await structured_llm.ainvoke([SystemMessage(content=system_prompt), HumanMessage(content=text)])
             for rel in res.relations:
@@ -57,9 +59,9 @@ class EntityStore:
 
     async def search_graph(self, query: str, user_id: str) -> List[Dict]:
         try:
-            if not memory_manager._redis:
+            if not short_term_memory._redis:
                 return []
-            edges = await memory_manager._redis.smembers(f"entity:graph:{user_id}:edges")
+            edges = await short_term_memory._redis.smembers(f"entity:graph:{user_id}:edges")
             results = []
             for e in edges:
                 data = json.loads(e)
@@ -72,9 +74,9 @@ class EntityStore:
 
     async def get_graph(self, user_id: str) -> Dict[str, Any]:
         try:
-            if not memory_manager._redis:
+            if not short_term_memory._redis:
                 return {"user_id": user_id, "nodes": [], "edges": []}
-            edges = await memory_manager._redis.smembers(f"entity:graph:{user_id}:edges")
+            edges = await short_term_memory._redis.smembers(f"entity:graph:{user_id}:edges")
             parsed_edges = [json.loads(e) for e in edges]
             nodes = list({e.get("text") for e in parsed_edges if e.get("text")})
             return {"user_id": user_id, "nodes": nodes, "edges": parsed_edges}
@@ -84,19 +86,19 @@ class EntityStore:
 
     async def delete_graph(self, user_id: str, entity_name: Optional[str] = None) -> bool:
         try:
-            if not memory_manager._redis:
+            if not short_term_memory._redis:
                 return True
             key = f"entity:graph:{user_id}:edges"
             if not entity_name:
-                await memory_manager._redis.delete(key)
+                await short_term_memory._redis.delete(key)
                 logger.info("Memory entity graph deleted")
                 return True
 
-            edges = await memory_manager._redis.smembers(key)
+            edges = await short_term_memory._redis.smembers(key)
             for e in edges:
                 data = json.loads(e)
                 if data.get("text") == entity_name:
-                    await memory_manager._redis.srem(key, e)
+                    await short_term_memory._redis.srem(key, e)
             logger.info("Memory graph entity deleted")
             return True
         except Exception:
@@ -109,9 +111,9 @@ class ProjectStore:
 
     async def get_project(self, project_id: str) -> Optional[Dict]:
         try:
-            if not memory_manager._redis:
+            if not short_term_memory._redis:
                 return None
-            data = await memory_manager._redis.get(f"project:{project_id}")
+            data = await short_term_memory._redis.get(f"project:{project_id}")
             return json.loads(data) if data else None
         except Exception:
             logger.exception("Memory project read failed")
@@ -119,14 +121,14 @@ class ProjectStore:
 
     async def add_project(self, project_id: str, name: str, org_id: str):
         try:
-            if not memory_manager._redis:
+            if not short_term_memory._redis:
                 return
             data = json.dumps({"id": project_id, "name": name, "org_id": org_id})
-            await memory_manager._redis.set(f"project:{project_id}", data)
+            await short_term_memory._redis.set(f"project:{project_id}", data)
         except Exception:
             logger.exception("Memory project write failed")
 
-class MemoryManager:
+class LongTermMemory:
     def __init__(self):
         self.collection_name = "doclib_memories"
         self.client = AsyncQdrantClient(
@@ -165,7 +167,7 @@ class MemoryManager:
 
     def _calculate_recency_score(self, created_at_iso: str, decay_rate: float = 0.01) -> float:
         try:
-            created_at = datetime.fromisoformat(created_at_iso.replace('Z', '+00:00'))
+            created_at = datetime.fromisoformat(created_at_iso.replace("Z", "+00:00"))
             now = datetime.now(timezone.utc)
             delta_days = (now - created_at).total_seconds() / 86400.0
             return math.exp(-decay_rate * max(0.0, delta_days))
@@ -208,7 +210,7 @@ class MemoryManager:
         org_id: Optional[str] = None,
         project_id: Optional[str] = None,
         category: Optional[str] = None,
-        filters: Optional[Dict] = None
+        filters: Optional[Dict] = None,
     ) -> Filter:
         conditions = []
         if user_id:
@@ -296,7 +298,7 @@ class MemoryManager:
         org_id: Optional[str] = None,
         project_id: Optional[str] = None,
         category: Optional[str] = None,
-        memory_scope: str = "user"
+        memory_scope: str = "user",
     ):
         if not user_id and not org_id and not project_id:
             user_id = "default"
@@ -317,18 +319,18 @@ class MemoryManager:
                 collection_name=self.collection_name,
                 scroll_filter=scroll_filter,
                 limit=1000,
-                with_payload=True
+                with_payload=True,
             )
             for r in records:
-                if 'hash' in r.payload:
-                    existing_hashes.add(r.payload['hash'])
+                if "hash" in r.payload:
+                    existing_hashes.add(r.payload["hash"])
         except Exception:
             logger.exception("Hash deduplication pre-fetch error")
 
         for item in operations.add:
-            content_hash = hashlib.sha256(item.content.encode('utf-8')).hexdigest()
+            content_hash = hashlib.sha256(item.content.encode("utf-8")).hexdigest()
             if content_hash in existing_hashes:
-                logger.info(f"Memory skipped due to exact hash match: {content_hash}")
+                logger.info("Memory skipped due to exact hash match")
                 continue
 
             resolved_ops = await self.search_and_resolve_conflicts(item.content, user_id=user_id, agent_id=agent_id, run_id=run_id)
@@ -355,11 +357,11 @@ class MemoryManager:
                     "run_id": run_id or "",
                     "expires_at": getattr(item, "expires_at", None),
                     "created_at": datetime.now(timezone.utc).isoformat(),
-                    "updated_at": datetime.now(timezone.utc).isoformat()
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
                 }
                 points.append(PointStruct(id=item_id, vector=vector, payload=payload))
                 create_background_task(
-                    memory_manager.save_memory_history(
+                    short_term_memory.save_memory_history(
                         item_id,
                         "ADD",
                         None,
@@ -386,8 +388,8 @@ class MemoryManager:
                 for p in points:
                     if p.payload.get("memory_type") == "entity":
                         edge_data = json.dumps({"source_id": p.id, "text": p.payload.get("text"), "created_at": p.payload.get("created_at")})
-                        if memory_manager._redis:
-                            await memory_manager._redis.sadd(f"entity:graph:{user_id}:edges", edge_data)
+                        if short_term_memory._redis:
+                            await short_term_memory._redis.sadd(f"entity:graph:{user_id}:edges", edge_data)
             except Exception:
                 logger.exception("Memory point upsert failed")
 
@@ -413,17 +415,17 @@ class MemoryManager:
             memory_scope = item.get("memory_scope", "user")
             tasks.append(self.add(messages, user_id, agent_id, run_id, org_id, project_id, category, memory_scope))
         await asyncio.gather(*tasks, return_exceptions=True)
-        logger.info(f"Completed batch_add for {len(batch_items)} memory items")
+        logger.info("Completed batch_add for memory items")
 
     async def batch_update(self, updates: List[Dict[str, str]]):
         tasks = [self.update(u["id"], u["content"]) for u in updates if "id" in u and "content" in u]
         await asyncio.gather(*tasks, return_exceptions=True)
-        logger.info(f"Completed batch_update for {len(updates)} memory items")
+        logger.info("Completed batch_update for memory items")
 
     async def batch_delete(self, memory_ids: List[str]):
         tasks = [self.delete(mid) for mid in memory_ids]
         await asyncio.gather(*tasks, return_exceptions=True)
-        logger.info(f"Completed batch_delete for {len(memory_ids)} memory items")
+        logger.info("Completed batch_delete for memory items")
 
     async def get(self, memory_id: str) -> Optional[Dict]:
         await self._ensure_collection()
@@ -444,7 +446,7 @@ class MemoryManager:
         project_id: Optional[str] = None,
         category: Optional[str] = None,
         limit: int = 100,
-        filters: Optional[Dict] = None
+        filters: Optional[Dict] = None,
     ) -> List[Dict]:
         await self._ensure_collection()
         try:
@@ -454,7 +456,7 @@ class MemoryManager:
                 collection_name=self.collection_name,
                 scroll_filter=query_filter,
                 limit=limit,
-                with_payload=True
+                with_payload=True,
             )
             return [r.payload for r in records if r.payload and not self._is_expired(r.payload)]
         except Exception:
@@ -466,7 +468,7 @@ class MemoryManager:
         if not expires_at:
             return False
         try:
-            exp = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
+            exp = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
             return datetime.now(timezone.utc) > exp
         except Exception:
             return False
@@ -481,7 +483,7 @@ class MemoryManager:
         project_id: Optional[str] = None,
         category: Optional[str] = None,
         limit: int = 10,
-        filters: Optional[Dict] = None
+        filters: Optional[Dict] = None,
     ) -> List[Dict]:
         if not user_id and not org_id and not project_id:
             return []
@@ -496,7 +498,7 @@ class MemoryManager:
                 query_vector=vector,
                 query_filter=query_filter,
                 limit=limit * 2,
-                with_payload=True
+                with_payload=True,
             )
 
             if not results:
@@ -504,8 +506,8 @@ class MemoryManager:
 
             memories = []
             for r in results:
-                payload = r.payload if hasattr(r, 'payload') else r.get('payload', {})
-                if 'text' in payload and not self._is_expired(payload):
+                payload = r.payload if hasattr(r, "payload") else r.get("payload", {})
+                if "text" in payload and not self._is_expired(payload):
                     memories.append(payload)
 
             if not memories:
@@ -559,15 +561,15 @@ class MemoryManager:
                 payload = res[0].payload
                 old_content = payload.get("text")
                 payload["text"] = new_content
-                payload["hash"] = hashlib.sha256(new_content.encode('utf-8')).hexdigest()
+                payload["hash"] = hashlib.sha256(new_content.encode("utf-8")).hexdigest()
                 payload["updated_at"] = datetime.now(timezone.utc).isoformat()
 
                 await self.client.upsert(
                     collection_name=self.collection_name,
-                    points=[PointStruct(id=memory_id, vector=vector, payload=payload)]
+                    points=[PointStruct(id=memory_id, vector=vector, payload=payload)],
                 )
                 create_background_task(
-                    memory_manager.save_memory_history(
+                    short_term_memory.save_memory_history(
                         memory_id,
                         "UPDATE",
                         old_content,
@@ -588,10 +590,10 @@ class MemoryManager:
                 old_content = res[0].payload.get("text")
                 await self.client.delete(
                     collection_name=self.collection_name,
-                    points_selector=[memory_id]
+                    points_selector=[memory_id],
                 )
                 create_background_task(
-                    memory_manager.save_memory_history(
+                    short_term_memory.save_memory_history(
                         memory_id,
                         "DELETE",
                         old_content,
@@ -611,7 +613,7 @@ class MemoryManager:
 
             await self.client.delete(
                 collection_name=self.collection_name,
-                points_selector=Filter(must=query_filter.must)
+                points_selector=Filter(must=query_filter.must),
             )
             logger.info("Memory bulk delete completed")
         except Exception:
@@ -620,8 +622,8 @@ class MemoryManager:
     async def history(self, memory_id: str) -> List[Dict]:
         try:
             key = f"memory:history:{memory_id}"
-            if memory_manager._redis:
-                existing = await memory_manager._redis.get(key)
+            if short_term_memory._redis:
+                existing = await short_term_memory._redis.get(key)
                 if existing:
                     return json.loads(existing)
             return []
@@ -660,10 +662,10 @@ class MemoryManager:
 
     async def close(self):
         try:
-            if hasattr(self.client, 'close'):
+            if hasattr(self.client, "close"):
                 await self.client.close()
             logger.info("Memory client closed")
         except Exception:
             logger.exception("Memory client close failed")
 
-memo_manager = MemoryManager()
+long_term_memory = LongTermMemory()

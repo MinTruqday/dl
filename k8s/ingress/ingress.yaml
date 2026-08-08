@@ -59,7 +59,7 @@ spec:
         pathType: ImplementationSpecific
         backend:
           service:
-            name: content
+            name: collaboration
             port:
               number: 80
       - path: /danh-dau(/|$)(.*)

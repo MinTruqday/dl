@@ -57,7 +57,7 @@ async def _persist_conversation_turns(
     await context.save_turn(session_id, "user", user_content)
     await context.save_turn(session_id, "assistant", assistant_content)
     try:
-        from src.memory.memo import memo_manager
+        from src.memory.management import memory_manager
         from src.services.history import HistoryService
         from src.utils.background import create_background_task
 
@@ -70,7 +70,7 @@ async def _persist_conversation_turns(
             {"user_id": user_id, "role": "assistant", "content": assistant_content},
         )
         create_background_task(
-            memo_manager.add_memory(
+            memory_manager.add_memory(
                 [
                     {"role": "user", "content": user_content},
                     {"role": "assistant", "content": assistant_content},

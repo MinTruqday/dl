@@ -236,7 +236,7 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
                         replan_count += 1
                         logger.warning("Self-reflection failed, initiating replan sequence")
                         try:
-                            from src.memory.memo import memo_manager
+                            from src.memory.management import memory_manager
                             from src.utils.background import create_background_task
 
                             user_id = req_data.get("user_id", "guest")
@@ -251,7 +251,7 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
                                 },
                             ]
                             create_background_task(
-                                memo_manager.add_memory(mem_data, user_id),
+                                memory_manager.add_memory(mem_data, user_id),
                                 f"procedural-memory-{user_id}",
                             )
                         except Exception:

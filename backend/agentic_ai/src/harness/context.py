@@ -100,12 +100,12 @@ class ContextHarness:
             return ""
         try:
             from src.core.infrastructure.database import database
-            from src.memory.memo import memo_manager
+            from src.memory.management import memory_manager
 
             db = database.mongodb[settings.AGENTIC_AI_DB_NAME]
             instruction_doc, memories = await asyncio.gather(
                 db.user_instructions.find_one({"_id": user_id}),
-                memo_manager.get_memories(user_id),
+                memory_manager.get_memories(user_id),
             )
             instructions = (
                 str(instruction_doc.get("instructions", ""))

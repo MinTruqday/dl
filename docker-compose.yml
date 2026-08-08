@@ -539,14 +539,13 @@ services:
       - 8004:8000
     labels:
       - traefik.enable=true
-      - traefik.http.routers.content.rule=PathPrefix(`/cong-tac`)
-        || PathPrefix(`/dau-trang`) || PathPrefix(`/danh-gia`) || PathPrefix(`/doc-hieu`)
+      - traefik.http.routers.content.rule=PathPrefix(`/dau-trang`)
+        || PathPrefix(`/danh-gia`) || PathPrefix(`/doc-hieu`)
         || PathPrefix(`/ghim`) || PathPrefix(`/kham-pha`)
         || PathPrefix(`/phien-ban`) || PathPrefix(`/tai-lieu`) || PathPrefix(`/thu-vien`)
         || PathPrefix(`/xuat-ban`) || PathPrefix(`/danh-dau`) || PathPrefix(`/noi-bat`)
-        || PathPrefix(`/danh-gia`) || PathPrefix(`/cam-quyen-nhap-lieu`)
-        || PathPrefix(`/thu-vien`) || PathPrefix(`/ghim-trang`) || PathPrefix(`/kham-pha`)
-        || PathPrefix(`/cong-tac`) || PathPrefix(`/xuat-cam-quyen`) || PathPrefix(`/phien-lam-cam-quyen`)
+        || PathPrefix(`/cam-quyen-nhap-lieu`) || PathPrefix(`/ghim-trang`)
+        || PathPrefix(`/xuat-cam-quyen`) || PathPrefix(`/phien-lam-cam-quyen`)
         || PathPrefix(`/tai-lieu-hieu`)
       - traefik.http.services.content.loadbalancer.server.port=8000
     env_file:
@@ -559,6 +558,29 @@ services:
     volumes:
       - ./backend/content/src:/app/src
       - ./backend/logs/content:/app/logs
+    networks:
+      - doclib_network
+
+  collaboration:
+    build:
+      context: ./backend
+      dockerfile: ./collaboration/Dockerfile
+    container_name: doclib_collaboration
+    restart: always
+    ports:
+      - 8016:8000
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.collaboration.rule=PathPrefix(`/cong-tac`)
+      - traefik.http.services.collaboration.loadbalancer.server.port=8000
+    env_file:
+      - .env
+    depends_on:
+      - mongodb
+      - redis
+    volumes:
+      - ./backend/collaboration/src:/app/src
+      - ./backend/logs/collaboration:/app/logs
     networks:
       - doclib_network
 

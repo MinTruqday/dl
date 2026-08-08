@@ -6,7 +6,7 @@ from loguru import logger
 from src.schemas.planning import ExecutionPlan
 from src.utils.huggingface import create_chat_model
 from src.core.infrastructure.configuration import settings
-from src.memory.memo import memo_manager
+from src.memory.management import memory_manager
 
 llm = create_chat_model()
 
@@ -51,7 +51,7 @@ class PlanAgent:
         
         user_id = req_data.get("user_id", "guest")
         try:
-            long_term_memory = await memo_manager.get_memories(
+            long_term_memory = await memory_manager.get_memories(
                 user_id=user_id,
                 query=req_data.get("query", ""),
             )
