@@ -1,5 +1,4 @@
 import os
-from typing import Optional
 from pydantic import BaseModel
 
 def get_service_url(service_name_underscore: str) -> str:
@@ -28,7 +27,6 @@ class Settings(BaseModel):
     CONTENT_URL: str = get_service_url("CONTENT")
     SEARCH_URL: str = get_service_url("SEARCH")
     ENGAGEMENT_DB_NAME: str = os.environ["ENGAGEMENT_DB_NAME"]
-    CONTENT_DB_NAME: str = os.environ["CONTENT_DB_NAME"]
     MINIO_ENDPOINT: str = os.environ["MINIO_ENDPOINT"]
     MINIO_PUBLIC_URL: str = os.environ["MINIO_PUBLIC_URL"]
 

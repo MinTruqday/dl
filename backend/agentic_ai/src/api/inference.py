@@ -39,6 +39,10 @@ from src.schemas.inference import (
     QuickRepliesOutput,
     ArtifactExtractionResult,
     ExtractTextRequest,
+    RetrievalExpansionRequest,
+    CrossDocumentExpansionRequest,
+    RagChunkSafetyRequest,
+    RagDocumentSummaryRequest,
 )
 from src.schemas.auth import Tier
 
@@ -250,7 +254,12 @@ async def semantic_document_search(
         limits = await _check_quota(current_user)
         from src.rag.retrieval import retriever
 
-        chunks = await retriever.retrieve(req.query, k=req.limit)
+        chunks = await retriever.retrieve(
+            req.query,
+            k=req.limit,
+            requester_id=str(current_user.id),
+            is_admin=current_user.role == Role.ADMIN,
+        )
         scores = {}
         for chunk in chunks:
             metadata = chunk.get("metadata") or {}
@@ -276,6 +285,116 @@ async def semantic_document_search(
         return {"results": ranked}
     except Exception as exc:
         raise _public_ai_error("semantic_document_search", exc)
+
+
+@router.post(
+    "/noi-bo/mo-rong-truy-van",
+    dependencies=[Depends(verify_internal_token)],
+)
+async def expand_retrieval_query(req: RetrievalExpansionRequest):
+    from langchain_core.messages import HumanMessage
+    from src.schemas.routing import MultiQueryOutput
+    from src.utils.huggingface import create_chat_model
+
+    hypothetical_prompt = registry.get(PromptType.HYDE_GENERATION).format(
+        question=req.question
+    )
+    hypothetical_document = await _chat_direct(
+        [{"role": "user", "content": hypothetical_prompt}],
+        max_tokens=384,
+        temperature=0.2,
+    )
+    query_prompt = registry.get(PromptType.MULTI_QUERY).format(
+        question=req.question
+    )
+    structured_model = create_chat_model(
+        settings.LLM_MODEL
+    ).with_structured_output(MultiQueryOutput)
+    result = await structured_model.ainvoke(
+        [HumanMessage(content=query_prompt)],
+        max_tokens=192,
+        temperature=0.2,
+    )
+    queries = [query.strip() for query in result.queries if query.strip()]
+    return {
+        "hypothetical_document": hypothetical_document.strip() or req.question,
+        "queries": queries[:5],
+    }
+
+
+@router.post(
+    "/noi-bo/phan-ra-lien-tai-lieu",
+    dependencies=[Depends(verify_internal_token)],
+)
+async def decompose_cross_document_query(req: CrossDocumentExpansionRequest):
+    from langchain_core.messages import HumanMessage
+    from src.schemas.routing import CrossDocumentQueries
+    from src.utils.huggingface import create_chat_model
+
+    prompt = registry.get(PromptType.CROSS_DOCUMENT_QUERY).format(
+        question=req.question,
+        document_ids=req.document_ids,
+    )
+    structured_model = create_chat_model(
+        settings.LLM_MODEL
+    ).with_structured_output(CrossDocumentQueries)
+    result = await structured_model.ainvoke(
+        [HumanMessage(content=prompt)],
+        max_tokens=min(1024, 96 * len(req.document_ids)),
+        temperature=0.2,
+    )
+    queries = [query.strip() for query in result.queries if query.strip()]
+    if len(queries) != len(req.document_ids):
+        raise HTTPException(
+            status_code=502,
+            detail={"code": "cross_document_decomposition_invalid"},
+        )
+    return {"queries": queries}
+
+
+@router.post(
+    "/noi-bo/kiem-tra-doan-rag",
+    dependencies=[Depends(verify_internal_token)],
+)
+async def inspect_rag_chunks(req: RagChunkSafetyRequest):
+    import asyncio
+    from src.core.security.guardrails import guardrails_engine
+
+    semaphore = asyncio.Semaphore(4)
+
+    async def inspect(index: int, text: str):
+        async with semaphore:
+            assessment = await guardrails_engine.async_inspect_input(text)
+            return index if assessment.get("is_safe", False) else None
+
+    results = await asyncio.gather(
+        *[inspect(index, text) for index, text in enumerate(req.texts)]
+    )
+    return {"safe_indices": [index for index in results if index is not None]}
+
+
+@router.post(
+    "/noi-bo/tom-tat-tai-lieu-rag",
+    dependencies=[Depends(verify_internal_token)],
+)
+async def summarize_rag_document(req: RagDocumentSummaryRequest):
+    from src.core.security.guardrails import guardrails_engine
+
+    assessment = await guardrails_engine.async_inspect_input(req.text)
+    if not assessment.get("is_safe", False):
+        raise HTTPException(
+            status_code=422,
+            detail={"code": "rag_summary_input_unsafe"},
+        )
+    prompt = registry.get(PromptType.DOCUMENT_GLOBAL_SUMMARY).format(
+        text=assessment.get("sanitized_text") or req.text
+    )
+    summary = await _chat_direct(
+        [{"role": "user", "content": prompt}],
+        max_tokens=512,
+        temperature=0.2,
+    )
+    return {"summary": summary.strip()}
 
 
 @router.post("/tao-ma")
@@ -370,11 +489,14 @@ async def check_plagiarism(
                 detail={"code": "premium_tier_required"}
             )
 
-        from src.rag.embedding import embedder
-        from src.store.vector import vector_store
+        from src.rag.retrieval import retriever
 
-        query_vector = await embedder.embed_query(req.content[:2000])
-        matches = await vector_store.query(query_vector=query_vector, limit=5)
+        matches = await retriever.retrieve(
+            req.content[:2000],
+            k=5,
+            requester_id=str(current_user.id),
+            is_admin=current_user.role == Role.ADMIN,
+        )
 
         significant_matches = [m for m in matches if m["score"] > 0.75]
 
@@ -493,11 +615,14 @@ async def suggest_citations(
                 detail={"code": "premium_tier_required"}
             )
 
-        from src.rag.embedding import embedder
-        from src.store.vector import vector_store
+        from src.rag.retrieval import retriever
 
-        query_vector = await embedder.embed_query(req.text[:500])
-        matches = await vector_store.query(query_vector=query_vector, limit=3)
+        matches = await retriever.retrieve(
+            req.text[:500],
+            k=3,
+            requester_id=str(current_user.id),
+            is_admin=current_user.role == Role.ADMIN,
+        )
 
         sources = []
         for m in matches:
@@ -595,15 +720,16 @@ async def multi_doc_synthesis(
     """Synthesize evidence from an authorized set of indexed documents"""
     logger.info("Multi-document synthesis started document_count={}", len(req.document_ids))
     try:
-        from src.rag.embedding import embedder
-        from src.store.vector import vector_store
-
-        query_vector = await embedder.embed_query(req.query)
+        from src.rag.retrieval import retriever
 
         all_context = []
         for doc_id in req.document_ids:
-            matches = await vector_store.query(
-                query_vector=query_vector, document_ids=[doc_id], limit=3
+            matches = await retriever.retrieve(
+                req.query,
+                document_ids=[doc_id],
+                k=3,
+                requester_id=str(current_user.id),
+                is_admin=current_user.role == Role.ADMIN,
             )
             for m in matches:
                 all_context.append(f"[From document {doc_id}]: {m['text']}")
@@ -630,21 +756,13 @@ async def extract_text(
     """Extract normalized text from an authorized cloud file"""
     logger.info("Document text extraction started")
     try:
-        from src.rag.pipeline import ingestion_pipeline
+        from src.services.rag_client import rag_client
 
-        document = await ingestion_pipeline.authorize_document(
+        extracted_text = await rag_client.extract_document(
             req.document_id,
             str(current_user.id),
             current_user.role == Role.ADMIN,
         )
-        file_url = document.get("file_url")
-        if not file_url:
-            raise HTTPException(
-                status_code=404,
-                detail={"code": "document_file_not_found"},
-            )
-
-        extracted_text = await ingestion_pipeline._extract_text(file_url)
         if not extracted_text:
             raise HTTPException(
                 status_code=422,
@@ -701,9 +819,13 @@ async def delete_vector_document(document_id: str):
     """Delete all indexed vectors for an internal document identifier"""
     logger.info(f"Started vector index deletion for document {document_id}")
     try:
-        from src.store.vector import vector_store
+        from src.services.rag_client import rag_client
 
-        await vector_store.delete_by_document(document_id)
+        await rag_client.delete_document(
+            document_id,
+            settings.PLATFORM_SYSTEM_ID,
+            True,
+        )
         logger.info(f"Completed vector index deletion for document {document_id}")
         return {"status": "success", "message_code": "document_vectors_deleted"}
     except Exception:

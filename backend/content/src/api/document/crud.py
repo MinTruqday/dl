@@ -1,5 +1,5 @@
 from typing import Any, List, Optional
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, UploadFile, File, Response
+from fastapi import APIRouter, Body, Depends, Header, HTTPException, Query, UploadFile, File, Response
 from src.core.logging_route import LoggingRoute
 from src.core.response import APIResponse
 from src.api.dependency import get_current_user, get_current_user_optional, require_role, CurrentUser, Role
@@ -11,18 +11,24 @@ from src.schemas.document import (
     DocumentUpdate,
 )
 from src.services.document import DocumentService
+from src.services.protected_rendering import ProtectedRenderingService
+from src.core.infrastructure.configuration import settings
+from src.core.infrastructure.database import database
 
 router = APIRouter(route_class=LoggingRoute)
 
-@router.post("", response_model=APIResponse[Any])
-async def create_document(doc_in: DocumentCreate, current_user=Depends(get_current_user)):
+@router.post("", response_model=APIResponse[Any], status_code=201)
+async def create_document(
+    doc_in: DocumentCreate,
+    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN])),
+):
     return APIResponse(
         data=await DocumentService.create_document(doc_in, current_user),
         message="Khởi tạo tài liệu hoàn tất",
         status=201,
     )
 
-@router.post("/nhap-file", response_model=APIResponse[Any])
+@router.post("/ket-nhap", response_model=APIResponse[Any], status_code=201)
 async def import_document(file: UploadFile = File(...), current_user=Depends(get_current_user)):
     try:
         data = await DocumentService.import_document_from_file(file, current_user)
@@ -30,45 +36,66 @@ async def import_document(file: UploadFile = File(...), current_user=Depends(get
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.get("/cua-toi", response_model=APIResponse[Any])
+@router.get("/ca-nhan", response_model=APIResponse[Any])
 async def get_my_documents(
-    status: Optional[str] = None,
-    sort_by: str = "updated_at",
-    limit: int = 50,
+    q: Optional[str] = None,
     cursor: Optional[str] = None,
-    folder_id: Optional[str] = None,
+    limit: int = Query(default=50, ge=1, le=100),
     current_user=Depends(get_current_user),
 ):
     data = await DocumentService.get_my_documents(
         current_user,
-        status_filter=status,
-        sort_by=sort_by,
-        limit=limit,
+        q=q,
         cursor=cursor,
-        folder_id=folder_id,
+        limit=limit,
     )
     return APIResponse(data=data, message="Truy xuất danh sách tài liệu cá nhân hoàn tất")
 
-@router.get("/thung-rac", response_model=APIResponse[Any])
+@router.get(
+    "/thung-rac",
+    response_model=APIResponse[Any],
+    dependencies=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
+)
 async def get_trash(current_user=Depends(get_current_user)):
     data = await DocumentService.get_trash(current_user)
     return APIResponse(data=data, message="Truy xuất thùng rác hoàn tất")
 
-@router.post("/thung-rac/{document_id}/khoi-phuc", response_model=APIResponse[Any])
+
+@router.get("", response_model=APIResponse[List[DocumentResponse]])
+async def list_documents(
+    limit: int = Query(default=20, le=100),
+    cursor: Optional[str] = None,
+    q: Optional[str] = None,
+    sort_by: str = "latest",
+    category: Optional[str] = None,
+    tag: Optional[str] = None,
+):
+    return APIResponse(
+        data=await DocumentService.list_documents(
+            limit, cursor, q, sort_by, category, tag
+        ),
+        message="Trích xuất danh mục tài liệu hoàn tất",
+    )
+
+@router.post(
+    "/{document_id}/khoi-phuc",
+    response_model=APIResponse[Any],
+    dependencies=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
+)
 async def restore_document(document_id: str, current_user=Depends(get_current_user)):
     return APIResponse(
         data=await DocumentService.restore_document(document_id, current_user),
         message="Khôi phục tài liệu hoàn tất",
     )
 
-@router.get("/slug/{slug}", response_model=APIResponse[Any])
+@router.get("/tai-lieu/{slug}", response_model=APIResponse[Any])
 async def get_document_by_slug(slug: str, current_user=Depends(get_current_user_optional)):
     return APIResponse(
         data=await DocumentService.get_document_by_slug(slug, current_user),
         message="Truy xuất tài liệu hoàn tất",
     )
 
-@router.get("/slug/{slug}/xem-truoc", response_model=APIResponse[Any])
+@router.get("/xem-truoc/{slug}", response_model=APIResponse[Any])
 async def get_document_preview(slug: str):
     return APIResponse(
         data=await DocumentService.get_document_preview(slug),
@@ -78,15 +105,46 @@ async def get_document_preview(slug: str):
 @router.get("/{document_id}", response_model=APIResponse[Any])
 async def get_document(
     document_id: str,
-    password: Optional[str] = None,
-    x_share_token: Optional[str] = Header(None, alias="X-Share-Token"),
+    password: Optional[str] = Header(None, alias="x-document-password"),
+    share_token: Optional[str] = Query(None, max_length=256),
     current_user=Depends(get_current_user_optional),
 ):
     return APIResponse(
         data=await DocumentService.get_document_by_id(
-            document_id, current_user, password=password, share_token=x_share_token
+            document_id, current_user, password=password, share_token=share_token
         ),
         message="Truy xuất tài liệu hoàn tất",
+    )
+
+
+@router.get("/{document_id}/trang-bao-ve/{page_number}")
+async def get_protected_document_page(
+    document_id: str,
+    page_number: int,
+    password: Optional[str] = Header(None, alias="x-document-password"),
+    share_token: Optional[str] = Query(None, max_length=256),
+    current_user=Depends(get_current_user_optional),
+) -> Response:
+    resolved = await DocumentService.get_document_by_id(
+        document_id, current_user, password, share_token
+    )
+    if not resolved.get("drm_settings", {}).get("ghost_font_active"):
+        raise HTTPException(status_code=403, detail="Chế độ kết xuất bảo vệ không được áp dụng")
+    raw = await database.mongodb[settings.CONTENT_DB_NAME].documents.find_one(
+        {"_id": document_id, "is_deleted": {"$ne": True}},
+        {"file_url": 1, "pdf_url": 1, "content_format": 1},
+    )
+    if not raw or str(raw.get("content_format", "")).lower() != "pdf":
+        raise HTTPException(
+            status_code=422, detail="Định dạng tài liệu không hỗ trợ kết xuất bảo vệ"
+        )
+    page, page_count = await ProtectedRenderingService.render_pdf_page(
+        str(raw.get("file_url") or raw.get("pdf_url") or ""), page_number
+    )
+    return Response(
+        content=page,
+        media_type="image/png",
+        headers={"Cache-Control": "private, no-store", "X-Page-Count": str(page_count)},
     )
 
 @router.put("/{document_id}/noi-dung", response_model=APIResponse[Any])
@@ -100,7 +158,7 @@ async def update_document_content(
         message="Cập nhật nội dung tài liệu hoàn tất",
     )
 
-@router.patch("/{document_id}", response_model=APIResponse[Any])
+@router.put("/{document_id}", response_model=APIResponse[Any])
 async def update_document(
     document_id: str,
     doc_update: DocumentUpdate,
@@ -111,14 +169,22 @@ async def update_document(
         message="Cập nhật thông tin tài liệu hoàn tất",
     )
 
-@router.delete("/{document_id}", response_model=APIResponse[Any])
+@router.delete(
+    "/{document_id}",
+    response_model=APIResponse[Any],
+    dependencies=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
+)
 async def delete_document(document_id: str, current_user=Depends(get_current_user)):
     return APIResponse(
         data=await DocumentService.soft_delete_document(document_id, current_user),
         message="Chuyển tài liệu vào thùng rác hoàn tất",
     )
 
-@router.post("/{document_id}/mat-khau", response_model=APIResponse[Any])
+@router.post(
+    "/{document_id}/bao-ve",
+    response_model=APIResponse[Any],
+    dependencies=[Depends(require_role([Role.AUTHOR, Role.ADMIN]))],
+)
 async def set_document_password(
     document_id: str,
     body: DocumentPasswordRequest,
@@ -130,8 +196,23 @@ async def set_document_password(
     )
 
 @router.get("/{document_id}/khoa-giai-ma", response_model=APIResponse[Any])
-async def get_decryption_key(document_id: str, current_user=Depends(get_current_user)):
+async def get_decryption_key(
+    document_id: str,
+    current_user: CurrentUser = Depends(get_current_user_optional),
+):
     return APIResponse(
         data=await DocumentService.get_document_decryption_key(document_id, current_user),
         message="Lấy khóa giải mã thành công",
+    )
+
+
+@router.post("/{document_id}/mo-khoa", response_model=APIResponse[Any])
+async def unlock_document(
+    document_id: str,
+    password: str = Body(..., embed=True),
+    current_user=Depends(get_current_user_optional),
+):
+    return APIResponse(
+        data=await DocumentService.get_document_by_id(document_id, current_user, password),
+        message="Xác thực quyền truy cập tài liệu hoàn tất",
     )

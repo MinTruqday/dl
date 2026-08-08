@@ -246,51 +246,53 @@ class WorkerRunner:
     async def consume(self, queue_name: str):
         handler = HANDLERS[queue_name]
         while True:
+            channel = None
             try:
-                queue = await mq.get_queue(queue_name)
-                while True:
-                    message = await queue.get(timeout=5, fail=False)
-                    if message is None:
-                        continue
-                    try:
+                channel, queue = await mq.create_consumer_queue(queue_name)
+                async with queue.iterator() as iterator:
+                    async for message in iterator:
                         try:
-                            payload = json.loads(message.body.decode("utf-8"))
-                            if not isinstance(payload, dict):
-                                raise PermanentTaskError("Task payload must be an object")
-                        except (UnicodeDecodeError, json.JSONDecodeError, PermanentTaskError):
-                            await message.reject(requeue=False)
-                            continue
-                        failure = None
-                        for attempt in range(settings.WORKER_MAX_RETRIES):
                             try:
-                                await handler(payload)
-                                failure = None
-                                break
-                            except PermanentTaskError as error:
-                                failure = error
-                                break
-                            except Exception as error:
-                                failure = error
-                                logger.exception("Worker task attempt failed")
-                                if attempt + 1 < settings.WORKER_MAX_RETRIES:
-                                    await asyncio.sleep(2 ** attempt)
-                        if failure is None:
-                            await message.ack()
-                        else:
-                            await mark_failed(queue_name, payload, failure)
-                            if isinstance(failure, PermanentTaskError):
+                                payload = json.loads(message.body.decode("utf-8"))
+                                if not isinstance(payload, dict):
+                                    raise PermanentTaskError("Task payload must be an object")
+                            except (UnicodeDecodeError, json.JSONDecodeError, PermanentTaskError):
+                                await message.reject(requeue=False)
+                                continue
+                            failure = None
+                            for attempt in range(settings.WORKER_MAX_RETRIES):
+                                try:
+                                    await handler(payload)
+                                    failure = None
+                                    break
+                                except PermanentTaskError as error:
+                                    failure = error
+                                    break
+                                except Exception as error:
+                                    failure = error
+                                    logger.exception("Worker task attempt failed")
+                                    if attempt + 1 < settings.WORKER_MAX_RETRIES:
+                                        await asyncio.sleep(2 ** attempt)
+                            if failure is None:
                                 await message.ack()
                             else:
-                                await message.reject(requeue=False)
-                    except Exception:
-                        if not message.processed:
-                            await message.reject(requeue=True)
-                        raise
+                                await mark_failed(queue_name, payload, failure)
+                                if isinstance(failure, PermanentTaskError):
+                                    await message.ack()
+                                else:
+                                    await message.reject(requeue=False)
+                        except Exception:
+                            if not message.processed:
+                                await message.reject(requeue=True)
+                            raise
             except asyncio.CancelledError:
                 raise
             except Exception:
                 logger.exception("Worker queue consumer cycle failed")
                 await asyncio.sleep(2)
+            finally:
+                if channel and not channel.is_closed:
+                    await channel.close()
 
     async def schedule_publications(self):
         while True:

@@ -1,5 +1,5 @@
-from typing import Any, List, Optional
-from fastapi import APIRouter, Body, Depends, Query
+from typing import Any, List
+from fastapi import APIRouter, Body, Depends
 from src.api.dependency import require_role
 from src.core.dependency import CurrentUser, Role
 from src.core.logging_route import LoggingRoute
@@ -20,18 +20,6 @@ async def duplicate_item(
     result = await SearchService.duplicate_item(item_id, current_user.id)
     return APIResponse(data=result, message="Nhân bản tệp thành công", status=201)
 
-@router.get("/tim-kiem-nang-cao", response_model=APIResponse[Any])
-async def advanced_search(
-    q: Optional[str] = Query(default=None, max_length=200),
-    mime_type: Optional[str] = Query(default=None, max_length=100),
-    extension: Optional[str] = Query(default=None, max_length=10),
-    min_size_mb: Optional[float] = Query(default=None, ge=0),
-    max_size_mb: Optional[float] = Query(default=None, ge=0),
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
-):
-    result = await SearchService.advanced_search(current_user.id, q, mime_type, extension, min_size_mb, max_size_mb)
-    return APIResponse(data=result, message="Tìm kiếm tệp nâng cao hoàn tất")
-
 @router.post("/thu-muc/{folder_id}/mau-sac", response_model=APIResponse[Any])
 async def set_folder_color(
     folder_id: str,
@@ -49,11 +37,3 @@ async def update_item_tags(
 ):
     result = await SearchService.update_item_tags(item_id, current_user.id, tags)
     return APIResponse(data=result, message="Cập nhật thẻ nhãn tài liệu hoàn tất")
-
-@router.get("/xem-truoc/{item_id}", response_model=APIResponse[Any])
-async def get_preview_payload(
-    item_id: str,
-    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
-):
-    result = await SearchService.get_preview_payload(item_id, current_user.id)
-    return APIResponse(data=result, message="Trích xuất dữ liệu xem trước tệp hoàn tất")

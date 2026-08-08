@@ -18,6 +18,9 @@ async def run():
     secret = os.environ["SECRET_KEY"]
     mongo = AsyncIOMotorClient(os.environ["MONGODB_URI"])
     content_db = mongo[os.getenv("CONTENT_DB_NAME", "doclib_content")]
+    collaboration_db = mongo[
+        os.getenv("COLLABORATION_DB_NAME", "doclib_collaboration")
+    ]
     humanity_db = mongo[os.getenv("HUMANITY_DB_NAME", "doclib_humanity")]
     redis_client = redis_async.from_url(os.environ["REDIS_URI"], decode_responses=True)
 
@@ -55,7 +58,7 @@ async def run():
 
     doc_id = None
     try:
-        async with httpx.AsyncClient(base_url="http://content:8000", timeout=15.0) as client:
+        async with httpx.AsyncClient(base_url="http://traefik:8000", timeout=15.0) as client:
             create_resp = await client.post(
                 "/tai-lieu",
                 json={
@@ -117,6 +120,45 @@ async def run():
                 headers=editor_headers,
             )
             assert update_editor.status_code == 200, update_editor.text
+
+            snapshot = await client.post(
+                f"/cong-tac/tai-lieu/{doc_id}/phien-ban",
+                json={"version_name": "integration"},
+                headers=editor_headers,
+            )
+            assert snapshot.status_code == 201, snapshot.text
+            snapshot_data = snapshot.json()["data"]["snapshot"]
+            assert snapshot_data["content"] == "Content updated by legit editor"
+            assert snapshot_data["created_by"] == ""
+
+            memo = await client.post(
+                f"/cong-tac/tai-lieu/{doc_id}/tin-nhan",
+                json={"message": "integration memo"},
+                headers=editor_headers,
+            )
+            assert memo.status_code == 200, memo.text
+            assert memo.json()["data"]["memo"]["sender_id"] == editor_id
+            memos = await client.get(
+                f"/cong-tac/tai-lieu/{doc_id}/tin-nhan",
+                headers=owner_headers,
+            )
+            assert memos.status_code == 200, memos.text
+            assert memos.json()["data"][0]["sender_id"] == editor_id
+
+            task = await client.post(
+                f"/cong-tac/tai-lieu/{doc_id}/cong-viec",
+                json={"task_desc": "integration task", "assigned_to": editor_id},
+                headers=owner_headers,
+            )
+            assert task.status_code == 201, task.text
+            task_id = task.json()["data"]["task"]["_id"]
+            task_comment = await client.post(
+                f"/cong-tac/nhiem-vu/{task_id}/binh-luan",
+                json={"comment_text": "integration comment"},
+                headers=editor_headers,
+            )
+            assert task_comment.status_code == 201, task_comment.text
+            assert task_comment.json()["data"]["comment"]["sender_name"] == ""
 
             invite_viewer = await client.post(
                 "/cong-tac/loi-moi",
@@ -186,6 +228,31 @@ async def run():
             assert status_unlocked.status_code == 200, status_unlocked.text
             assert status_unlocked.json()["data"]["is_locked"] is False
 
+            collaborators = await client.get(
+                f"/cong-tac/tai-lieu/{doc_id}",
+                headers=owner_headers,
+            )
+            assert collaborators.status_code == 200, collaborators.text
+            collaborator_rows = collaborators.json()["data"]
+            commenter_row = next(
+                row for row in collaborator_rows if row["user_id"] == commenter_id
+            )
+            assert commenter_row["_id"] == commenter_invite_id
+            assert commenter_row["collaboration_id"] == commenter_invite_id
+            remove_commenter = await client.delete(
+                f"/cong-tac/{commenter_invite_id}",
+                headers=owner_headers,
+            )
+            assert remove_commenter.status_code == 200, remove_commenter.text
+            assert await collaboration_db.collaboration_invites.find_one(
+                {"_id": commenter_invite_id}
+            ) is None
+            denied_after_removal = await client.get(
+                f"/tai-lieu/{doc_id}",
+                headers=commenter_headers,
+            )
+            assert denied_after_removal.status_code in {403, 404}, denied_after_removal.text
+
             print("collaboration roles integration test passed")
     finally:
         await humanity_db.users.delete_many({"_id": {"$in": [u["_id"] for u in users]}})
@@ -193,8 +260,20 @@ async def run():
             await redis_client.delete(f"user_sessions:{uid}")
         if doc_id:
             await content_db.documents.delete_one({"_id": doc_id})
-            await content_db.collaboration_invites.delete_many({"document_id": doc_id})
-            await content_db.collaboration_locks.delete_many({"document_id": doc_id})
+            await collaboration_db.collaboration_invites.delete_many({"document_id": doc_id})
+            await collaboration_db.collaboration_locks.delete_many({"document_id": doc_id})
+            await collaboration_db.collaboration_drafts.delete_many({"document_id": doc_id})
+            await collaboration_db.collaboration_memos.delete_many({"document_id": doc_id})
+            task_ids = [
+                row["_id"]
+                async for row in collaboration_db.collaboration_tasks.find(
+                    {"document_id": doc_id}, {"_id": 1}
+                )
+            ]
+            await collaboration_db.collaboration_tasks.delete_many({"document_id": doc_id})
+            await collaboration_db.collaboration_task_comments.delete_many(
+                {"task_id": {"$in": task_ids}}
+            )
         mongo.close()
         await redis_client.aclose()
 

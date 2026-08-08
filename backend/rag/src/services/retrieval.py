@@ -5,6 +5,7 @@ from src.core.infrastructure.configuration import settings
 from src.store.vector import vector_store
 from src.services.embedding import embedder
 from src.store.graph import graph_store
+from src.services.agentic_client import agentic_client
 
 class RetrievalService:
     def __init__(self):
@@ -13,13 +14,20 @@ class RetrievalService:
     @property
     def reranker(self):
         if self._reranker is None:
-            try:
-                from sentence_transformers import CrossEncoder
-                self._reranker = CrossEncoder(settings.RERANKER_MODEL)
-            except Exception:
-                logger.exception("AI ranking model loading error")
-                self._reranker = False
+            raise RuntimeError("Reranker model is not initialized")
         return self._reranker
+
+    async def initialize(self):
+        try:
+            from sentence_transformers import CrossEncoder
+
+            self._reranker = await asyncio.to_thread(
+                CrossEncoder,
+                settings.RERANKER_MODEL,
+            )
+        except Exception:
+            logger.exception("AI ranking model loading error")
+            self._reranker = False
 
     def get_citations(self, results: List[Dict]) -> List[Dict]:
         seen = set()
@@ -48,6 +56,8 @@ class RetrievalService:
         document_ids: Optional[List[str]] = None,
         k: int = 5,
         query_vector_override: Optional[List[float]] = None,
+        requester_id: Optional[str] = None,
+        is_admin: bool = False,
     ) -> List[Dict]:
         if query_vector_override is not None:
             query_vector = query_vector_override
@@ -58,7 +68,11 @@ class RetrievalService:
         fetch_limit = k * 3 if current_reranker else k
 
         documents = await vector_store.query(
-            query_vector=query_vector, document_ids=document_ids, limit=fetch_limit
+            query_vector=query_vector,
+            document_ids=document_ids,
+            limit=fetch_limit,
+            requester_id=requester_id,
+            is_admin=is_admin,
         )
 
         if not documents:
@@ -96,15 +110,67 @@ class RetrievalService:
             return documents[:k]
 
     async def multi_query_retrieve(
-        self, question: str, document_ids: Optional[List[str]] = None, k: int = 5
+        self,
+        question: str,
+        document_ids: Optional[List[str]] = None,
+        k: int = 5,
+        requester_id: Optional[str] = None,
+        is_admin: bool = False,
     ) -> List[Dict]:
-        all_documents = await self.retrieve(question, document_ids, k=k)
+        try:
+            expansion = await agentic_client.expand_retrieval_query(question)
+        except Exception:
+            logger.exception("Retrieval query expansion failed")
+            expansion = {
+                "hypothetical_document": question,
+                "queries": [],
+            }
+
+        queries = list(dict.fromkeys([*expansion.get("queries", []), question]))
+        result_groups = await asyncio.gather(
+            *[
+                self.retrieve(
+                    query,
+                    document_ids,
+                    k=3,
+                    requester_id=requester_id,
+                    is_admin=is_admin,
+                )
+                for query in queries
+            ],
+            return_exceptions=True,
+        )
+        all_documents = []
+        for group in result_groups:
+            if isinstance(group, list):
+                all_documents.extend(group)
+
+        hypothetical_document = str(
+            expansion.get("hypothetical_document") or question
+        )
+        hypothetical_vector = await embedder.embed_query(hypothetical_document)
+        hypothetical_documents = await vector_store.query(
+            query_vector=hypothetical_vector,
+            document_ids=document_ids,
+            limit=3,
+            requester_id=requester_id,
+            is_admin=is_admin,
+        )
+        all_documents.extend(hypothetical_documents)
+
+        unique_documents = []
+        seen_texts = set()
+        for document in all_documents:
+            text = document.get("text", "")
+            if text and text not in seen_texts:
+                seen_texts.add(text)
+                unique_documents.append(document)
 
         if document_ids:
             try:
                 graph_context = await self.graph_expand(document_ids, question)
                 if graph_context:
-                    all_documents.append({
+                    unique_documents.append({
                         "text": graph_context,
                         "metadata": {"chunk_type": "graphrag_context", "source": "graphrag"},
                         "score": 0.0,
@@ -112,17 +178,45 @@ class RetrievalService:
             except Exception:
                 logger.exception("GraphRAG context augmentation failed")
 
-        return all_documents[:k]
+        return unique_documents[:k]
 
     async def cross_document_retrieve(
-        self, question: str, document_ids: List[str], k: int = 5
+        self,
+        question: str,
+        document_ids: List[str],
+        k: int = 5,
+        requester_id: Optional[str] = None,
+        is_admin: bool = False,
     ) -> List[Dict]:
         if not document_ids or len(document_ids) < 2:
-            return await self.multi_query_retrieve(question, document_ids, k)
+            return await self.multi_query_retrieve(
+                question,
+                document_ids,
+                k,
+                requester_id,
+                is_admin,
+            )
+
+        sub_queries = [question] * len(document_ids)
+        try:
+            decomposed = await agentic_client.decompose_cross_document_query(
+                question,
+                document_ids,
+            )
+            if len(decomposed) == len(document_ids):
+                sub_queries = decomposed
+        except Exception:
+            logger.exception("Cross-document query decomposition failed")
 
         tasks = [
-            self.retrieve(question, [doc_id], k=k)
-            for doc_id in document_ids
+            self.retrieve(
+                sub_queries[index],
+                [doc_id],
+                k=k,
+                requester_id=requester_id,
+                is_admin=is_admin,
+            )
+            for index, doc_id in enumerate(document_ids)
         ]
         results_per_doc = await asyncio.gather(*tasks, return_exceptions=True)
 

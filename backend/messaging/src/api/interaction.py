@@ -100,13 +100,6 @@ async def update_theme(other_user_id: str, req: dict, current_user=Depends(get_c
         data=result, message="Cập nhật chủ đề cuộc trò chuyện thành công"
     )
 
-@router.post("/{other_user_id}/an-tin-nhan", response_model=APIResponse[Any])
-async def set_pin_lock(other_user_id: str, req: dict, current_user=Depends(get_current_user)):
-    pin_code = req.get("pin_code", "")
-    result = await InteractionService.set_pin_lock(other_user_id, pin_code, current_user)
-    return APIResponse(data=result, message="Đặt mã PIN ẩn cuộc trò chuyện thành công")
-
-
 @router.post("/{message_id}/nhac-hen", response_model=APIResponse[Any])
 async def set_message_alarm(message_id: str, req: dict, current_user=Depends(get_current_user)):
     remind_at = req.get("remind_at", "")
@@ -134,13 +127,6 @@ async def export_chat_history(other_user_id: str, current_user=Depends(get_curre
     return APIResponse(data=result, message="Trích xuất lịch sử trò chuyện hoàn tất")
 
 
-@router.post("/{other_user_id}/xoa-dinh-ky", response_model=APIResponse[Any])
-async def set_auto_clean_schedule(other_user_id: str, req: dict, current_user=Depends(get_current_user)):
-    days = req.get("days", 30)
-    result = await InteractionService.set_auto_clean_schedule(other_user_id, days, current_user)
-    return APIResponse(data=result, message="Cấu hình lịch xóa định kỳ cuộc trò chuyện thành công")
-
-
 @router.post("/{other_user_id}/tam-tat-thong-bao", response_model=APIResponse[Any])
 async def snooze_notifications(other_user_id: str, req: dict, current_user=Depends(get_current_user)):
     minutes = req.get("minutes", 60)
@@ -166,7 +152,6 @@ async def create_announcement(group_id: str, req: dict, current_user=Depends(get
     body = req.get("body", "")
     result = await InteractionService.create_announcement(group_id, title, body, current_user)
     return APIResponse(data=result, message="Đăng thông báo nhóm thành công")
-
 
 
 

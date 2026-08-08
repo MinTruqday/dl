@@ -1,4 +1,5 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from src.core.dependency import verify_internal_token
 from src.core.logging_route import LoggingRoute
 from src.core.logic_logger import log_logic_execution
 from src.core.response import APIResponse
@@ -10,7 +11,10 @@ from src.schemas.embedding import (
 )
 from src.services.embedding import embedder
 
-router = APIRouter(route_class=LoggingRoute)
+router = APIRouter(
+    route_class=LoggingRoute,
+    dependencies=[Depends(verify_internal_token)],
+)
 
 @router.post("/query", response_model=APIResponse[EmbeddingResponse])
 @log_logic_execution

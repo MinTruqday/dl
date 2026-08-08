@@ -101,7 +101,7 @@ async def verify_planner_privacy():
     planner.parser = JsonOutputParser(pydantic_object=ExecutionPlan)
     planner.structured_llm = FakePlanModel()
     planner._redis = None
-    with patch("src.agents.planning.memo_manager.get_memories", return_value=""):
+    with patch("src.agents.planning.memory_manager.get_memories", return_value=""):
         events = [
             event
             async for event in planner.stream_plan(
@@ -116,7 +116,7 @@ async def verify_planner_privacy():
             raise ValueError("invalid structured output")
 
     planner.structured_llm = FailingPlanModel()
-    with patch("src.agents.planning.memo_manager.get_memories", return_value=""):
+    with patch("src.agents.planning.memory_manager.get_memories", return_value=""):
         failed_events = [
             event
             async for event in planner.stream_plan(
@@ -247,10 +247,16 @@ def verify_source_contracts():
         if path != SOURCE / "utils" / "translation.py":
             assert "Vietnamese" not in text, path
 
-    interaction_source = (SOURCE / "api" / "interaction.py").read_text()
+    interaction_source = "\n".join(
+        path.read_text() for path in (SOURCE / "api" / "interaction").glob("*.py")
+    )
     assert "public_agent_names" not in interaction_source
     assert '"label"' not in interaction_source
     assert "event: error" in interaction_source
+    assert interaction_source.count('yield "event: done\\ndata: [DONE]\\n\\n"') >= 7
+    assert '"prompt_injection_blocked"' in interaction_source
+    assert '"pii_redacted"' in interaction_source
+    assert "session_id=session_id" in interaction_source
 
     security_source = (SOURCE / "harness" / "security.py").read_text()
     assert "review_markers" not in security_source

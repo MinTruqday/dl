@@ -78,6 +78,22 @@ class FolderService:
             )
             if not parent:
                 raise HTTPException(status_code=400, detail="Thư mục đích không tồn tại")
+            ancestor = parent
+            while ancestor.get("parent_id"):
+                if ancestor["parent_id"] == folder_id:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="Không thể di chuyển thư mục vào thư mục con của nó",
+                    )
+                ancestor = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one(
+                    {
+                        "_id": ancestor["parent_id"],
+                        "owner_id": owner_id,
+                        "is_folder": True,
+                    }
+                )
+                if not ancestor:
+                    raise HTTPException(status_code=400, detail="Cây thư mục không hợp lệ")
         res = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.update_one(
             {"_id": folder_id, "owner_id": owner_id, "is_folder": True},
             {"$set": {"parent_id": new_parent_id, "updated_at": datetime.now(timezone.utc)}},

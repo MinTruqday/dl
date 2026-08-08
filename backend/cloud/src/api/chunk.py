@@ -6,6 +6,7 @@ from src.api.dependency import get_db, require_role
 from src.core.dependency import CurrentUser, Role
 from src.services.chunk import ChunkService
 from src.services.file import FileService
+from src.services.upload import UploadService
 from src.schemas.storage import StorageItemCreate
 
 router = APIRouter(route_class=LoggingRoute, prefix="/phan-doan")
@@ -20,13 +21,16 @@ async def upload_chunk(
     current_user: CurrentUser = Depends(require_role([Role.READER, Role.AUTHOR, Role.ADMIN])),
     db=Depends(get_db),
 ) -> Any:
-    content = await file.read()
+    content_type = file.content_type or "application/octet-stream"
+    UploadService.validate_filename(filename, content_type)
+    content = await UploadService.read_limited(file)
     res = await ChunkService.save_chunk(
         upload_id=upload_id,
         chunk_index=chunk_index,
         total_chunks=total_chunks,
         filename=filename,
         content=content,
+        content_type=content_type,
         user_id=current_user.id,
     )
     if res.get("is_complete"):

@@ -24,7 +24,7 @@ spec:
         args: ["server", "/data", "--console-address", ":9001"]
         envFrom:
         - secretRef:
-            name: doclib-secrets
+            name: doclib-minio-secrets
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:

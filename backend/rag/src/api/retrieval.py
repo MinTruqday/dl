@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from src.core.logging_route import LoggingRoute
 from src.core.logic_logger import log_logic_execution
 from src.core.response import APIResponse
-from src.core.dependency import CurrentUser, get_current_user_optional
+from src.core.dependency import CurrentUser, get_current_user_optional, verify_internal_token
 from src.schemas.retrieval import (
     RetrieveRequest,
     MultiQueryRetrieveRequest,
@@ -13,7 +13,10 @@ from src.schemas.retrieval import (
 )
 from src.services.retrieval import retriever
 
-router = APIRouter(route_class=LoggingRoute)
+router = APIRouter(
+    route_class=LoggingRoute,
+    dependencies=[Depends(verify_internal_token)],
+)
 
 @router.post("/retrieve", response_model=APIResponse[RetrieveResponse])
 @log_logic_execution
@@ -26,6 +29,8 @@ async def retrieve_documents(
         document_ids=req.document_ids,
         k=req.k,
         query_vector_override=req.query_vector_override,
+        requester_id=str(user.id) if user else req.requester_id,
+        is_admin=user.is_admin() if user else req.is_admin,
     )
     citations_data = retriever.get_citations(docs)
     retrieved_docs = [
@@ -61,6 +66,8 @@ async def multi_query_retrieve(
         question=req.question,
         document_ids=req.document_ids,
         k=req.k,
+        requester_id=str(user.id) if user else req.requester_id,
+        is_admin=user.is_admin() if user else req.is_admin,
     )
     citations_data = retriever.get_citations(docs)
     retrieved_docs = [
@@ -96,6 +103,8 @@ async def cross_document_retrieve(
         question=req.question,
         document_ids=req.document_ids,
         k=req.k,
+        requester_id=str(user.id) if user else req.requester_id,
+        is_admin=user.is_admin() if user else req.is_admin,
     )
     citations_data = retriever.get_citations(docs)
     retrieved_docs = [

@@ -31,7 +31,7 @@ from src.api.interaction.executor import (
 
 router = APIRouter(route_class=LoggingRoute)
 
-@router.post("/luong")
+@router.post("/phat-truc-tiep")
 async def chat_stream_endpoint(
     req: ChatRequest, request: Request, current_user: CurrentUser = Depends(get_current_user)
 ):
@@ -51,6 +51,7 @@ async def chat_stream_endpoint(
         is_quota_ok, quota_code = await _reserve_upload_quota(req)
         if not is_quota_ok:
             yield f"event: error\ndata: {json.dumps({'code': quota_code})}\n\n"
+            yield "event: done\ndata: [DONE]\n\n"
             return
 
         try:
@@ -58,16 +59,36 @@ async def chat_stream_endpoint(
             _validate_audio(req)
         except (ValueError, RuntimeError):
             yield f"event: error\ndata: {json.dumps({'code': 'multimodal_processing_failed'})}\n\n"
+            yield "event: done\ndata: [DONE]\n\n"
             return
 
-        scan = await security.ascan_input(req.query, user_id=user_id)
+        scan = await security.ascan_input(
+            req.query,
+            session_id=session_id,
+            user_id=user_id,
+        )
         if not scan.passed:
+            agentops.record_security_event(
+                session_id,
+                "prompt_injection_blocked",
+                scan.risk_score,
+                scan.violations,
+            )
             yield f"event: error\ndata: {json.dumps({'code': 'input_security_blocked'})}\n\n"
+            yield "event: done\ndata: [DONE]\n\n"
             return
+
+        if scan.violations:
+            agentops.record_security_event(
+                session_id,
+                "pii_redacted",
+                scan.risk_score,
+                scan.violations,
+            )
 
         original_query = scan.sanitized_text
         req.query = original_query
-        agentops.record_session_start(session_id, user_id, req.mode)
+        agentops.record_session_start(session_id, user_id, original_query)
         await workspace.start(session_id, user_id, req.mode, original_query, req.approval_policy)
         mode_directive = await workspace.mode_context(session_id, user_id, req.mode)
 
@@ -76,6 +97,7 @@ async def chat_stream_endpoint(
             if not quota_ok:
                 yield f"event: error\ndata: {json.dumps({'code': quota_code})}\n\n"
                 agentops.record_session_end(session_id, "failed")
+                yield "event: done\ndata: [DONE]\n\n"
                 return
 
             start_accounting()
@@ -98,11 +120,13 @@ async def chat_stream_endpoint(
                             logger.warning(f"Document {doc_id} access denied or not found")
                             yield f"event: error\ndata: {json.dumps({'code': 'document_access_denied'})}\n\n"
                             agentops.record_session_end(session_id, "failed")
+                            yield "event: done\ndata: [DONE]\n\n"
                             return
                     except Exception:
                         logger.exception(f"Document {doc_id} access verification error")
                         yield f"event: error\ndata: {json.dumps({'code': 'document_access_verification_failed'})}\n\n"
                         agentops.record_session_end(session_id, "failed")
+                        yield "event: done\ndata: [DONE]\n\n"
                         return
 
             ctx = await context.build_context(

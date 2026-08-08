@@ -28,17 +28,15 @@ class MemoService:
         memo = {
             "_id": str(uuid.uuid4()),
             "document_id": document_id,
-            "user_id": str(current_user.id),
-            "user_name": current_user.full_name,
+            "sender_id": str(current_user.id),
+            "sender_name": current_user.full_name,
             "message": message,
             "timestamp": datetime.now(timezone.utc),
         }
         await CooperationRepository.insert_memo(memo)
         return {
-            "id": memo["_id"],
-            "user_name": current_user.full_name,
-            "message": message,
-            "timestamp": memo["timestamp"].isoformat(),
+            "message": "Phân phối tin nhắn cộng tác nội bộ hoàn tất",
+            "memo": memo,
         }
 
     @staticmethod
@@ -68,8 +66,8 @@ class MemoService:
         return [
             {
                 "id": m["_id"],
-                "user_id": m["user_id"],
-                "user_name": m["user_name"],
+                "sender_id": m.get("sender_id") or m.get("user_id", ""),
+                "sender_name": m.get("sender_name") or m.get("user_name", ""),
                 "message": m["message"],
                 "timestamp": (
                     m["timestamp"].isoformat()

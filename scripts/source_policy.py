@@ -17,11 +17,12 @@ UNICODE_ELLIPSIS = chr(0x2026)
 INTERNAL_UUID7_COUNTS = {
     "backend/agentic_ai/src/core/infrastructure/mq.py": 1,
     "backend/agentic_ai/src/loop/event.py": 3,
-    "backend/agentic_ai/src/memory/memo.py": 1,
-    "backend/agentic_ai/src/rag/chunk.py": 2,
-    "backend/agentic_ai/src/rag/pipeline.py": 2,
+    "backend/agentic_ai/src/memory/long_term.py": 1,
     "backend/agentic_ai/src/services/finetuning.py": 3,
     "backend/agentic_ai/src/workflow/orchestration.py": 1,
+    "backend/rag/src/services/chunking.py": 2,
+    "backend/rag/src/services/pipeline.py": 2,
+    "backend/engagement/src/services/library.py": 1,
     "backend/collection/src/sources/nxbst.py": 3,
     "backend/finance/src/services/purchase.py": 1,
     "backend/finance/src/services/transfer.py": 1,
@@ -631,7 +632,7 @@ def scan_identifier_policy(issues):
     required_secret_generators = {
         "backend/cloud/src/api/storage.py": "secrets.token_urlsafe(",
         "backend/cloud/src/services/share.py": "secrets.token_urlsafe(",
-        "backend/content/src/services/collaboration.py": "secrets.token_hex(",
+        "backend/collaboration/src/services/link.py": "secrets.token_hex(",
     }
     for path, marker in required_secret_generators.items():
         if marker not in (ROOT / path).read_text(encoding="utf-8"):

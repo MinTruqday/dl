@@ -15,7 +15,7 @@ export const getTagsCategoriesAPI = async () => {
 
 export const smartSearchAPI = async (query: string, limit: number = 10) => {
   const res = await fetch(
-    `${API_URL}/kham-pha/tim-kiem-thong-minh?query=${encodeURIComponent(query)}&limit=${limit}`,
+    `${API_URL}/tim-kiem/thong-minh?q=${encodeURIComponent(query)}&limit=${limit}`,
     { headers: getAuthHeaders() },
   );
   const data = await res.json();

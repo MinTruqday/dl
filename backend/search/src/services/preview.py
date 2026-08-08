@@ -22,7 +22,10 @@ class PreviewService:
         elif "text" in mime or name.endswith((".txt", ".py", ".js", ".json", ".md")):
             preview_type = "text"
         can_preview = bool(item.get("url")) and preview_type != "generic"
-        stream_url = item.get("url")
+        stream_url = None
+        if can_preview:
+            preview = await CloudRepository.preview_url(item_id, owner_id)
+            stream_url = preview.get("preview_url") if preview else None
         return {
             "item_id": item_id,
             "name": item.get("name"),

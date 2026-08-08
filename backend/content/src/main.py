@@ -4,7 +4,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from loguru import logger
 from src.api.document import router as document
-from src.api.library import router as library
 from src.api.publication import router as publication
 from src.api.version import router as version
 from src.core.infrastructure.configuration import settings
@@ -40,7 +39,6 @@ app.add_middleware(
 
 app.include_router(document)
 app.include_router(version)
-app.include_router(library)
 app.include_router(publication)
 
 

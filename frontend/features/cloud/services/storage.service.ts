@@ -213,7 +213,7 @@ export const advancedSearchStorageItemsAPI = async (
     if (value !== undefined && value !== "") query.set(key, String(value));
   });
   const res = await fetch(
-    `${API_URL}/luu-tru/tim-kiem-nang-cao?${query.toString()}`,
+    `${API_URL}/tim-kiem/luu-tru?${query.toString()}`,
     { headers: { Authorization: `Bearer ${token}` } },
   );
   const data = await res.json();
@@ -526,7 +526,7 @@ export const updateItemTagsAPI = async (item_id: string, tags: string[]) => {
 
 export const getPreviewPayloadAPI = async (item_id: string) => {
   const token = getAuthToken();
-  const res = await fetch(`${API_URL}/luu-tru/xem-truoc/${item_id}`, {
+  const res = await fetch(`${API_URL}/tim-kiem/xem-truoc/${item_id}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
@@ -750,8 +750,8 @@ export const autoPurgeTrashAPI = async (
   days: number = 30
 ): Promise<{ purged_count: number; message: string }> => {
   const token = getAuthToken();
-  const res = await fetch(`${API_URL}/luu-tru/thung-rac/tu-dong-don-dep?days=${days}`, {
-    method: "POST",
+  const res = await fetch(`${API_URL}/thung-rac/tu-dong-don?days=${days}`, {
+    method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
@@ -814,4 +814,3 @@ export const uploadFileChunkedAPI = async (
 
   return mapItem(lastData);
 };
-

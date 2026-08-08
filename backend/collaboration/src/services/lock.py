@@ -1,4 +1,4 @@
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from fastapi import HTTPException
 from src.core.logic_logger import log_logic_execution
 from src.repositories.cooperation import CooperationRepository, DocumentRepository
@@ -22,29 +22,23 @@ class LockService:
                 status_code=404,
                 detail="Không tìm thấy tài liệu hoặc không có quyền truy cập",
             )
-        lock = await CooperationRepository.find_lock({"document_id": document_id})
-        now = datetime.now(timezone.utc)
-        if lock:
-            locked_at = lock.get("locked_at")
-            if isinstance(locked_at, datetime) and locked_at.tzinfo is None:
-                locked_at = locked_at.replace(tzinfo=timezone.utc)
-            if (
-                lock["locked_by"] != str(current_user.id)
-                and locked_at
-                and locked_at > now - timedelta(minutes=5)
-            ):
+        cutoff = datetime.now(timezone.utc).timestamp() - 60
+        existing = await CooperationRepository.find_lock({"document_id": document_id})
+        if existing:
+            locked_at = existing.get("locked_at")
+            locked_at_timestamp = locked_at.timestamp() if isinstance(locked_at, datetime) else 0
+            if locked_at_timestamp > cutoff and existing.get("user_id") != str(current_user.id):
                 raise HTTPException(
-                    status_code=423,
-                    detail=f"Tài liệu hiện đang được chỉnh sửa độc quyền bởi {lock.get('user_name', 'người dùng khác')}",
+                    status_code=400,
+                    detail="Tài liệu hiện đang trong phiên chỉnh sửa độc quyền của người dùng khác",
                 )
         await CooperationRepository.update_lock(
             {"document_id": document_id},
             {
                 "$set": {
-                    "document_id": document_id,
-                    "locked_by": str(current_user.id),
+                    "user_id": str(current_user.id),
                     "user_name": current_user.full_name,
-                    "locked_at": now,
+                    "locked_at": datetime.now(timezone.utc),
                 }
             },
             upsert=True,
@@ -60,37 +54,29 @@ class LockService:
     @staticmethod
     @log_logic_execution
     async def release_lock(document_id: str, current_user) -> dict:
-        lock = await CooperationRepository.find_lock({"document_id": document_id})
-        if not lock:
-            return {"message": "Tài liệu hiện không bị khóa"}
-        if lock["locked_by"] != str(current_user.id):
-            raise HTTPException(
-                status_code=403, detail="Bạn không phải người đang nắm giữ khóa tài liệu này"
+        existing = await CooperationRepository.find_lock({"document_id": document_id})
+        if existing and existing.get("user_id") == str(current_user.id):
+            await CooperationRepository.delete_lock({"document_id": document_id})
+            await ActivityService.log_activity(
+                document_id,
+                current_user.full_name,
+                "Release lock",
+                "Document edit lock released",
             )
-        await CooperationRepository.delete_lock({"document_id": document_id})
-        await ActivityService.log_activity(
-            document_id,
-            current_user.full_name,
-            "Release lock",
-            "Document edit lock released",
-        )
         return {"message": "Mở khóa tài liệu thành công"}
 
     @staticmethod
     @log_logic_execution
     async def get_lock_status(document_id: str) -> dict:
-        lock = await CooperationRepository.find_lock({"document_id": document_id})
-        if not lock:
+        existing = await CooperationRepository.find_lock({"document_id": document_id})
+        if not existing:
             return {"is_locked": False}
-        now = datetime.now(timezone.utc)
-        locked_at = lock.get("locked_at")
-        if isinstance(locked_at, datetime) and locked_at.tzinfo is None:
-            locked_at = locked_at.replace(tzinfo=timezone.utc)
-        if locked_at and locked_at < now - timedelta(minutes=5):
-            return {"is_locked": False}
+        cutoff = datetime.now(timezone.utc).timestamp() - 60
+        locked_at = existing.get("locked_at")
+        locked_at_timestamp = locked_at.timestamp() if isinstance(locked_at, datetime) else 0
         return {
-            "is_locked": True,
-            "locked_by": lock["locked_by"],
-            "user_name": lock.get("user_name"),
-            "locked_at": locked_at.isoformat() if locked_at else None,
+            "is_locked": locked_at_timestamp > cutoff,
+            "user_id": existing.get("user_id"),
+            "user_name": existing.get("user_name"),
+            "locked_at": locked_at,
         }

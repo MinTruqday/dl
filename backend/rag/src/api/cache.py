@@ -1,4 +1,5 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from src.core.dependency import verify_internal_token
 from src.core.logging_route import LoggingRoute
 from src.core.logic_logger import log_logic_execution
 from src.core.response import APIResponse
@@ -9,7 +10,10 @@ from src.schemas.cache import (
 )
 from src.services.cache import cache_service
 
-router = APIRouter(route_class=LoggingRoute)
+router = APIRouter(
+    route_class=LoggingRoute,
+    dependencies=[Depends(verify_internal_token)],
+)
 
 @router.post("/get", response_model=APIResponse[CacheGetResponse])
 @log_logic_execution

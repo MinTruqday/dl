@@ -223,29 +223,6 @@ class InteractionService:
 
     @staticmethod
     @log_logic_execution
-    async def set_pin_lock(other_user_id: str, pin_code: str, current_user) -> dict:
-        user_id = str(current_user.id)
-        if len(pin_code) != 4 or not pin_code.isdigit():
-            raise HTTPException(status_code=400, detail="Mã PIN ẩn trò chuyện phải gồm đúng 4 chữ số")
-        participant_key = (
-            other_user_id
-            if other_user_id.startswith("group_")
-            else f"{min(user_id, other_user_id)}_{max(user_id, other_user_id)}"
-        )
-        await ConversationRepository.update_one(
-            {"_id": participant_key},
-            {
-                "$set": {
-                    f"hidden_pin.{user_id}": pin_code,
-                    f"is_hidden.{user_id}": True,
-                }
-            },
-            upsert=True,
-        )
-        return {"status": "hidden", "other_user_id": other_user_id, "has_pin": True}
-
-    @staticmethod
-    @log_logic_execution
     async def set_message_alarm(message_id: str, remind_at: str, current_user) -> dict:
         user_id = str(current_user.id)
         msg = await MessageRepository.find_one({"_id": message_id})
@@ -406,7 +383,6 @@ class InteractionService:
             upsert=True,
         )
         return {"status": "cleared", "other_user_id": other_user_id, "freed_bytes": 10485760}
-
 
 
 

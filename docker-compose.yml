@@ -1,3 +1,23 @@
+x-service-environment: &service-environment
+  PROJECT_NAME: ${PROJECT_NAME:?PROJECT_NAME is required}
+  VERSION: ${VERSION:?VERSION is required}
+  SECRET_KEY: ${SECRET_KEY:?SECRET_KEY is required}
+  CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS is required}
+  MONGODB_URI: ${MONGODB_URI:?MONGODB_URI is required}
+  REDIS_URI: ${REDIS_URI:?REDIS_URI is required}
+  PLATFORM_SYSTEM_ID: ${PLATFORM_SYSTEM_ID:?PLATFORM_SYSTEM_ID is required}
+  INTERNAL_API_URL: ${INTERNAL_API_URL:?INTERNAL_API_URL is required}
+  PAYOS_API_URL: ${PAYOS_API_URL:?PAYOS_API_URL is required}
+
+x-minio-environment: &minio-environment
+  MINIO_ENDPOINT: ${MINIO_ENDPOINT:?MINIO_ENDPOINT is required}
+  MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:?MINIO_ACCESS_KEY is required}
+  MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:?MINIO_SECRET_KEY is required}
+  MINIO_PRIVATE_BUCKET: ${MINIO_PRIVATE_BUCKET:?MINIO_PRIVATE_BUCKET is required}
+  MINIO_PUBLIC_BUCKET: ${MINIO_PUBLIC_BUCKET:?MINIO_PUBLIC_BUCKET is required}
+  MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:?MINIO_PUBLIC_URL is required}
+  MINIO_REGION: ${MINIO_REGION:?MINIO_REGION is required}
+
 services:
   flaresolverr:
     image: ghcr.io/flaresolverr/flaresolverr:v3.5.0@sha256:139dfee1c6f89249c8d665d1333a42e8ec74ec0a86bc6bb1c8461e10d3a66a47
@@ -163,8 +183,14 @@ services:
       - traefik.enable=true
       - traefik.http.routers.finance.rule=PathPrefix(`/rut-tien`) || PathPrefix(`/nap-tien`) || PathPrefix(`/kiem-tien`) || PathPrefix(`/vi-tien`)
       - traefik.http.services.finance.loadbalancer.server.port=8000
-    env_file:
-      - .env
+    environment:
+      <<: *service-environment
+      FINANCE_DB_NAME: ${FINANCE_DB_NAME:?FINANCE_DB_NAME is required}
+      RABBITMQ_URI: ${RABBITMQ_URI:?RABBITMQ_URI is required}
+      PAYOS_API_KEY: ${PAYOS_API_KEY:?PAYOS_API_KEY is required}
+      PAYOS_CHECKSUM_KEY: ${PAYOS_CHECKSUM_KEY:?PAYOS_CHECKSUM_KEY is required}
+      PAYOS_CLIENT_ID: ${PAYOS_CLIENT_ID:?PAYOS_CLIENT_ID is required}
+      PAYOS_RETURN_URL: ${PAYOS_RETURN_URL:?PAYOS_RETURN_URL is required}
     depends_on:
       - mongodb
       - redis
@@ -186,8 +212,10 @@ services:
       - traefik.enable=true
       - traefik.http.routers.notification.rule=PathPrefix(`/thong-bao`)
       - traefik.http.services.notification.loadbalancer.server.port=8000
-    env_file:
-      - .env
+    environment:
+      <<: *service-environment
+      NOTIFICATION_DB_NAME: ${NOTIFICATION_DB_NAME:?NOTIFICATION_DB_NAME is required}
+      RABBITMQ_URI: ${RABBITMQ_URI:?RABBITMQ_URI is required}
     depends_on:
       - mongodb
       - redis
@@ -210,19 +238,57 @@ services:
       - traefik.enable=true
       - traefik.http.routers.ai.rule=PathPrefix(`/lich-su`) || PathPrefix(`/phan-hoi`) || PathPrefix(`/suy-luan`) || PathPrefix(`/nap-du-lieu`) || PathPrefix(`/tinh-chinh`) || PathPrefix(`/tro-chuyen`) || PathPrefix(`/huan-luyen`) || PathPrefix(`/nhap-lieu`) || PathPrefix(`/su-kien`) || PathPrefix(`/toi-uu`) || PathPrefix(`/tiep-nap`) || PathPrefix(`/drm`) || PathPrefix(`/mcp`)
       - traefik.http.services.ai.loadbalancer.server.port=8000
-    env_file:
-      - .env
     environment:
+      <<: [*service-environment, *minio-environment]
+      AGENTIC_AI_DB_NAME: ${AGENTIC_AI_DB_NAME:?AGENTIC_AI_DB_NAME is required}
+      RABBITMQ_URI: ${RABBITMQ_URI:?RABBITMQ_URI is required}
+      QDRANT_URL: ${QDRANT_URL:?QDRANT_URL is required}
+      DOCKER_HOST: ${DOCKER_HOST:?DOCKER_HOST is required}
+      MIN_FILE_SIZE_BYTES: ${MIN_FILE_SIZE_BYTES:?MIN_FILE_SIZE_BYTES is required}
+      HF_TOKEN: ${HF_TOKEN:?HF_TOKEN is required}
+      LLM_MODEL: ${LLM_MODEL:?LLM_MODEL is required}
+      PRIMARY_MODEL_STYLE: ${PRIMARY_MODEL_STYLE:?PRIMARY_MODEL_STYLE is required}
+      PRIMARY_MODEL_URL: ${PRIMARY_MODEL_URL:?PRIMARY_MODEL_URL is required}
+      PRIMARY_MODEL_HEALTH_URL: ${PRIMARY_MODEL_HEALTH_URL:?PRIMARY_MODEL_HEALTH_URL is required}
+      PRIMARY_MODEL_API_TOKEN: ${PRIMARY_MODEL_API_TOKEN}
+      QWEN_MODEL: ${QWEN_MODEL:?QWEN_MODEL is required}
+      QWEN_API_URL: ${QWEN_API_URL}
+      QWEN_HEALTH_URL: ${QWEN_HEALTH_URL}
+      MODEL_TIMEOUT_SECONDS: ${MODEL_TIMEOUT_SECONDS:?MODEL_TIMEOUT_SECONDS is required}
+      MODEL_KEEP_ALIVE: ${MODEL_KEEP_ALIVE:?MODEL_KEEP_ALIVE is required}
+      RERANKER_MODEL: ${RERANKER_MODEL:?RERANKER_MODEL is required}
+      NLLB_MODEL: ${NLLB_MODEL:?NLLB_MODEL is required}
+      NLI_MODEL_NAME: ${NLI_MODEL_NAME:?NLI_MODEL_NAME is required}
+      DOCLING_MODEL: ${DOCLING_MODEL:?DOCLING_MODEL is required}
+      TAVILY_API_KEY: ${TAVILY_API_KEY:?TAVILY_API_KEY is required}
+      AGENT_FAILURE_RATE_THRESHOLD: ${AGENT_FAILURE_RATE_THRESHOLD:?AGENT_FAILURE_RATE_THRESHOLD is required}
+      AGENT_TOOL_FAILURE_THRESHOLD: ${AGENT_TOOL_FAILURE_THRESHOLD:?AGENT_TOOL_FAILURE_THRESHOLD is required}
+      AGENT_SECURITY_VIOLATION_THRESHOLD: ${AGENT_SECURITY_VIOLATION_THRESHOLD:?AGENT_SECURITY_VIOLATION_THRESHOLD is required}
+      AGENT_SLOW_DURATION_MS_THRESHOLD: ${AGENT_SLOW_DURATION_MS_THRESHOLD:?AGENT_SLOW_DURATION_MS_THRESHOLD is required}
+      AGENT_ROUTE_CONFIDENCE_THRESHOLD: ${AGENT_ROUTE_CONFIDENCE_THRESHOLD:?AGENT_ROUTE_CONFIDENCE_THRESHOLD is required}
+      AGENT_EXECUTION_TIMEOUT_SECONDS: ${AGENT_EXECUTION_TIMEOUT_SECONDS:?AGENT_EXECUTION_TIMEOUT_SECONDS is required}
+      AGENT_RECURSION_LIMIT: ${AGENT_RECURSION_LIMIT:?AGENT_RECURSION_LIMIT is required}
+      AGENT_MAX_CONTEXT_TOKENS: ${AGENT_MAX_CONTEXT_TOKENS:?AGENT_MAX_CONTEXT_TOKENS is required}
+      AGENT_HISTORY_MAX_TURNS: ${AGENT_HISTORY_MAX_TURNS:?AGENT_HISTORY_MAX_TURNS is required}
+      AGENT_DEFAULT_MAX_OUTPUT_TOKENS: ${AGENT_DEFAULT_MAX_OUTPUT_TOKENS:?AGENT_DEFAULT_MAX_OUTPUT_TOKENS is required}
+      AGENT_PROACTIVE_MEMORY_ENABLED: ${AGENT_PROACTIVE_MEMORY_ENABLED:?AGENT_PROACTIVE_MEMORY_ENABLED is required}
+      AGENT_FILE_ROOT: ${AGENT_FILE_ROOT:?AGENT_FILE_ROOT is required}
+      AGENT_ARCHIVE_MAX_FILES: ${AGENT_ARCHIVE_MAX_FILES:?AGENT_ARCHIVE_MAX_FILES is required}
+      AGENT_ARCHIVE_MAX_UNCOMPRESSED_BYTES: ${AGENT_ARCHIVE_MAX_UNCOMPRESSED_BYTES:?AGENT_ARCHIVE_MAX_UNCOMPRESSED_BYTES is required}
+      AGENT_ARCHIVE_MAX_COMPRESSION_RATIO: ${AGENT_ARCHIVE_MAX_COMPRESSION_RATIO:?AGENT_ARCHIVE_MAX_COMPRESSION_RATIO is required}
+      MCP_ALLOWED_STDIO_COMMANDS: ${MCP_ALLOWED_STDIO_COMMANDS}
+      MCP_ALLOWED_REMOTE_HOSTS: ${MCP_ALLOWED_REMOTE_HOSTS}
+      MCP_ALLOW_PRIVATE_NETWORKS: ${MCP_ALLOW_PRIVATE_NETWORKS:?MCP_ALLOW_PRIVATE_NETWORKS is required}
       FINETUNE_MODELS_DIR: /var/lib/doclib/finetune/models
       FINETUNE_ADAPTERS_DIR: /var/lib/doclib/finetune/adapters
       FINETUNE_GGUF_DIR: /var/lib/doclib/finetune/gguf
-      OLLAMA_BASE_URL: http://ollama:11434
     depends_on:
       - mongodb
       - redis
       - rabbitmq
       - minio
       - qdrant
+      - rag
       - ollama_models
     volumes:
       - ./backend/agentic_ai/src:/app/src
@@ -256,10 +322,9 @@ services:
   ollama_models:
     image: ollama/ollama@sha256:b88c73ace3e115f8ec53dc8761ae1c0aabfa675406e3681786b98757ce050f42
     restart: "no"
-    env_file:
-      - .env
     environment:
       OLLAMA_HOST: http://ollama:11434
+      LLM_MODEL: ${LLM_MODEL:?LLM_MODEL is required}
     entrypoint: ["/bin/sh", "/bootstrap_ollama.sh"]
     volumes:
       - ./scripts/bootstrap_ollama.sh:/bootstrap_ollama.sh:ro
@@ -354,8 +419,13 @@ services:
       - traefik.enable=true
       - traefik.http.routers.collector.rule=PathPrefix(`/thu-thap`)
       - traefik.http.services.collector.loadbalancer.server.port=8000
-    env_file:
-      - .env
+    environment:
+      <<: [*service-environment, *minio-environment]
+      COLLECTION_DB_NAME: ${COLLECTION_DB_NAME:?COLLECTION_DB_NAME is required}
+      RABBITMQ_URI: ${RABBITMQ_URI:?RABBITMQ_URI is required}
+      FLARESOLVERR_URL: ${FLARESOLVERR_URL:?FLARESOLVERR_URL is required}
+      MAX_DOWNLOAD_SIZE_BYTES: ${MAX_DOWNLOAD_SIZE_BYTES:?MAX_DOWNLOAD_SIZE_BYTES is required}
+      MIN_FILE_SIZE_BYTES: ${MIN_FILE_SIZE_BYTES:?MIN_FILE_SIZE_BYTES is required}
     depends_on:
       - mongodb
       - redis
@@ -379,8 +449,14 @@ services:
       - traefik.enable=true
       - traefik.http.routers.editor.rule=PathPrefix(`/soan-thao`)
       - traefik.http.services.editor.loadbalancer.server.port=8000
-    env_file:
-      - .env
+    environment:
+      <<: *service-environment
+      COMPILATION_DB_NAME: ${COMPILATION_DB_NAME:?COMPILATION_DB_NAME is required}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT:?MINIO_ENDPOINT is required}
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:?MINIO_PUBLIC_URL is required}
+      MAX_COMPILE_INPUT_BYTES: ${MAX_COMPILE_INPUT_BYTES:?MAX_COMPILE_INPUT_BYTES is required}
+      MAX_COMPILE_OUTPUT_BYTES: ${MAX_COMPILE_OUTPUT_BYTES:?MAX_COMPILE_OUTPUT_BYTES is required}
+      MAX_CONCURRENT_COMPILATIONS: ${MAX_CONCURRENT_COMPILATIONS:?MAX_CONCURRENT_COMPILATIONS is required}
     depends_on:
       - mongodb
       - redis
@@ -403,8 +479,26 @@ services:
       - traefik.enable=true
       - traefik.http.routers.authentication.rule=PathPrefix(`/xac-thuc`) || PathPrefix(`/google`)
       - traefik.http.services.authentication.loadbalancer.server.port=8000
-    env_file:
-      - .env
+    environment:
+      <<: *service-environment
+      AUTHENTICATION_DB_NAME: ${AUTHENTICATION_DB_NAME:?AUTHENTICATION_DB_NAME is required}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:?ACCESS_TOKEN_EXPIRE_MINUTES is required}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:?REFRESH_TOKEN_EXPIRE_DAYS is required}
+      GOOGLE_AUTH_URL: ${GOOGLE_AUTH_URL:?GOOGLE_AUTH_URL is required}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?GOOGLE_CLIENT_ID is required}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:?GOOGLE_CLIENT_SECRET is required}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:?GOOGLE_REDIRECT_URI is required}
+      GOOGLE_TOKEN_URL: ${GOOGLE_TOKEN_URL:?GOOGLE_TOKEN_URL is required}
+      GOOGLE_USERINFO_URL: ${GOOGLE_USERINFO_URL:?GOOGLE_USERINFO_URL is required}
+      PASSKEY_ALLOWED_ORIGINS: ${PASSKEY_ALLOWED_ORIGINS:?PASSKEY_ALLOWED_ORIGINS is required}
+      PASSKEY_RP_ID: ${PASSKEY_RP_ID:?PASSKEY_RP_ID is required}
+      PASSKEY_RP_NAME: ${PASSKEY_RP_NAME:?PASSKEY_RP_NAME is required}
+      SENDER_EMAIL: ${SENDER_EMAIL:?SENDER_EMAIL is required}
+      SENDER_NAME: ${SENDER_NAME:?SENDER_NAME is required}
+      SMTP_HOST: ${SMTP_HOST:?SMTP_HOST is required}
+      SMTP_PASS: ${SMTP_PASS:?SMTP_PASS is required}
+      SMTP_PORT: ${SMTP_PORT:?SMTP_PORT is required}
+      SMTP_USER: ${SMTP_USER:?SMTP_USER is required}
     depends_on:
       - mongodb
       - redis
@@ -425,8 +519,9 @@ services:
       - traefik.enable=true
       - traefik.http.routers.humanity.rule=PathPrefix(`/ho-so`) || PathPrefix(`/nguoi-dung`)
       - traefik.http.services.humanity.loadbalancer.server.port=8000
-    env_file:
-      - .env
+    environment:
+      <<: *service-environment
+      HUMANITY_DB_NAME: ${HUMANITY_DB_NAME:?HUMANITY_DB_NAME is required}
     depends_on:
       - mongodb
       - redis
@@ -448,8 +543,10 @@ services:
       - traefik.enable=true
       - traefik.http.routers.usage.rule=PathPrefix(`/goi-cuoc`) || PathPrefix(`/han-muc`)
       - traefik.http.services.usage.loadbalancer.server.port=8000
-    env_file:
-      - .env
+    environment:
+      <<: *service-environment
+      USAGE_DB_NAME: ${USAGE_DB_NAME:?USAGE_DB_NAME is required}
+      LLM_MODEL: ${LLM_MODEL:?LLM_MODEL is required}
     depends_on:
       - mongodb
       - redis
@@ -471,8 +568,14 @@ services:
       - traefik.enable=true
       - traefik.http.routers.management.rule=PathPrefix(`/giam-sat`) || PathPrefix(`/kiem-toan`) || PathPrefix(`/quang-cao`) || PathPrefix(`/van-hanh`) || PathPrefix(`/do-luong`) || PathPrefix(`/phan-tich`)
       - traefik.http.services.management.loadbalancer.server.port=8000
-    env_file:
-      - .env
+    environment:
+      <<: [*service-environment, *minio-environment]
+      MANAGEMENT_DB_NAME: ${MANAGEMENT_DB_NAME:?MANAGEMENT_DB_NAME is required}
+      MIN_FILE_SIZE_BYTES: ${MIN_FILE_SIZE_BYTES:?MIN_FILE_SIZE_BYTES is required}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:?EMBEDDING_MODEL is required}
+      RERANKER_MODEL: ${RERANKER_MODEL:?RERANKER_MODEL is required}
+      LLM_MODEL: ${LLM_MODEL:?LLM_MODEL is required}
+      TAVILY_API_KEY: ${TAVILY_API_KEY:?TAVILY_API_KEY is required}
     depends_on:
       - mongodb
       - redis
@@ -495,8 +598,16 @@ services:
       - traefik.enable=true
       - traefik.http.routers.realtime.rule=PathPrefix(`/ws`)
       - traefik.http.services.realtime.loadbalancer.server.port=8000
-    env_file:
-      - .env
+    environment:
+      PROJECT_NAME: ${PROJECT_NAME:?PROJECT_NAME is required}
+      VERSION: ${VERSION:?VERSION is required}
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY is required}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS is required}
+      MONGODB_URI: ${MONGODB_URI:?MONGODB_URI is required}
+      REDIS_URI: ${REDIS_URI:?REDIS_URI is required}
+      MAX_WS_CONNECTIONS_PER_USER: ${MAX_WS_CONNECTIONS_PER_USER:?MAX_WS_CONNECTIONS_PER_USER is required}
+      MAX_WS_FRAMES_PER_SECOND: ${MAX_WS_FRAMES_PER_SECOND:?MAX_WS_FRAMES_PER_SECOND is required}
+      MAX_WS_MESSAGE_BYTES: ${MAX_WS_MESSAGE_BYTES:?MAX_WS_MESSAGE_BYTES is required}
     depends_on:
       - mongodb
       - redis
@@ -518,8 +629,9 @@ services:
       - traefik.enable=true
       - traefik.http.routers.messaging.rule=PathPrefix(`/tin-nhan`)
       - traefik.http.services.messaging.loadbalancer.server.port=8000
-    env_file:
-      - .env
+    environment:
+      <<: *service-environment
+      MESSAGING_DB_NAME: ${MESSAGING_DB_NAME:?MESSAGING_DB_NAME is required}
     depends_on:
       - mongodb
       - redis
@@ -539,10 +651,14 @@ services:
       - 8004:8000
     labels:
       - traefik.enable=true
-      - traefik.http.routers.content.rule=PathPrefix(`/tai-lieu`) || PathPrefix(`/phien-ban`) || PathPrefix(`/thu-vien`) || PathPrefix(`/xuat-ban`)
+      - traefik.http.routers.content.rule=PathPrefix(`/tai-lieu`) || PathPrefix(`/phien-ban`) || PathPrefix(`/xuat-ban`)
       - traefik.http.services.content.loadbalancer.server.port=8000
-    env_file:
-      - .env
+    environment:
+      <<: *service-environment
+      CONTENT_DB_NAME: ${CONTENT_DB_NAME:?CONTENT_DB_NAME is required}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT:?MINIO_ENDPOINT is required}
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:?MINIO_PUBLIC_URL is required}
+      RABBITMQ_URI: ${RABBITMQ_URI:?RABBITMQ_URI is required}
     depends_on:
       - mongodb
       - redis
@@ -566,11 +682,13 @@ services:
       - traefik.enable=true
       - traefik.http.routers.collaboration.rule=PathPrefix(`/cong-tac`)
       - traefik.http.services.collaboration.loadbalancer.server.port=8000
-    env_file:
-      - .env
+    environment:
+      <<: *service-environment
+      COLLABORATION_DB_NAME: ${COLLABORATION_DB_NAME:?COLLABORATION_DB_NAME is required}
     depends_on:
       - mongodb
       - redis
+      - content
     volumes:
       - ./backend/collaboration/src:/app/src
       - ./backend/logs/collaboration:/app/logs
@@ -587,13 +705,17 @@ services:
       - 8017:8000
     labels:
       - traefik.enable=true
-      - traefik.http.routers.engagement.rule=PathPrefix(`/doc-hieu`) || PathPrefix(`/dau-trang`) || PathPrefix(`/ghim`) || PathPrefix(`/kham-pha`) || PathPrefix(`/danh-dau`) || PathPrefix(`/danh-gia`) || PathPrefix(`/noi-bat`)
+      - traefik.http.routers.engagement.rule=PathPrefix(`/doc-hieu`) || PathPrefix(`/dau-trang`) || PathPrefix(`/ghim`) || PathPrefix(`/kham-pha`) || PathPrefix(`/noi-bat`) || PathPrefix(`/thu-vien`)
       - traefik.http.services.engagement.loadbalancer.server.port=8000
-    env_file:
-      - .env
+    environment:
+      <<: *service-environment
+      ENGAGEMENT_DB_NAME: ${ENGAGEMENT_DB_NAME:?ENGAGEMENT_DB_NAME is required}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT:?MINIO_ENDPOINT is required}
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:?MINIO_PUBLIC_URL is required}
     depends_on:
       - mongodb
       - redis
+      - content
     volumes:
       - ./backend/engagement/src:/app/src
       - ./backend/logs/engagement:/app/logs
@@ -612,11 +734,16 @@ services:
       - traefik.enable=true
       - traefik.http.routers.search.rule=PathPrefix(`/tim-kiem`)
       - traefik.http.services.search.loadbalancer.server.port=8000
-    env_file:
-      - .env
+    environment:
+      <<: *service-environment
+      SEARCH_DB_NAME: ${SEARCH_DB_NAME:?SEARCH_DB_NAME is required}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT:?MINIO_ENDPOINT is required}
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:?MINIO_PUBLIC_URL is required}
     depends_on:
       - mongodb
       - redis
+      - content
+      - cloud
     volumes:
       - ./backend/search/src:/app/src
       - ./backend/logs/search:/app/logs
@@ -633,10 +760,14 @@ services:
       - 8012:8000
     labels:
       - traefik.enable=true
-      - traefik.http.routers.cloud.rule=PathPrefix(`/luu-tru`) || PathPrefix(`/tai-len`)
+      - traefik.http.routers.cloud.rule=PathPrefix(`/luu-tru`) || PathPrefix(`/tai-len`) || PathPrefix(`/tep-tin`) || PathPrefix(`/thu-muc`) || PathPrefix(`/phan-doan`) || PathPrefix(`/tai-ve`)
       - traefik.http.services.cloud.loadbalancer.server.port=8000
-    env_file:
-      - .env
+    environment:
+      <<: [*service-environment, *minio-environment]
+      CLOUD_DB_NAME: ${CLOUD_DB_NAME:?CLOUD_DB_NAME is required}
+      MINIO_LEGACY_BUCKET: ${MINIO_LEGACY_BUCKET:?MINIO_LEGACY_BUCKET is required}
+      MIN_FILE_SIZE_BYTES: ${MIN_FILE_SIZE_BYTES:?MIN_FILE_SIZE_BYTES is required}
+      MAX_UPLOAD_SIZE_BYTES: ${MAX_UPLOAD_SIZE_BYTES:?MAX_UPLOAD_SIZE_BYTES is required}
     depends_on:
       - mongodb
       - redis
@@ -660,8 +791,9 @@ services:
       - traefik.http.routers.drm.rule=PathPrefix(`/thuy-an`) || PathPrefix(`/ban-quyen`) || PathPrefix(`/giay-phep`) || PathPrefix(`/bao-ve`)
       - traefik.http.routers.drm.priority=2
       - traefik.http.services.drm.loadbalancer.server.port=8000
-    env_file:
-      - .env
+    environment:
+      <<: *service-environment
+      DRM_DB_NAME: ${DRM_DB_NAME:?DRM_DB_NAME is required}
     depends_on:
       - mongodb
       - redis
@@ -683,8 +815,20 @@ services:
       - traefik.enable=true
       - traefik.http.routers.worker.rule=PathPrefix(`/worker`)
       - traefik.http.services.worker.loadbalancer.server.port=8000
-    env_file:
-      - .env
+    environment:
+      PROJECT_NAME: ${PROJECT_NAME:?PROJECT_NAME is required}
+      VERSION: ${VERSION:?VERSION is required}
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY is required}
+      MONGODB_URI: ${MONGODB_URI:?MONGODB_URI is required}
+      RABBITMQ_URI: ${RABBITMQ_URI:?RABBITMQ_URI is required}
+      WORKER_DB_NAME: ${WORKER_DB_NAME:?WORKER_DB_NAME is required}
+      WORKER_MAX_RETRIES: ${WORKER_MAX_RETRIES:?WORKER_MAX_RETRIES is required}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT:?MINIO_ENDPOINT is required}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:?MINIO_ACCESS_KEY is required}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:?MINIO_SECRET_KEY is required}
+      MINIO_PRIVATE_BUCKET: ${MINIO_PRIVATE_BUCKET:?MINIO_PRIVATE_BUCKET is required}
+      MAX_COMPILE_INPUT_BYTES: ${MAX_COMPILE_INPUT_BYTES:?MAX_COMPILE_INPUT_BYTES is required}
+      MAX_COMPILE_OUTPUT_BYTES: ${MAX_COMPILE_OUTPUT_BYTES:?MAX_COMPILE_OUTPUT_BYTES is required}
     depends_on:
       mongodb:
         condition: service_started
@@ -710,17 +854,26 @@ services:
       - traefik.enable=true
       - traefik.http.routers.rag.rule=PathPrefix(`/rag`)
       - traefik.http.services.rag.loadbalancer.server.port=8000
-    env_file:
-      - .env
+    environment:
+      <<: [*service-environment, *minio-environment]
+      RAG_DB_NAME: ${RAG_DB_NAME:?RAG_DB_NAME is required}
+      RABBITMQ_URI: ${RABBITMQ_URI:?RABBITMQ_URI is required}
+      QDRANT_URL: ${QDRANT_URL:?QDRANT_URL is required}
+      NEO4J_URI: ${NEO4J_URI:?NEO4J_URI is required}
+      NEO4J_USER: ${NEO4J_USER:?NEO4J_USER is required}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD:?NEO4J_PASSWORD is required}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:?EMBEDDING_MODEL is required}
+      RERANKER_MODEL: ${RERANKER_MODEL:?RERANKER_MODEL is required}
     depends_on:
       - mongodb
       - redis
       - qdrant
       - neo4j
+      - content
     volumes:
       - ./backend/rag/src:/app/src
       - ./backend/logs/rag:/app/logs
-      - hf_cache:/root/.cache/huggingface
+      - hf_cache:/home/appuser/.cache/huggingface
     networks:
       - doclib_network
 

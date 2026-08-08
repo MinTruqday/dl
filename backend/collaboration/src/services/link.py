@@ -1,10 +1,12 @@
 import secrets
+import uuid
 from datetime import datetime, timezone, timedelta
 from fastapi import HTTPException
 from passlib.context import CryptContext
 from src.core.logic_logger import log_logic_execution
 from src.repositories.cooperation import CooperationRepository, DocumentRepository
 from src.services.activity import ActivityService
+from src.services.presence import PresenceService
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -120,22 +122,30 @@ class LinkService:
         existing_link = await CooperationRepository.find_share_link({"document_id": document_id})
         token = existing_link.get("share_token") if existing_link else secrets.token_urlsafe(16)
 
-        expires_at = None
+        expires_at = existing_link.get("expires_at") if existing_link else None
         if expires_in_hours and expires_in_hours > 0:
             expires_at = datetime.now(timezone.utc) + timedelta(hours=expires_in_hours)
+        elif expires_in_hours is not None:
+            expires_at = None
 
-        hashed_pw = None
-        if password and password.strip():
-            hashed_pw = pwd_context.hash(password.strip())
-        elif existing_link and password is None:
-            hashed_pw = existing_link.get("password_hash")
+        hashed_pw = existing_link.get("password_hash") if existing_link else None
+        password_protected = bool(
+            existing_link.get("is_password_protected", False) if existing_link else False
+        )
+        if password is not None:
+            if password.strip():
+                hashed_pw = pwd_context.hash(password.strip())
+                password_protected = True
+            else:
+                hashed_pw = None
+                password_protected = False
 
         update_doc = {
             "document_id": document_id,
             "share_token": token,
             "is_active": is_active,
             "password_hash": hashed_pw,
-            "has_password": bool(hashed_pw),
+            "is_password_protected": password_protected,
             "default_role": default_role,
             "expires_at": expires_at,
             "created_by": str(current_user.id),
@@ -159,7 +169,7 @@ class LinkService:
             "document_id": document_id,
             "share_token": token,
             "is_active": is_active,
-            "has_password": bool(hashed_pw),
+            "is_password_protected": password_protected,
             "default_role": default_role,
             "expires_at": expires_at.isoformat() if expires_at else None,
             "message": "Cấu hình liên kết cộng tác hoàn tất",
@@ -182,7 +192,7 @@ class LinkService:
                 "document_id": document_id,
                 "is_active": False,
                 "share_token": None,
-                "has_password": False,
+                "is_password_protected": False,
                 "default_role": "editor",
                 "expires_at": None,
             }
@@ -190,7 +200,7 @@ class LinkService:
             "document_id": document_id,
             "is_active": link.get("is_active", False),
             "share_token": link.get("share_token"),
-            "has_password": bool(link.get("has_password", False)),
+            "is_password_protected": bool(link.get("is_password_protected", False)),
             "default_role": link.get("default_role", "editor"),
             "expires_at": (
                 link["expires_at"].isoformat()
@@ -216,16 +226,10 @@ class LinkService:
         if not doc:
             raise HTTPException(status_code=404, detail="Tài liệu liên quan không tồn tại")
         return {
-            "document_id": doc["_id"],
-            "title": doc.get("title", "Untitled Document"),
-            "description": doc.get("description", ""),
-            "has_password": bool(link.get("has_password", False)),
+            "document_id": link["document_id"],
+            "document_title": doc.get("title", "Untitled Document"),
+            "is_password_protected": bool(link.get("is_password_protected", False)),
             "default_role": link.get("default_role", "editor"),
-            "created_at": (
-                doc.get("created_at").isoformat()
-                if isinstance(doc.get("created_at"), datetime)
-                else str(doc.get("created_at", ""))
-            ),
         }
 
     @staticmethod
@@ -244,39 +248,72 @@ class LinkService:
         if expires_at and expires_at < datetime.now(timezone.utc):
             raise HTTPException(status_code=400, detail="Liên kết chia sẻ đã hết hạn hiệu lực")
 
-        if link.get("has_password") and link.get("password_hash"):
-            if not password or not pwd_context.verify(password.strip(), link["password_hash"]):
-                raise HTTPException(status_code=403, detail="Mật khẩu truy cập liên kết không chính xác")
+        if link.get("is_password_protected"):
+            if not password:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Vui lòng cung cấp mật khẩu để tham gia không gian cộng tác",
+                )
+            if not pwd_context.verify(password, link.get("password_hash", "")):
+                raise HTTPException(
+                    status_code=403,
+                    detail="Mật khẩu truy cập không gian cộng tác không chính xác",
+                )
 
         document_id = link["document_id"]
         doc = await DocumentRepository.find_one({"_id": document_id})
         if not doc:
             raise HTTPException(status_code=404, detail="Tài liệu không còn tồn tại trên hệ thống")
 
+        status_info = PresenceService.get_effective_collaboration_status(
+            doc,
+            user_id=str(current_user.id),
+            is_admin=str(getattr(current_user, "role", "")).lower().endswith("admin"),
+        )
+        if status_info["is_effective_closed"]:
+            raise HTTPException(
+                status_code=403,
+                detail="Tài liệu đã đóng hoàn toàn không gian cộng tác",
+            )
+
         if str(doc.get("creator_id")) == str(current_user.id):
             return {
                 "message": "Bạn là chủ sở hữu của tài liệu này",
                 "document_id": document_id,
+                "role": "owner",
             }
 
         coauthors = doc.get("coauthors", [])
         role = link.get("default_role", "editor")
 
-        if str(current_user.id) in coauthors:
-            return {
-                "message": "Bạn đã là thành viên cộng tác của tài liệu này",
-                "document_id": document_id,
-            }
-
-        await DocumentRepository.update_one(
-            {"_id": document_id},
+        user_id = str(current_user.id)
+        if user_id not in coauthors:
+            await DocumentRepository.update_one(
+                {"_id": document_id},
+                {
+                    "$push": {"coauthors": user_id},
+                    "$set": {"updated_at": datetime.now(timezone.utc)},
+                },
+            )
+        await CooperationRepository.update_invite(
+            {"document_id": document_id, "invitee_id": user_id},
             {
-                "$addToSet": {"coauthors": str(current_user.id)},
                 "$set": {
-                    f"coauthor_roles.{str(current_user.id)}": role,
-                    "updated_at": datetime.now(timezone.utc),
+                    "document_id": document_id,
+                    "document_title": doc.get("title", "Untitled Document"),
+                    "inviter_id": doc["creator_id"],
+                    "inviter_name": "Shared Link",
+                    "invitee_id": user_id,
+                    "role": role,
+                    "status": "ACCEPTED",
+                    "responded_at": datetime.now(timezone.utc),
+                },
+                "$setOnInsert": {
+                    "_id": str(uuid.uuid4()),
+                    "created_at": datetime.now(timezone.utc),
                 },
             },
+            upsert=True,
         )
 
         await ActivityService.log_activity(

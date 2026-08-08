@@ -1,10 +1,10 @@
 from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends
 from loguru import logger
-from src.rag.pipeline import ingestion_pipeline
 from src.schemas.ingestion import IngestRequest
-from src.store.vector import vector_store
 from src.core.dependency import CurrentUser, Role, get_current_user
+from src.services.rag_client import rag_client
+from src.services.graph_indexing import graph_indexing_service
 
 router = APIRouter(route_class=LoggingRoute, prefix="/tiep-nap")
 
@@ -16,11 +16,26 @@ async def ingest_endpoint(
     """Authorize and index one document into the retrieval pipeline"""
     logger.info(f"Started document ingestion process document_id={req.document_id}")
     try:
-        result = await ingestion_pipeline.ingest_document(
+        result = await rag_client.ingest_document(
             req.document_id,
-            user_id=str(current_user.id),
-            is_admin=current_user.role == Role.ADMIN,
+            str(current_user.id),
+            current_user.role == Role.ADMIN,
         )
+        graph_text = str(result.pop("graph_text", ""))
+        try:
+            result["graph_entities_count"] = await graph_indexing_service.index_document(
+                req.document_id,
+                graph_text,
+                str(current_user.id),
+                current_user.role == Role.ADMIN,
+            )
+        except Exception:
+            await rag_client.delete_document(
+                req.document_id,
+                str(current_user.id),
+                current_user.role == Role.ADMIN,
+            )
+            raise
         logger.info(f"Document ingestion completed document_id={req.document_id}")
         return result
     except Exception:
@@ -33,17 +48,13 @@ async def delete_document_endpoint(
     current_user: CurrentUser = Depends(get_current_user),
 ):
     """Authorize and remove one document from the retrieval index"""
-    await ingestion_pipeline.authorize_document(
-        document_id,
-        user_id=str(current_user.id),
-        is_admin=current_user.role == Role.ADMIN,
-    )
     logger.info(f"Started document deletion from Qdrant vector store document_id={document_id}")
     try:
-        from src.store.graph import graph_store
-
-        await vector_store.delete_by_document(document_id)
-        await graph_store.delete_document(document_id)
+        await rag_client.delete_document(
+            document_id,
+            str(current_user.id),
+            current_user.role == Role.ADMIN,
+        )
         logger.info(f"Document deletion completed document_id={document_id}")
         return {
             "status": "success",

@@ -17,14 +17,21 @@ class CloudService:
         max_size_mb: Optional[float] = None
     ) -> list:
         filter_doc = {"owner_id": owner_id, "is_trashed": False}
+        name_filters = []
         if query_text:
-            filter_doc["name"] = {"$regex": re.escape(query_text), "$options": "i"}
+            name_filters.append(
+                {"name": {"$regex": re.escape(query_text), "$options": "i"}}
+            )
         if mime_type:
             filter_doc["mime_type"] = {"$regex": re.escape(mime_type), "$options": "i"}
         if extension:
             if not re.fullmatch(r"[a-zA-Z0-9]{1,10}", extension):
                 raise HTTPException(status_code=422, detail="Phần mở rộng tệp không hợp lệ")
-            filter_doc["name"] = {"$regex": f"\\.{extension}$", "$options": "i"}
+            name_filters.append(
+                {"name": {"$regex": f"\\.{extension}$", "$options": "i"}}
+            )
+        if name_filters:
+            filter_doc["$and"] = name_filters
         if min_size_mb is not None and min_size_mb < 0:
             raise HTTPException(status_code=422, detail="Kích thước tối thiểu không hợp lệ")
         if max_size_mb is not None and max_size_mb < 0:

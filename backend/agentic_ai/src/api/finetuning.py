@@ -67,14 +67,14 @@ async def delete_sample(dataset_id: str, sample_id: str, current_user: CurrentUs
     """Delete one sample from an owned fine tuning dataset"""
     return await finetune_service.delete_sample(dataset_id, sample_id, str(current_user.id))
 
-@router.post("/dau-vao/phan-hoi")
+@router.post("/ket-nhap/phan-hoi")
 async def import_feedback(
     current_user: CurrentUser = Depends(get_current_user),
 ):
     """Import authenticated feedback as fine tuning samples"""
     return await finetune_service.import_feedback({"user_id": str(current_user.id)})
 
-@router.post("/dau-vao/tai-lieu")
+@router.post("/ket-nhap/tai-lieu")
 async def import_documents(
     req: DocumentImport,
     current_user: CurrentUser = Depends(get_current_user),

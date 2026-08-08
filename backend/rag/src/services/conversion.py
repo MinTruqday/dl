@@ -148,8 +148,8 @@ class ConversionService:
         logger.info("Created text chunks")
         return ingestion_chunks
 
-    async def get_markdown(self, file_url: str) -> str:
-        parse_result = await self.parse_document(file_url)
+    async def get_markdown(self, file_url: str, visibility: str = "private") -> str:
+        parse_result = await self.parse_document(file_url, visibility=visibility)
         return parse_result.get("markdown", "")
 
     async def _download_from_minio(self, file_url: str, visibility: str = "public") -> tuple:

@@ -61,6 +61,69 @@ patches:
           runAsNonRoot: true
 
 secretGenerator:
-  - name: doclib-secrets
+  - name: doclib-agentic-ai-secrets
     envs:
-      - .env
+      - generated/agentic_ai.env
+  - name: doclib-authentication-secrets
+    envs:
+      - generated/authentication.env
+  - name: doclib-cloud-secrets
+    envs:
+      - generated/cloud.env
+  - name: doclib-collaboration-secrets
+    envs:
+      - generated/collaboration.env
+  - name: doclib-collection-secrets
+    envs:
+      - generated/collection.env
+  - name: doclib-compilation-secrets
+    envs:
+      - generated/compilation.env
+  - name: doclib-content-secrets
+    envs:
+      - generated/content.env
+  - name: doclib-drm-secrets
+    envs:
+      - generated/drm.env
+  - name: doclib-engagement-secrets
+    envs:
+      - generated/engagement.env
+  - name: doclib-finance-secrets
+    envs:
+      - generated/finance.env
+  - name: doclib-frontend-secrets
+    envs:
+      - generated/frontend.env
+  - name: doclib-humanity-secrets
+    envs:
+      - generated/humanity.env
+  - name: doclib-management-secrets
+    envs:
+      - generated/management.env
+  - name: doclib-messaging-secrets
+    envs:
+      - generated/messaging.env
+  - name: doclib-minio-secrets
+    envs:
+      - generated/minio.env
+  - name: doclib-notification-secrets
+    envs:
+      - generated/notification.env
+  - name: doclib-ollama-secrets
+    envs:
+      - generated/ollama.env
+  - name: doclib-rag-secrets
+    envs:
+      - generated/rag.env
+  - name: doclib-search-secrets
+    envs:
+      - generated/search.env
+  - name: doclib-usage-secrets
+    envs:
+      - generated/usage.env
+  - name: doclib-websocket-secrets
+    envs:
+      - generated/websocket.env
+  - name: doclib-worker-secrets
+    envs:
+      - generated/worker.env

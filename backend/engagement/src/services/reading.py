@@ -23,24 +23,26 @@ class ReadingService:
             {"$match": match_stage},
             {"$sort": {"last_read_at": -1}},
             {"$limit": limit},
-            {
-                "$lookup": {
-                    "from": "documents",
-                    "localField": "document_id",
-                    "foreignField": "_id",
-                    "as": "doc",
-                }
-            },
-            {"$unwind": {"path": "$doc", "preserveNullAndEmptyArrays": True}},
         ]
         history = (
             await ReadingRepository
             .aggregate(pipeline)
             .to_list(length=None)
         )
+        document_ids = list(
+            {str(item.get("document_id")) for item in history if item.get("document_id")}
+        )
+        documents = (
+            await DocumentRepository.find({"_id": {"$in": document_ids}}).limit(
+                len(document_ids)
+            ).to_list(length=len(document_ids))
+            if document_ids
+            else []
+        )
+        documents_by_id = {str(item.get("_id")): item for item in documents}
         result = []
         for h in history:
-            doc = h.get("doc") or {}
+            doc = documents_by_id.get(str(h.get("document_id")), {})
             result.append(
                 {
                     "document_id": h["document_id"],
@@ -82,16 +84,17 @@ class ReadingService:
     async def search_in_document(
         document_id: str, query: str, current_user
     ) -> dict:
-        doc = await DocumentRepository.find_one(
-            {"_id": document_id}, {"content": 1, "title": 1, "is_public": 1, "creator_id": 1}
+        doc = await DocumentRepository.get_accessible(
+            document_id,
+            str(current_user.id),
+            current_user.is_admin(),
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy tài liệu yêu cầu")
-        
-        is_creator = str(doc.get("creator_id")) == str(current_user.id)
-        if not doc.get("is_public", False) and not is_creator and not current_user.is_admin():
-            raise HTTPException(status_code=403, detail="Bạn không có quyền tìm kiếm trong nội dung tài liệu này")
-        
+            raise HTTPException(
+                status_code=403,
+                detail="Bạn không có quyền tìm kiếm trong nội dung tài liệu này",
+            )
+
         content = doc.get("content", "")
         query_lower = query.lower()
         content_lower = content.lower()

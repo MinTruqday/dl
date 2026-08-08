@@ -3,6 +3,8 @@ from pydantic import BaseModel, Field
 
 class IngestRequest(BaseModel):
     document_id: str = Field(description="Mã định danh duy nhất của tài liệu cần nạp")
+    requester_id: Optional[str] = None
+    is_admin: bool = False
 
 class IngestResponse(BaseModel):
     document_id: str
@@ -11,3 +13,4 @@ class IngestResponse(BaseModel):
     summary_generated: bool = False
     graph_entities_count: int = 0
     extraction_method: str = "local"
+    graph_text: str = ""

@@ -1,14 +1,36 @@
+import httpx
+from fastapi.encoders import jsonable_encoder
 from src.core.infrastructure.mongo import mongo
 from src.core.infrastructure.configuration import settings
 
 class DocumentRepository:
     @classmethod
-    async def find_one(cls, *args, **kwargs):
-        return await mongo.find_one("documents", *args, db_name=settings.CONTENT_DB_NAME, **kwargs)
+    async def request(cls, payload: dict):
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            response = await client.post(
+                f"{settings.CONTENT_URL}/tai-lieu/noi-bo/tai-lieu",
+                json=jsonable_encoder(payload),
+                headers={"X-Internal-Token": settings.SECRET_KEY},
+            )
+        response.raise_for_status()
+        return response.json().get("data")
 
     @classmethod
-    async def update_one(cls, *args, **kwargs):
-        return await mongo.update_one("documents", *args, db_name=settings.CONTENT_DB_NAME, **kwargs)
+    async def find_one(cls, query: dict, projection: dict = None, **kwargs):
+        return await cls.request(
+            {"operation": "find_one", "query": query, "projection": projection}
+        )
+
+    @classmethod
+    async def update_one(cls, query: dict, update: dict, upsert: bool = False, **kwargs):
+        return await cls.request(
+            {
+                "operation": "update_one",
+                "query": query,
+                "update": update,
+                "upsert": upsert,
+            }
+        )
 
 class CooperationRepository:
     @classmethod
@@ -34,6 +56,10 @@ class CooperationRepository:
     @classmethod
     async def find_invite(cls, *args, **kwargs):
         return await mongo.find_one("collaboration_invites", *args, **kwargs)
+
+    @classmethod
+    async def find_invites(cls, query: dict):
+        return await mongo.find("collaboration_invites", query).to_list(length=None)
 
     @classmethod
     async def update_invite_code(cls, *args, **kwargs):

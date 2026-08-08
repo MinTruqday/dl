@@ -9,11 +9,20 @@ from src.core.infrastructure.configuration import settings
 from src.core.logic_logger import log_logic_execution
 from src.core.storage import upload_file
 from src.services.upload import UploadService
+from src.services.file import FileService
 
 class ChunkService:
     @staticmethod
     @log_logic_execution
-    async def save_chunk(upload_id: str, chunk_index: int, total_chunks: int, filename: str, content: bytes, user_id: str) -> dict:
+    async def save_chunk(
+        upload_id: str,
+        chunk_index: int,
+        total_chunks: int,
+        filename: str,
+        content: bytes,
+        content_type: str,
+        user_id: str,
+    ) -> dict:
         try:
             normalized_id = str(UUID(upload_id))
         except ValueError:
@@ -38,13 +47,17 @@ class ChunkService:
             shutil.rmtree(chunk_dir)
             raise HTTPException(status_code=413, detail="Tệp tải lên vượt quá kích thước cho phép")
 
+        quota = await FileService.get_storage_quota(user_id)
+        if total_size > quota["storage_available"]:
+            shutil.rmtree(chunk_dir)
+            raise HTTPException(status_code=413, detail="Dung lượng lưu trữ không đủ")
+
         combined = bytearray()
         for part in parts:
             async with aiofiles.open(part, "rb") as stream:
                 combined.extend(await stream.read())
 
         ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
-        content_type = "application/octet-stream"
         path = UploadService.object_path(ext, content_type, user_id, False, False)
         try:
             await upload_file(bytes(combined), path, content_type)

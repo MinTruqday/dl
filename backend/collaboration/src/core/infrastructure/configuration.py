@@ -1,5 +1,4 @@
 import os
-from typing import Optional
 from pydantic import BaseModel
 
 def get_service_url(service_name_underscore: str) -> str:
@@ -26,7 +25,6 @@ class Settings(BaseModel):
     AGENTIC_AI_URL: str = get_service_url("AGENTIC_AI")
     MANAGEMENT_URL: str = get_service_url("MANAGEMENT")
     CONTENT_URL: str = get_service_url("CONTENT")
-    COLLABORATION_DB_NAME: str = os.getenv("COLLABORATION_DB_NAME")
-    CONTENT_DB_NAME: str = os.getenv("CONTENT_DB_NAME")
+    COLLABORATION_DB_NAME: str = os.environ["COLLABORATION_DB_NAME"]
 
 settings = Settings()

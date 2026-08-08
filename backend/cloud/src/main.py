@@ -15,9 +15,9 @@ from src.api.version import router as version
 from src.api.trash import router as trash
 from src.api.share import router as share
 from src.api.star import router as star
-from src.api.analytics import router as analytics
 from src.api.search import router as search
 from src.api.file_request import router as file_request
+from src.api.internal import router as internal
 
 from src.core.metrics import PrometheusMiddleware, metrics_endpoint
 from src.core.infrastructure.database import database
@@ -61,9 +61,9 @@ app.include_router(version)
 app.include_router(trash)
 app.include_router(share)
 app.include_router(star)
-app.include_router(analytics)
 app.include_router(search)
 app.include_router(file_request)
+app.include_router(internal)
 
 @app.get("/health", include_in_schema=False)
 async def health_check():

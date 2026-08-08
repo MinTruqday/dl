@@ -28,7 +28,16 @@ class PinService:
                 pinned_at_map[d_id] = item.get("pinned_at")
         docs = (
             await DocumentRepository
-            .find({"_id": {"$in": doc_ids}})
+            .find(
+                {
+                    "_id": {"$in": doc_ids},
+                    "is_deleted": {"$ne": True},
+                    "$or": [
+                        {"visibility": "public", "status": "published"},
+                        {"creator_id": str(current_user.id)},
+                    ],
+                }
+            )
             .to_list(length=None)
         )
         doc_map = {str(d["_id"]): d for d in docs}
@@ -54,6 +63,18 @@ class PinService:
         await mongo.update_one(
             "user_content_profiles",
             {"_id": str(current_user.id)},
+            {"$pull": {"pinned_documents": document_id}},
+            upsert=True,
+        )
+        await mongo.update_one(
+            "user_content_profiles",
+            {"_id": str(current_user.id)},
+            {"$pull": {"pinned_documents": {"document_id": document_id}}},
+            upsert=True,
+        )
+        await mongo.update_one(
+            "user_content_profiles",
+            {"_id": str(current_user.id)},
             {
                 "$addToSet": {
                     "pinned_documents": {
@@ -74,6 +95,12 @@ class PinService:
             "user_content_profiles",
             {"_id": str(current_user.id)},
             {"$pull": {"pinned_documents": document_id}},
+            upsert=True,
+        )
+        await mongo.update_one(
+            "user_content_profiles",
+            {"_id": str(current_user.id)},
+            {"$pull": {"pinned_documents": {"document_id": document_id}}},
             upsert=True,
         )
         return {

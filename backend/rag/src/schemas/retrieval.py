@@ -6,16 +6,22 @@ class RetrieveRequest(BaseModel):
     document_ids: Optional[List[str]] = Field(default=None, description="Danh sách ID tài liệu giới hạn phạm vi tìm kiếm")
     k: int = Field(default=5, ge=1, le=100, description="Số lượng kết quả tối đa cần lấy")
     query_vector_override: Optional[List[float]] = Field(default=None, description="Vector truy vấn ghi đè nếu có")
+    requester_id: Optional[str] = None
+    is_admin: bool = False
 
 class MultiQueryRetrieveRequest(BaseModel):
     question: str = Field(description="Câu hỏi truy vấn đa chiều")
     document_ids: Optional[List[str]] = Field(default=None, description="Danh sách ID tài liệu")
     k: int = Field(default=5, ge=1, le=100, description="Số lượng kết quả tối đa cần lấy")
+    requester_id: Optional[str] = None
+    is_admin: bool = False
 
 class CrossDocRetrieveRequest(BaseModel):
     question: str = Field(description="Câu hỏi truy vấn liên tài liệu")
     document_ids: List[str] = Field(description="Danh sách ID các tài liệu cần phân tích so sánh")
     k: int = Field(default=5, ge=1, le=100, description="Số lượng kết quả tối đa cần lấy")
+    requester_id: Optional[str] = None
+    is_admin: bool = False
 
 class RetrievedDocument(BaseModel):
     text: str

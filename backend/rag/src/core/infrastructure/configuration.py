@@ -1,5 +1,4 @@
 import os
-from typing import Optional
 from pydantic import BaseModel
 
 def get_service_url(service_name_underscore: str) -> str:
@@ -36,7 +35,6 @@ class Settings(BaseModel):
     CONTENT_URL: str = get_service_url("CONTENT")
     DRM_URL: str = get_service_url("DRM")
     AGENTIC_AI_URL: str = get_service_url("AGENTIC_AI")
-    RAG_DB_NAME: str = os.getenv("RAG_DB_NAME", "doclib_rag")
-    CONTENT_DB_NAME: str = os.environ["CONTENT_DB_NAME"]
+    RAG_DB_NAME: str = os.environ["RAG_DB_NAME"]
 
 settings = Settings()

@@ -1,6 +1,4 @@
-import asyncio
 from typing import List
-from loguru import logger
 from src.services.rag_client import rag_client
 
 class EmbeddingRag:
@@ -8,21 +6,17 @@ class EmbeddingRag:
         self._dimensions = 1024
 
     async def embed_query(self, query: str) -> List[float]:
-        try:
-            res = await rag_client.embed_query(query)
-            if res:
-                return res
-        except Exception:
-            logger.warning("RAG service embed_query delegation failed")
-        return [0.0] * self._dimensions
+        embedding = await rag_client.embed_query(query)
+        if len(embedding) != self._dimensions:
+            raise RuntimeError("RAG embedding dimension mismatch")
+        return embedding
 
     async def embed_batch(self, texts: List[str]) -> List[List[float]]:
-        try:
-            res = await rag_client.embed_batch(texts)
-            if res:
-                return res
-        except Exception:
-            logger.warning("RAG service embed_batch delegation failed")
-        return [[0.0] * self._dimensions for _ in texts]
+        embeddings = await rag_client.embed_batch(texts)
+        if len(embeddings) != len(texts) or any(
+            len(embedding) != self._dimensions for embedding in embeddings
+        ):
+            raise RuntimeError("RAG batch embedding dimension mismatch")
+        return embeddings
 
 embedder = EmbeddingRag()

@@ -90,6 +90,19 @@ class SemanticSearchRequest(BaseModel):
     query: str = Field(min_length=1, max_length=1000, description="<input_context>Search query embedded against the authorized document index</input_context>")
     limit: int = Field(default=20, ge=1, le=30, description="<constraints>Maximum distinct document results</constraints>")
 
+class RetrievalExpansionRequest(BaseModel):
+    question: str = Field(min_length=1, max_length=10000, description="<input_context>Question to expand for semantic retrieval</input_context>")
+
+class CrossDocumentExpansionRequest(BaseModel):
+    question: str = Field(min_length=1, max_length=10000, description="<input_context>Question to decompose across documents</input_context>")
+    document_ids: List[Annotated[str, Field(min_length=1, max_length=128)]] = Field(min_length=2, max_length=100, description="<input_context>Ordered document identifiers receiving one retrieval query each</input_context>")
+
+class RagChunkSafetyRequest(BaseModel):
+    texts: List[Annotated[str, Field(min_length=1, max_length=4000)]] = Field(min_length=1, max_length=500, description="<input_context>Bounded retrieval chunks requiring security classification</input_context>")
+
+class RagDocumentSummaryRequest(BaseModel):
+    text: str = Field(min_length=1, max_length=15000, description="<input_context>Bounded leading document content requiring a retrieval summary</input_context>")
+
 class StructuredInferenceResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

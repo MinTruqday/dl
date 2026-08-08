@@ -12,10 +12,6 @@ class LocalModelUnavailable(RuntimeError):
     pass
 
 
-def _url(base: str, path: str) -> str:
-    return f"{base.rstrip('/')}/{path.lstrip('/')}"
-
-
 def _data_value(value: Any) -> str:
     if isinstance(value, dict):
         value = value.get("url", "")
@@ -61,6 +57,7 @@ def _response(content: str, prompt_tokens: int = 0, completion_tokens: int = 0):
 class LocalModelClient:
     def __init__(self):
         self._primary_runtime_status = "unverified"
+        self._fallback_runtime_status = "unverified"
 
     async def _ollama_completion(self, model, messages, max_tokens, temperature):
         payload = {
@@ -76,7 +73,7 @@ class LocalModelClient:
         }
         async with httpx.AsyncClient(timeout=settings.MODEL_TIMEOUT_SECONDS) as client:
             response = await client.post(
-                _url(settings.OLLAMA_BASE_URL, "/api/chat"),
+                settings.PRIMARY_MODEL_URL,
                 json=payload,
             )
         response.raise_for_status()
@@ -92,15 +89,66 @@ class LocalModelClient:
             int(body.get("eval_count", 0) or 0),
         )
 
+    async def _openai_primary_completion(self, model, messages, max_tokens, temperature):
+        headers = {"Content-Type": "application/json"}
+        if settings.PRIMARY_MODEL_API_TOKEN:
+            headers["Authorization"] = f"Bearer {settings.PRIMARY_MODEL_API_TOKEN}"
+        payload = {
+            "model": model,
+            "messages": messages,
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+        }
+        async with httpx.AsyncClient(timeout=settings.MODEL_TIMEOUT_SECONDS) as client:
+            response = await client.post(
+                settings.PRIMARY_MODEL_URL,
+                headers=headers,
+                json=payload,
+            )
+        response.raise_for_status()
+        body = response.json()
+        choices = body.get("choices") or []
+        content = (
+            str(choices[0].get("message", {}).get("content", "")).strip()
+            if choices
+            else ""
+        )
+        if not content:
+            self._primary_runtime_status = "unavailable"
+            raise LocalModelUnavailable("primary_model_empty_response")
+        self._primary_runtime_status = "ready"
+        usage = body.get("usage") or {}
+        return _response(
+            content,
+            int(usage.get("prompt_tokens", 0) or 0),
+            int(usage.get("completion_tokens", 0) or 0),
+        )
+
+    async def _primary_completion(self, messages, max_tokens, temperature):
+        if settings.PRIMARY_MODEL_STYLE == "ollama":
+            return await self._ollama_completion(
+                settings.LLM_MODEL,
+                messages,
+                max_tokens,
+                temperature,
+            )
+        if settings.PRIMARY_MODEL_STYLE == "openai":
+            return await self._openai_primary_completion(
+                settings.LLM_MODEL,
+                messages,
+                max_tokens,
+                temperature,
+            )
+        raise LocalModelUnavailable("primary_model_style_unsupported")
+
     async def _qwen_completion(self, messages, max_tokens, temperature):
         if not settings.QWEN_API_URL.strip():
             raise LocalModelUnavailable("fallback_endpoint_not_configured")
         payload = {
-            "inputs": messages,
-            "parameters": {
-                "max_new_tokens": max_tokens,
-                "temperature": temperature,
-            },
+            "model": settings.QWEN_MODEL,
+            "messages": messages,
+            "max_tokens": max_tokens,
+            "temperature": temperature,
         }
         headers = {
             "Authorization": f"Bearer {settings.HF_TOKEN}",
@@ -121,7 +169,9 @@ class LocalModelClient:
             else ""
         )
         if not content:
+            self._fallback_runtime_status = "unavailable"
             raise LocalModelUnavailable("fallback_model_empty_response")
+        self._fallback_runtime_status = "ready"
         usage = body.get("usage") or {}
         return _response(
             content,
@@ -141,8 +191,7 @@ class LocalModelClient:
         if stream:
             return self._stream(messages, max_tokens, temperature)
         try:
-            return await self._ollama_completion(
-                settings.LLM_MODEL,
+            return await self._primary_completion(
                 messages,
                 max_tokens,
                 temperature,
@@ -157,13 +206,13 @@ class LocalModelClient:
             try:
                 return await self._qwen_completion(messages, max_tokens, temperature)
             except Exception as fallback_error:
+                self._fallback_runtime_status = "unavailable"
                 raise LocalModelUnavailable("all_local_models_unavailable") from fallback_error
 
     async def warm_primary(self) -> None:
         for attempt in range(3):
             try:
-                await self._ollama_completion(
-                    settings.LLM_MODEL,
+                await self._primary_completion(
                     [{"role": "user", "content": "Reply OK"}],
                     4,
                     0,
@@ -172,6 +221,19 @@ class LocalModelClient:
             except Exception:
                 if attempt < 2:
                     await asyncio.sleep(30)
+
+    async def warm_fallback(self) -> None:
+        if not settings.QWEN_API_URL.strip():
+            self._fallback_runtime_status = "not_configured"
+            return
+        try:
+            await self._qwen_completion(
+                [{"role": "user", "content": "Reply OK"}],
+                4,
+                0,
+            )
+        except Exception:
+            self._fallback_runtime_status = "unavailable"
 
     async def _stream(
         self,
@@ -194,17 +256,35 @@ class LocalModelClient:
         checks = {"primary_model": "unavailable", "fallback_model": "unavailable"}
         async with httpx.AsyncClient(timeout=5) as client:
             try:
-                response = await client.get(_url(settings.OLLAMA_BASE_URL, "/api/tags"))
-                names = {item.get("name") for item in response.json().get("models", [])}
+                headers = {}
+                if settings.PRIMARY_MODEL_API_TOKEN:
+                    headers["Authorization"] = f"Bearer {settings.PRIMARY_MODEL_API_TOKEN}"
+                response = await client.get(
+                    settings.PRIMARY_MODEL_HEALTH_URL,
+                    headers=headers,
+                )
                 if response.status_code == 200:
-                    if any(settings.LLM_MODEL == n or settings.LLM_MODEL.split(":")[0] == n.split(":")[0] for n in names):
+                    if settings.PRIMARY_MODEL_STYLE == "ollama":
+                        names = {
+                            item.get("name")
+                            for item in response.json().get("models", [])
+                        }
+                        available = any(
+                            settings.LLM_MODEL == name
+                            or settings.LLM_MODEL.split(":")[0] == name.split(":")[0]
+                            for name in names
+                            if name
+                        )
+                    else:
+                        available = True
+                    if available:
                         checks["primary_model"] = self._primary_runtime_status
             except Exception:
                 pass
             if not settings.QWEN_API_URL.strip():
                 checks["fallback_model"] = "not_configured"
             elif not settings.QWEN_HEALTH_URL.strip():
-                checks["fallback_model"] = "unknown"
+                checks["fallback_model"] = self._fallback_runtime_status
             else:
                 try:
                     response = await client.get(
@@ -212,7 +292,7 @@ class LocalModelClient:
                         headers={"Authorization": f"Bearer {settings.HF_TOKEN}"},
                     )
                     if response.status_code == 200:
-                        checks["fallback_model"] = "ready"
+                        checks["fallback_model"] = self._fallback_runtime_status
                 except Exception:
                     pass
         return checks

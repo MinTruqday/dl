@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timezone
 from typing import List
 from fastapi import HTTPException, Query
@@ -8,7 +9,8 @@ from src.core.logic_logger import log_logic_execution
 from src.repositories.document import DocumentRepository
 from src.schemas.document import DocumentStatus
 from src.services.finance_client import FinanceClient
-from src.services.document.base import is_admin, serialize_document
+from src.services.engagement_client import EngagementClient
+from src.services.document.base import can_read_full, is_admin, serialize_document
 
 class DocumentMetadataService:
     @staticmethod
@@ -23,18 +25,23 @@ class DocumentMetadataService:
             )
         views = doc.get("views", 0)
         content = doc.get("content", "")
-        total_words = len(content.split()) if content else 0
-        avg_read_time_min = max(1, total_words // 200)
-        bookmark_count = await mongo.count_documents(
-            collection="bookmarks", filter={"document_id": document_id}
+        text_content = (
+            content
+            if isinstance(content, str)
+            else json.dumps(content, ensure_ascii=False)
         )
+        total_words = len(text_content.split()) if text_content else 0
+        avg_read_time_min = max(1, total_words // 200)
+        engagement_stats = await EngagementClient.document_stats(document_id)
         purchase_count = await FinanceClient.purchase_count(document_id)
         return {
             "views": views,
             "avg_read_time": f"{avg_read_time_min} minutes",
             "avg_read_time_min": avg_read_time_min,
             "total_words": total_words,
-            "saves": bookmark_count,
+            "saves": int(engagement_stats.get("saves", 0)),
+            "reads": int(engagement_stats.get("reads", 0)),
+            "highlights": int(engagement_stats.get("highlights", 0)),
             "purchases": purchase_count,
         }
 
@@ -44,17 +51,24 @@ class DocumentMetadataService:
         doc = await mongo.find_one(collection="documents", query={"_id": document_id})
         if not doc:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu trong kho chính")
-        if (
-            doc.get("creator_id") != str(current_user.id)
-            and not is_admin(current_user)
-            and doc.get("status") != DocumentStatus.PUBLISHED
-        ):
+        if not await can_read_full(doc, current_user):
             raise HTTPException(
                 status_code=403, detail="Bạn không có quyền xem chỉ số tài liệu này"
             )
         content = doc.get("content", "")
-        word_count = len(content.split()) if content else 0
-        sentences = content.count(".") + content.count("!") + content.count("?") if content else 0
+        text_content = (
+            content
+            if isinstance(content, str)
+            else json.dumps(content, ensure_ascii=False)
+        )
+        word_count = len(text_content.split()) if text_content else 0
+        sentences = (
+            text_content.count(".")
+            + text_content.count("!")
+            + text_content.count("?")
+            if text_content
+            else 0
+        )
         avg_sentence_len = round(word_count / max(sentences, 1), 1)
         readability_score = max(0, min(100, 100 - (avg_sentence_len - 15) * 3))
         return {
@@ -76,19 +90,61 @@ class DocumentMetadataService:
         user_id = str(current_user.id)
         if doc.get("creator_id") != user_id and not is_admin(current_user):
             raise HTTPException(status_code=403, detail="Bạn không có quyền xem nhật ký kiểm toán")
-        logs = await mongo.query("document_audit_logs").filter({"document_id": document_id}).sort("created_at", -1).limit(100)
-        for log in logs:
-            log["_id"] = str(log["_id"])
-        return logs
+        logs = await mongo.find("audit_logs", {"document_id": document_id}).sort(
+            "timestamp", -1
+        ).limit(100).to_list(length=100)
+        return [
+            {
+                "_id": str(log["_id"]),
+                "action": log.get("action"),
+                "actor_id": log.get("actor_id"),
+                "reason": log.get("reason"),
+                "timestamp": (
+                    log["timestamp"].isoformat()
+                    if isinstance(log.get("timestamp"), datetime)
+                    else log.get("timestamp")
+                ),
+            }
+            for log in logs
+        ]
 
     @staticmethod
     @log_logic_execution
     async def get_approval_queue(cursor: str = None, limit: int = 50) -> list:
-        query = {"status": DocumentStatus.PENDING_REVIEW, "is_deleted": {"$ne": True}}
+        query = {
+            "status": DocumentStatus.PROCESSING_PUBLISH,
+            "is_deleted": {"$ne": True},
+        }
         if cursor:
-            query["_id"] = {"$lt": cursor}
-        docs = await DocumentRepository.find(query).sort("created_at", -1).limit(limit).to_list(length=limit)
-        return [serialize_document(d) for d in docs]
+            query["updated_at"] = {
+                "$gt": datetime.fromisoformat(cursor.replace("Z", "+00:00"))
+            }
+        documents = await DocumentRepository.find(query).sort("updated_at", 1).limit(
+            limit
+        ).to_list(length=limit)
+
+        def format_date(value):
+            if isinstance(value, datetime):
+                return value.isoformat()
+            if isinstance(value, str):
+                return value
+            return datetime.now(timezone.utc).isoformat()
+
+        return [
+            {
+                "_id": str(document["_id"]),
+                "title": document.get("title", ""),
+                "description": document.get("description", ""),
+                "creator_id": document.get("creator_id"),
+                "author_name": document.get("publisher_name") or "Anonymous",
+                "created_at": format_date(
+                    document.get("created_at") or document.get("updated_at")
+                ),
+                "updated_at": format_date(document.get("updated_at")),
+                "submitted_at": format_date(document.get("updated_at")),
+            }
+            for document in documents
+        ]
 
     @staticmethod
     @log_logic_execution

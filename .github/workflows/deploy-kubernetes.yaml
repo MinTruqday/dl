@@ -53,6 +53,7 @@ jobs:
 
       - name: Validate deployment configuration
         run: |
+          python scripts/split_kubernetes_env.py
           kubectl kustomize ./k8s > /tmp/doclib.yaml
           python scripts/audit_kubernetes.py /tmp/doclib.yaml
 
@@ -76,7 +77,7 @@ jobs:
         shell: bash
         run: |
           declare -A SERVICE_PORTS
-          SERVICE_PORTS=([authentication]=8000 [humanity]=8000 [content]=8000 [cloud]=8000 [drm]=8000 [compilation]=8000 [messaging]=8000 [notification]=8000 [collection]=8000 [finance]=8000 [usage]=8000 [management]=8000 [agentic-ai]=8000 [websocket]=8000 [worker-service]=8000)
+          SERVICE_PORTS=([authentication]=8000 [humanity]=8000 [content]=8000 [cloud]=8000 [collaboration]=8000 [engagement]=8000 [search]=8000 [rag]=8000 [drm]=8000 [compilation]=8000 [messaging]=8000 [notification]=8000 [collection]=8000 [finance]=8000 [usage]=8000 [management]=8000 [agentic-ai]=8000 [websocket]=8000 [worker-service]=8000)
           FAILED_SERVICES=()
           for svc in "${!SERVICE_PORTS[@]}"; do
             port="${SERVICE_PORTS[$svc]}"
@@ -86,7 +87,7 @@ jobs:
               FAILED_SERVICES+=("$svc")
               continue
             fi
-            if ! kubectl exec "$POD" -n doclib-production -- python -c "import urllib.request; urllib.request.urlopen('http://localhost:$port/health', timeout=10).read()" >/dev/null 2>&1; then
+            if ! kubectl exec "$POD" -n doclib-production -- python -c "import urllib.request; urllib.request.urlopen('http://localhost:$port/ready', timeout=10).read()" >/dev/null 2>&1; then
               echo "Health check failed for $svc (pod: $POD)"
               FAILED_SERVICES+=("$svc")
             else

@@ -127,12 +127,23 @@ def main():
                 expected_port = 3000 if app == "frontend" else 8000
                 if f"containerPort: {expected_port}" not in document:
                     issues.append(f"{app}:container_port")
-                if not re.search(r"secretRef:\n\s+name: doclib-secrets", document):
+                secret_scope = "worker" if app == "worker-service" else app
+                if not re.search(
+                    rf"secretRef:\n\s+name: doclib-{secret_scope}-secrets(?:-[a-z0-9]+)?",
+                    document,
+                ):
                     issues.append(f"{app}:secret_reference")
                 if not re.search(r"configMapRef:\n\s+name: doclib-config", document):
                     issues.append(f"{app}:config_reference")
                 if "livenessProbe:" not in document or "readinessProbe:" not in document:
                     issues.append(f"{app}:health_probes")
+                readiness_path = "/" if app == "frontend" else "/ready"
+                if not re.search(
+                    rf"readinessProbe:.*?path: {re.escape(readiness_path)}(?:\s|$)",
+                    document,
+                    re.DOTALL,
+                ):
+                    issues.append(f"{app}:readiness_path")
                 if "runAsNonRoot: true" not in document or "allowPrivilegeEscalation: false" not in document:
                     issues.append(f"{app}:security_context")
                 continue
@@ -147,6 +158,11 @@ def main():
                 issues.append(f"{name}:service_account_token")
             if "runAsNonRoot: true" not in document or "allowPrivilegeEscalation: false" not in document:
                 issues.append(f"{name}:security_context")
+            if name in {"minio", "ollama"} and not re.search(
+                rf"secretRef:\n\s+name: doclib-{name}-secrets(?:-[a-z0-9]+)?",
+                document,
+            ):
+                issues.append(f"{name}:secret_reference")
             image_matches = re.findall(r"(?m)^\s+-?\s*image: ([^\n]+)$", document)
             if not image_matches or "@sha256:" not in image_matches[0]:
                 issues.append(f"{name}:immutable_image")
@@ -179,8 +195,8 @@ def main():
         issues.append("image_registry_placeholder")
     if "doclib-config" not in config_maps:
         issues.append("config_map:doclib-config")
-    if not any(name.startswith("doclib-secrets-") or name == "doclib-secrets" for name in secrets):
-        issues.append("secret:doclib-secrets")
+    if any(name == "doclib-secrets" or name.startswith("doclib-secrets-") for name in secrets):
+        issues.append("secret:global_scope")
     missing_secret_keys = required_secret_keys - secret_keys
     if missing_secret_keys:
         issues.append(f"secret_keys:{','.join(sorted(missing_secret_keys))}")

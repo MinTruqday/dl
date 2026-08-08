@@ -95,14 +95,27 @@ class VectorStore:
         query_vector: List[float],
         document_ids: Optional[List[str]] = None,
         limit: int = 20,
+        requester_id: Optional[str] = None,
+        is_admin: bool = False,
     ) -> List[Dict]:
-        query_filter = None
+        must = []
         if document_ids:
-            query_filter = Filter(
-                must=[
-                    FieldCondition(key="document_id", match=MatchAny(any=document_ids))
-                ]
+            must.append(
+                FieldCondition(key="document_id", match=MatchAny(any=document_ids))
             )
+        should = []
+        if not is_admin:
+            should.append(
+                FieldCondition(key="visibility", match=MatchValue(value="public"))
+            )
+            if requester_id:
+                should.append(
+                    FieldCondition(
+                        key="creator_id",
+                        match=MatchValue(value=str(requester_id)),
+                    )
+                )
+        query_filter = Filter(must=must, should=should) if must or should else None
 
         if limit < 1 or limit > 100:
             raise ValueError("Vector query limit must be between 1 and 100")

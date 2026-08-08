@@ -38,23 +38,6 @@ async def translate_message(
     )
     return APIResponse(data=result, message="Dịch văn bản hoàn tất")
 
-@router.post("/{other_user_id}/tu-huy", response_model=APIResponse[Any])
-async def toggle_self_destruct(
-    other_user_id: str, req: dict, current_user=Depends(get_current_user)
-):
-    seconds = req.get("seconds", 0)
-    result = await EnhancementService.toggle_self_destruct(
-        other_user_id, seconds, current_user
-    )
-    await publish_personal_message(
-        {
-            "type": "conversation_settings_updated",
-            "data": {"self_destruct_seconds": seconds},
-        },
-        other_user_id,
-    )
-    return APIResponse(data=result, message="Kích hoạt tính năng tự động hủy tin nhắn hoàn tất")
-
 @router.get("/{other_user_id}/goi-y-tra-loi", response_model=APIResponse[Any])
 async def get_quick_replies(
     other_user_id: str,
@@ -145,4 +128,3 @@ async def set_vip_priority(other_user_id: str, req: dict, current_user=Depends(g
     is_vip = req.get("is_vip", True)
     result = await EnhancementService.set_vip_priority(other_user_id, is_vip, current_user)
     return APIResponse(data=result, message="Cập nhật thẻ ưu tiên VIP cuộc trò chuyện thành công")
-

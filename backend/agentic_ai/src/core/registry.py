@@ -609,8 +609,8 @@ Analyze the provided text and extract knowledge graph entities and relations.
 </objective>
 
 <rules>
-1. Format your entire response as a STRICTLY VALID JSON list of objects. Do not include markdown code blocks like ```json.
-2. Each object must have exactly three keys: "source", "relation", and "target".
+1. Format your entire response as a STRICTLY VALID JSON object with one key named "relations" containing a list. Do not include markdown code blocks.
+2. Each item in "relations" must have exactly three keys: "source", "relation", and "target".
 3. "source" and "target" must be concise noun phrases (e.g., "DocLib", "User", "API Key").
 4. "relation" must be a concise, capitalized verb or action phrase (e.g., "USES", "CREATED_BY", "DEPENDS_ON").
 5. Ignore generic or conversational text. Focus only on factual relationships.
@@ -621,16 +621,15 @@ Analyze the provided text and extract knowledge graph entities and relations.
 <example>
 <text>John Doe is the CEO of OpenAI. He announced the release of GPT-5 yesterday.</text>
 <good_response>
-[
+{{{{"relations": [
     {{{{"source": "John Doe", "relation": "IS_CEO_OF", "target": "OpenAI"}}}},
     {{{{"source": "John Doe", "relation": "ANNOUNCED", "target": "GPT-5"}}}}
-]
+]}}}}
 </good_response>
 <bad_response>
-Here are the relations:
-[
+{{{{"relations": [
     {{{{"source": "He", "relation": "announced", "target": "it"}}}}
-]
+]}}}}
 </bad_response>
 <explanation>The bad response includes conversational text, fails to resolve pronouns (He -> John Doe), and uses lowercase relations.</explanation>
 </example>
@@ -638,7 +637,7 @@ Here are the relations:
 </examples>
 
 <edge_cases>
-- If no meaningful relationships are found, return an empty JSON array: [].
+- If no meaningful relationships are found, return {{{{"relations": []}}}}.
 - If pronouns are used in the text, resolve them to the actual entity name whenever possible.
 </edge_cases>
 

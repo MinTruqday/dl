@@ -37,7 +37,7 @@ spec:
         - configMapRef:
             name: doclib-config
         - secretRef:
-            name: doclib-secrets
+            name: doclib-ollama-secrets
         env:
         - name: OLLAMA_HOST
           value: http://127.0.0.1:11434

@@ -5,6 +5,7 @@ from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
 from src.repositories.cooperation import CooperationRepository, DocumentRepository
 from src.services.activity import ActivityService
+from src.services.presence import PresenceService
 
 class AccessRequestService:
     @staticmethod
@@ -16,12 +17,24 @@ class AccessRequestService:
         if not doc:
             raise HTTPException(status_code=404, detail="Hệ thống không tìm thấy tài liệu yêu cầu")
 
-        if str(doc.get("creator_id")) == str(current_user.id):
+        user_id = str(current_user.id)
+        status_info = PresenceService.get_effective_collaboration_status(
+            doc,
+            user_id=user_id,
+            is_admin=str(getattr(current_user, "role", "")).lower().endswith("admin"),
+        )
+        if status_info["is_effective_closed"]:
+            raise HTTPException(
+                status_code=403,
+                detail="Tài liệu đã đóng hoàn toàn và không tiếp nhận yêu cầu xin quyền",
+            )
+
+        if str(doc.get("creator_id")) == user_id:
             raise HTTPException(
                 status_code=400, detail="Bạn là chủ sở hữu của tài liệu này"
             )
 
-        if str(current_user.id) in (doc.get("coauthors") or []):
+        if user_id in (doc.get("coauthors") or []):
             raise HTTPException(
                 status_code=400, detail="Bạn đã là cộng tác viên của tài liệu này"
             )
@@ -30,7 +43,7 @@ class AccessRequestService:
             raise HTTPException(status_code=400, detail="Quyền yêu cầu không hợp lệ")
 
         existing = await CooperationRepository.find_access_request(
-            {"document_id": document_id, "user_id": str(current_user.id), "status": "PENDING"}
+            {"document_id": document_id, "user_id": user_id, "status": "PENDING"}
         )
         if existing:
             raise HTTPException(
@@ -43,7 +56,7 @@ class AccessRequestService:
             "document_id": document_id,
             "document_title": doc.get("title", "Untitled Document"),
             "creator_id": str(doc.get("creator_id")),
-            "user_id": str(current_user.id),
+            "user_id": user_id,
             "user_name": current_user.full_name or "Người dùng",
             "user_email": getattr(current_user, "email", ""),
             "requested_role": requested_role,
@@ -63,10 +76,8 @@ class AccessRequestService:
         )
 
         return {
-            "id": req_doc["_id"],
-            "document_id": document_id,
-            "status": "PENDING",
             "message": "Gửi yêu cầu xin cấp quyền truy cập hoàn tất",
+            "request_id": req_doc["_id"],
         }
 
     @staticmethod
@@ -83,7 +94,10 @@ class AccessRequestService:
 
         requests = (
             await mongo
-            .find("collaboration_access_requests", {"document_id": document_id})
+            .find(
+                "collaboration_access_requests",
+                {"document_id": document_id, "status": "PENDING"},
+            )
             .sort("created_at", -1)
             .to_list(length=100)
         )
@@ -157,7 +171,7 @@ class AccessRequestService:
             )
 
         status = status.upper()
-        if status not in ["APPROVED", "REJECTED"]:
+        if status not in ["ACCEPTED", "REJECTED"]:
             raise HTTPException(status_code=400, detail="Trạng thái duyệt không hợp lệ")
 
         granted_role = role or req.get("requested_role", "editor")
@@ -170,23 +184,42 @@ class AccessRequestService:
             {
                 "$set": {
                     "status": status,
-                    "granted_role": granted_role if status == "APPROVED" else None,
+                    "granted_role": granted_role if status == "ACCEPTED" else None,
                     "reviewed_at": now,
                     "reviewed_by": str(current_user.id),
                 }
             },
         )
 
-        if status == "APPROVED":
+        if status == "ACCEPTED":
+            user_id = str(req["user_id"])
+            document_id = req["document_id"]
             await DocumentRepository.update_one(
-                {"_id": req["document_id"]},
+                {"_id": document_id},
                 {
-                    "$addToSet": {"coauthors": str(req["user_id"])},
+                    "$addToSet": {"coauthors": user_id},
+                    "$set": {"updated_at": now},
+                },
+            )
+            await CooperationRepository.update_invite(
+                {"document_id": document_id, "invitee_id": user_id},
+                {
                     "$set": {
-                        f"coauthor_roles.{str(req['user_id'])}": granted_role,
-                        "updated_at": now,
+                        "document_id": document_id,
+                        "document_title": req.get("document_title", ""),
+                        "inviter_id": req["creator_id"],
+                        "inviter_name": current_user.full_name,
+                        "invitee_id": user_id,
+                        "role": granted_role,
+                        "status": "ACCEPTED",
+                        "responded_at": now,
+                    },
+                    "$setOnInsert": {
+                        "_id": str(uuid.uuid4()),
+                        "created_at": now,
                     },
                 },
+                upsert=True,
             )
 
         await ActivityService.log_activity(
@@ -197,8 +230,11 @@ class AccessRequestService:
         )
 
         return {
-            "id": request_id,
             "status": status,
-            "granted_role": granted_role if status == "APPROVED" else None,
-            "message": f"Xét duyệt yêu cầu thành công: {status}",
+            "role": granted_role if status == "ACCEPTED" else None,
+            "message": (
+                "Phê duyệt yêu cầu tham gia cộng tác hoàn tất"
+                if status == "ACCEPTED"
+                else "Từ chối yêu cầu tham gia cộng tác hoàn tất"
+            ),
         }

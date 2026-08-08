@@ -1,3 +1,4 @@
+import hmac
 from src.core.infrastructure.redis import redis
 from typing import List, Optional
 
@@ -181,6 +182,11 @@ def require_permissions(required_permissions: List[str]):
     return permission_checker
 
 from fastapi import Header
+
+
+async def verify_internal_token(x_internal_token: str = Header(default="")):
+    if not hmac.compare_digest(x_internal_token, settings.SECRET_KEY):
+        raise HTTPException(status_code=403, detail="Thông tin xác thực nội bộ không hợp lệ")
 
 class AuthenticatedUser:
     def __init__(self, user_id: str, user_name: str = "User"):

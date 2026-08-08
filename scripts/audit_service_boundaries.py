@@ -17,6 +17,25 @@ for path in sorted(backend.glob("*/src/**/*.py")):
                 violations.append(f"{path.relative_to(root)}:{line_number} {service}->{owner}")
     if "list_database_names(" in source:
         violations.append(f"{path.relative_to(root)} {service}->ALL_DATABASES")
+    if (
+        "def get_db(self, db_name" in source
+        or "database.client[target_db]" in source
+        or "database.mongodb[target_db]" in source
+    ):
+        violations.append(f"{path.relative_to(root)} {service}->DYNAMIC_DATABASE")
+    relative = path.relative_to(backend).as_posix()
+    if service != "RAG" and ("from neo4j" in source or "settings.NEO4J_" in source):
+        violations.append(f"{path.relative_to(root)} {service}->RAG_GRAPH")
+    if service == "AGENTIC_AI" and (
+        "src.store.vector" in source
+        or "src.store.graph" in source
+        or "src.rag.pipeline" in source
+    ):
+        violations.append(f"{path.relative_to(root)} AGENTIC_AI->RAG_IMPLEMENTATION")
+    if service == "AGENTIC_AI" and "qdrant_client" in source and not relative.endswith(
+        "agentic_ai/src/memory/long_term.py"
+    ):
+        violations.append(f"{path.relative_to(root)} AGENTIC_AI->RAG_VECTOR")
 for violation in violations:
     print(violation)
 print(f"cross_database_accesses={len(violations)}")

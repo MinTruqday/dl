@@ -19,7 +19,6 @@ from src.memory.management import memory_manager
 
 from src.rag.embedding import embedder
 from src.rag.retrieval import retriever
-from src.store.vector import vector_store
 from src.utils.processing import extract_text_from_base64
 from src.workflow.state import AgentState
 
@@ -127,12 +126,16 @@ def _mask_pii(text: str) -> str:
 async def retrieve_db(state: AgentState):
     question = state["question"]
     document_ids = state.get("document_ids", [])
+    requester_id = state.get("user_id") or None
 
     if document_ids and len(document_ids) >= 2:
         logger.info("Processing cross-document retrieval")
         try:
             raw_documents = await retriever.cross_document_retrieve(
-                question, document_ids, k=6
+                question,
+                document_ids,
+                k=6,
+                requester_id=requester_id,
             )
             extracted_documents = []
             for doc in raw_documents:
@@ -165,10 +168,11 @@ async def retrieve_db(state: AgentState):
     all_raw_documents = []
     for q in list(dict.fromkeys(queries))[:3]:
         try:
-            results = await vector_store.query(
-                query_vector=await embedder.embed_query(q),
+            results = await retriever.retrieve(
+                q,
                 document_ids=document_ids,
-                limit=10,
+                k=10,
+                requester_id=requester_id,
             )
             for doc in results:
                 doc["_query"] = q

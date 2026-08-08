@@ -30,10 +30,8 @@ class SnapshotService:
             "_id": str(uuid.uuid4()),
             "document_id": document_id,
             "version_name": version_name,
-            "created_by": str(current_user.id),
-            "user_name": current_user.full_name,
-            "file_url": doc.get("file_url"),
-            "content": doc.get("description", ""),
+            "created_by": current_user.full_name,
+            "content": doc.get("content", ""),
             "timestamp": datetime.now(timezone.utc),
         }
         await CooperationRepository.insert_draft(snapshot)
@@ -44,10 +42,8 @@ class SnapshotService:
             f"Created snapshot: {version_name}",
         )
         return {
-            "id": snapshot["_id"],
-            "version_name": version_name,
-            "timestamp": snapshot["timestamp"].isoformat(),
-            "message": "Tạo bản chụp nháp thành công",
+            "message": "Lưu trữ bản chụp phiên bản tài liệu hoàn tất",
+            "snapshot": snapshot,
         }
 
     @staticmethod
@@ -77,8 +73,7 @@ class SnapshotService:
             {
                 "id": s["_id"],
                 "version_name": s["version_name"],
-                "user_name": s["user_name"],
-                "file_url": s.get("file_url"),
+                "created_by": s.get("created_by") or s.get("user_name", ""),
                 "timestamp": (
                     s["timestamp"].isoformat()
                     if isinstance(s.get("timestamp"), datetime)

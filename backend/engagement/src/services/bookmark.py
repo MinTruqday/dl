@@ -55,7 +55,16 @@ class BookmarkService:
             return []
         docs = (
             await DocumentRepository
-            .find({"_id": {"$in": bookmark_ids}})
+            .find(
+                {
+                    "_id": {"$in": bookmark_ids},
+                    "is_deleted": {"$ne": True},
+                    "$or": [
+                        {"visibility": "public", "status": "published"},
+                        {"creator_id": str(current_user.id)},
+                    ],
+                }
+            )
             .limit(limit)
             .to_list(length=limit)
         )
@@ -65,7 +74,7 @@ class BookmarkService:
                 "title": d.get("title", ""),
                 "slug": d.get("slug", ""),
                 "cover_url": d.get("cover_url"),
-                "author_name": d.get("author_name", "DocLib Author"),
+                "author_name": d.get("author_name", ""),
                 "views": d.get("views", 0),
                 "created_at": (
                     d["created_at"].isoformat()

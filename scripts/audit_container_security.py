@@ -3,28 +3,9 @@ import re
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-SERVICES = (
-    "agentic_ai",
-    "authentication",
-    "cloud",
-    "collection",
-    "compilation",
-    "content",
-    "drm",
-    "finance",
-    "humanity",
-    "management",
-    "messaging",
-    "notification",
-    "usage",
-    "websocket",
-    "worker",
-)
-
-
 def main():
     issues = []
-    dockerfiles = [ROOT / "backend" / service / "Dockerfile" for service in SERVICES]
+    dockerfiles = sorted((ROOT / "backend").glob("*/Dockerfile"))
     dockerfiles.append(ROOT / "frontend" / "Dockerfile")
     for path in dockerfiles:
         source = path.read_text(encoding="utf-8")

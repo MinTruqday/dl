@@ -108,27 +108,25 @@ class HighlightService:
         if skip > 0:
             pipeline.append({"$skip": skip})
         pipeline.append({"$limit": limit})
-        pipeline.extend(
-            [
-                {
-                    "$lookup": {
-                        "from": "documents",
-                        "localField": "document_id",
-                        "foreignField": "_id",
-                        "as": "doc",
-                    }
-                },
-                {"$unwind": {"path": "$doc", "preserveNullAndEmptyArrays": True}},
-            ]
-        )
         highlights = (
             await HighlightRepository
             .aggregate(pipeline)
             .to_list(length=None)
         )
+        document_ids = list(
+            {str(item.get("document_id")) for item in highlights if item.get("document_id")}
+        )
+        documents = (
+            await DocumentRepository.find({"_id": {"$in": document_ids}}).to_list(
+                length=len(document_ids)
+            )
+            if document_ids
+            else []
+        )
+        documents_by_id = {str(item.get("_id")): item for item in documents}
         result = []
         for h in highlights:
-            document = h.get("doc", {})
+            document = documents_by_id.get(str(h.get("document_id")), {})
             result.append(
                 {
                     "_id": str(h["_id"]),

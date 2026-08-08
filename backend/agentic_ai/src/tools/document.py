@@ -6,6 +6,7 @@ from langchain_core.tools import tool
 from loguru import logger
 from pydantic import Field
 from src.tools.http_client import INTERNAL_API_URL, check_system_access, make_api_request
+from src.core.infrastructure.configuration import settings
 
 
 @tool
@@ -370,8 +371,12 @@ async def delete_document(
         )
         if response.status_code == 200:
             try:
-                from src.store.vector import vector_store
-                await vector_store.delete_by_document(document_id)
+                from src.services.rag_client import rag_client
+                await rag_client.delete_document(
+                    document_id,
+                    settings.PLATFORM_SYSTEM_ID,
+                    True,
+                )
                 logger.info("Document index cleanup completed")
             except Exception:
                 logger.exception("Failed to clean up document index")

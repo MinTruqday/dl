@@ -25,6 +25,15 @@ class EmbeddingService:
             self._model = SentenceTransformer(self._model_name)
         return self._model
 
+    async def initialize(self):
+        model = await asyncio.to_thread(self._get_model)
+        embedding = await asyncio.to_thread(
+            model.encode,
+            "readiness",
+            convert_to_numpy=True,
+        )
+        return embedding.tolist()
+
     def _cache_key(self, text: str) -> str:
         return f"emb:local:{self._model_name}:{hashlib.sha256(text.encode()).hexdigest()[:24]}"
 

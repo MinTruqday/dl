@@ -28,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [agentic_ai, authentication, cloud, collection, compilation, content, drm, finance, humanity, management, messaging, notification, usage, websocket, worker]
+        service: [agentic_ai, authentication, cloud, collaboration, collection, compilation, content, drm, engagement, finance, humanity, management, messaging, notification, rag, search, usage, websocket, worker]
     
     steps:
       - name: Checkout repository

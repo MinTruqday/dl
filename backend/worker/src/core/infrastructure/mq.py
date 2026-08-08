@@ -67,6 +67,25 @@ class RabbitMQClient:
         )
         return confirmation is not False
 
+    async def create_consumer_queue(self, queue_name: str):
+        if not QUEUE_PATTERN.fullmatch(queue_name):
+            raise ValueError("Invalid queue name")
+        await self.connect()
+        channel = await self.connection.channel()
+        await channel.set_qos(prefetch_count=1)
+        dlx = await channel.declare_exchange("dlx", aio_pika.ExchangeType.DIRECT)
+        dlq = await channel.declare_queue("dlq", durable=True)
+        await dlq.bind(dlx, "dlq")
+        queue = await channel.declare_queue(
+            queue_name,
+            durable=True,
+            arguments={
+                "x-dead-letter-exchange": "dlx",
+                "x-dead-letter-routing-key": "dlq",
+            },
+        )
+        return channel, queue
+
     async def health_check(self) -> bool:
         await self.connect()
         return bool(self.connection and not self.connection.is_closed)

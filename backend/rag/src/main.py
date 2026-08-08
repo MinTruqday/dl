@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+import httpx
 from loguru import logger
 
 from src.api.retrieval import router as retrieval_router
@@ -16,19 +17,19 @@ from src.core.infrastructure.redis import redis_client
 from src.core.metrics import PrometheusMiddleware, metrics_endpoint
 from src.store.vector import vector_store
 from src.store.graph import graph_store
+from src.services.embedding import embedder
+from src.services.retrieval import retriever
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
     await redis_client.init_redis()
-    try:
-        await vector_store.ensure_collection()
-    except Exception as e:
-        logger.warning(f"Vector store collection check deferred: {e}")
-    try:
-        await graph_store.ensure_schema()
-    except Exception as e:
-        logger.warning(f"Graph store schema check deferred: {e}")
+    embedding = await embedder.initialize()
+    if len(embedding) != embedder._dimensions:
+        raise RuntimeError("Embedding model dimension does not match the vector index")
+    await vector_store.ensure_collection()
+    await graph_store.ensure_schema()
+    await retriever.initialize()
     logger.info("RAG Knowledge service initialized and ready")
     try:
         yield
@@ -77,6 +78,28 @@ async def readiness_check():
         checks["redis"] = "ready" if redis_client.client and await redis_client.client.ping() else "unavailable"
     except Exception:
         checks["redis"] = "unavailable"
+    try:
+        collections = await vector_store.client.get_collections()
+        checks["qdrant"] = (
+            "ready"
+            if any(item.name == vector_store.collection_name for item in collections.collections)
+            else "unavailable"
+        )
+    except Exception:
+        checks["qdrant"] = "unavailable"
+    try:
+        await graph_store.verify_connectivity()
+        checks["neo4j"] = "ready"
+    except Exception:
+        checks["neo4j"] = "unavailable"
+    checks["embedding"] = "ready" if embedder._model is not None else "unavailable"
+    checks["reranker"] = "ready" if retriever._reranker is not None else "unavailable"
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            response = await client.get(f"{settings.CONTENT_URL}/ready")
+        checks["content"] = "ready" if response.status_code == 200 else "unavailable"
+    except Exception:
+        checks["content"] = "unavailable"
     ready = all(value == "ready" for value in checks.values())
     return JSONResponse(
         status_code=200 if ready else 503,

@@ -2,12 +2,15 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+import httpx
 from loguru import logger
 from src.api.reading import router as reading_router
 from src.api.highlight import router as highlight_router
 from src.api.bookmark import router as bookmark_router
 from src.api.pin import router as pin_router
 from src.api.discovery import router as discovery_router
+from src.api.internal import router as internal_router
+from src.api.library import router as library_router
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import close_db, database, init_db
 from src.core.infrastructure.redis import redis
@@ -43,6 +46,8 @@ app.include_router(highlight_router)
 app.include_router(bookmark_router)
 app.include_router(pin_router)
 app.include_router(discovery_router)
+app.include_router(internal_router)
+app.include_router(library_router)
 
 @app.get("/health", include_in_schema=False)
 async def health_check():
@@ -63,6 +68,12 @@ async def readiness_check():
         checks["redis"] = "ready" if await redis.get_client().ping() else "unavailable"
     except Exception:
         checks["redis"] = "unavailable"
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            response = await client.get(f"{settings.CONTENT_URL}/ready")
+        checks["content"] = "ready" if response.status_code == 200 else "unavailable"
+    except Exception:
+        checks["content"] = "unavailable"
     ready = all(value == "ready" for value in checks.values())
     return JSONResponse(
         status_code=200 if ready else 503,

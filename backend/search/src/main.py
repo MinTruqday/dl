@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+import httpx
 from loguru import logger
 from src.api.document import router as document_router
 from src.api.cloud import router as cloud_router
@@ -65,6 +66,16 @@ async def readiness_check():
         checks["redis"] = "ready" if await redis.get_client().ping() else "unavailable"
     except Exception:
         checks["redis"] = "unavailable"
+    for dependency, url in {
+        "content": settings.CONTENT_URL,
+        "cloud": settings.CLOUD_URL,
+    }.items():
+        try:
+            async with httpx.AsyncClient(timeout=3.0) as client:
+                response = await client.get(f"{url}/ready")
+            checks[dependency] = "ready" if response.status_code == 200 else "unavailable"
+        except Exception:
+            checks[dependency] = "unavailable"
     ready = all(value == "ready" for value in checks.values())
     return JSONResponse(
         status_code=200 if ready else 503,

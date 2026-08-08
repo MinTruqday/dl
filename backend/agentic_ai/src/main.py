@@ -103,17 +103,21 @@ async def readiness_check():
     except Exception:
         checks["rabbitmq"] = "unavailable"
     try:
-        from src.store.vector import vector_store
-        await vector_store.client.get_collections()
-        checks["qdrant"] = "ready"
+        import httpx
+
+        async with httpx.AsyncClient(timeout=3) as client:
+            response = await client.get(f"{settings.QDRANT_URL.rstrip('/')}/collections")
+        checks["qdrant"] = "ready" if response.status_code == 200 else "unavailable"
     except Exception:
         checks["qdrant"] = "unavailable"
     try:
-        from src.store.graph import graph_store
-        await graph_store.verify_connectivity()
-        checks["neo4j"] = "ready"
+        import httpx
+
+        async with httpx.AsyncClient(timeout=3) as client:
+            response = await client.get(f"{settings.RAG_URL}/ready")
+        checks["rag"] = "ready" if response.status_code == 200 else "unavailable"
     except Exception:
-        checks["neo4j"] = "unavailable"
+        checks["rag"] = "unavailable"
     try:
         import httpx
 
@@ -177,19 +181,7 @@ async def harness_status():
     }
 async def startup_event():
     logger.info("Agentic AI system initialized")
-    from src.store.vector import vector_store
     from src.core.infrastructure.configuration import settings
-    try:
-        await vector_store.ensure_collection()
-        logger.info("Qdrant vector store connection established")
-    except Exception:
-        logger.exception("Qdrant vector store initialization error")
-    try:
-        from src.store.graph import graph_store
-        await graph_store.ensure_schema()
-        logger.info("Neo4j graph store connection established")
-    except Exception:
-        logger.exception("Neo4j graph store initialization error")
     try:
         from src.core.infrastructure.database import init_db
         await init_db()
@@ -226,14 +218,13 @@ async def startup_event():
             local_model_client.warm_primary(),
             "primary-model-warmup",
         )
+        create_background_task(
+            local_model_client.warm_fallback(),
+            "fallback-model-warmup",
+        )
     except Exception:
         logger.exception("Primary model warmup startup error")
 async def shutdown_event():
-    try:
-        from src.store.graph import graph_store
-        await graph_store.close()
-    except Exception:
-        logger.exception("Neo4j graph store shutdown failed")
     try:
         from src.utils.background import drain_background_tasks
 
@@ -261,11 +252,6 @@ async def shutdown_event():
         await close_db()
     except Exception:
         logger.exception("Database shutdown failed")
-    try:
-        from src.store.vector import vector_store
-        await vector_store.client.close()
-    except Exception:
-        logger.exception("Vector store shutdown failed")
     try:
         from src.memory.management import memory_manager
         await memory_manager.close()

@@ -10,27 +10,14 @@ class DiscoveryService:
     @staticmethod
     @log_logic_execution
     async def get_tags_categories() -> dict:
-        pipeline = [
-            {"$match": {"status": "published", "is_public": True}},
-            {"$unwind": "$tags"},
-            {"$group": {"_id": "$tags", "count": {"$sum": 1}}},
-            {"$sort": {"count": -1}},
-            {"$limit": 50},
-        ]
-        tags_data = await DocumentRepository.find({"status": "published", "is_public": True}).to_list(length=None)
-        tags_count = {}
-        for d in tags_data:
-            for t in d.get("tags", []):
-                tags_count[t] = tags_count.get(t, 0) + 1
-        sorted_tags = sorted([{"tag": k, "count": v} for k, v in tags_count.items()], key=lambda x: x["count"], reverse=True)[:50]
-        return {"tags": sorted_tags}
+        return await DocumentRepository.taxonomy()
 
     @staticmethod
     @log_logic_execution
     async def get_trending_documents(limit: int = 20) -> list:
         docs = (
             await DocumentRepository
-            .find({"status": "published", "is_public": True})
+            .find({"status": "published", "visibility": "public"})
             .sort("views", -1)
             .limit(limit)
             .to_list(length=limit)
@@ -41,7 +28,7 @@ class DiscoveryService:
                 "title": d.get("title", ""),
                 "slug": d.get("slug", ""),
                 "cover_url": d.get("cover_url"),
-                "author_name": d.get("publisher_name") or "DocLib Author",
+                "author_name": d.get("publisher_name") or "",
                 "views": d.get("views", 0),
                 "summary": d.get("summary", ""),
             }
@@ -68,7 +55,7 @@ class DiscoveryService:
 
         recommended = (
             await DocumentRepository
-            .find({"status": "published", "is_public": True, "tags": {"$in": list(tags_set)}, "_id": {"$nin": read_doc_ids}})
+            .find({"status": "published", "visibility": "public", "tags": {"$in": list(tags_set)}, "_id": {"$nin": read_doc_ids}})
             .sort("views", -1)
             .limit(limit)
             .to_list(length=limit)
@@ -90,7 +77,7 @@ class DiscoveryService:
                 "title": d.get("title", ""),
                 "slug": d.get("slug", ""),
                 "cover_url": d.get("cover_url"),
-                "author_name": d.get("publisher_name") or "DocLib Author",
+                "author_name": d.get("publisher_name") or "",
                 "views": d.get("views", 0),
                 "summary": d.get("summary", ""),
             }

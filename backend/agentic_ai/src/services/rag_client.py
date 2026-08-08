@@ -1,40 +1,31 @@
 import httpx
 from typing import Dict, List, Optional
-from loguru import logger
 from src.core.infrastructure.configuration import settings
 
 class RagClient:
     @staticmethod
     async def embed_query(text: str) -> List[float]:
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.post(
-                    f"{settings.RAG_URL}/rag/embedding/query",
-                    json={"text": text},
-                    headers={"X-Internal-Token": settings.SECRET_KEY},
-                )
-                response.raise_for_status()
-                data = response.json().get("data", {})
-                return data.get("embedding", [])
-        except Exception:
-            logger.exception("RagClient embed_query failed")
-            return []
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                f"{settings.RAG_URL}/rag/embedding/query",
+                json={"text": text},
+                headers={"X-Internal-Token": settings.SECRET_KEY},
+            )
+            response.raise_for_status()
+            data = response.json().get("data", {})
+            return data.get("embedding", [])
 
     @staticmethod
     async def embed_batch(texts: List[str]) -> List[List[float]]:
-        try:
-            async with httpx.AsyncClient(timeout=60.0) as client:
-                response = await client.post(
-                    f"{settings.RAG_URL}/rag/embedding/batch",
-                    json={"texts": texts},
-                    headers={"X-Internal-Token": settings.SECRET_KEY},
-                )
-                response.raise_for_status()
-                data = response.json().get("data", {})
-                return data.get("embeddings", [])
-        except Exception:
-            logger.exception("RagClient embed_batch failed")
-            return []
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.post(
+                f"{settings.RAG_URL}/rag/embedding/batch",
+                json={"texts": texts},
+                headers={"X-Internal-Token": settings.SECRET_KEY},
+            )
+            response.raise_for_status()
+            data = response.json().get("data", {})
+            return data.get("embeddings", [])
 
     @staticmethod
     async def retrieve(
@@ -42,120 +33,116 @@ class RagClient:
         document_ids: Optional[List[str]] = None,
         k: int = 5,
         query_vector_override: Optional[List[float]] = None,
+        requester_id: Optional[str] = None,
+        is_admin: bool = False,
     ) -> List[Dict]:
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.post(
-                    f"{settings.RAG_URL}/rag/retrieve",
-                    json={
-                        "query": query,
-                        "document_ids": document_ids,
-                        "k": k,
-                        "query_vector_override": query_vector_override,
-                    },
-                    headers={"X-Internal-Token": settings.SECRET_KEY},
-                )
-                response.raise_for_status()
-                data = response.json().get("data", {})
-                return data.get("documents", [])
-        except Exception:
-            logger.exception("RagClient retrieve failed")
-            return []
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                f"{settings.RAG_URL}/rag/retrieve",
+                json={
+                    "query": query,
+                    "document_ids": document_ids,
+                    "k": k,
+                    "query_vector_override": query_vector_override,
+                    "requester_id": requester_id,
+                    "is_admin": is_admin,
+                },
+                headers={"X-Internal-Token": settings.SECRET_KEY},
+            )
+            response.raise_for_status()
+            data = response.json().get("data", {})
+            return data.get("documents", [])
 
     @staticmethod
     async def multi_query_retrieve(
         question: str,
         document_ids: Optional[List[str]] = None,
         k: int = 5,
+        requester_id: Optional[str] = None,
+        is_admin: bool = False,
     ) -> List[Dict]:
-        try:
-            async with httpx.AsyncClient(timeout=45.0) as client:
-                response = await client.post(
-                    f"{settings.RAG_URL}/rag/multi-query-retrieve",
-                    json={
-                        "question": question,
-                        "document_ids": document_ids,
-                        "k": k,
-                    },
-                    headers={"X-Internal-Token": settings.SECRET_KEY},
-                )
-                response.raise_for_status()
-                data = response.json().get("data", {})
-                return data.get("documents", [])
-        except Exception:
-            logger.exception("RagClient multi_query_retrieve failed")
-            return []
+        async with httpx.AsyncClient(timeout=45.0) as client:
+            response = await client.post(
+                f"{settings.RAG_URL}/rag/multi-query-retrieve",
+                json={
+                    "question": question,
+                    "document_ids": document_ids,
+                    "k": k,
+                    "requester_id": requester_id,
+                    "is_admin": is_admin,
+                },
+                headers={"X-Internal-Token": settings.SECRET_KEY},
+            )
+            response.raise_for_status()
+            data = response.json().get("data", {})
+            return data.get("documents", [])
 
     @staticmethod
     async def cross_document_retrieve(
         question: str,
         document_ids: List[str],
         k: int = 5,
+        requester_id: Optional[str] = None,
+        is_admin: bool = False,
     ) -> List[Dict]:
-        try:
-            async with httpx.AsyncClient(timeout=60.0) as client:
-                response = await client.post(
-                    f"{settings.RAG_URL}/rag/cross-document-retrieve",
-                    json={
-                        "question": question,
-                        "document_ids": document_ids,
-                        "k": k,
-                    },
-                    headers={"X-Internal-Token": settings.SECRET_KEY},
-                )
-                response.raise_for_status()
-                data = response.json().get("data", {})
-                return data.get("documents", [])
-        except Exception:
-            logger.exception("RagClient cross_document_retrieve failed")
-            return []
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.post(
+                f"{settings.RAG_URL}/rag/cross-document-retrieve",
+                json={
+                    "question": question,
+                    "document_ids": document_ids,
+                    "k": k,
+                    "requester_id": requester_id,
+                    "is_admin": is_admin,
+                },
+                headers={"X-Internal-Token": settings.SECRET_KEY},
+            )
+            response.raise_for_status()
+            data = response.json().get("data", {})
+            return data.get("documents", [])
 
     @staticmethod
     async def expand_graph(
         document_ids: List[str],
         seed_query: str,
         limit: int = 20,
+        requester_id: Optional[str] = None,
+        is_admin: bool = False,
     ) -> str:
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.post(
-                    f"{settings.RAG_URL}/rag/graph/expand",
-                    json={
-                        "document_ids": document_ids,
-                        "seed_query": seed_query,
-                        "limit": limit,
-                    },
-                    headers={"X-Internal-Token": settings.SECRET_KEY},
-                )
-                response.raise_for_status()
-                data = response.json().get("data", {})
-                return data.get("context", "")
-        except Exception:
-            logger.exception("RagClient expand_graph failed")
-            return ""
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                f"{settings.RAG_URL}/rag/graph/expand",
+                json={
+                    "document_ids": document_ids,
+                    "seed_query": seed_query,
+                    "limit": limit,
+                    "requester_id": requester_id,
+                    "is_admin": is_admin,
+                },
+                headers={"X-Internal-Token": settings.SECRET_KEY},
+            )
+            response.raise_for_status()
+            data = response.json().get("data", {})
+            return data.get("context", "")
 
     @staticmethod
     async def get_cache(
         query_text: str,
         query_vector: Optional[List[float]] = None,
     ) -> Optional[str]:
-        try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.post(
-                    f"{settings.RAG_URL}/rag/cache/get",
-                    json={
-                        "query_text": query_text,
-                        "query_vector": query_vector,
-                    },
-                    headers={"X-Internal-Token": settings.SECRET_KEY},
-                )
-                response.raise_for_status()
-                data = response.json().get("data", {})
-                if data.get("hit"):
-                    return data.get("response")
-                return None
-        except Exception:
-            logger.exception("RagClient get_cache failed")
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(
+                f"{settings.RAG_URL}/rag/cache/get",
+                json={
+                    "query_text": query_text,
+                    "query_vector": query_vector,
+                },
+                headers={"X-Internal-Token": settings.SECRET_KEY},
+            )
+            response.raise_for_status()
+            data = response.json().get("data", {})
+            if data.get("hit"):
+                return data.get("response")
             return None
 
     @staticmethod
@@ -164,31 +151,100 @@ class RagClient:
         response_text: str,
         query_vector: Optional[List[float]] = None,
     ) -> None:
-        try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.post(
-                    f"{settings.RAG_URL}/rag/cache/set",
-                    json={
-                        "query_text": query_text,
-                        "response_text": response_text,
-                        "query_vector": query_vector,
-                    },
-                    headers={"X-Internal-Token": settings.SECRET_KEY},
-                )
-                response.raise_for_status()
-        except Exception:
-            logger.exception("RagClient set_cache failed")
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(
+                f"{settings.RAG_URL}/rag/cache/set",
+                json={
+                    "query_text": query_text,
+                    "response_text": response_text,
+                    "query_vector": query_vector,
+                },
+                headers={"X-Internal-Token": settings.SECRET_KEY},
+            )
+            response.raise_for_status()
 
     @staticmethod
-    async def ingest_document(document_id: str, auth_token: Optional[str] = None) -> Dict:
+    async def ingest_document(
+        document_id: str,
+        requester_id: str,
+        is_admin: bool = False,
+        auth_token: Optional[str] = None,
+    ) -> Dict:
         headers = {"X-Internal-Token": settings.SECRET_KEY}
         if auth_token:
             headers["Authorization"] = f"Bearer {auth_token}"
         async with httpx.AsyncClient(timeout=120.0) as client:
             response = await client.post(
                 f"{settings.RAG_URL}/rag/ingest",
-                json={"document_id": document_id},
+                json={
+                    "document_id": document_id,
+                    "requester_id": requester_id,
+                    "is_admin": is_admin,
+                },
                 headers=headers,
+            )
+            response.raise_for_status()
+            return response.json().get("data", {})
+
+    @staticmethod
+    async def extract_document(
+        document_id: str,
+        requester_id: str,
+        is_admin: bool = False,
+        auth_token: Optional[str] = None,
+    ) -> str:
+        headers = {"X-Internal-Token": settings.SECRET_KEY}
+        if auth_token:
+            headers["Authorization"] = f"Bearer {auth_token}"
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            response = await client.post(
+                f"{settings.RAG_URL}/rag/extract",
+                json={
+                    "document_id": document_id,
+                    "requester_id": requester_id,
+                    "is_admin": is_admin,
+                },
+                headers=headers,
+            )
+            response.raise_for_status()
+            return str(response.json().get("data", {}).get("text") or "")
+
+    @staticmethod
+    async def delete_document(
+        document_id: str,
+        requester_id: str,
+        is_admin: bool = False,
+        auth_token: Optional[str] = None,
+    ) -> Dict:
+        headers = {"X-Internal-Token": settings.SECRET_KEY}
+        if auth_token:
+            headers["Authorization"] = f"Bearer {auth_token}"
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.delete(
+                f"{settings.RAG_URL}/rag/document/{document_id}",
+                params={"requester_id": requester_id, "is_admin": is_admin},
+                headers=headers,
+            )
+            response.raise_for_status()
+            return response.json().get("data", {})
+
+    @staticmethod
+    async def replace_graph(
+        document_id: str,
+        relations: List[Dict],
+        requester_id: str,
+        is_admin: bool = False,
+    ) -> Dict:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.post(
+                f"{settings.RAG_URL}/rag/graph/replace-document",
+                json={
+                    "document_id": document_id,
+                    "relations": relations,
+                    "requester_id": requester_id,
+                    "is_admin": is_admin,
+                },
+                headers={"X-Internal-Token": settings.SECRET_KEY},
             )
             response.raise_for_status()
             return response.json().get("data", {})

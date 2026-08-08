@@ -105,6 +105,28 @@ async def main():
         object_paths.append(path)
         assert path.startswith(f"users/{OWNER_ID}/")
         assert await cloud.storage_items.find_one({"_id": item_id, "size": len(content)})
+        status, search_results, _ = call(
+            "GET",
+            "/tim-kiem/luu-tru?q=integration&extension=txt",
+            owner_token,
+        )
+        assert status == 200, search_results
+        assert any(item["_id"] == item_id for item in search_results["data"])
+        status, preview, _ = call(
+            "GET",
+            f"/tim-kiem/xem-truoc/{item_id}",
+            owner_token,
+        )
+        assert status == 200, preview
+        assert preview["data"]["preview_type"] == "text"
+        assert preview["data"]["stream_url"].startswith("http")
+        status, download, _ = call(
+            "GET",
+            f"/tai-ve/{item_id}/duong-dan",
+            owner_token,
+        )
+        assert status == 200, download
+        assert download["data"]["download_url"].startswith("http")
         media_item_ids = []
         media_content = b"editor-media" * 500
         for filename, content_type, expected_folder in (
@@ -265,6 +287,12 @@ async def main():
         assert status == 201, child_payload
         child_id = child_payload["data"]["_id"]
         assert call("PUT", f"/luu-tru/tap-tin/{folder_id}", owner_token, {"parent_id": child_id})[0] == 404
+        assert call(
+            "PATCH",
+            f"/thu-muc/{folder_id}/di-chuyen",
+            owner_token,
+            {"parent_id": child_id},
+        )[0] == 400
         assert call("DELETE", f"/luu-tru/tap-tin/{folder_id}", owner_token)[0] == 200
         child = await cloud.storage_items.find_one({"_id": child_id})
         assert child["is_trashed"] is True

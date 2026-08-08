@@ -7,21 +7,21 @@ from src.services.document import DocumentService
 
 router = APIRouter(route_class=LoggingRoute)
 
-@router.get("/{document_id}/phan-tich", response_model=APIResponse[Any])
+@router.get("/{document_id}/thong-ke", response_model=APIResponse[Any])
 async def get_document_analytics(document_id: str, current_user=Depends(get_current_user)):
     return APIResponse(
         data=await DocumentService.get_document_analytics(document_id, current_user),
         message="Truy xuất dữ liệu phân tích tài liệu hoàn tất",
     )
 
-@router.get("/{document_id}/hoc-thuat", response_model=APIResponse[Any])
+@router.get("/{document_id}/chi-so-hoc-thuat", response_model=APIResponse[Any])
 async def get_document_academic(document_id: str, current_user=Depends(get_current_user)):
     return APIResponse(
         data=await DocumentService.get_document_academic(document_id, current_user),
         message="Truy xuất chỉ số học thuật hoàn tất",
     )
 
-@router.get("/{document_id}/nhat-ky-kiem-toan", response_model=APIResponse[Any])
+@router.get("/{document_id}/nhat-ky-hoat-dong", response_model=APIResponse[Any])
 async def get_document_audit_logs(document_id: str, current_user=Depends(get_current_user)):
     return APIResponse(
         data=await DocumentService.get_document_audit_logs(document_id, current_user),

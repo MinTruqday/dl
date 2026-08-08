@@ -33,9 +33,8 @@ class TaskService:
             "_id": str(uuid.uuid4()),
             "document_id": document_id,
             "task_desc": task_desc,
-            "created_by": str(current_user.id),
-            "created_by_name": current_user.full_name,
-            "assigned_to": assigned_to,
+            "created_by": current_user.full_name,
+            "assigned_to": assigned_to or "Unassigned",
             "is_done": False,
             "created_at": datetime.now(timezone.utc),
         }
@@ -46,14 +45,7 @@ class TaskService:
             "Create task",
             f"Created task: {task_desc[:30]}",
         )
-        return {
-            "id": task_doc["_id"],
-            "task_desc": task_desc,
-            "assigned_to": assigned_to,
-            "is_done": False,
-            "created_at": task_doc["created_at"].isoformat(),
-            "message": "Tạo nhiệm vụ thành công",
-        }
+        return {"task": task_doc}
 
     @staticmethod
     @log_logic_execution
@@ -82,8 +74,7 @@ class TaskService:
             {
                 "id": t["_id"],
                 "task_desc": t["task_desc"],
-                "created_by": t.get("created_by"),
-                "created_by_name": t.get("created_by_name"),
+                "created_by": t.get("created_by_name") or t.get("created_by", ""),
                 "assigned_to": t.get("assigned_to"),
                 "is_done": t.get("is_done", False),
                 "created_at": (
@@ -152,19 +143,12 @@ class TaskService:
         comment_doc = {
             "_id": str(uuid.uuid4()),
             "task_id": task_id,
-            "user_id": str(current_user.id),
-            "user_name": current_user.full_name,
+            "sender_name": current_user.full_name,
             "comment_text": comment_text,
             "timestamp": datetime.now(timezone.utc),
         }
         await CooperationRepository.insert_task_comment(comment_doc)
-        return {
-            "id": comment_doc["_id"],
-            "comment_text": comment_text,
-            "user_name": current_user.full_name,
-            "timestamp": comment_doc["timestamp"].isoformat(),
-            "message": "Thêm bình luận nhiệm vụ thành công",
-        }
+        return {"comment": comment_doc}
 
     @staticmethod
     @log_logic_execution
@@ -194,8 +178,7 @@ class TaskService:
         return [
             {
                 "id": c["_id"],
-                "user_id": c["user_id"],
-                "user_name": c["user_name"],
+                "sender_name": c.get("sender_name") or c.get("user_name", ""),
                 "comment_text": c["comment_text"],
                 "timestamp": (
                     c["timestamp"].isoformat()

@@ -18,6 +18,9 @@ async def run():
     secret = os.environ["SECRET_KEY"]
     mongo = AsyncIOMotorClient(os.environ["MONGODB_URI"])
     content_db = mongo[os.getenv("CONTENT_DB_NAME", "doclib_content")]
+    collaboration_db = mongo[
+        os.getenv("COLLABORATION_DB_NAME", "doclib_collaboration")
+    ]
     humanity_db = mongo[os.getenv("HUMANITY_DB_NAME", "doclib_humanity")]
     redis_client = redis_async.from_url(os.environ["REDIS_URI"], decode_responses=True)
 
@@ -56,7 +59,7 @@ async def run():
     doc_id = None
     share_token = None
     try:
-        async with httpx.AsyncClient(base_url="http://content:8000", timeout=15.0) as client:
+        async with httpx.AsyncClient(base_url="http://traefik:8000", timeout=15.0) as client:
             create_resp = await client.post(
                 "/tai-lieu",
                 json={
@@ -192,10 +195,10 @@ async def run():
             await redis_client.delete(f"user_sessions:{u['_id']}")
         if doc_id:
             await content_db.documents.delete_one({"_id": doc_id})
-            await content_db.collaboration_invites.delete_many({"document_id": doc_id})
-            await content_db.collaboration_share_links.delete_many({"document_id": doc_id})
-            await content_db.collaboration_access_requests.delete_many({"document_id": doc_id})
-            await content_db.collaboration_activities.delete_many({"document_id": doc_id})
+            await collaboration_db.collaboration_invites.delete_many({"document_id": doc_id})
+            await collaboration_db.collaboration_share_links.delete_many({"document_id": doc_id})
+            await collaboration_db.collaboration_access_requests.delete_many({"document_id": doc_id})
+            await collaboration_db.collaboration_activities.delete_many({"document_id": doc_id})
         await redis_client.aclose()
         mongo.close()
 
