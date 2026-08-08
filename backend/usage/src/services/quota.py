@@ -104,7 +104,7 @@ class QuotaService:
                 "req_reset_hours": 5,
                 "max_docs": 5,
                 "model": settings.LLM_MODEL,
-                "thinking": False,
+                "thinking": True,
             },
             "PREMIUM": {
                 "session_requests": 100,

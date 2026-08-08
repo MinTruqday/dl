@@ -698,6 +698,33 @@ services:
     networks:
       - doclib_network
 
+  rag:
+    build:
+      context: ./backend
+      dockerfile: ./rag/Dockerfile
+    container_name: doclib_rag
+    restart: always
+    ports:
+      - 8019:8000
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.rag.rule=PathPrefix(`/rag`)
+      - traefik.http.services.rag.loadbalancer.server.port=8000
+    env_file:
+      - .env
+    depends_on:
+      - mongodb
+      - redis
+      - qdrant
+      - neo4j
+    volumes:
+      - ./backend/rag/src:/app/src
+      - ./backend/logs/rag:/app/logs
+      - hf_cache:/root/.cache/huggingface
+    networks:
+      - doclib_network
+
+
 networks:
   doclib_network:
     driver: bridge

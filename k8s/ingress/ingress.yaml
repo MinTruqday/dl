@@ -377,6 +377,14 @@ spec:
             port:
               number: 80
 
+      - path: /rag(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: rag
+            port:
+              number: 80
+
       - path: /ws(/|$)(.*)
         pathType: ImplementationSpecific
         backend:

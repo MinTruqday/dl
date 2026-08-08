@@ -35,6 +35,7 @@ resources:
   - apps/cloud.yaml
   - apps/frontend.yaml
   - apps/usage.yaml
+  - apps/rag.yaml
   - ingress/ingress.yaml
 
 patches:

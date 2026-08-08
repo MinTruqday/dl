@@ -1,0 +1,31 @@
+from fastapi import APIRouter
+from src.core.logging_route import LoggingRoute
+from src.core.logic_logger import log_logic_execution
+from src.core.response import APIResponse
+from src.schemas.embedding import (
+    EmbedQueryRequest,
+    EmbedBatchRequest,
+    EmbeddingResponse,
+    BatchEmbeddingResponse,
+)
+from src.services.embedding import embedder
+
+router = APIRouter(route_class=LoggingRoute)
+
+@router.post("/query", response_model=APIResponse[EmbeddingResponse])
+@log_logic_execution
+async def embed_single_query(req: EmbedQueryRequest):
+    emb = await embedder.embed_query(req.text)
+    return APIResponse(
+        data=EmbeddingResponse(embedding=emb),
+        message="Trích xuất vector embedding thành công",
+    )
+
+@router.post("/batch", response_model=APIResponse[BatchEmbeddingResponse])
+@log_logic_execution
+async def embed_batch_texts(req: EmbedBatchRequest):
+    embs = await embedder.embed_batch(req.texts)
+    return APIResponse(
+        data=BatchEmbeddingResponse(embeddings=embs, count=len(embs)),
+        message="Trích xuất hàng loạt vector embedding thành công",
+    )

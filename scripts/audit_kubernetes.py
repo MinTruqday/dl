@@ -7,16 +7,20 @@ EXPECTED = {
     "agentic-ai",
     "authentication",
     "cloud",
+    "collaboration",
     "collection",
     "compilation",
     "content",
     "drm",
+    "engagement",
     "finance",
     "frontend",
     "humanity",
     "management",
     "messaging",
     "notification",
+    "rag",
+    "search",
     "usage",
     "websocket",
     "worker-service",
@@ -62,6 +66,7 @@ EXPECTED_API_PREFIXES = {
     "/noi-bat",
     "/phan-hoi",
     "/phien-ban",
+    "/rag",
     "/rut-tien",
     "/soan-thao",
     "/su-kien",
@@ -72,6 +77,7 @@ EXPECTED_API_PREFIXES = {
     "/thu-thap",
     "/thu-vien",
     "/tiep-nap",
+    "/tim-kiem",
     "/tin-nhan",
     "/tinh-chinh",
     "/toi-uu",
@@ -85,7 +91,12 @@ EXPECTED_API_PREFIXES = {
 
 
 def main():
-    source = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")
+    if len(sys.argv) > 1 and sys.argv[1] == "-":
+        source = sys.stdin.read()
+    elif len(sys.argv) > 1:
+        source = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")
+    else:
+        source = sys.stdin.read()
     required_secret_keys = set()
     for path in pathlib.Path("backend").glob("*/src/core/infrastructure/configuration.py"):
         required_secret_keys.update(

@@ -197,7 +197,7 @@ class LocalModelClient:
                 response = await client.get(_url(settings.OLLAMA_BASE_URL, "/api/tags"))
                 names = {item.get("name") for item in response.json().get("models", [])}
                 if response.status_code == 200:
-                    if settings.LLM_MODEL in names:
+                    if any(settings.LLM_MODEL == n or settings.LLM_MODEL.split(":")[0] == n.split(":")[0] for n in names):
                         checks["primary_model"] = self._primary_runtime_status
             except Exception:
                 pass
