@@ -55,62 +55,6 @@ spec:
             name: content
             port:
               number: 80
-      - path: /cong-tac(/|$)(.*)
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: collaboration
-            port:
-              number: 80
-      - path: /danh-dau(/|$)(.*)
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: content
-            port:
-              number: 80
-      - path: /danh-gia(/|$)(.*)
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: content
-            port:
-              number: 80
-      - path: /doc-hieu(/|$)(.*)
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: content
-            port:
-              number: 80
-      - path: /dau-trang(/|$)(.*)
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: content
-            port:
-              number: 80
-      - path: /ghim(/|$)(.*)
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: content
-            port:
-              number: 80
-      - path: /kham-pha(/|$)(.*)
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: content
-            port:
-              number: 80
-      - path: /noi-bat(/|$)(.*)
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: content
-            port:
-              number: 80
       - path: /phien-ban(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
@@ -130,6 +74,72 @@ spec:
         backend:
           service:
             name: content
+            port:
+              number: 80
+
+      - path: /cong-tac(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: collaboration
+            port:
+              number: 80
+
+      - path: /doc-hieu(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: engagement
+            port:
+              number: 80
+      - path: /dau-trang(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: engagement
+            port:
+              number: 80
+      - path: /ghim(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: engagement
+            port:
+              number: 80
+      - path: /kham-pha(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: engagement
+            port:
+              number: 80
+      - path: /danh-dau(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: engagement
+            port:
+              number: 80
+      - path: /danh-gia(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: engagement
+            port:
+              number: 80
+      - path: /noi-bat(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: engagement
+            port:
+              number: 80
+
+      - path: /tim-kiem(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: search
             port:
               number: 80
 

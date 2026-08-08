@@ -3,16 +3,19 @@ from src.core.infrastructure.database import database
 
 class MongoClient:
     def __init__(self):
-        self.db_name = settings.COLLABORATION_DB_NAME
+        self.db_name = settings.SEARCH_DB_NAME
 
     def get_db(self, db_name: str | None = None):
         if database.mongodb is None:
             raise Exception("MongoDB is not initialized")
         target_db = db_name or self.db_name
-        return database.mongodb[target_db]
+        return database.client[target_db]
 
     def get_content_db(self):
         return self.get_db(settings.CONTENT_DB_NAME)
+
+    def get_cloud_db(self):
+        return self.get_db(settings.CLOUD_DB_NAME)
 
     async def find_one(self, collection: str, query: dict, projection: dict = None, db_name: str | None = None, **kwargs):
         return await self.get_db(db_name)[collection].find_one(query, projection, **kwargs)

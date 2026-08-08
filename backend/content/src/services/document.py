@@ -19,12 +19,10 @@ from src.schemas.document import DocumentContentUpdate, DocumentCreate, Document
 
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
+from src.core.infrastructure.mongo import mongo
 from src.repositories.document import DocumentRepository
-from src.repositories.reading import ReadingRepository
-from src.repositories.collaboration import CollaborationRepository
 from src.services.drm_client import DrmClient
 from src.services.finance_client import FinanceClient
-from src.services.collaboration import CollaborationService
 
 
 def serialize_document(document):
@@ -49,6 +47,82 @@ class DocumentService:
         from src.core.dependency import Role
 
         return str(getattr(role, "value", role)).lower() == Role.ADMIN.value
+
+    @staticmethod
+    def _get_effective_collaboration_status(document: dict, user_id: str | None = None, is_admin: bool = False) -> dict:
+        if not document:
+            return {
+                "mode": "CLOSED",
+                "effective_mode": "CLOSED",
+                "is_effective_closed": True,
+                "is_read_only": True,
+                "can_edit": False,
+                "can_comment": False,
+                "can_view": False,
+            }
+        creator_id = str(document.get("creator_id") or "")
+        if is_admin or (user_id and str(user_id) == creator_id):
+            return {
+                "mode": document.get("collaboration_mode", "OPEN"),
+                "effective_mode": "OPEN",
+                "is_effective_closed": False,
+                "is_read_only": False,
+                "can_edit": True,
+                "can_comment": True,
+                "can_view": True,
+            }
+        now = datetime.now(timezone.utc)
+        schedules = document.get("collaboration_schedules") or []
+        active_schedules = [s for s in schedules if s.get("is_active", True)]
+        effective_mode = None
+        if active_schedules:
+            in_window_rule = None
+            for rule in active_schedules:
+                start_at = rule.get("start_at")
+                end_at = rule.get("end_at")
+                if isinstance(start_at, str):
+                    try:
+                        start_at = datetime.fromisoformat(start_at.replace("Z", "+00:00"))
+                    except Exception:
+                        start_at = None
+                elif isinstance(start_at, datetime) and start_at.tzinfo is None:
+                    start_at = start_at.replace(tzinfo=timezone.utc)
+
+                if isinstance(end_at, str):
+                    try:
+                        end_at = datetime.fromisoformat(end_at.replace("Z", "+00:00"))
+                    except Exception:
+                        end_at = None
+                elif isinstance(end_at, datetime) and end_at.tzinfo is None:
+                    end_at = end_at.replace(tzinfo=timezone.utc)
+
+                if end_at:
+                    if start_at:
+                        if start_at <= now <= end_at:
+                            in_window_rule = rule
+                            break
+                    elif now <= end_at:
+                        in_window_rule = rule
+                        break
+            if in_window_rule:
+                effective_mode = in_window_rule.get("mode", "EDIT").upper()
+            else:
+                fallback = "READ_ONLY"
+                for rule in active_schedules:
+                    if rule.get("fallback_mode"):
+                        fallback = rule.get("fallback_mode").upper()
+                effective_mode = fallback
+        if not effective_mode:
+            effective_mode = str(document.get("collaboration_mode") or "OPEN").upper()
+        return {
+            "mode": document.get("collaboration_mode", "OPEN"),
+            "effective_mode": effective_mode,
+            "is_effective_closed": effective_mode == "CLOSED",
+            "is_read_only": effective_mode in ("READ_ONLY", "VIEW"),
+            "can_edit": effective_mode in ("OPEN", "EDIT"),
+            "can_comment": effective_mode in ("OPEN", "COMMENT", "COMMENT_ONLY", "EDIT"),
+            "can_view": effective_mode != "CLOSED",
+        }
 
     @staticmethod
     async def _has_purchase(user_id: str | None, document_id: str) -> bool:
@@ -144,7 +218,7 @@ class DocumentService:
     @log_logic_execution
     async def get_personalized_recommendations(user_id: str, limit: int) -> List[dict]:
         history = await (
-            ReadingRepository.find({"user_id": user_id})
+            mongo.find("reading_sessions", {"user_id": user_id})
             .sort("last_read_at", -1)
             .limit(100)
             .to_list(length=100)
@@ -428,7 +502,7 @@ class DocumentService:
         if not (is_owner or is_admin or is_coauthor):
             raise HTTPException(status_code=403, detail="Bạn không có quyền chỉnh sửa nội dung tài liệu này")
 
-        status_info = CollaborationService.get_effective_collaboration_status(
+        status_info = DocumentService._get_effective_collaboration_status(
             document, user_id=user_id, is_admin=is_admin
         )
         if not status_info["can_edit"]:
@@ -443,7 +517,8 @@ class DocumentService:
             )
 
         if is_coauthor and not (is_owner or is_admin):
-            invite = await CollaborationRepository.find_invite(
+            invite = await mongo.find_one(
+                "collaboration_invites",
                 {"document_id": document_id, "invitee_id": user_id, "status": "ACCEPTED"}
             )
             if invite and invite.get("role") in ["viewer", "commenter"]:
@@ -460,7 +535,7 @@ class DocumentService:
             ):
                 raise HTTPException(
                     status_code=409,
-                    detail="Xung đột phiên bản: Tài liệu đã được cập nhật bởi một phiên làm việc khác",
+                    detail="Tài liệu đã được cập nhật bởi một phiên làm việc khác",
                 )
 
         if document.get("content"):
@@ -648,7 +723,7 @@ class DocumentService:
 
         is_coauthor = user_id in document.get("coauthors", [])
 
-        status_info = CollaborationService.get_effective_collaboration_status(
+        status_info = DocumentService._get_effective_collaboration_status(
             document, user_id=user_id, is_admin=DocumentService._is_admin(current_user)
         )
         if not status_info["can_view"]:

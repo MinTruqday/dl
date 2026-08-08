@@ -6,9 +6,7 @@ from datetime import datetime, timezone
 from fastapi import HTTPException
 from loguru import logger
 
-from src.core.infrastructure.database import database
 from src.repositories.document import DocumentRepository
-from src.repositories.reading import ReadingRepository
 
 class LibraryService:
 
@@ -24,7 +22,7 @@ class LibraryService:
             "documents": [],
             "created_at": datetime.now(timezone.utc),
         }
-        await ReadingRepository.insert_list(new_list)
+        await mongo.insert_one("reading_lists", new_list)
         logger.info("Reading collection created")
         return new_list
 
@@ -40,7 +38,8 @@ class LibraryService:
     @staticmethod
     @log_logic_execution
     async def get_reading_list_by_id(list_id: str, current_user):
-        reading_list = await ReadingRepository.find_list(
+        reading_list = await mongo.find_one(
+            "reading_lists",
             {"_id": list_id, "user_id": str(current_user.id)}
         )
         if not reading_list:
@@ -62,7 +61,8 @@ class LibraryService:
     async def add_document_to_list(
         list_id: str, document_id: str, current_user
     ) -> dict:
-        result = await ReadingRepository.update_list(
+        result = await mongo.update_one(
+            "reading_lists",
             {"_id": list_id, "user_id": str(current_user.id)},
             {
                 "$addToSet": {"documents": document_id},
@@ -78,7 +78,8 @@ class LibraryService:
     async def remove_document_from_list(
         list_id: str, document_id: str, current_user
     ) -> dict:
-        result = await ReadingRepository.update_list(
+        result = await mongo.update_one(
+            "reading_lists",
             {"_id": list_id, "user_id": str(current_user.id)},
             {
                 "$pull": {"documents": document_id},

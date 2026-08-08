@@ -539,14 +539,7 @@ services:
       - 8004:8000
     labels:
       - traefik.enable=true
-      - traefik.http.routers.content.rule=PathPrefix(`/dau-trang`)
-        || PathPrefix(`/danh-gia`) || PathPrefix(`/doc-hieu`)
-        || PathPrefix(`/ghim`) || PathPrefix(`/kham-pha`)
-        || PathPrefix(`/phien-ban`) || PathPrefix(`/tai-lieu`) || PathPrefix(`/thu-vien`)
-        || PathPrefix(`/xuat-ban`) || PathPrefix(`/danh-dau`) || PathPrefix(`/noi-bat`)
-        || PathPrefix(`/cam-quyen-nhap-lieu`) || PathPrefix(`/ghim-trang`)
-        || PathPrefix(`/xuat-cam-quyen`) || PathPrefix(`/phien-lam-cam-quyen`)
-        || PathPrefix(`/tai-lieu-hieu`)
+      - traefik.http.routers.content.rule=PathPrefix(`/tai-lieu`) || PathPrefix(`/phien-ban`) || PathPrefix(`/thu-vien`) || PathPrefix(`/xuat-ban`)
       - traefik.http.services.content.loadbalancer.server.port=8000
     env_file:
       - .env
@@ -581,6 +574,52 @@ services:
     volumes:
       - ./backend/collaboration/src:/app/src
       - ./backend/logs/collaboration:/app/logs
+    networks:
+      - doclib_network
+
+  engagement:
+    build:
+      context: ./backend
+      dockerfile: ./engagement/Dockerfile
+    container_name: doclib_engagement
+    restart: always
+    ports:
+      - 8017:8000
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.engagement.rule=PathPrefix(`/doc-hieu`) || PathPrefix(`/dau-trang`) || PathPrefix(`/ghim`) || PathPrefix(`/kham-pha`) || PathPrefix(`/danh-dau`) || PathPrefix(`/danh-gia`) || PathPrefix(`/noi-bat`)
+      - traefik.http.services.engagement.loadbalancer.server.port=8000
+    env_file:
+      - .env
+    depends_on:
+      - mongodb
+      - redis
+    volumes:
+      - ./backend/engagement/src:/app/src
+      - ./backend/logs/engagement:/app/logs
+    networks:
+      - doclib_network
+
+  search:
+    build:
+      context: ./backend
+      dockerfile: ./search/Dockerfile
+    container_name: doclib_search
+    restart: always
+    ports:
+      - 8018:8000
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.search.rule=PathPrefix(`/tim-kiem`)
+      - traefik.http.services.search.loadbalancer.server.port=8000
+    env_file:
+      - .env
+    depends_on:
+      - mongodb
+      - redis
+    volumes:
+      - ./backend/search/src:/app/src
+      - ./backend/logs/search:/app/logs
     networks:
       - doclib_network
 

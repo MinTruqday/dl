@@ -24,6 +24,8 @@ resources:
   - apps/messaging.yaml
   - apps/content.yaml
   - apps/collaboration.yaml
+  - apps/engagement.yaml
+  - apps/search.yaml
   - apps/drm.yaml
   - apps/finance.yaml
   - apps/management.yaml
