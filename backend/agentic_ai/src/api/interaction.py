@@ -28,6 +28,22 @@ def require_mode_tier(mode: str, tier: str) -> None:
         raise HTTPException(status_code=403, detail={"code": "advanced_mode_requires_pro"})
 
 
+def _validate_audio(req: ChatRequest) -> None:
+    if not req.audio_data:
+        return
+    from src.utils.multimodal import validate_audio
+
+    validate_audio(req.audio_data)
+
+
+def _validate_image(req: ChatRequest) -> None:
+    if not req.image_data:
+        return
+    from src.utils.multimodal import validate_image
+
+    validate_image(req.image_data)
+
+
 async def _persist_conversation_turns(
     session_id: str,
     user_id: str,
@@ -81,6 +97,16 @@ async def chat_endpoint(
     if token:
         req.token = token.replace("Bearer ", "")
 
+    is_quota_ok, quota_code = await _reserve_upload_quota(req)
+    if not is_quota_ok:
+        return {"answer": "", "route": "error", "error_code": quota_code}
+
+    try:
+        _validate_image(req)
+        _validate_audio(req)
+    except (ValueError, RuntimeError):
+        return {"answer": "", "route": "error", "error_code": "multimodal_processing_failed"}
+
     scan = await security.ascan_input(req.query, user_id=req.user_id or "")
     if not scan.passed:
         logger.warning("Query execution blocked due to security policy violation")
@@ -99,9 +125,6 @@ async def chat_endpoint(
         if not quota_ok:
             return {"answer": "", "route": "error", "error_code": quota_code}
         start_accounting()
-        is_quota_ok, quota_code = await _reserve_upload_quota(req)
-        if not is_quota_ok:
-            return {"answer": "", "route": "error", "error_code": quota_code}
         ctx = await context.build_context(
             session_id=req.session_id or "",
             user_id=req.user_id,
@@ -169,16 +192,10 @@ async def chat_endpoint(
         elif route == "chat":
             final_answer = route_data.get("answer", "")
             if not final_answer:
-                from huggingface_hub import AsyncInferenceClient
                 from langchain_core.messages import HumanMessage
-                from src.utils.huggingface import HFInferenceChat
+                from src.utils.huggingface import create_chat_model
 
-                from src.core.infrastructure.configuration import settings
-
-                llama_client = AsyncInferenceClient(
-                    model=settings.LLM_MODEL, token=settings.HF_TOKEN
-                )
-                chat_llm = HFInferenceChat(client=llama_client, model=settings.LLM_MODEL)
+                chat_llm = create_chat_model()
 
                 text_prompt = registry.get(PromptType.CHAT_ASSISTANT).format(query=req.query)
                 if req.image_data:
@@ -188,6 +205,13 @@ async def chat_endpoint(
                     ]
                 else:
                     content = text_prompt
+
+                if req.audio_data:
+                    if isinstance(content, str):
+                        content = [{"type": "text", "text": content}]
+                    content.append(
+                        {"type": "audio_url", "audio_url": {"url": req.audio_data}}
+                    )
 
                 res = await chat_llm.ainvoke([HumanMessage(content=content)], max_tokens=256)
                 final_answer = res.content
@@ -236,6 +260,8 @@ async def _reserve_upload_quota(req: ChatRequest):
         item_type = "document"
     elif req.image_data:
         item_type = "image"
+    elif req.audio_data:
+        item_type = "audio"
 
     if not item_type:
         return True, None
@@ -328,6 +354,20 @@ async def stream_endpoint(
         session_id = req.session_id or ""
         user_id = req.user_id or ""
 
+        is_quota_ok, quota_code = await _reserve_upload_quota(req)
+        if not is_quota_ok:
+            yield f"event: error\ndata: {json.dumps({'code': quota_code})}\n\n"
+            yield "event: done\ndata: [DONE]\n\n"
+            return
+
+        try:
+            _validate_image(req)
+            _validate_audio(req)
+        except (ValueError, RuntimeError):
+            yield f"event: error\ndata: {json.dumps({'code': 'multimodal_processing_failed'})}\n\n"
+            yield "event: done\ndata: [DONE]\n\n"
+            return
+
         scan = await security.ascan_input(req.query, session_id=session_id, user_id=user_id)
         if not scan.passed:
             agentops.record_security_event(
@@ -357,13 +397,6 @@ async def stream_endpoint(
                 agentops.record_session_end(session_id, "failed")
                 return
             start_accounting()
-            is_quota_ok, quota_code = await _reserve_upload_quota(req)
-            if not is_quota_ok:
-                yield f"event: error\ndata: {json.dumps({'code': quota_code})}\n\n"
-                yield "event: done\ndata: [DONE]\n\n"
-                agentops.record_session_end(session_id, "failed")
-                return
-
             if req.document_ids:
                 from src.tools.http_client import (
                     INTERNAL_API_URL,
@@ -433,16 +466,10 @@ async def stream_endpoint(
                     yield f"event: message\ndata: {json.dumps({'chunk': fast_answer})}\n\n"
                     final_answer = fast_answer
                 else:
-                    from huggingface_hub import AsyncInferenceClient
                     from langchain_core.messages import HumanMessage
-                    from src.utils.huggingface import HFInferenceChat
+                    from src.utils.huggingface import create_chat_model
 
-                    from src.core.infrastructure.configuration import settings
-
-                    llama_client = AsyncInferenceClient(
-                        model=settings.LLM_MODEL, token=settings.HF_TOKEN
-                    )
-                    chat_llm = HFInferenceChat(client=llama_client, model=settings.LLM_MODEL)
+                    chat_llm = create_chat_model()
 
                     text_prompt = registry.get(PromptType.CHAT_ASSISTANT).format(query=req.query)
                     if req.image_data:
@@ -452,6 +479,12 @@ async def stream_endpoint(
                         ]
                     else:
                         content = text_prompt
+                    if req.audio_data:
+                        if isinstance(content, str):
+                            content = [{"type": "text", "text": content}]
+                        content.append(
+                            {"type": "audio_url", "audio_url": {"url": req.audio_data}}
+                        )
 
                     try:
                         response = await chat_llm.ainvoke(

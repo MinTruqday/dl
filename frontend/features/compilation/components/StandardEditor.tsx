@@ -93,6 +93,7 @@ export default function StandardEditor({
         indent,
         shape,
         video,
+        audio,
         aiText,
         formDropdown,
         formCheckBox,
@@ -125,6 +126,7 @@ export default function StandardEditor({
         import("./DocLibIndent").then((module) => module.default),
         import("./DocLibShape").then((module) => module.default),
         import("./DocLibVideo").then((module) => module.default),
+        import("./DocLibAudio").then((module) => module.default),
         import("./DocLibAiText").then((module) => module.default),
         import("./DocLibFormDropdown").then((module) => module.default),
         import("./DocLibFormCheckBox").then((module) => module.default),
@@ -183,6 +185,7 @@ export default function StandardEditor({
           indent: { class: indent },
           shape,
           video,
+          audio,
           aiText,
           formDropdown,
           formCheckBox,
@@ -249,7 +252,8 @@ export default function StandardEditor({
       if (changeTimer.current) window.clearTimeout(changeTimer.current);
       const editor = activeEditorRef.current;
       activeEditorRef.current = null;
-      if (editor) void editor.isReady.then(() => editor.destroy()).catch(() => undefined);
+      if (editor)
+        void editor.isReady.then(() => editor.destroy()).catch(() => undefined);
       holder.remove();
     };
   }, []);

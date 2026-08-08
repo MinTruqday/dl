@@ -48,15 +48,24 @@ class SecurityHarness:
     async def _adetect_security_issues(
         self, text: str, allow_ai_review: bool = True
     ) -> tuple[str, List[str]]:
-        from huggingface_hub import AsyncInferenceClient
         from langchain_core.messages import HumanMessage
-        from src.utils.huggingface import HFInferenceChat
+        from src.utils.huggingface import create_chat_model
         from src.core.infrastructure.configuration import settings
         from src.schemas.security import SecurityEvaluation
         from src.core.registry import PromptType, registry
         
         violations = []
-        sanitized = text
+        from src.core.security.guardrails import guardrails_engine
+
+        baseline = guardrails_engine.inspect_input(text)
+        sanitized = baseline.get("sanitized_text", text)
+        category = baseline.get("threat_category", "none")
+        if category == "prompt_injection":
+            violations.append("prompt_injection:baseline_rule")
+        elif category == "credential_leak":
+            violations.append("credential_leak")
+        elif category == "pii":
+            violations.append("pii_detected")
 
         if self.analyzer and self.anonymizer:
             try:
@@ -77,8 +86,7 @@ class SecurityHarness:
             return sanitized, list(dict.fromkeys(violations))
 
         try:
-            client = AsyncInferenceClient(model=settings.LLM_MODEL, token=settings.HF_TOKEN)
-            llm = HFInferenceChat(client=client, model=settings.LLM_MODEL)
+            llm = create_chat_model()
             structured_llm = llm.with_structured_output(SecurityEvaluation)
             
             prompt = registry.get(PromptType.SECURITY_SCAN).format(text=sanitized)
@@ -159,6 +167,12 @@ class SecurityHarness:
     async def ascan_output(self, text: str, session_id: str = "") -> str:
         if not text:
             return text
+        from src.core.security.guardrails import guardrails_engine
+
+        baseline = guardrails_engine.inspect_output(text)
+        text = baseline.get("sanitized_text", text)
+        if baseline.get("threat_category") == "credential_leak":
+            raise PermissionError("output_credential_leak_blocked")
         sanitized, violations = await self._adetect_security_issues(
             text, allow_ai_review=False
         )

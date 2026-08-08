@@ -352,7 +352,7 @@ export default function CollaborationPage() {
                             fallback_mode: schedFallback,
                             is_active: true,
                           };
-                          setLocalSchedules([...activeSchedulesList, newRule]);
+                          setLocalSchedules([ activeSchedulesList, newRule]);
                           setSchedTitle("");
                           setSchedStart("");
                           setSchedEnd("");
@@ -500,7 +500,7 @@ export default function CollaborationPage() {
                       type="password"
                       value={sharePassword}
                       onChange={(e) => setSharePassword(e.target.value)}
-                      placeholder="Nhập mật khẩu riêng cho link..."
+                      placeholder="Nhập mật khẩu riêng cho link "
                       className="apple-input w-full"
                     />
                   </div>
@@ -557,7 +557,7 @@ export default function CollaborationPage() {
                   <input
                     value={joinLinkToken}
                     onChange={(e) => setJoinLinkToken(e.target.value)}
-                    placeholder="Dán mã liên kết..."
+                    placeholder="Dán mã liên kết "
                     className="apple-input w-full"
                   />
                 </div>
@@ -569,7 +569,7 @@ export default function CollaborationPage() {
                     type="password"
                     value={joinLinkPassword}
                     onChange={(e) => setJoinLinkPassword(e.target.value)}
-                    placeholder="Nhập mật khẩu..."
+                    placeholder="Nhập mật khẩu "
                     className="apple-input w-full"
                   />
                 </div>
@@ -653,7 +653,7 @@ export default function CollaborationPage() {
                   <input
                     value={reqDocId}
                     onChange={(e) => setReqDocId(e.target.value)}
-                    placeholder="Nhập ID tài liệu..."
+                    placeholder="Nhập ID tài liệu "
                     className="apple-input w-full"
                   />
                 </div>
@@ -678,7 +678,7 @@ export default function CollaborationPage() {
                   <textarea
                     value={reqMessage}
                     onChange={(e) => setReqMessage(e.target.value)}
-                    placeholder="Lý do xin tham gia..."
+                    placeholder="Lý do xin tham gia "
                     className="apple-input min-h-20 w-full"
                   />
                 </div>

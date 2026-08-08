@@ -2,20 +2,15 @@ import asyncio
 from typing import Dict, List, Optional
 
 from langchain_core.messages import HumanMessage, SystemMessage
-from huggingface_hub import AsyncInferenceClient
 from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 from src.core.registry import PromptType, registry
 from src.store.vector import vector_store
-from src.utils.huggingface import HFInferenceChat
+from src.utils.huggingface import create_chat_model
 
 
-_hf = AsyncInferenceClient(
-    model=settings.LLM_MODEL,
-    token=settings.HF_TOKEN,
-)
-_llm = HFInferenceChat(client=_hf, model=settings.LLM_MODEL)
+_llm = create_chat_model()
 
 
 class RetrievalRag:
@@ -241,43 +236,14 @@ class RetrievalRag:
         self, document_ids: List[str], seed_query: str
     ) -> str:
         try:
-            from src.memory.management import memory_manager
-            import json
+            from src.store.graph import graph_store
 
-            if not memory_manager._redis:
+            relations = await graph_store.expand(document_ids, seed_query)
+            if not relations:
                 return ""
-
-            all_edges = []
-            for doc_id in document_ids:
-                raw = await memory_manager._redis.lrange(f"graphrag:edges:{doc_id}", 0, -1)
-                for item in raw:
-                    try:
-                        edge = json.loads(item)
-                        all_edges.append(edge)
-                    except Exception:
-                        pass
-
-            if not all_edges:
-                return ""
-
-            seed_lower = seed_query.lower()
-            relevant = [
-                e for e in all_edges
-                if seed_lower in e.get("source", "").lower()
-                or seed_lower in e.get("target", "").lower()
-                or any(
-                    word in e.get("source", "").lower() or word in e.get("target", "").lower()
-                    for word in seed_lower.split()
-                    if len(word) > 3
-                )
-            ]
-
-            if not relevant:
-                relevant = all_edges[:10]
-
             lines = [
                 f"{e.get('source')} --[{e.get('relation')}]--> {e.get('target')}"
-                for e in relevant[:20]
+                for e in relations
             ]
             return "Knowledge graph context:\n" + "\n".join(lines)
         except Exception:

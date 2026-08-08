@@ -13,9 +13,12 @@ class UploadService:
     allowed_extensions = {
         "pdf", "docx", "doc", "xlsx", "xls", "pptx", "ppt", "txt", "zip",
         "csv", "json", "md", "png", "jpg", "jpeg", "webp", "webm", "doclib",
-        "doclibx",
+        "doclibx", "mp4", "mov", "m4v", "mp3", "wav", "ogg", "oga", "m4a",
+        "aac", "flac",
     }
     image_extensions = {"png", "jpg", "jpeg", "webp"}
+    video_extensions = {"webm", "mp4", "mov", "m4v"}
+    audio_extensions = {"mp3", "wav", "ogg", "oga", "m4a", "aac", "flac"}
 
     @staticmethod
     def validate_filename(filename: str, content_type: str, image_only: bool = False) -> str:
@@ -27,6 +30,12 @@ class UploadService:
             raise HTTPException(status_code=400, detail="Định dạng tệp tin không được hỗ trợ")
         if image_only and not content_type.lower().startswith("image/"):
             raise HTTPException(status_code=400, detail="Định dạng hình ảnh không hợp lệ")
+        if ext in UploadService.image_extensions and not content_type.lower().startswith("image/"):
+            raise HTTPException(status_code=400, detail="Kiểu nội dung hình ảnh không hợp lệ")
+        if ext in UploadService.video_extensions and not content_type.lower().startswith("video/"):
+            raise HTTPException(status_code=400, detail="Kiểu nội dung video không hợp lệ")
+        if ext in UploadService.audio_extensions and not content_type.lower().startswith("audio/"):
+            raise HTTPException(status_code=400, detail="Kiểu nội dung âm thanh không hợp lệ")
         return ext
 
     @staticmethod
@@ -40,7 +49,15 @@ class UploadService:
 
     @staticmethod
     def object_path(ext: str, content_type: str, owner_id: str | None, is_system: bool, is_message_attachment: bool, is_temporary: bool = False) -> str:
-        kind = "images" if content_type.lower().startswith("image/") else "documents"
+        normalized_type = content_type.lower()
+        if normalized_type.startswith("image/"):
+            kind = "images"
+        elif normalized_type.startswith("video/"):
+            kind = "videos"
+        elif normalized_type.startswith("audio/"):
+            kind = "audio"
+        else:
+            kind = "documents"
         if is_system:
             return f"system/{kind}/{uuid.uuid4().hex}.{ext}"
         if owner_id and is_temporary:

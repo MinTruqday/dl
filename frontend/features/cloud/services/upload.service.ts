@@ -96,3 +96,19 @@ export async function getChatAttachmentBlobUrlAPI(filePath: string) {
   if (!response.ok) throw new Error("Không thể tải tệp tin nhắn");
   return URL.createObjectURL(await response.blob());
 }
+
+export async function getProtectedAssetBlobUrlAPI(filePath: string) {
+  return getChatAttachmentBlobUrlAPI(filePath);
+}
+
+export async function downloadProtectedAssetAPI(
+  filePath: string,
+  filename: string,
+) {
+  const blobUrl = await getProtectedAssetBlobUrlAPI(filePath);
+  const anchor = document.createElement("a");
+  anchor.href = blobUrl;
+  anchor.download = filename;
+  anchor.click();
+  if (blobUrl.startsWith("blob:")) URL.revokeObjectURL(blobUrl);
+}

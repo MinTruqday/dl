@@ -393,7 +393,6 @@ async def get_preview_url(
     from src.core.storage import get_bucket, get_storage_client
     try:
         client = await get_storage_client()
-        # Create presigned URL with inline content disposition
         url = await client.generate_presigned_url(
             "get_object",
             Params={

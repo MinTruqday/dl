@@ -54,7 +54,13 @@ def call(method, path, bearer=None, body=None, raw=None, headers=None, follow=Tr
     try:
         with opener.open(request, timeout=20) as response:
             content = response.read()
-            return response.status, json.loads(content) if content else None, response.headers
+            if not content:
+                payload = None
+            try:
+                payload = json.loads(content) if content else None
+            except json.JSONDecodeError:
+                payload = content
+            return response.status, payload, response.headers
     except urllib.error.HTTPError as error:
         content = error.read()
         try:
@@ -99,8 +105,40 @@ async def main():
         object_paths.append(path)
         assert path.startswith(f"users/{OWNER_ID}/")
         assert await cloud.storage_items.find_one({"_id": item_id, "size": len(content)})
+        media_item_ids = []
+        media_content = b"editor-media" * 500
+        for filename, content_type, expected_folder in (
+            ("editor.mp4", "video/mp4", "videos"),
+            ("editor.mp3", "audio/mpeg", "audio"),
+        ):
+            media_data, media_headers = multipart(filename, media_content, content_type)
+            status, media_payload, _ = call(
+                "POST",
+                "/tai-len/tap-tin",
+                owner_token,
+                raw=media_data,
+                headers=media_headers,
+            )
+            assert status == 201, media_payload
+            media_path = media_payload["data"]["url"]
+            assert media_path.startswith(f"users/{OWNER_ID}/{expected_folder}/")
+            assert call("GET", f"/tai-len/noi-dung/{media_path}", owner_token)[0] == 200
+            media_item_ids.append(media_payload["data"]["item_id"])
+        invalid_media, invalid_media_headers = multipart(
+            "invalid.mp4",
+            b"invalid-media" * 500,
+            "text/plain",
+        )
+        assert call(
+            "POST",
+            "/tai-len/tap-tin",
+            owner_token,
+            raw=invalid_media,
+            headers=invalid_media_headers,
+        )[0] == 400
         status, quota, _ = call("GET", "/luu-tru/han-muc", owner_token)
-        assert status == 200 and quota["data"]["used"] == len(content), quota
+        assert status == 200
+        assert quota["data"]["used"] == len(content) + 2 * len(media_content), quota
         assert call("GET", f"/tai-len/luu-tru/{path}", shared_token, follow=False)[0] == 403
         version_content = b"cloud-version-data" * 400
         version_data, version_headers = multipart(
@@ -144,7 +182,7 @@ async def main():
         assert current_item["url"] == path
         status, quota, _ = call("GET", "/luu-tru/han-muc", owner_token)
         assert status == 200
-        assert quota["data"]["used"] == len(content) + len(version_content), quota
+        assert quota["data"]["used"] == len(content) + len(version_content) + 2 * len(media_content), quota
 
         status, share_payload, _ = call(
             "POST",
@@ -234,6 +272,8 @@ async def main():
         assert await cloud.storage_items.find_one({"_id": child_id}) is None
         assert call("DELETE", f"/luu-tru/tap-tin/{item_id}?hard_delete=true", owner_token)[0] == 200
         assert call("DELETE", f"/luu-tru/tap-tin/{confirmed_item_id}?hard_delete=true", owner_token)[0] == 200
+        for media_item_id in media_item_ids:
+            assert call("DELETE", f"/luu-tru/tap-tin/{media_item_id}?hard_delete=true", owner_token)[0] == 200
         print("cloud integration passed")
     finally:
         records = await cloud.storage_items.find({"owner_id": {"$in": [OWNER_ID, SHARED_ID]}}).to_list(length=None)

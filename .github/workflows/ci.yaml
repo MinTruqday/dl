@@ -87,6 +87,7 @@ jobs:
               keys.update(re.findall(r'os\.environ\["([A-Z0-9_]+)"\]', path.read_text()))
           for key in sorted(keys):
               print(f"{key}=validation")
+          print("NEO4J_AUTH=validation/validation")
           PY
 
       - name: Render Kubernetes manifests

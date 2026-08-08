@@ -1,23 +1,13 @@
 import csv
 import io
-import json
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
-from motor.motor_asyncio import AsyncIOMotorClient
-from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import database
-from src.core.infrastructure.mongo import mongo
 from src.core.logic_logger import log_logic_execution
+from src.services import content_client, finance_client
+from src.services.humanity_client import HumanityClient
 
 
 class AnalyticsService:
-
-    @staticmethod
-    def _get_client() -> AsyncIOMotorClient:
-        if database.mongodb is not None:
-            return database.mongodb
-        return mongo.client
-
     @staticmethod
     def _parse_date(date_str: Optional[str]) -> Optional[datetime]:
         if not date_str:
@@ -36,50 +26,27 @@ class AnalyticsService:
         from_date: Optional[str] = None,
         to_date: Optional[str] = None,
     ) -> Dict[str, Any]:
-        client = AnalyticsService._get_client()
-        content_db = client[settings.CONTENT_DB_NAME]
-        finance_db = client[settings.FINANCE_DB_NAME]
-        humanity_db = client[settings.HUMANITY_DB_NAME]
-
-        documents = await content_db.documents.find(
-            {"creator_id": user_id, "status": "published"}
-        ).to_list(length=None)
+        documents = await content_client.analytics_documents(creator_id=user_id)
         document_ids = [str(doc["_id"]) for doc in documents]
-
-        purchase_filter: Dict[str, Any] = {
-            "document_id": {"$in": document_ids},
-            "status": "ACTIVE",
-        }
-        start_dt = AnalyticsService._parse_date(from_date)
-        end_dt = AnalyticsService._parse_date(to_date)
-        if start_dt or end_dt:
-            time_filter: Dict[str, Any] = {}
-            if start_dt:
-                time_filter["$gte"] = start_dt
-            if end_dt:
-                time_filter["$lte"] = end_dt
-            purchase_filter["purchased_at"] = time_filter
-
-        purchases = await finance_db.purchases.find(purchase_filter).to_list(length=None)
-        total_revenue = sum(int(p.get("price", 0)) for p in purchases)
-        total_purchases = len(purchases)
+        finance = await finance_client.author_analytics(
+            user_id, document_ids, from_date, to_date
+        )
         total_views = sum(int(doc.get("views", doc.get("view_count", 0))) for doc in documents)
         conversion_rate = (
-            round((total_purchases / total_views) * 100, 2) if total_views > 0 else 0.0
+            round((finance.get("total_purchases", 0) / total_views) * 100, 2)
+            if total_views > 0
+            else 0.0
         )
-        unique_buyers = len({str(p.get("user_id")) for p in purchases if p.get("user_id")})
-
-        wallet = await finance_db.wallets.find_one({"_id": user_id})
-        profile = await humanity_db.users.find_one({"_id": user_id})
+        profile = await HumanityClient.get(user_id)
 
         return {
-            "total_revenue": total_revenue,
+            "total_revenue": int(finance.get("total_revenue", 0)),
             "total_views": total_views,
-            "total_purchases": total_purchases,
+            "total_purchases": int(finance.get("total_purchases", 0)),
             "conversion_rate": conversion_rate,
-            "unique_buyers": unique_buyers,
+            "unique_buyers": int(finance.get("unique_buyers", 0)),
             "total_documents": len(documents),
-            "available_balance": int(wallet.get("balance", 0)) if wallet else 0,
+            "available_balance": int(finance.get("available_balance", 0)),
             "reward_points": int(profile.get("reward_points", 0)) if profile else 0,
         }
 
@@ -91,13 +58,7 @@ class AnalyticsService:
         from_date: Optional[str] = None,
         to_date: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
-        client = AnalyticsService._get_client()
-        content_db = client[settings.CONTENT_DB_NAME]
-        finance_db = client[settings.FINANCE_DB_NAME]
-
-        documents = await content_db.documents.find(
-            {"creator_id": user_id, "status": "published"}
-        ).to_list(length=None)
+        documents = await content_client.analytics_documents(creator_id=user_id)
         document_ids = [str(doc["_id"]) for doc in documents]
 
         start_dt = AnalyticsService._parse_date(from_date)
@@ -109,13 +70,12 @@ class AnalyticsService:
         if not end_dt:
             end_dt = now
 
-        purchases = await finance_db.purchases.find(
-            {
-                "document_id": {"$in": document_ids},
-                "status": "ACTIVE",
-                "purchased_at": {"$gte": start_dt, "$lte": end_dt},
-            }
-        ).to_list(length=None)
+        finance = await finance_client.author_analytics(
+            user_id,
+            document_ids,
+            start_dt.isoformat(),
+            end_dt.isoformat(),
+        )
 
         buckets: Dict[str, Dict[str, Any]] = {}
         curr = start_dt
@@ -128,13 +88,11 @@ class AnalyticsService:
             }
             curr += timedelta(days=1)
 
-        for p in purchases:
-            p_date = p.get("purchased_at")
-            if isinstance(p_date, datetime):
-                key = p_date.strftime("%Y-%m-%d")
-                if key in buckets:
-                    buckets[key]["revenue"] += int(p.get("price", 0))
-                    buckets[key]["purchases"] += 1
+        for row in finance.get("daily", []):
+            key = str(row.get("date", ""))
+            if key in buckets:
+                buckets[key]["revenue"] = int(row.get("revenue", 0))
+                buckets[key]["purchases"] = int(row.get("purchases", 0))
 
         return list(buckets.values())
 
@@ -150,46 +108,17 @@ class AnalyticsService:
         from_date: Optional[str] = None,
         to_date: Optional[str] = None,
     ) -> Dict[str, Any]:
-        client = AnalyticsService._get_client()
-        content_db = client[settings.CONTENT_DB_NAME]
-        finance_db = client[settings.FINANCE_DB_NAME]
-
-        query: Dict[str, Any] = {"creator_id": user_id, "status": "published"}
-        if search and search.strip():
-            query["title"] = {"$regex": search.strip(), "$options": "i"}
-
-        documents = await content_db.documents.find(query).to_list(length=None)
+        documents = await content_client.analytics_documents(
+            creator_id=user_id,
+            search=search.strip() if search else None,
+        )
         document_ids = [str(doc["_id"]) for doc in documents]
-
-        purchase_filter: Dict[str, Any] = {
-            "document_id": {"$in": document_ids},
-            "status": "ACTIVE",
-        }
-        start_dt = AnalyticsService._parse_date(from_date)
-        end_dt = AnalyticsService._parse_date(to_date)
-        if start_dt or end_dt:
-            time_filter: Dict[str, Any] = {}
-            if start_dt:
-                time_filter["$gte"] = start_dt
-            if end_dt:
-                time_filter["$lte"] = end_dt
-            purchase_filter["purchased_at"] = time_filter
-
-        pipeline = [
-            {"$match": purchase_filter},
-            {
-                "$group": {
-                    "_id": "$document_id",
-                    "revenue": {"$sum": "$price"},
-                    "purchases": {"$sum": 1},
-                    "last_purchased_at": {"$max": "$purchased_at"},
-                }
-            },
-        ]
-        revenue_rows = await finance_db.purchases.aggregate(pipeline).to_list(length=None)
-        revenue_map = {row["_id"]: row for row in revenue_rows}
-
-        total_author_revenue = sum(row.get("revenue", 0) for row in revenue_rows)
+        finance = await finance_client.author_analytics(
+            user_id, document_ids, from_date, to_date
+        )
+        revenue_rows = finance.get("documents", [])
+        revenue_map = {row["document_id"]: row for row in revenue_rows}
+        total_author_revenue = int(finance.get("total_revenue", 0))
 
         items = []
         for doc in documents:
@@ -206,10 +135,11 @@ class AnalyticsService:
             )
 
             last_purchase = rev_info.get("last_purchased_at")
-            if isinstance(last_purchase, datetime):
-                last_purchase_str = last_purchase.isoformat()
-            else:
-                last_purchase_str = None
+            last_purchase_str = (
+                last_purchase.isoformat()
+                if isinstance(last_purchase, datetime)
+                else last_purchase
+            )
 
             items.append(
                 {
@@ -264,46 +194,19 @@ class AnalyticsService:
         from_date: Optional[str] = None,
         to_date: Optional[str] = None,
     ) -> Dict[str, Any]:
-        client = AnalyticsService._get_client()
-        content_db = client[settings.CONTENT_DB_NAME]
-        finance_db = client[settings.FINANCE_DB_NAME]
-        humanity_db = client[settings.HUMANITY_DB_NAME]
-
-        purchase_filter: Dict[str, Any] = {"status": "ACTIVE"}
-        start_dt = AnalyticsService._parse_date(from_date)
-        end_dt = AnalyticsService._parse_date(to_date)
-        if start_dt or end_dt:
-            time_filter: Dict[str, Any] = {}
-            if start_dt:
-                time_filter["$gte"] = start_dt
-            if end_dt:
-                time_filter["$lte"] = end_dt
-            purchase_filter["purchased_at"] = time_filter
-
-        purchases = await finance_db.purchases.find(purchase_filter).to_list(length=None)
-        total_platform_revenue = sum(int(p.get("price", 0)) for p in purchases)
-        total_platform_purchases = len(purchases)
-
-        total_users = await humanity_db.users.count_documents({})
-        total_authors = await humanity_db.users.count_documents({"role": {"$in": ["author", "admin"]}})
-        total_documents = await content_db.documents.count_documents({"status": "published"})
-
-        all_docs = await content_db.documents.find({"status": "published"}).to_list(length=None)
+        finance = await finance_client.system_analytics(from_date, to_date)
+        user_stats = await HumanityClient.stats()
+        all_docs = await content_client.analytics_documents()
+        total_documents = len(all_docs)
         total_platform_views = sum(int(doc.get("views", doc.get("view_count", 0))) for doc in all_docs)
-
-        author_revenue_pipeline = [
-            {"$match": purchase_filter},
-            {"$group": {"_id": "$seller_id", "revenue": {"$sum": "$price"}, "purchases": {"$sum": 1}}},
-            {"$sort": {"revenue": -1}},
-            {"$limit": 10},
-        ]
-        top_authors_raw = await finance_db.purchases.aggregate(author_revenue_pipeline).to_list(length=None)
+        top_authors_raw = finance.get("top_authors", [])
+        author_ids = [row.get("author_id") for row in top_authors_raw if row.get("author_id")]
+        profiles = await HumanityClient.get_many(author_ids) if author_ids else []
+        profile_map = {str(profile.get("_id")): profile for profile in profiles}
         top_authors = []
         for a in top_authors_raw:
-            seller_id = a.get("_id")
-            user_doc = (
-                await humanity_db.users.find_one({"_id": seller_id}) if seller_id else None
-            )
+            seller_id = a.get("author_id")
+            user_doc = profile_map.get(str(seller_id))
             top_authors.append(
                 {
                     "author_id": seller_id,
@@ -317,17 +220,12 @@ class AnalyticsService:
                 }
             )
 
-        doc_revenue_pipeline = [
-            {"$match": purchase_filter},
-            {"$group": {"_id": "$document_id", "revenue": {"$sum": "$price"}, "purchases": {"$sum": 1}}},
-            {"$sort": {"revenue": -1}},
-            {"$limit": 10},
-        ]
-        top_docs_raw = await finance_db.purchases.aggregate(doc_revenue_pipeline).to_list(length=None)
+        document_map = {str(doc.get("_id")): doc for doc in all_docs}
+        top_docs_raw = finance.get("top_documents", [])
         top_documents = []
         for d in top_docs_raw:
-            doc_id = d.get("_id")
-            doc_info = await content_db.documents.find_one({"_id": doc_id}) if doc_id else None
+            doc_id = d.get("document_id")
+            doc_info = document_map.get(str(doc_id))
             top_documents.append(
                 {
                     "document_id": doc_id,
@@ -338,12 +236,12 @@ class AnalyticsService:
             )
 
         return {
-            "total_revenue": total_platform_revenue,
-            "total_purchases": total_platform_purchases,
+            "total_revenue": int(finance.get("total_revenue", 0)),
+            "total_purchases": int(finance.get("total_purchases", 0)),
             "total_views": total_platform_views,
             "total_documents": total_documents,
-            "total_users": total_users,
-            "total_authors": total_authors,
+            "total_users": int(user_stats.get("total_users", 0)),
+            "total_authors": int(user_stats.get("total_authors", 0)),
             "top_authors": top_authors,
             "top_documents": top_documents,
         }

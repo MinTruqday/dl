@@ -1,0 +1,4 @@
+accelerate==1.10.1
+qwen-omni-utils==0.0.9
+soundfile==0.13.1
+git+https://github.com/huggingface/transformers@v4.51.3-Qwen2.5-Omni-preview

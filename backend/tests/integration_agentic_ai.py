@@ -59,7 +59,16 @@ async def main():
     assert call("GET", "/health")[0] == 200
     status, readiness = call("GET", "/ready")
     assert status == 200, readiness
-    assert all(value == "ready" for value in readiness["checks"].values())
+    assert all(
+        value == "ready"
+        for key, value in readiness["checks"].items()
+        if key != "fallback_model"
+    )
+    assert readiness["checks"]["fallback_model"] in {
+        "ready",
+        "not_configured",
+        "unknown",
+    }
 
     user = CurrentUser(_id="agentic-user", email="agentic@example.com")
     assert user.ai_tier is Tier.BASIC
@@ -84,6 +93,7 @@ async def main():
             "sub": "admin@example.com",
             "role": "admin",
             "sid": "agentic-admin-session",
+            "ai_tier": "PREMIUM",
         },
         SECRET_KEY,
         algorithm="HS256",

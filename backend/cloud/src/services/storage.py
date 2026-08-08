@@ -529,7 +529,6 @@ class StorageService:
         if not item.is_locked:
             return item
         if item.locked_by != owner_id:
-            # Optionally check if user is Admin here, but restricting to owner for now
             from fastapi import HTTPException
             raise HTTPException(status_code=403, detail="Chỉ người đã khóa tệp mới có quyền mở khóa")
         

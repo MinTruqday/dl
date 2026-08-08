@@ -284,6 +284,7 @@ export default function ChatPage() {
                 <input
                   ref={fileInput}
                   type="file"
+                  accept="image/*,audio/*,.pdf,.txt,.md,.doc,.docx"
                   className="hidden"
                   onChange={(event) => setFile(event.target.files?.[0] ?? null)}
                 />

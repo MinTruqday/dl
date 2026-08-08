@@ -109,6 +109,12 @@ async def readiness_check():
     except Exception:
         checks["qdrant"] = "unavailable"
     try:
+        from src.store.graph import graph_store
+        await graph_store.verify_connectivity()
+        checks["neo4j"] = "ready"
+    except Exception:
+        checks["neo4j"] = "unavailable"
+    try:
         import httpx
 
         async with httpx.AsyncClient(timeout=3) as client:
@@ -120,10 +126,33 @@ async def readiness_check():
             )
     except Exception:
         checks["object_storage"] = "unavailable"
-    ready = all(value == "ready" for value in checks.values())
+    try:
+        from src.utils.local_models import local_model_client
+
+        checks.update(await local_model_client.readiness())
+    except Exception:
+        checks["primary_model"] = "unavailable"
+        checks["fallback_model"] = "unavailable"
+    required_checks = {
+        key: value
+        for key, value in checks.items()
+        if key not in {"primary_model", "fallback_model"}
+    }
+    infrastructure_ready = all(
+        value == "ready" for value in required_checks.values()
+    )
+    model_ready = any(
+        checks.get(key) == "ready"
+        for key in {"primary_model", "fallback_model"}
+    )
+    ready = infrastructure_ready and model_ready
+    complete = ready and all(
+        checks.get(key) == "ready"
+        for key in {"primary_model", "fallback_model"}
+    )
     return JSONResponse(
         status_code=200 if ready else 503,
-        content={"status": "ready" if ready else "degraded", "checks": checks},
+        content={"status": "ready" if complete else "degraded", "checks": checks},
     )
 @app.get("/evaluate/metrics")
 async def harness_metrics():
@@ -156,6 +185,12 @@ async def startup_event():
     except Exception:
         logger.exception("Qdrant vector store initialization error")
     try:
+        from src.store.graph import graph_store
+        await graph_store.ensure_schema()
+        logger.info("Neo4j graph store connection established")
+    except Exception:
+        logger.exception("Neo4j graph store initialization error")
+    try:
         from src.core.infrastructure.database import init_db
         await init_db()
         if settings.MONGODB_URI:
@@ -183,7 +218,22 @@ async def startup_event():
         logger.info("Event-driven loop started")
     except Exception:
         logger.exception("Event-driven loop startup error")
+    try:
+        from src.utils.background import create_background_task
+        from src.utils.local_models import local_model_client
+
+        create_background_task(
+            local_model_client.warm_primary(),
+            "primary-model-warmup",
+        )
+    except Exception:
+        logger.exception("Primary model warmup startup error")
 async def shutdown_event():
+    try:
+        from src.store.graph import graph_store
+        await graph_store.close()
+    except Exception:
+        logger.exception("Neo4j graph store shutdown failed")
     try:
         from src.utils.background import drain_background_tasks
 

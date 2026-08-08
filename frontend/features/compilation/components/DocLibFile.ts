@@ -1,4 +1,8 @@
 import { API, BlockTool } from "@editorjs/editorjs";
+import {
+  downloadProtectedAssetAPI,
+  uploadAssetAPI,
+} from "@/features/cloud/services/upload.service";
 
 export default class DocLibFile implements BlockTool {
   static readonly feature = {
@@ -10,7 +14,6 @@ export default class DocLibFile implements BlockTool {
 
   private api: API;
   private wrapper: HTMLElement | null = null;
-  private config: any;
   private data: {
     file: { url: string; name: string; size: number; extension: string };
     title: string;
@@ -27,9 +30,8 @@ export default class DocLibFile implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, config }: { api: API; data: any; config?: any }) {
+  constructor({ api, data }: { api: API; data: any; config?: any }) {
     this.api = api;
-    this.config = config || {};
     this.data = {
       file: {
         url: data?.file?.url || "",
@@ -99,12 +101,22 @@ export default class DocLibFile implements BlockTool {
       info.appendChild(title);
       info.appendChild(meta);
 
-      const download = document.createElement("a");
+      const download = document.createElement("button");
+      download.type = "button";
       download.classList.add("doclib-file-download");
-      download.href = this.data?.file?.url;
-      download.target = "_blank";
       download.innerHTML =
         '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="211121415a48f55a"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="20,4 20,18 9,8 11,9 9,5 17,5"/></svg>';
+      download.addEventListener("click", async () => {
+        download.disabled = true;
+        try {
+          await downloadProtectedAssetAPI(
+            this.data.file.url,
+            this.data.file.name,
+          );
+        } finally {
+          download.disabled = false;
+        }
+      });
 
       card.appendChild(icon);
       card.appendChild(info);
@@ -132,55 +144,25 @@ export default class DocLibFile implements BlockTool {
       fileInput.type = "file";
       fileInput.style.display = "none";
 
-      fileInput.addEventListener("change", () => {
+      fileInput.addEventListener("change", async () => {
         if (fileInput.files && fileInput.files[0]) {
           const file = fileInput.files[0];
-          const formData = new FormData();
-          formData.append("file", file);
-          const endpoint = this.config?.endpoints?.byFile || "/api/uploadFile";
-
           uploader.innerHTML =
-      '<div style="padding: 20px; font-weight: 500;">Uploading</div>';
-
-          fetch(endpoint, { method: "POST", body: formData })
-            .then((res) => res.json())
-            .then((res) => {
-              if (res.success === 1 && res.file && res.file.url) {
-                if (this.data.file) this.data.file.url = res.file.url;
-                this.data.file = {
-                  url: res.file.url,
-                  name: file.name,
-                  size: file.size,
-                  extension: file.name.split(".").pop()?.toUpperCase() || "",
-                };
-                this.data.title = file.name;
-              } else {
-                const newUrl =
-                  res.url || res.data?.url || URL.createObjectURL(file);
-                if (this.data.file) this.data.file.url = newUrl;
-                this.data.file = {
-                  url: newUrl,
-                  name: file.name,
-                  size: file.size,
-                  extension: file.name.split(".").pop()?.toUpperCase() || "",
-                };
-                this.data.title = file.name;
-              }
-              this.buildUI();
-            })
-            .catch((err) => {
-              console.error("File upload failed", err);
-              const fallbackUrl = URL.createObjectURL(file);
-              if (this.data.file) this.data.file.url = fallbackUrl;
-              this.data.file = {
-                url: fallbackUrl,
-                name: file.name,
-                size: file.size,
-                extension: file.name.split(".").pop()?.toUpperCase() || "",
-              };
-              this.data.title = file.name;
-              this.buildUI();
-            });
+            '<div style="padding: 20px; font-weight: 500;">Đang tải lên</div>';
+          try {
+            const response = await uploadAssetAPI(file);
+            this.data.file = {
+              url: response.data.url,
+              name: file.name,
+              size: file.size,
+              extension: file.name.split(".").pop()?.toUpperCase() || "",
+            };
+            this.data.title = file.name;
+            this.buildUI();
+          } catch (reason) {
+            uploader.textContent =
+              reason instanceof Error ? reason.message : "Không thể tải tệp";
+          }
         }
       });
 

@@ -48,12 +48,9 @@ class ProactiveMemoryAgent:
         self._bank = bank or proactive_memory_bank
 
     def _build_llm(self):
-        from huggingface_hub import AsyncInferenceClient
-        from src.core.infrastructure.configuration import settings
-        from src.utils.huggingface import HFInferenceChat
+        from src.utils.huggingface import create_chat_model
 
-        client = AsyncInferenceClient(model=settings.LLM_MODEL, token=settings.HF_TOKEN)
-        return HFInferenceChat(client=client, model=settings.LLM_MODEL)
+        return create_chat_model()
 
     async def _run_phase1(
         self,

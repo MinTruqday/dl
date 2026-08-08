@@ -1,4 +1,8 @@
 import { API, BlockTool } from "@editorjs/editorjs";
+import {
+  getProtectedAssetBlobUrlAPI,
+  uploadAssetAPI,
+} from "@/features/cloud/services/upload.service";
 
 export default class DocLibVideo implements BlockTool {
   static readonly feature = {
@@ -10,7 +14,7 @@ export default class DocLibVideo implements BlockTool {
 
   private api: API;
   private wrapper: HTMLElement | null = null;
-  private config: any;
+  private previewUrl = "";
   private data: { url: string; caption: string };
 
   static get toolbox() {
@@ -24,9 +28,8 @@ export default class DocLibVideo implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, config }: { api: API; data: any; config?: any }) {
+  constructor({ api, data }: { api: API; data: any; config?: any }) {
     this.api = api;
-    this.config = config || {};
     this.data = {
       url: data.url || "",
       caption: data.caption || "",
@@ -62,7 +65,7 @@ export default class DocLibVideo implements BlockTool {
 
     if (this.data.url) {
       const video = document.createElement("video");
-      video.src = this.data.url;
+      void this.loadPreview(video, this.data.url);
       video.controls = true;
       video.classList.add("doclib-video-player");
 
@@ -97,35 +100,22 @@ export default class DocLibVideo implements BlockTool {
 
       const fileInput = document.createElement("input");
       fileInput.type = "file";
+      fileInput.accept = "video/*";
       fileInput.style.display = "none";
 
-      fileInput.addEventListener("change", () => {
+      fileInput.addEventListener("change", async () => {
         if (fileInput.files && fileInput.files[0]) {
           const file = fileInput.files[0];
-          const formData = new FormData();
-          formData.append("file", file);
-          const endpoint = this.config?.endpoints?.byFile || "/api/uploadFile";
-
           uploader.innerHTML =
-      '<div style="padding: 20px; font-weight: 500;">Uploading</div>';
-
-          fetch(endpoint, { method: "POST", body: formData })
-            .then((res) => res.json())
-            .then((res) => {
-              if (res.success === 1 && res.file && res.file.url) {
-                this.data.url = res.file.url;
-              } else {
-                this.data.url =
-                  res.url || res.data?.url || URL.createObjectURL(file);
-              }
-              this.buildUI();
-            })
-            .catch((err) => {
-              console.error("Video upload failed", err);
-              this.data.url = URL.createObjectURL(file);
-
-              this.buildUI();
-            });
+            '<div style="padding: 20px; font-weight: 500;">Đang tải lên</div>';
+          try {
+            const response = await uploadAssetAPI(file, "video");
+            this.data.url = response.data.url;
+            this.buildUI();
+          } catch (reason) {
+            uploader.textContent =
+              reason instanceof Error ? reason.message : "Không thể tải video";
+          }
         }
       });
 
@@ -146,5 +136,25 @@ export default class DocLibVideo implements BlockTool {
 
   save() {
     return this.data;
+  }
+
+  destroy() {
+    this.releasePreview();
+  }
+
+  private async loadPreview(element: HTMLVideoElement, path: string) {
+    try {
+      this.releasePreview();
+      this.previewUrl = await getProtectedAssetBlobUrlAPI(path);
+      element.src = this.previewUrl;
+    } catch {
+      element.textContent = "Không thể tải video";
+    }
+  }
+
+  private releasePreview() {
+    if (this.previewUrl.startsWith("blob:"))
+      URL.revokeObjectURL(this.previewUrl);
+    this.previewUrl = "";
   }
 }

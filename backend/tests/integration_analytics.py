@@ -1,15 +1,12 @@
 import asyncio
 import os
-import sys
 from datetime import datetime, timedelta, timezone
 from motor.motor_asyncio import AsyncIOMotorClient
-from src.core.infrastructure.database import database, init_db
 from src.services.analytics import AnalyticsService
 
 
 async def run_integration_tests():
-    await init_db()
-    client = AnalyticsService._get_client()
+    client = AsyncIOMotorClient(os.environ["MONGODB_URI"])
 
     content_db = client[os.getenv("CONTENT_DB_NAME", "doclib_content")]
     finance_db = client[os.getenv("FINANCE_DB_NAME", "doclib_finance")]
@@ -146,6 +143,7 @@ async def run_integration_tests():
     await content_db.documents.delete_many({"_id": {"$in": [doc_id_1, doc_id_2]}})
     await finance_db.purchases.delete_many({"document_id": {"$in": [doc_id_1, doc_id_2]}})
     await finance_db.wallets.delete_many({"_id": {"$in": [author_id, reader_1, reader_2, admin_id]}})
+    client.close()
 
     print("TAT CA CAC KIEM THU TICH HOP PHAN TICH DA HOAN TAT THANH CONG")
 

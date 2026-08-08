@@ -19,7 +19,7 @@ INTERNAL_UUID7_COUNTS = {
     "backend/agentic_ai/src/loop/event.py": 3,
     "backend/agentic_ai/src/memory/memo.py": 1,
     "backend/agentic_ai/src/rag/chunk.py": 2,
-    "backend/agentic_ai/src/rag/pipeline.py": 1,
+    "backend/agentic_ai/src/rag/pipeline.py": 2,
     "backend/agentic_ai/src/services/finetuning.py": 3,
     "backend/agentic_ai/src/workflow/orchestration.py": 1,
     "backend/collection/src/sources/nxbst.py": 3,

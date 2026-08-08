@@ -8,6 +8,7 @@ resources:
   - infrastructure/rabbitmq.yaml
   - infrastructure/minio.yaml
   - infrastructure/qdrant.yaml
+  - infrastructure/neo4j.yaml
   - infrastructure/ollama.yaml
   - infrastructure/flaresolverr.yaml
   - observability/prometheus-config.yaml

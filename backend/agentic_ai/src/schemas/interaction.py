@@ -16,6 +16,7 @@ class ChatRequest(BaseModel):
     approve_tools: bool = Field(default=False, description="<conditional_output>Whether the user explicitly approved sensitive tool execution for this request.</conditional_output>")
     approval_id: Optional[str] = Field(default=None, max_length=128, description="<critical_instructions>One-time approval identifier for a previously proposed sensitive tool action.</critical_instructions>")
     image_data: Optional[str] = Field(default=None, max_length=28000000, description="<input_context>Base64 encoded image data if attached.</input_context>")
+    audio_data: Optional[str] = Field(default=None, max_length=28000000, description="<input_context>Base64 encoded audio data if attached.</input_context>")
     file_data: Optional[str] = Field(default=None, max_length=28000000, description="<input_context>Base64 encoded file data if attached.</input_context>")
     folder_data: Optional[str] = Field(default=None, max_length=28000000, description="<input_context>Base64 encoded folder context.</input_context>")
     session_id: Optional[str] = Field(default=None, max_length=128, description="<input_context>Session identifier for context retrieval.</input_context>")

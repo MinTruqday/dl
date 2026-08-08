@@ -64,14 +64,11 @@ class SASTScanner:
         ast_result = PythonAstScanner.scan(code)
         
         from src.core.registry import PromptType, registry
-        from src.utils.huggingface import HFInferenceChat
-        from huggingface_hub import AsyncInferenceClient
-        from src.core.infrastructure.configuration import settings
+        from src.utils.huggingface import create_chat_model
         from langchain_core.messages import HumanMessage, SystemMessage
 
         try:
-            client = AsyncInferenceClient(model=settings.LLM_MODEL, token=settings.HF_TOKEN)
-            llm = HFInferenceChat(client=client, model=settings.LLM_MODEL)
+            llm = create_chat_model()
             
             system_prompt = registry.get(PromptType.SAST_OWASP_SCAN).replace("{{code}}", code)
             messages = [

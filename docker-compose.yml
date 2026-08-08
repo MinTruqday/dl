@@ -1,6 +1,6 @@
 services:
   flaresolverr:
-    image: ghcr.io/flaresolverr/flaresolverr:latest
+    image: ghcr.io/flaresolverr/flaresolverr:v3.5.0@sha256:139dfee1c6f89249c8d665d1333a42e8ec74ec0a86bc6bb1c8461e10d3a66a47
     container_name: doclib_flaresolverr
     environment:
       - LOG_LEVEL=info
@@ -12,7 +12,7 @@ services:
       - doclib_network
 
   mongodb:
-    image: mongo:7.0
+    image: mongo:7.0@sha256:35a5926f71f8b6cb19206bee928c5a85f241a8be99f20c81abe35ae78a73415d
     container_name: doclib_mongodb
     restart: always
     command:
@@ -26,7 +26,7 @@ services:
       - doclib_network
 
   redis:
-    image: redis:7-alpine
+    image: redis:7-alpine@sha256:e7723ff73d963f5cc6d9c4643ea3d989527a402a319239054e9472a7fb9219a2
     container_name: doclib_redis
     restart: always
     ports:
@@ -37,7 +37,7 @@ services:
       - doclib_network
 
   rabbitmq:
-    image: rabbitmq:3-management-alpine
+    image: rabbitmq:3-management-alpine@sha256:606d8c0d6b3c18d1da9afc53bc7cdb2a8d5486df91b5a9830e9e07626c9ae281
     container_name: doclib_rabbitmq
     restart: always
     ports:
@@ -59,7 +59,7 @@ services:
       - doclib_network
 
   minio:
-    image: minio/minio:latest
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
     container_name: doclib_minio
     restart: always
     ports:
@@ -75,7 +75,7 @@ services:
       - doclib_network
 
   traefik:
-    image: traefik:v3.7.6
+    image: traefik:v3.7.6@sha256:21a3d83696379bac6434bb32e1dde0aff0e84ef2abd053ed3db87d3f45e749b2
     container_name: doclib_traefik
     restart: always
     command:
@@ -131,12 +131,13 @@ services:
     command: pnpm exec next dev --hostname 0.0.0.0
     volumes:
       - ./frontend:/app
-      - /app/node_modules
+      - frontend_node_modules:/app/node_modules
       - ./packages:/packages
-      - /app/.next
+      - frontend_next_cache:/app/.next
     environment:
       WATCHPACK_POLLING: "true"
       CHOKIDAR_USEPOLLING: "true"
+      NEXT_TELEMETRY_DISABLED: "1"
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
       NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL}
     healthcheck:
@@ -215,12 +216,14 @@ services:
       FINETUNE_MODELS_DIR: /var/lib/doclib/finetune/models
       FINETUNE_ADAPTERS_DIR: /var/lib/doclib/finetune/adapters
       FINETUNE_GGUF_DIR: /var/lib/doclib/finetune/gguf
+      OLLAMA_BASE_URL: http://ollama:11434
     depends_on:
       - mongodb
       - redis
       - rabbitmq
       - minio
       - qdrant
+      - ollama_models
     volumes:
       - ./backend/agentic_ai/src:/app/src
       - ./backend/agentic_ai/tests:/app/tests
@@ -228,8 +231,46 @@ services:
       - finetune_data:/var/lib/doclib/finetune
     networks:
       - doclib_network
+
+  ollama:
+    image: ollama/ollama@sha256:b88c73ace3e115f8ec53dc8761ae1c0aabfa675406e3681786b98757ce050f42
+    container_name: doclib_ollama
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:11434:11434
+    environment:
+      OLLAMA_KEEP_ALIVE: 2m
+      OLLAMA_MAX_LOADED_MODELS: "1"
+      OLLAMA_NUM_PARALLEL: "1"
+      OLLAMA_MODELS: /models
+    volumes:
+      - ollama_data:/models
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    networks:
+      - doclib_network
+
+  ollama_models:
+    image: ollama/ollama@sha256:b88c73ace3e115f8ec53dc8761ae1c0aabfa675406e3681786b98757ce050f42
+    restart: "no"
+    env_file:
+      - .env
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    entrypoint: ["/bin/sh", "/bootstrap_ollama.sh"]
+    volumes:
+      - ./scripts/bootstrap_ollama.sh:/bootstrap_ollama.sh:ro
+      - ollama_data:/models
+    depends_on:
+      ollama:
+        condition: service_healthy
+    networks:
+      - doclib_network
   qdrant:
-    image: qdrant/qdrant:latest
+    image: qdrant/qdrant:v1.18.2@sha256:75eab8c4ba42096724fdcfde8b4de0b5713d529dde32f285a1f86fdcb2c9e50c
     container_name: doclib_qdrant
     restart: always
     ports:
@@ -241,14 +282,14 @@ services:
       - doclib_network
 
   neo4j:
-    image: neo4j:5-community
+    image: neo4j:5-community@sha256:d9dd3dc7d1c78fa959191ff02dbdcbefadceaf83eee23428fb92a58cac8ad3fe
     container_name: doclib_neo4j
     restart: unless-stopped
     ports:
       - 7474:7474
       - 7687:7687
     environment:
-      - NEO4J_AUTH=${NEO4J_USER:-neo4j}/${NEO4J_PASSWORD:-doclib_neo4j}
+      - NEO4J_AUTH=${NEO4J_USER}/${NEO4J_PASSWORD}
       - NEO4J_PLUGINS=["apoc"]
       - NEO4J_dbms_memory_heap_initial__size=256m
       - NEO4J_dbms_memory_heap_max__size=512m
@@ -258,7 +299,7 @@ services:
       - doclib_network
 
   prometheus:
-    image: prom/prometheus:v3.13.0
+    image: prom/prometheus:v3.13.0@sha256:c6b27ea434f8389bfe233fbc7be381cf50587c286e871bc842008f5a1b1908a7
     container_name: doclib_prometheus
     restart: always
     ports:
@@ -275,7 +316,7 @@ services:
       retries: 3
 
   grafana:
-    image: grafana/grafana:13.1.0
+    image: grafana/grafana:13.1.0@sha256:121a7a9ece6dc10b969f1f96eed64b4f07dfac0d0b8abc070f7cb83bbde86f63
     container_name: doclib_grafana
     restart: always
     ports:
@@ -612,3 +653,6 @@ volumes:
   hf_cache: null
   finetune_data: null
   tectonic_cache_v2: null
+  frontend_node_modules: null
+  frontend_next_cache: null
+  ollama_data: null

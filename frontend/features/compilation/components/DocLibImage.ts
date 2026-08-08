@@ -1,4 +1,8 @@
 import { API, BlockTool } from "@editorjs/editorjs";
+import {
+  getProtectedAssetBlobUrlAPI,
+  uploadAssetAPI,
+} from "@/features/cloud/services/upload.service";
 
 export default class DocLibImage implements BlockTool {
   static readonly feature = {
@@ -10,7 +14,7 @@ export default class DocLibImage implements BlockTool {
 
   private api: API;
   private wrapper: HTMLElement | null = null;
-  private config: any;
+  private previewUrl = "";
   private data: {
     file: { url: string };
     caption: string;
@@ -30,9 +34,8 @@ export default class DocLibImage implements BlockTool {
     return true;
   }
 
-  constructor({ api, data, config }: { api: API; data: any; config?: any }) {
+  constructor({ api, data }: { api: API; data: any; config?: any }) {
     this.api = api;
-    this.config = config || {};
     this.data = {
       file: { url: data.file?.url || data.url || "" },
       caption: data.caption || "",
@@ -124,7 +127,7 @@ export default class DocLibImage implements BlockTool {
 
       const img = document.createElement("img");
       img.classList.add("doclib-image-img");
-      img.src = this.data.file?.url;
+      void this.loadPreview(img, this.data.file.url);
 
       const caption = document.createElement("div");
       caption.classList.add("doclib-image-caption");
@@ -150,38 +153,21 @@ export default class DocLibImage implements BlockTool {
       const input = document.createElement("input");
       input.type = "file";
       input.accept = "image/*";
-      input.addEventListener("change", () => {
+      input.addEventListener("change", async () => {
         if (input.files && input.files[0]) {
           const file = input.files[0];
-          const formData = new FormData();
-          formData.append("file", file);
-
-          const endpoint = this.config.endpoints?.byFile || "/api/uploadFile";
-
           uploader.innerHTML =
-      '<div style="padding: 20px; font-weight: 500;">Uploading</div>';
-
-          fetch(endpoint, {
-            method: "POST",
-            body: formData,
-          })
-            .then((res) => res.json())
-            .then((res) => {
-              if (res.success === 1 && res.file && res.file.url) {
-                if (this.data.file) this.data.file.url = res.file.url;
-              } else {
-                if (this.data.file)
-                  this.data.file.url =
-                    res.url || res.data?.url || URL.createObjectURL(file);
-              }
-              this.buildUI();
-            })
-            .catch((err) => {
-              console.error("Image upload failed", err);
-              if (this.data.file)
-                this.data.file.url = URL.createObjectURL(file);
-              this.buildUI();
-            });
+            '<div style="padding: 20px; font-weight: 500;">Đang tải lên</div>';
+          try {
+            const response = await uploadAssetAPI(file, "image");
+            this.data.file.url = response.data.url;
+            this.buildUI();
+          } catch (reason) {
+            uploader.textContent =
+              reason instanceof Error
+                ? reason.message
+                : "Không thể tải hình ảnh";
+          }
         }
       });
 
@@ -203,5 +189,25 @@ export default class DocLibImage implements BlockTool {
 
   save() {
     return this.data;
+  }
+
+  destroy() {
+    this.releasePreview();
+  }
+
+  private async loadPreview(element: HTMLImageElement, path: string) {
+    try {
+      this.releasePreview();
+      this.previewUrl = await getProtectedAssetBlobUrlAPI(path);
+      element.src = this.previewUrl;
+    } catch {
+      element.alt = "Không thể tải hình ảnh";
+    }
+  }
+
+  private releasePreview() {
+    if (this.previewUrl.startsWith("blob:"))
+      URL.revokeObjectURL(this.previewUrl);
+    this.previewUrl = "";
   }
 }

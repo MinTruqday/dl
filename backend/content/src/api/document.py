@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from typing import Any, List, Optional
 import uuid
 import httpx
+import re
 
 from bson import ObjectId
 from pymongo import ReturnDocument
@@ -249,6 +250,31 @@ async def exchange_internal_document(req: dict):
         rows = await documents.find(
             {"creator_id": creator_id, "is_deleted": {"$ne": True}},
             {"title": 1, "slug": 1, "views": 1, "view_count": 1, "price_dl": 1, "price_dls": 1},
+        ).to_list(length=None)
+        for row in rows:
+            row["_id"] = str(row["_id"])
+        return {"data": rows}
+    if action == "list_analytics_documents":
+        creator_id = str(req.get("creator_id") or "").strip()
+        search = str(req.get("search") or "").strip()
+        query = {"status": "published", "is_deleted": {"$ne": True}}
+        if creator_id:
+            query["creator_id"] = creator_id
+        if search:
+            query["title"] = {"$regex": re.escape(search), "$options": "i"}
+        rows = await documents.find(
+            query,
+            {
+                "title": 1,
+                "slug": 1,
+                "views": 1,
+                "view_count": 1,
+                "price_dl": 1,
+                "price_dls": 1,
+                "is_drm_protected": 1,
+                "creator_id": 1,
+                "created_at": 1,
+            },
         ).to_list(length=None)
         for row in rows:
             row["_id"] = str(row["_id"])

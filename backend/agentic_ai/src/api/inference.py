@@ -3,13 +3,13 @@ from typing import List
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
-from huggingface_hub import AsyncInferenceClient
 from loguru import logger
 
 from src.core.dependency import CurrentUser, Role, get_current_user, verify_internal_token
 from src.core.infrastructure.configuration import settings
 from src.core.logging_route import LoggingRoute
 from src.core.model_runtime import run_chat_completion
+from src.utils.local_models import local_model_client
 from src.core.registry import PromptType, registry
 from src.schemas.inference import (
     ActionRequest,
@@ -44,7 +44,7 @@ from src.schemas.auth import Tier
 
 router = APIRouter(route_class=LoggingRoute, prefix="/suy-luan")
 
-client = AsyncInferenceClient(token=settings.HF_TOKEN)
+client = local_model_client
 
 async def _check_quota(current_user: CurrentUser):
     logger.info("AI quota verification started")
@@ -124,9 +124,12 @@ async def _run_ai_with_quota(
     temperature: float = 0.3,
 ) -> str:
     limits = await _check_quota(current_user)
-    model = limits.get("model", settings.QWEN_MODEL)
-
-    result = await _chat_direct(messages, max_tokens, temperature, model)
+    result = await _chat_direct(
+        messages,
+        max_tokens,
+        temperature,
+        settings.LLM_MODEL,
+    )
 
     prompt_len = sum(len(m.get("content", "")) for m in messages)
     tokens_used = (prompt_len + len(result)) // 4
@@ -142,18 +145,10 @@ async def _run_structured_ai_with_quota(
     temperature: float = 0.3,
 ):
     from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
-    from src.utils.huggingface import HFInferenceChat
+    from src.utils.huggingface import create_chat_model
 
     limits = await _check_quota(current_user)
-    model = limits.get("model", settings.QWEN_MODEL)
-    inference_client = AsyncInferenceClient(
-        model=model,
-        token=settings.HF_TOKEN,
-    )
-    structured_model = HFInferenceChat(
-        client=inference_client,
-        model=model,
-    ).with_structured_output(schema)
+    structured_model = create_chat_model(settings.LLM_MODEL).with_structured_output(schema)
     message_types = {
         "assistant": AIMessage,
         "system": SystemMessage,

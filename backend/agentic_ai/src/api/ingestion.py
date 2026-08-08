@@ -40,7 +40,10 @@ async def delete_document_endpoint(
     )
     logger.info(f"Started document deletion from Qdrant vector store document_id={document_id}")
     try:
+        from src.store.graph import graph_store
+
         await vector_store.delete_by_document(document_id)
+        await graph_store.delete_document(document_id)
         logger.info(f"Document deletion completed document_id={document_id}")
         return {
             "status": "success",

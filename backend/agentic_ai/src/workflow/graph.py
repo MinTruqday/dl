@@ -52,14 +52,9 @@ try:
 except Exception:
     logger.exception("Redis semantic cache initialization error")
 
-from huggingface_hub import AsyncInferenceClient
-from src.utils.huggingface import HFInferenceChat
+from src.utils.huggingface import create_chat_model
 
-llama_client = AsyncInferenceClient(
-    model=settings.LLM_MODEL,
-    token=settings.HF_TOKEN,
-)
-llm = HFInferenceChat(client=llama_client, model=settings.LLM_MODEL)
+llm = create_chat_model()
 
 llm_generate = llm.with_config({"tags": ["final_generator"]})
 
@@ -345,6 +340,12 @@ async def generate(state: AgentState):
         ]
     else:
         content = prompt_text
+    if state.get("audio_data"):
+        if isinstance(content, str):
+            content = [{"type": "text", "text": content}]
+        content.append(
+            {"type": "audio_url", "audio_url": {"url": state["audio_data"]}}
+        )
 
     try:
         messages = []

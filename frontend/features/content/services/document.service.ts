@@ -48,7 +48,7 @@ export async function getDocumentDraftAPI(documentId: string) {
 }
 
 export async function exportProtectedDocumentAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/thuy-an/${documentId}/drm`, {
+  const res = await fetch(`${API_URL}/thuy-an/${documentId}`, {
     headers: getAuthHeaders(),
   });
   if (!res.ok) {

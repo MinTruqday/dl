@@ -56,7 +56,6 @@ async def run():
     doc_id = None
     try:
         async with httpx.AsyncClient(base_url="http://content:8000", timeout=15.0) as client:
-            # 1. Owner creates document
             create_resp = await client.post(
                 "/tai-lieu",
                 json={
@@ -72,7 +71,6 @@ async def run():
             assert create_resp.status_code == 201, create_resp.text
             doc_id = create_resp.json()["data"]["_id"]
 
-            # 2. Owner invites Commenter
             invite_commenter = await client.post(
                 "/cong-tac/loi-moi",
                 json={"document_id": doc_id, "email": f"{commenter_id}@example.com", "role": "commenter"},
@@ -81,7 +79,6 @@ async def run():
             assert invite_commenter.status_code == 201, invite_commenter.text
             commenter_invite_id = invite_commenter.json()["data"]["invite_id"]
 
-            # Commenter accepts invite
             accept_commenter = await client.patch(
                 f"/cong-tac/loi-moi/{commenter_invite_id}",
                 json={"status": "ACCEPTED"},
@@ -89,7 +86,6 @@ async def run():
             )
             assert accept_commenter.status_code == 200, accept_commenter.text
 
-            # 3. Owner invites Editor
             invite_editor = await client.post(
                 "/cong-tac/loi-moi",
                 json={"document_id": doc_id, "email": f"{editor_id}@example.com", "role": "editor"},
@@ -98,7 +94,6 @@ async def run():
             assert invite_editor.status_code == 201, invite_editor.text
             editor_invite_id = invite_editor.json()["data"]["invite_id"]
 
-            # Editor accepts invite
             accept_editor = await client.patch(
                 f"/cong-tac/loi-moi/{editor_invite_id}",
                 json={"status": "ACCEPTED"},
@@ -106,11 +101,9 @@ async def run():
             )
             assert accept_editor.status_code == 200, accept_editor.text
 
-            # 4. Commenter can read full document (coauthor)
             read_commenter = await client.get(f"/tai-lieu/{doc_id}", headers=commenter_headers)
             assert read_commenter.status_code == 200, read_commenter.text
 
-            # 5. Commenter tries to update document content -> MUST BE FORBIDDEN (403)
             update_commenter = await client.put(
                 f"/tai-lieu/{doc_id}/noi-dung",
                 json={"content": "Hacked content by commenter", "content_format": "markdown"},
@@ -118,7 +111,6 @@ async def run():
             )
             assert update_commenter.status_code == 403, f"Expected 403 for commenter update but got {update_commenter.status_code}: {update_commenter.text}"
 
-            # 6. Editor updates document content -> MUST SUCCEED (200)
             update_editor = await client.put(
                 f"/tai-lieu/{doc_id}/noi-dung",
                 json={"content": "Content updated by legit editor", "content_format": "markdown"},
@@ -126,7 +118,6 @@ async def run():
             )
             assert update_editor.status_code == 200, update_editor.text
 
-            # 7. Owner invites Viewer
             invite_viewer = await client.post(
                 "/cong-tac/loi-moi",
                 json={"document_id": doc_id, "email": f"{viewer_id}@example.com", "role": "viewer"},
@@ -135,7 +126,6 @@ async def run():
             assert invite_viewer.status_code == 201, invite_viewer.text
             viewer_invite_id = invite_viewer.json()["data"]["invite_id"]
 
-            # Viewer accepts invite
             accept_viewer = await client.patch(
                 f"/cong-tac/loi-moi/{viewer_invite_id}",
                 json={"status": "ACCEPTED"},
@@ -143,7 +133,6 @@ async def run():
             )
             assert accept_viewer.status_code == 200, accept_viewer.text
 
-            # Viewer tries to edit content -> MUST BE FORBIDDEN (403)
             update_viewer = await client.put(
                 f"/tai-lieu/{doc_id}/noi-dung",
                 json={"content": "Content edited by viewer", "content_format": "markdown"},
@@ -151,7 +140,6 @@ async def run():
             )
             assert update_viewer.status_code == 403, f"Expected 403 for viewer update but got {update_viewer.status_code}: {update_viewer.text}"
 
-            # 8. Owner updates Viewer role to Editor
             update_role = await client.patch(
                 f"/cong-tac/{viewer_invite_id}/vai-tro",
                 json={"role": "editor"},
@@ -159,7 +147,6 @@ async def run():
             )
             assert update_role.status_code == 200, update_role.text
 
-            # Now promoted viewer (now editor) can edit content -> MUST SUCCEED (200)
             update_promoted = await client.put(
                 f"/tai-lieu/{doc_id}/noi-dung",
                 json={"content": "Content successfully edited after promotion to editor", "content_format": "markdown"},
@@ -167,14 +154,12 @@ async def run():
             )
             assert update_promoted.status_code == 200, update_promoted.text
 
-            # 9. Exclusive Lock check
             lock_resp = await client.post(
                 f"/cong-tac/tai-lieu/{doc_id}/khoa",
                 headers=editor_headers,
             )
             assert lock_resp.status_code == 200, lock_resp.text
 
-            # Check status is locked
             status_resp = await client.get(
                 f"/cong-tac/tai-lieu/{doc_id}/trang-thai-khoa",
                 headers=editor_headers,
@@ -182,21 +167,18 @@ async def run():
             assert status_resp.status_code == 200, status_resp.text
             assert status_resp.json()["data"]["is_locked"] is True
 
-            # Another user tries to acquire lock -> MUST FAIL (400 Conflict/Bad Request)
             lock_conflict = await client.post(
                 f"/cong-tac/tai-lieu/{doc_id}/khoa",
                 headers=viewer_headers,
             )
             assert lock_conflict.status_code == 400, lock_conflict.text
 
-            # Editor unlocks
             unlock_resp = await client.post(
                 f"/cong-tac/tai-lieu/{doc_id}/mo-khoa",
                 headers=editor_headers,
             )
             assert unlock_resp.status_code == 200, unlock_resp.text
 
-            # Check status is unlocked
             status_unlocked = await client.get(
                 f"/cong-tac/tai-lieu/{doc_id}/trang-thai-khoa",
                 headers=editor_headers,

@@ -27,12 +27,10 @@ class ReasoningAgent:
     async def execute(self, task: str) -> str:
         prompt = registry.get(PromptType.ANALYTICAL_ENGINE).format(task=task)
         try:
-            from huggingface_hub import AsyncInferenceClient
             from langchain_core.messages import HumanMessage
-            from src.utils.huggingface import HFInferenceChat
+            from src.utils.huggingface import create_chat_model
 
-            client = AsyncInferenceClient(model=self._model, token=self._hf_token)
-            llm = HFInferenceChat(client=client, model=self._model)
+            llm = create_chat_model(self._model)
             result = await llm.ainvoke([HumanMessage(content=prompt)])
             content = result.content.strip()
             
@@ -53,14 +51,10 @@ class ReasoningAgent:
             query=query, answer=answer, context_str=context_str[:3000]
         )
         try:
-            from huggingface_hub import AsyncInferenceClient
             from langchain_core.messages import HumanMessage
-            from src.utils.huggingface import HFInferenceChat
+            from src.utils.huggingface import create_chat_model
 
-            client = AsyncInferenceClient(model=self._model, token=self._hf_token)
-            llm = HFInferenceChat(
-                client=client, model=self._model
-            ).with_structured_output(QualityEvaluation)
+            llm = create_chat_model(self._model).with_structured_output(QualityEvaluation)
 
             eval_res: QualityEvaluation = await llm.ainvoke(
                 [HumanMessage(content=eval_prompt)]

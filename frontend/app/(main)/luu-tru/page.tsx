@@ -175,7 +175,7 @@ export default function StoragePage() {
           <div className="flex items-center justify-between text-xs font-semibold text-primary">
             <div className="flex items-center gap-2">
               <UploadCloud className="h-4 w-4 animate-pulse" />
-              <span>Đang truyền tải tệp tin lên Đám mây...</span>
+              <span>Đang truyền tải tệp tin lên đám mây</span>
             </div>
             <span>{state.uploadProgress}%</span>
           </div>
@@ -236,7 +236,7 @@ export default function StoragePage() {
               className="gap-1.5"
             >
               <Upload className="h-4 w-4" />
-              {state.processing === "upload" ? "Đang tải lên..." : "Tải tệp lên"}
+              {state.processing === "upload" ? "Đang tải lên" : "Tải tệp lên"}
             </Button>
           </div>
         }
@@ -294,7 +294,7 @@ export default function StoragePage() {
           value={state.query}
           onChange={(event) => state.setQuery(event.target.value)}
           className="apple-input sm:w-72"
-          placeholder="Tìm kiếm tệp hoặc thư mục..."
+          placeholder="Tìm kiếm tệp hoặc thư mục"
         />
         <Button
           variant="secondary"
@@ -392,7 +392,7 @@ export default function StoragePage() {
               }))
             }
             className="apple-input text-xs"
-            placeholder="Đuôi tệp (.pdf, .png...)"
+            placeholder="Đuôi tệp như pdf hoặc png"
           />
           <input
             type="number"

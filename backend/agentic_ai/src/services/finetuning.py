@@ -278,19 +278,11 @@ async def import_feedback(req: dict):
 @log_logic_execution
 async def import_documents(req: dict):
     user_id, doc_ids = req.get("user_id"), req.get("document_ids", [])
-    from huggingface_hub import AsyncInferenceClient
     from langchain_core.messages import HumanMessage
     from src.schemas.finetuning import GeneratedSamples
-    from src.utils.huggingface import HFInferenceChat
+    from src.utils.huggingface import create_chat_model
 
-    client = AsyncInferenceClient(
-        model=settings.LLM_MODEL,
-        token=settings.HF_TOKEN,
-    )
-    structured_model = HFInferenceChat(
-        client=client,
-        model=settings.LLM_MODEL,
-    ).with_structured_output(GeneratedSamples)
+    structured_model = create_chat_model().with_structured_output(GeneratedSamples)
     generated_samples = []
     for document_id in doc_ids:
         document = await FinetuneRepository.find_document_context(

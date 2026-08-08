@@ -83,20 +83,10 @@ class PipelineRag:
                     return None
 
                 from langchain_core.prompts import PromptTemplate
-                from huggingface_hub import AsyncInferenceClient
-                from src.utils.huggingface import HFInferenceChat
+                from src.utils.huggingface import create_chat_model
 
                 llama_model = settings.LLM_MODEL
-                hf_token = settings.HF_TOKEN
-
-                _hf = AsyncInferenceClient(
-                    model=llama_model,
-                    token=hf_token,
-                )
-                llm_summary = HFInferenceChat(
-                    client=_hf,
-                    model=llama_model,
-                )
+                llm_summary = create_chat_model(llama_model)
                 from src.core.registry import PromptType, registry
 
                 prompt_content = registry.get(PromptType.DOCUMENT_GLOBAL_SUMMARY).format(text=safe_text)
@@ -427,14 +417,16 @@ class PipelineRag:
 
     async def _extract_entities_and_relations(self, text: str, document_id: str):
         if not text or not text.strip():
+            from src.store.graph import graph_store
+
+            await graph_store.delete_document(document_id)
             return
 
         from src.core.registry import PromptType, registry
         from src.workflow.graph import llm
-        from src.memory.management import memory_manager
-        import json
         from langchain_core.messages import SystemMessage, HumanMessage
         from pydantic import BaseModel
+        from src.store.graph import graph_store
 
         class GraphRelation(BaseModel):
             source: str
@@ -451,31 +443,11 @@ class PipelineRag:
         try:
             msg = [SystemMessage(content=system_prompt), HumanMessage(content=human_msg)]
             response = await llm.with_structured_output(ExtractedGraph).ainvoke(msg)
-            if memory_manager._redis and response.relations:
-                edge_key = f"graphrag:edges:{document_id}"
-                node_key = f"graphrag:nodes:{document_id}"
-                nodes: set = set()
-                for relation in response.relations:
-                    edge_data = json.dumps(
-                        {
-                            "document_id": document_id,
-                            "source": relation.source,
-                            "target": relation.target,
-                            "relation": relation.relation,
-                        },
-                        ensure_ascii=False,
-                    )
-                    await memory_manager._redis.lpush(edge_key, edge_data)
-                    nodes.add(relation.source)
-                    nodes.add(relation.target)
-
-                await memory_manager._redis.expire(edge_key, 86400 * 30)
-
-                if nodes:
-                    await memory_manager._redis.sadd(node_key, *nodes)
-                    await memory_manager._redis.expire(node_key, 86400 * 30)
-
-                logger.info(f"Pushed {len(response.relations)} GraphRAG edges and {len(nodes)} nodes for document {document_id}")
+            relations = [relation.model_dump() for relation in response.relations]
+            await graph_store.replace_document(document_id, relations)
+            logger.info(
+                f"Stored {len(relations)} GraphRAG relations for document {document_id}"
+            )
         except Exception:
             logger.exception("GraphRAG entity extraction failed")
 

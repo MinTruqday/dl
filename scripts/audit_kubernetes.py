@@ -22,6 +22,19 @@ EXPECTED = {
     "worker-service",
 }
 
+EXPECTED_INFRASTRUCTURE = {
+    "flaresolverr",
+    "grafana",
+    "minio",
+    "mongodb",
+    "neo4j",
+    "ollama",
+    "prometheus",
+    "qdrant",
+    "rabbitmq",
+    "redis",
+}
+
 EXPECTED_API_PREFIXES = {
     "/ban-quyen",
     "/bao-ve",
@@ -80,6 +93,7 @@ def main():
         )
     documents = re.split(r"(?m)^---\s*$", source)
     deployments = {}
+    infrastructure = {}
     services = {}
     config_maps = set()
     secrets = set()
@@ -91,23 +105,40 @@ def main():
         name_match = re.search(r"metadata:\n  name: ([^\n]+)", document)
         kind = kind_match.group(1).strip() if kind_match else ""
         name = name_match.group(1).strip() if name_match else ""
-        if kind == "Deployment":
+        if kind in {"Deployment", "StatefulSet"}:
             labels = re.findall(r"(?m)^\s+app: ([^\n]+)$", document)
             app = labels[0].strip() if labels else ""
-            if app not in EXPECTED:
+            if app in EXPECTED:
+                if kind != "Deployment":
+                    issues.append(f"{app}:workload_kind")
+                    continue
+                deployments[app] = document
+                expected_port = 3000 if app == "frontend" else 8000
+                if f"containerPort: {expected_port}" not in document:
+                    issues.append(f"{app}:container_port")
+                if not re.search(r"secretRef:\n\s+name: doclib-secrets", document):
+                    issues.append(f"{app}:secret_reference")
+                if not re.search(r"configMapRef:\n\s+name: doclib-config", document):
+                    issues.append(f"{app}:config_reference")
+                if "livenessProbe:" not in document or "readinessProbe:" not in document:
+                    issues.append(f"{app}:health_probes")
+                if "runAsNonRoot: true" not in document or "allowPrivilegeEscalation: false" not in document:
+                    issues.append(f"{app}:security_context")
                 continue
-            deployments[app] = document
-            expected_port = 3000 if app == "frontend" else 8000
-            if f"containerPort: {expected_port}" not in document:
-                issues.append(f"{app}:container_port")
-            if not re.search(r"secretRef:\n\s+name: doclib-secrets", document):
-                issues.append(f"{app}:secret_reference")
-            if not re.search(r"configMapRef:\n\s+name: doclib-config", document):
-                issues.append(f"{app}:config_reference")
+            if name not in EXPECTED_INFRASTRUCTURE:
+                continue
+            infrastructure[name] = document
             if "livenessProbe:" not in document or "readinessProbe:" not in document:
-                issues.append(f"{app}:health_probes")
+                issues.append(f"{name}:health_probes")
+            if "resources:" not in document:
+                issues.append(f"{name}:resources")
+            if "automountServiceAccountToken: false" not in document:
+                issues.append(f"{name}:service_account_token")
             if "runAsNonRoot: true" not in document or "allowPrivilegeEscalation: false" not in document:
-                issues.append(f"{app}:security_context")
+                issues.append(f"{name}:security_context")
+            image_matches = re.findall(r"(?m)^\s+-?\s*image: ([^\n]+)$", document)
+            if not image_matches or "@sha256:" not in image_matches[0]:
+                issues.append(f"{name}:immutable_image")
         elif kind == "Service":
             labels = re.findall(r"(?m)^\s+app: ([^\n]+)$", document)
             app = labels[-1].strip() if labels else name
@@ -125,6 +156,11 @@ def main():
         issues.append(f"deployments:{','.join(sorted(EXPECTED.symmetric_difference(deployments)))}")
     if set(services) != EXPECTED:
         issues.append(f"services:{','.join(sorted(EXPECTED.symmetric_difference(services)))}")
+    if set(infrastructure) != EXPECTED_INFRASTRUCTURE:
+        issues.append(
+            "infrastructure:"
+            + ",".join(sorted(EXPECTED_INFRASTRUCTURE.symmetric_difference(infrastructure)))
+        )
     for app in EXPECTED:
         if app in deployments and app not in services:
             issues.append(f"{app}:service_missing")
@@ -145,7 +181,10 @@ def main():
     if issues:
         print("\n".join(issues))
         return 1
-    print(f"kubernetes_audit_passed deployments={len(deployments)} services={len(services)}")
+    print(
+        f"kubernetes_audit_passed deployments={len(deployments)} "
+        f"services={len(services)} infrastructure={len(infrastructure)}"
+    )
     return 0
 
 

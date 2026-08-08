@@ -32,9 +32,9 @@ class Settings(BaseModel):
     QDRANT_URL: str = os.environ["QDRANT_URL"]
     QDRANT_HOST: str = os.environ["QDRANT_HOST"]
     QDRANT_PORT: int = int(os.environ["QDRANT_PORT"])
-    NEO4J_URI: Optional[str] = os.environ.get("NEO4J_URI")
-    NEO4J_USER: Optional[str] = os.environ.get("NEO4J_USER")
-    NEO4J_PASSWORD: Optional[str] = os.environ.get("NEO4J_PASSWORD")
+    NEO4J_URI: str = os.environ["NEO4J_URI"]
+    NEO4J_USER: str = os.environ["NEO4J_USER"]
+    NEO4J_PASSWORD: str = os.environ["NEO4J_PASSWORD"]
     DOCKER_HOST: str = os.environ["DOCKER_HOST"]
     PAYOS_API_URL: str = os.environ["PAYOS_API_URL"]
     MINIO_ENDPOINT: str = os.environ["MINIO_ENDPOINT"]
@@ -47,8 +47,13 @@ class Settings(BaseModel):
     MIN_FILE_SIZE_BYTES: int = int(os.environ["MIN_FILE_SIZE_BYTES"])
     TAVILY_API_KEY: Optional[str] = os.environ["TAVILY_API_KEY"]
     HF_TOKEN: str = os.environ["HF_TOKEN"]
+    OLLAMA_BASE_URL: str = os.environ["OLLAMA_BASE_URL"]
     LLM_MODEL: str = os.environ["LLM_MODEL"]
     QWEN_MODEL: str = os.environ["QWEN_MODEL"]
+    QWEN_API_URL: str = os.environ["QWEN_API_URL"]
+    QWEN_HEALTH_URL: str = os.environ["QWEN_HEALTH_URL"]
+    MODEL_TIMEOUT_SECONDS: float = float(os.environ["MODEL_TIMEOUT_SECONDS"])
+    MODEL_KEEP_ALIVE: str = os.environ["MODEL_KEEP_ALIVE"]
     EMBEDDING_MODEL: str = os.environ["EMBEDDING_MODEL"]
     RERANKER_MODEL: str = os.environ["RERANKER_MODEL"]
     NLLB_MODEL: str = os.environ["NLLB_MODEL"]

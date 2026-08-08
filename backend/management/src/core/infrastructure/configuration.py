@@ -31,17 +31,14 @@ class Settings(BaseModel):
     MINIO_PUBLIC_URL: Optional[str] = os.environ["MINIO_PUBLIC_URL"]
     MIN_FILE_SIZE_BYTES: int = int(os.environ["MIN_FILE_SIZE_BYTES"])
     TAVILY_API_KEY: Optional[str] = os.environ["TAVILY_API_KEY"]
-    LLAMA_MODEL: str = os.environ["LLAMA_MODEL"]
-    QWEN_MODEL: str = os.environ["QWEN_MODEL"]
+    LLM_MODEL: str = os.environ["LLM_MODEL"]
     EMBEDDING_MODEL: str = os.environ["EMBEDDING_MODEL"]
     RERANKER_MODEL: str = os.environ["RERANKER_MODEL"]
     PLATFORM_SYSTEM_ID: str = os.environ["PLATFORM_SYSTEM_ID"]
     AGENTIC_AI_URL: str = get_service_url("AGENTIC_AI")
     HUMANITY_URL: str = get_service_url("HUMANITY")
     CONTENT_URL: str = get_service_url("CONTENT")
+    FINANCE_URL: str = get_service_url("FINANCE")
     MANAGEMENT_DB_NAME: str = os.environ["MANAGEMENT_DB_NAME"]
-    CONTENT_DB_NAME: str = os.environ["CONTENT_DB_NAME"]
-    FINANCE_DB_NAME: str = os.environ["FINANCE_DB_NAME"]
-    HUMANITY_DB_NAME: str = os.environ["HUMANITY_DB_NAME"]
 
 settings = Settings()

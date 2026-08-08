@@ -62,11 +62,10 @@ def _compute_rouge_l(reference: str, hypothesis: str) -> float:
     return 2 * precision * recall / (precision + recall)
 
 async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
-    from huggingface_hub import AsyncInferenceClient
     from langchain_core.messages import HumanMessage
     from src.core.registry import PromptType, registry
     from src.schemas.evaluation import JudgeScores
-    from src.utils.huggingface import HFInferenceChat
+    from src.utils.huggingface import create_chat_model
 
     from src.core.infrastructure.configuration import settings
 
@@ -76,13 +75,7 @@ async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
         actual=actual,
     )
     try:
-        client = AsyncInferenceClient(
-            model=settings.LLM_MODEL, token=settings.HF_TOKEN
-        )
-        evaluator = HFInferenceChat(
-            client=client,
-            model=settings.LLM_MODEL,
-        ).with_structured_output(JudgeScores)
+        evaluator = create_chat_model().with_structured_output(JudgeScores)
         scores = await evaluator.ainvoke(
             [HumanMessage(content=prompt)],
             max_tokens=256,
@@ -178,15 +171,13 @@ class EvaluationHarness:
         return report
 
     async def run_benchmark(self, model_name: str, use_judge: bool = False) -> dict:
-        from huggingface_hub import AsyncInferenceClient
-
-        from src.core.infrastructure.configuration import settings
+        from src.utils.local_models import local_model_client
 
         if not self._dataset:
             return {"error_code": "evaluation_dataset_not_loaded"}
 
         try:
-            client = AsyncInferenceClient(model=model_name, token=settings.HF_TOKEN)
+            client = local_model_client
         except Exception:
             logger.exception("Evaluation client initialization failed")
             return {"error_code": "evaluation_client_initialization_failed"}

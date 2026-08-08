@@ -1,19 +1,14 @@
 from typing import Any, Dict, List
 
-from huggingface_hub import AsyncInferenceClient
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.output_parsers import JsonOutputParser
 from loguru import logger
 from src.schemas.planning import ExecutionPlan
-from src.utils.huggingface import HFInferenceChat
+from src.utils.huggingface import create_chat_model
 from src.core.infrastructure.configuration import settings
 from src.memory.memo import memo_manager
 
-_hf_client = AsyncInferenceClient(
-    model=settings.LLM_MODEL,
-    token=settings.HF_TOKEN,
-)
-llm = HFInferenceChat(client=_hf_client, model=settings.LLM_MODEL)
+llm = create_chat_model()
 
 class PlanAgent:
     """

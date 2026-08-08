@@ -1,11 +1,8 @@
 import base64
-from typing import Optional
-
-from huggingface_hub import AsyncInferenceClient
 from langchain_core.tools import tool
 from loguru import logger
 
-from src.core.infrastructure.configuration import settings
+from src.utils.local_models import local_model_client
 
 class VisionTool:
     """
@@ -14,15 +11,10 @@ class VisionTool:
     """
 
     def __init__(self):
-        self._client: Optional[AsyncInferenceClient] = None
+        self._client = local_model_client
 
     @property
-    def client(self) -> AsyncInferenceClient:
-        if self._client is None:
-            self._client = AsyncInferenceClient(
-                model=settings.QWEN_MODEL,
-                token=settings.HF_TOKEN,
-            )
+    def client(self):
         return self._client
 
     async def analyze_image(self, image_base64: str, question: str) -> str:

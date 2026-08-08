@@ -49,6 +49,7 @@ class Tier(str, Enum):
 
 class UploadType(str, Enum):
     IMAGE = "image"
+    AUDIO = "audio"
     DOCUMENT = "document"
     FOLDER = "folder"
 

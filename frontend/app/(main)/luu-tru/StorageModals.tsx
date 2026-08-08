@@ -109,7 +109,7 @@ export function StorageTextModal({
           Hủy
         </Button>
         <Button disabled={!value.trim() || processing} onClick={save}>
-          {processing ? "Đang lưu..." : "Lưu"}
+          {processing ? "Đang lưu" : "Lưu"}
         </Button>
       </ModalFooter>
     </Modal>
@@ -170,7 +170,6 @@ export function StorageShareModal({
       </ModalHeader>
       <ModalContent>
         <div className="space-y-6">
-          {/* Internal User Share */}
           <section className="space-y-3">
             <p className="text-[13px] font-semibold text-ink">
               Chia sẻ nội bộ với người dùng
@@ -179,7 +178,7 @@ export function StorageShareModal({
               <div className="flex-1">
                 <input
                   type="email"
-                  placeholder="Nhập email người nhận..."
+                  placeholder="Nhập email người nhận"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="apple-input w-full"
@@ -197,11 +196,10 @@ export function StorageShareModal({
                 disabled={!email.trim() || processing}
                 onClick={save}
               >
-                {processing ? "..." : "Thêm"}
+                {processing ? "Đang thêm" : "Thêm"}
               </Button>
             </div>
 
-            {/* List of currently shared users */}
             {item?.shared_with && item.shared_with.length > 0 && (
               <div className="mt-3 space-y-2 rounded-xl bg-surface-muted p-3">
                 <p className="text-[12px] font-medium text-ink-muted">
@@ -238,7 +236,6 @@ export function StorageShareModal({
             )}
           </section>
 
-          {/* Public Link Share */}
           <section className="space-y-4 border-t border-border pt-5">
             <p className="text-[13px] font-semibold text-ink">
               Tạo liên kết chia sẻ ngoài
@@ -302,7 +299,7 @@ export function StorageShareModal({
               onClick={generateLink}
               className="w-full"
             >
-              {creatingLink ? "Đang tạo liên kết..." : "Tạo liên kết công khai"}
+              {creatingLink ? "Đang tạo liên kết" : "Tạo liên kết công khai"}
             </Button>
           </section>
         </div>
@@ -376,7 +373,7 @@ export function StorageVersionModal({
 
           {loading ? (
             <div className="py-8 text-center text-xs text-ink-muted">
-              Đang tải lịch sử phiên bản...
+              Đang tải lịch sử phiên bản
             </div>
           ) : error ? (
             <div className="rounded-lg bg-danger/10 p-3 text-xs text-danger">
@@ -505,7 +502,6 @@ export function StorageTagColorModal({
       </ModalHeader>
       <ModalContent>
         <div className="space-y-5">
-          {/* Color palette */}
           <div>
             <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-ink">
               <Palette className="h-3.5 w-3.5" />
@@ -529,7 +525,6 @@ export function StorageTagColorModal({
             </div>
           </div>
 
-          {/* Tags list */}
           <div className="space-y-2">
             <label className="block text-xs font-semibold text-ink">
               Thẻ phân loại (Tags)
@@ -537,7 +532,7 @@ export function StorageTagColorModal({
             <div className="flex gap-2">
               <input
                 type="text"
-                placeholder="Nhập thẻ mới (vd: Quan trọng, Dự án A)..."
+                placeholder="Nhập thẻ mới như Quan trọng hoặc Dự án A"
                 value={inputTag}
                 onChange={(e) => setInputTag(e.target.value)}
                 onKeyDown={(e) => {
@@ -581,7 +576,7 @@ export function StorageTagColorModal({
           Hủy
         </Button>
         <Button disabled={processing} onClick={save}>
-          {processing ? "Đang lưu..." : "Lưu thay đổi"}
+          {processing ? "Đang lưu" : "Lưu thay đổi"}
         </Button>
       </ModalFooter>
     </Modal>
@@ -622,7 +617,7 @@ export function StorageAnalyticsModal({
       <ModalContent>
         {loading ? (
           <div className="py-12 text-center text-xs text-ink-muted">
-            Đang tổng hợp dữ liệu dung lượng...
+            Đang tổng hợp dữ liệu dung lượng
           </div>
         ) : error ? (
           <div className="rounded-lg bg-danger/10 p-3 text-xs text-danger">
@@ -630,7 +625,6 @@ export function StorageAnalyticsModal({
           </div>
         ) : data ? (
           <div className="space-y-6">
-            {/* Overall storage bar */}
             <div className="space-y-2 rounded-2xl bg-surface-muted p-4">
               <div className="flex justify-between text-xs font-semibold text-ink">
                 <span>Dung lượng đã sử dụng</span>
@@ -661,7 +655,6 @@ export function StorageAnalyticsModal({
               </div>
             </div>
 
-            {/* Category breakdown */}
             <div className="space-y-3">
               <p className="text-xs font-semibold text-ink">
                 Phân bố theo thể loại
@@ -699,7 +692,6 @@ export function StorageAnalyticsModal({
               </div>
             </div>
 
-            {/* Trash summary */}
             <div className="flex items-center justify-between rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 text-xs">
               <div className="flex items-center gap-2">
                 <Trash2 className="h-4 w-4 text-amber-500" />
@@ -751,7 +743,7 @@ export function StorageActivitiesModal({
       <ModalContent>
         {loading ? (
           <div className="py-8 text-center text-xs text-ink-muted">
-            Đang tải nhật ký...
+            Đang tải nhật ký
           </div>
         ) : activities.length === 0 ? (
           <div className="py-8 text-center text-xs text-ink-muted">
@@ -907,7 +899,7 @@ export function StoragePreviewModal({
       <ModalContent className="max-h-[75vh] overflow-y-auto p-4">
         {!previewUrl ? (
           <div className="py-16 text-center text-xs text-ink-muted">
-            Đang tạo liên kết xem trước trực tiếp...
+            Đang tạo liên kết xem trước trực tiếp
           </div>
         ) : isImage ? (
           <div className="space-y-4">
@@ -1012,7 +1004,7 @@ export function StoragePreviewModal({
             </div>
             {loadingText ? (
               <div className="py-12 text-center text-xs text-ink-muted">
-                Đang tải văn bản...
+                Đang tải văn bản
               </div>
             ) : (
               <pre className="max-h-[55vh] overflow-auto rounded-2xl border border-border bg-neutral-950 p-4 text-xs font-mono text-neutral-200 shadow-inner">
@@ -1066,5 +1058,3 @@ export function StoragePreviewModal({
     </Modal>
   );
 }
-
-

@@ -1,22 +1,71 @@
 import re
+import math
+from collections import Counter
 from typing import Any, Dict
 from loguru import logger
 
-from huggingface_hub import AsyncInferenceClient
 from langchain_core.messages import HumanMessage, SystemMessage
 from src.core.infrastructure.configuration import settings
 from src.core.registry import PromptType, registry
 from src.schemas.guardrails import SecurityAssessment
-from src.utils.huggingface import HFInferenceChat
+from src.utils.huggingface import create_chat_model
 
 class GuardrailsEngine:
     def __init__(self):
-        self._hf = AsyncInferenceClient(
-            model=settings.LLM_MODEL,
-            token=settings.HF_TOKEN,
-        )
-        self.llm = HFInferenceChat(client=self._hf, model=settings.LLM_MODEL)
+        self.llm = create_chat_model()
         self._redis = None
+
+    @staticmethod
+    def _entropy(value: str) -> float:
+        if not value:
+            return 0.0
+        counts = Counter(value)
+        length = len(value)
+        return -sum((count / length) * math.log2(count / length) for count in counts.values())
+
+    def _redact_structural_secrets(self, text: str) -> tuple[str, bool]:
+        found = False
+
+        def redact(match: re.Match) -> str:
+            nonlocal found
+            candidate = match.group(0)
+            if re.fullmatch(
+                r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}",
+                candidate,
+            ):
+                return candidate
+            has_character_mix = bool(
+                re.search(r"[A-Za-z]", candidate) and re.search(r"\d", candidate)
+            )
+            compact_ratio = sum(character.isalnum() for character in candidate) / len(candidate)
+            credential_shape = (
+                len(candidate) >= 32 and compact_ratio >= 0.85
+            ) or (
+                len(candidate) == 20
+                and candidate.upper() == candidate
+                and compact_ratio == 1.0
+            )
+            credential_uri = "://" in candidate and "@" in candidate
+            if has_character_mix and self._entropy(candidate) >= 3.5 and (
+                credential_shape or credential_uri
+            ):
+                found = True
+                return "[REDACTED]"
+            return candidate
+
+        sanitized = re.sub(r"(?<![\w])[^\s]{20,}(?![\w])", redact, text)
+        return sanitized, found
+
+    def _deterministic_assessment(self, text: str) -> Dict[str, Any]:
+        sanitized, credential_found = self._redact_structural_secrets(text)
+        threat_category = "credential_leak" if credential_found else "none"
+        return {
+            "is_safe": not credential_found,
+            "risk_score": 1.0 if credential_found else 0.0,
+            "threat_category": threat_category,
+            "reason": "Sensitive content redacted" if credential_found else "Passed structural security inspection",
+            "sanitized_text": sanitized,
+        }
 
     def _get_redis(self):
         if self._redis is None:
@@ -42,33 +91,9 @@ class GuardrailsEngine:
         if not prompt or not prompt.strip():
             return {"is_safe": True, "risk_score": 0.0, "reason": "Empty input", "sanitized_text": ""}
 
-        injection_rules = await self._get_dynamic_patterns("security:guardrails:patterns")
-        for pattern in injection_rules:
-            if re.search(pattern, prompt, re.IGNORECASE):
-                return {
-                    "is_safe": False,
-                    "risk_score": 1.0,
-                    "threat_category": "prompt_injection",
-                    "reason": f"Matched dynamic security rule: {pattern}",
-                    "sanitized_text": prompt,
-                }
-
-        credential_rules = await self._get_dynamic_patterns("security:guardrails:credentials")
-        sanitized = prompt
-        credential_found = False
-        for pattern in credential_rules:
-            updated = re.sub(pattern, "[REDACTED]", sanitized, flags=re.IGNORECASE)
-            credential_found = credential_found or updated != sanitized
-            sanitized = updated
-
-        if credential_found:
-            return {
-                "is_safe": False,
-                "risk_score": 1.0,
-                "threat_category": "credential_leak",
-                "reason": "Credential material detected and redacted",
-                "sanitized_text": sanitized,
-            }
+        baseline = self._deterministic_assessment(prompt)
+        if not baseline["is_safe"]:
+            return baseline
 
         try:
             system_prompt = registry.get(PromptType.PROMPT_INJECTION_DETECTOR)
@@ -80,7 +105,7 @@ class GuardrailsEngine:
                 "risk_score": assessment.risk_score,
                 "threat_category": assessment.threat_category,
                 "reason": assessment.reason,
-                "sanitized_text": prompt,
+                "sanitized_text": baseline["sanitized_text"],
             }
         except Exception:
             logger.exception("AI safety classifier failed")
@@ -96,25 +121,13 @@ class GuardrailsEngine:
         if not prompt or not prompt.strip():
             return {"is_safe": True, "risk_score": 0.0, "reason": "Empty input", "sanitized_text": ""}
 
-        return {
-            "is_safe": True,
-            "risk_score": 0.0,
-            "threat_category": "none",
-            "reason": "Passed synchronous input check",
-            "sanitized_text": prompt,
-        }
+        return self._deterministic_assessment(prompt)
 
     def inspect_output(self, response_text: str) -> Dict[str, Any]:
         if not response_text or not response_text.strip():
             return {"is_safe": True, "risk_score": 0.0, "reason": "Empty output", "sanitized_text": ""}
 
-        return {
-            "is_safe": True,
-            "risk_score": 0.0,
-            "threat_category": "none",
-            "reason": "Passed synchronous output check",
-            "sanitized_text": response_text,
-        }
+        return self._deterministic_assessment(response_text)
 
     validate_input = inspect_input
     validate_output = inspect_output

@@ -77,6 +77,7 @@ class AgentState(TypedDict):
     user_preferences: str
     document_ids: list
     image_data: str
+    audio_data: str
     file_data: str
     folder_data: str
     thread_id: str

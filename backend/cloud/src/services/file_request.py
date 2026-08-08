@@ -47,11 +47,9 @@ class FileRequestService:
             if not doc:
                 return None
                 
-            # Check expiration
             if doc["expires_at"].replace(tzinfo=timezone.utc) < datetime.now(timezone.utc):
                 return None
                 
-            # Check password
             if doc.get("password") and doc["password"] != password:
                 return {"error": "Mật khẩu không chính xác"}
                 

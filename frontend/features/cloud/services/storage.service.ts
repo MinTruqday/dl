@@ -764,7 +764,7 @@ export const uploadFileChunkedAPI = async (
   parentId?: string,
   onProgress?: (percent: number) => void
 ): Promise<StorageItem> => {
-  const CHUNK_SIZE = 2 * 1024 * 1024; // 2MB chunks
+  const CHUNK_SIZE = 2 * 1024 * 1024;
   if (file.size <= CHUNK_SIZE) {
     const res = await uploadStorageFileAPI(file, parentId);
     if (onProgress) onProgress(100);
@@ -814,5 +814,4 @@ export const uploadFileChunkedAPI = async (
 
   return mapItem(lastData);
 };
-
 

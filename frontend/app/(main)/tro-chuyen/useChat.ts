@@ -55,7 +55,17 @@ const streamErrors: Record<string, string> = {
   response_verification_failed: "Kết quả không vượt qua bước kiểm chứng",
   chat_stream_failed: "Luồng phản hồi bị gián đoạn",
   advanced_mode_requires_pro: "Chế độ này cần gói Pro hoặc Premium",
+  multimodal_processing_failed: "Không thể xử lý tệp đa phương tiện",
 };
+
+function readDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("Không thể đọc tệp đính kèm"));
+    reader.readAsDataURL(file);
+  });
+}
 export function useChat(documentId?: string | null) {
   const { user, isLoading: authLoading } = useAuth();
   const [sessions, setSessions] = useState<any[]>([]);
@@ -189,8 +199,15 @@ export function useChat(documentId?: string | null) {
     let activeSession = sessionId;
     let approvalTimer: ReturnType<typeof setInterval> | null = null;
     try {
+      const effectiveText =
+        text.trim() ||
+        (file?.type.startsWith("audio/")
+          ? "Phân tích nội dung âm thanh đính kèm"
+          : file?.type.startsWith("image/")
+            ? "Phân tích nội dung hình ảnh đính kèm"
+            : "Phân tích tệp đính kèm");
       if (!activeSession) {
-        const created = await createAiSessionAPI("", text.trim(), mode);
+        const created = await createAiSessionAPI("", effectiveText, mode);
         activeSession = created.data?._id ?? created._id;
         setSessionId(activeSession);
         setOpenedMode(mode);
@@ -208,12 +225,21 @@ export function useChat(documentId?: string | null) {
       let attachment: any = null;
       if (file) {
         const uploaded = await uploadChatAttachmentAPI(file);
-        attachment = { url: uploaded.data?.url, filename: file.name };
+        attachment = {
+          url: uploaded.data?.url,
+          filename: file.name,
+          content_type: file.type || "application/octet-stream",
+          size: file.size,
+        };
       }
+      const multimodalData =
+        file && (file.type.startsWith("image/") || file.type.startsWith("audio/"))
+          ? await readDataUrl(file)
+          : null;
       const userMessage: ChatMessage = {
         id: crypto.randomUUID(),
         role: "user",
-        content: text.trim(),
+        content: effectiveText,
         attachment: file?.name,
       };
       const assistantId = crypto.randomUUID();
@@ -225,7 +251,7 @@ export function useChat(documentId?: string | null) {
       requestController.current = new AbortController();
       const response = await streamAiChatAPI(
         {
-          query: text.trim(),
+          query: effectiveText,
           thinking: mode === "work" || mode === "goal",
           mode,
           approval_policy: approvalPolicy,
@@ -234,6 +260,8 @@ export function useChat(documentId?: string | null) {
           user_id: user?._id,
           document_ids: documentId ? [documentId] : [],
           attachments: attachment ? [attachment] : [],
+          image_data: file?.type.startsWith("image/") ? multimodalData : null,
+          audio_data: file?.type.startsWith("audio/") ? multimodalData : null,
         },
         requestController.current.signal,
       );

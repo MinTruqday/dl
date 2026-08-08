@@ -91,7 +91,7 @@ class QuotaService:
                 "weekly_tokens": 12000,
                 "req_reset_hours": 5,
                 "max_docs": 1,
-                "model": settings.QWEN_MODEL,
+                "model": settings.LLM_MODEL,
                 "thinking": False,
             },
             "PRO": {
@@ -103,7 +103,7 @@ class QuotaService:
                 "weekly_tokens": 75000,
                 "req_reset_hours": 5,
                 "max_docs": 5,
-                "model": settings.LLAMA_MODEL,
+                "model": settings.LLM_MODEL,
                 "thinking": False,
             },
             "PREMIUM": {
@@ -115,7 +115,7 @@ class QuotaService:
                 "weekly_tokens": 300000,
                 "req_reset_hours": 5,
                 "max_docs": -1,
-                "model": settings.LLAMA_MODEL,
+                "model": settings.LLM_MODEL,
                 "thinking": True,
             },
             "admin": {
@@ -127,7 +127,7 @@ class QuotaService:
                 "weekly_tokens": -1,
                 "req_reset_hours": 5,
                 "max_docs": -1,
-                "model": settings.LLAMA_MODEL,
+                "model": settings.LLM_MODEL,
                 "thinking": True,
             },
         }
@@ -175,7 +175,7 @@ class QuotaService:
             weekly_tokens=int(cfg.get("weekly_tokens", daily_tokens * 7)),
             req_reset_hours=5,
             max_docs=cfg.get("max_docs", 1),
-            model=cfg.get("model", settings.QWEN_MODEL),
+            model=settings.LLM_MODEL,
             thinking=cfg.get("thinking", False),
         )
 

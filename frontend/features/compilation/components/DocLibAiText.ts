@@ -1,4 +1,8 @@
 import { API, BlockTool } from "@editorjs/editorjs";
+import {
+  API_URL,
+  getAuthHeaders,
+} from "@/features/authentication/services/session.service";
 
 export default class DocLibAiText implements BlockTool {
   static readonly feature = {
@@ -115,12 +119,10 @@ export default class DocLibAiText implements BlockTool {
         this.data.status = "generating";
         this.buildUI();
 
-        const apiUrl =
-          (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000") +
-          "/inference/tao-noi-dung";
+        const apiUrl = `${API_URL}/suy-luan/tao-noi-dung`;
         fetch(apiUrl, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
           body: JSON.stringify({
             prompt: this.data.prompt,
             max_tokens: 500,

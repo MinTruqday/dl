@@ -72,7 +72,7 @@ class BulkActionRequest(BaseModel):
 class FileRequestCreate(BaseModel):
     target_folder_id: str = Field(min_length=1, max_length=128)
     password: Optional[str] = Field(default=None, max_length=128)
-    expires_in_hours: int = Field(default=168, ge=1, le=720) # max 30 days
+    expires_in_hours: int = Field(default=168, ge=1, le=720)
     description: Optional[str] = None
 
 class FileRequestResponse(BaseModel):

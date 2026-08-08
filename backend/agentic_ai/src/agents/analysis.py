@@ -26,6 +26,7 @@ class AnalysisAgent:
                 )
                 file_data = req.get("file_data")
                 image_data = req.get("image_data")
+                audio_data = req.get("audio_data")
                 user_preferences = req.get("user_preferences", "")
                 mode_directive = req.get("mode_directive", "")
             else:
@@ -43,6 +44,7 @@ class AnalysisAgent:
                 )
                 file_data = getattr(req, "file_data", None)
                 image_data = getattr(req, "image_data", None)
+                audio_data = getattr(req, "audio_data", None)
                 user_preferences = getattr(req, "user_preferences", "")
                 mode_directive = getattr(req, "mode_directive", "")
 
@@ -56,6 +58,7 @@ class AnalysisAgent:
                     "chat_history": chat_history,
                     "file_data": file_data,
                     "image_data": image_data,
+                    "audio_data": audio_data,
                     "user_preferences": user_preferences,
                     "mode_directive": mode_directive,
                 }

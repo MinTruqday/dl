@@ -248,8 +248,11 @@ class WorkerRunner:
         while True:
             try:
                 queue = await mq.get_queue(queue_name)
-                async with queue.iterator() as iterator:
-                    async for message in iterator:
+                while True:
+                    message = await queue.get(timeout=5, fail=False)
+                    if message is None:
+                        continue
+                    try:
                         try:
                             payload = json.loads(message.body.decode("utf-8"))
                             if not isinstance(payload, dict):
@@ -279,6 +282,10 @@ class WorkerRunner:
                                 await message.ack()
                             else:
                                 await message.reject(requeue=False)
+                    except Exception:
+                        if not message.processed:
+                            await message.reject(requeue=True)
+                        raise
             except asyncio.CancelledError:
                 raise
             except Exception:

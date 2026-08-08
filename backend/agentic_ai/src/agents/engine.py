@@ -191,14 +191,12 @@ class EngineAgent:
             return json.dumps({"status": "search_service_unavailable"})
 
         try:
-            from huggingface_hub import AsyncInferenceClient
             from langchain_core.messages import HumanMessage
-            from src.utils.huggingface import HFInferenceChat
+            from src.utils.huggingface import create_chat_model
             from src.schemas.engine import SearchEvaluation, SubQueries
             from src.core.registry import registry, PromptType
             
-            client = AsyncInferenceClient(model=settings.LLM_MODEL, token=settings.HF_TOKEN)
-            llm = HFInferenceChat(client=client, model=settings.LLM_MODEL)
+            llm = create_chat_model()
             structured_llm = llm.with_structured_output(SubQueries)
             evaluation_llm = llm.with_structured_output(SearchEvaluation)
             

@@ -1,6 +1,5 @@
 import asyncio
 import os
-import sys
 import uuid
 from datetime import datetime, timezone, timedelta
 from fastapi import HTTPException
@@ -28,6 +27,26 @@ async def run_e2e_tests():
     owner = MockUser(str(uuid.uuid4()), "owner@doclib.vn", "Doc Owner")
     editor = MockUser(str(uuid.uuid4()), "editor@doclib.vn", "Doc Editor")
     doc_id = str(uuid.uuid4())
+    humanity = database.mongodb[os.environ["HUMANITY_DB_NAME"]]
+    content = database.mongodb[settings.CONTENT_DB_NAME]
+    await humanity.users.insert_many(
+        [
+            {
+                "_id": owner.id,
+                "email": owner.email,
+                "full_name": owner.full_name,
+                "role": owner.role,
+                "is_active": True,
+            },
+            {
+                "_id": editor.id,
+                "email": editor.email,
+                "full_name": editor.full_name,
+                "role": editor.role,
+                "is_active": True,
+            },
+        ]
+    )
 
     await DocumentRepository.insert_one(
         {
@@ -126,6 +145,12 @@ async def run_e2e_tests():
         ),
         editor,
     )
+
+    await content.documents.delete_one({"_id": doc_id})
+    await content.collaboration_invites.delete_many({"document_id": doc_id})
+    await content.collaboration_activities.delete_many({"document_id": doc_id})
+    await content.collaboration_locks.delete_many({"document_id": doc_id})
+    await humanity.users.delete_many({"_id": {"$in": [owner.id, editor.id]}})
 
     print("ALL E2E INTEGRATION TESTS PASSED PERFECTLY")
 

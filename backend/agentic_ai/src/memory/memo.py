@@ -7,7 +7,6 @@ from typing import Dict, List, Optional, Any
 from uuid6 import uuid7
 
 from langchain_core.messages import HumanMessage, SystemMessage
-from huggingface_hub import AsyncInferenceClient
 from loguru import logger
 from qdrant_client import AsyncQdrantClient
 from qdrant_client.http.models import Distance, FieldCondition, Filter, MatchValue, PointStruct, Range, VectorParams, MatchAny, MatchExcept
@@ -15,7 +14,7 @@ from rank_bm25 import BM25Okapi
 
 from src.core.infrastructure.configuration import settings
 from src.utils.background import create_background_task
-from src.utils.huggingface import HFInferenceChat
+from src.utils.huggingface import create_chat_model
 from src.core.registry import PromptType, registry
 from src.schemas.memory import MemoryOperation
 from src.memory.management import memory_manager
@@ -134,11 +133,7 @@ class MemoryManager:
             url=settings.QDRANT_URL,
             timeout=10.0,
         )
-        self._hf = AsyncInferenceClient(
-            model=settings.LLM_MODEL,
-            token=settings.HF_TOKEN,
-        )
-        self.llm = HFInferenceChat(client=self._hf, model=settings.LLM_MODEL)
+        self.llm = create_chat_model()
         from src.rag.embedding import embedder
         self.embedder = embedder
         self._initialized = False

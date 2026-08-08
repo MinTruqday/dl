@@ -29,6 +29,15 @@ def resolve_model_revision(model_id: str, token: Optional[str] = None) -> str:
         raise RuntimeError(f"Unable to resolve an immutable revision for model {model_id}")
     return info.sha
 
+
+def create_chat_model(model: Optional[str] = None):
+    from src.utils.local_models import local_model_client
+
+    return HFInferenceChat(
+        client=local_model_client,
+        model=model or settings.LLM_MODEL,
+    )
+
 class HFInferenceChat(BaseChatModel):
     """
     <module_purpose>
@@ -85,7 +94,9 @@ class HFInferenceChat(BaseChatModel):
             ),
             "temperature": kwargs.get("temperature", 0.1),
         }
-        response = await self.client.chat_completion(**chat_kwargs)
+        from src.utils.local_models import local_model_client
+
+        response = await local_model_client.chat_completion(**chat_kwargs)
         content = response.choices[0].message.content
         from src.services.token_accounting import record_usage
 
@@ -122,7 +133,9 @@ class HFInferenceChat(BaseChatModel):
                 role = "assistant"
             hf_messages.append({"role": role, "content": msg.content})
 
-        stream = await self.client.chat_completion(
+        from src.utils.local_models import local_model_client
+
+        stream = await local_model_client.chat_completion(
             messages=hf_messages,
             max_tokens=kwargs.get(
                 "max_tokens",

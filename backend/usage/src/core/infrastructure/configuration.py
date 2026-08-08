@@ -21,7 +21,6 @@ class Settings(BaseModel):
     REDIS_URI: str = os.environ["REDIS_URI"]
     PLATFORM_SYSTEM_ID: str = os.environ["PLATFORM_SYSTEM_ID"]
     USAGE_DB_NAME: str = os.environ["USAGE_DB_NAME"]
-    QWEN_MODEL: str = os.environ["QWEN_MODEL"]
-    LLAMA_MODEL: str = os.environ["LLAMA_MODEL"]
+    LLM_MODEL: str = os.environ["LLM_MODEL"]
 
 settings = Settings()
