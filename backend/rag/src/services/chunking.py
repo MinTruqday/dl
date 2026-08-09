@@ -32,9 +32,9 @@ class ChunkingService:
             if current_length + len(trimmed) > 1000 and current_chunk:
                 combined_text = "\n\n".join(current_chunk)
                 if len(combined_text) >= 30 and await _sanitize_text(combined_text):
-                    chunk_id = str(uuid7())[:12]
+                    chunk_id = str(uuid7())
                     chunks.append({
-                        "id": f"{metadata.get('document_id', 'unknown')}_{chunk_id}",
+                        "id": chunk_id,
                         "text": combined_text,
                         "metadata": {
                             **metadata,
@@ -55,9 +55,9 @@ class ChunkingService:
         if current_chunk:
             combined_text = "\n\n".join(current_chunk)
             if len(combined_text) >= 30 and await _sanitize_text(combined_text):
-                chunk_id = str(uuid7())[:12]
+                chunk_id = str(uuid7())
                 chunks.append({
-                    "id": f"{metadata.get('document_id', 'unknown')}_{chunk_id}",
+                    "id": chunk_id,
                     "text": combined_text,
                     "metadata": {
                         **metadata,

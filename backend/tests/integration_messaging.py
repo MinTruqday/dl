@@ -120,6 +120,47 @@ async def run():
             )
             assert disappear_res.status_code == 200, disappear_res.text
 
+            set_pin_res = await client.post(
+                f"http://messaging:8000/tin-nhan/{user_b}/an-tin-nhan",
+                json={"pin_code": "1234"},
+                headers=headers_a,
+            )
+            assert set_pin_res.status_code == 200, set_pin_res.text
+            participant_key = f"{min(user_a, user_b)}_{max(user_a, user_b)}"
+            locked = await messaging_db.conversations.find_one(
+                {"_id": participant_key}
+            )
+            assert "hidden_pin" not in locked or user_a not in locked["hidden_pin"]
+            assert locked["hidden_pin_hash"][user_a] != "1234"
+            for _ in range(5):
+                invalid_pin_res = await client.post(
+                    f"http://messaging:8000/tin-nhan/{user_b}/xac-thuc-pin",
+                    json={"pin_code": "9999"},
+                    headers=headers_a,
+                )
+                assert invalid_pin_res.status_code == 401, invalid_pin_res.text
+            limited_pin_res = await client.post(
+                f"http://messaging:8000/tin-nhan/{user_b}/xac-thuc-pin",
+                json={"pin_code": "1234"},
+                headers=headers_a,
+            )
+            assert limited_pin_res.status_code == 429, limited_pin_res.text
+            await redis_client.delete(
+                f"messaging:pin-attempts:{user_a}:{participant_key}"
+            )
+            valid_pin_res = await client.post(
+                f"http://messaging:8000/tin-nhan/{user_b}/xac-thuc-pin",
+                json={"pin_code": "1234"},
+                headers=headers_a,
+            )
+            assert valid_pin_res.status_code == 200, valid_pin_res.text
+            remove_pin_res = await client.post(
+                f"http://messaging:8000/tin-nhan/{user_b}/xoa-ma-pin",
+                json={"pin_code": "1234"},
+                headers=headers_a,
+            )
+            assert remove_pin_res.status_code == 200, remove_pin_res.text
+
             recall_res = await client.delete(
                 f"http://messaging:8000/tin-nhan/{msg_id}",
                 headers=headers_a,
@@ -136,6 +177,12 @@ async def run():
                     {"receiver_id": {"$in": [user_a, user_b]}},
                 ]
             }
+        )
+        await messaging_db.conversations.delete_many(
+            {"participants": {"$in": [user_a, user_b]}}
+        )
+        await messaging_db.conversations.delete_one(
+            {"_id": f"{min(user_a, user_b)}_{max(user_a, user_b)}"}
         )
         await humanity_db.users.delete_many({"_id": {"$in": [user_a, user_b]}})
         for user_id in sessions:

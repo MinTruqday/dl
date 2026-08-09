@@ -189,7 +189,32 @@ class LocalModelClient:
         **_: Any,
     ):
         if stream:
-            return self._stream(messages, max_tokens, temperature)
+            return self._stream(messages, max_tokens, temperature, model)
+        if model == settings.QWEN_MODEL:
+            try:
+                return await self._qwen_completion(
+                    messages,
+                    max_tokens,
+                    temperature,
+                )
+            except Exception as fallback_error:
+                self._fallback_runtime_status = "unavailable"
+                logger.warning(
+                    "Secondary model failed error_type={} primary_model={}",
+                    type(fallback_error).__name__,
+                    settings.LLM_MODEL,
+                )
+                try:
+                    return await self._primary_completion(
+                        messages,
+                        max_tokens,
+                        temperature,
+                    )
+                except Exception as primary_error:
+                    self._primary_runtime_status = "unavailable"
+                    raise LocalModelUnavailable(
+                        "all_local_models_unavailable"
+                    ) from primary_error
         try:
             return await self._primary_completion(
                 messages,
@@ -240,9 +265,11 @@ class LocalModelClient:
         messages: list[dict[str, Any]],
         max_tokens: int,
         temperature: float,
+        model: str | None = None,
     ) -> AsyncIterator[Any]:
         response = await self.chat_completion(
             messages=messages,
+            model=model,
             max_tokens=max_tokens,
             temperature=temperature,
             stream=False,

@@ -17,11 +17,16 @@ router = APIRouter(
 )
 
 def document_error(error: Exception):
+    if isinstance(error, HTTPException):
+        return error
     if isinstance(error, PermissionError):
         return HTTPException(status_code=403, detail="Document access denied")
     if isinstance(error, ValueError):
         return HTTPException(status_code=404, detail=str(error))
-    return error
+    return HTTPException(
+        status_code=502,
+        detail={"code": "rag_dependency_failed"},
+    )
 
 @router.post("/expand", response_model=APIResponse[GraphExpandResponse])
 @log_logic_execution

@@ -137,6 +137,23 @@ def main():
         assert status == 200 and retrieved["data"]["documents"], retrieved
         assert retrieved["data"]["documents"][0]["metadata"]["document_id"] == DOCUMENT_ID
 
+        status, multi_query = call(
+            "POST",
+            "/rag/multi-query-retrieve",
+            {
+                "question": "How does private document indexing preserve ownership",
+                "document_ids": [DOCUMENT_ID],
+                "k": 5,
+                "requester_id": USER_ID,
+                "is_admin": False,
+            },
+        )
+        assert status == 200 and multi_query["data"]["documents"], multi_query
+        assert any(
+            document["metadata"].get("document_id") == DOCUMENT_ID
+            for document in multi_query["data"]["documents"]
+        ), multi_query
+
         status, graph_replaced = call(
             "POST",
             "/rag/graph/replace-document",

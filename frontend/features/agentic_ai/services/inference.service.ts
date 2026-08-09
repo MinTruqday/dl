@@ -49,7 +49,7 @@ export async function getSynonymsAPI(text: string) {
 }
 
 export async function generateCodeAPI(prompt: string) {
-  const res = await fetch(`${API_URL}/suy-luan/tao-ma`, {
+  const res = await fetch(`${API_URL}/suy-luan/tao-ma-nguon`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ prompt }),

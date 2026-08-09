@@ -233,7 +233,7 @@ export async function importDocumentAPI(file: File) {
     throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
   const body = new FormData();
   body.append("file", file);
-  const res = await fetch(`${API_URL}/tai-lieu/import`, {
+  const res = await fetch(`${API_URL}/tai-lieu/ket-nhap`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
     body,

@@ -1,4 +1,3 @@
-import asyncio
 from typing import Dict, List, Optional
 import httpx
 from loguru import logger
@@ -22,30 +21,6 @@ class VectorStore:
             timeout=60.0,
         )
         self.collection_name = "doclib"
-        self._upsert_queue = None
-        self._worker_task = None
-
-    async def _init_worker(self):
-        if self._upsert_queue is None:
-            self._upsert_queue = asyncio.Queue()
-            self._worker_task = asyncio.create_task(self._upsert_worker())
-
-    async def _upsert_worker(self):
-        while True:
-            task = None
-            try:
-                task = await self._upsert_queue.get()
-                await self.client.upsert(**task)
-            except asyncio.CancelledError:
-                break
-            except Exception:
-                logger.exception("Search index payload upsert queue error")
-            finally:
-                if task is not None:
-                    try:
-                        self._upsert_queue.task_done()
-                    except ValueError:
-                        pass
 
     async def ensure_collection(self):
         try:
@@ -73,7 +48,6 @@ class VectorStore:
         documents: List[str],
         metadatas: List[Dict],
     ):
-        await self._init_worker()
         points = [
             PointStruct(
                 id=ids[i],
@@ -82,13 +56,14 @@ class VectorStore:
             )
             for i in range(len(ids))
         ]
-        await self._upsert_queue.put(
-            {"collection_name": self.collection_name, "points": points}
+        await self.client.upsert(
+            collection_name=self.collection_name,
+            points=points,
+            wait=True,
         )
 
     async def wait_upsert(self):
-        if self._upsert_queue:
-            await self._upsert_queue.join()
+        return None
 
     async def query(
         self,

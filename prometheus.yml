@@ -10,15 +10,19 @@ scrape_configs:
           - agentic_ai:8000
           - authentication:8000
           - cloud:8000
+          - collaboration:8000
           - collection:8000
           - compilation:8000
           - content:8000
           - drm:8000
+          - engagement:8000
           - finance:8000
           - humanity:8000
           - management:8000
           - messaging:8000
           - notification:8000
+          - rag:8000
+          - search:8000
           - usage:8000
           - websocket:8000
           - worker:8000

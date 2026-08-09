@@ -118,7 +118,7 @@ export const deleteSampleAPI = async (datasetId: string, sampleId: string) => {
 };
 
 export const importFromFeedbackAPI = async () => {
-  const res = await fetch(`${API_URL}/tinh-chinh/dau-vao/phan-hoi`, {
+  const res = await fetch(`${API_URL}/tinh-chinh/ket-nhap/phan-hoi`, {
     method: "POST",
     headers: authHeaders(),
   });
@@ -132,7 +132,7 @@ export const importFromFeedbackAPI = async () => {
 };
 
 export const importFromDocumentsAPI = async (documentIds: string[]) => {
-  const res = await fetch(`${API_URL}/tinh-chinh/dau-vao/tai-lieu`, {
+  const res = await fetch(`${API_URL}/tinh-chinh/ket-nhap/tai-lieu`, {
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify({ document_ids: documentIds }),

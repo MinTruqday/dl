@@ -6,17 +6,19 @@ import string
 import tokenize
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from src.agents.planning import PlanAgent
 from src.agents.routing import RouteAgent, SemanticRouterValidator
 from src.core.logging_route import summarize_payload
 from src.core.model_runtime import run_chat_completion
+from src.core.infrastructure.configuration import settings
 from src.core.registry import PromptType, RegistryCore, registry
 from src.harness.failure import failure
 from src.loop.hill_climbing import ImprovementSuggestion, IssueDetector, PromptOptimizer
 from src.schemas.inference import StyleImitationRequest
 from src.workflow.orchestration import execute_tool_node, sanitizer_node, supervisor
+from src.utils.local_models import LocalModelClient
 from src.api.interaction import require_mode_tier
 from fastapi import HTTPException
 
@@ -90,6 +92,22 @@ async def verify_runtime():
         )
     assert result == "Hoàn tất"
     assert client.calls == 3
+
+    routed_client = LocalModelClient()
+    qwen_response = SimpleNamespace(
+        choices=[SimpleNamespace(message=SimpleNamespace(content="Qwen"))]
+    )
+    routed_client._qwen_completion = AsyncMock(return_value=qwen_response)
+    routed_client._primary_completion = AsyncMock()
+    routed = await routed_client.chat_completion(
+        messages=[{"role": "user", "content": "route"}],
+        model=settings.QWEN_MODEL,
+        max_tokens=16,
+        temperature=0,
+    )
+    assert routed.choices[0].message.content == "Qwen"
+    routed_client._qwen_completion.assert_awaited_once()
+    routed_client._primary_completion.assert_not_awaited()
 
 
 async def verify_planner_privacy():

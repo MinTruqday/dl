@@ -26,6 +26,18 @@ data:
         static_configs:
           - targets: ['collaboration:80']
 
+      - job_name: engagement
+        static_configs:
+          - targets: ['engagement:80']
+
+      - job_name: search
+        static_configs:
+          - targets: ['search:80']
+
+      - job_name: rag
+        static_configs:
+          - targets: ['rag:80']
+
       - job_name: cloud
         static_configs:
           - targets: ['cloud:80']

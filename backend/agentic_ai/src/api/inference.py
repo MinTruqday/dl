@@ -112,6 +112,39 @@ async def _chat_direct(
     )
 
 
+async def _structured_direct(
+    prompt: str,
+    schema,
+    max_tokens: int,
+    model: str,
+):
+    from src.utils.structured_output import validate_structured_output
+
+    raw = await _chat_direct(
+        [{"role": "user", "content": prompt}],
+        max_tokens=max_tokens,
+        temperature=0.1,
+        model=model,
+    )
+    try:
+        return validate_structured_output(raw, schema)
+    except Exception:
+        corrected = await _chat_direct(
+            [
+                {"role": "user", "content": prompt},
+                {"role": "assistant", "content": raw[:4000]},
+                {
+                    "role": "user",
+                    "content": "Return one corrected strictly valid JSON object only",
+                },
+            ],
+            max_tokens=max_tokens,
+            temperature=0,
+            model=model,
+        )
+        return validate_structured_output(corrected, schema)
+
+
 def _public_ai_error(operation: str, exc: Exception) -> HTTPException:
     if isinstance(exc, HTTPException):
         return exc
@@ -292,9 +325,7 @@ async def semantic_document_search(
     dependencies=[Depends(verify_internal_token)],
 )
 async def expand_retrieval_query(req: RetrievalExpansionRequest):
-    from langchain_core.messages import HumanMessage
     from src.schemas.routing import MultiQueryOutput
-    from src.utils.huggingface import create_chat_model
 
     hypothetical_prompt = registry.get(PromptType.HYDE_GENERATION).format(
         question=req.question
@@ -303,17 +334,16 @@ async def expand_retrieval_query(req: RetrievalExpansionRequest):
         [{"role": "user", "content": hypothetical_prompt}],
         max_tokens=384,
         temperature=0.2,
+        model=settings.QWEN_MODEL,
     )
     query_prompt = registry.get(PromptType.MULTI_QUERY).format(
         question=req.question
     )
-    structured_model = create_chat_model(
-        settings.LLM_MODEL
-    ).with_structured_output(MultiQueryOutput)
-    result = await structured_model.ainvoke(
-        [HumanMessage(content=query_prompt)],
+    result = await _structured_direct(
+        query_prompt,
+        MultiQueryOutput,
         max_tokens=192,
-        temperature=0.2,
+        model=settings.QWEN_MODEL,
     )
     queries = [query.strip() for query in result.queries if query.strip()]
     return {
@@ -327,21 +357,17 @@ async def expand_retrieval_query(req: RetrievalExpansionRequest):
     dependencies=[Depends(verify_internal_token)],
 )
 async def decompose_cross_document_query(req: CrossDocumentExpansionRequest):
-    from langchain_core.messages import HumanMessage
     from src.schemas.routing import CrossDocumentQueries
-    from src.utils.huggingface import create_chat_model
 
     prompt = registry.get(PromptType.CROSS_DOCUMENT_QUERY).format(
         question=req.question,
         document_ids=req.document_ids,
     )
-    structured_model = create_chat_model(
-        settings.LLM_MODEL
-    ).with_structured_output(CrossDocumentQueries)
-    result = await structured_model.ainvoke(
-        [HumanMessage(content=prompt)],
+    result = await _structured_direct(
+        prompt,
+        CrossDocumentQueries,
         max_tokens=min(1024, 96 * len(req.document_ids)),
-        temperature=0.2,
+        model=settings.QWEN_MODEL,
     )
     queries = [query.strip() for query in result.queries if query.strip()]
     if len(queries) != len(req.document_ids):
@@ -393,11 +419,13 @@ async def summarize_rag_document(req: RagDocumentSummaryRequest):
         [{"role": "user", "content": prompt}],
         max_tokens=512,
         temperature=0.2,
+        model=settings.QWEN_MODEL,
     )
     return {"summary": summary.strip()}
 
 
 @router.post("/tao-ma")
+@router.post("/tao-ma-nguon")
 async def generate_code(
     req: CodeRequest, current_user: CurrentUser = Depends(get_current_user)
 ):

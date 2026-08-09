@@ -38,6 +38,23 @@ def create_chat_model(model: Optional[str] = None):
         model=model or settings.LLM_MODEL,
     )
 
+
+def _merge_system_messages(messages: List[dict]) -> List[dict]:
+    system_content = [
+        str(message.get("content", ""))
+        for message in messages
+        if message.get("role") == "system"
+    ]
+    remaining = [
+        message for message in messages if message.get("role") != "system"
+    ]
+    if not system_content:
+        return remaining
+    return [
+        {"role": "system", "content": "\n\n".join(system_content)},
+        *remaining,
+    ]
+
 class HFInferenceChat(BaseChatModel):
     """
     <module_purpose>
@@ -85,8 +102,10 @@ class HFInferenceChat(BaseChatModel):
             else:
                 role = "assistant"
             hf_messages.append({"role": role, "content": msg.content})
+        hf_messages = _merge_system_messages(hf_messages)
 
         chat_kwargs = {
+            "model": self.model,
             "messages": hf_messages,
             "max_tokens": kwargs.get(
                 "max_tokens",
@@ -132,6 +151,7 @@ class HFInferenceChat(BaseChatModel):
             else:
                 role = "assistant"
             hf_messages.append({"role": role, "content": msg.content})
+        hf_messages = _merge_system_messages(hf_messages)
 
         from src.utils.local_models import local_model_client
 

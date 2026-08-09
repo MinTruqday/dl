@@ -12,7 +12,7 @@ from src.utils.huggingface import create_chat_model
 
 class GuardrailsEngine:
     def __init__(self):
-        self.llm = create_chat_model()
+        self.llm = create_chat_model(settings.QWEN_MODEL)
         self._redis = None
 
     @staticmethod
@@ -99,7 +99,11 @@ class GuardrailsEngine:
             system_prompt = registry.get(PromptType.PROMPT_INJECTION_DETECTOR)
             structured_llm = self.llm.with_structured_output(SecurityAssessment)
             messages = [SystemMessage(content=system_prompt), HumanMessage(content=prompt)]
-            assessment = await structured_llm.ainvoke(messages)
+            assessment = await structured_llm.ainvoke(
+                messages,
+                max_tokens=256,
+                temperature=0,
+            )
             return {
                 "is_safe": assessment.is_safe,
                 "risk_score": assessment.risk_score,

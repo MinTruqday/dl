@@ -102,16 +102,20 @@ class IngestionPipelineService:
                 chunk for index, chunk in enumerate(chunks) if index in safe_indices
             ]
 
-        try:
-            summary = await agentic_client.summarize_rag_document(first_pages)
-        except Exception:
-            logger.exception("Document summary generation error")
-            summary = ""
+        if len(first_pages) < 500:
+            summary = first_pages.strip()
+        else:
+            try:
+                summary = await agentic_client.summarize_rag_document(first_pages)
+            except Exception:
+                logger.exception("Document summary generation error")
+                summary = ""
         if summary:
+            summary_point_id = str(uuid7())
             chunks.insert(
                 0,
                 {
-                    "id": f"{document_id}_global_summary",
+                    "id": summary_point_id,
                     "text": (
                         f"[GLOBAL METADATA - SUMMARY CHUNK]\n"
                         f"Document: {title}\n"
@@ -180,10 +184,10 @@ class IngestionPipelineService:
             snippet = node.get("snippet", "").strip()
             if len(snippet) < 30:
                 continue
-            chunk_id = str(uuid7())[:12]
+            chunk_id = str(uuid7())
             chunks.append(
                 {
-                    "id": f"{document_id}_{chunk_id}",
+                    "id": chunk_id,
                     "text": (
                         f"[{node.get('type', 'code')}] "
                         f"{node.get('name', '')}\n{snippet}"
