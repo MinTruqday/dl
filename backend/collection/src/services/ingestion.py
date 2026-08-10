@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import re
 import uuid
 from datetime import datetime, timezone
 
@@ -198,6 +199,28 @@ async def get_collector_logs():
         size = stream.tell()
         stream.seek(max(0, size - 256 * 1024))
         text = stream.read().decode("utf-8", errors="ignore")
+    entries = {}
+    pattern = re.compile(
+        r"^(\d{4}-\d{2}-\d{2}[^|]*)\|\s*(TRACE|DEBUG|INFO|WARNING|ERROR|CRITICAL)\s*\|\s*(.+)$"
+    )
+    for line in text.splitlines():
+        match = pattern.match(line.strip())
+        if not match:
+            continue
+        message = match.group(3).strip()
+        if not any(keyword in message.lower() for keyword in whitelist):
+            continue
+        key = (match.group(2), message)
+        current = entries.get(key, {"count": 0})
+        entries[key] = {
+            "timestamp": match.group(1).strip(),
+            "level": match.group(2),
+            "message": message,
+            "count": current["count"] + 1,
+        }
+    rows = list(entries.values())[-50:]
     return [
-        line for line in text.splitlines() if any(keyword in line.lower() for keyword in whitelist)
-    ][-50:]
+        f"{row['timestamp']} · {row['level']} · {row['message']}"
+        + (f" ({row['count']} lần)" if row["count"] > 1 else "")
+        for row in rows
+    ]

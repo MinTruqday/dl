@@ -60,8 +60,27 @@ class UserService:
 
     @staticmethod
     async def get_all_users(limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
-        users = await UserRepository.get_users_query({}).sort("created_at", -1).skip(offset).limit(limit).execute()
-        return [{ "_id": str(u["_id"]), "email": u.get("email"), "full_name": u.get("full_name"), "role": u.get("role"), "is_active": u.get("is_active", True), "created_at": u.get("created_at").isoformat() if hasattr(u.get("created_at"), "isoformat") else u.get("created_at"), "avatar_url": u.get("avatar_url"), "slug": u.get("slug") } for u in users]
+        cursor = UserRepository.get_users_query({}).sort("created_at", -1).skip(offset).limit(limit)
+        users = await cursor.to_list(length=limit)
+        return [
+            {
+                "_id": str(user["_id"]),
+                "email": user.get("email"),
+                "full_name": user.get("full_name"),
+                "role": user.get("role"),
+                "is_active": user.get("is_active", True),
+                "is_shadowbanned": user.get("is_shadowbanned", False),
+                "kyc_status": user.get("kyc_status", "PENDING"),
+                "created_at": (
+                    user.get("created_at").isoformat()
+                    if hasattr(user.get("created_at"), "isoformat")
+                    else user.get("created_at")
+                ),
+                "avatar_url": user.get("avatar_url"),
+                "slug": user.get("slug"),
+            }
+            for user in users
+        ]
         
     @staticmethod
     async def get_user_profile(user_id: str) -> Dict[str, Any]:
@@ -102,7 +121,7 @@ class UserService:
         if q:
             escaped = re.escape(q.strip()[:100])
             query = {"$or": [{"slug": {"$regex": escaped, "$options": "i"}}, {"full_name": {"$regex": escaped, "$options": "i"}}]}
-        users = await UserRepository.get_users_query(query).limit(limit).execute()
+        users = await UserRepository.get_users_query(query).limit(limit).to_list(length=limit)
         return [UserService.to_public_user(user) for user in users]
 
     @staticmethod

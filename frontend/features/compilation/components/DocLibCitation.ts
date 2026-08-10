@@ -14,7 +14,7 @@ type CitationTextKey = Exclude<keyof CitationData, "style">;
 export default class DocLibCitation implements BlockTool {
   static readonly feature = {
     id: "DocLibCitation",
-    title: "DocLib Citation",
+    title: "Trích dẫn",
     icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d8730ef74236f09c"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="16,17 18,13 19,7 6,7 18,12 5,4"/></svg>',
     product: "doclib",
   } as const;
@@ -26,7 +26,7 @@ export default class DocLibCitation implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "DocLib Citation",
+      title: "Trích dẫn",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="d8730ef74236f09c"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="16,17 18,13 19,7 6,7 18,12 5,4"/></svg>',
     };
   }
@@ -65,7 +65,7 @@ export default class DocLibCitation implements BlockTool {
       if (title) c += ` <em>${title}</em>.`;
       if (source) c += ` ${source}.`;
       if (url)
-        c += ` Retrieved from <a href="${url}" target="_blank" style="color:hsl(var(--brand))">${url}</a>`;
+        c += ` Truy cập từ <a href="${url}" target="_blank" style="color:hsl(var(--brand))">${url}</a>`;
       return c;
     }
     if (style === "MLA") {
@@ -125,7 +125,7 @@ export default class DocLibCitation implements BlockTool {
       const output = document.createElement("div");
       output.classList.add("doclib-citation-readonly");
       output.innerHTML =
-        this.formatCitation(this.data) || "<em>No citation data</em>";
+        this.formatCitation(this.data) || "<em>Chưa có dữ liệu trích dẫn</em>";
       this.wrapper.appendChild(output);
       return;
     }
@@ -155,10 +155,10 @@ export default class DocLibCitation implements BlockTool {
       label: string;
       placeholder: string;
     }[] = [
-      { key: "author", label: "Author", placeholder: "Jane Doe" },
-      { key: "year", label: "Year", placeholder: "2024" },
-      { key: "title", label: "Title", placeholder: "Article or book title" },
-      { key: "source", label: "Source Journal", placeholder: "Journal of" },
+      { key: "author", label: "Tác giả", placeholder: "Tên tác giả" },
+      { key: "year", label: "Năm", placeholder: "2024" },
+      { key: "title", label: "Tiêu đề", placeholder: "Tên bài viết hoặc sách" },
+      { key: "source", label: "Nguồn", placeholder: "Tên tạp chí hoặc nhà xuất bản" },
       { key: "url", label: "URL", placeholder: "https://" },
     ];
 
@@ -194,13 +194,13 @@ export default class DocLibCitation implements BlockTool {
     actions.classList.add("doclib-citation-actions");
     const copyBtn = document.createElement("button");
     copyBtn.classList.add("doclib-citation-copy");
-    copyBtn.innerText = "Copy";
+    copyBtn.innerText = "Sao chép";
     copyBtn.addEventListener("click", () => {
       const text = output.innerText;
       navigator.clipboard.writeText(text).then(() => {
-        copyBtn.innerText = "Copied";
+        copyBtn.innerText = "Đã sao chép";
         setTimeout(() => {
-          copyBtn.innerText = "Copy";
+          copyBtn.innerText = "Sao chép";
         }, 1500);
       });
     });

@@ -7,7 +7,7 @@ const authHeaders = () => {
   const token = getToken();
   if (!token)
     throw new Error(
-      "MODULE AGENTIC_AI: Authentication token missing for finetuning job",
+      "Phiên đăng nhập đã hết hạn",
     );
   return {
     "Content-Type": "application/json",
@@ -28,7 +28,7 @@ export const createDatasetAPI = async (
   const data = await res.json();
   if (!res.ok)
     throw new Error(
-      data.message || "MODULE AGENTIC_AI: Failed to create dataset",
+      data.message || "Không thể tạo tập dữ liệu",
     );
   return data;
 };
@@ -40,7 +40,7 @@ export const listDatasetsAPI = async () => {
   const data = await res.json();
   if (!res.ok)
     throw new Error(
-      data.message || "MODULE AGENTIC_AI: Failed to fetch datasets",
+      data.message || "Không thể tải danh sách tập dữ liệu",
     );
   return data;
 };
@@ -52,7 +52,7 @@ export const getDatasetAPI = async (datasetId: string) => {
   const data = await res.json();
   if (!res.ok)
     throw new Error(
-      data.message || "MODULE AGENTIC_AI: Failed to fetch dataset details",
+      data.message || "Không thể tải chi tiết tập dữ liệu",
     );
   return data;
 };
@@ -65,7 +65,7 @@ export const deleteDatasetAPI = async (datasetId: string) => {
   const data = await res.json();
   if (!res.ok)
     throw new Error(
-      data.message || "MODULE AGENTIC_AI: Failed to delete dataset",
+      data.message || "Không thể xóa tập dữ liệu",
     );
   return data;
 };
@@ -82,7 +82,7 @@ export const addSamplesAPI = async (datasetId: string, samples: any[]) => {
   const data = await res.json();
   if (!res.ok)
     throw new Error(
-      data.message || "MODULE AGENTIC_AI: Failed to add samples to dataset",
+      data.message || "Không thể thêm mẫu vào tập dữ liệu",
     );
   return data;
 };
@@ -99,7 +99,7 @@ export const getSamplesAPI = async (
   const data = await res.json();
   if (!res.ok)
     throw new Error(
-      data.message || "MODULE AGENTIC_AI: Failed to fetch dataset samples",
+      data.message || "Không thể tải các mẫu dữ liệu",
     );
   return data;
 };
@@ -112,7 +112,7 @@ export const deleteSampleAPI = async (datasetId: string, sampleId: string) => {
   const data = await res.json();
   if (!res.ok)
     throw new Error(
-      data.message || "MODULE AGENTIC_AI: Failed to delete dataset sample",
+      data.message || "Không thể xóa mẫu dữ liệu",
     );
   return data;
 };
@@ -126,7 +126,7 @@ export const importFromFeedbackAPI = async () => {
   if (!res.ok)
     throw new Error(
       data.message ||
-        "MODULE AGENTIC_AI: Failed to import samples from feedback",
+        "Không thể nhập mẫu từ phản hồi",
     );
   return data;
 };
@@ -141,7 +141,7 @@ export const importFromDocumentsAPI = async (documentIds: string[]) => {
   if (!res.ok)
     throw new Error(
       data.message ||
-        "MODULE AGENTIC_AI: Failed to import samples from documents",
+        "Không thể nhập mẫu từ tài liệu",
     );
   return data;
 };
@@ -155,7 +155,7 @@ export const createJobAPI = async (config: any) => {
   const data = await res.json();
   if (!res.ok)
     throw new Error(
-      data.message || "MODULE AGENTIC_AI: Failed to create finetuning job",
+      data.message || "Không thể tạo tiến trình tinh chỉnh",
     );
   return data;
 };
@@ -168,7 +168,7 @@ export const startTrainingAPI = async (jobId: string) => {
   const data = await res.json();
   if (!res.ok)
     throw new Error(
-      data.message || "MODULE AGENTIC_AI: Failed to start finetuning job",
+      data.message || "Không thể bắt đầu tinh chỉnh",
     );
   return data;
 };
@@ -180,7 +180,7 @@ export const listJobsAPI = async () => {
   const data = await res.json();
   if (!res.ok)
     throw new Error(
-      data.message || "MODULE AGENTIC_AI: Failed to fetch finetuning jobs",
+      data.message || "Không thể tải các tiến trình tinh chỉnh",
     );
   return data;
 };
@@ -192,7 +192,7 @@ export const getJobAPI = async (jobId: string) => {
   const data = await res.json();
   if (!res.ok)
     throw new Error(
-      data.message || "MODULE AGENTIC_AI: Failed to fetch job details",
+      data.message || "Không thể tải chi tiết tiến trình",
     );
   return data;
 };
@@ -204,7 +204,7 @@ export const cancelJobAPI = async (jobId: string) => {
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || "MODULE AGENTIC_AI: Failed to cancel job");
+    throw new Error(data.message || "Không thể hủy tiến trình");
   return data;
 };
 
@@ -219,7 +219,7 @@ export const deployModelAPI = async (jobId: string) => {
   const data = await res.json();
   if (!res.ok)
     throw new Error(
-      data.message || "MODULE AGENTIC_AI: Failed to deploy model",
+      data.message || "Không thể triển khai mô hình",
     );
   return data;
 };
@@ -236,7 +236,7 @@ export const evaluateModelAPI = async (jobId: string, testSamples: any[]) => {
   const data = await res.json();
   if (!res.ok)
     throw new Error(
-      data.message || "MODULE AGENTIC_AI: Failed to evaluate model",
+      data.message || "Không thể đánh giá mô hình",
     );
   return data;
 };

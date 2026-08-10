@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import AppShell from "@/app/_components/AppShell";
+import AppShell from "@/shared/components/layout/AppShell";
 
 export default function MainLayout({
   children,

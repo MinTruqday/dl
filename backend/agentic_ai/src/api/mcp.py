@@ -24,8 +24,54 @@ router = APIRouter(route_class=LoggingRoute, prefix="/mcp")
 
 
 def require_mcp_tier(current_user: CurrentUser) -> None:
-    if current_user.ai_tier.value not in {"PRO", "PREMIUM"}:
+    if (
+        current_user.role.value != "admin"
+        and current_user.ai_tier.value not in {"PRO", "PREMIUM"}
+    ):
         raise HTTPException(status_code=403, detail={"code": "mcp_requires_pro"})
+
+
+@router.get("/presets")
+async def list_mcp_presets(current_user: CurrentUser = Depends(get_current_user)):
+    """Return only built-in connectors that pass a live MCP handshake and tool probe."""
+    require_mcp_tier(current_user)
+    return {"status": "success", "presets": await MCPService.available_presets()}
+
+
+@router.post("/presets/{preset_id}/connect")
+async def connect_mcp_preset(
+    preset_id: str,
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    """Connect an immutable, server-owned preset after probing it again."""
+    require_mcp_tier(current_user)
+    try:
+        doc = MCPService.preset_connector(preset_id)
+    except LookupError:
+        raise HTTPException(status_code=404, detail={"code": "mcp_preset_not_found"})
+    existing = await MCPRepository.find_connector(
+        {"owner_id": current_user.id, "preset_id": preset_id}
+    )
+    if existing:
+        return {
+            "status": "success",
+            "id": str(existing["_id"]),
+            "already_connected": True,
+        }
+    doc["owner_id"] = current_user.id
+    try:
+        tools = await MCPService.probe_definition(doc)
+    except Exception:
+        raise HTTPException(status_code=503, detail={"code": "mcp_preset_unavailable"})
+    if not tools:
+        raise HTTPException(status_code=503, detail={"code": "mcp_preset_unavailable"})
+    doc["is_connected"] = True
+    doc["tool_names"] = [tool["name"] for tool in tools]
+    try:
+        result = await MCPRepository.insert_connector(doc)
+    except DuplicateKeyError:
+        raise HTTPException(status_code=409, detail={"code": "mcp_connector_already_exists"})
+    return {"status": "success", "id": str(result.inserted_id), "tools": tools}
 
 
 @router.post("/servers")

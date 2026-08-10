@@ -30,6 +30,9 @@ class HistoryService:
             "user_id": user_id,
             "document_id": document_id,
             "title": title,
+            "title_generated": False,
+            "is_pinned": False,
+            "is_archived": False,
             "mode": data.get("mode", "chat"),
             "messages": [],
             "created_at": datetime.now(timezone.utc),
@@ -52,7 +55,7 @@ class HistoryService:
         cursor = (
             ChatRepository
             .find_ai_sessions(query, {"messages": 0})
-            .sort("updated_at", -1)
+            .sort([("is_pinned", -1), ("updated_at", -1)])
             .skip(skip)
             .limit(limit)
         )
@@ -84,6 +87,7 @@ class HistoryService:
             {
                 "$set": {
                     "title": data.get("title", ""),
+                    "title_generated": True,
                     "updated_at": datetime.now(timezone.utc),
                 }
             },
@@ -91,6 +95,74 @@ class HistoryService:
         if result.modified_count == 0:
             raise HTTPException(status_code=404, detail={"code": "chat_session_not_found"})
         return {"status": "success"}
+
+    @staticmethod
+    @log_logic_execution
+    async def update_state(session_id: str, data: dict, user_id: str) -> Dict[str, Any]:
+        values = {
+            key: bool(data[key])
+            for key in ("is_pinned", "is_archived")
+            if data.get(key) is not None
+        }
+        if not values:
+            raise HTTPException(status_code=400, detail={"code": "session_state_required"})
+        values["updated_at"] = datetime.now(timezone.utc)
+        result = await ChatRepository.update_ai_session(
+            {"_id": session_id, "user_id": user_id},
+            {"$set": values},
+        )
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail={"code": "chat_session_not_found"})
+        return {"status": "success"}
+
+    @staticmethod
+    @log_logic_execution
+    async def generate_title(
+        session_id: str,
+        user_id: str,
+        user_content: str,
+        assistant_content: str,
+    ) -> str:
+        session = await ChatRepository.find_ai_session(
+            {"_id": session_id, "user_id": user_id}
+        )
+        if not session or session.get("title_generated"):
+            return str((session or {}).get("title", ""))
+
+        fallback = " ".join(user_content.split())[:60].strip() or "Cuộc trò chuyện"
+        title = fallback
+        try:
+            import asyncio
+            from langchain_core.messages import HumanMessage
+            from src.utils.huggingface import create_chat_model
+
+            prompt = (
+                "Tạo một tiêu đề tiếng Việt ngắn, tối đa 8 từ, cho cuộc trò chuyện sau. "
+                "Chỉ trả về tiêu đề, không dùng dấu ngoặc kép.\n"
+                f"Người dùng: {user_content[:1000]}\n"
+                f"Trợ lý: {assistant_content[:1000]}"
+            )
+            response = await asyncio.wait_for(
+                create_chat_model().ainvoke([HumanMessage(content=prompt)], max_tokens=32),
+                timeout=20,
+            )
+            candidate = " ".join(str(response.content or "").split()).strip(" \"'`#")
+            if candidate:
+                title = candidate[:80]
+        except Exception:
+            title = fallback
+
+        await ChatRepository.update_ai_session(
+            {"_id": session_id, "user_id": user_id, "title_generated": {"$ne": True}},
+            {
+                "$set": {
+                    "title": title,
+                    "title_generated": True,
+                    "updated_at": datetime.now(timezone.utc),
+                }
+            },
+        )
+        return title
 
     @staticmethod
     @log_logic_execution

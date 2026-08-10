@@ -8,10 +8,19 @@ from src.rag.conversion import document_parser
 
 def extract_text_from_base64(base64_data: str, filename: str = "temp_file") -> str:
     try:
+        media_type = ""
         if "," in base64_data:
-            base64_data = base64_data.split(",")[1]
+            header, base64_data = base64_data.split(",", 1)
+            media_type = header.removeprefix("data:").split(";", 1)[0].lower()
 
         file_bytes = base64.b64decode(base64_data)
+
+        if media_type.startswith("text/") or media_type in {
+            "application/json",
+            "application/xml",
+            "application/javascript",
+        }:
+            return file_bytes.decode("utf-8", errors="replace")
 
         ext = os.path.splitext(filename)[1] or ".pdf"
 

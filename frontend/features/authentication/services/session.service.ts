@@ -31,6 +31,41 @@ export function removeToken() {
   }
 }
 
+export function getUserFromToken(token = getToken()) {
+  if (!token) return null;
+  try {
+    const encodedPayload = token.split(".")[1];
+    if (!encodedPayload) return null;
+    const normalized = encodedPayload.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized.padEnd(
+      normalized.length + ((4 - (normalized.length % 4)) % 4),
+      "=",
+    );
+    const payload = JSON.parse(
+      decodeURIComponent(
+        Array.from(atob(padded))
+          .map((character) =>
+            `%${character.charCodeAt(0).toString(16).padStart(2, "0")}`,
+          )
+          .join(""),
+      ),
+    );
+    if (!payload.sub || !payload.uid) return null;
+    if (payload.exp && payload.exp * 1000 <= Date.now()) return null;
+    return {
+      _id: payload.uid,
+      email: payload.sub,
+      full_name: payload.full_name || payload.sub,
+      slug: payload.slug || "",
+      role: payload.role || "reader",
+      wallet_balance: 0,
+      ai_tier: payload.ai_tier || "BASIC",
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function logoutAPI(allDevices: boolean = false) {
   const token = getToken();
   if (!token) return;
@@ -102,10 +137,11 @@ export async function getUserMe() {
         },
       });
 
-      if (!res.ok) {
+      if (res.status === 401 || res.status === 403) {
         removeToken();
         return null;
       }
+      if (!res.ok) throw new Error("Không thể xác minh phiên đăng nhập");
       const json = await res.json();
       return json.data;
     } finally {

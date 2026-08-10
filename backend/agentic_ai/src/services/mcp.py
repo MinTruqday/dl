@@ -5,6 +5,7 @@ import ipaddress
 import os
 import shlex
 import socket
+import time
 from contextlib import asynccontextmanager
 from typing import Any, Dict, List
 from urllib.parse import urlparse
@@ -17,6 +18,70 @@ from src.repositories.mcp import MCPRepository
 
 
 class MCPService:
+    _preset_cache: tuple[float, list[dict[str, Any]]] = (0.0, [])
+    _preset_lock = asyncio.Lock()
+
+    @staticmethod
+    def preset_specs() -> dict[str, dict[str, Any]]:
+        root = settings.MCP_PRESET_ROOT.rstrip("/")
+        return {
+            "reqwise-figma": {
+                "id": "reqwise-figma",
+                "name": "Reqwise Figma",
+                "description": "Đọc, chỉnh sửa và kiểm tra bố cục trên tệp Figma đang mở.",
+                "server_type": "stdio",
+                "command": "/usr/local/bin/node",
+                "args": [f"{root}/reqwise/dist/server/index.js"],
+                "source_url": "https://github.com/hoangpm96/reqwise-figma-mcp",
+                "setup_note": "Cần mở plugin Reqwise Figma MCP trong Figma Desktop để thao tác trên tệp.",
+            },
+            "chrome-devtools": {
+                "id": "chrome-devtools",
+                "name": "Chrome DevTools",
+                "description": "Mở trang, tương tác, đọc lỗi bảng điều khiển và kiểm tra hiệu năng.",
+                "server_type": "stdio",
+                "command": "/usr/local/bin/node",
+                "args": [
+                    f"{root}/chrome/node_modules/chrome-devtools-mcp/build/src/bin/chrome-devtools-mcp.js",
+                    "--headless=true",
+                    "--isolated=true",
+                    "--executablePath=/usr/bin/chromium",
+                    "--no-usage-statistics",
+                ],
+                "source_url": "https://developer.chrome.com/blog/chrome-devtools-mcp",
+                "setup_note": "Chạy trong một hồ sơ Chromium tạm, tách biệt với dữ liệu trình duyệt cá nhân.",
+            },
+        }
+
+    @staticmethod
+    def preset_connector(preset_id: str) -> dict[str, Any]:
+        preset = MCPService.preset_specs().get(preset_id)
+        if not preset:
+            raise LookupError("mcp_preset_not_found")
+        return {
+            "preset_id": preset_id,
+            "name": preset["name"],
+            "description": preset["description"],
+            "server_type": preset["server_type"],
+            "command": preset["command"],
+            "args": list(preset["args"]),
+        }
+
+    @staticmethod
+    def _is_trusted_preset(connector: dict) -> bool:
+        preset_id = str(connector.get("preset_id") or "")
+        if not preset_id:
+            return False
+        try:
+            expected = MCPService.preset_connector(preset_id)
+        except LookupError:
+            return False
+        return (
+            connector.get("server_type") == expected["server_type"]
+            and connector.get("command") == expected["command"]
+            and list(connector.get("args") or []) == expected["args"]
+        )
+
     @staticmethod
     def seal_secret(secret: str, owner_id: str) -> str:
         from cryptography.hazmat.primitives.ciphers.aead import AESGCM
@@ -94,6 +159,8 @@ class MCPService:
         if server_type == "stdio":
             command = str(connector.get("command") or "")
             args = tuple(str(item) for item in connector.get("args", []))
+            if MCPService._is_trusted_preset(connector):
+                return
             if (command, *args) not in MCPService._allowed_stdio_specs():
                 raise PermissionError("mcp_stdio_command_not_allowed")
             return
@@ -150,6 +217,52 @@ class MCPService:
             async with ClientSession(streams[0], streams[1]) as session:
                 await session.initialize()
                 yield session
+
+    @staticmethod
+    async def probe_definition(connector: dict) -> list[dict]:
+        async with MCPService._session(connector) as session:
+            result = await asyncio.wait_for(session.list_tools(), timeout=25)
+        return [
+            {
+                "name": tool.name,
+                "description": tool.description or "",
+                "input_schema": tool.inputSchema,
+            }
+            for tool in result.tools
+        ]
+
+    @staticmethod
+    async def available_presets(force: bool = False) -> list[dict[str, Any]]:
+        cached_at, cached = MCPService._preset_cache
+        if not force and cached_at and time.monotonic() - cached_at < 300:
+            return cached
+        async with MCPService._preset_lock:
+            cached_at, cached = MCPService._preset_cache
+            if not force and cached_at and time.monotonic() - cached_at < 300:
+                return cached
+            verified: list[dict[str, Any]] = []
+            for preset_id, metadata in MCPService.preset_specs().items():
+                connector = MCPService.preset_connector(preset_id)
+                try:
+                    tools = await MCPService.probe_definition(connector)
+                except Exception:
+                    continue
+                if not tools:
+                    continue
+                verified.append(
+                    {
+                        "id": preset_id,
+                        "name": metadata["name"],
+                        "description": metadata["description"],
+                        "source_url": metadata["source_url"],
+                        "setup_note": metadata["setup_note"],
+                        "tool_count": len(tools),
+                        "tool_names": [tool["name"] for tool in tools],
+                        "verified": True,
+                    }
+                )
+            MCPService._preset_cache = (time.monotonic(), verified)
+            return verified
 
     @staticmethod
     async def _get_connector(directory_uuid: str, owner_id: str) -> dict:

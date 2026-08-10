@@ -7,7 +7,7 @@ import {
   executeDocumentCommand,
   type DocumentCommand,
 } from "./document-command-engine";
-import SegmentedTabs from "@/app/_components/SegmentedTabs";
+import SegmentedTabs from "@/shared/components/navigation/SegmentedTabs";
 import { Button } from "@/shared/components/ui/Button";
 import {
   Modal,
@@ -17,7 +17,37 @@ import {
   ModalTitle,
 } from "@/shared/components/ui/Modal";
 
-const commands = catalog as DocumentCommand[];
+const commandLabels: Record<string, string> = {
+  DocLibClearFormatting: "Xóa định dạng",
+  DocLibAllCaps: "Viết hoa toàn bộ",
+  DocLibFormatPainter: "Sao chép định dạng",
+  DocLibBlankPage: "Chèn trang trắng",
+  DocLibColumnBreak: "Ngắt cột",
+  DocLibColumnsOne: "Một cột",
+  DocLibColumnsTwo: "Hai cột",
+  DocLibColumnsThree: "Ba cột",
+  DocLibContinuousSectionBreak: "Ngắt phần liên tục",
+  DocLibLineNumbersContinuous: "Đánh số dòng liên tục",
+  DocLibCustomWatermark: "Tạo hình mờ",
+  DocLibConvertTableToText: "Chuyển bảng thành văn bản",
+  DocLibConvertTextToTable: "Chuyển văn bản thành bảng",
+  DocLibInsertAbove: "Chèn hàng phía trên",
+  DocLibInsertBelow: "Chèn hàng phía dưới",
+  DocLibGridlines: "Hiện đường lưới",
+  DocLibAltText: "Văn bản thay thế",
+  DocLibAutoCheckForErrors: "Kiểm tra lỗi tự động",
+  DocLibDictation: "Nhập liệu bằng giọng nói",
+  DocLibAutoCorrect: "Tự động sửa",
+  DocLibDatePickerControl: "Chèn bộ chọn ngày",
+  DocLibDocumentInspector: "Kiểm tra tài liệu",
+  DocLibDraftView: "Chế độ bản thảo",
+  DocLibFocusMode: "Chế độ tập trung",
+  DocLibReadAloud: "Đọc thành tiếng",
+  DocLibZoom: "Thu phóng",
+};
+const commands = (catalog as DocumentCommand[])
+  .filter((command) => commandLabels[command.id] && command.implementation === "direct")
+  .map((command) => ({ ...command, title: commandLabels[command.id] }));
 const categories = [
   ["all", "Tất cả"],
   ["format", "Định dạng"],
@@ -25,14 +55,12 @@ const categories = [
   ["layout", "Bố cục"],
   ["table", "Bảng"],
   ["review", "Kiểm tra"],
-  ["reference", "Tham chiếu"],
   ["view", "Hiển thị"],
   ["media", "Đa phương tiện"],
-  ["mailing", "Trộn thư"],
   ["automation", "Tự động hóa"],
   ["ai", "Trí tuệ nhân tạo"],
-  ["security", "Bảo mật"],
 ] as const;
+const categoryLabels = Object.fromEntries(categories) as Record<string, string>;
 
 export default function DocumentCommandPalette({
   open,
@@ -81,18 +109,19 @@ export default function DocumentCommandPalette({
         <div className="space-y-4">
           <input value={query} onChange={(event) => setQuery(event.target.value)} className="apple-input w-full" placeholder="Tìm chức năng" />
           <SegmentedTabs label="Nhóm chức năng" value={category} onChange={setCategory} tabs={categories.map(([id, label]) => ({ id, label }))} />
-          <div className="flex items-center justify-between text-[12px] text-ink-muted">
-            <span>{filtered.length.toLocaleString("vi-VN")} chức năng</span>
-            <span>Hiển thị tối đa 100 kết quả</span>
-          </div>
+          <p className="text-[12px] text-ink-muted">
+            {filtered.length.toLocaleString("vi-VN")} chức năng
+          </p>
           <div className="max-h-[420px] divide-y divide-border overflow-y-auto border-y border-border">
             {filtered.slice(0, 100).map((command) => (
               <button key={command.id} type="button" disabled={Boolean(running)} onClick={() => void run(command)} className="flex w-full items-center justify-between gap-4 px-2 py-3 text-left hover:bg-surface-quiet disabled:opacity-50">
                 <span className="min-w-0">
                   <span className="block truncate text-[13px] font-semibold text-ink">{command.title}</span>
-                  <span className="block text-[11px] text-ink-muted">{command.category}</span>
+                  <span className="block text-[11px] text-ink-muted">{categoryLabels[command.category] || command.category}</span>
                 </span>
-                <span className="text-[11px] text-ink-muted">{running === command.id ? "Đang chạy" : command.implementation === "direct" ? "Trực tiếp" : "Tài liệu"}</span>
+                {running === command.id && (
+                  <span className="text-[11px] text-ink-muted">Đang thực hiện</span>
+                )}
               </button>
             ))}
           </div>

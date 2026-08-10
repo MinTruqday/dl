@@ -2,7 +2,7 @@
 
 import { Suspense } from "react";
 import PageLoader from "@/shared/components/common/PageLoader";
-import EditorWorkspace from "../EditorWorkspace";
+import EditorWorkspace from "@/features/compilation/components/EditorWorkspace";
 
 export default function EditorPage() {
   return (

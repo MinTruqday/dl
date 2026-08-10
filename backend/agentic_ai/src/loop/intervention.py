@@ -51,6 +51,7 @@ class InterventionHarness:
         self._pending: Dict[str, InterventionRequest] = {}
         self._approved: Dict[str, InterventionRequest] = {}
         self._audit_log: List[InterventionAuditEntry] = []
+        self._session_grants: set[tuple[str, str, str]] = set()
         self._redis_client = None
         self._default_ttl_seconds = 300
 
@@ -134,6 +135,7 @@ class InterventionHarness:
         status: Literal["APPROVED", "REJECTED", "CORRECTED"],
         human_feedback: Optional[str] = None,
         correction: Optional[str] = None,
+        scope: Literal["once", "session", "safe_session"] = "once",
     ) -> Optional[InterventionRequest]:
         request = self._pending.get(intervention_id)
         if not request:
@@ -148,6 +150,12 @@ class InterventionHarness:
         self._pending.pop(intervention_id, None)
         if status == "APPROVED":
             self._approved[intervention_id] = request
+            if scope == "session":
+                self._session_grants.add(
+                    (request.session_id, request.user_id, request.action_type)
+                )
+            elif scope == "safe_session" and request.risk_level in {"low", "medium"}:
+                self._session_grants.add((request.session_id, request.user_id, "*"))
         self._record_audit(request)
 
         redis = self._get_redis()
@@ -176,6 +184,20 @@ class InterventionHarness:
             f"Intervention feedback recorded: id={intervention_id}, status={status}"
         )
         return request
+
+    def has_session_grant(
+        self,
+        session_id: str,
+        user_id: str,
+        action_type: str,
+        risk_level: RiskLevel,
+    ) -> bool:
+        exact = (session_id, user_id, action_type) in self._session_grants
+        safe_all = (
+            risk_level in {"low", "medium"}
+            and (session_id, user_id, "*") in self._session_grants
+        )
+        return exact or safe_all
 
     async def consume_approval(
         self,

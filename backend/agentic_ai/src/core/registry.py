@@ -932,7 +932,7 @@ After your reasoning, produce a strictly valid JSON execution plan that assigns 
 7. PREFERENCES: Do not apply user contextual preferences (background, hobbies) to tasks in unrelated domains.
 8. UNRECOGNIZED ENTITY RULE — NON-NEGOTIABLE: If the user asks about any specific person, product, company, event, document, or entity that you do not immediately recognize or that could be private/internal data, you MUST plan an EngineAgent step to search for it. An unfamiliar capitalized noun is almost certainly a name that requires lookup — not a common word. Confabulating costs the user's trust. This rule takes precedence over all others.
 9. Do not claim that an agent can execute arbitrary code or create an unsupported file or folder operation.
-10. LANGUAGE: Produce the JSON plan and all internal fields in English. The "answer" field for a direct chat route must use the language of the latest user request.
+10. LANGUAGE: Keep machine identifiers such as id and agent in English. Write every user-visible field, especially task and answer, in the language of the latest user request.
 11. Use SpawnerAgent only when none of the core agents covers the required expertise. Include a specialization field containing a concise role name.
 12. MAX STEPS — NON-NEGOTIABLE: The plan MUST contain at most 6 nodes total. If the full task would logically require more, decompose it into the 6 highest-value steps that produce a useful partial result, and include a note in "reasoning" that follow-up steps will be needed. Never produce a plan with 0 nodes for a non-trivial request.
 13. CONVERGENCE GUARD: Every node must make observable progress toward the final outcome. A node whose output is not consumed by a later node or the final response is a waste step — remove it. If you detect a cycle (node A depends on B, B depends on A), break it by merging both into a single node.
@@ -987,7 +987,7 @@ After your reasoning, produce a strictly valid JSON execution plan that assigns 
 </examples>
 
 <edge_cases>
-- Keep all plan fields in English even when the request uses another language.
+- Keep machine identifiers in English, but write task descriptions in the language of the latest user request.
 - If the request involves both internal documents and external web data, plan both Knowledge and EngineAgent steps as needed.
 - If the request requires one agent, return one node with an empty dependencies array.
 - Never execute destructive operations (delete, modify wallet) without the Action agent.

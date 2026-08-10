@@ -16,6 +16,11 @@ class SessionCreate(HistoryRequest):
 class SessionTitleUpdate(HistoryRequest):
     title: str = Field(min_length=1, max_length=200, description="<input_context>New conversation title.</input_context>")
 
+
+class SessionStateUpdate(HistoryRequest):
+    is_pinned: Optional[bool] = None
+    is_archived: Optional[bool] = None
+
 class MessageCreate(HistoryRequest):
     role: Literal["user"] = Field(default="user", description="<critical_instructions>Public history writes may append only authenticated user messages.</critical_instructions>")
     content: str = Field(min_length=1, max_length=100000, description="<input_context>Message content to append.</input_context>")

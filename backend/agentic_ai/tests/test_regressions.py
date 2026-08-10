@@ -14,7 +14,11 @@ from langchain_core.tools import tool
 from pydantic import BaseModel
 from src.agents.routing import RouteAgent, SemanticRouterValidator
 from src.schemas.auth import CurrentUser, Tier
-from src.utils.huggingface import HFInferenceChat
+from src.utils.huggingface import (
+    HFInferenceChat,
+    reset_request_ai_tier,
+    set_request_ai_tier,
+)
 from src.utils.structured_output import (
     StructuredOutputError,
     extract_json_value,
@@ -55,6 +59,33 @@ class FakeStructuredClient:
         )()
         choice = type("Choice", (), {"message": message})()
         return type("Response", (), {"choices": [choice]})()
+
+
+def test_basic_tier_routes_every_chat_model_call_to_qwen():
+    from unittest.mock import AsyncMock, patch
+
+    from src.core.infrastructure.configuration import settings
+
+    response = type(
+        "Response",
+        (),
+        {
+            "choices": [type("Choice", (), {"message": type("Message", (), {"content": "ok"})()})()],
+            "model": settings.QWEN_MODEL,
+        },
+    )()
+    completion = AsyncMock(return_value=response)
+    model = HFInferenceChat(model=settings.LLM_MODEL)
+    token = set_request_ai_tier("BASIC")
+    try:
+        with patch(
+            "src.utils.local_models.local_model_client.chat_completion",
+            new=completion,
+        ):
+            asyncio.run(model._agenerate([HumanMessage(content="Xin chào")]))
+    finally:
+        reset_request_ai_tier(token)
+    assert completion.await_args.kwargs["model"] == settings.QWEN_MODEL
 
 
 class FakeToolClient:
@@ -789,6 +820,31 @@ def test_mcp_stdio_allowlist_matches_complete_command():
         except PermissionError:
             denied = True
     assert denied is True
+
+
+def test_mcp_builtin_presets_are_immutable_and_only_verified_choices_are_returned():
+    from unittest.mock import AsyncMock, patch
+
+    from src.core.infrastructure.configuration import settings
+    from src.services.mcp import MCPService
+
+    trusted = MCPService.preset_connector("reqwise-figma")
+    with patch.object(settings, "MCP_ALLOWED_STDIO_COMMANDS", ""):
+        asyncio.run(MCPService.validate_connector(trusted))
+        tampered = {**trusted, "args": ["/tmp/untrusted.js"]}
+        with pytest.raises(PermissionError):
+            asyncio.run(MCPService.validate_connector(tampered))
+
+    MCPService._preset_cache = (0.0, [])
+    verified_tools = [{"name": "figma_status", "description": "", "input_schema": {}}]
+    with patch.object(
+        MCPService,
+        "probe_definition",
+        new=AsyncMock(side_effect=[verified_tools, RuntimeError("unavailable")]),
+    ):
+        choices = asyncio.run(MCPService.available_presets(force=True))
+    assert [choice["id"] for choice in choices] == ["reqwise-figma"]
+    assert choices[0]["verified"] is True
 
 
 def test_mcp_remote_connector_requires_https_allowlist():

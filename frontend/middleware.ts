@@ -15,8 +15,12 @@ export function middleware(request: NextRequest) {
 
   const isPublicRoute =
     pathname === "/" ||
+    pathname.startsWith("/images/") ||
     pathname.startsWith("/kham-pha") ||
     pathname.startsWith("/tai-lieu/") ||
+    pathname.startsWith("/chia-se/") ||
+    pathname.startsWith("/dieu-khoan") ||
+    pathname.startsWith("/tro-giup") ||
     pathname.startsWith("/auth/google/callback");
 
   if (!token && !isAuthRoute && !isPublicRoute) {

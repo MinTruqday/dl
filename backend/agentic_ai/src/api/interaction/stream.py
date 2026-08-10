@@ -27,20 +27,46 @@ from src.api.interaction.executor import (
     _reserve_upload_quota,
     _reserve_ai_quota,
     _consume_ai_quota,
+    get_tier_routed_user,
 )
 
 router = APIRouter(route_class=LoggingRoute)
 
+
+@router.get("/kha-nang")
+async def chat_capabilities(
+    current_user: CurrentUser = Depends(get_tier_routed_user),
+):
+    from src.utils.huggingface import model_for_tier
+    from src.utils.local_models import local_model_client
+
+    tier_model = model_for_tier(current_user.ai_tier.value)
+    model = (
+        tier_model
+        if current_user.ai_tier.value == "BASIC"
+        else local_model_client.active_model()
+    )
+    is_qwen = "qwen" in model.lower()
+    return {
+        "model": model,
+        "audio_input": not is_qwen,
+        "code_execution": True,
+        "mcp": current_user.ai_tier.value in {"PRO", "PREMIUM"}
+        or current_user.role.value == "admin",
+    }
+
 @router.post("/phat-truc-tiep")
 async def chat_stream_endpoint(
-    req: ChatRequest, request: Request, current_user: CurrentUser = Depends(get_current_user)
+    req: ChatRequest,
+    request: Request,
+    current_user: CurrentUser = Depends(get_tier_routed_user),
 ):
     session_id = req.session_id or ""
     user_id = str(current_user.id)
     req.user_id = user_id
     req.role = current_user.role.value
     req.ai_tier = current_user.ai_tier.value
-    require_mode_tier(req.mode, req.ai_tier)
+    require_mode_tier(req.mode, req.ai_tier, req.role)
 
     token = request.headers.get("Authorization")
     if token:
@@ -151,6 +177,10 @@ async def chat_stream_endpoint(
                 route = "knowledge"
             elif req.document_ids or req.file_data or req.folder_data:
                 route = "knowledge"
+            elif req.mode == "chat" and not req.useWeb:
+                # A plain conversation does not need an extra LLM classifier pass.
+                # Route it directly so the user only waits for the actual answer.
+                route = "chat"
             else:
                 route_data = await semantic_router.execute(req.query)
                 route = route_data.get("route", "knowledge")
@@ -197,6 +227,16 @@ async def chat_stream_endpoint(
                         response = await chat_llm.ainvoke(
                             [HumanMessage(content=content)], max_tokens=256
                         )
+                        active_model = str(
+                            response.response_metadata.get("model")
+                            or settings.LLM_MODEL
+                        )
+                        yield "event: model\ndata: " + json.dumps(
+                            {
+                                "model": active_model,
+                                "audio_input": "qwen" not in active_model.lower(),
+                            }
+                        ) + "\n\n"
                         final_answer = await security.ascan_output(response.content)
                         if final_answer:
                             yield (

@@ -1,12 +1,19 @@
 "use client";
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import {
   getUserMe,
+  getUserFromToken,
   getToken,
   removeToken,
   logoutAPI,
 } from "@/features/authentication/services/session.service";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 interface User {
   _id: string;
@@ -35,18 +42,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  const pathname = usePathname();
+  const clearAuth = useCallback(() => {
+    removeToken();
+    document.cookie = "token=; path=/; max-age=0; SameSite=Lax";
+    document.cookie = "role=; path=/; max-age=0; SameSite=Lax";
+    setUser(null);
+  }, []);
 
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
     const token = getToken();
     if (!token) {
       setIsLoading(false);
       return;
     }
 
-    if (!user) {
-      setIsLoading(true);
-    }
+    setIsLoading(true);
     try {
       const data = await getUserMe();
       if (data) {
@@ -56,26 +66,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         clearAuth();
       }
-    } catch (error) {
-      clearAuth();
+    } catch {
+      // Hồ sơ được ghép từ nhiều dịch vụ. Nếu một dịch vụ tạm lỗi, vẫn giữ
+      // phiên hợp lệ bằng các claim tối thiểu trong JWT; API phía máy chủ vẫn
+      // là nơi quyết định quyền truy cập thật sự.
+      const sessionUser = getUserFromToken(token);
+      if (sessionUser) {
+        setUser(sessionUser);
+        document.cookie = `token=${token}; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `role=${sessionUser.role}; path=/; max-age=604800; SameSite=Lax`;
+      }
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [clearAuth]);
 
   useEffect(() => {
-    fetchUser();
-  }, [pathname]);
+    void fetchUser();
+  }, [fetchUser]);
 
   const loginState = async (token: string) => {
     localStorage.setItem("doclib_token", token);
     document.cookie = `token=${token}; path=/; max-age=604800; SameSite=Lax`;
     await fetchUser();
-  };
-
-  const clearAuth = () => {
-    removeToken();
-    setUser(null);
   };
 
   const logoutState = async () => {

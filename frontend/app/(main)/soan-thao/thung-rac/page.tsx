@@ -1,4 +1,4 @@
-import ComposerDocumentList from "../_components/ComposerDocumentList";
+import ComposerDocumentList from "@/features/compilation/components/ComposerDocumentList";
 
 export default function TrashPage() {
   return <ComposerDocumentList source="trash" />;

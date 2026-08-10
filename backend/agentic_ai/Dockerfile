@@ -1,3 +1,16 @@
+FROM node:24-bookworm-slim AS mcp-build
+
+ARG REQWISE_FIGMA_REV=c6b75b9fc1aa315bc75633bd70b6c9b297d04ce4
+
+RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates \
+    && git clone https://github.com/hoangpm96/reqwise-figma-mcp.git /opt/doclib-mcp/reqwise \
+    && git -C /opt/doclib-mcp/reqwise checkout --detach ${REQWISE_FIGMA_REV} \
+    && npm --prefix /opt/doclib-mcp/reqwise ci --include=dev \
+    && npm --prefix /opt/doclib-mcp/reqwise run build \
+    && npm --prefix /opt/doclib-mcp/reqwise prune --omit=dev \
+    && npm install --prefix /opt/doclib-mcp/chrome --omit=dev chrome-devtools-mcp@1.6.0 \
+    && rm -rf /var/lib/apt/lists/* /root/.npm
+
 FROM python:3.11-slim
 
 ARG LLAMA_CPP_REV=305ba519ab61cdff8044922cba2347826a04453f
@@ -24,6 +37,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && pip install -q --no-cache-dir -r requirements.txt \
     && apt-get purge -y build-essential \
     && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=mcp-build /usr/local/ /usr/local/
+COPY --from=mcp-build /opt/doclib-mcp/ /opt/doclib-mcp/
+
+RUN apt-get update && apt-get install -y --no-install-recommends chromium \
     && rm -rf /var/lib/apt/lists/*
 
 RUN groupadd --gid 10001 appuser && useradd --uid 10001 --gid appuser -m -s /bin/bash appuser

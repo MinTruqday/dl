@@ -77,7 +77,23 @@ class SecurityHarness:
             except Exception:
                 logger.exception("Presidio scan failed")
 
-        requires_ai_review = bool(sanitized.strip())
+        normalized = sanitized.casefold()
+        suspicious_markers = (
+            "ignore previous",
+            "ignore all previous",
+            "system prompt",
+            "developer message",
+            "bỏ qua chỉ dẫn",
+            "bỏ qua hướng dẫn",
+            "tiết lộ prompt",
+            "hiển thị prompt hệ thống",
+        )
+        # Ordinary chat must stay on the deterministic fast path. The model
+        # reviewer is reserved for input that actually resembles an injection;
+        # otherwise every message pays for an unnecessary extra generation.
+        requires_ai_review = category != "none" or any(
+            marker in normalized for marker in suspicious_markers
+        )
         if (
             not allow_ai_review
             or not requires_ai_review

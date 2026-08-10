@@ -43,7 +43,11 @@ class PricingService:
                 "BASIC": {
                     "name": "Cơ bản",
                     "monthly_price": 0.0,
-                    "features": ["Truy cập đọc tài liệu tiêu chuẩn", "Các công cụ sưu tầm cơ bản"],
+                    "features": [
+                        "Trợ lý AI Qwen",
+                        "Truy cập đọc tài liệu tiêu chuẩn",
+                        "Các công cụ sưu tầm cơ bản",
+                    ],
                 },
                 "PRO": {
                     "name": "Chuyên sâu",

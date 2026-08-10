@@ -17,6 +17,29 @@ from src.services.document.base import can_read_full
 
 router = APIRouter(route_class=LoggingRoute)
 
+
+def normalize_internal_query(value: Any) -> Any:
+    """Accept serialized Mongo ObjectIds from other services.
+
+    Public APIs expose every document id as a string. Older collected documents,
+    however, still store ``_id`` as an ObjectId. Internal callers must therefore
+    be able to address either representation without knowing how the document was
+    originally created.
+    """
+    if isinstance(value, list):
+        return [normalize_internal_query(item) for item in value]
+    if not isinstance(value, dict):
+        return value
+
+    normalized: dict[str, Any] = {}
+    for key, item in value.items():
+        if key == "_id" and isinstance(item, str) and ObjectId.is_valid(item):
+            normalized[key] = {"$in": [item, ObjectId(item)]}
+        else:
+            normalized[key] = normalize_internal_query(item)
+    return normalized
+
+
 def serialize_internal(value: Any):
     if isinstance(value, dict):
         return {key: serialize_internal(item) for key, item in value.items()}
@@ -34,7 +57,7 @@ def serialize_internal(value: Any):
 )
 async def internal_document_data(req: dict):
     operation = str(req.get("operation", ""))
-    query = req.get("query") or {}
+    query = normalize_internal_query(req.get("query") or {})
     projection = req.get("projection")
     documents = database.mongodb[settings.CONTENT_DB_NAME].documents
     if operation == "find_one":

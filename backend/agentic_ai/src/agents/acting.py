@@ -24,6 +24,7 @@ _REQUIRES_APPROVAL_TOOLS = frozenset(
         "restore_document",
         "update_document_metadata",
         "execute_mcp_tool",
+        "execute_python",
     }
 )
 
@@ -34,6 +35,7 @@ _AUTO_SAFE_TOOLS = frozenset(
         "edit_document_text",
         "propose_document_edits",
         "update_document_metadata",
+        "execute_python",
     }
 )
 
@@ -77,6 +79,29 @@ class ActingAgent:
             tool_descriptions.append(f"- {t.name}({args}) {t.description}")
         self.tools_prompt = "\n".join(tool_descriptions)
 
+    def _candidate_tools(self, action: str):
+        normalized = action.casefold()
+        intent_tools = {
+            "create_document": ("create_document", "tạo tài liệu", "tạo một tài liệu"),
+            "execute_python": (
+                "execute_python",
+                "chạy python",
+                "chạy mã python",
+                "công cụ chạy mã",
+                "thực thi python",
+            ),
+            "read_document": ("read_document", "đọc tài liệu"),
+            "get_my_documents": ("get_my_documents", "tài liệu của tôi"),
+            "delete_document": ("delete_document", "xóa tài liệu"),
+            "restore_document": ("restore_document", "khôi phục tài liệu"),
+        }
+        names = {
+            tool_name
+            for tool_name, markers in intent_tools.items()
+            if any(marker in normalized for marker in markers)
+        }
+        return [tool for tool in tools if tool.name in names] or tools
+
     async def execute(
         self,
         action: str,
@@ -106,7 +131,12 @@ class ActingAgent:
                 ),
             ]
 
-            llm_with_tools = llm.bind_tools(tools)
+            candidate_tools = self._candidate_tools(action)
+            forced_tool = candidate_tools[0].name if len(candidate_tools) == 1 else None
+            llm_with_tools = llm.bind_tools(
+                candidate_tools,
+                tool_choice=forced_tool,
+            )
             is_last = lambda attempt: attempt == _MAX_ATTEMPTS - 1
 
             for attempt in range(_MAX_ATTEMPTS):
@@ -177,9 +207,26 @@ class ActingAgent:
                 approved_automatically = auto_approve or (
                     approval_policy == "auto_safe" and tool_name in _AUTO_SAFE_TOOLS
                 )
-                if tool_name in _REQUIRES_APPROVAL_TOOLS and not approved_automatically:
+                risk_level = (
+                    "high"
+                    if tool_name
+                    in {
+                        "delete_document",
+                        "replace_document_content",
+                        "restore_document",
+                    }
+                    else "medium"
+                )
+                if tool_name in _REQUIRES_APPROVAL_TOOLS:
                     from src.loop.intervention import intervention
 
+                    approved_automatically = approved_automatically or intervention.has_session_grant(
+                        session_id,
+                        str(user_id),
+                        tool_name,
+                        risk_level,
+                    )
+                if tool_name in _REQUIRES_APPROVAL_TOOLS and not approved_automatically:
                     if approval_id:
                         approved = await intervention.consume_approval(
                             intervention_id=approval_id,
@@ -200,16 +247,7 @@ class ActingAgent:
                             proposed_action=json.dumps(
                                 tool_params, ensure_ascii=False, default=str
                             ),
-                            risk_level=(
-                                "high"
-                                if tool_name
-                                in {
-                                    "delete_document",
-                                    "replace_document_content",
-                                    "restore_document",
-                                }
-                                else "medium"
-                            ),
+                            risk_level=risk_level,
                         )
                         approved = await intervention.wait_for_approval(
                             approval.intervention_id, session_id, str(user_id), tool_name
@@ -224,7 +262,16 @@ class ActingAgent:
                     tool_name,
                     session_id,
                     tool_params,
-                    config={"configurable": {"token": token, "user_id": user_id}},
+                    config={
+                        "configurable": {
+                            "token": (
+                                token
+                                if str(token).startswith("Bearer ")
+                                else f"Bearer {token}"
+                            ),
+                            "user_id": user_id,
+                        }
+                    },
                 )
                 agentops.record_tool_call(
                     session_id,
@@ -233,12 +280,33 @@ class ActingAgent:
                     success=tool_result.success,
                 )
                 if tool_result.success:
+                    semantic_data = tool_result.data
+                    if isinstance(semantic_data, str):
+                        try:
+                            parsed_semantic_data = json.loads(semantic_data)
+                        except json.JSONDecodeError:
+                            parsed_semantic_data = None
+                        if (
+                            isinstance(parsed_semantic_data, dict)
+                            and parsed_semantic_data.get("status")
+                            not in {None, "success", "completed"}
+                        ):
+                            logger.warning(
+                                "Tool returned business failure tool={} status={}",
+                                tool_name,
+                                parsed_semantic_data.get("status"),
+                            )
+                            return semantic_data
                     logger.info(
                         "Tool execution completed tool={} output_chars={}",
                         tool_name,
                         len(str(tool_result.data)),
                     )
-                    return str(tool_result.data)
+                    return json.dumps(
+                        tool_result.data,
+                        ensure_ascii=False,
+                        default=str,
+                    )
                 logger.error(
                     "Tool execution failed tool={} attempts={}",
                     tool_name,

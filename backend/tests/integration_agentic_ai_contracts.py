@@ -20,6 +20,7 @@ from src.schemas.inference import StyleImitationRequest
 from src.workflow.orchestration import execute_tool_node, sanitizer_node, supervisor
 from src.utils.local_models import LocalModelClient
 from src.api.interaction import require_mode_tier
+from src.api.mcp import require_mcp_tier
 from fastapi import HTTPException
 
 
@@ -286,6 +287,13 @@ def verify_source_contracts():
     assert "execute_mcp_tool" in tools_source
     require_mode_tier("work", "PRO")
     require_mode_tier("learn", "PREMIUM")
+    require_mode_tier("goal", "BASIC", "admin")
+    require_mcp_tier(
+        SimpleNamespace(
+            role=SimpleNamespace(value="admin"),
+            ai_tier=SimpleNamespace(value="BASIC"),
+        )
+    )
     try:
         require_mode_tier("goal", "BASIC")
         raise AssertionError("Basic tier was allowed to use an advanced mode")

@@ -18,7 +18,7 @@ export async function cloudAutoSaveAPI(documentId: string, content: string) {
   const res = await fetch(`${API_URL}/soan-thao/latex/tu-dong-luu`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ document_id: documentId, content }),
+    body: JSON.stringify({ content }),
   });
   const data = await res.json();
   if (!res.ok)
@@ -39,19 +39,16 @@ export async function getLatexDraftAPI() {
   return data;
 }
 
-export async function compileLatexPreviewAPI(
-  content: string,
-  isFragment: boolean = false,
-) {
+export async function compileLatexPreviewAPI(content: string) {
   const res = await fetch(`${API_URL}/soan-thao/latex/bien-dich`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ content, is_fragment: isFragment }),
+    body: JSON.stringify({ content }),
   });
   if (!res.ok) {
     const data = await res.json();
     throw new Error(
-      data.message || "Không thể thực hiện tiến trình kết xuất LaTeX",
+      data.detail || data.message || "Không thể thực hiện tiến trình kết xuất LaTeX",
     );
   }
   return res.blob();
@@ -75,12 +72,12 @@ export async function exportLatexAPI(content: string, format: string = "docx") {
   const res = await fetch(`${API_URL}/soan-thao/latex/ket-xuat/${format}`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ content, format }),
+    body: JSON.stringify({ content }),
   });
   if (!res.ok) {
     const data = await res.json();
     throw new Error(
-      data.message || "Không thể tạo luồng kết xuất tài liệu đích",
+      data.detail || data.message || "Không thể tạo luồng kết xuất tài liệu đích",
     );
   }
   return res.blob();

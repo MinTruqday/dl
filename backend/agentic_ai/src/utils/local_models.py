@@ -1,4 +1,3 @@
-import asyncio
 from types import SimpleNamespace
 from typing import Any, AsyncIterator
 
@@ -45,19 +44,53 @@ def _ollama_messages(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return converted
 
 
-def _response(content: str, prompt_tokens: int = 0, completion_tokens: int = 0):
+def _response(
+    content: str,
+    prompt_tokens: int = 0,
+    completion_tokens: int = 0,
+    model_used: str = "",
+):
     usage = SimpleNamespace(
         prompt_tokens=prompt_tokens,
         completion_tokens=completion_tokens,
     )
     message = SimpleNamespace(content=content)
-    return SimpleNamespace(choices=[SimpleNamespace(message=message)], usage=usage)
+    return SimpleNamespace(
+        choices=[SimpleNamespace(message=message)],
+        usage=usage,
+        model=model_used,
+    )
 
 
 class LocalModelClient:
     def __init__(self):
         self._primary_runtime_status = "unverified"
         self._fallback_runtime_status = "unverified"
+
+    async def _ollama_model_is_loaded(self) -> bool:
+        """Return true only when Ollama already has the primary model in memory."""
+        health_url = settings.PRIMARY_MODEL_HEALTH_URL.rstrip("/")
+        ps_url = (
+            health_url.rsplit("/", 1)[0] + "/ps"
+            if health_url.endswith("/tags")
+            else health_url
+        )
+        try:
+            async with httpx.AsyncClient(timeout=1.5) as client:
+                response = await client.get(ps_url)
+            response.raise_for_status()
+            names = {
+                item.get("name") or item.get("model")
+                for item in response.json().get("models", [])
+            }
+            return any(
+                settings.LLM_MODEL == name
+                or settings.LLM_MODEL.split(":")[0] == str(name).split(":")[0]
+                for name in names
+                if name
+            )
+        except Exception:
+            return False
 
     async def _ollama_completion(self, model, messages, max_tokens, temperature):
         payload = {
@@ -71,7 +104,9 @@ class LocalModelClient:
                 "temperature": temperature,
             },
         }
-        async with httpx.AsyncClient(timeout=settings.MODEL_TIMEOUT_SECONDS) as client:
+        async with httpx.AsyncClient(
+            timeout=min(settings.MODEL_TIMEOUT_SECONDS, 30)
+        ) as client:
             response = await client.post(
                 settings.PRIMARY_MODEL_URL,
                 json=payload,
@@ -87,6 +122,7 @@ class LocalModelClient:
             content,
             int(body.get("prompt_eval_count", 0) or 0),
             int(body.get("eval_count", 0) or 0),
+            settings.LLM_MODEL,
         )
 
     async def _openai_primary_completion(self, model, messages, max_tokens, temperature):
@@ -122,6 +158,7 @@ class LocalModelClient:
             content,
             int(usage.get("prompt_tokens", 0) or 0),
             int(usage.get("completion_tokens", 0) or 0),
+            str(body.get("model") or settings.LLM_MODEL),
         )
 
     async def _primary_completion(self, messages, max_tokens, temperature):
@@ -177,7 +214,16 @@ class LocalModelClient:
             content,
             int(usage.get("prompt_tokens", 0) or 0),
             int(usage.get("completion_tokens", 0) or 0),
+            str(body.get("model") or settings.QWEN_MODEL),
         )
+
+    def active_model(self) -> str:
+        if (
+            self._primary_runtime_status == "unavailable"
+            and self._fallback_runtime_status == "ready"
+        ):
+            return settings.QWEN_MODEL
+        return settings.LLM_MODEL
 
     async def chat_completion(
         self,
@@ -190,6 +236,19 @@ class LocalModelClient:
     ):
         if stream:
             return self._stream(messages, max_tokens, temperature, model)
+        if (
+            settings.PRIMARY_MODEL_STYLE == "ollama"
+            and model in {None, settings.LLM_MODEL}
+            and self._primary_runtime_status != "ready"
+        ):
+            self._primary_runtime_status = (
+                "ready" if await self._ollama_model_is_loaded() else "unavailable"
+            )
+        if (
+            model in {None, settings.LLM_MODEL}
+            and self._primary_runtime_status == "unavailable"
+        ):
+            return await self._qwen_completion(messages, max_tokens, temperature)
         if model == settings.QWEN_MODEL:
             try:
                 return await self._qwen_completion(
@@ -235,17 +294,19 @@ class LocalModelClient:
                 raise LocalModelUnavailable("all_local_models_unavailable") from fallback_error
 
     async def warm_primary(self) -> None:
-        for attempt in range(3):
-            try:
-                await self._primary_completion(
-                    [{"role": "user", "content": "Reply OK"}],
-                    4,
-                    0,
-                )
-                return
-            except Exception:
-                if attempt < 2:
-                    await asyncio.sleep(30)
+        if settings.PRIMARY_MODEL_STYLE == "ollama":
+            self._primary_runtime_status = (
+                "ready" if await self._ollama_model_is_loaded() else "unavailable"
+            )
+            return
+        try:
+            await self._primary_completion(
+                [{"role": "user", "content": "Reply OK"}],
+                4,
+                0,
+            )
+        except Exception:
+            self._primary_runtime_status = "unavailable"
 
     async def warm_fallback(self) -> None:
         if not settings.QWEN_API_URL.strip():
@@ -281,7 +342,7 @@ class LocalModelClient:
 
     async def readiness(self) -> dict[str, str]:
         checks = {"primary_model": "unavailable", "fallback_model": "unavailable"}
-        async with httpx.AsyncClient(timeout=5) as client:
+        async with httpx.AsyncClient(timeout=1.5) as client:
             try:
                 headers = {}
                 if settings.PRIMARY_MODEL_API_TOKEN:
@@ -292,36 +353,24 @@ class LocalModelClient:
                 )
                 if response.status_code == 200:
                     if settings.PRIMARY_MODEL_STYLE == "ollama":
-                        names = {
-                            item.get("name")
-                            for item in response.json().get("models", [])
-                        }
-                        available = any(
-                            settings.LLM_MODEL == name
-                            or settings.LLM_MODEL.split(":")[0] == name.split(":")[0]
-                            for name in names
-                            if name
+                        available = await self._ollama_model_is_loaded()
+                        self._primary_runtime_status = (
+                            "ready" if available else "unavailable"
                         )
                     else:
                         available = True
                     if available:
-                        checks["primary_model"] = self._primary_runtime_status
+                        checks["primary_model"] = (
+                            "ready"
+                            if self._primary_runtime_status != "unavailable"
+                            else "unavailable"
+                        )
             except Exception:
                 pass
             if not settings.QWEN_API_URL.strip():
                 checks["fallback_model"] = "not_configured"
-            elif not settings.QWEN_HEALTH_URL.strip():
-                checks["fallback_model"] = self._fallback_runtime_status
             else:
-                try:
-                    response = await client.get(
-                        settings.QWEN_HEALTH_URL,
-                        headers={"Authorization": f"Bearer {settings.HF_TOKEN}"},
-                    )
-                    if response.status_code == 200:
-                        checks["fallback_model"] = self._fallback_runtime_status
-                except Exception:
-                    pass
+                checks["fallback_model"] = self._fallback_runtime_status
         return checks
 
 

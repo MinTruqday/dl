@@ -22,9 +22,11 @@ from src.tools.mindmap import generate_mindmap
 from src.tools.instructions import manage_user_instructions
 from src.tools.mcp import execute_mcp_tool, search_mcp_connectors, suggest_mcp_connectors
 from src.workflow.reduction import agent_summarize_long_document
+from src.tools.code import execute_python
 
 tools = [
     agent_summarize_long_document,
+    execute_python,
     search_editorjs_capabilities,
     create_document,
     update_document_metadata,

@@ -109,7 +109,18 @@ async def create_document(
         try:
             parsed = json.loads(normalized_content)
         except (TypeError, json.JSONDecodeError):
-            return json.dumps({"status": "document_content_invalid"})
+            # A user asking for a short document naturally supplies plain text.
+            # Convert it to the minimal valid EditorJS paragraph representation.
+            parsed = {
+                "time": 0,
+                "blocks": [
+                    {
+                        "type": "paragraph",
+                        "data": {"text": str(normalized_content)},
+                    }
+                ],
+                "version": "2.30.8",
+            }
         if not isinstance(parsed, dict) or not isinstance(parsed.get("blocks"), list):
             return json.dumps({"status": "document_content_invalid"})
         normalized_content = json.dumps(parsed, ensure_ascii=False)
@@ -142,12 +153,16 @@ async def create_document(
                 }
             )
         data = response.json().get("data", {})
+        document_id = data.get("_id") or data.get("id")
         return json.dumps(
             {
                 "status": "success",
-                "document_id": data.get("_id") or data.get("id"),
+                "document_id": document_id,
+                "title": title,
+                "url": f"/tai-lieu/xem-truoc/{document_id}",
                 "content_format": normalized_format,
-            }
+            },
+            ensure_ascii=False,
         )
     except Exception:
         logger.exception("Document creation failed")

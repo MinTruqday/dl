@@ -6,7 +6,7 @@ from src.core.dependency import get_current_user, CurrentUser
 
 
 from src.services.history import HistoryService
-from src.schemas.history import MessageCreate, SessionCreate, SessionTitleUpdate
+from src.schemas.history import MessageCreate, SessionCreate, SessionStateUpdate, SessionTitleUpdate
 
 router = APIRouter(route_class=LoggingRoute, prefix="/lich-su")
 
@@ -27,7 +27,11 @@ async def create_session(
     data: SessionCreate, current_user: CurrentUser = Depends(get_current_user)
 ):
     """Create a conversation session for the authenticated user"""
-    if data.mode != "chat" and current_user.ai_tier.value not in {"PRO", "PREMIUM"}:
+    if (
+        data.mode != "chat"
+        and current_user.role.value != "admin"
+        and current_user.ai_tier.value not in {"PRO", "PREMIUM"}
+    ):
         raise HTTPException(status_code=403, detail={"code": "advanced_mode_requires_pro"})
     payload = data.model_dump()
     payload["user_id"] = str(current_user.id)
@@ -48,6 +52,17 @@ async def update_title(
 ):
     """Update the title of an owned conversation session"""
     return await HistoryService.update_title(session_id, data.model_dump(), str(current_user.id))
+
+
+@router.patch("/{session_id}/trang-thai", response_model=Dict[str, Any])
+async def update_state(
+    session_id: str,
+    data: SessionStateUpdate,
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    return await HistoryService.update_state(
+        session_id, data.model_dump(), str(current_user.id)
+    )
 
 
 @router.delete("/{session_id}", response_model=Dict[str, Any])

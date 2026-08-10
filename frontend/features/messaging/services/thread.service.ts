@@ -79,21 +79,6 @@ export const sendMessageAPI = async (
   return data;
 };
 
-export const togglePinAPI = async (messageId: string) => {
-  const token = getToken();
-  if (!token) throw new Error("Phiên đăng nhập đã hết hạn");
-  const res = await fetch(`${API_URL}/tin-nhan/${messageId}/ghim`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const data = await res.json();
-  if (!res.ok)
-    throw new Error(
-      data.message || "Không thể cập nhật trạng thái dữ liệu ghim",
-    );
-  return data;
-};
-
 export const editMessageAPI = async (messageId: string, content: string) => {
   const token = getToken();
   if (!token) throw new Error("Phiên đăng nhập đã hết hạn");
@@ -783,36 +768,6 @@ export const getBlockedStatusAPI = async (otherUserId: string) => {
   const data = await res.json();
   if (!res.ok)
     throw new Error(data.message || "Không thể tải trạng thái quy tắc hạn chế");
-  return data;
-};
-
-export const togglePinConversationAPI = async (otherUserId: string) => {
-  const token = getToken();
-  if (!token) throw new Error("Phiên đăng nhập đã hết hạn");
-  const res = await fetch(
-    `${API_URL}/tin-nhan/cuoc-tro-chuyen/${otherUserId}/ghim`,
-    {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-    },
-  );
-  const data = await res.json();
-  if (!res.ok)
-    throw new Error(
-      data.message || "Không thể cập nhật trạng thái ghim luồng hội thoại",
-    );
-  return data;
-};
-
-export const getPinnedMessagesAPI = async (otherUserId: string) => {
-  const token = getToken();
-  if (!token) throw new Error("Phiên đăng nhập đã hết hạn");
-  const res = await fetch(`${API_URL}/tin-nhan/${otherUserId}/tin-nhan-ghim`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const data = await res.json();
-  if (!res.ok)
-    throw new Error(data.message || "Không thể tải tin nhắn đã ghim");
   return data;
 };
 

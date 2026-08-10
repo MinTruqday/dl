@@ -21,8 +21,25 @@ from src.services.token_accounting import current_usage, start_accounting
 
 router = APIRouter(route_class=LoggingRoute)
 
-def require_mode_tier(mode: str, tier: str) -> None:
-    if mode != "chat" and str(tier).upper() not in {"PRO", "PREMIUM"}:
+
+async def get_tier_routed_user(
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    """Keep model routing bound to this request, including streaming responses."""
+    from src.utils.huggingface import reset_request_ai_tier, set_request_ai_tier
+
+    token = set_request_ai_tier(current_user.ai_tier.value)
+    try:
+        yield current_user
+    finally:
+        reset_request_ai_tier(token)
+
+def require_mode_tier(mode: str, tier: str, role: str = "") -> None:
+    if (
+        mode != "chat"
+        and str(role).lower() != "admin"
+        and str(tier).upper() not in {"PRO", "PREMIUM"}
+    ):
         raise HTTPException(status_code=403, detail={"code": "advanced_mode_requires_pro"})
 
 def _validate_audio(req: ChatRequest) -> None:
@@ -71,6 +88,15 @@ async def _persist_conversation_turns(
             ),
             f"chat-memory-{session_id}",
         )
+        create_background_task(
+            HistoryService.generate_title(
+                session_id,
+                user_id,
+                user_content,
+                assistant_content,
+            ),
+            f"chat-title-{session_id}",
+        )
     except Exception:
         logger.exception("Chat history persistence to database error")
 
@@ -85,34 +111,37 @@ async def _reserve_upload_quota(req: ChatRequest):
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             res = await client.post(
-                f"{settings.FINANCE_URL}/vi/kiem-tra-gioi-han",
-                json={"user_id": req.user_id, "item_type": item_type},
-                headers={"X-Internal-Token": settings.SECRET_KEY},
+                f"{settings.USAGE_URL}/han-muc/tai-len/dat-cho",
+                json={"item_type": item_type},
+                headers={"Authorization": f"Bearer {req.token}"},
             )
             if res.status_code == 200:
-                data = res.json()
-                if data.get("allowed", False):
-                    return True, None
-                return False, data.get("error_code", "upload_quota_exceeded")
+                return True, None
+            if res.status_code in {403, 429}:
+                return False, "upload_quota_exceeded"
     except Exception:
         logger.exception("Quota reservation request error")
     return True, None
 
 async def _reserve_ai_quota(req: ChatRequest):
-    if req.ai_tier in ["PRO", "PREMIUM"]:
+    if req.role == "admin" or req.ai_tier in ["PRO", "PREMIUM"]:
         return True, None
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
-            res = await client.post(
-                f"{settings.FINANCE_URL}/vi/kiem-tra-ai-quota",
-                json={"user_id": req.user_id, "mode": req.mode},
+            res = await client.get(
+                f"{settings.USAGE_URL}/han-muc/xac-minh",
+                params={
+                    "user_id": req.user_id,
+                    "role": req.role,
+                    "ai_tier": req.ai_tier,
+                    "feature": req.mode,
+                },
                 headers={"X-Internal-Token": settings.SECRET_KEY},
             )
             if res.status_code == 200:
-                data = res.json()
-                if data.get("allowed", False):
-                    return True, None
-                return False, data.get("error_code", "ai_quota_exceeded")
+                return True, None
+            if res.status_code == 429:
+                return False, "ai_quota_exceeded"
     except Exception:
         logger.exception("AI quota reservation request error")
     return True, None
@@ -123,12 +152,14 @@ async def _consume_ai_quota(req: ChatRequest, query: str, answer: str, usage: di
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             await client.post(
-                f"{settings.FINANCE_URL}/vi/tru-ai-quota",
+                f"{settings.USAGE_URL}/han-muc/su-dung",
                 json={
                     "user_id": req.user_id,
-                    "mode": req.mode,
-                    "query_tokens": usage.get("query_tokens", len(query.split())),
-                    "answer_tokens": usage.get("answer_tokens", len(answer.split())),
+                    "feature": req.mode,
+                    "role": req.role,
+                    "ai_tier": req.ai_tier,
+                    "input_tokens": usage.get("query_tokens", len(query.split())),
+                    "output_tokens": usage.get("answer_tokens", len(answer.split())),
                 },
                 headers={"X-Internal-Token": settings.SECRET_KEY},
             )
@@ -137,12 +168,14 @@ async def _consume_ai_quota(req: ChatRequest, query: str, answer: str, usage: di
 
 @router.post("")
 async def chat_endpoint(
-    req: ChatRequest, request: Request, current_user: CurrentUser = Depends(get_current_user)
+    req: ChatRequest,
+    request: Request,
+    current_user: CurrentUser = Depends(get_tier_routed_user),
 ):
     req.user_id = str(current_user.id)
     req.role = current_user.role.value
     req.ai_tier = current_user.ai_tier.value
-    require_mode_tier(req.mode, req.ai_tier)
+    require_mode_tier(req.mode, req.ai_tier, req.role)
     logger.info("Chat request started query_chars={}", len(req.query))
     token = request.headers.get("Authorization")
     if token:
@@ -226,6 +259,9 @@ async def chat_endpoint(
             route = "knowledge"
         elif req.document_ids or req.file_data or req.folder_data:
             route = "knowledge"
+        elif req.mode == "chat" and not req.useWeb:
+            # Avoid an unnecessary model round-trip for ordinary conversation.
+            route = "chat"
         else:
             route_data = await semantic_router.execute(req.query)
             route = route_data.get("route", "knowledge")

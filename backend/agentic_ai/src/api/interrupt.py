@@ -66,6 +66,7 @@ async def resolve_approval(
         status=req.status,
         human_feedback=req.human_feedback,
         correction=req.correction,
+        scope=req.scope,
     )
     if not resolved:
         raise HTTPException(

@@ -1,3 +1,4 @@
+from contextvars import ContextVar, Token
 from typing import Any, List, Optional
 
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -20,6 +21,26 @@ from src.utils.structured_output import (
     extract_json_values,
     validate_structured_output,
 )
+
+_request_ai_tier: ContextVar[str] = ContextVar("request_ai_tier", default="")
+
+
+def model_for_tier(tier: str) -> str:
+    """Use Qwen for the Basic package and the primary model for paid packages."""
+    return settings.QWEN_MODEL if str(tier).upper() == "BASIC" else settings.LLM_MODEL
+
+
+def set_request_ai_tier(tier: str) -> Token:
+    return _request_ai_tier.set(str(tier).upper())
+
+
+def reset_request_ai_tier(token: Token) -> None:
+    _request_ai_tier.reset(token)
+
+
+def _request_model(configured_model: str) -> str:
+    tier = _request_ai_tier.get()
+    return model_for_tier(tier) if tier else configured_model
 
 def resolve_model_revision(model_id: str, token: Optional[str] = None) -> str:
     from huggingface_hub import HfApi
@@ -104,8 +125,9 @@ class HFInferenceChat(BaseChatModel):
             hf_messages.append({"role": role, "content": msg.content})
         hf_messages = _merge_system_messages(hf_messages)
 
+        effective_model = _request_model(self.model)
         chat_kwargs = {
-            "model": self.model,
+            "model": effective_model,
             "messages": hf_messages,
             "max_tokens": kwargs.get(
                 "max_tokens",
@@ -125,7 +147,14 @@ class HFInferenceChat(BaseChatModel):
             len(str(content or "")),
         )
         return ChatResult(
-            generations=[ChatGeneration(message=AIMessage(content=content))]
+            generations=[
+                ChatGeneration(
+                    message=AIMessage(
+                        content=content,
+                        response_metadata={"model": str(getattr(response, "model", effective_model))},
+                    )
+                )
+            ]
         )
 
     @retry(
@@ -155,7 +184,9 @@ class HFInferenceChat(BaseChatModel):
 
         from src.utils.local_models import local_model_client
 
+        effective_model = _request_model(self.model)
         stream = await local_model_client.chat_completion(
+            model=effective_model,
             messages=hf_messages,
             max_tokens=kwargs.get(
                 "max_tokens",
@@ -280,13 +311,20 @@ class HFInferenceChat(BaseChatModel):
             "none",
         }:
             allowed_names &= {tool_choice}
+        forced_name = (
+            tool_choice
+            if isinstance(tool_choice, str)
+            and tool_choice not in {"auto", "any", "required", "none"}
+            else None
+        )
         selection_prompt = SystemMessage(
             content=(
                 "Select exactly one tool for the request\n"
                 "Return one JSON object with keys name and arguments\n"
                 "name must match a registered tool\n"
                 "arguments must be one JSON object matching that tool schema\n"
-                f"Registered tools: {tool_definitions}"
+                + (f"You MUST use the exact tool name {forced_name}\n" if forced_name else "")
+                + f"Registered tools: {tool_definitions}"
             )
         )
 

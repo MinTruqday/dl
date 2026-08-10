@@ -234,9 +234,10 @@ services:
     restart: always
     ports:
       - 8008:8000
+      - 38470-38479:38470-38479
     labels:
       - traefik.enable=true
-      - traefik.http.routers.ai.rule=PathPrefix(`/lich-su`) || PathPrefix(`/phan-hoi`) || PathPrefix(`/suy-luan`) || PathPrefix(`/nap-du-lieu`) || PathPrefix(`/tinh-chinh`) || PathPrefix(`/tro-chuyen`) || PathPrefix(`/huan-luyen`) || PathPrefix(`/nhap-lieu`) || PathPrefix(`/su-kien`) || PathPrefix(`/toi-uu`) || PathPrefix(`/tiep-nap`) || PathPrefix(`/drm`) || PathPrefix(`/mcp`)
+      - traefik.http.routers.ai.rule=PathPrefix(`/lich-su`) || PathPrefix(`/phan-hoi`) || PathPrefix(`/suy-luan`) || PathPrefix(`/nap-du-lieu`) || PathPrefix(`/tinh-chinh`) || PathPrefix(`/tro-chuyen`) || PathPrefix(`/huan-luyen`) || PathPrefix(`/nhap-lieu`) || PathPrefix(`/su-kien`) || PathPrefix(`/toi-uu`) || PathPrefix(`/tiep-nap`) || PathPrefix(`/ngat-qua-trinh`) || PathPrefix(`/drm`) || PathPrefix(`/mcp`)
       - traefik.http.services.ai.loadbalancer.server.port=8000
     environment:
       <<: [*service-environment, *minio-environment]
@@ -279,6 +280,7 @@ services:
       MCP_ALLOWED_STDIO_COMMANDS: ${MCP_ALLOWED_STDIO_COMMANDS}
       MCP_ALLOWED_REMOTE_HOSTS: ${MCP_ALLOWED_REMOTE_HOSTS}
       MCP_ALLOW_PRIVATE_NETWORKS: ${MCP_ALLOW_PRIVATE_NETWORKS:?MCP_ALLOW_PRIVATE_NETWORKS is required}
+      MCP_PRESET_ROOT: /opt/doclib-mcp
       FINETUNE_MODELS_DIR: /var/lib/doclib/finetune/models
       FINETUNE_ADAPTERS_DIR: /var/lib/doclib/finetune/adapters
       FINETUNE_GGUF_DIR: /var/lib/doclib/finetune/gguf

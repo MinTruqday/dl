@@ -112,6 +112,30 @@ export async function updateAiSessionTitleAPI(
   return data;
 }
 
+export async function updateAiSessionStateAPI(
+  sessionId: string,
+  state: { is_pinned?: boolean; is_archived?: boolean },
+) {
+  const res = await fetch(`${API_URL}/lich-su/${sessionId}/trang-thai`, {
+    method: "PATCH",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify(state),
+  });
+  const data = await res.json();
+  if (!res.ok)
+    throw new Error(data.message || "Không thể cập nhật cuộc trò chuyện");
+  return data;
+}
+
+export async function getAiCapabilitiesAPI() {
+  const res = await fetch(`${API_URL}/tro-chuyen/kha-nang`, {
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải khả năng AI");
+  return data;
+}
+
 export async function deleteAiSessionAPI(sessionId: string) {
   const res = await fetch(`${API_URL}/lich-su/${sessionId}`, {
     method: "DELETE",
@@ -161,13 +185,14 @@ export async function getPendingAiApprovalsAPI(sessionId: string) {
 export async function resolveAiApprovalAPI(
   approvalId: string,
   status: "APPROVED" | "REJECTED",
+  scope: "once" | "session" | "safe_session" = "once",
 ) {
   const res = await fetch(
     `${API_URL}/ngat-qua-trinh/phe-duyet/phan-hoi/${approvalId}`,
     {
       method: "POST",
       headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, scope }),
     },
   );
   const data = await res.json();
