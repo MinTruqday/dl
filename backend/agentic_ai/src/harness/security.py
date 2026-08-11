@@ -88,16 +88,17 @@ class SecurityHarness:
             "tiết lộ prompt",
             "hiển thị prompt hệ thống",
         )
-        # Ordinary chat must stay on the deterministic fast path. The model
-        # reviewer is reserved for input that actually resembles an injection;
-        # otherwise every message pays for an unnecessary extra generation.
         requires_ai_review = category != "none" or any(
             marker in normalized for marker in suspicious_markers
         )
         if (
             not allow_ai_review
             or not requires_ai_review
-            or any("credential_leak" in violation for violation in violations)
+            or any(
+                marker in violation
+                for violation in violations
+                for marker in ("credential_leak", "prompt_injection")
+            )
         ):
             return sanitized, list(dict.fromkeys(violations))
 

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/features/authentication/contexts/AuthContext";
-import { toggleBookmarkAPI } from "@/features/content/services/bookmark.service";
+import { toggleBookmarkAPI } from "@/features/engagement/services/bookmark.service";
 import {
   getDocumentBySlugAPI,
   getDocumentDecryptionKeyAPI,
@@ -12,7 +12,7 @@ import { submitReportAPI } from "@/features/management/services/user_feedback.se
 import {
   pinDocumentAPI,
   unpinDocumentAPI,
-} from "@/features/content/services/reading.service";
+} from "@/features/engagement/services/reading.service";
 
 async function decryptFragments(document: any) {
   if (!Array.isArray(document.content_fragments))

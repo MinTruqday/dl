@@ -48,9 +48,6 @@ async def supervisor_node(state: ActingState):
         task_status = {n["id"]: "pending" for n in steps}
         completed_tasks = []
     elif not task_status:
-        # Streaming builds the plan before entering this workflow. Initialize the
-        # execution state for that supplied plan instead of treating an empty
-        # status map as an already-completed DAG.
         task_status = {n["id"]: "pending" for n in steps}
         completed_tasks = []
 
@@ -234,8 +231,6 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
                 else:
                     res = await tool_callable.execute(current_task)
 
-                # A successful mutation must not be repeated because a separate
-                # probabilistic self-review disagrees with the tool's result.
                 if agent_name == "Action" and _result_succeeded(res):
                     final_res = res
                     break

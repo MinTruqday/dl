@@ -261,8 +261,9 @@ def verify_source_contracts():
             )
         ]
         assert not invalid_strings, path
-        if path != SOURCE / "utils" / "translation.py":
-            assert "Vietnamese" not in text, path
+        lowered_source = text.casefold()
+        assert "qwen" not in lowered_source, path
+        assert "gemma" not in lowered_source, path
 
     interaction_source = "\n".join(
         path.read_text() for path in (SOURCE / "api" / "interaction").glob("*.py")
@@ -277,7 +278,9 @@ def verify_source_contracts():
 
     security_source = (SOURCE / "harness" / "security.py").read_text()
     assert "review_markers" not in security_source
-    assert "requires_ai_review = bool(sanitized.strip())" in security_source
+    assert "suspicious_markers" in security_source
+    assert "requires_ai_review = category != \"none\"" in security_source
+    assert '("credential_leak", "prompt_injection")' in security_source
 
     workspace_source = (SOURCE / "services" / "workspace.py").read_text()
     assert not any("À" <= character <= "ỹ" for character in workspace_source)

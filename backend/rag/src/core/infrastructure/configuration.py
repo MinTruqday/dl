@@ -35,6 +35,9 @@ class Settings(BaseModel):
     CONTENT_URL: str = get_service_url("CONTENT")
     DRM_URL: str = get_service_url("DRM")
     AGENTIC_AI_URL: str = get_service_url("AGENTIC_AI")
+    AGENTIC_REQUEST_TIMEOUT_SECONDS: float = float(
+        os.getenv("AGENTIC_REQUEST_TIMEOUT_SECONDS", "900")
+    )
     RAG_DB_NAME: str = os.environ["RAG_DB_NAME"]
 
 settings = Settings()

@@ -106,6 +106,8 @@ async def _chat_direct(
     max_tokens: int = 500,
     temperature: float = 0.3,
     model: str = settings.LLM_MODEL,
+    attempts: int = 3,
+    timeout_seconds: float = 60.0,
 ) -> str:
     return await run_chat_completion(
         client=client,
@@ -113,6 +115,8 @@ async def _chat_direct(
         model=model,
         max_tokens=max_tokens,
         temperature=temperature,
+        attempts=attempts,
+        timeout_seconds=timeout_seconds,
     )
 
 
@@ -121,6 +125,8 @@ async def _structured_direct(
     schema,
     max_tokens: int,
     model: str,
+    attempts: int = 3,
+    timeout_seconds: float = 60.0,
 ):
     from src.utils.structured_output import validate_structured_output
 
@@ -129,6 +135,8 @@ async def _structured_direct(
         max_tokens=max_tokens,
         temperature=0.1,
         model=model,
+        attempts=attempts,
+        timeout_seconds=timeout_seconds,
     )
     try:
         return validate_structured_output(raw, schema)
@@ -145,6 +153,8 @@ async def _structured_direct(
             max_tokens=max_tokens,
             temperature=0,
             model=model,
+            attempts=attempts,
+            timeout_seconds=timeout_seconds,
         )
         return validate_structured_output(corrected, schema)
 
@@ -340,6 +350,8 @@ async def expand_retrieval_query(req: RetrievalExpansionRequest):
         max_tokens=384,
         temperature=0.2,
         model=settings.LLM_MODEL,
+        attempts=1,
+        timeout_seconds=20.0,
     )
     query_prompt = registry.get(PromptType.MULTI_QUERY).format(
         question=req.question
@@ -349,6 +361,8 @@ async def expand_retrieval_query(req: RetrievalExpansionRequest):
         MultiQueryOutput,
         max_tokens=192,
         model=settings.LLM_MODEL,
+        attempts=1,
+        timeout_seconds=20.0,
     )
     queries = [query.strip() for query in result.queries if query.strip()]
     return {
@@ -374,6 +388,8 @@ async def decompose_cross_document_query(req: CrossDocumentExpansionRequest):
         CrossDocumentQueries,
         max_tokens=min(1024, 96 * len(req.document_ids)),
         model=settings.LLM_MODEL,
+        attempts=1,
+        timeout_seconds=20.0,
     )
     queries = [query.strip() for query in result.queries if query.strip()]
     if len(queries) != len(req.document_ids):
@@ -391,14 +407,14 @@ async def decompose_cross_document_query(req: CrossDocumentExpansionRequest):
 async def inspect_rag_chunks(req: RagChunkSafetyRequest):
     """Return the indices of retrieval chunks that pass the internal safety check."""
     import asyncio
-    from src.core.security.guardrails import guardrails_engine
+    from src.harness.security import security
 
     semaphore = asyncio.Semaphore(4)
 
     async def inspect(index: int, text: str):
         async with semaphore:
-            assessment = await guardrails_engine.async_inspect_input(text)
-            return index if assessment.get("is_safe", False) else None
+            assessment = await security.ascan_input(text)
+            return index if assessment.passed else None
 
     results = await asyncio.gather(
         *[inspect(index, text) for index, text in enumerate(req.texts)]

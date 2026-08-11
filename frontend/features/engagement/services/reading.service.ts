@@ -1,7 +1,7 @@
 import {
   API_URL,
   getAuthHeaders,
-} from "@/features/authentication/services/session.service";
+} from "@/shared/services/api-client";
 
 export async function getReadingHistoryAPI(
   skip: number = 0,

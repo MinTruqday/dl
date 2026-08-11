@@ -13,6 +13,7 @@ USER_ID = f"rag-user-{uuid.uuid4()}"
 OTHER_USER_ID = f"rag-other-{uuid.uuid4()}"
 DOCUMENT_ID = f"rag-document-{uuid.uuid4()}"
 OBJECT_KEY = f"integration/rag/{uuid.uuid4()}.txt"
+HTTP_TIMEOUT = float(os.getenv("INTEGRATION_HTTP_TIMEOUT_SECONDS", "900"))
 
 
 def call(method: str, path: str, body=None, internal: bool = True):
@@ -26,7 +27,7 @@ def call(method: str, path: str, body=None, internal: bool = True):
         method=method,
     )
     try:
-        with urllib.request.urlopen(request, timeout=180) as response:
+        with urllib.request.urlopen(request, timeout=HTTP_TIMEOUT) as response:
             payload = response.read()
             return response.status, json.loads(payload) if payload else None
     except urllib.error.HTTPError as error:

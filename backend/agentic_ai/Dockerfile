@@ -56,5 +56,5 @@ RUN git init /app/llama.cpp && \
 COPY --chown=appuser:appuser agentic_ai/src/ ./src/
 
 USER 10001:10001
-HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ready', timeout=3)"]
+HEALTHCHECK --interval=30s --timeout=20s --start-period=90s --retries=3 CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ready', timeout=15)"]
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]

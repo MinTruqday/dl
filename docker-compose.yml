@@ -18,6 +18,13 @@ x-minio-environment: &minio-environment
   MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:?MINIO_PUBLIC_URL is required}
   MINIO_REGION: ${MINIO_REGION:?MINIO_REGION is required}
 
+x-app-healthcheck: &app-healthcheck
+  test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ready', timeout=15)"]
+  interval: 30s
+  timeout: 20s
+  start_period: 30s
+  retries: 3
+
 services:
   flaresolverr:
     image: ghcr.io/flaresolverr/flaresolverr:v3.5.0@sha256:139dfee1c6f89249c8d665d1333a42e8ec74ec0a86bc6bb1c8461e10d3a66a47
@@ -72,7 +79,7 @@ services:
         - -q
         - ping
       interval: 5s
-      timeout: 5s
+      timeout: 20s
       start_period: 10s
       retries: 12
     networks:
@@ -110,7 +117,7 @@ services:
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8000/ping"]
       interval: 30s
-      timeout: 5s
+      timeout: 20s
       retries: 3
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -135,7 +142,7 @@ services:
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/nginx-health"]
       interval: 30s
-      timeout: 5s
+      timeout: 20s
       retries: 3
 
   frontend:
@@ -163,8 +170,8 @@ services:
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
       interval: 30s
-      timeout: 5s
-      start_period: 20s
+      timeout: 20s
+      start_period: 30s
       retries: 3
     depends_on:
       - traefik
@@ -172,6 +179,7 @@ services:
       - doclib_network
 
   finance:
+    healthcheck: *app-healthcheck
     build:
       context: ./backend
       dockerfile: ./finance/Dockerfile
@@ -201,6 +209,7 @@ services:
       - doclib_network
 
   notification:
+    healthcheck: *app-healthcheck
     build:
       context: ./backend
       dockerfile: ./notification/Dockerfile
@@ -227,6 +236,7 @@ services:
       - doclib_network
 
   agentic_ai:
+    healthcheck: *app-healthcheck
     build:
       context: ./backend
       dockerfile: ./agentic_ai/Dockerfile
@@ -282,13 +292,20 @@ services:
       FINETUNE_ADAPTERS_DIR: /var/lib/doclib/finetune/adapters
       FINETUNE_GGUF_DIR: /var/lib/doclib/finetune/gguf
     depends_on:
-      - mongodb
-      - redis
-      - rabbitmq
-      - minio
-      - qdrant
-      - rag
-      - ollama_models
+      mongodb:
+        condition: service_started
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      minio:
+        condition: service_started
+      qdrant:
+        condition: service_started
+      rag:
+        condition: service_started
+      ollama_models:
+        condition: service_completed_successfully
     volumes:
       - ./backend/agentic_ai/src:/app/src
       - ./backend/agentic_ai/tests:/app/tests
@@ -304,7 +321,8 @@ services:
     ports:
       - 127.0.0.1:11434:11434
     environment:
-      OLLAMA_KEEP_ALIVE: 2m
+      OLLAMA_KEEP_ALIVE: ${MODEL_KEEP_ALIVE:-24h}
+      OLLAMA_LOAD_TIMEOUT: 15m
       OLLAMA_MAX_LOADED_MODELS: "1"
       OLLAMA_NUM_PARALLEL: "1"
       OLLAMA_MODELS: /models
@@ -313,7 +331,7 @@ services:
     healthcheck:
       test: ["CMD", "ollama", "list"]
       interval: 10s
-      timeout: 5s
+      timeout: 20s
       retries: 12
     networks:
       - doclib_network
@@ -376,7 +394,7 @@ services:
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:9090/-/healthy"]
       interval: 30s
-      timeout: 5s
+      timeout: 20s
       retries: 3
 
   grafana:
@@ -403,10 +421,11 @@ services:
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3000/api/health"]
       interval: 30s
-      timeout: 5s
+      timeout: 20s
       retries: 3
 
   collection:
+    healthcheck: *app-healthcheck
     build:
       context: ./backend
       dockerfile: ./collection/Dockerfile
@@ -437,6 +456,7 @@ services:
       - doclib_network
 
   compilation:
+    healthcheck: *app-healthcheck
     build:
       context: ./backend
       dockerfile: ./compilation/Dockerfile
@@ -467,6 +487,7 @@ services:
       - doclib_network
 
   authentication:
+    healthcheck: *app-healthcheck
     build:
       context: ./backend
       dockerfile: ./authentication/Dockerfile
@@ -507,6 +528,7 @@ services:
     networks:
       - doclib_network
   humanity:
+    healthcheck: *app-healthcheck
     build:
       context: ./backend
       dockerfile: ./humanity/Dockerfile
@@ -531,6 +553,7 @@ services:
       - doclib_network
 
   usage:
+    healthcheck: *app-healthcheck
     build:
       context: ./backend
       dockerfile: ./usage/Dockerfile
@@ -556,6 +579,7 @@ services:
       - doclib_network
 
   management:
+    healthcheck: *app-healthcheck
     build:
       context: ./backend
       dockerfile: ./management/Dockerfile
@@ -573,6 +597,7 @@ services:
       MIN_FILE_SIZE_BYTES: ${MIN_FILE_SIZE_BYTES:?MIN_FILE_SIZE_BYTES is required}
       EMBEDDING_MODEL: ${EMBEDDING_MODEL:?EMBEDDING_MODEL is required}
       RERANKER_MODEL: ${RERANKER_MODEL:?RERANKER_MODEL is required}
+      AGENTIC_REQUEST_TIMEOUT_SECONDS: ${MODEL_TIMEOUT_SECONDS:?MODEL_TIMEOUT_SECONDS is required}
       LLM_MODEL: ${LLM_MODEL:?LLM_MODEL is required}
       TAVILY_API_KEY: ${TAVILY_API_KEY:?TAVILY_API_KEY is required}
     depends_on:
@@ -586,6 +611,7 @@ services:
       - doclib_network
 
   websocket:
+    healthcheck: *app-healthcheck
     build:
       context: ./backend
       dockerfile: ./websocket/Dockerfile
@@ -617,6 +643,7 @@ services:
       - doclib_network
 
   messaging:
+    healthcheck: *app-healthcheck
     build:
       context: ./backend
       dockerfile: ./messaging/Dockerfile
@@ -641,6 +668,7 @@ services:
       - doclib_network
 
   content:
+    healthcheck: *app-healthcheck
     build:
       context: ./backend
       dockerfile: ./content/Dockerfile
@@ -670,6 +698,7 @@ services:
       - doclib_network
 
   collaboration:
+    healthcheck: *app-healthcheck
     build:
       context: ./backend
       dockerfile: ./collaboration/Dockerfile
@@ -695,6 +724,7 @@ services:
       - doclib_network
 
   engagement:
+    healthcheck: *app-healthcheck
     build:
       context: ./backend
       dockerfile: ./engagement/Dockerfile
@@ -722,6 +752,7 @@ services:
       - doclib_network
 
   search:
+    healthcheck: *app-healthcheck
     build:
       context: ./backend
       dockerfile: ./search/Dockerfile
@@ -750,6 +781,7 @@ services:
       - doclib_network
 
   cloud:
+    healthcheck: *app-healthcheck
     build:
       context: ./backend
       dockerfile: ./cloud/Dockerfile
@@ -778,6 +810,7 @@ services:
       - doclib_network
 
   drm:
+    healthcheck: *app-healthcheck
     build:
       context: ./backend
       dockerfile: ./drm/Dockerfile
@@ -803,6 +836,7 @@ services:
       - doclib_network
 
   worker:
+    healthcheck: *app-healthcheck
     build:
       context: ./backend
       dockerfile: ./worker/Dockerfile
@@ -842,6 +876,7 @@ services:
       - doclib_network
 
   rag:
+    healthcheck: *app-healthcheck
     build:
       context: ./backend
       dockerfile: ./rag/Dockerfile

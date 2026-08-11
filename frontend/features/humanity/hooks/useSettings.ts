@@ -10,12 +10,12 @@ import {
 import {
   applyForAuthorAPI,
   deleteMyAccountAPI,
-} from "@/features/management/services/account.service";
+} from "@/features/humanity/services/account.service";
 import {
   getPrivacySettingsAPI,
   updateGeneralSettingsAPI,
   updatePrivacySettingsAPI,
-} from "@/features/management/services/setting.service";
+} from "@/features/humanity/services/setting.service";
 import {
   getAnnouncementSettingsAPI,
   updateAnnouncementSettingsAPI,

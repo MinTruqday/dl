@@ -1,7 +1,7 @@
 import {
   API_URL,
   getAuthHeaders,
-} from "@/features/authentication/services/session.service";
+} from "@/shared/services/api-client";
 
 export async function inviteCollaboratorAPI(
   documentId: string,
@@ -654,5 +654,4 @@ export async function getCollaborationSchedulesAPI(documentId: string) {
     throw new Error(data.message || "Không thể tải lịch hẹn giờ cộng tác");
   return data;
 }
-
 

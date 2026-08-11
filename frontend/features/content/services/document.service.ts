@@ -2,7 +2,7 @@ import {
   API_URL,
   getToken,
   getAuthHeaders,
-} from "@/features/authentication/services/session.service";
+} from "@/shared/services/api-client";
 
 export async function saveDocumentDraftAPI(
   documentId: string,
@@ -456,40 +456,6 @@ export async function getDocumentAnalyticsAPI(id: string) {
 export async function getAcademicMetricsAPI(id: string) {
   const res = await fetch(`${API_URL}/tai-lieu/${id}/chi-so-hoc-thuat`);
   return res.ok ? res.json() : null;
-}
-
-export async function updateDRMSettingsAPI(
-  documentId: string,
-  settings: {
-    disable_copy: boolean;
-    disable_print: boolean;
-    hide_from_search: boolean;
-    watermark_enabled: boolean;
-    allow_internal_ai: boolean;
-    license_valid_days: number;
-    max_open_count: number;
-    ghost_font_enabled: boolean;
-    ghost_font_exemption_scope:
-      | "owner_only"
-      | "private_link"
-      | "selected_users"
-      | "everyone";
-    ghost_font_exempt_user_ids: string[];
-  },
-) {
-  const token = getToken();
-  const res = await fetch(`${API_URL}/ban-quyen/${documentId}`, {
-    method: "PUT",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(settings),
-  });
-  const data = await res.json();
-  if (!res.ok)
-    throw new Error(data.detail || "Không thể cấu hình cơ chế bảo mật DRM");
-  return data;
 }
 
 export async function updateTagsAPI(documentId: string, tags: string[]) {

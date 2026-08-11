@@ -19,7 +19,7 @@ def audio_data_url() -> str:
 async def complete(messages):
     response = await local_model_client.chat_completion(
         messages=messages,
-        max_tokens=24,
+        max_tokens=8,
         temperature=0,
     )
     content = response.choices[0].message.content

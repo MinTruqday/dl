@@ -182,8 +182,6 @@ async def chat_stream_endpoint(
             elif req.document_ids or req.file_data or req.folder_data:
                 route = "knowledge"
             elif req.mode == "chat" and not req.useWeb:
-                # A plain conversation does not need an extra LLM classifier pass.
-                # Route it directly so the user only waits for the actual answer.
                 route = "chat"
             else:
                 route_data = await semantic_router.execute(req.query)

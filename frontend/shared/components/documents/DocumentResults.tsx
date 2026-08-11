@@ -1,6 +1,6 @@
 import Link from "next/link";
 import EmptyState from "@/shared/components/common/EmptyState";
-import { API_URL } from "@/features/authentication/services/session.service";
+import { API_URL } from "@/shared/services/api-client";
 
 export type DocumentSummary = {
   _id?: string;

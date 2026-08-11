@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { getDocumentsAPI } from "@/features/content/services/document.service";
+import { searchDocumentsAPI } from "@/features/search/services/search.service";
 import type { DocumentSummary } from "@/shared/components/documents/DocumentResults";
 
 export type SearchFilters = {
@@ -49,10 +49,7 @@ export function useDocumentSearch() {
     setLoading(true);
     setError("");
     try {
-      const response = await getDocumentsAPI(
-        query,
-        filters.sort === "latest" ? "latest" : "views",
-      );
+      const response = await searchDocumentsAPI(query);
       const data = response?.data || response || [];
       setDocuments(Array.isArray(data) ? data : []);
       setHistory((current) => {
@@ -70,7 +67,7 @@ export function useDocumentSearch() {
     } finally {
       setLoading(false);
     }
-  }, [filters.sort, query]);
+  }, [query]);
 
   useEffect(() => {
     load();

@@ -1,7 +1,7 @@
 import {
   API_URL,
   getToken,
-} from "@/features/authentication/services/session.service";
+} from "@/shared/services/api-client";
 
 function headers() {
   return {

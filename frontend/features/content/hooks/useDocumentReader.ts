@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { API_URL } from "@/features/authentication/services/session.service";
+import { API_URL } from "@/shared/services/api-client";
 import {
   createAiSessionAPI,
   getAiSessionsAPI,
@@ -15,7 +15,7 @@ import {
 import {
   getBookmarksAPI,
   toggleBookmarkAPI,
-} from "@/features/content/services/bookmark.service";
+} from "@/features/engagement/services/bookmark.service";
 import {
   getDocumentDecryptionKeyAPI,
   getDocumentWithPasswordAPI,
@@ -24,7 +24,7 @@ import {
   createHighlightAPI,
   deleteHighlightAPI,
   getHighlightsAPI,
-} from "@/features/content/services/highlight.service";
+} from "@/features/engagement/services/highlight.service";
 
 type Message = { id: string; role: "user" | "assistant"; content: string };
 async function decrypt(document: any, id: string) {

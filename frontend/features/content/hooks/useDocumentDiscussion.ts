@@ -5,7 +5,7 @@ import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import {
   createCommentAPI,
   getCommentsByItemAPI,
-} from "@/features/content/services/collaboration.service";
+} from "@/features/collaboration/services/collaboration.service";
 
 export type DiscussionItem = {
   _id: string;

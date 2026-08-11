@@ -2,7 +2,7 @@ import {
   API_URL,
   getToken,
   getAuthHeaders,
-} from "@/features/authentication/services/session.service";
+} from "@/shared/services/api-client";
 
 export const getAnnouncementsAPI = async () => {
   const token = getToken();

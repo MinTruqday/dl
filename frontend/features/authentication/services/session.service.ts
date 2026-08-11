@@ -1,21 +1,11 @@
-export const API_URL = process.env.NEXT_PUBLIC_API_URL;
-export const WS_URL =
-  process.env.NEXT_PUBLIC_WS_URL ||
-  (API_URL ? API_URL.replace("http", "ws") : "");
+import {
+  API_URL,
+  WS_URL,
+  getAuthHeaders,
+  getToken,
+} from "@/shared/services/api-client";
 
-export function getToken() {
-  if (typeof window !== "undefined") {
-    const t = localStorage.getItem("doclib_token");
-    if (t === "null" || t === "undefined") return null;
-    return t;
-  }
-  return null;
-}
-
-export function getAuthHeaders(): Record<string, string> {
-  const token = getToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+export { API_URL, WS_URL, getAuthHeaders, getToken };
 
 export function setToken(token: string) {
   if (typeof window !== "undefined") {

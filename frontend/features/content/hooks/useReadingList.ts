@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   getReadingListByIdAPI,
   removeDocumentFromListAPI,
-} from "@/features/content/services/library.service";
+} from "@/features/engagement/services/library.service";
 import type { DocumentSummary } from "@/shared/components/documents/DocumentResults";
 
 type ReadingListDetail = {

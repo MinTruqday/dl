@@ -2,7 +2,7 @@ import {
   API_URL,
   getToken,
   getAuthHeaders,
-} from "@/features/authentication/services/session.service";
+} from "@/shared/services/api-client";
 
 export async function getUsersAPI(limit: number = 50, offset: number = 0) {
   const token = getToken();
@@ -100,37 +100,4 @@ export async function searchUsersAPI(query: string, limit: number = 10) {
 
 export async function deleteUserAPI(userId: string) {
   return updateUserStatusAPI(userId, false);
-}
-
-export async function updateUserShadowbanAPI(userId: string, status: boolean) {
-  const res = await fetch(`${API_URL}/van-hanh/nguoi-dung/${userId}/cam-ngam`, {
-    method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ status }),
-  });
-  const data = await res.json();
-  if (!res.ok)
-    throw new Error(
-      data.detail || data.message || "Không thể cập nhật quyền hiển thị",
-    );
-  return data;
-}
-
-export async function updateUserKycAPI(
-  userId: string,
-  status: "PENDING" | "VERIFIED" | "REJECTED",
-) {
-  const res = await fetch(
-    `${API_URL}/van-hanh/nguoi-dung/${userId}/xac-minh/${status}`,
-    {
-      method: "POST",
-      headers: getAuthHeaders(),
-    },
-  );
-  const data = await res.json();
-  if (!res.ok)
-    throw new Error(
-      data.detail || data.message || "Không thể cập nhật xác minh danh tính",
-    );
-  return data;
 }

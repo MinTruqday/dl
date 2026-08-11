@@ -1,7 +1,7 @@
 import {
   API_URL,
   getAuthHeaders,
-} from "@/features/authentication/services/session.service";
+} from "@/shared/services/api-client";
 
 export async function createDepositLinkAPI(amount: number) {
   const res = await fetch(`${API_URL}/nap-tien`, {

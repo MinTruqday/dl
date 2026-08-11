@@ -8,7 +8,7 @@ import {
   getCollectorStatsAPI,
   stopCollectionAPI,
   triggerCollectionAPI,
-} from "@/features/management/services/collection.service";
+} from "@/features/collection/services/collection.service";
 
 export function useCollector() {
   const { user, isLoading: authLoading } = useAuth() as any;

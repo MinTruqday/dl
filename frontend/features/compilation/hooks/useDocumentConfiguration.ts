@@ -8,16 +8,16 @@ import {
   getCollaboratorsAPI,
   inviteCollaboratorAPI,
   removeCollaboratorAPI,
-} from "@/features/content/services/collaboration.service";
+} from "@/features/collaboration/services/collaboration.service";
 import {
   getFoldersAPI,
   getDocumentDraftAPI,
   getMyDocumentsAPI,
   transferDocumentAPI,
   updateDocumentAPI,
-  updateDRMSettingsAPI,
   updateTagsAPI,
 } from "@/features/content/services/document.service";
+import { updateDRMSettingsAPI } from "@/features/drm/services/drm.service";
 
 export function useDocumentConfiguration() {
   const { user } = useAuth();

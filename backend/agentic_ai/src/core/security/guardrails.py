@@ -58,12 +58,37 @@ class GuardrailsEngine:
 
     def _deterministic_assessment(self, text: str) -> Dict[str, Any]:
         sanitized, credential_found = self._redact_structural_secrets(text)
-        threat_category = "credential_leak" if credential_found else "none"
+        normalized = sanitized.casefold()
+        injection_markers = (
+            "ignore previous",
+            "ignore all previous",
+            "reveal secret credentials",
+            "system prompt",
+            "developer message",
+            "bỏ qua chỉ dẫn",
+            "bỏ qua hướng dẫn",
+            "tiết lộ prompt",
+            "hiển thị prompt hệ thống",
+        )
+        injection_found = any(marker in normalized for marker in injection_markers)
+        if credential_found:
+            threat_category = "credential_leak"
+        elif injection_found:
+            threat_category = "prompt_injection"
+        else:
+            threat_category = "none"
+        unsafe = credential_found or injection_found
         return {
-            "is_safe": not credential_found,
-            "risk_score": 1.0 if credential_found else 0.0,
+            "is_safe": not unsafe,
+            "risk_score": 1.0 if unsafe else 0.0,
             "threat_category": threat_category,
-            "reason": "Sensitive content redacted" if credential_found else "Passed structural security inspection",
+            "reason": (
+                "Sensitive content redacted"
+                if credential_found
+                else "Prompt injection pattern blocked"
+                if injection_found
+                else "Passed structural security inspection"
+            ),
             "sanitized_text": sanitized,
         }
 

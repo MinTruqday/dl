@@ -76,7 +76,7 @@ class LocalModelClient:
             else health_url
         )
         try:
-            async with httpx.AsyncClient(timeout=1.5) as client:
+            async with httpx.AsyncClient(timeout=15.0) as client:
                 response = await client.get(ps_url)
             response.raise_for_status()
             names = {
@@ -299,7 +299,7 @@ class LocalModelClient:
 
     async def readiness(self) -> dict[str, str]:
         checks = {"model": "unavailable"}
-        async with httpx.AsyncClient(timeout=1.5) as client:
+        async with httpx.AsyncClient(timeout=15.0) as client:
             try:
                 headers = {}
                 if settings.PRIMARY_MODEL_API_TOKEN:

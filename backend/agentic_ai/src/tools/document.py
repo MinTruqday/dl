@@ -109,8 +109,6 @@ async def create_document(
         try:
             parsed = json.loads(normalized_content)
         except (TypeError, json.JSONDecodeError):
-            # A user asking for a short document naturally supplies plain text.
-            # Convert it to the minimal valid EditorJS paragraph representation.
             parsed = {
                 "time": 0,
                 "blocks": [

@@ -1,7 +1,7 @@
 import {
   API_URL,
   getAuthHeaders,
-} from "@/features/authentication/services/session.service";
+} from "@/shared/services/api-client";
 
 export const getTagsCategoriesAPI = async () => {
   const res = await fetch(`${API_URL}/kham-pha/the-loai`);
@@ -9,19 +9,6 @@ export const getTagsCategoriesAPI = async () => {
   if (!res.ok)
     throw new Error(
       data.message || "Không thể tải cây cấu trúc thẻ và danh mục",
-    );
-  return data;
-};
-
-export const smartSearchAPI = async (query: string, limit: number = 10) => {
-  const res = await fetch(
-    `${API_URL}/tim-kiem/thong-minh?q=${encodeURIComponent(query)}&limit=${limit}`,
-    { headers: getAuthHeaders() },
-  );
-  const data = await res.json();
-  if (!res.ok)
-    throw new Error(
-      data.message || "Không thể thực hiện truy vấn tìm kiếm ngữ nghĩa",
     );
   return data;
 };

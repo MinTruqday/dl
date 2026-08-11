@@ -5,7 +5,7 @@ import { getDocumentsAPI } from "@/features/content/services/document.service";
 import {
   getPersonalizedRecommendationsAPI,
   getTagsCategoriesAPI,
-} from "@/features/content/services/discovery.service";
+} from "@/features/engagement/services/discovery.service";
 import type { DocumentSummary } from "@/shared/components/documents/DocumentResults";
 
 export function useExploreDocuments() {

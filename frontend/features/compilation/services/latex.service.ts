@@ -1,7 +1,7 @@
 import {
   API_URL,
   getAuthHeaders,
-} from "@/features/authentication/services/session.service";
+} from "@/shared/services/api-client";
 
 export async function cleanTempFilesAPI() {
   const res = await fetch(`${API_URL}/soan-thao/latex/don-dep`, {

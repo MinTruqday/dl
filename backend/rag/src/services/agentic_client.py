@@ -5,7 +5,9 @@ from src.core.infrastructure.configuration import settings
 
 class AgenticClient:
     async def inspect_rag_chunks(self, texts: list[str]) -> set[int]:
-        async with httpx.AsyncClient(timeout=300.0) as client:
+        async with httpx.AsyncClient(
+            timeout=min(settings.AGENTIC_REQUEST_TIMEOUT_SECONDS, 60.0)
+        ) as client:
             response = await client.post(
                 f"{settings.AGENTIC_AI_URL}/suy-luan/noi-bo/kiem-tra-doan-rag",
                 json={"texts": [text[:4000] for text in texts]},
@@ -20,7 +22,9 @@ class AgenticClient:
         }
 
     async def summarize_rag_document(self, text: str) -> str:
-        async with httpx.AsyncClient(timeout=180.0) as client:
+        async with httpx.AsyncClient(
+            timeout=min(settings.AGENTIC_REQUEST_TIMEOUT_SECONDS, 60.0)
+        ) as client:
             response = await client.post(
                 f"{settings.AGENTIC_AI_URL}/suy-luan/noi-bo/tom-tat-tai-lieu-rag",
                 json={"text": text[:15000]},
@@ -30,7 +34,7 @@ class AgenticClient:
         return str(response.json().get("summary") or "").strip()
 
     async def expand_retrieval_query(self, question: str) -> dict:
-        async with httpx.AsyncClient(timeout=90.0) as client:
+        async with httpx.AsyncClient(timeout=25.0) as client:
             response = await client.post(
                 f"{settings.AGENTIC_AI_URL}/suy-luan/noi-bo/mo-rong-truy-van",
                 json={"question": question},
@@ -54,7 +58,7 @@ class AgenticClient:
         question: str,
         document_ids: list[str],
     ) -> list[str]:
-        async with httpx.AsyncClient(timeout=90.0) as client:
+        async with httpx.AsyncClient(timeout=25.0) as client:
             response = await client.post(
                 f"{settings.AGENTIC_AI_URL}/suy-luan/noi-bo/phan-ra-lien-tai-lieu",
                 json={"question": question, "document_ids": document_ids},

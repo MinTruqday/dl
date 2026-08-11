@@ -6,17 +6,17 @@ import {
   createBookmarkFolderAPI,
   deleteBookmarkFolderAPI,
   getBookmarkFoldersAPI,
-} from "@/features/content/services/bookmark.service";
+} from "@/features/engagement/services/bookmark.service";
 import {
   createReadingListAPI,
   getMyReadingListsAPI,
-} from "@/features/content/services/library.service";
+} from "@/features/engagement/services/library.service";
 import {
   clearReadingHistoryAPI,
   deleteReadingHistoryItemAPI,
   getPinnedDocumentsAPI,
   getReadingHistoryAPI,
-} from "@/features/content/services/reading.service";
+} from "@/features/engagement/services/reading.service";
 import type { DocumentSummary } from "@/shared/components/documents/DocumentResults";
 
 export type ReadingHistoryItem = {

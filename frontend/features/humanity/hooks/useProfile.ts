@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/features/authentication/contexts/AuthContext";
-import { API_URL } from "@/features/authentication/services/session.service";
+import { API_URL } from "@/shared/services/api-client";
 import { uploadAssetAPI } from "@/features/cloud/services/upload.service";
-import { updateMyProfileAPI } from "@/features/management/services/account.service";
+import { updateMyProfileAPI } from "@/features/humanity/services/account.service";
 
 export function useProfile() {
   const { user, isLoading, logoutState, refreshUser } = useAuth() as any;

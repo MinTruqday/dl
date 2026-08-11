@@ -10,6 +10,35 @@ from src.repositories.pricing import PricingRepository
 class PricingService:
 
     @staticmethod
+    def _normalize_basic_features(features: list) -> list[str]:
+        """Keep plan copy model-agnostic because every tier uses LLM_MODEL."""
+        normalized = []
+        assistant_feature_added = False
+        for feature in features:
+            text = str(feature).strip()
+            if not text:
+                continue
+            if any(model_name in text.lower() for model_name in ("qwen", "gemma")):
+                if not assistant_feature_added:
+                    normalized.append("Trợ lý AI DocLib Metis")
+                    assistant_feature_added = True
+                continue
+            if text.lower() in {
+                "doclib metis",
+                "trợ lý ai doclib metis",
+                "trợ lý ai tiêu chuẩn",
+            }:
+                if not assistant_feature_added:
+                    normalized.append("Trợ lý AI DocLib Metis")
+                    assistant_feature_added = True
+                continue
+            if text not in normalized:
+                normalized.append(text)
+        if not assistant_feature_added:
+            normalized.insert(0, "Trợ lý AI DocLib Metis")
+        return normalized
+
+    @staticmethod
     @log_logic_execution
     async def set_document_pricing(
         document_id: str, data: dict, current_user
@@ -39,11 +68,11 @@ class PricingService:
             tiers = config.setdefault("tiers", {})
             basic = tiers.setdefault("BASIC", {})
             features = list(basic.get("features") or [])
-            if not any("qwen" in str(feature).lower() for feature in features):
-                features.insert(0, "DocLib Metis")
-                basic["features"] = features
+            normalized_features = PricingService._normalize_basic_features(features)
+            if normalized_features != features:
+                basic["features"] = normalized_features
                 await PricingRepository.update_pricing_config(
-                    {"$set": {"tiers.BASIC.features": features}},
+                    {"$set": {"tiers.BASIC.features": normalized_features}},
                     upsert=True,
                 )
             return config
@@ -54,7 +83,7 @@ class PricingService:
                     "name": "Cơ bản",
                     "monthly_price": 0.0,
                     "features": [
-                        "Trợ lý AI Qwen",
+                        "Trợ lý AI DocLib Metis",
                         "Truy cập đọc tài liệu tiêu chuẩn",
                         "Các công cụ sưu tầm cơ bản",
                     ],

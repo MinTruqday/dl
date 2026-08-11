@@ -1,7 +1,7 @@
 import {
   API_URL,
   getAuthHeaders,
-} from "@/features/authentication/services/session.service";
+} from "@/shared/services/api-client";
 
 export async function getMyProfileAPI() {
   const res = await fetch(`${API_URL}/ho-so/ca-nhan`, {

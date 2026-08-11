@@ -35,7 +35,7 @@ import {
   updateCollaborationModeAPI,
   getCollaborationSchedulesAPI,
   updateCollaborationSchedulesAPI,
-} from "@/features/content/services/collaboration.service";
+} from "@/features/collaboration/services/collaboration.service";
 
 export function useCollaboration() {
   const [documents, setDocuments] = useState<any[]>([]);

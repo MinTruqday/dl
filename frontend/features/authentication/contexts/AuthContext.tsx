@@ -67,9 +67,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clearAuth();
       }
     } catch {
-      // Hồ sơ được ghép từ nhiều dịch vụ. Nếu một dịch vụ tạm lỗi, vẫn giữ
-      // phiên hợp lệ bằng các claim tối thiểu trong JWT; API phía máy chủ vẫn
-      // là nơi quyết định quyền truy cập thật sự.
       const sessionUser = getUserFromToken(token);
       if (sessionUser) {
         setUser(sessionUser);

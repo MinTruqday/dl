@@ -1,8 +1,0 @@
-{
-  "name": "@doclib/api-client",
-  "version": "1.0.0",
-  "main": "index.js",
-  "scripts": {
-    "generate": "echo 'Run generator algorithm here'"
-  }
-}

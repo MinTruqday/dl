@@ -81,6 +81,12 @@ jobs:
       - name: Check types
         run: pnpm --dir frontend exec tsc --noEmit
 
+      - name: Lint frontend
+        run: pnpm --dir frontend lint
+
+      - name: Audit document command coverage
+        run: pnpm --dir frontend audit:document-commands
+
       - name: Build frontend
         run: pnpm --dir frontend build
 

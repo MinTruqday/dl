@@ -2,7 +2,7 @@ import { API, BlockTool } from "@editorjs/editorjs";
 import {
   API_URL,
   getAuthHeaders,
-} from "@/features/authentication/services/session.service";
+} from "@/shared/services/api-client";
 
 export default class DocLibAiText implements BlockTool {
   static readonly feature = {

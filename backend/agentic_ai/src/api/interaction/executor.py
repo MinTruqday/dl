@@ -259,7 +259,6 @@ async def chat_endpoint(
         elif req.document_ids or req.file_data or req.folder_data:
             route = "knowledge"
         elif req.mode == "chat" and not req.useWeb:
-            # Avoid an unnecessary model round-trip for ordinary conversation.
             route = "chat"
         else:
             route_data = await semantic_router.execute(req.query)

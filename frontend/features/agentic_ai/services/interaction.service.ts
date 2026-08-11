@@ -2,7 +2,7 @@ import {
   API_URL,
   getAuthHeaders,
   getToken,
-} from "@/features/authentication/services/session.service";
+} from "@/shared/services/api-client";
 
 export async function processTextAPI(
   text: string,
@@ -19,21 +19,6 @@ export async function processTextAPI(
   if (!res.ok)
     throw new Error(
       data.message || "Không thể xử lý văn bản",
-    );
-  return data;
-}
-
-export async function smartSearchAIAPI(query: string) {
-  const res = await fetch(
-    `${API_URL}/tim-kiem/thong-minh?q=${encodeURIComponent(query)}`,
-    {
-      headers: getAuthHeaders(),
-    },
-  );
-  const data = await res.json();
-  if (!res.ok)
-    throw new Error(
-      data.message || "Không thể tìm kiếm theo nội dung",
     );
   return data;
 }

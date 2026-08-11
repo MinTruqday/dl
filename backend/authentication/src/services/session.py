@@ -152,8 +152,6 @@ class SessionService:
         if not is_active:
             raise HTTPException(status_code=403, detail="Tài khoản hiện đang bị khóa hoặc ở trạng thái không hoạt động")
 
-        # Administrators receive every Premium capability. Their role, rather
-        # than the tier field, remains authoritative for unlimited usage.
         effective_ai_tier = "PREMIUM" if str(role).lower() == "admin" else ai_tier
 
         session_id = str(uuid.uuid4())

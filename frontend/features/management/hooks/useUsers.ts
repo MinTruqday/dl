@@ -5,11 +5,13 @@ import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import {
   createUserAPI,
   getUsersAPI,
-  updateUserKycAPI,
   updateUserRoleAPI,
-  updateUserShadowbanAPI,
   updateUserStatusAPI,
-} from "@/features/management/services/profile.service";
+} from "@/features/humanity/services/user.service";
+import {
+  updateUserKycAPI,
+  updateUserShadowbanAPI,
+} from "@/features/management/services/user-moderation.service";
 
 export type ManagedUser = {
   _id?: string;

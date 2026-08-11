@@ -6,7 +6,7 @@ import {
   createCommentAPI,
   deleteCommentAPI,
   getCommentsByItemAPI,
-} from "@/features/content/services/collaboration.service";
+} from "@/features/collaboration/services/collaboration.service";
 import { getMyDocumentsAPI } from "@/features/content/services/document.service";
 
 export type CommentRecord = {

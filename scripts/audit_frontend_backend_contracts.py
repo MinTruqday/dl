@@ -6,6 +6,14 @@ import sys
 
 HTTP_METHODS = {"delete", "get", "patch", "post", "put"}
 EXTERNAL_FETCH_ARGUMENTS = {"previewUrl", "upload_url"}
+IGNORED_DIRECTORY_NAMES = {
+    ".git",
+    ".next",
+    ".turbo",
+    "coverage",
+    "dist",
+    "node_modules",
+}
 FETCH_PATTERN = re.compile(r"fetch\s*\(\s*(`[^`]*`|[A-Za-z_$][\w$]*)", re.DOTALL)
 ASSIGNMENT_PATTERN = re.compile(
     r"(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*`\$\{API_URL\}([^`]*)`"
@@ -56,6 +64,8 @@ def load_frontend_calls(frontend_dir: pathlib.Path):
     total_fetches = 0
     for source in frontend_dir.rglob("*"):
         if source.suffix not in {".ts", ".tsx"}:
+            continue
+        if any(part in IGNORED_DIRECTORY_NAMES for part in source.parts):
             continue
         text = source.read_text(encoding="utf-8")
         assignments = [

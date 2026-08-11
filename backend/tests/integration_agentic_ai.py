@@ -13,6 +13,7 @@ from src.tools.http_client import check_system_access
 
 
 SECRET_KEY = os.environ["SECRET_KEY"]
+HTTP_TIMEOUT = float(os.getenv("INTEGRATION_HTTP_TIMEOUT_SECONDS", "900"))
 
 
 class FakeEmbedder:
@@ -47,7 +48,7 @@ def call(method: str, path: str, body=None, internal: bool = False, bearer=None)
         method=method,
     )
     try:
-        with urllib.request.urlopen(request, timeout=30) as response:
+        with urllib.request.urlopen(request, timeout=HTTP_TIMEOUT) as response:
             raw = response.read()
             return response.status, json.loads(raw) if raw else None
     except urllib.error.HTTPError as error:

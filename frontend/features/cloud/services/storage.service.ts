@@ -1,5 +1,5 @@
-import { getToken as getAuthToken } from "@/features/authentication/services/session.service";
-import { API_URL } from "@/features/authentication/services/session.service";
+import { getToken as getAuthToken } from "@/shared/services/api-client";
+import { API_URL } from "@/shared/services/api-client";
 
 export interface StorageItem {
   _id: string;

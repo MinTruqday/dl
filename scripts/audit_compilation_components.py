@@ -32,7 +32,7 @@ def main():
     missing = [command_id for command_id in ids if not (COMPONENTS / f"{command_id}.ts").is_file()]
     if missing:
         issues.append(f"missing_command_files:{len(missing)}")
-    if "DocumentCommandPalette" not in (ROOT / "frontend/app/(main)/soan-thao/EditorWorkspace.tsx").read_text(encoding="utf-8"):
+    if "DocumentCommandPalette" not in (COMPONENTS / "EditorWorkspace.tsx").read_text(encoding="utf-8"):
         issues.append("command_palette_unreachable")
     if "documentCommandState" not in editor_source:
         issues.append("command_state_not_persisted")

@@ -12,7 +12,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import redis.asyncio as redis
 
 
-BASE_URL = os.getenv("CLOUD_TEST_URL", "http://127.0.0.1:8000")
+BASE_URL = os.getenv("CLOUD_TEST_URL", "http://traefik:8000")
 OWNER_ID = f"cloud-owner-{uuid.uuid4()}"
 SHARED_ID = f"cloud-shared-{uuid.uuid4()}"
 OWNER_SESSION = str(uuid.uuid4())

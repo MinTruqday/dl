@@ -5,12 +5,12 @@ import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import {
   WS_URL,
   getToken,
-} from "@/features/authentication/services/session.service";
+} from "@/shared/services/api-client";
 import {
   getChatAttachmentBlobUrlAPI,
   uploadChatAttachmentAPI,
 } from "@/features/cloud/services/upload.service";
-import { searchUsersAPI } from "@/features/management/services/profile.service";
+import { searchUsersAPI } from "@/features/humanity/services/user.service";
 import {
   blockUserAPI,
   addReactionAPI,
