@@ -5,10 +5,12 @@ import type EditorJS from "@editorjs/editorjs";
 import catalog from "./document-command-catalog.generated.json";
 import {
   executeDocumentCommand,
+  isVerifiedDocumentCommand,
   type DocumentCommand,
 } from "./document-command-engine";
 import SegmentedTabs from "@/shared/components/navigation/SegmentedTabs";
 import { Button } from "@/shared/components/ui/Button";
+import { useToast } from "@/shared/contexts/ToastContext";
 import {
   Modal,
   ModalContent,
@@ -18,23 +20,60 @@ import {
 } from "@/shared/components/ui/Modal";
 
 const commandLabels: Record<string, string> = {
+  DocLibAccessibilityChecker: "Kiểm tra trợ năng",
+  DocLibAlignCenter: "Căn giữa",
+  DocLibAlignJustify: "Căn đều",
+  DocLibAlignLeft: "Căn trái",
+  DocLibAlignRight: "Căn phải",
   DocLibClearFormatting: "Xóa định dạng",
   DocLibAllCaps: "Viết hoa toàn bộ",
+  DocLibBold: "In đậm",
+  DocLibItalic: "In nghiêng",
+  DocLibWordUnderline: "Gạch chân",
+  DocLibTextHighlightColorPicker: "Tô sáng",
   DocLibFormatPainter: "Sao chép định dạng",
   DocLibBlankPage: "Chèn trang trắng",
+  DocLibActiveXCheckBox: "Chèn ô chọn",
+  DocLibActiveXComboBox: "Chèn danh sách chọn",
+  DocLibActiveXCommandButton: "Chèn nút lệnh",
+  DocLibActiveXListBox: "Chèn hộp danh sách",
+  DocLibActiveXTextBox: "Chèn ô văn bản",
+  DocLibActiveXToggleButton: "Chèn nút bật tắt",
+  DocLib3DModels: "Chèn mô hình ba chiều",
+  DocLib3DRotation: "Xoay mô hình ba chiều",
+  DocLibAlignObjects: "Căn đối tượng",
+  DocLibAutoFit: "Tự động điều chỉnh bảng",
+  DocLibAutoSaveSwitch: "Tự động lưu",
+  DocLibAutoScroll: "Tự động cuộn",
+  DocLibAllMarkup: "Hiện toàn bộ đánh dấu",
+  DocLibBalloons: "Hiện chú thích bên cạnh",
+  DocLibAutoCorrectCapsLockOff: "Tự sửa khi bật Caps Lock",
+  DocLibAutoCorrectInitialCaps: "Tự sửa chữ cái đầu",
+  DocLibAutoCorrectSentenceCaps: "Tự viết hoa đầu câu",
+  DocLibAutoCorrectSmartQuotes: "Tự đổi dấu ngoặc kép",
+  DocLibAutoFormatAsYouType: "Tự định dạng khi nhập",
+  DocLibAltText: "Văn bản thay thế",
+  DocLibArtisticEffects: "Chèn hình có hiệu ứng nghệ thuật",
+  DocLibBevel: "Chèn hình nổi",
   DocLibColumnBreak: "Ngắt cột",
   DocLibColumnsOne: "Một cột",
   DocLibColumnsTwo: "Hai cột",
   DocLibColumnsThree: "Ba cột",
   DocLibContinuousSectionBreak: "Ngắt phần liên tục",
   DocLibLineNumbersContinuous: "Đánh số dòng liên tục",
+  DocLibLineSpacing: "Giãn dòng",
+  DocLibOrientation: "Hướng giấy",
+  DocLibPaperSize: "Khổ giấy",
   DocLibCustomWatermark: "Tạo hình mờ",
+  DocLibDontHyphenate: "Không ngắt từ",
+  DocLibKeepLinesTogether: "Giữ các dòng cùng nhau",
+  DocLibParagraphSpacingSet: "Khoảng cách đoạn",
+  DocLibWidowOrphanControl: "Kiểm soát dòng góa và mồ côi",
   DocLibConvertTableToText: "Chuyển bảng thành văn bản",
   DocLibConvertTextToTable: "Chuyển văn bản thành bảng",
   DocLibInsertAbove: "Chèn hàng phía trên",
   DocLibInsertBelow: "Chèn hàng phía dưới",
   DocLibGridlines: "Hiện đường lưới",
-  DocLibAltText: "Văn bản thay thế",
   DocLibAutoCheckForErrors: "Kiểm tra lỗi tự động",
   DocLibDictation: "Nhập liệu bằng giọng nói",
   DocLibAutoCorrect: "Tự động sửa",
@@ -44,9 +83,14 @@ const commandLabels: Record<string, string> = {
   DocLibFocusMode: "Chế độ tập trung",
   DocLibReadAloud: "Đọc thành tiếng",
   DocLibZoom: "Thu phóng",
+  DocLibWordCount: "Đếm từ",
 };
 const commands = (catalog as DocumentCommand[])
-  .filter((command) => commandLabels[command.id] && command.implementation === "direct")
+  .filter(
+    (command) =>
+      commandLabels[command.id] &&
+      isVerifiedDocumentCommand(command),
+  )
   .map((command) => ({ ...command, title: commandLabels[command.id] }));
 const categories = [
   ["all", "Tất cả"],
@@ -76,7 +120,7 @@ export default function DocumentCommandPalette({
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
   const [running, setRunning] = useState("");
-  const [notice, setNotice] = useState("");
+  const { showToast } = useToast();
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     return commands.filter(
@@ -87,17 +131,19 @@ export default function DocumentCommandPalette({
   }, [category, query]);
   const run = async (command: DocumentCommand) => {
     const editor = editorRef.current;
-    if (!editor) return setNotice("Trình soạn thảo chưa sẵn sàng");
+    if (!editor) return showToast("Trình soạn thảo chưa sẵn sàng", "error");
     if (command.requiresSelection && !window.getSelection()?.toString().trim())
-      return setNotice("Chọn nội dung trước khi thực hiện");
+      return showToast("Chọn nội dung trước khi thực hiện", "info");
     setRunning(command.id);
-    setNotice("");
     try {
       const result = await executeDocumentCommand(editor, command);
       onSave(JSON.stringify(result.data));
-      setNotice(result.effect);
+      showToast(result.effect, "success");
     } catch (reason) {
-      setNotice(reason instanceof Error ? reason.message : "Không thể thực hiện chức năng");
+      showToast(
+        reason instanceof Error ? reason.message : "Không thể thực hiện chức năng",
+        "error",
+      );
     } finally {
       setRunning("");
     }
@@ -125,7 +171,6 @@ export default function DocumentCommandPalette({
               </button>
             ))}
           </div>
-          {notice && <p role="status" className="text-[13px] text-ink">{notice}</p>}
         </div>
       </ModalContent>
       <ModalFooter><Button variant="secondary" onClick={close}>Đóng</Button></ModalFooter>

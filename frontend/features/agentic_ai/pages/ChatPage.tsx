@@ -355,8 +355,8 @@ export default function ChatPage() {
                 : "Cuộc trò chuyện mới"}
             </h1>
             <p className="mt-1 flex flex-wrap gap-x-2 text-[11px] leading-4 text-ink-muted">
-              <span>{formatQuota("Ngày", daily)}</span>
-              <span>{formatQuota("Tuần", weekly)}</span>
+              <span>{formatQuota("Hạn mức ngày", daily)}</span>
+              <span>{formatQuota("Hạn mức tuần", weekly)}</span>
             </p>
           </div>
           <div className="flex shrink-0 gap-1">
@@ -521,13 +521,14 @@ export default function ChatPage() {
                 <div className="relative">
                 <Button
                   type="button"
-                  size="icon"
+                  size="sm"
                   variant="ghost"
                   aria-label="Mở menu đính kèm"
                   aria-expanded={attachmentMenuOpen}
                   onClick={() => setAttachmentMenuOpen((value) => !value)}
                 >
                   <Paperclip size={17} />
+                  <span>Đính kèm</span>
                 </Button>
                   {attachmentMenuOpen && (
                     <div className="absolute bottom-12 left-0 z-30 w-56 rounded-panel border border-border bg-surface p-1.5 shadow-xl">
@@ -566,6 +567,7 @@ export default function ChatPage() {
                             </button>
                           )}
                           {[
+                            { value: "work" as ChatMode, label: "Công việc" },
                             { value: "plan" as ChatMode, label: "Kế hoạch" },
                             { value: "goal" as ChatMode, label: "Mục tiêu" },
                             { value: "learn" as ChatMode, label: "Học tập" },
@@ -599,23 +601,9 @@ export default function ChatPage() {
                     {recording ? <MicOff size={17} /> : <Mic size={17} />}
                   </Button>
                 )}
-                <div className="flex gap-1 rounded-control bg-surface-quiet p-1">
-                  {modes.filter((item) => item.value === "chat" || item.value === "work").map((item) => {
-                    const locked = item.value === "work" && !advancedModesEnabled;
-                    return (
-                    <button
-                      key={item.value}
-                      type="button"
-                      onClick={() => !locked && setMode(item.value)}
-                      disabled={locked}
-                      title={locked ? `${item.detail}. Cần gói Pro` : item.detail}
-                      className={`shrink-0 rounded-control px-2.5 py-1 text-[12px] font-medium disabled:cursor-not-allowed disabled:opacity-45 ${mode === item.value ? "bg-surface text-ink shadow-sm" : "text-ink-muted"}`}
-                    >
-                      {item.label}
-                    </button>
-                    );
-                  })}
-                </div>
+                <span className="rounded-control bg-brand-soft px-2.5 py-1 text-[12px] font-medium text-brand">
+                  {modes.find((item) => item.value === mode)?.label || "Trò chuyện"}
+                </span>
                 {advancedModesEnabled && mode === "chat" && (
                   <button
                     type="button"

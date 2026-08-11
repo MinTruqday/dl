@@ -5,6 +5,7 @@ from loguru import logger
 from src.schemas.composition import CompileRequest
 from src.engines.editorjs import EditorjsEngine
 from src.engines.editorjs_capabilities import (
+    capability_with_execution,
     capabilities_by_id,
     capability_page,
 )
@@ -40,7 +41,7 @@ async def get_editorjs_capability(
             status_code=404,
             detail="Capability không tồn tại",
         )
-    return feature
+    return capability_with_execution(feature)
 
 
 @router.post("/bien-dich", dependencies=[Depends(RateLimiting(10, 60))])

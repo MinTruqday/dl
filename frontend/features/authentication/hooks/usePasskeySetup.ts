@@ -28,7 +28,7 @@ export function usePasskeySetup(email: string, onSuccess: () => void) {
           authenticatorSelection: begin.authenticatorSelection,
         },
       });
-      if (!result) throw new Error("Không nhận được thông tin khóa truy cập");
+      if (!result) throw new Error("Không nhận được thông tin passkey");
       const credential = result as PublicKeyCredential;
       const response = credential.response as AuthenticatorAttestationResponse;
       await passkeyRegisterFinishAPI(email, {
@@ -45,7 +45,7 @@ export function usePasskeySetup(email: string, onSuccess: () => void) {
       setError(
         reason instanceof Error
           ? reason.message
-          : "Không thể thiết lập khóa truy cập",
+          : "Không thể thiết lập passkey",
       );
     } finally {
       setLoading(false);

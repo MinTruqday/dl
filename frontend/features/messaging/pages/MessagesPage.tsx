@@ -116,8 +116,9 @@ export default function MessagesPage() {
       >
         <div className="flex min-h-16 items-center justify-between border-b border-border px-4">
           <h1 className="text-[18px] font-semibold tracking-[-0.02em] text-ink">Tin nhắn</h1>
-          <Button size="icon" aria-label="Cuộc trò chuyện mới" onClick={() => setNewOpen(true)}>
+          <Button size="sm" aria-label="Tin nhắn mới" onClick={() => setNewOpen(true)}>
             <Plus size={17} />
+            Tin nhắn mới
           </Button>
         </div>
         <div className="border-b border-border px-3 py-3">

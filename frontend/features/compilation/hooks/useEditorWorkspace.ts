@@ -212,7 +212,9 @@ export function useEditorWorkspace() {
         const result = await exportProtectedDocumentAPI(documentId);
         const extension = result.contentDisposition?.includes(".pdf")
           ? "pdf"
-          : "doclib";
+          : selectedDocument.content_format === "doclibx"
+            ? "doclibx"
+            : "doclib";
         download(result.blob, `${basename}.${extension}`);
       } else {
         const blob =

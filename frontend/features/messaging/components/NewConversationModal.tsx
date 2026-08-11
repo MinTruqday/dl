@@ -39,7 +39,7 @@ export default function NewConversationModal({
   return (
     <Modal isOpen={open} onClose={close}>
       <ModalHeader>
-        <ModalTitle>Cuộc trò chuyện mới</ModalTitle>
+        <ModalTitle>Tin nhắn mới</ModalTitle>
       </ModalHeader>
       <ModalContent>
         <div className="flex gap-2">

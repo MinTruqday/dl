@@ -23,7 +23,7 @@ export default class DocLibAiText implements BlockTool {
 
   static get toolbox() {
     return {
-      title: "DocLib AI Text",
+      title: "Trợ lý viết bằng AI",
       icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="38f70a61c87e820c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,13 14,16 17,11 15,16 19,10 12,18"/></svg>',
     };
   }
@@ -89,7 +89,7 @@ export default class DocLibAiText implements BlockTool {
     header.classList.add("doclib-ai-header");
     header.innerHTML = `
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-doclib-icon="38f70a61c87e820c"><rect x="7" y="7" width="10" height="10" rx="3"/><polyline points="9,13 14,16 17,11 15,16 19,10 12,18"/></svg>
-          DocLib AI Assistant
+          Trợ lý viết DocLib
       `;
     container.appendChild(header);
 
@@ -99,17 +99,17 @@ export default class DocLibAiText implements BlockTool {
 
       const input = document.createElement("input");
       input.classList.add("doclib-ai-input");
-      input.placeholder = "DocLib Input";
+      input.placeholder = "Mô tả nội dung cần tạo";
       input.value = this.data.prompt;
 
       const btn = document.createElement("button");
       btn.classList.add("doclib-ai-btn");
-      btn.innerText = "Generate Content";
+      btn.innerText = "Tạo nội dung";
 
       if (this.data.status === "generating") {
         input.disabled = true;
         btn.disabled = true;
-        btn.innerText = "Generating";
+        btn.innerText = "Đang tạo";
       }
 
       const submit = () => {
@@ -120,30 +120,52 @@ export default class DocLibAiText implements BlockTool {
         this.buildUI();
 
         const apiUrl = `${API_URL}/suy-luan/tao-noi-dung`;
+        const controller = new AbortController();
+        const timeout = window.setTimeout(() => controller.abort(), 185_000);
         fetch(apiUrl, {
           method: "POST",
           headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+          signal: controller.signal,
           body: JSON.stringify({
             prompt: this.data.prompt,
-            max_tokens: 500,
+            max_tokens: 160,
             temperature: 0.3,
           }),
         })
-          .then((res) => res.json())
+          .then(async (res) => {
+            const payload = await res.json().catch(() => ({}));
+            if (!res.ok) {
+              throw new Error(
+                payload.detail?.message ||
+                  payload.detail ||
+                  payload.message ||
+                  "Dịch vụ AI từ chối yêu cầu",
+              );
+            }
+            return payload;
+          })
           .then((res) => {
-            this.data.response =
-              res.data?.result ||
-              res.result ||
-              res.message ||
-              "No response generated.";
+            const response = res.data?.result || res.result;
+            if (typeof response !== "string" || !response.trim())
+              throw new Error("Dịch vụ AI không trả về nội dung hợp lệ");
+            this.data.response = response;
             this.data.status = "done";
             this.buildUI();
           })
           .catch((err) => {
-            this.data.response = "Error connecting to AI: " + err.message;
-            this.data.status = "done";
+            this.data.response = "";
+            this.data.status = "idle";
+            this.api.notifier.show({
+              message:
+                (err instanceof DOMException && err.name === "AbortError"
+                  ? "Yêu cầu quá thời gian xử lý"
+                  : "Không thể tạo nội dung: " +
+                    (err instanceof Error ? err.message : "Lỗi không xác định")),
+              style: "error",
+            });
             this.buildUI();
-          });
+          })
+          .finally(() => window.clearTimeout(timeout));
       };
 
       btn.addEventListener("click", submit);
@@ -162,7 +184,7 @@ export default class DocLibAiText implements BlockTool {
 
     if (this.data.status === "generating") {
       responseBox.classList.add("doclib-ai-generating");
-      responseBox.innerText = "AI is generating content";
+      responseBox.innerText = "AI đang tạo nội dung";
       responseBox.contentEditable = "false";
     } else if (this.data.status === "done") {
       responseBox.innerText = this.data.response;

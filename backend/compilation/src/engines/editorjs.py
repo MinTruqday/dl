@@ -14,6 +14,7 @@ from uuid6 import uuid7
 from src.core.infrastructure.configuration import settings
 from src.engines.editorjs_capabilities import (
     capabilities_by_tool_key,
+    validate_document_command_state,
     validate_command_block,
 )
 
@@ -219,7 +220,9 @@ class EditorjsEngine:
                 s(d.get("file", {}).get("url", d.get("url", "")))
             )
             cap = san(s(d.get("caption", "")))
-            cap_attribute = EditorjsEngine._attribute_text(d.get("caption", ""))
+            cap_attribute = EditorjsEngine._attribute_text(
+                d.get("alt", d.get("caption", ""))
+            )
             link = EditorjsEngine._safe_link_url(d.get("link", ""))
             img = (
                 f'<img src="{url}" alt="{cap_attribute}" style="max-width:100%;display:block;margin:0 auto"/>'
@@ -290,13 +293,14 @@ class EditorjsEngine:
         if t == "table":
             rows = d.get("content", [])
             has_heading = d.get("withHeadings", False)
+            border = "1px solid #ccc" if d.get("gridlines", True) else "none"
             if not rows:
                 return ""
             html_rows = []
             for i, row in enumerate(rows):
                 is_head = i == 0 and has_heading
                 cells = "".join(
-                    f'<{"th" if is_head else "td"} style="border:1px solid #ccc;padding:5px 8px">{san(s(cell))}</{"th" if is_head else "td"}>'
+                    f'<{"th" if is_head else "td"} style="border:{border};padding:5px 8px">{san(s(cell))}</{"th" if is_head else "td"}>'
                     for cell in row
                 )
                 html_rows.append(f"<tr>{cells}</tr>")
@@ -559,7 +563,7 @@ class EditorjsEngine:
         return ""
 
     @staticmethod
-    def _convert_blocks_to_html(blocks: list) -> str:
+    def _convert_blocks_to_html(blocks: list, command_state=None) -> str:
         CSS = (
             "@page { margin: 2.5cm 2cm; }"
             "body { font-family: 'DejaVu Sans', Arial, sans-serif; font-size: 12pt; line-height: 1.7; color: #222; }"
@@ -581,11 +585,60 @@ class EditorjsEngine:
             ".DocLibDoubleStrikethrough { text-decoration-line: line-through; text-decoration-style: double; }"
             ".DocLibHiddenText { opacity: 0.35; text-decoration: underline dashed; }"
             ".DocLibSmallCaps { font-variant: small-caps; }"
+            ".DocLibHighlightColor { background-color: #fef08a; }"
             ".doclib-text-effects { text-shadow: 1px 1px 2px rgba(15, 23, 42, 0.35); }"
         )
-        parts = [
-            f'<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"/><style>{CSS}</style></head><body>'
+        commands = (command_state or {}).get("commands", {})
+        enabled = [
+            command for command in commands.values() if command.get("enabled")
         ]
+        latest_by_effect = {}
+        for command in enabled:
+            effect = command.get("effect")
+            previous = latest_by_effect.get(effect)
+            if previous is None or command["appliedAt"] > previous["appliedAt"]:
+                latest_by_effect[effect] = command
+        document_css = ""
+        columns = latest_by_effect.get("columns")
+        if columns:
+            document_css += f'body {{ column-count: {columns["parameters"]["count"]}; column-gap: 2em; }}'
+        zoom = latest_by_effect.get("zoom")
+        if zoom:
+            document_css += f'body {{ zoom: {zoom["parameters"]["percent"] / 100:.2f}; }}'
+        line_spacing = latest_by_effect.get("line_spacing")
+        if line_spacing:
+            document_css += f'body {{ line-height: {line_spacing["parameters"]["value"]:.2f}; }}'
+        widow_orphan = latest_by_effect.get("widow_orphan_control")
+        if widow_orphan:
+            protected_lines = widow_orphan["parameters"]["lines"]
+            document_css += f'body {{ widows: {protected_lines}; orphans: {protected_lines}; }}'
+        if latest_by_effect.get("keep_lines_together"):
+            document_css += 'body > * { break-inside: avoid; page-break-inside: avoid; }'
+        hyphenation = latest_by_effect.get("hyphenation")
+        if hyphenation:
+            document_css += f'body {{ hyphens: {hyphenation["parameters"]["value"]}; }}'
+        paragraph_spacing = latest_by_effect.get("paragraph_spacing")
+        if paragraph_spacing:
+            before = paragraph_spacing["parameters"]["before"]
+            after = paragraph_spacing["parameters"]["after"]
+            document_css += f'p {{ margin-top: {before}pt; margin-bottom: {after}pt; }}'
+        paper_size = latest_by_effect.get("paper_size")
+        orientation = latest_by_effect.get("orientation")
+        if paper_size or orientation:
+            size_value = paper_size["parameters"]["value"] if paper_size else "A4"
+            orientation_value = orientation["parameters"]["value"] if orientation else "portrait"
+            document_css += f'@page {{ size: {size_value} {orientation_value}; }}'
+        parts = [
+            f'<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"/><style>{CSS}{document_css}</style></head><body>'
+        ]
+        watermark = latest_by_effect.get("watermark")
+        if watermark:
+            watermark_text = html.escape(watermark["parameters"]["text"])
+            parts.append(
+                '<div aria-hidden="true" style="position:fixed;top:45%;left:0;right:0;'
+                'z-index:-1;text-align:center;transform:rotate(-30deg);font-size:64px;'
+                f'font-weight:700;color:rgba(100,116,139,.14)">{watermark_text}</div>'
+            )
         for block in blocks:
             rendered = EditorjsEngine._render_block(block)
             if rendered:
@@ -595,6 +648,11 @@ class EditorjsEngine:
 
     @staticmethod
     def _parse_content(content: str) -> list:
+        blocks, _ = EditorjsEngine._parse_document(content)
+        return blocks
+
+    @staticmethod
+    def _parse_document(content: str):
         if len(content.encode("utf-8")) > settings.MAX_COMPILE_INPUT_BYTES:
             raise ValueError("Kích thước nội dung biên dịch không hợp lệ")
         try:
@@ -612,14 +670,15 @@ class EditorjsEngine:
             ):
                 raise ValueError("Khối EditorJS không hợp lệ")
             validate_command_block(block)
-        return blocks
+        command_state = validate_document_command_state(parsed_content)
+        return blocks, command_state
 
     @staticmethod
     async def compile_to_pdf(content: str) -> bytes:
         from src.engines.latex import compile_semaphore, run_process
 
-        blocks = EditorjsEngine._parse_content(content)
-        html_content = EditorjsEngine._convert_blocks_to_html(blocks)
+        blocks, command_state = EditorjsEngine._parse_document(content)
+        html_content = EditorjsEngine._convert_blocks_to_html(blocks, command_state)
         async with compile_semaphore:
             with tempfile.TemporaryDirectory(prefix="doclib_editorjs_") as temp_dir:
                 html_path = os.path.join(temp_dir, "document.html")
@@ -648,8 +707,13 @@ class EditorjsEngine:
 
         if target_format not in {"docx", "html"}:
             raise ValueError("Định dạng xuất không được hỗ trợ")
-        blocks = EditorjsEngine._parse_content(content)
-        html_content = EditorjsEngine._convert_blocks_to_html(blocks)
+        blocks, command_state = EditorjsEngine._parse_document(content)
+        html_content = EditorjsEngine._convert_blocks_to_html(blocks, command_state)
+        if target_format == "html":
+            encoded = html_content.encode("utf-8")
+            if len(encoded) > settings.MAX_COMPILE_OUTPUT_BYTES:
+                raise ValueError("Kích thước tệp kết quả không hợp lệ")
+            return encoded
         async with compile_semaphore:
             with tempfile.TemporaryDirectory(prefix="doclib_editorjs_export_") as temp_dir:
                 html_path = os.path.join(temp_dir, "document.html")

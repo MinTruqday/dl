@@ -20,9 +20,6 @@ export function Button({
   icon,
   ...props
 }: ButtonProps) {
-  const hasLabel = React.Children.toArray(children).some(
-    (child) => typeof child === "string" || typeof child === "number",
-  );
   const vClass = {
     primary:
       "border-brand bg-brand text-white hover:border-brand-hover hover:bg-brand-hover",
@@ -43,10 +40,10 @@ export function Button({
 
   return (
     <button
-      className={`inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-control font-semibold transition duration-150 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50 ${hasLabel ? "[&>svg]:hidden" : ""} ${vClass[variant]} ${sClass[size]} ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-control font-semibold transition duration-150 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50 ${vClass[variant]} ${sClass[size]} ${className}`}
       {...props}
     >
-      {icon && !children && <span>{icon}</span>}
+      {icon && <span className="shrink-0">{icon}</span>}
       {children}
     </button>
   );

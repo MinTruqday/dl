@@ -42,7 +42,7 @@ export function useLogin() {
   const passkeyLogin = async (email: string) => {
     if (submitting) return;
     if (!email.trim()) {
-      setError("Nhập email trước khi dùng khóa truy cập");
+      setError("Nhập email trước khi dùng passkey");
       return;
     }
     setSubmitting(true);
@@ -63,7 +63,7 @@ export function useLogin() {
           ),
         },
       });
-      if (!assertion) throw new Error("Không nhận được thông tin khóa truy cập");
+      if (!assertion) throw new Error("Không nhận được thông tin passkey");
       const credential = assertion as PublicKeyCredential;
       const response = credential.response as AuthenticatorAssertionResponse;
       const result = await passkeyLoginFinishAPI(email.trim(), {
@@ -84,7 +84,7 @@ export function useLogin() {
       setError(
         reason instanceof Error
           ? reason.message
-          : "Không thể đăng nhập bằng khóa truy cập",
+          : "Không thể đăng nhập bằng passkey",
       );
       setSubmitting(false);
     }

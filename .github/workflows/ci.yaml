@@ -32,9 +32,14 @@ jobs:
 
       - name: Audit compilation components
         run: python scripts/audit_compilation_components.py
+      - name: Audit EditorJS command contract
+        run: python scripts/audit_editorjs_command_contract.py
 
       - name: Audit fine-tuning notebook parity
         run: python scripts/audit_finetuning.py
+
+      - name: Audit architecture workflow documentation
+        run: python scripts/audit_workflow_docs.py
 
       - name: Audit microservice database boundaries
         run: python scripts/audit_service_boundaries.py

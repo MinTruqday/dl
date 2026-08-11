@@ -18,7 +18,7 @@ export default function PasskeySetup({
   return (
     <div>
       <p className="text-[14px] leading-relaxed text-ink-muted">
-        Dùng khóa bảo mật hoặc sinh trắc học để đăng nhập
+        Dùng passkey hoặc sinh trắc học để đăng nhập
       </p>
       {passkey.error && (
         <div className="mt-5">

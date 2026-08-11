@@ -15,6 +15,9 @@ frontend/public/images/*
 backend/logs/
 backend/.venv/
 *.md
+!agentic_ai_workflow_and_architecture_guide_3.md
+!drm_full_workflow_guide.md
+!compilation_workflow_and_architecture_guide.md
 .gitignore
 test_*.py
 !backend/agentic_ai/tests/test_regressions.py

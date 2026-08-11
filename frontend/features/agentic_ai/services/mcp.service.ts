@@ -26,6 +26,11 @@ const mcpErrors: Record<string, string> = {
   mcp_preset_unavailable: "Máy chủ MCP chưa vượt qua kiểm tra kết nối",
   mcp_connection_failed: "Không thể kết nối máy chủ MCP",
   mcp_connector_already_exists: "Máy chủ MCP này đã được kết nối",
+  mcp_remote_endpoint_not_allowed: "Địa chỉ máy chủ không được phép kết nối",
+  mcp_remote_dns_resolution_failed: "Không thể tìm thấy địa chỉ máy chủ",
+  mcp_remote_private_address_blocked: "Không thể kết nối địa chỉ mạng riêng",
+  mcp_remote_url_missing: "Chưa nhập địa chỉ máy chủ",
+  mcp_server_has_no_tools: "Máy chủ không cung cấp công cụ nào",
 };
 
 function errorMessage(data: any, fallback: string) {

@@ -3,17 +3,14 @@ import {
   getAuthHeaders,
 } from "@/shared/services/api-client";
 
-export async function compilePreviewAPI(
-  content: string,
-  isFragment: boolean = false,
-) {
+export async function compilePreviewAPI(content: string) {
   const res = await fetch(`${API_URL}/soan-thao/editorjs/bien-dich`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ content, is_fragment: isFragment }),
+    body: JSON.stringify({ content }),
   });
   if (!res.ok) {
-    let errMsg = "Không thể thực hiện tiến trình kết xuất LaTeX";
+    let errMsg = "Không thể tạo bản xem trước EditorJS";
     try {
       const data = await res.json();
       errMsg = data.detail?.error || data.detail || errMsg;

@@ -106,8 +106,8 @@ async def _chat_direct(
     max_tokens: int = 500,
     temperature: float = 0.3,
     model: str = settings.LLM_MODEL,
-    attempts: int = 3,
-    timeout_seconds: float = 60.0,
+    attempts: int = 1,
+    timeout_seconds: float = 180.0,
 ) -> str:
     return await run_chat_completion(
         client=client,

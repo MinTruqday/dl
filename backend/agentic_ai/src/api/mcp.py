@@ -53,10 +53,52 @@ async def connect_mcp_preset(
         {"owner_id": current_user.id, "preset_id": preset_id}
     )
     if existing:
+        refreshed = MCPService.preset_connector(preset_id)
+        refreshed["owner_id"] = current_user.id
+        try:
+            tools = await MCPService.probe_definition(refreshed)
+        except Exception:
+            await MCPRepository.update_connector(
+                {"_id": existing["_id"], "owner_id": current_user.id},
+                {
+                    "$set": {
+                        "is_connected": False,
+                        "last_error": "mcp_preset_unavailable",
+                    }
+                },
+            )
+            raise HTTPException(
+                status_code=503, detail={"code": "mcp_preset_unavailable"}
+            )
+        if not tools:
+            await MCPRepository.update_connector(
+                {"_id": existing["_id"], "owner_id": current_user.id},
+                {
+                    "$set": {
+                        "is_connected": False,
+                        "last_error": "mcp_preset_unavailable",
+                    }
+                },
+            )
+            raise HTTPException(
+                status_code=503, detail={"code": "mcp_preset_unavailable"}
+            )
+        await MCPRepository.update_connector(
+            {"_id": existing["_id"], "owner_id": current_user.id},
+            {
+                "$set": {
+                    **refreshed,
+                    "is_connected": True,
+                    "tool_names": [tool["name"] for tool in tools],
+                },
+                "$unset": {"last_error": ""},
+            },
+        )
         return {
             "status": "success",
             "id": str(existing["_id"]),
             "already_connected": True,
+            "tools": tools,
         }
     doc["owner_id"] = current_user.id
     try:
@@ -103,12 +145,26 @@ async def register_mcp_server(
     try:
         tools = await MCPService.list_tools(connector_id, current_user.id)
     except Exception as error:
-        await MCPRepository.update_connector(
-            {"_id": result.inserted_id},
-            {"$set": {"is_connected": False, "last_error": str(error)[:500]}},
+        await MCPRepository.delete_connector(
+            {"_id": result.inserted_id, "owner_id": current_user.id}
         )
+        code = str(error)
+        if code in {
+            "mcp_remote_endpoint_not_allowed",
+            "mcp_remote_dns_resolution_failed",
+            "mcp_remote_private_address_blocked",
+            "mcp_remote_url_missing",
+        }:
+            raise HTTPException(status_code=422, detail={"code": code})
         raise HTTPException(
             status_code=502, detail={"code": "mcp_connection_failed", "id": connector_id}
+        )
+    if not tools:
+        await MCPRepository.delete_connector(
+            {"_id": result.inserted_id, "owner_id": current_user.id}
+        )
+        raise HTTPException(
+            status_code=422, detail={"code": "mcp_server_has_no_tools"}
         )
     await MCPRepository.update_connector(
         {"_id": result.inserted_id},
@@ -134,6 +190,8 @@ async def probe_mcp_server(
     try:
         object_id = ObjectId(server_id)
         tools = await MCPService.list_tools(server_id, current_user.id)
+        if not tools:
+            raise ValueError("mcp_server_has_no_tools")
         await MCPRepository.update_connector(
             {"_id": object_id, "owner_id": current_user.id},
             {
@@ -142,6 +200,13 @@ async def probe_mcp_server(
             },
         )
         return {"status": "success", "tools": tools}
+    except ValueError as error:
+        if "object_id" in locals():
+            await MCPRepository.update_connector(
+                {"_id": object_id, "owner_id": current_user.id},
+                {"$set": {"is_connected": False, "last_error": str(error)[:500]}},
+            )
+        raise HTTPException(status_code=422, detail={"code": str(error)})
     except Exception as error:
         if "object_id" in locals():
             await MCPRepository.update_connector(

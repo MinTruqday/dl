@@ -20,7 +20,7 @@ export default function AuthFrame({
     <main className="flex min-h-[100dvh] flex-col bg-canvas px-4 py-6 sm:px-6">
       <div className="mx-auto flex w-full max-w-[1280px] items-center justify-between">
         <Link
-          href="/"
+          href="/kham-pha"
           className="text-[19px] font-semibold tracking-[-0.035em] text-ink"
         >
           DocLib

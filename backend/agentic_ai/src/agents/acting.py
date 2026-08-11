@@ -15,6 +15,7 @@ _MAX_ATTEMPTS = 3
 _REQUIRES_APPROVAL_TOOLS = frozenset(
     {
         "create_document",
+        "apply_editorjs_command",
         "delete_document",
         "edit_document_block",
         "edit_document_text",
@@ -31,6 +32,7 @@ _REQUIRES_APPROVAL_TOOLS = frozenset(
 _AUTO_SAFE_TOOLS = frozenset(
     {
         "create_document",
+        "apply_editorjs_command",
         "edit_document_block",
         "edit_document_text",
         "propose_document_edits",

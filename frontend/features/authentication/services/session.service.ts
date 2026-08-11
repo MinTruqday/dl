@@ -40,10 +40,11 @@ export function getUserFromToken(token = getToken()) {
           .join(""),
       ),
     );
-    if (!payload.sub || !payload.uid) return null;
+    const userId = payload.uid || payload.user_id || payload.id;
+    if (!payload.sub || !userId) return null;
     if (payload.exp && payload.exp * 1000 <= Date.now()) return null;
     return {
-      _id: payload.uid,
+      _id: userId,
       email: payload.sub,
       full_name: payload.full_name || payload.sub,
       slug: payload.slug || "",

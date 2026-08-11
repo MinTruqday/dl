@@ -7,6 +7,7 @@ from src.tools.editing import (
 from src.tools.billing import get_user_balance, get_transaction_history, get_revenue_report
 from src.tools.document import (
     search_editorjs_capabilities,
+    apply_editorjs_command,
     create_document,
     update_document_metadata,
     replace_document_content,
@@ -28,6 +29,7 @@ tools = [
     agent_summarize_long_document,
     execute_python,
     search_editorjs_capabilities,
+    apply_editorjs_command,
     create_document,
     update_document_metadata,
     replace_document_content,

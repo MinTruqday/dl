@@ -28,17 +28,17 @@ class MCPService:
             "reqwise-figma": {
                 "id": "reqwise-figma",
                 "name": "Reqwise Figma",
-                "description": "Đọc, chỉnh sửa và kiểm tra bố cục trên tệp Figma đang mở.",
+                "description": "Đọc chỉnh sửa và kiểm tra bố cục trên tệp Figma đang mở",
                 "server_type": "stdio",
                 "command": "/usr/local/bin/node",
                 "args": [f"{root}/reqwise/dist/server/index.js"],
                 "source_url": "https://github.com/hoangpm96/reqwise-figma-mcp",
-                "setup_note": "Cần mở plugin Reqwise Figma MCP trong Figma Desktop để thao tác trên tệp.",
+                "setup_note": "Cần mở Reqwise Figma MCP trong Figma Desktop để thao tác trên tệp",
             },
             "chrome-devtools": {
                 "id": "chrome-devtools",
                 "name": "Chrome DevTools",
-                "description": "Mở trang, tương tác, đọc lỗi bảng điều khiển và kiểm tra hiệu năng.",
+                "description": "Mở trang tương tác đọc lỗi và kiểm tra hiệu năng",
                 "server_type": "stdio",
                 "command": "/usr/local/bin/node",
                 "args": [
@@ -53,7 +53,7 @@ class MCPService:
                     "--no-performance-crux",
                 ],
                 "source_url": "https://developer.chrome.com/blog/chrome-devtools-mcp",
-                "setup_note": "Chạy trong một hồ sơ Chromium tạm, tách biệt với dữ liệu trình duyệt cá nhân.",
+                "setup_note": "Chạy trong hồ sơ Chromium tạm tách biệt với dữ liệu trình duyệt cá nhân",
             },
         }
 

@@ -10,6 +10,7 @@ COMPONENTS = ROOT / "frontend/features/compilation/components"
 EDITOR = COMPONENTS / "StandardEditor.tsx"
 CATALOG = COMPONENTS / "document-command-catalog.generated.json"
 ENGINE = COMPONENTS / "document-command-engine.ts"
+BACKEND_ENGINE = ROOT / "backend/compilation/src/engines/editorjs.py"
 
 
 def main():
@@ -36,10 +37,28 @@ def main():
         issues.append("command_palette_unreachable")
     if "documentCommandState" not in editor_source:
         issues.append("command_state_not_persisted")
+    if (
+        "root.dataset.documentMode" in engine_source
+        or "Đã cập nhật thiết lập" in engine_source
+    ):
+        issues.append("command_bridge_fabricates_success")
+    if "import(`./${command.id}`)" in engine_source:
+        issues.append("generated_command_bridge_still_executable")
+    if "Đã thực hiện ${command.title}" in engine_source:
+        issues.append("unverified_command_success_message_present")
+    if "isVerifiedDocumentCommand(command)" not in engine_source:
+        issues.append("unverified_command_execution_not_blocked")
+    if "if (verifiedPersistentCommands.has(command.id))" not in engine_source:
+        issues.append("transient_command_state_may_be_persisted")
     event_names = set(re.findall(r'CustomEvent\("(doclib-[^"]+)"', "\n".join(path.read_text(encoding="utf-8") for path in component_files)))
-    missing_events = sorted(event for event in event_names if f'"{event}"' not in engine_source)
-    if missing_events:
-        issues.append(f"unhandled_events:{','.join(missing_events)}")
+    backend_engine_source = BACKEND_ENGINE.read_text(encoding="utf-8")
+    html_branch = re.search(
+        r'async def export_to_format\(.*?if target_format == "html":.*?return encoded',
+        backend_engine_source,
+        re.DOTALL,
+    )
+    if html_branch is None:
+        issues.append("html_export_does_not_preserve_rendered_css")
     result = subprocess.run(
         ["node", "scripts/audit-document-components.mjs"],
         cwd=ROOT / "frontend",

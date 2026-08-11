@@ -536,6 +536,7 @@ def test_mutating_tools_require_approval():
     from src.agents.acting import _REQUIRES_APPROVAL_TOOLS
 
     expected = {
+        "apply_editorjs_command",
         "create_document",
         "delete_document",
         "edit_document_block",
@@ -547,6 +548,245 @@ def test_mutating_tools_require_approval():
         "update_document_metadata",
     }
     assert expected <= _REQUIRES_APPROVAL_TOOLS
+
+
+def test_apply_editorjs_command_persists_verified_contract():
+    import json
+    from unittest.mock import AsyncMock, patch
+    from src.tools.document import apply_editorjs_command
+
+    requests = []
+
+    class FakeResponse:
+        def __init__(self, status_code, payload):
+            self.status_code = status_code
+            self.payload = payload
+
+        def json(self):
+            return self.payload
+
+    async def fake_request(method, url, **kwargs):
+        requests.append((method, url, kwargs))
+        if "/capabilities/" in url:
+            return FakeResponse(
+                200,
+                {
+                    "id": "DocLibColumnsTwo",
+                    "mode": "ColumnsTwo",
+                    "toolKey": "columnsTwo",
+                    "executionStatus": "verified",
+                    "executionKind": "persistent_document_command",
+                    "effect": "columns",
+                    "defaultParameters": {"count": 2},
+                },
+            )
+        if method == "GET":
+            return FakeResponse(
+                200,
+                {
+                    "data": {
+                        "content_format": "doclib",
+                        "content": '{"time":1,"blocks":[],"version":"2.30.8"}',
+                    }
+                },
+            )
+        return FakeResponse(200, {"data": {"_id": "doc-1"}})
+
+    with (
+        patch("src.tools.document.make_api_request", side_effect=fake_request),
+        patch("src.tools.editing._broadcast_update", new=AsyncMock()) as broadcast,
+    ):
+        result = json.loads(
+            asyncio.run(
+                apply_editorjs_command.ainvoke(
+                    {
+                        "document_id": "doc-1",
+                        "feature_id": "DocLibColumnsTwo",
+                    },
+                    config={"configurable": {"token": "Bearer test"}},
+                )
+            )
+        )
+
+    assert result["status"] == "success"
+    saved = json.loads(requests[-1][2]["json"]["content"])
+    command = saved["documentCommandState"]["commands"]["DocLibColumnsTwo"]
+    assert command["mode"] == "ColumnsTwo"
+    assert command["parameters"] == {"count": 2}
+    broadcast.assert_awaited_once_with("doc-1", requests[-1][2]["json"]["content"])
+
+
+def test_apply_editorjs_command_rejects_unverified_catalog_entry():
+    import json
+    from unittest.mock import patch
+    from src.tools.document import apply_editorjs_command
+
+    requests = []
+
+    class FakeResponse:
+        status_code = 200
+
+        def json(self):
+            return {
+                "id": "DocLibActivateOffice",
+                "mode": "ActivateOffice",
+                "toolKey": "activateOffice",
+                "executionStatus": "unavailable",
+            }
+
+    async def fake_request(method, url, **kwargs):
+        requests.append((method, url, kwargs))
+        return FakeResponse()
+
+    with patch("src.tools.document.make_api_request", side_effect=fake_request):
+        result = json.loads(
+            asyncio.run(
+                apply_editorjs_command.ainvoke(
+                    {
+                        "document_id": "doc-1",
+                        "feature_id": "DocLibActivateOffice",
+                    },
+                    config={"configurable": {"token": "Bearer test"}},
+                )
+            )
+        )
+    assert result == {"status": "document_command_not_verified"}
+    assert len(requests) == 1
+
+
+def test_apply_editorjs_structure_command_converts_text_to_table():
+    import json
+    from unittest.mock import AsyncMock, patch
+    from src.tools.document import apply_editorjs_command
+
+    requests = []
+
+    class FakeResponse:
+        def __init__(self, status_code, payload):
+            self.status_code = status_code
+            self.payload = payload
+
+        def json(self):
+            return self.payload
+
+    async def fake_request(method, url, **kwargs):
+        requests.append((method, url, kwargs))
+        if "/capabilities/" in url:
+            return FakeResponse(
+                200,
+                {
+                    "id": "DocLibConvertTextToTable",
+                    "mode": "ConvertTextToTable",
+                    "toolKey": "convertTextToTable",
+                    "executionStatus": "verified",
+                    "executionKind": "document_structure_command",
+                    "effect": "text_to_table",
+                    "defaultParameters": {
+                        "block_index": -1,
+                        "column_separator": "\t",
+                    },
+                },
+            )
+        if method == "GET":
+            return FakeResponse(
+                200,
+                {
+                    "data": {
+                        "content_format": "doclib",
+                        "content": json.dumps(
+                            {
+                                "blocks": [
+                                    {
+                                        "id": "text-1",
+                                        "type": "paragraph",
+                                        "data": {"text": "A\tB<br>C\tD"},
+                                    }
+                                ]
+                            }
+                        ),
+                    }
+                },
+            )
+        return FakeResponse(200, {"data": {"_id": "doc-1"}})
+
+    with (
+        patch("src.tools.document.make_api_request", side_effect=fake_request),
+        patch("src.tools.editing._broadcast_update", new=AsyncMock()),
+    ):
+        result = json.loads(
+            asyncio.run(
+                apply_editorjs_command.ainvoke(
+                    {
+                        "document_id": "doc-1",
+                        "feature_id": "DocLibConvertTextToTable",
+                        "parameters_json": json.dumps({"block_index": 0}),
+                    },
+                    config={"configurable": {"token": "Bearer test"}},
+                )
+            )
+        )
+    assert result["status"] == "success"
+    assert result["execution_kind"] == "document_structure_command"
+    saved = json.loads(requests[-1][2]["json"]["content"])
+    assert saved["blocks"] == [
+        {
+            "id": "text-1",
+            "type": "table",
+            "data": {
+                "content": [["A", "B"], ["C", "D"]],
+                "withHeadings": False,
+            },
+        }
+    ]
+    assert "documentCommandState" not in saved
+
+
+def test_existing_mcp_preset_is_reprobed_and_refreshed():
+    from types import SimpleNamespace
+    from unittest.mock import AsyncMock, patch
+    from bson import ObjectId
+    from src.api.mcp import connect_mcp_preset
+
+    existing_id = ObjectId()
+    tools = [{"name": "list_pages", "description": "", "input_schema": {}}]
+    update = AsyncMock()
+    with (
+        patch(
+            "src.api.mcp.MCPRepository.find_connector",
+            new=AsyncMock(
+                return_value={
+                    "_id": existing_id,
+                    "owner_id": "admin-1",
+                    "preset_id": "chrome-devtools",
+                    "command": "/stale/node",
+                    "args": [],
+                }
+            ),
+        ),
+        patch(
+            "src.api.mcp.MCPService.probe_definition",
+            new=AsyncMock(return_value=tools),
+        ) as probe,
+        patch("src.api.mcp.MCPRepository.update_connector", new=update),
+    ):
+        result = asyncio.run(
+            connect_mcp_preset(
+                "chrome-devtools",
+                current_user=SimpleNamespace(
+                    id="admin-1",
+                    role=SimpleNamespace(value="admin"),
+                    ai_tier=SimpleNamespace(value="BASIC"),
+                ),
+            )
+        )
+    assert result["already_connected"] is True
+    assert result["tools"] == tools
+    probe.assert_awaited_once()
+    update.assert_awaited_once()
+    update_payload = update.await_args.args[1]["$set"]
+    assert update_payload["preset_id"] == "chrome-devtools"
+    assert update_payload["is_connected"] is True
+    assert update_payload["tool_names"] == ["list_pages"]
 
 
 def test_intervention_approval_is_owner_scoped_and_single_use():
@@ -1008,6 +1248,97 @@ def test_mcp_user_remote_connector_accepts_public_https_without_global_allowlist
                 {"server_type": "streamable_http", "url": "https://connector.example.com/mcp"}
             )
         )
+
+
+def test_mcp_user_connector_is_probed_before_it_is_kept():
+    from types import SimpleNamespace
+    from unittest.mock import AsyncMock, patch
+
+    from bson import ObjectId
+    from src.api.mcp import register_mcp_server
+    from src.schemas.mcp import RegisterServerRequest
+
+    connector_id = ObjectId()
+    tools = [{"name": "search", "description": "", "input_schema": {}}]
+    insert = AsyncMock(return_value=SimpleNamespace(inserted_id=connector_id))
+    update = AsyncMock()
+    with (
+        patch("src.api.mcp.MCPService.validate_connector", new=AsyncMock()),
+        patch("src.api.mcp.MCPRepository.insert_connector", new=insert),
+        patch("src.api.mcp.MCPService.list_tools", new=AsyncMock(return_value=tools)),
+        patch("src.api.mcp.MCPRepository.update_connector", new=update),
+    ):
+        result = asyncio.run(
+            register_mcp_server(
+                RegisterServerRequest(
+                    name="Máy chủ của tôi",
+                    description="Tìm kiếm tài liệu",
+                    server_type="streamable_http",
+                    url="https://connector.example.com/mcp",
+                ),
+                current_user=SimpleNamespace(
+                    id="user-1",
+                    role=SimpleNamespace(value="reader"),
+                    ai_tier=SimpleNamespace(value="PRO"),
+                ),
+            )
+        )
+    assert result["status"] == "success"
+    assert result["tools"] == tools
+    assert "preset_id" not in insert.await_args.args[0]
+    saved = update.await_args.args[1]["$set"]
+    assert saved["is_connected"] is True
+    assert saved["tool_names"] == ["search"]
+
+
+def test_mcp_failed_user_connector_is_removed_for_retry():
+    from types import SimpleNamespace
+    from unittest.mock import AsyncMock, patch
+
+    from bson import ObjectId
+    from fastapi import HTTPException
+    from src.api.mcp import register_mcp_server
+    from src.schemas.mcp import RegisterServerRequest
+
+    connector_id = ObjectId()
+    delete = AsyncMock()
+    with (
+        patch("src.api.mcp.MCPService.validate_connector", new=AsyncMock()),
+        patch(
+            "src.api.mcp.MCPRepository.insert_connector",
+            new=AsyncMock(return_value=SimpleNamespace(inserted_id=connector_id)),
+        ),
+        patch(
+            "src.api.mcp.MCPService.list_tools",
+            new=AsyncMock(side_effect=RuntimeError("unavailable")),
+        ),
+        patch("src.api.mcp.MCPRepository.delete_connector", new=delete),
+    ):
+        try:
+            asyncio.run(
+                register_mcp_server(
+                    RegisterServerRequest(
+                        name="Máy chủ lỗi",
+                        description="Kiểm thử kết nối lỗi",
+                        server_type="sse",
+                        url="https://connector.example.com/sse",
+                    ),
+                    current_user=SimpleNamespace(
+                        id="user-1",
+                        role=SimpleNamespace(value="reader"),
+                        ai_tier=SimpleNamespace(value="PREMIUM"),
+                    ),
+                )
+            )
+            assert False
+        except HTTPException as error:
+            assert error.status_code == 502
+            assert error.detail["code"] == "mcp_connection_failed"
+    delete.assert_awaited_once()
+    assert delete.await_args.args[0] == {
+        "_id": connector_id,
+        "owner_id": "user-1",
+    }
 
 
 def test_mcp_secret_is_encrypted_and_bound_to_owner():

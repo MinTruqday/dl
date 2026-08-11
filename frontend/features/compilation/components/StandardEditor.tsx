@@ -5,6 +5,7 @@ import type EditorJS from "@editorjs/editorjs";
 import type { OutputData } from "@editorjs/editorjs";
 import { sanitizeEditorData } from "./editorjs-sanitizer";
 import {
+  applyPersistentDocumentCommandState,
   attachDocumentCommandState,
   registerDocumentCommandState,
   type DocumentOutputData,
@@ -97,7 +98,6 @@ export default function StandardEditor({
         aiText,
         formDropdown,
         formCheckBox,
-        macroButton,
         labelConfig,
         citation,
       ] = await Promise.all([
@@ -130,7 +130,6 @@ export default function StandardEditor({
         import("./DocLibAiText").then((module) => module.default),
         import("./DocLibFormDropdown").then((module) => module.default),
         import("./DocLibFormCheckBox").then((module) => module.default),
-        import("./DocLibMacroButton").then((module) => module.default),
         import("./DocLibLabelConfig").then((module) => module.default),
         import("./DocLibCitation").then((module) => module.default),
       ]);
@@ -189,7 +188,6 @@ export default function StandardEditor({
           aiText,
           formDropdown,
           formCheckBox,
-          macroButton,
           labelConfig,
           citation,
           comment: { class: alert, inlineToolbar: true },
@@ -243,6 +241,16 @@ export default function StandardEditor({
           .documentCommandState;
       } catch {}
       registerDocumentCommandState(editor, commandState);
+      void editor.isReady
+        .then(() => applyPersistentDocumentCommandState(editor))
+        .catch((reason) =>
+          showToast?.(
+            reason instanceof Error
+              ? reason.message
+              : "Không thể áp dụng thiết lập tài liệu",
+            "error",
+          ),
+        );
       activeEditorRef.current = editor;
     };
 

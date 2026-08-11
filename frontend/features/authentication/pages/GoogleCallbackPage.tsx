@@ -13,7 +13,7 @@ function GoogleCallbackContent() {
 
   if (emailForPasskey)
     return (
-      <AuthFrame title="Thiết lập khóa truy cập">
+      <AuthFrame title="Thiết lập passkey">
         <PasskeySetup
           email={emailForPasskey}
           onClose={finish}

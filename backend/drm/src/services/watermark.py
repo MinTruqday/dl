@@ -15,6 +15,11 @@ else:
     REPORTLAB_AVAILABLE = True
 
 
+def protected_extension_for_format(content_format: str) -> str:
+    """Keep the protected container aligned with the document authoring format."""
+    return "doclibx" if str(content_format).strip().lower() == "doclibx" else "doclib"
+
+
 class WatermarkService:
 
     @staticmethod
@@ -142,7 +147,7 @@ class WatermarkService:
                     detail="Tài liệu yêu cầu quyền truy cập đặc biệt hoặc xác nhận mua hàng",
                 )
 
-        content_format = document.get("content_format", "doclib")
+        content_format = str(document.get("content_format") or "doclib").strip().lower()
         raw_content = str(document.get("content", ""))
 
         if content_format == "doclibx":
@@ -287,7 +292,11 @@ class WatermarkService:
             raise HTTPException(status_code=500, detail="Đã xảy ra lỗi hệ thống trong quá trình mã hóa tài liệu")
 
         logger.info(f"Exported E-DRM document, file_id={file_id}")
-        return final_doclib_data, "doclib", "application/octet-stream"
+        return (
+            final_doclib_data,
+            protected_extension_for_format(content_format),
+            "application/octet-stream",
+        )
 
     @staticmethod
     @log_logic_execution
