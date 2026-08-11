@@ -11,14 +11,3 @@ async def document_exists(document_id: str, user_id: str = "", is_admin: bool = 
             headers={"X-Internal-Token": settings.SECRET_KEY},
         )
     return response.status_code == 200
-
-
-async def allowed_contacts(user_id: str, requested: list[str]) -> set[str]:
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        response = await client.post(
-            f"{settings.MESSAGING_URL}/tin-nhan/noi-bo/lien-he-duoc-phep",
-            json={"user_id": user_id, "requested": requested},
-            headers={"X-Internal-Token": settings.SECRET_KEY},
-        )
-    response.raise_for_status()
-    return set(response.json().get("allowed", []))

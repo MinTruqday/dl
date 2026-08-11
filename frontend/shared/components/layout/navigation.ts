@@ -7,7 +7,6 @@ import {
   FileText,
   FolderOpen,
   Library,
-  MessageSquare,
   MessageCircle,
   PenLine,
   Search,
@@ -43,13 +42,6 @@ export const navigationGroups: NavigationGroup[] = [
         label: "Thư viện",
         href: "/thu-vien",
         icon: Library,
-        requireAuth: true,
-      },
-      {
-        id: "messages",
-        label: "Tin nhắn",
-        href: "/tin-nhan",
-        icon: MessageSquare,
         requireAuth: true,
       },
       {

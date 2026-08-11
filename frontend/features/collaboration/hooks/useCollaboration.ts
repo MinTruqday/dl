@@ -14,7 +14,6 @@ import {
   getCollaborationInvitesAPI,
   getCollaboratorsAPI,
   getLockStatusAPI,
-  getMemosAPI,
   getMyIncomingAccessRequestsAPI,
   getOnlineCollaboratorsAPI,
   getShareLinkConfigAPI,
@@ -27,7 +26,6 @@ import {
   removeCollaboratorAPI,
   respondToInviteAPI,
   reviewAccessRequestAPI,
-  sendMemoAPI,
   updateCollabAccessAPI,
   updateCollabTaskAPI,
   updateCollaboratorRoleAPI,
@@ -45,7 +43,6 @@ export function useCollaboration() {
   const [online, setOnline] = useState<any[]>([]);
   const [tasks, setTasks] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
-  const [memos, setMemos] = useState<any[]>([]);
   const [snapshots, setSnapshots] = useState<any[]>([]);
   const [lock, setLock] = useState<any>({ is_locked: false });
   const [inviteCode, setInviteCode] = useState("");
@@ -85,7 +82,6 @@ export function useCollaboration() {
         getOnlineCollaboratorsAPI(documentId),
         getCollabTasksAPI(documentId),
         getCollaborationActivitiesAPI(documentId),
-        getMemosAPI(documentId),
         getSnapshotsAPI(documentId),
         getLockStatusAPI(documentId),
         getShareLinkConfigAPI(documentId).catch(() => ({ data: null })),
@@ -98,14 +94,13 @@ export function useCollaboration() {
       setOnline(value(results[1]));
       setTasks(value(results[2]));
       setActivities(value(results[3]));
-      setMemos(value(results[4]));
-      setSnapshots(value(results[5]));
-      setLock(value(results[6]));
-      setShareConfig(results[7]?.data ?? null);
-      setAccessRequests(value(results[8]));
-      setCollabMode(results[9]?.data?.collaboration_mode ?? "OPEN");
-      setEffectiveStatus(results[9]?.data?.effective_status ?? null);
-      setCollabSchedules(results[10]?.data?.schedules ?? []);
+      setSnapshots(value(results[4]));
+      setLock(value(results[5]));
+      setShareConfig(results[6]?.data ?? null);
+      setAccessRequests(value(results[7]));
+      setCollabMode(results[8]?.data?.collaboration_mode ?? "OPEN");
+      setEffectiveStatus(results[8]?.data?.effective_status ?? null);
+      setCollabSchedules(results[9]?.data?.schedules ?? []);
     } catch (cause) {
 
       setError(
@@ -182,12 +177,6 @@ export function useCollaboration() {
     );
   const toggleTask = (id: string, done: boolean) =>
     run("task", () => updateCollabTaskAPI(id, done), "Đã cập nhật công việc");
-  const sendMemo = (message: string) =>
-    run(
-      "memo",
-      () => sendMemoAPI(documentId, message.trim()),
-      "Đã gửi ghi chú",
-    );
   const snapshot = (name: string) =>
     run(
       "snapshot",
@@ -288,7 +277,6 @@ export function useCollaboration() {
     online,
     tasks,
     activities,
-    memos,
     snapshots,
     lock,
     inviteCode,
@@ -309,7 +297,6 @@ export function useCollaboration() {
     updateRole,
     createTask,
     toggleTask,
-    sendMemo,
     snapshot,
     toggleLock,
     updateAccess,

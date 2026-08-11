@@ -8,7 +8,6 @@ from typing import Any, Optional
 from uuid import UUID
 
 import aiofiles
-import httpx
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import RedirectResponse, Response
 
@@ -85,17 +84,6 @@ async def can_download(file_path: str, user_id: str, role: Role) -> bool:
     }
     if await db.storage_items.find_one(query, {"_id": 1}):
         return True
-    try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            response = await client.post(
-                f"{settings.MESSAGING_URL}/tin-nhan/noi-bo/quyen-truy-cap-tep",
-                json={"file_path": file_path, "user_id": user_id},
-                headers={"X-Internal-Token": settings.SECRET_KEY},
-            )
-        if response.status_code == 200 and response.json().get("allowed") is True:
-            return True
-    except (httpx.HTTPError, ValueError):
-        pass
     return role == Role.ADMIN and file_path.startswith("system/")
 
 
@@ -120,28 +108,6 @@ async def upload_asset(file: UploadFile = File(...), current_user: CurrentUser =
     item = await register_item(result, current_user.id)
     return APIResponse(data={**result, "item_id": item.id}, message="Truyền tải tệp tin hoàn tất", status=201)
 
-
-@router.post("/tin-nhan", response_model=APIResponse[Any], status_code=201)
-async def upload_chat_attachment(file: UploadFile = File(...), current_user: CurrentUser = Depends(require_role([Role.READER, Role.AUTHOR, Role.ADMIN])), db=Depends(get_db)) -> Any:
-    size = await file_size(file)
-    is_temporary = current_user.ai_tier.upper() == Tier.BASIC.value and current_user.role != Role.ADMIN
-    if not is_temporary:
-        await enforce_quota(current_user.id, size)
-    result = await UploadService.upload_document(file, owner_id=current_user.id, is_message_attachment=True, is_temporary=is_temporary)
-    if is_temporary:
-        expires_at = datetime.now(timezone.utc) + timedelta(days=14)
-        await database.mongodb[settings.CLOUD_DB_NAME].temp_chat_files.insert_one({
-            "owner_id": current_user.id,
-            "url": result["url"],
-            "original_filename": result["filename"],
-            "created_at": datetime.now(timezone.utc),
-            "expires_at": expires_at,
-        })
-        result["expires_in_days"] = 14
-    else:
-        item = await register_item(result, current_user.id)
-        result["item_id"] = item.id
-    return APIResponse(data=result, message="Truyền tải tệp đính kèm hoàn tất", status=201)
 
 
 @router.post("/presigned-url", response_model=APIResponse[Any])

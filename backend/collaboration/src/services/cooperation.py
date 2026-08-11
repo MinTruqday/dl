@@ -5,7 +5,6 @@ from src.services.member import MemberService
 from src.services.link import LinkService
 from src.services.access_request import AccessRequestService
 from src.services.task import TaskService
-from src.services.memo import MemoService
 from src.services.lock import LockService
 from src.services.snapshot import SnapshotService
 from src.core.logic_logger import log_logic_execution
@@ -53,9 +52,6 @@ class CooperationService:
     update_task = TaskService.update_task
     add_task_comment = TaskService.add_task_comment
     get_task_comments = TaskService.get_task_comments
-
-    send_memo = MemoService.send_memo
-    get_memos = MemoService.get_memos
 
     acquire_lock = LockService.acquire_lock
     release_lock = LockService.release_lock

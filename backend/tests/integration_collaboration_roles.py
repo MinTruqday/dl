@@ -131,20 +131,6 @@ async def run():
             assert snapshot_data["content"] == "Content updated by legit editor"
             assert snapshot_data["created_by"] == ""
 
-            memo = await client.post(
-                f"/cong-tac/tai-lieu/{doc_id}/tin-nhan",
-                json={"message": "integration memo"},
-                headers=editor_headers,
-            )
-            assert memo.status_code == 200, memo.text
-            assert memo.json()["data"]["memo"]["sender_id"] == editor_id
-            memos = await client.get(
-                f"/cong-tac/tai-lieu/{doc_id}/tin-nhan",
-                headers=owner_headers,
-            )
-            assert memos.status_code == 200, memos.text
-            assert memos.json()["data"][0]["sender_id"] == editor_id
-
             task = await client.post(
                 f"/cong-tac/tai-lieu/{doc_id}/cong-viec",
                 json={"task_desc": "integration task", "assigned_to": editor_id},

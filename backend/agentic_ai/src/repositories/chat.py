@@ -5,7 +5,7 @@ from src.core.infrastructure.configuration import settings
 class ChatRepository:
     """
     <module_purpose>
-    <purpose>Handles direct MongoDB interactions for AI messaging data.</purpose>
+    <purpose>Handles direct MongoDB interactions for AI conversation data.</purpose>
     <metis_behavior>Isolates database logic from business rules. Fails safely on disconnected databases.</metis_behavior>
     </module_purpose>
     """

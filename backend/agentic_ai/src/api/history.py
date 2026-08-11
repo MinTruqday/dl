@@ -72,7 +72,7 @@ async def delete_session(session_id: str, current_user: CurrentUser = Depends(ge
     return await HistoryService.delete_session(session_id, str(current_user.id))
 
 
-@router.post("/{session_id}/tin-nhan", response_model=Dict[str, Any])
+@router.post("/{session_id}/luot", response_model=Dict[str, Any])
 async def add_message(
     session_id: str, data: MessageCreate, current_user: CurrentUser = Depends(get_current_user)
 ):

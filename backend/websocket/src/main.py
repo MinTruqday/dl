@@ -6,25 +6,21 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 
 from src.api.composition import router as composition_socket
-from src.api.message import router as message_socket
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import close_db, database, init_db
 from src.core.metrics import PrometheusMiddleware, metrics_endpoint
 from src.sockets.composition import composition_socket_manager
-from src.sockets.message import message_manager
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
     await composition_socket_manager.start()
-    await message_manager.start()
     logger.info("WebSocket service initialized")
     try:
         yield
     finally:
         await composition_socket_manager.close()
-        await message_manager.close()
         await close_db()
 
 
@@ -48,7 +44,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(composition_socket)
-app.include_router(message_socket)
 
 
 @app.get("/health", include_in_schema=False)
@@ -70,9 +65,6 @@ async def readiness_check():
         checks["redis"] = "unavailable"
     checks["composition_listener"] = (
         "ready" if composition_socket_manager.is_running() else "unavailable"
-    )
-    checks["message_listener"] = (
-        "ready" if message_manager.is_running() else "unavailable"
     )
     ready = all(value == "ready" for value in checks.values())
     return JSONResponse(

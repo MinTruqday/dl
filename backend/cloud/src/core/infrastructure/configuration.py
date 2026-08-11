@@ -35,7 +35,6 @@ class Settings(BaseModel):
     PLATFORM_SYSTEM_ID: str = os.environ["PLATFORM_SYSTEM_ID"]
     MANAGEMENT_URL: str = get_service_url("MANAGEMENT")
     USAGE_URL: str = get_service_url("USAGE")
-    MESSAGING_URL: str = get_service_url("MESSAGING")
     HUMANITY_URL: str = get_service_url("HUMANITY")
     CLOUD_DB_NAME: str = os.environ["CLOUD_DB_NAME"]
 

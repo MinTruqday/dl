@@ -16,9 +16,6 @@ class TransferOwnershipRequest(BaseModel):
 class UpdateCollaboratorRoleRequest(BaseModel):
     role: str
 
-class CollabMemoCreateRequest(BaseModel):
-    message: str
-
 class UpdateCollabAccessRequest(BaseModel):
     access_level: str
 

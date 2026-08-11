@@ -13,7 +13,7 @@ type AppShellProps = {
   requireAuth: boolean;
 };
 
-const fullWidthRoutes = ["/tai-lieu/xem-truoc", "/tin-nhan", "/tro-chuyen"];
+const fullWidthRoutes = ["/tai-lieu/xem-truoc", "/tro-chuyen"];
 
 function NavigationList({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();

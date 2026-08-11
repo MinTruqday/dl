@@ -20,6 +20,5 @@ class Settings(BaseModel):
     MAX_WS_FRAMES_PER_SECOND: int = int(os.environ["MAX_WS_FRAMES_PER_SECOND"])
     MAX_WS_CONNECTIONS_PER_USER: int = int(os.environ["MAX_WS_CONNECTIONS_PER_USER"])
     CONTENT_URL: str = get_service_url("CONTENT")
-    MESSAGING_URL: str = get_service_url("MESSAGING")
 
 settings = Settings()

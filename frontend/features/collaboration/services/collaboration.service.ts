@@ -137,34 +137,6 @@ export async function updateCollaboratorRoleAPI(
   return data;
 }
 
-export async function sendMemoAPI(documentId: string, message: string) {
-  const res = await fetch(
-    `${API_URL}/cong-tac/tai-lieu/${documentId}/tin-nhan`,
-    {
-      method: "POST",
-      headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-      body: JSON.stringify({ message }),
-    },
-  );
-  const data = await res.json();
-  if (!res.ok)
-    throw new Error(data.message || "Không thể tạo bản tin giao tiếp");
-  return data;
-}
-
-export async function getMemosAPI(documentId: string) {
-  const res = await fetch(
-    `${API_URL}/cong-tac/tai-lieu/${documentId}/tin-nhan`,
-    {
-      headers: getAuthHeaders(),
-    },
-  );
-  const data = await res.json();
-  if (!res.ok)
-    throw new Error(data.message || "Không thể tải luồng dữ liệu giao tiếp");
-  return data;
-}
-
 export async function updateCollabAccessAPI(
   documentId: string,
   accessLevel: string,
@@ -654,4 +626,3 @@ export async function getCollaborationSchedulesAPI(documentId: string) {
     throw new Error(data.message || "Không thể tải lịch hẹn giờ cộng tác");
   return data;
 }
-

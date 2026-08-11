@@ -643,31 +643,6 @@ services:
     networks:
       - doclib_network
 
-  messaging:
-    healthcheck: *app-healthcheck
-    build:
-      context: ./backend
-      dockerfile: ./messaging/Dockerfile
-    container_name: doclib_messaging
-    restart: always
-    ports:
-      - 8009:8000
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.messaging.rule=PathPrefix(`/tin-nhan`)
-      - traefik.http.services.messaging.loadbalancer.server.port=8000
-    environment:
-      <<: *service-environment
-      MESSAGING_DB_NAME: ${MESSAGING_DB_NAME:?MESSAGING_DB_NAME is required}
-    depends_on:
-      - mongodb
-      - redis
-    volumes:
-      - ./backend/messaging/src:/app/src
-      - ./backend/logs/messaging:/app/logs
-    networks:
-      - doclib_network
-
   content:
     healthcheck: *app-healthcheck
     build:

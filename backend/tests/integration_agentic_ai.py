@@ -246,7 +246,7 @@ async def main():
     session_id = session["_id"]
     status, message = call(
         "POST",
-        f"/lich-su/{session_id}/tin-nhan",
+        f"/lich-su/{session_id}/luot",
         {"content": "Bounded integration message", "attachments": [{"name": "evidence.txt"}]},
         bearer=reader_token,
     )

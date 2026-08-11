@@ -26,7 +26,6 @@ async def setup_indexes():
         await db["collaboration_invites"].create_index([("document_id", 1), ("invitee_id", 1)], background=True)
         await db["collaboration_activities"].create_index([("document_id", 1), ("timestamp", -1)], background=True)
         await db["collaboration_status"].create_index([("document_id", 1), ("user_id", 1)], unique=True, background=True)
-        await db["collaboration_memos"].create_index([("document_id", 1), ("timestamp", 1)], background=True)
         await db["collaboration_drafts"].create_index([("document_id", 1), ("timestamp", -1)], background=True)
         await db["collaboration_locks"].create_index([("document_id", 1)], unique=True, background=True)
         await db["collaboration_invite_codes"].create_index([("invite_code", 1)], unique=True, background=True)

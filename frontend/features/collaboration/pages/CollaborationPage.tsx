@@ -16,7 +16,7 @@ type Tab =
   | "share_link"
   | "requests"
   | "tasks"
-  | "notes"
+  | "snapshots"
   | "invites";
 
 function roleLabel(role?: string) {
@@ -41,7 +41,6 @@ export default function CollaborationPage() {
   const [role, setRole] = useState("editor");
   const [task, setTask] = useState("");
   const [assignee, setAssignee] = useState("");
-  const [memo, setMemo] = useState("");
   const [snapshot, setSnapshot] = useState("");
   const [joinCode, setJoinCode] = useState("");
   const [sharePassword, setSharePassword] = useState("");
@@ -164,7 +163,7 @@ export default function CollaborationPage() {
                 { id: "share_link", label: "Liên kết chia sẻ" },
                 { id: "requests", label: "Yêu cầu xin quyền" },
                 { id: "tasks", label: "Công việc" },
-                { id: "notes", label: "Ghi chú" },
+                { id: "snapshots", label: "Bản chụp phiên" },
                 { id: "invites", label: "Lời mời" },
               ]}
             />
@@ -753,42 +752,8 @@ export default function CollaborationPage() {
               </aside>
             </div>
           )}
-          {tab === "notes" && (
+          {tab === "snapshots" && (
             <div className="grid gap-6 lg:grid-cols-2">
-              <section>
-                <h2 className="mb-3 text-[16px] font-semibold text-ink">
-                  Ghi chú nhóm
-                </h2>
-                <ul className="overflow-hidden rounded-panel border border-border bg-surface">
-                  {state.memos.length ? state.memos.map((item, index) => (
-                    <li
-                      key={item._id ?? item.id ?? index}
-                      className="border-b border-border p-4 last:border-b-0"
-                    >
-                      <p className="text-[14px] leading-relaxed text-ink">
-                        {item.message}
-                      </p>
-                      <p className="mt-2 text-[12px] text-ink-muted">
-                        {item.created_at
-                          ? new Date(item.created_at).toLocaleString("vi-VN")
-                          : ""}
-                      </p>
-                    </li>
-                  )) : <li><InlineState title="Chưa có ghi chú" /></li>}
-                </ul>
-                <textarea
-                  value={memo}
-                  onChange={(event) => setMemo(event.target.value)}
-                  className="apple-input mt-3 min-h-24 w-full"
-                />
-                <Button
-                  className="mt-2"
-                  disabled={!memo.trim()}
-                  onClick={() => state.sendMemo(memo)}
-                >
-                  Gửi ghi chú
-                </Button>
-              </section>
               <section>
                 <h2 className="mb-3 text-[16px] font-semibold text-ink">
                   Bản chụp phiên

@@ -82,10 +82,6 @@ class CooperationRepository:
         return await mongo.find_one("collaboration_locks", *args, **kwargs)
 
     @classmethod
-    async def insert_memo(cls, *args, **kwargs):
-        return await mongo.insert_one("collaboration_memos", *args, **kwargs)
-
-    @classmethod
     async def update_status(cls, *args, **kwargs):
         return await mongo.update_one("collaboration_status", *args, **kwargs)
 
