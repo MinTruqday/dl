@@ -83,5 +83,8 @@ class Settings(BaseModel):
     FINETUNE_MODELS_DIR: str = os.environ["FINETUNE_MODELS_DIR"]
     FINETUNE_ADAPTERS_DIR: str = os.environ["FINETUNE_ADAPTERS_DIR"]
     FINETUNE_GGUF_DIR: str = os.environ["FINETUNE_GGUF_DIR"]
+    FINETUNE_BASE_MODEL: str = os.getenv(
+        "FINETUNE_BASE_MODEL", "google/gemma-4-E4B-it"
+    )
 
 settings = Settings()

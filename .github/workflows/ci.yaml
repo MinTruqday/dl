@@ -33,6 +33,9 @@ jobs:
       - name: Audit compilation components
         run: python scripts/audit_compilation_components.py
 
+      - name: Audit fine-tuning notebook parity
+        run: python scripts/audit_finetuning.py
+
       - name: Audit microservice database boundaries
         run: python scripts/audit_service_boundaries.py
 

@@ -11,9 +11,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends git ca-certific
     && npm install --prefix /opt/doclib-mcp/chrome --omit=dev chrome-devtools-mcp@1.6.0 \
     && rm -rf /var/lib/apt/lists/* /root/.npm
 
-FROM python:3.11-slim
+FROM ghcr.io/astral-sh/uv:latest AS uv-build
+
+FROM debian:bookworm-slim AS llama-build
 
 ARG LLAMA_CPP_REV=305ba519ab61cdff8044922cba2347826a04453f
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential ca-certificates cmake git \
+    && git clone https://github.com/ggml-org/llama.cpp.git /opt/llama.cpp \
+    && git -C /opt/llama.cpp checkout --detach ${LLAMA_CPP_REV} \
+    && cmake -S /opt/llama.cpp -B /opt/llama.cpp/build \
+        -DGGML_NATIVE=OFF -DLLAMA_CURL=OFF -DGGML_OPENMP=OFF \
+    && cmake --build /opt/llama.cpp/build --config Release \
+        --target llama-quantize -j6 \
+    && rm -rf /var/lib/apt/lists/*
+
+FROM python:3.11-slim
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -25,6 +39,7 @@ ENV PYTHONUNBUFFERED=1 \
 WORKDIR /app
 
 COPY agentic_ai/requirements.txt .
+COPY --from=uv-build /uv /usr/local/bin/uv
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
@@ -34,7 +49,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     git \
     ripgrep \
-    && pip install -q --no-cache-dir -r requirements.txt \
+    && mkdir -p /home/appuser/.cache/tmp \
+    && uv pip install --system --no-cache \
+        --index-strategy unsafe-best-match -r requirements.txt \
     && apt-get purge -y build-essential \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
@@ -47,11 +64,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends chromium \
 
 RUN groupadd --gid 10001 appuser && useradd --uid 10001 --gid appuser -m -s /bin/bash appuser
 RUN mkdir -p /home/appuser/.cache/huggingface /home/appuser/.cache/torchinductor /home/appuser/.cache/torch /home/appuser/.cache/tmp /var/lib/doclib/finetune/models /var/lib/doclib/finetune/adapters /var/lib/doclib/finetune/gguf && chown -R appuser:appuser /home/appuser/.cache /var/lib/doclib
-RUN git init /app/llama.cpp && \
-    git -C /app/llama.cpp remote add origin https://github.com/ggerganov/llama.cpp.git && \
-    git -C /app/llama.cpp fetch --depth 1 origin ${LLAMA_CPP_REV} && \
-    git -C /app/llama.cpp checkout --detach FETCH_HEAD && \
-    chown -R appuser:appuser /app/llama.cpp
+COPY --from=llama-build --chown=appuser:appuser /opt/llama.cpp /app/llama.cpp
+ENV LD_LIBRARY_PATH=/app/llama.cpp/build/bin
 
 COPY --chown=appuser:appuser agentic_ai/src/ ./src/
 

@@ -291,6 +291,7 @@ services:
       FINETUNE_MODELS_DIR: /var/lib/doclib/finetune/models
       FINETUNE_ADAPTERS_DIR: /var/lib/doclib/finetune/adapters
       FINETUNE_GGUF_DIR: /var/lib/doclib/finetune/gguf
+      FINETUNE_BASE_MODEL: ${FINETUNE_BASE_MODEL:-google/gemma-4-E4B-it}
     depends_on:
       mongodb:
         condition: service_started

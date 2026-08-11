@@ -155,6 +155,7 @@ def run_mlx_training(job_id: str, config: dict, update_callback):
     }
 
 def run_hf_training(job_id: str, config: dict, update_callback):
+    import gc
     import torch
     from peft import LoraConfig, PeftModel, get_peft_model
     from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
@@ -167,8 +168,54 @@ def run_hf_training(job_id: str, config: dict, update_callback):
     batch_size = config.get("batch_size", 4)
     learning_rate = config.get("learning_rate", 2e-4)
     lora_rank = config.get("lora_rank", 16)
+    lora_alpha = config.get("lora_alpha", lora_rank * 2)
     samples = config.get("training_data", [])
     revision = resolve_model_revision(base_model_name, hf_token)
+
+    from src.training.gemma4_finetuning import (
+        doclib_samples_to_dataset,
+        is_gemma4_model,
+        merge_gemma4_adapter,
+        train_gemma4_qlora,
+    )
+
+    if is_gemma4_model(base_model_name):
+        adapter_path = str(ADAPTERS_DIR / job_id)
+        dataset = doclib_samples_to_dataset(samples)
+        training_result = train_gemma4_qlora(
+            dataset=dataset,
+            output_dir=adapter_path,
+            model_id=base_model_name,
+            hf_token=hf_token,
+            revision=revision,
+            epochs=epochs,
+            batch_size=min(batch_size, 2),
+            gradient_accumulation_steps=max(1, 8 // min(batch_size, 2)),
+            learning_rate=learning_rate,
+            lora_rank=lora_rank,
+            lora_alpha=lora_alpha,
+            update_callback=update_callback,
+        )
+        final_loss = training_result["final_loss"]
+        del training_result["trainer"]
+        del training_result["processor"]
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        merged_path = str(MODELS_DIR / f"merged-{job_id}")
+        merge_gemma4_adapter(
+            adapter_path=adapter_path,
+            merged_path=merged_path,
+            model_id=base_model_name,
+            hf_token=hf_token,
+            revision=revision,
+        )
+        update_callback({"progress": 96})
+        return {
+            "adapter_path": adapter_path,
+            "final_loss": final_loss,
+            "merged_path": merged_path,
+        }
 
     logger.info("Initializing and loading language model")
     update_callback({"progress": 10, "status": "running"})
@@ -201,7 +248,7 @@ def run_hf_training(job_id: str, config: dict, update_callback):
 
     lora_config = LoraConfig(
         r=lora_rank,
-        lora_alpha=lora_rank * 2,
+        lora_alpha=lora_alpha,
         lora_dropout=0.05,
         target_modules=[
             "q_proj",
@@ -322,32 +369,20 @@ def run_finetune_job(job_id: str, config: dict, update_callback):
             result = run_hf_training(job_id, config, update_callback)
 
     merged_path = result.get("merged_path")
-    gguf_path = str(GGUF_DIR / f"model-ft-{job_id[:8]}.gguf")
     try:
-        import shutil
-        import subprocess
+        from src.training.gemma4_finetuning import export_gguf_artifacts
 
-        convert_script = shutil.which("python3") or "python"
-        llama_cpp_convert = Path("/app/llama.cpp/convert_hf_to_gguf.py")
-        if not llama_cpp_convert.exists():
-            llama_cpp_convert = Path("convert_hf_to_gguf.py")
-
-        if llama_cpp_convert.exists():
-            subprocess.run(
-                [
-                    convert_script,
-                    str(llama_cpp_convert),
-                    merged_path,
-                    "--outfile",
-                    gguf_path,
-                    "--outtype",
-                    "q4_k_m",
-                ],
-                check=True,
-                timeout=1800,
+        llama_cpp_dir = Path("/app/llama.cpp")
+        if not llama_cpp_dir.exists():
+            llama_cpp_dir = Path("llama.cpp")
+        if merged_path and llama_cpp_dir.exists():
+            artifacts = export_gguf_artifacts(
+                merged_path=merged_path,
+                output_dir=GGUF_DIR / job_id,
+                llama_cpp_dir=llama_cpp_dir,
             )
             logger.info("Exported deployment model")
-            result["gguf_path"] = gguf_path
+            result.update(artifacts)
         else:
             logger.warning("Format conversion not supported")
     except Exception:
@@ -373,6 +408,7 @@ def run_seq2seq_training(job_id: str, config: dict, update_callback):
     batch_size = config.get("batch_size", 4)
     learning_rate = config.get("learning_rate", 2e-4)
     lora_rank = config.get("lora_rank", 16)
+    lora_alpha = config.get("lora_alpha", lora_rank * 2)
     samples = config.get("training_data", [])
     revision = resolve_model_revision(base_model_name, hf_token)
 
@@ -394,7 +430,7 @@ def run_seq2seq_training(job_id: str, config: dict, update_callback):
 
     lora_config = LoraConfig(
         r=lora_rank,
-        lora_alpha=lora_rank * 2,
+        lora_alpha=lora_alpha,
         lora_dropout=0.05,
         target_modules="all-linear",
         bias="none",
@@ -518,6 +554,7 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
     batch_size = max(1, int(config.get("batch_size", 1)))
     learning_rate = config.get("learning_rate", 1e-4)
     lora_rank = config.get("lora_rank", 16)
+    lora_alpha = config.get("lora_alpha", lora_rank * 2)
     samples = config.get("training_data", [])
     revision = resolve_model_revision(base_model_name, hf_token)
 
@@ -537,7 +574,7 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
 
     lora_config = LoraConfig(
         r=lora_rank,
-        lora_alpha=lora_rank * 2,
+        lora_alpha=lora_alpha,
         lora_dropout=0.05,
         target_modules="all-linear",
         bias="none",

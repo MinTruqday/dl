@@ -370,7 +370,7 @@ async def create_job(req: dict):
         "dataset_id": ds_id,
         "job_name": req.get("job_name")
         or f"Model-Training-Task-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M')}",
-        "base_model": req.get("base_model") or settings.LLM_MODEL,
+        "base_model": req.get("base_model") or settings.FINETUNE_BASE_MODEL,
         "method": req.get("method", "lora"),
         "epochs": req.get("epochs", 3),
         "learning_rate": req.get("learning_rate", 2e-4),
@@ -398,7 +398,7 @@ async def start_job(job_id: str, req: dict):
         return {"error_code": "finetuning_job_already_running"}
     samples = await mongo.find("finetune_samples", {"dataset_id": job["dataset_id"]}).to_list(length=None)
     config = {
-        "base_model": job.get("base_model") or settings.LLM_MODEL,
+        "base_model": job.get("base_model") or settings.FINETUNE_BASE_MODEL,
         "hf_token": settings.HF_TOKEN,
         "epochs": job.get("epochs", 3),
         "batch_size": job.get("batch_size", 4),
@@ -501,7 +501,7 @@ async def deploy_model(job_id: str, req: dict):
         repo_id = f"{hf_username}/{model_name}"
 
         logger.info("Remote model repository created")
-        api.create_repo(repo_id=repo_id, exist_ok=True)
+        api.create_repo(repo_id=repo_id, exist_ok=True, private=True)
 
         import os
         artifact_uploaded = False
