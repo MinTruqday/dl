@@ -282,10 +282,23 @@ class ActingAgent:
                 if tool_result.success:
                     semantic_data = tool_result.data
                     if isinstance(semantic_data, str):
-                        try:
-                            parsed_semantic_data = json.loads(semantic_data)
-                        except json.JSONDecodeError:
-                            parsed_semantic_data = None
+                        parsed_semantic_data = semantic_data
+                        for _ in range(4):
+                            if not isinstance(parsed_semantic_data, str):
+                                break
+                            try:
+                                parsed_semantic_data = json.loads(
+                                    parsed_semantic_data
+                                )
+                            except json.JSONDecodeError:
+                                if '\\"' not in parsed_semantic_data:
+                                    break
+                                try:
+                                    parsed_semantic_data = json.loads(
+                                        f'"{parsed_semantic_data}"'
+                                    )
+                                except json.JSONDecodeError:
+                                    break
                         if (
                             isinstance(parsed_semantic_data, dict)
                             and parsed_semantic_data.get("status")
@@ -296,14 +309,20 @@ class ActingAgent:
                                 tool_name,
                                 parsed_semantic_data.get("status"),
                             )
-                            return semantic_data
+                            return json.dumps(
+                                parsed_semantic_data,
+                                ensure_ascii=False,
+                                default=str,
+                            )
+                        if parsed_semantic_data is not semantic_data:
+                            semantic_data = parsed_semantic_data
                     logger.info(
                         "Tool execution completed tool={} output_chars={}",
                         tool_name,
                         len(str(tool_result.data)),
                     )
                     return json.dumps(
-                        tool_result.data,
+                        semantic_data,
                         ensure_ascii=False,
                         default=str,
                     )

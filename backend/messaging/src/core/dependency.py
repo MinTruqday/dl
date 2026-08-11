@@ -103,7 +103,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
         "full_name": payload.get("full_name", ""),
         "slug": payload.get("slug", ""),
         "is_active": True,
-        "ai_tier": payload.get("ai_tier", "BASIC"),
+        "ai_tier": "PREMIUM" if str(payload.get("role", "")).lower() == "admin" else payload.get("ai_tier", "BASIC"),
     }
     return CurrentUser(**user_doc)
 

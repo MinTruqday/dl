@@ -278,6 +278,7 @@ export function useChat(documentId?: string | null) {
     mode: ChatMode,
     approvalPolicy: "manual" | "auto_safe",
     attachmentSelection?: ChatAttachmentSelection | null,
+    thinkingEnabled: boolean = false,
   ) => {
     const selectedFiles = attachmentSelection?.files ?? [];
     const firstFile = selectedFiles[0];
@@ -386,7 +387,8 @@ export function useChat(documentId?: string | null) {
       const response = await streamAiChatAPI(
         {
           query: effectiveText,
-          thinking: mode === "work" || mode === "goal",
+          thinking:
+            thinkingEnabled || mode === "work" || mode === "goal",
           mode,
           approval_policy: approvalPolicy,
           session_id: activeSession,

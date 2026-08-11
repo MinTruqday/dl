@@ -60,6 +60,7 @@ async def update_state(
     data: SessionStateUpdate,
     current_user: CurrentUser = Depends(get_current_user),
 ):
+    """Update the pinned or archived state of an owned conversation session."""
     return await HistoryService.update_state(
         session_id, data.model_dump(), str(current_user.id)
     )

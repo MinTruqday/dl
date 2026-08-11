@@ -27,46 +27,50 @@ from src.api.interaction.executor import (
     _reserve_upload_quota,
     _reserve_ai_quota,
     _consume_ai_quota,
-    get_tier_routed_user,
 )
 
 router = APIRouter(route_class=LoggingRoute)
 
 
+def _sanitize_stream_piece(piece: str) -> str:
+    """Apply deterministic output protection without stripping token whitespace."""
+    if piece and not piece.strip():
+        return piece
+    from src.core.security.guardrails import guardrails_engine
+
+    assessment = guardrails_engine.inspect_output(piece)
+    if assessment.get("threat_category") == "credential_leak":
+        raise PermissionError("output_credential_leak_blocked")
+    return str(assessment.get("sanitized_text", piece))
+
+
 @router.get("/kha-nang")
 async def chat_capabilities(
-    current_user: CurrentUser = Depends(get_tier_routed_user),
+    current_user: CurrentUser = Depends(get_current_user),
 ):
-    from src.utils.huggingface import model_for_tier
-    from src.utils.local_models import local_model_client
-
-    tier_model = model_for_tier(current_user.ai_tier.value)
-    model = (
-        tier_model
-        if current_user.ai_tier.value == "BASIC"
-        else local_model_client.active_model()
-    )
-    is_qwen = "qwen" in model.lower()
+    """Return model and interaction capabilities for the authenticated user's tier."""
+    is_admin = current_user.role.value == "admin"
+    tier = current_user.ai_tier.value
     return {
-        "model": model,
-        "audio_input": not is_qwen,
+        "model": settings.LLM_MODEL,
+        "audio_input": is_admin or tier != "BASIC",
         "code_execution": True,
-        "mcp": current_user.ai_tier.value in {"PRO", "PREMIUM"}
-        or current_user.role.value == "admin",
+        "mcp": is_admin or tier in {"PRO", "PREMIUM"},
     }
 
 @router.post("/phat-truc-tiep")
 async def chat_stream_endpoint(
     req: ChatRequest,
     request: Request,
-    current_user: CurrentUser = Depends(get_tier_routed_user),
+    current_user: CurrentUser = Depends(get_current_user),
 ):
+    """Stream one authenticated assistant interaction as server-sent events."""
     session_id = req.session_id or ""
     user_id = str(current_user.id)
     req.user_id = user_id
     req.role = current_user.role.value
     req.ai_tier = current_user.ai_tier.value
-    require_mode_tier(req.mode, req.ai_tier, req.role)
+    require_mode_tier(req.mode, req.ai_tier, req.role, req.thinking)
 
     token = request.headers.get("Authorization")
     if token:
@@ -208,7 +212,9 @@ async def chat_stream_endpoint(
 
                     chat_llm = create_chat_model()
 
-                    text_prompt = registry.get(PromptType.CHAT_ASSISTANT).format(query=req.query)
+                    text_prompt = registry.get_base(PromptType.CHAT_ASSISTANT).format(
+                        query=req.query
+                    )
                     if req.image_data:
                         content = [
                             {"type": "text", "text": text_prompt},
@@ -224,26 +230,33 @@ async def chat_stream_endpoint(
                         )
 
                     try:
-                        response = await chat_llm.ainvoke(
-                            [HumanMessage(content=content)], max_tokens=256
-                        )
-                        active_model = str(
-                            response.response_metadata.get("model")
-                            or settings.LLM_MODEL
-                        )
+                        active_model = settings.LLM_MODEL
                         yield "event: model\ndata: " + json.dumps(
                             {
                                 "model": active_model,
-                                "audio_input": "qwen" not in active_model.lower(),
+                                "audio_input": (
+                                    str(req.role).lower() == "admin"
+                                    or str(req.ai_tier).upper() != "BASIC"
+                                ),
                             }
                         ) + "\n\n"
-                        final_answer = await security.ascan_output(response.content)
-                        if final_answer:
+                        raw_answer = ""
+                        async for chunk in chat_llm.astream(
+                            [HumanMessage(content=content)], max_tokens=128
+                        ):
+                            piece = str(chunk.content or "")
+                            if not piece:
+                                continue
+                            safe_piece = _sanitize_stream_piece(piece)
+                            if not safe_piece:
+                                continue
+                            raw_answer += safe_piece
                             yield (
                                 "event: message\ndata: "
-                                + json.dumps({"chunk": final_answer})
+                                + json.dumps({"chunk": safe_piece})
                                 + "\n\n"
                             )
+                        final_answer = await security.ascan_output(raw_answer)
                     except RuntimeError:
                         logger.exception("Runtime error during LLM chat stream")
                         yield (

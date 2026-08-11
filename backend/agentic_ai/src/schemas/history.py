@@ -18,8 +18,14 @@ class SessionTitleUpdate(HistoryRequest):
 
 
 class SessionStateUpdate(HistoryRequest):
-    is_pinned: Optional[bool] = None
-    is_archived: Optional[bool] = None
+    is_pinned: Optional[bool] = Field(
+        default=None,
+        description="<input_context>Optional pinned state to apply to the conversation.</input_context>",
+    )
+    is_archived: Optional[bool] = Field(
+        default=None,
+        description="<input_context>Optional archived state to apply to the conversation.</input_context>",
+    )
 
 class MessageCreate(HistoryRequest):
     role: Literal["user"] = Field(default="user", description="<critical_instructions>Public history writes may append only authenticated user messages.</critical_instructions>")

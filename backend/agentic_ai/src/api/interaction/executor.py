@@ -21,22 +21,14 @@ from src.services.token_accounting import current_usage, start_accounting
 
 router = APIRouter(route_class=LoggingRoute)
 
-
-async def get_tier_routed_user(
-    current_user: CurrentUser = Depends(get_current_user),
-):
-    """Keep model routing bound to this request, including streaming responses."""
-    from src.utils.huggingface import reset_request_ai_tier, set_request_ai_tier
-
-    token = set_request_ai_tier(current_user.ai_tier.value)
-    try:
-        yield current_user
-    finally:
-        reset_request_ai_tier(token)
-
-def require_mode_tier(mode: str, tier: str, role: str = "") -> None:
+def require_mode_tier(
+    mode: str,
+    tier: str,
+    role: str = "",
+    thinking: bool = False,
+) -> None:
     if (
-        mode != "chat"
+        (mode != "chat" or thinking)
         and str(role).lower() != "admin"
         and str(tier).upper() not in {"PRO", "PREMIUM"}
     ):
@@ -45,6 +37,8 @@ def require_mode_tier(mode: str, tier: str, role: str = "") -> None:
 def _validate_audio(req: ChatRequest) -> None:
     if not req.audio_data:
         return
+    if str(req.role).lower() != "admin" and str(req.ai_tier).upper() == "BASIC":
+        raise RuntimeError("audio_input_requires_pro")
     from src.utils.multimodal import validate_audio
     validate_audio(req.audio_data)
 
@@ -124,7 +118,7 @@ async def _reserve_upload_quota(req: ChatRequest):
     return True, None
 
 async def _reserve_ai_quota(req: ChatRequest):
-    if req.role == "admin" or req.ai_tier in ["PRO", "PREMIUM"]:
+    if str(req.role).lower() == "admin":
         return True, None
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
@@ -147,8 +141,10 @@ async def _reserve_ai_quota(req: ChatRequest):
     return True, None
 
 async def _consume_ai_quota(req: ChatRequest, query: str, answer: str, usage: dict):
-    if not req.user_id:
+    if not req.user_id or str(req.role).lower() == "admin":
         return
+    input_tokens = int(usage.get("input_tokens", 0) or max(1, len(query) // 4))
+    output_tokens = int(usage.get("output_tokens", 0) or max(1, len(answer) // 4))
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             await client.post(
@@ -158,8 +154,10 @@ async def _consume_ai_quota(req: ChatRequest, query: str, answer: str, usage: di
                     "feature": req.mode,
                     "role": req.role,
                     "ai_tier": req.ai_tier,
-                    "input_tokens": usage.get("query_tokens", len(query.split())),
-                    "output_tokens": usage.get("answer_tokens", len(answer.split())),
+                    "input_tokens": input_tokens,
+                    "output_tokens": output_tokens,
+                    "cached_tokens": int(usage.get("cached_tokens", 0) or 0),
+                    "tool_tokens": int(usage.get("tool_tokens", 0) or 0),
                 },
                 headers={"X-Internal-Token": settings.SECRET_KEY},
             )
@@ -170,12 +168,13 @@ async def _consume_ai_quota(req: ChatRequest, query: str, answer: str, usage: di
 async def chat_endpoint(
     req: ChatRequest,
     request: Request,
-    current_user: CurrentUser = Depends(get_tier_routed_user),
+    current_user: CurrentUser = Depends(get_current_user),
 ):
+    """Execute one authenticated assistant interaction and return its final result."""
     req.user_id = str(current_user.id)
     req.role = current_user.role.value
     req.ai_tier = current_user.ai_tier.value
-    require_mode_tier(req.mode, req.ai_tier, req.role)
+    require_mode_tier(req.mode, req.ai_tier, req.role, req.thinking)
     logger.info("Chat request started query_chars={}", len(req.query))
     token = request.headers.get("Authorization")
     if token:
@@ -284,7 +283,9 @@ async def chat_endpoint(
 
                 chat_llm = create_chat_model()
 
-                text_prompt = registry.get(PromptType.CHAT_ASSISTANT).format(query=req.query)
+                text_prompt = registry.get_base(PromptType.CHAT_ASSISTANT).format(
+                    query=req.query
+                )
                 if req.image_data:
                     content = [
                         {"type": "text", "text": text_prompt},
@@ -300,7 +301,7 @@ async def chat_endpoint(
                         {"type": "audio_url", "audio_url": {"url": req.audio_data}}
                     )
 
-                res = await chat_llm.ainvoke([HumanMessage(content=content)], max_tokens=256)
+                res = await chat_llm.ainvoke([HumanMessage(content=content)], max_tokens=128)
                 final_answer = res.content
         elif route == "knowledge":
             from src.agents.analysis import researcher

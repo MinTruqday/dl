@@ -36,6 +36,31 @@ class PricingService:
     async def get_pricing_config() -> dict:
         config = await PricingRepository.get_pricing_config()
         if config:
+            tiers = config.setdefault("tiers", {})
+            basic = tiers.setdefault("BASIC", {})
+            features = list(basic.get("features") or [])
+            qwen_features = [
+                feature for feature in features if "qwen" in str(feature).lower()
+            ]
+            if qwen_features:
+                features = [
+                    "Trợ lý AI tiêu chuẩn"
+                    if "qwen" in str(feature).lower()
+                    else feature
+                    for feature in features
+                ]
+                basic["features"] = features
+                await PricingRepository.update_pricing_config(
+                    {"$set": {"tiers.BASIC.features": features}},
+                    upsert=True,
+                )
+            elif not any("trợ lý ai" in str(feature).lower() for feature in features):
+                features.insert(0, "Trợ lý AI tiêu chuẩn")
+                basic["features"] = features
+                await PricingRepository.update_pricing_config(
+                    {"$set": {"tiers.BASIC.features": features}},
+                    upsert=True,
+                )
             return config
 
         default_config = {
@@ -44,7 +69,7 @@ class PricingService:
                     "name": "Cơ bản",
                     "monthly_price": 0.0,
                     "features": [
-                        "Trợ lý AI Qwen",
+                        "Trợ lý AI tiêu chuẩn",
                         "Truy cập đọc tài liệu tiêu chuẩn",
                         "Các công cụ sưu tầm cơ bản",
                     ],

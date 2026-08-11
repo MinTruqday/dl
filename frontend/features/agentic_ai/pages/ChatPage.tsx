@@ -161,6 +161,7 @@ export default function ChatPage() {
   const [recording, setRecording] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
   const [composerExpanded, setComposerExpanded] = useState(false);
+  const [thinkingEnabled, setThinkingEnabled] = useState(false);
   useEffect(
     () => () => {
       mediaRecorder.current?.stop();
@@ -207,11 +208,22 @@ export default function ChatPage() {
       String(chat.user?.ai_tier || "BASIC").toUpperCase(),
     );
   useEffect(() => {
-    if (!advancedModesEnabled && mode !== "chat") setMode("chat");
-  }, [advancedModesEnabled, mode]);
+    if (!advancedModesEnabled) {
+      if (mode !== "chat") setMode("chat");
+      if (thinkingEnabled) setThinkingEnabled(false);
+    }
+  }, [advancedModesEnabled, mode, thinkingEnabled]);
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    if (await chat.send(input, mode, approvalPolicy, attachment)) {
+    if (
+      await chat.send(
+        input,
+        mode,
+        approvalPolicy,
+        attachment,
+        thinkingEnabled,
+      )
+    ) {
       setInput("");
       setAttachment(null);
     }
@@ -229,6 +241,18 @@ export default function ChatPage() {
   const weekly = chat.quota?.windows?.find(
     (window) => window.name === "weekly",
   );
+  const formatQuota = (
+    label: string,
+    window?: { used_tokens?: number; limit_tokens?: number },
+  ) => {
+    if (!window) return `${label} —`;
+    const used = (window.used_tokens ?? 0).toLocaleString("vi-VN");
+    const limit =
+      (window.limit_tokens ?? -1) < 0
+        ? "Không giới hạn"
+        : (window.limit_tokens ?? 0).toLocaleString("vi-VN");
+    return `${label} ${used} / ${limit}`;
+  };
   return (
     <div className="flex h-[calc(100dvh-60px)] w-full overflow-hidden bg-surface">
       <aside className="hidden w-[288px] shrink-0 flex-col border-r border-border bg-surface md:flex">
@@ -321,8 +345,8 @@ export default function ChatPage() {
         </div>
       </aside>
       <main className="flex min-w-0 flex-1 flex-col">
-        <header className="flex min-h-16 items-center justify-between gap-4 border-b border-border px-4 md:px-6">
-          <div className="min-w-0">
+        <header className="flex min-h-16 items-center justify-between gap-2 border-b border-border px-4 py-2 md:gap-4 md:px-6 md:py-0">
+          <div className="min-w-0 flex-1">
             <h1 className="truncate text-[15px] font-semibold text-ink">
               {chat.sessionId
                 ? chat.sessions.find(
@@ -330,10 +354,9 @@ export default function ChatPage() {
                   )?.title || "Cuộc trò chuyện"
                 : "Cuộc trò chuyện mới"}
             </h1>
-            <p className="mt-1 text-[11px] text-ink-muted">
-              Ngày {(daily?.used_tokens ?? 0).toLocaleString("vi-VN")} / {(daily?.limit_tokens ?? 0) < 0 ? "Không giới hạn" : (daily?.limit_tokens ?? 0).toLocaleString("vi-VN")}
-              <span aria-hidden="true"> · </span>
-              Tuần {(weekly?.used_tokens ?? 0).toLocaleString("vi-VN")} / {(weekly?.limit_tokens ?? 0) < 0 ? "Không giới hạn" : (weekly?.limit_tokens ?? 0).toLocaleString("vi-VN")}
+            <p className="mt-1 flex flex-wrap gap-x-2 text-[11px] leading-4 text-ink-muted">
+              <span>{formatQuota("Ngày", daily)}</span>
+              <span>{formatQuota("Tuần", weekly)}</span>
             </p>
           </div>
           <div className="flex shrink-0 gap-1">
@@ -342,15 +365,17 @@ export default function ChatPage() {
               size="sm"
               variant="ghost"
               onClick={chat.newChat}
+              aria-label="Cuộc trò chuyện mới"
             >
-              Cuộc trò chuyện mới
+              Mới
             </Button>
             <Button
               size="sm"
               variant="ghost"
               onClick={() => setInstructionsOpen(true)}
             >
-              Chỉ dẫn cá nhân
+              <span className="md:hidden">Chỉ dẫn</span>
+              <span className="hidden md:inline">Chỉ dẫn cá nhân</span>
             </Button>
           </div>
         </header>
@@ -591,6 +616,17 @@ export default function ChatPage() {
                     );
                   })}
                 </div>
+                {advancedModesEnabled && mode === "chat" && (
+                  <button
+                    type="button"
+                    aria-pressed={thinkingEnabled}
+                    title="Sử dụng suy luận nâng cao"
+                    onClick={() => setThinkingEnabled((value) => !value)}
+                    className={`shrink-0 rounded-control px-2.5 py-1 text-[12px] font-medium transition-colors ${thinkingEnabled ? "bg-brand-soft text-brand" : "text-ink-muted hover:bg-surface-quiet hover:text-ink"}`}
+                  >
+                    Suy nghĩ
+                  </button>
+                )}
                 {!(["chat", "work"] as ChatMode[]).includes(mode) && (
                   <span className="hidden rounded-control bg-brand-soft px-2.5 py-1 text-[12px] font-medium text-brand sm:inline">
                     {modes.find((item) => item.value === mode)?.label}

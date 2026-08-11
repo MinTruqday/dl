@@ -95,20 +95,18 @@ async def verify_runtime():
     assert client.calls == 3
 
     routed_client = LocalModelClient()
-    qwen_response = SimpleNamespace(
-        choices=[SimpleNamespace(message=SimpleNamespace(content="Qwen"))]
+    model_response = SimpleNamespace(
+        choices=[SimpleNamespace(message=SimpleNamespace(content="Configured model"))]
     )
-    routed_client._qwen_completion = AsyncMock(return_value=qwen_response)
-    routed_client._primary_completion = AsyncMock()
+    routed_client._primary_completion = AsyncMock(return_value=model_response)
     routed = await routed_client.chat_completion(
         messages=[{"role": "user", "content": "route"}],
-        model=settings.QWEN_MODEL,
+        model=settings.LLM_MODEL,
         max_tokens=16,
         temperature=0,
     )
-    assert routed.choices[0].message.content == "Qwen"
-    routed_client._qwen_completion.assert_awaited_once()
-    routed_client._primary_completion.assert_not_awaited()
+    assert routed.choices[0].message.content == "Configured model"
+    routed_client._primary_completion.assert_awaited_once()
 
 
 async def verify_planner_privacy():

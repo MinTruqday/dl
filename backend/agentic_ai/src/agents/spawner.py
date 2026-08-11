@@ -77,7 +77,16 @@ class AgentSpawner:
         from src.core.security.guardrails import guardrails_engine
 
         normalized_role = role.strip()
-        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9 ._/-]{2,79}", normalized_role) or len(task) > 20000:
+        role_injection = re.search(
+            r"\b(ignore|override|bypass|disregard)\b.*\b(system|prompt|instruction)s?\b",
+            normalized_role,
+            flags=re.IGNORECASE,
+        )
+        if (
+            not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9 ._/-]{2,79}", normalized_role)
+            or role_injection
+            or len(task) > 20000
+        ):
             raise ValueError("spawn_request_invalid")
 
         role_assessment = await guardrails_engine.async_inspect_input(normalized_role)

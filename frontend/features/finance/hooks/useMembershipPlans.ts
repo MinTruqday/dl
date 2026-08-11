@@ -25,7 +25,7 @@ const fallbackPlans: Plan[] = [
     name: "Cơ bản",
     price: 0,
     monthlyPrice: 0,
-    features: ["Trợ lý AI Qwen", "Đọc và lưu tài liệu", "Công cụ thu thập cơ bản"],
+    features: ["Trợ lý AI tiêu chuẩn", "Đọc và lưu tài liệu", "Công cụ thu thập cơ bản"],
   },
   {
     id: "PRO",
@@ -95,7 +95,10 @@ export function useMembershipPlans() {
   }, [load]);
 
   const currentTier = useMemo(
-    () => String(user?.ai_tier || "BASIC").toUpperCase() as MembershipTier,
+    () =>
+      (String(user?.role || "").toLowerCase() === "admin"
+        ? "PREMIUM"
+        : String(user?.ai_tier || "BASIC").toUpperCase()) as MembershipTier,
     [user],
   );
 

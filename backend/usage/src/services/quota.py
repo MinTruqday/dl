@@ -312,7 +312,12 @@ return 1
                 }
             )
         daily = next(item for item in result if item["name"] == "daily")
-        return {**daily, "tier": ai_tier, "windows": result, "unit": "capacity"}
+        effective_tier = (
+            Tier.PREMIUM.value
+            if str(role).lower() == Role.ADMIN.value
+            else ai_tier
+        )
+        return {**daily, "tier": effective_tier, "windows": result, "unit": "capacity"}
 
     @staticmethod
     @log_logic_execution

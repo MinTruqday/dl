@@ -59,16 +59,7 @@ async def main():
     assert call("GET", "/health")[0] == 200
     status, readiness = call("GET", "/ready")
     assert status == 200, readiness
-    assert all(
-        value == "ready"
-        for key, value in readiness["checks"].items()
-        if key != "fallback_model"
-    )
-    assert readiness["checks"]["fallback_model"] in {
-        "ready",
-        "not_configured",
-        "unknown",
-    }
+    assert all(value == "ready" for value in readiness["checks"].values())
 
     status, safe_chunks = call(
         "POST",

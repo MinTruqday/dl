@@ -66,6 +66,10 @@ async def read_users_me(
     if not user_doc:
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Không tìm thấy thông tin tài khoản người dùng")
+
+    if str(user_doc.get("role", "")).lower() == "admin":
+        user_doc["ai_tier"] = "PREMIUM"
+        user_doc["is_premium"] = True
         
     user_data = user_doc
     user_data["_id"] = str(user_doc["_id"])

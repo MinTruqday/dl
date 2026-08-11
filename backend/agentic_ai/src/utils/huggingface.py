@@ -1,4 +1,3 @@
-from contextvars import ContextVar, Token
 from typing import Any, List, Optional
 
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -21,26 +20,6 @@ from src.utils.structured_output import (
     extract_json_values,
     validate_structured_output,
 )
-
-_request_ai_tier: ContextVar[str] = ContextVar("request_ai_tier", default="")
-
-
-def model_for_tier(tier: str) -> str:
-    """Use Qwen for the Basic package and the primary model for paid packages."""
-    return settings.QWEN_MODEL if str(tier).upper() == "BASIC" else settings.LLM_MODEL
-
-
-def set_request_ai_tier(tier: str) -> Token:
-    return _request_ai_tier.set(str(tier).upper())
-
-
-def reset_request_ai_tier(token: Token) -> None:
-    _request_ai_tier.reset(token)
-
-
-def _request_model(configured_model: str) -> str:
-    tier = _request_ai_tier.get()
-    return model_for_tier(tier) if tier else configured_model
 
 def resolve_model_revision(model_id: str, token: Optional[str] = None) -> str:
     from huggingface_hub import HfApi
@@ -125,7 +104,7 @@ class HFInferenceChat(BaseChatModel):
             hf_messages.append({"role": role, "content": msg.content})
         hf_messages = _merge_system_messages(hf_messages)
 
-        effective_model = _request_model(self.model)
+        effective_model = self.model or settings.LLM_MODEL
         chat_kwargs = {
             "model": effective_model,
             "messages": hf_messages,
@@ -137,7 +116,8 @@ class HFInferenceChat(BaseChatModel):
         }
         from src.utils.local_models import local_model_client
 
-        response = await local_model_client.chat_completion(**chat_kwargs)
+        client = self.client or local_model_client
+        response = await client.chat_completion(**chat_kwargs)
         content = response.choices[0].message.content
         from src.services.token_accounting import record_usage
 
@@ -184,8 +164,9 @@ class HFInferenceChat(BaseChatModel):
 
         from src.utils.local_models import local_model_client
 
-        effective_model = _request_model(self.model)
-        stream = await local_model_client.chat_completion(
+        effective_model = self.model or settings.LLM_MODEL
+        client = self.client or local_model_client
+        stream = await client.chat_completion(
             model=effective_model,
             messages=hf_messages,
             max_tokens=kwargs.get(

@@ -135,28 +135,20 @@ async def readiness_check():
 
         checks.update(await local_model_client.readiness())
     except Exception:
-        checks["primary_model"] = "unavailable"
-        checks["fallback_model"] = "unavailable"
+        checks["model"] = "unavailable"
     required_checks = {
         key: value
         for key, value in checks.items()
-        if key not in {"primary_model", "fallback_model"}
+        if key != "model"
     }
     infrastructure_ready = all(
         value == "ready" for value in required_checks.values()
     )
-    model_ready = any(
-        checks.get(key) == "ready"
-        for key in {"primary_model", "fallback_model"}
-    )
+    model_ready = checks.get("model") == "ready"
     ready = infrastructure_ready and model_ready
-    complete = ready and all(
-        checks.get(key) == "ready"
-        for key in {"primary_model", "fallback_model"}
-    )
     return JSONResponse(
         status_code=200 if ready else 503,
-        content={"status": "ready" if complete else "degraded", "checks": checks},
+        content={"status": "ready" if ready else "degraded", "checks": checks},
     )
 @app.get("/evaluate/metrics")
 async def harness_metrics():
@@ -217,10 +209,6 @@ async def startup_event():
         create_background_task(
             local_model_client.warm_primary(),
             "primary-model-warmup",
-        )
-        create_background_task(
-            local_model_client.warm_fallback(),
-            "fallback-model-warmup",
         )
     except Exception:
         logger.exception("Primary model warmup startup error")

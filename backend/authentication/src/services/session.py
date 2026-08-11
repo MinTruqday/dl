@@ -152,6 +152,10 @@ class SessionService:
         if not is_active:
             raise HTTPException(status_code=403, detail="Tài khoản hiện đang bị khóa hoặc ở trạng thái không hoạt động")
 
+        # Administrators receive every Premium capability. Their role, rather
+        # than the tier field, remains authoritative for unlimited usage.
+        effective_ai_tier = "PREMIUM" if str(role).lower() == "admin" else ai_tier
+
         session_id = str(uuid.uuid4())
         from src.core.infrastructure.redis import redis
         await redis.sadd(f"user_sessions:{user_id_str}", session_id)
@@ -167,8 +171,12 @@ class SessionService:
                 "role": role,
                 "uid": user_id_str,
                 "permissions": user_data.get("permissions", []),
-                "is_premium": user_data.get("is_premium", False),
-                "ai_tier": ai_tier,
+                "is_premium": (
+                    True
+                    if str(role).lower() == "admin"
+                    else user_data.get("is_premium", False)
+                ),
+                "ai_tier": effective_ai_tier,
                 "full_name": user_data.get("full_name", ""),
                 "slug": user_data.get("slug", ""),
             }
@@ -292,15 +300,25 @@ class SessionService:
             f"user_sessions:{user_id_str}",
             settings.REFRESH_TOKEN_EXPIRE_DAYS * 86400,
         )
+        role = user_doc.get("role", "reader")
+        effective_ai_tier = (
+            "PREMIUM"
+            if str(role).lower() == "admin"
+            else user_doc.get("ai_tier", "BASIC")
+        )
         access_token = create_access_token(
             data={
                 "sub": user_doc["email"],
                 "sid": session_id,
-                "role": user_doc.get("role", "reader"),
+                "role": role,
                 "uid": str(user_doc.get("_id", "")),
                 "permissions": user_doc.get("permissions", []),
-                "is_premium": user_doc.get("is_premium", False),
-                "ai_tier": user_doc.get("ai_tier", "BASIC"),
+                "is_premium": (
+                    True
+                    if str(role).lower() == "admin"
+                    else user_doc.get("is_premium", False)
+                ),
+                "ai_tier": effective_ai_tier,
                 "full_name": user_doc.get("full_name", ""),
                 "slug": user_doc.get("slug", ""),
             }

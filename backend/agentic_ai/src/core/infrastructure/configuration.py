@@ -47,9 +47,6 @@ class Settings(BaseModel):
     PRIMARY_MODEL_HEALTH_URL: str = os.environ["PRIMARY_MODEL_HEALTH_URL"]
     PRIMARY_MODEL_API_TOKEN: str = os.environ["PRIMARY_MODEL_API_TOKEN"]
     LLM_MODEL: str = os.environ["LLM_MODEL"]
-    QWEN_MODEL: str = os.environ["QWEN_MODEL"]
-    QWEN_API_URL: str = os.environ["QWEN_API_URL"]
-    QWEN_HEALTH_URL: str = os.environ["QWEN_HEALTH_URL"]
     MODEL_TIMEOUT_SECONDS: float = float(os.environ["MODEL_TIMEOUT_SECONDS"])
     MODEL_KEEP_ALIVE: str = os.environ["MODEL_KEEP_ALIVE"]
     RERANKER_MODEL: str = os.environ["RERANKER_MODEL"]

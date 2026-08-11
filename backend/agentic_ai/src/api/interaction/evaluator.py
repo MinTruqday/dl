@@ -11,6 +11,7 @@ router = APIRouter(route_class=LoggingRoute)
 
 @router.get("/khong-gian/{session_id}")
 async def get_workspace(session_id: str, current_user: CurrentUser = Depends(get_current_user)):
+    """Return the authenticated user's workspace state for one conversation."""
     row = await workspace.get(session_id, str(current_user.id))
     if not row:
         return {"status": "success", "data": None}
@@ -18,6 +19,7 @@ async def get_workspace(session_id: str, current_user: CurrentUser = Depends(get
 
 @router.get("/tuy-chon-ca-nhan")
 async def get_user_instructions(current_user: CurrentUser = Depends(get_current_user)):
+    """Return the authenticated user's personal assistant instructions."""
     user_id = str(current_user.id)
     db = database.mongodb[settings.AGENTIC_AI_DB_NAME]
     doc = await db.user_instructions.find_one({"_id": user_id})
@@ -28,6 +30,7 @@ async def get_user_instructions(current_user: CurrentUser = Depends(get_current_
 async def save_user_instructions(
     req: UserInstructionsRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
+    """Save the authenticated user's personal assistant instructions."""
     user_id = str(current_user.id)
     instructions = req.instructions.strip()
     db = database.mongodb[settings.AGENTIC_AI_DB_NAME]
@@ -44,6 +47,7 @@ async def save_user_instructions(
 
 @router.delete("/tuy-chon-ca-nhan")
 async def clear_user_instructions(current_user: CurrentUser = Depends(get_current_user)):
+    """Clear the authenticated user's personal assistant instructions."""
     user_id = str(current_user.id)
     db = database.mongodb[settings.AGENTIC_AI_DB_NAME]
     await db.user_instructions.delete_one({"_id": user_id})

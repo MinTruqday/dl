@@ -12,7 +12,7 @@ from src.utils.huggingface import create_chat_model
 
 class GuardrailsEngine:
     def __init__(self):
-        self.llm = create_chat_model(settings.QWEN_MODEL)
+        self.llm = create_chat_model(settings.LLM_MODEL)
         self._redis = None
 
     @staticmethod

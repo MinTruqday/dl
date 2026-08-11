@@ -51,6 +51,8 @@ router = APIRouter(route_class=LoggingRoute, prefix="/suy-luan")
 client = local_model_client
 
 async def _check_quota(current_user: CurrentUser):
+    if current_user.role == Role.ADMIN:
+        return {"req_reset_hours": 24}
     logger.info("AI quota verification started")
     try:
         async with httpx.AsyncClient(timeout=10.0) as c:
@@ -79,6 +81,8 @@ async def _check_quota(current_user: CurrentUser):
 async def _consume_quota(
     current_user: CurrentUser, tokens: int, req_reset_hours: int = 24
 ):
+    if current_user.role == Role.ADMIN:
+        return
     logger.info("AI quota consumption started tokens={}", tokens)
     try:
         async with httpx.AsyncClient(timeout=10.0) as c:
@@ -325,6 +329,7 @@ async def semantic_document_search(
     dependencies=[Depends(verify_internal_token)],
 )
 async def expand_retrieval_query(req: RetrievalExpansionRequest):
+    """Expand one retrieval question into a hypothetical answer and related queries."""
     from src.schemas.routing import MultiQueryOutput
 
     hypothetical_prompt = registry.get(PromptType.HYDE_GENERATION).format(
@@ -334,7 +339,7 @@ async def expand_retrieval_query(req: RetrievalExpansionRequest):
         [{"role": "user", "content": hypothetical_prompt}],
         max_tokens=384,
         temperature=0.2,
-        model=settings.QWEN_MODEL,
+        model=settings.LLM_MODEL,
     )
     query_prompt = registry.get(PromptType.MULTI_QUERY).format(
         question=req.question
@@ -343,7 +348,7 @@ async def expand_retrieval_query(req: RetrievalExpansionRequest):
         query_prompt,
         MultiQueryOutput,
         max_tokens=192,
-        model=settings.QWEN_MODEL,
+        model=settings.LLM_MODEL,
     )
     queries = [query.strip() for query in result.queries if query.strip()]
     return {
@@ -357,6 +362,7 @@ async def expand_retrieval_query(req: RetrievalExpansionRequest):
     dependencies=[Depends(verify_internal_token)],
 )
 async def decompose_cross_document_query(req: CrossDocumentExpansionRequest):
+    """Create one focused retrieval query for each requested document."""
     from src.schemas.routing import CrossDocumentQueries
 
     prompt = registry.get(PromptType.CROSS_DOCUMENT_QUERY).format(
@@ -367,7 +373,7 @@ async def decompose_cross_document_query(req: CrossDocumentExpansionRequest):
         prompt,
         CrossDocumentQueries,
         max_tokens=min(1024, 96 * len(req.document_ids)),
-        model=settings.QWEN_MODEL,
+        model=settings.LLM_MODEL,
     )
     queries = [query.strip() for query in result.queries if query.strip()]
     if len(queries) != len(req.document_ids):
@@ -383,6 +389,7 @@ async def decompose_cross_document_query(req: CrossDocumentExpansionRequest):
     dependencies=[Depends(verify_internal_token)],
 )
 async def inspect_rag_chunks(req: RagChunkSafetyRequest):
+    """Return the indices of retrieval chunks that pass the internal safety check."""
     import asyncio
     from src.core.security.guardrails import guardrails_engine
 
@@ -404,6 +411,7 @@ async def inspect_rag_chunks(req: RagChunkSafetyRequest):
     dependencies=[Depends(verify_internal_token)],
 )
 async def summarize_rag_document(req: RagDocumentSummaryRequest):
+    """Create a guarded summary for an internally supplied retrieval document."""
     from src.core.security.guardrails import guardrails_engine
 
     assessment = await guardrails_engine.async_inspect_input(req.text)
@@ -419,7 +427,7 @@ async def summarize_rag_document(req: RagDocumentSummaryRequest):
         [{"role": "user", "content": prompt}],
         max_tokens=512,
         temperature=0.2,
-        model=settings.QWEN_MODEL,
+        model=settings.LLM_MODEL,
     )
     return {"summary": summary.strip()}
 
