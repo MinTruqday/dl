@@ -30,12 +30,6 @@ export type ChatMessage = {
   role: "user" | "assistant";
   content: string;
   attachment?: string;
-  activity?: ChatActivity[];
-};
-export type ChatActivity = {
-  id: string;
-  label: string;
-  status: "running" | "completed";
 };
 export type ChatMode = "chat" | "work" | "goal" | "learn" | "plan";
 export type ChatPlanStep = {
@@ -73,12 +67,6 @@ const streamErrors: Record<string, string> = {
   chat_stream_failed: "Luồng phản hồi bị gián đoạn",
   advanced_mode_requires_pro: "Chế độ này cần gói Pro hoặc Premium",
   multimodal_processing_failed: "Không thể xử lý tệp đa phương tiện",
-};
-
-const activityLabels: Record<string, string> = {
-  analyzing_request: "Đang phân tích yêu cầu",
-  processing: "Đang xử lý",
-  synthesizing_response: "Đang soạn câu trả lời",
 };
 
 function readDataUrl(file: File) {
@@ -145,11 +133,11 @@ export function useChat(documentId?: string | null) {
           getAiSessionsAPI(undefined, user._id),
           getMyQuotaAPI(),
           getUserInstructionsAPI(),
-          getAiCapabilitiesAPI().catch(() => ({
-            model: "",
-            audio_input: true,
-            mcp: false,
-          })),
+        getAiCapabilitiesAPI().catch(() => ({
+          model: "",
+          audio_input: false,
+          mcp: false,
+        })),
         ]);
       setSessions(sessionResponse.data ?? sessionResponse ?? []);
       setQuota(quotaResponse);
@@ -287,6 +275,7 @@ export function useChat(documentId?: string | null) {
     setError("");
     let activeSession = sessionId;
     let approvalTimer: ReturnType<typeof setInterval> | null = null;
+    let responseTimer: ReturnType<typeof setTimeout> | null = null;
     try {
       const effectiveText =
         text.trim() ||
@@ -354,41 +343,16 @@ export function useChat(documentId?: string | null) {
       setMessages((rows) => [
         ...rows,
         userMessage,
-        {
-          id: assistantId,
-          role: "assistant",
-          content: "",
-          activity: [
-            { id: "preparing", label: "Đang chuẩn bị", status: "running" },
-          ],
-        },
       ]);
-      const addActivity = (id: string, label: string) =>
-        setMessages((rows) =>
-          rows.map((message) => {
-            if (message.id !== assistantId) return message;
-            const previous = message.activity ?? [];
-            const completed = previous.map((item) => ({
-              ...item,
-              status: "completed" as const,
-            }));
-            const existing = completed.find((item) => item.id === id);
-            return {
-              ...message,
-              activity: existing
-                ? completed.map((item) =>
-                    item.id === id ? { ...item, label, status: "running" } : item,
-                  )
-                : [...completed, { id, label, status: "running" }],
-            };
-          }),
-        );
       requestController.current = new AbortController();
+      responseTimer = setTimeout(() => {
+        setError("AI chưa phản hồi trong thời gian cho phép");
+        requestController.current?.abort();
+      }, 90_000);
       const response = await streamAiChatAPI(
         {
           query: effectiveText,
-          thinking:
-            thinkingEnabled || mode === "work" || mode === "goal",
+          thinking: thinkingEnabled,
           mode,
           approval_policy: approvalPolicy,
           session_id: activeSession,
@@ -432,14 +396,9 @@ export function useChat(documentId?: string | null) {
           if (!data || type === "done" || data === "[DONE]") continue;
           try {
             const parsed = JSON.parse(data);
-            if (type === "message" || !type)
+            if (type === "message" || !type) {
               answer += parsed.chunk ?? parsed.answer ?? "";
-            if (type === "status") {
-              const code = String(parsed.code ?? "processing");
-              addActivity(code, activityLabels[code] ?? "Đang xử lý");
             }
-            if (type === "plan" && Array.isArray(parsed.steps))
-              addActivity("plan", "Đã chuẩn bị cách thực hiện");
             if (type === "plan" && Array.isArray(parsed.steps))
               setPlanSteps(
                 parsed.steps.map((step: any, index: number) => ({
@@ -448,8 +407,6 @@ export function useChat(documentId?: string | null) {
                   status: step.status ?? "pending",
                 })),
               );
-            if (type === "tool" && parsed.task_status)
-              addActivity("tool", "Đã sử dụng công cụ cần thiết");
             if (type === "tool" && parsed.task_status)
               setPlanSteps((steps) =>
                 steps.map((step) => ({
@@ -471,22 +428,16 @@ export function useChat(documentId?: string | null) {
             if (cause instanceof SyntaxError) answer += data;
             else throw cause;
           }
-          setMessages((rows) =>
-            rows.map((message) =>
-              message.id === assistantId
-                ? {
-                    ...message,
-                    content: answer,
-                    activity: answer
-                      ? (message.activity ?? []).map((item) => ({
-                          ...item,
-                          status: "completed" as const,
-                        }))
-                      : message.activity,
-                  }
-                : message,
-            ),
-          );
+          if (answer) {
+            setMessages((rows) => {
+              const existing = rows.some((message) => message.id === assistantId);
+              if (!existing)
+                return [...rows, { id: assistantId, role: "assistant", content: answer }];
+              return rows.map((message) =>
+                message.id === assistantId ? { ...message, content: answer } : message,
+              );
+            });
+          }
         }
       }
       if (activeSession && mode !== "chat") {
@@ -518,6 +469,7 @@ export function useChat(documentId?: string | null) {
       return false;
     } finally {
       if (approvalTimer) clearInterval(approvalTimer);
+      if (responseTimer) clearTimeout(responseTimer);
       requestController.current = null;
       setSending(false);
     }

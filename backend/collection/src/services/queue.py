@@ -122,25 +122,41 @@ async def run_worker():
 
     async def route_anna_collector(payload):
         return await AnnaSource.run_list_collector(
-            search_query="", pages=parse_pages(payload.get("pages")), job_id=payload.get("job_id")
+            search_query="",
+            pages=parse_pages(payload.get("pages")),
+            job_id=payload.get("job_id"),
+            max_documents=int(payload.get("max_documents", 1)),
         )
 
     async def route_ctan_collector(payload):
         letter = str(payload.get("pages", "a")).lower()
-        return await CtanSource.run_list_collector(letter, payload.get("job_id"))
+        return await CtanSource.run_list_collector(
+            letter,
+            payload.get("job_id"),
+            int(payload.get("max_documents", 1)),
+        )
 
     async def route_list_collector(payload):
         source = payload.get("source", "AnnaArchive")
         pages = parse_pages(payload.get("pages"))
         if source == "NXBST":
-            return await NxbstSource.run_list_collector(pages, payload.get("job_id"))
+            return await NxbstSource.run_list_collector(
+                pages,
+                payload.get("job_id"),
+                int(payload.get("max_documents", 1)),
+            )
         elif source == "CTAN":
             return await CtanSource.run_list_collector(
-                str(payload.get("pages", "a")).lower(), payload.get("job_id")
+                str(payload.get("pages", "a")).lower(),
+                payload.get("job_id"),
+                int(payload.get("max_documents", 1)),
             )
         else:
             return await AnnaSource.run_list_collector(
-                search_query="", pages=pages, job_id=payload.get("job_id")
+                search_query="",
+                pages=pages,
+                job_id=payload.get("job_id"),
+                max_documents=int(payload.get("max_documents", 1)),
             )
 
     async def route_detail_collector(payload):
@@ -173,12 +189,17 @@ async def run_worker():
             return {"documents_detected": 1, "documents_queued": 1, "documents_completed": 1}
         else:
             return await NxbstSource.run_list_collector(
-                parse_pages(payload.get("pages")), payload.get("job_id")
+                parse_pages(payload.get("pages")),
+                payload.get("job_id"),
+                int(payload.get("max_documents", 1)),
             )
 
     async def route_nxbgd_collector(payload):
         target_class = str(payload.get("target_class", payload.get("pages", "-1")))
-        return await NxbgdSource(target_class).execute(payload.get("job_id"))
+        return await NxbgdSource(target_class).execute(
+            payload.get("job_id"),
+            int(payload.get("max_documents", 1)),
+        )
 
     async def poll_queue(queue_name, handler_func):
         while True:

@@ -32,12 +32,18 @@ SOURCE_QUEUES = {
 
 @log_logic_execution
 async def trigger_collection(req: Collection):
+    if req.source == "AnnaArchive":
+        raise HTTPException(
+            status_code=422,
+            detail="Anna Archive không có luồng thu thập PDF công khai được DocLib hỗ trợ",
+        )
     job_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc)
     payload = {
         "source": req.source,
         "job_id": job_id,
         "pages": req.pages,
+        "max_documents": req.max_documents,
         "triggered_at": now.isoformat(),
     }
     if req.source == "NXBGD":
@@ -45,7 +51,7 @@ async def trigger_collection(req: Collection):
     job = {
         "_id": job_id,
         "source": req.source,
-        "parameters": {"pages": req.pages},
+        "parameters": {"pages": req.pages, "max_documents": req.max_documents},
         "status": "pending",
         "progress": 0,
         "completed_items": 0,

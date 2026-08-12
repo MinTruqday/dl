@@ -175,7 +175,7 @@ async def chat_stream_endpoint(
             route_data = {}
             if req.mode == "plan":
                 route = "plan"
-            elif req.mode in {"work", "goal"} or req.thinking:
+            elif req.mode in {"work", "goal"}:
                 route = "supervisor"
             elif req.mode == "learn":
                 route = "knowledge"

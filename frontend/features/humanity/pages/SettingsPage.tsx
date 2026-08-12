@@ -14,6 +14,7 @@ import {
 import InlineState from "@/shared/components/common/InlineState";
 import PageHeader from "@/shared/components/layout/PageHeader";
 import SegmentedTabs from "@/shared/components/navigation/SegmentedTabs";
+import PasskeySetup from "@/features/authentication/components/PasskeySetup";
 import { useSettings } from "../hooks/useSettings";
 import { useNoticeToast } from "@/shared/hooks/useNoticeToast";
 
@@ -51,6 +52,7 @@ function ToggleRow({
 export default function SettingsPage() {
   const [tab, setTab] = useState<Tab>("general");
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [passkeyOpen, setPasskeyOpen] = useState(false);
   const [motivation, setMotivation] = useState("");
   const [portfolio, setPortfolio] = useState("");
   const settings = useSettings();
@@ -347,6 +349,21 @@ export default function SettingsPage() {
             <div className="overflow-hidden rounded-panel border border-border bg-surface">
               <div className="flex flex-col gap-4 border-b border-border p-5 sm:flex-row sm:items-center sm:justify-between">
                 <div>
+                  <p className="font-semibold text-ink">Passkey</p>
+                  <p className="mt-1 text-[13px] text-ink-muted">
+                    Dùng sinh trắc học hoặc khóa thiết bị để đăng nhập nhanh
+                  </p>
+                </div>
+                <Button
+                  variant="secondary"
+                  onClick={() => setPasskeyOpen(true)}
+                  disabled={Boolean(settings.processing)}
+                >
+                  Thiết lập Passkey
+                </Button>
+              </div>
+              <div className="flex flex-col gap-4 border-b border-border p-5 sm:flex-row sm:items-center sm:justify-between">
+                <div>
                   <p className="font-semibold text-ink">Kết thúc mọi phiên</p>
                   <p className="mt-1 text-[13px] text-ink-muted">
                     Đăng xuất tài khoản trên tất cả thiết bị
@@ -379,6 +396,22 @@ export default function SettingsPage() {
           </section>
         )}
       </div>
+
+      <Modal
+        isOpen={passkeyOpen}
+        onClose={() => setPasskeyOpen(false)}
+      >
+        <ModalHeader>
+          <ModalTitle>Thiết lập Passkey</ModalTitle>
+        </ModalHeader>
+        <ModalContent>
+          <PasskeySetup
+            email={settings.user.email}
+            onClose={() => setPasskeyOpen(false)}
+            onSuccess={() => setPasskeyOpen(false)}
+          />
+        </ModalContent>
+      </Modal>
 
       <Modal
         isOpen={deleteOpen}

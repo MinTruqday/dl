@@ -9,14 +9,13 @@ type LibraryHistoryProps = {
   history: ReadingHistoryItem[];
   processing: boolean;
   onDelete: (id: string) => Promise<boolean>;
-  onClear: () => void;
 };
 
 function formatDate(value?: string) {
-  if (!value) return "Chưa ghi nhận";
+  if (!value) return "Chưa có thông tin";
   const date = new Date(value);
   return Number.isNaN(date.getTime())
-    ? "Chưa ghi nhận"
+    ? "Chưa có thông tin"
     : new Intl.DateTimeFormat("vi-VN", {
         dateStyle: "medium",
         timeStyle: "short",
@@ -27,35 +26,17 @@ export default function LibraryHistory({
   history,
   processing,
   onDelete,
-  onClear,
 }: LibraryHistoryProps) {
   if (!history.length)
     return (
       <EmptyState
-        text="Chưa có lịch sử đọc"
+        text="Chưa có thông tin"
         actionLabel="Khám phá tài liệu"
         actionHref="/kham-pha"
       />
     );
 
   return (
-    <section aria-labelledby="reading-history-title">
-      <div className="mb-4 flex items-center justify-between gap-4">
-        <h2
-          id="reading-history-title"
-          className="text-[18px] font-semibold text-ink"
-        >
-          Lịch sử đọc
-        </h2>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onClear}
-          disabled={processing}
-        >
-          Xóa lịch sử
-        </Button>
-      </div>
       <div className="overflow-hidden rounded-panel border border-border bg-surface">
         {history.map((item) => (
           <div
@@ -67,7 +48,7 @@ export default function LibraryHistory({
                 href={`/tai-lieu/${item.document_slug || item.document_id}`}
                 className="block truncate font-semibold text-ink hover:text-brand"
               >
-                {item.document_title || "Tài liệu chưa có tiêu đề"}
+                {item.document_title || "Chưa có thông tin"}
               </Link>
               <p className="mt-1 text-[12px] text-ink-muted">
                 Đã đọc {Math.round(Number(item.progress_percentage || 0))}%
@@ -89,6 +70,5 @@ export default function LibraryHistory({
           </div>
         ))}
       </div>
-    </section>
   );
 }

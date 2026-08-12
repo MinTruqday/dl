@@ -17,6 +17,7 @@ export const metadata: Metadata = {
 import { AuthProvider } from "@/features/authentication/contexts/AuthContext";
 import { ToastProvider } from "@/shared/contexts/ToastContext";
 import { AnnouncementProvider } from "@/shared/contexts/AnnouncementContext";
+import { ChunkRecovery } from "@/shared/components/common/ChunkRecovery";
 
 export default function RootLayout({
   children,
@@ -26,6 +27,7 @@ export default function RootLayout({
   return (
     <html lang="vi" suppressHydrationWarning>
       <body className={`${manrope.variable} min-h-[100dvh] font-sans`}>
+        <ChunkRecovery />
         <AuthProvider>
           <ToastProvider>
             <AnnouncementProvider>{children}</AnnouncementProvider>

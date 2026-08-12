@@ -36,7 +36,7 @@ export default function MetricStrip({ items }: { items: MetricItem[] }) {
       {items.map((item, index) => (
         <div
           key={item.label}
-          className={`min-w-0 py-4 sm:px-5 ${dividers(index)} ${index % smColumns === 0 ? "sm:pl-0" : ""} ${index % lgColumns === 0 ? "lg:pl-0" : ""}`}
+          className={`min-w-0 py-4 sm:px-5 ${dividers(index)} ${index % smColumns === 0 ? "sm:pl-0" : ""} ${index % lgColumns === 0 ? "lg:pl-0" : ""} ${index % smColumns === smColumns - 1 ? "sm:pr-0" : ""} ${index % lgColumns === lgColumns - 1 ? "lg:pr-0" : ""}`}
         >
           <dt className="text-[13px] font-medium text-ink-muted">
             {item.label}

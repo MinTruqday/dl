@@ -3,11 +3,8 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import {
   Archive,
-  Check,
-  ChevronDown,
   FileText,
   FolderOpen,
-  LoaderCircle,
   Maximize2,
   Mic,
   MicOff,
@@ -114,24 +111,6 @@ function MessageBody({ content, collapsible = false }: { content: string; collap
         </button>
       )}
     </>
-  );
-}
-
-function ActivityDisclosure({ activity, active }: { activity?: Array<{ id: string; label: string; status: "running" | "completed" }>; active: boolean }) {
-  if (!activity?.length) return null;
-  return (
-    <details className="group mb-3 text-[12px] text-ink-muted" open={active}>
-      <summary className="flex w-fit cursor-pointer list-none items-center gap-1.5 font-medium hover:text-ink">
-        {active ? <LoaderCircle className="animate-spin" size={14} /> : <Check size={14} />}
-        Quá trình xử lý
-        <ChevronDown className="transition-transform group-open:rotate-180" size={14} />
-      </summary>
-      <ol className="ml-1 mt-2 space-y-1.5 border-l border-border pl-3">
-        {activity.map((item) => (
-          <li key={item.id}>{item.label.replace(/^Đang /, item.status === "completed" ? "Đã " : "Đang ")}</li>
-        ))}
-      </ol>
-    </details>
   );
 }
 
@@ -449,14 +428,8 @@ export default function ChatPage() {
                       Tệp: {message.attachment}
                     </p>
                   )}
-                  {message.role === "assistant" && (
-                    <ActivityDisclosure
-                      activity={message.activity}
-                      active={chat.sending && !message.content}
-                    />
-                  )}
                   <MessageBody
-                    content={message.content || (chat.sending ? "Đang xử lý" : "")}
+                    content={message.content}
                     collapsible={message.role === "user"}
                   />
                 </article>
@@ -521,14 +494,13 @@ export default function ChatPage() {
                 <div className="relative">
                 <Button
                   type="button"
-                  size="sm"
+                  size="icon"
                   variant="ghost"
                   aria-label="Mở menu đính kèm"
                   aria-expanded={attachmentMenuOpen}
                   onClick={() => setAttachmentMenuOpen((value) => !value)}
                 >
                   <Paperclip size={17} />
-                  <span>Đính kèm</span>
                 </Button>
                   {attachmentMenuOpen && (
                     <div className="absolute bottom-12 left-0 z-30 w-56 rounded-panel border border-border bg-surface p-1.5 shadow-xl">
@@ -614,11 +586,6 @@ export default function ChatPage() {
                   >
                     Suy nghĩ
                   </button>
-                )}
-                {!(["chat", "work"] as ChatMode[]).includes(mode) && (
-                  <span className="hidden rounded-control bg-brand-soft px-2.5 py-1 text-[12px] font-medium text-brand sm:inline">
-                    {modes.find((item) => item.value === mode)?.label}
-                  </span>
                 )}
                 {(mode === "work" || mode === "goal") && (
                   <select

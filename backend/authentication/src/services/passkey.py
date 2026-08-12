@@ -1,4 +1,6 @@
 import base64
+import binascii
+import hmac
 import json
 from datetime import datetime, timezone
 
@@ -46,7 +48,7 @@ class PasskeyService:
         passkeys = user.get("passkeys", [])
         if not passkeys:
             raise HTTPException(
-                status_code=400, detail="Tài khoản hiện tại chưa được thiết lập bất kỳ mã bảo mật nào"
+                status_code=400, detail="Tài khoản này chưa thiết lập Passkey"
             )
         options = generate_authentication_options(
             rp_id=RP_ID,
@@ -79,11 +81,21 @@ class PasskeyService:
                 status_code=400, detail="Mã xác minh bảo mật không hợp lệ hoặc đã quá hạn sử dụng"
             )
         credential_id_b64 = credential_data.get("id")
+        if not isinstance(credential_id_b64, str) or not credential_id_b64:
+            raise HTTPException(status_code=400, detail="Passkey không hợp lệ")
+        try:
+            credential_id = base64.urlsafe_b64decode(
+                credential_id_b64 + "=" * (-len(credential_id_b64) % 4)
+            )
+        except (ValueError, binascii.Error):
+            raise HTTPException(status_code=400, detail="Passkey không hợp lệ")
         passkey = next(
             (
                 p
                 for p in user.get("passkeys", [])
-                if p["credential_id"] == credential_id_b64
+                if hmac.compare_digest(
+                    base64.b64decode(p["credential_id"]), credential_id
+                )
             ),
             None,
         )

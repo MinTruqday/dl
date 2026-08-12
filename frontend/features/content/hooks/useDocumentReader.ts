@@ -11,6 +11,7 @@ import {
 import {
   getArchiveContentAPI,
   getArchiveTreeAPI,
+  getSystemFilePreviewUrlAPI,
 } from "@/features/cloud/services/storage.service";
 import {
   getBookmarksAPI,
@@ -105,6 +106,10 @@ export function useDocumentReader(
           return;
         }
         const row = response.data;
+        const storedPath = String(row.file_url || row.pdf_url || "");
+        if (storedPath && !/^https?:\/\//i.test(storedPath)) {
+          row.file_url = await getSystemFilePreviewUrlAPI(storedPath);
+        }
         setDocument(row);
         setLocked(false);
         try {

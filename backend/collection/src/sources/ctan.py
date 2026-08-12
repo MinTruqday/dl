@@ -1,5 +1,4 @@
 import os
-import random
 import re
 import string
 import urllib.parse
@@ -7,15 +6,10 @@ import zipfile
 from pathlib import Path
 
 import aiohttp
-import requests
 from bs4 import BeautifulSoup
 from loguru import logger
-from playwright.async_api import async_playwright
-from playwright_stealth import stealth_async
 from src.infrastructure.browser import (
     download_file_with_retry,
-    get_stealth_context,
-    managed_browser,
 )
 from src.core.database import database
 from src.core.infrastructure.mq import mq as mq_client
@@ -54,73 +48,54 @@ class CtanSource:
             }
 
     @staticmethod
-    async def run_list_collector(letter: str = "a", job_id: str | None = None):
+    async def run_list_collector(
+        letter: str = "a",
+        job_id: str | None = None,
+        max_documents: int = 1,
+    ):
         logger.info("[CTAN] Starting alphabetical list collection process")
 
-        async with managed_browser() as browser:
-            context = await get_stealth_context(browser)
-            page = await context.new_page()
-            await stealth_async(page)
-
-            try:
-                selected_letter = letter.upper()
-                if selected_letter not in string.ascii_uppercase:
-                    raise ValueError("Invalid CTAN letter")
-                for current_letter in [selected_letter]:
-                    search_url = f"https://www.ctan.org/pkg/:{current_letter}"
-                    logger.info("[CTAN] Scanning alphabetical category")
-
-                    await page.goto(search_url, timeout=60000)
-                    await page.wait_for_timeout(2000)
-
-                    list_css = 'main .pkg-cols .dt a[href^="/pkg/"]'
-
-                    try:
-                        await page.wait_for_selector("main", timeout=15000)
-                    except Exception as e:
-                        logger.exception("[CTAN] Documents not found in alphabetical category")
-                        continue
-
-                    book_nodes = await page.query_selector_all(list_css)
-                    book_urls = set()
-
-                    for node in book_nodes:
-                        href = await node.get_attribute("href")
-                        if href:
-                            full_url = (
-                                "https://www.ctan.org" + href if href.startswith("/") else href
-                            )
-                            book_urls.add(full_url)
-
-                    logger.info("[CTAN] Category data collected")
-                    queued = 0
-                    for url in book_urls:
-                        if not await dedup.is_collected("ctan_url", url):
-                            published = await mq_client.publish(
-                                "collect_detail_queue",
-                                {
-                                    "url": url,
-                                    "source": "CTAN",
-                                    "job_id": job_id,
-                                    "collection_scope": {
-                                        "type": "letter",
-                                        "value": current_letter,
-                                    },
-                                },
-                            )
-                            if not published:
-                                raise RuntimeError("RabbitMQ rejected a CTAN detail task")
-                            await dedup.mark_collected("ctan_url", url)
-                            queued += 1
-                    return {
-                        "pages_scanned": 1,
-                        "documents_detected": len(book_urls),
-                        "documents_queued": queued,
-                    }
-
-            except Exception as e:
-                logger.exception("[CTAN] Failed to get alphabetical data list")
-                raise
+        try:
+            selected_letter = letter.upper()
+            if selected_letter not in string.ascii_uppercase:
+                raise ValueError("Invalid CTAN letter")
+            search_url = f"https://www.ctan.org/pkg/:{selected_letter}"
+            logger.info("[CTAN] Scanning alphabetical category")
+            timeout = aiohttp.ClientTimeout(total=60)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                async with session.get(search_url) as response:
+                    response.raise_for_status()
+                    html = await response.text(errors="ignore")
+            soup = BeautifulSoup(html, "html.parser")
+            book_urls = {
+                urllib.parse.urljoin("https://www.ctan.org", node["href"])
+                for node in soup.select('main .pkg-cols .dt a[href^="/pkg/"]')
+            }
+            logger.info("[CTAN] Category data collected")
+            queued = 0
+            for url in sorted(book_urls)[:max_documents]:
+                if not await dedup.is_collected("ctan_url", url):
+                    published = await mq_client.publish(
+                        "collect_detail_queue",
+                        {
+                            "url": url,
+                            "source": "CTAN",
+                            "job_id": job_id,
+                            "collection_scope": {"type": "letter", "value": selected_letter},
+                        },
+                    )
+                    if not published:
+                        raise RuntimeError("RabbitMQ rejected a CTAN detail task")
+                    await dedup.mark_collected("ctan_url", url)
+                    queued += 1
+            return {
+                "pages_scanned": 1,
+                "documents_detected": len(book_urls),
+                "documents_queued": queued,
+            }
+        except Exception:
+            logger.exception("[CTAN] Failed to get alphabetical data list")
+            raise
 
     @staticmethod
     async def run_detail_collector(
@@ -130,73 +105,44 @@ class CtanSource:
     ):
         logger.info("[CTAN] Processing software package data")
 
-        async with managed_browser() as browser:
-            context = await get_stealth_context(browser)
-            page = await context.new_page()
-            await stealth_async(page)
-
-            try:
-                await page.goto(book_url, timeout=60000)
-                await page.wait_for_timeout(2000)
-
-                payload = {}
-                payload["source_url"] = book_url
-                payload["job_id"] = job_id
-                payload["collection_scope"] = collection_scope
-
-                title_el = await page.query_selector("main h1")
-                raw_title = await title_el.inner_text() if title_el else book_url.split("/")[-1]
-                payload["title"] = raw_title.strip()
-
-                desc_el = await page.query_selector("main p")
-                payload["description"] = (
-                    await desc_el.inner_text() if desc_el else "No description available"
-                )
-
-                author_nodes = await page.query_selector_all('main table td a[href*="/author/"]')
-                authors_list = []
-                for author_node in author_nodes:
-                    raw_author = (await author_node.inner_text()).strip()
-                    if raw_author and raw_author not in authors_list:
-                        authors_list.append(raw_author)
-                payload["authors"] = authors_list if authors_list else ["Unknown Author"]
-
-                download_el = await page.query_selector(
-                    'main a[href$=".zip"], main a:has-text("Download")'
-                )
-
-                if download_el:
-                    download_link = await download_el.get_attribute("href")
-                    if download_link:
-                        full_download_url = (
-                            "https://www.ctan.org" + download_link
-                            if download_link.startswith("/")
-                            else download_link
-                        )
-                        payload["download_link"] = full_download_url
-
-                        logger.info("[CTAN] Download URL created")
-
-                        slug = urllib.parse.quote(
-                            payload["title"].lower().replace(" ", "-"), safe=""
-                        )[:50]
-                        payload["filename"] = f"{slug}.zip"
-                        payload["content_format"] = "zip"
-
-                        published = await mq_client.publish(
-                            "download_processor_queue", {**payload, "source": "CTAN"}
-                        )
-                        if not published:
-                            raise RuntimeError("RabbitMQ rejected a CTAN download task")
-                        return True
-                    else:
-                        logger.warning("[CTAN] Download link contains no data")
-                else:
-                    raise RuntimeError("CTAN package download link was not found")
-
-            except Exception as e:
-                logger.exception("[CTAN] Compressed file data processing failed")
-                raise
+        try:
+            timeout = aiohttp.ClientTimeout(total=60)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                async with session.get(book_url) as response:
+                    response.raise_for_status()
+                    html = await response.text(errors="ignore")
+            soup = BeautifulSoup(html, "html.parser")
+            payload = {
+                "source_url": book_url,
+                "job_id": job_id,
+                "collection_scope": collection_scope,
+            }
+            title_el = soup.select_one("main h1")
+            payload["title"] = title_el.get_text(" ", strip=True) if title_el else book_url.rsplit("/", 1)[-1]
+            desc_el = soup.select_one("main p")
+            payload["description"] = desc_el.get_text(" ", strip=True) if desc_el else ""
+            authors = [
+                node.get_text(" ", strip=True)
+                for node in soup.select('main table td a[href*="/author/"]')
+            ]
+            payload["authors"] = list(dict.fromkeys(author for author in authors if author)) or ["Unknown Author"]
+            download_el = soup.select_one('main a[href$=".zip"]')
+            if not download_el or not download_el.get("href"):
+                raise RuntimeError("CTAN package download link was not found")
+            payload["download_link"] = urllib.parse.urljoin("https://www.ctan.org", download_el["href"])
+            logger.info("[CTAN] Download URL created")
+            slug = urllib.parse.quote(payload["title"].lower().replace(" ", "-"), safe="")[:50]
+            payload["filename"] = f"{slug}.zip"
+            payload["content_format"] = "zip"
+            published = await mq_client.publish(
+                "download_processor_queue", {**payload, "source": "CTAN"}
+            )
+            if not published:
+                raise RuntimeError("RabbitMQ rejected a CTAN download task")
+            return True
+        except Exception:
+            logger.exception("[CTAN] Compressed file data processing failed")
+            raise
 
     @staticmethod
     async def run_download_processor(payload: dict):
@@ -258,23 +204,14 @@ class CtanSource:
                     search_root = os.path.join(extracted_folder_path, contents[0])
                     logger.info("[CTAN] Processing compressed file directory structure")
 
-                found_pdf = None
+                found_pdfs = []
                 for root, _, files in os.walk(search_root):
                     for f in files:
                         if f.lower().endswith(".pdf"):
-                            if slug in f.lower() or "doc" in root.lower():
-                                found_pdf = os.path.join(root, f)
-                                break
-                    if found_pdf:
-                        break
+                            found_pdfs.append(os.path.join(root, f))
 
-                if found_pdf:
-                    pdf_filename = os.path.basename(found_pdf)
-                    minio_url_pdf = await storage.upload_local_file(
-                        f"system/collection/ctan/documents/{pdf_filename}", found_pdf
-                    )
-                    logger.info("[CTAN] PDF file uploaded")
-                    payload["pdf_url"] = minio_url_pdf
+                if not found_pdfs:
+                    raise RuntimeError("CTAN archive contains no PDF document")
 
                 md_content = f"# Source code for {title}\n\n"
                 allowed_exts = {
@@ -317,18 +254,29 @@ class CtanSource:
                 payload["markdown_url"] = minio_url_md
 
                 logger.info("[CTAN] Compressed file processed")
-                metadata = await collected_metadata(
-                    payload,
-                    found_pdf,
-                    minio_url_book,
-                    "zip",
-                    "CTAN",
-                    "ctan",
-                    pdf_url=payload.get("pdf_url"),
-                    markdown_url=payload.get("markdown_url"),
-                )
-                metadata["rag_status"] = "pending"
-                document_id = await database.insert_document(metadata)
+                for index, found_pdf in enumerate(found_pdfs, start=1):
+                    pdf_filename = os.path.basename(found_pdf)
+                    pdf_key = f"system/collection/ctan/documents/{slug}/{pdf_filename}"
+                    minio_url_pdf = await storage.upload_local_file(pdf_key, found_pdf)
+                    document_payload = {
+                        **payload,
+                        "title": f"{title} — {pdf_filename}",
+                        "source_url": f"{payload['source_url']}#pdf-{index}",
+                    }
+                    metadata = await collected_metadata(
+                        document_payload,
+                        found_pdf,
+                        minio_url_pdf,
+                        "pdf",
+                        "CTAN",
+                        "ctan",
+                        pdf_url=minio_url_pdf,
+                        markdown_url=payload.get("markdown_url"),
+                    )
+                    metadata["source_archive_url"] = minio_url_book
+                    metadata["rag_status"] = "pending"
+                    document_id = await database.insert_document(metadata)
+                    logger.info("[CTAN] PDF file uploaded")
             else:
                 raise RuntimeError("CTAN package download failed")
         except Exception:

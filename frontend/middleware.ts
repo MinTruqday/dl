@@ -6,28 +6,7 @@ export function middleware(request: NextRequest) {
   const role = request.cookies.get("role")?.value || "reader";
   const { pathname } = request.nextUrl;
 
-  const isAuthRoute =
-    pathname.startsWith("/dang-nhap") ||
-    pathname.startsWith("/dang-ky") ||
-    pathname.startsWith("/quen-mat-khau") ||
-    pathname.startsWith("/xac-thuc") ||
-    pathname.startsWith("/dat-lai-mat-khau");
-
-  const isPublicRoute =
-    pathname === "/" ||
-    pathname.startsWith("/images/") ||
-    pathname.startsWith("/kham-pha") ||
-    pathname.startsWith("/tai-lieu/") ||
-    pathname.startsWith("/chia-se/") ||
-    pathname.startsWith("/dieu-khoan") ||
-    pathname.startsWith("/tro-giup") ||
-    pathname.startsWith("/auth/google/callback");
-
-  if (!token && !isAuthRoute && !isPublicRoute) {
-    return NextResponse.redirect(new URL("/dang-nhap", request.url));
-  }
-
-  if (role === "reader") {
+  if (token && role === "reader") {
     if (
       pathname.startsWith("/soan-thao") ||
       pathname === "/tai-lieu" ||
@@ -44,7 +23,7 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  if (role === "author") {
+  if (token && role === "author") {
     if (
       pathname.startsWith("/kiem-toan") ||
       pathname.startsWith("/thu-thap") ||

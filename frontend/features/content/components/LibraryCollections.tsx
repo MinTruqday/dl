@@ -17,7 +17,7 @@ export function FolderList({
   if (!folders.length)
     return (
       <EmptyState
-        text="Chưa có thư mục"
+        text="Chưa có thông tin"
       />
     );
   return (
@@ -31,7 +31,7 @@ export function FolderList({
           >
             <div className="min-w-0">
               <p className="truncate font-semibold text-ink">
-                {folder.name || "Thư mục chưa có tên"}
+                {folder.name || "Chưa có thông tin"}
               </p>
               <p className="mt-1 text-[12px] text-ink-muted">
                 {folder.bookmark_ids?.length || 0} dấu trang
@@ -56,7 +56,7 @@ export function ReadingListRows({ lists }: { lists: ReadingList[] }) {
   if (!lists.length)
     return (
       <EmptyState
-        text="Chưa có danh sách đọc"
+        text="Chưa có thông tin"
       />
     );
   return (
@@ -71,10 +71,10 @@ export function ReadingListRows({ lists }: { lists: ReadingList[] }) {
           >
             <div className="min-w-0">
               <p className="truncate font-semibold text-ink">
-                {list.name || "Danh sách chưa có tên"}
+                {list.name || "Chưa có thông tin"}
               </p>
               <p className="mt-1 truncate text-[12px] text-ink-muted">
-                {list.description || `${list.documents?.length || 0} tài liệu`}
+                {list.description || "Chưa có thông tin"}
               </p>
             </div>
             <span className="shrink-0 text-[13px] font-semibold text-brand">

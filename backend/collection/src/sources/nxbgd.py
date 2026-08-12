@@ -8,6 +8,7 @@ import urllib.parse
 import aiohttp
 import img2pdf
 from loguru import logger
+from PIL import Image
 from playwright.async_api import Response, async_playwright
 from src.infrastructure.browser import get_stealth_context, managed_browser
 from src.core.database import database
@@ -106,9 +107,15 @@ class NxbgdSource:
             return
 
         try:
+            normalized_images = []
+            for index, image_path in enumerate(image_files):
+                normalized_path = os.path.join(self.temp_dir, f"nxbgd_pdf_{index:03d}.jpg")
+                with Image.open(image_path) as image:
+                    image.convert("RGB").save(normalized_path, "JPEG")
+                normalized_images.append(normalized_path)
             logger.info("[NXBGD] Compiling captured images into PDF document")
             with open(pdf_path, "wb") as f:
-                f.write(img2pdf.convert(image_files))
+                f.write(img2pdf.convert(normalized_images))
             logger.info("[NXBGD] PDF compilation and temporary storage successful")
 
             logger.info("[NXBGD] Uploading compiled document to permanent storage")
@@ -173,7 +180,7 @@ class NxbgdSource:
                 "reason": str(error)[:200],
             }
 
-    async def execute(self, job_id: str | None = None):
+    async def execute(self, job_id: str | None = None, max_documents: int = 1):
         await self.init_browser()
 
         url = f"https://taphuan.nxbgd.vn/tap-huan?grade={self.target_class}"
@@ -200,7 +207,7 @@ class NxbgdSource:
                 logger.info("[NXBGD] Found document elements on category page")
                 documents_detected += len(document_urls)
 
-                for doc_url in document_urls:
+                for doc_url in document_urls[:max_documents]:
                     full_doc_url = (
                         f"https://taphuan.nxbgd.vn{doc_url}" if doc_url.startswith("/") else doc_url
                     )
@@ -216,6 +223,8 @@ class NxbgdSource:
                             continue
 
                         for doc_link in doc_links:
+                            if documents_saved + failed_items >= max_documents:
+                                break
                             res_name = await doc_link.text_content()
                             res_name = res_name.strip()
                             full_title = res_name
@@ -280,6 +289,8 @@ class NxbgdSource:
                             else:
                                 failed_items += 1
                             await viewer_page.close()
+                            if documents_saved + failed_items >= max_documents:
+                                break
                     except Exception:
                         failed_items += 1
                         logger.exception("[NXBGD] Document information extraction failed")

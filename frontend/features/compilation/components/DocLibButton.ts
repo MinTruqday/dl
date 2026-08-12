@@ -19,6 +19,7 @@ export default class DocLibButton implements BlockTool {
   private linkInput: HTMLElement | null = null;
   private registButton: HTMLButtonElement | null = null;
   private anyButton: HTMLAnchorElement | null = null;
+  private validationMessage: HTMLParagraphElement | null = null;
   private readOnly: boolean;
 
   private CSS = {
@@ -97,6 +98,7 @@ export default class DocLibButton implements BlockTool {
             .anyButtonContainer__inputHolder { display: flex; flex-direction: column; gap: 10px; padding: 15px; border: 1px dashed hsl(var(--border)); border-radius: 5px; background: hsl(var(--surface-raised)); }
             .anyButtonContainer__registerButton { margin-top: 5px; background: hsl(var(--brand)); color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
             .anyButtonContainer__registerButton:hover { background: #0056b3; }
+            .anyButtonContainer__validation { margin: 0; color: hsl(var(--danger)); font-size: 12px; }
             .anyButton__btn { display: inline-block; padding: 10px 20px; border-radius: 5px; text-decoration: none; text-align: center; font-weight: bold; cursor: pointer; }
             .anyButton__btn--default { background: hsl(var(--brand)); color: white; }
             .anyButton__btn--default:hover { opacity: 0.9; }
@@ -134,13 +136,21 @@ export default class DocLibButton implements BlockTool {
     this.registButton = document.createElement("button");
     this.registButton.classList.add(this.CSS.registButton);
     this.registButton.type = "button";
-    this.registButton.textContent = "Set";
+    this.registButton.textContent = "Lưu nút";
+
+    this.validationMessage = document.createElement("p");
+    this.validationMessage.classList.add("anyButtonContainer__validation");
+    this.validationMessage.hidden = true;
 
     this.registButton.addEventListener("click", () => {
       if (!this.linkInput?.textContent || !this.textInput?.textContent) {
-        alert("A label and URL are required");
+        if (this.validationMessage) {
+          this.validationMessage.textContent = "Nhập nhãn và địa chỉ liên kết";
+          this.validationMessage.hidden = false;
+        }
         return;
       }
+      if (this.validationMessage) this.validationMessage.hidden = true;
       this.data = {
         link: this.linkInput.textContent,
         text: this.textInput.textContent,
@@ -150,6 +160,7 @@ export default class DocLibButton implements BlockTool {
 
     inputHolder.appendChild(this.textInput);
     inputHolder.appendChild(this.linkInput);
+    inputHolder.appendChild(this.validationMessage);
     inputHolder.appendChild(this.registButton);
 
     return inputHolder;

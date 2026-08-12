@@ -1,4 +1,5 @@
 import re
+import asyncio
 from dataclasses import dataclass, field
 from loguru import logger
 from typing import List
@@ -25,6 +26,10 @@ class SecurityHarness:
     def __init__(self):
         self.analyzer = None
         self.anonymizer = None
+        self._pii_engine_initialized = False
+        self._pii_engine_lock = asyncio.Lock()
+
+    def _initialize_pii_engine(self):
         try:
             from presidio_analyzer import AnalyzerEngine
             from presidio_anonymizer import AnonymizerEngine
@@ -44,10 +49,20 @@ class SecurityHarness:
             logger.warning("Presidio dependencies unavailable, using deterministic PII scanning")
         except Exception:
             logger.exception("Presidio initialization failed, using deterministic PII scanning")
+        finally:
+            self._pii_engine_initialized = True
+
+    async def _ensure_pii_engine(self):
+        if self._pii_engine_initialized:
+            return
+        async with self._pii_engine_lock:
+            if not self._pii_engine_initialized:
+                await asyncio.to_thread(self._initialize_pii_engine)
 
     async def _adetect_security_issues(
         self, text: str, allow_ai_review: bool = True
     ) -> tuple[str, List[str]]:
+        await self._ensure_pii_engine()
         from langchain_core.messages import HumanMessage
         from src.utils.huggingface import create_chat_model
         from src.core.infrastructure.configuration import settings

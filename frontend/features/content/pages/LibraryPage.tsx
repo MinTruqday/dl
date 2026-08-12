@@ -56,13 +56,6 @@ export default function LibraryPage() {
     <div className="w-full">
       <PageHeader
         title="Thư viện"
-        actions={
-          tab !== "history" && (
-            <Button onClick={() => setCreateOpen(true)}>
-              {tab === "folders" ? "Tạo thư mục" : "Tạo danh sách"}
-            </Button>
-          )
-        }
       />
 
       {library.error && (
@@ -98,29 +91,66 @@ export default function LibraryPage() {
           value={tab}
           onChange={setTab}
           tabs={[
-            { id: "history", label: "Lịch sử", count: library.history.length },
-            { id: "folders", label: "Thư mục", count: library.folders.length },
-            { id: "lists", label: "Danh sách", count: library.lists.length },
+            { id: "history", label: "Lịch sử" },
+            { id: "folders", label: "Thư mục" },
+            { id: "lists", label: "Danh sách" },
           ]}
         />
       </div>
 
-      {tab === "history" && (
-        <LibraryHistory
-          history={library.history}
-          processing={library.processing}
-          onDelete={library.deleteHistoryItem}
-          onClear={() => setClearOpen(true)}
-        />
-      )}
-      {tab === "folders" && (
-        <FolderList
-          folders={library.folders}
-          processing={library.processing}
-          onDelete={library.deleteFolder}
-        />
-      )}
-      {tab === "lists" && <ReadingListRows lists={library.lists} />}
+      <section aria-labelledby="library-section-title">
+        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2
+              id="library-section-title"
+              className="text-[18px] font-semibold text-ink"
+            >
+              {tab === "history"
+                ? "Lịch sử"
+                : tab === "folders"
+                  ? "Thư mục"
+                  : "Danh sách"}
+            </h2>
+            <p className="mt-1 text-[13px] text-ink-muted">
+              {tab === "history"
+                ? `${library.history.length} mục`
+                : tab === "folders"
+                  ? `${library.folders.length} mục`
+                  : `${library.lists.length} mục`}
+            </p>
+          </div>
+          {tab === "history" && library.history.length > 0 ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setClearOpen(true)}
+              disabled={library.processing}
+            >
+              Xóa lịch sử
+            </Button>
+          ) : tab !== "history" ? (
+            <Button size="sm" onClick={() => setCreateOpen(true)}>
+              {tab === "folders" ? "Tạo thư mục" : "Tạo danh sách"}
+            </Button>
+          ) : null}
+        </div>
+
+        {tab === "history" && (
+          <LibraryHistory
+            history={library.history}
+            processing={library.processing}
+            onDelete={library.deleteHistoryItem}
+          />
+        )}
+        {tab === "folders" && (
+          <FolderList
+            folders={library.folders}
+            processing={library.processing}
+            onDelete={library.deleteFolder}
+          />
+        )}
+        {tab === "lists" && <ReadingListRows lists={library.lists} />}
+      </section>
 
       <Modal
         isOpen={createOpen}

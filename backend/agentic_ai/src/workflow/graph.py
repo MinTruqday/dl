@@ -24,21 +24,39 @@ from src.workflow.state import AgentState
 
 from src.core.infrastructure.configuration import settings
 
-try:
-    from sentence_transformers import CrossEncoder
+nli_model = None
+reranker = None
+_nli_model_initialized = False
+_reranker_initialized = False
+_model_initialization_lock = asyncio.Lock()
 
-    nli_model_name = settings.NLI_MODEL_NAME
-    nli_model = CrossEncoder(nli_model_name)
-except Exception:
-    nli_model = None
-    logger.exception("NLI language model loading error")
 
-try:
-    from sentence_transformers import CrossEncoder
+async def _get_cross_encoder(kind: str):
+    global nli_model, reranker, _nli_model_initialized, _reranker_initialized
 
-    reranker = CrossEncoder(settings.RERANKER_MODEL)
-except Exception:
-    reranker = None
+    initialized = _nli_model_initialized if kind == "nli" else _reranker_initialized
+    if initialized:
+        return nli_model if kind == "nli" else reranker
+
+    async with _model_initialization_lock:
+        initialized = _nli_model_initialized if kind == "nli" else _reranker_initialized
+        if initialized:
+            return nli_model if kind == "nli" else reranker
+        try:
+            from sentence_transformers import CrossEncoder
+
+            model_name = settings.NLI_MODEL_NAME if kind == "nli" else settings.RERANKER_MODEL
+            model = await asyncio.to_thread(CrossEncoder, model_name)
+        except Exception:
+            logger.exception("Cross encoder model loading error")
+            model = None
+        if kind == "nli":
+            nli_model = model
+            _nli_model_initialized = True
+        else:
+            reranker = model
+            _reranker_initialized = True
+        return model
 
 try:
     redis_url = settings.REDIS_URI
@@ -181,12 +199,13 @@ async def retrieve_db(state: AgentState):
             logger.exception("Vector similarity search error")
 
     if all_raw_documents:
-        if reranker:
+        reranker_model = await _get_cross_encoder("reranker")
+        if reranker_model:
             try:
                 pairs = [
                     [doc["_query"], doc.get("text", "")] for doc in all_raw_documents
                 ]
-                scores = await asyncio.to_thread(reranker.predict, pairs)
+                scores = await asyncio.to_thread(reranker_model.predict, pairs)
                 scored_documents = list(zip(all_raw_documents, scores))
                 scored_documents.sort(key=lambda x: x[1], reverse=True)
                 top_documents = retriever._lost_in_the_middle_reorder(
@@ -385,10 +404,11 @@ async def grade_generation(state: AgentState):
 
         is_hallucination = eval_res.get("should_retry", False)
 
-        if not is_hallucination and nli_model:
+        nli_cross_encoder = await _get_cross_encoder("nli")
+        if not is_hallucination and nli_cross_encoder:
             documents_str = "".join(documents)[:1500]
             scores = await asyncio.to_thread(
-                nli_model.predict, [[documents_str, generation]]
+                nli_cross_encoder.predict, [[documents_str, generation]]
             )
             if scores[0][0] > scores[0][1]:
                 is_hallucination = True

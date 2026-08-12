@@ -736,6 +736,23 @@ export const getInlinePreviewUrlAPI = async (itemId: string): Promise<string> =>
   return data.data.preview_url;
 };
 
+export const getSystemFilePreviewUrlAPI = async (
+  filePath: string,
+): Promise<string> => {
+  const path = filePath
+    .split("/")
+    .filter(Boolean)
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
+  const res = await fetch(`${API_URL}/tai-len/luu-tru/xem-truoc/${path}`, {
+    headers: { Authorization: `Bearer ${getAuthToken()}` },
+  });
+  const data = await res.json();
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tạo liên kết xem trước tệp");
+  return data.data.preview_url;
+};
+
 export const getItemActivitiesAPI = async (itemId: string): Promise<any[]> => {
   const token = getAuthToken();
   const res = await fetch(`${API_URL}/luu-tru/tap-tin/${itemId}/nhat-ky`, {

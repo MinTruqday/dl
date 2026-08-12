@@ -11,6 +11,7 @@ class RabbitMQClient:
         self.url = settings.RABBITMQ_URI
         self.connection = None
         self.channel = None
+        self.consumer_channels = {}
         self.pending_acks = {}
 
     async def connect(self):
@@ -74,9 +75,23 @@ class RabbitMQClient:
             return False
 
     async def consume(self, queue_name: str, timeout: int = 30) -> Optional[Dict[str, Any]]:
-        if not self.channel or self.channel.is_closed:
+        if not self.connection or self.connection.is_closed:
             await self.connect()
-        queue = await self.get_queue(queue_name)
+        channel = self.consumer_channels.get(queue_name)
+        if channel is None or channel.is_closed:
+            channel = await self.connection.channel()
+            self.consumer_channels[queue_name] = channel
+        dlx = await channel.declare_exchange("dlx", aio_pika.ExchangeType.DIRECT)
+        dlq = await channel.declare_queue("dlq", durable=True)
+        await dlq.bind(dlx, "dlq")
+        queue = await channel.declare_queue(
+            queue_name,
+            durable=True,
+            arguments={
+                "x-dead-letter-exchange": "dlx",
+                "x-dead-letter-routing-key": "dlq",
+            },
+        )
         try:
             message = await queue.get(timeout=timeout)
             if message:
@@ -149,6 +164,10 @@ class RabbitMQClient:
         self.pending_acks.clear()
         if self.channel and not self.channel.is_closed:
             await self.channel.close()
+        for channel in self.consumer_channels.values():
+            if not channel.is_closed:
+                await channel.close()
+        self.consumer_channels.clear()
         if self.connection:
             await self.connection.close()
         self.channel = None

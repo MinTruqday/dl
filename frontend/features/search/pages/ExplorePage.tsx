@@ -66,7 +66,7 @@ export default function ExplorePage() {
       <section aria-labelledby="catalog-title">
         <div className="mb-4 flex items-end justify-between gap-4">
           <h2 id="catalog-title" className="text-[18px] font-semibold text-ink">
-            Tài liệu công khai
+            Tài liệu
           </h2>
           {!loading && (
             <p className="text-[13px] text-ink-muted">

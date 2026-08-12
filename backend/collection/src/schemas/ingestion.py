@@ -7,6 +7,7 @@ class Collection(BaseModel):
 
     source: Literal["AnnaArchive", "NXBST", "NXBGD", "CTAN"]
     pages: Union[int, str] = 1
+    max_documents: int = Field(default=1, ge=1, le=10)
 
     @field_validator("pages")
     @classmethod

@@ -176,6 +176,21 @@ async def confirm_upload(req: ConfirmUploadRequest, current_user: CurrentUser = 
     return APIResponse(data=result, message="Xác thực truyền tải tệp hoàn tất", status=201)
 
 
+@router.get("/luu-tru/xem-truoc/{file_path:path}", response_model=APIResponse[Any])
+async def get_presigned_preview_url(
+    file_path: str,
+    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
+    db=Depends(get_db),
+):
+    if not await can_download(file_path, current_user.id, current_user.role):
+        raise HTTPException(status_code=403, detail="Không có quyền xem trước tệp này")
+    url_data = await UploadService.get_presigned_url(file_path)
+    return APIResponse(
+        data={"preview_url": url_data["download_url"]},
+        message="Tạo liên kết xem trước hoàn tất",
+    )
+
+
 @router.get("/luu-tru/{file_path:path}")
 async def get_presigned_download_url(file_path: str, current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])), db=Depends(get_db)):
     if not await can_download(file_path, current_user.id, current_user.role):

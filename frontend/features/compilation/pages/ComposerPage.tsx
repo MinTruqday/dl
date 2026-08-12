@@ -4,6 +4,7 @@ import Link from "next/link";
 import InlineState from "@/shared/components/common/InlineState";
 import MetricStrip from "@/shared/components/data-display/MetricStrip";
 import PageLoader from "@/shared/components/common/PageLoader";
+import PageHeader from "@/shared/components/layout/PageHeader";
 import { Button } from "@/shared/components/ui/Button";
 import ComposerNavigation from "../components/ComposerNavigation";
 import { useComposerDocuments } from "../hooks/useComposerDocuments";
@@ -22,12 +23,14 @@ export default function ComposerPage() {
   return (
     <div className="w-full">
       <ComposerNavigation />
-      <div className="mb-6 flex items-center justify-between gap-4">
-        <h1 className="product-heading">Soạn thảo</h1>
-        <Link href="/soan-thao/khoi-tao" className="pill-button">
-          Tạo tài liệu
-        </Link>
-      </div>
+      <PageHeader
+        title="Soạn thảo"
+        actions={
+          <Link href="/soan-thao/khoi-tao" className="pill-button">
+            Tạo tài liệu
+          </Link>
+        }
+      />
 
       <MetricStrip
         items={[

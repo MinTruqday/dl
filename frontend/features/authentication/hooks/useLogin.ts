@@ -42,7 +42,7 @@ export function useLogin() {
   const passkeyLogin = async (email: string) => {
     if (submitting) return;
     if (!email.trim()) {
-      setError("Nhập email trước khi dùng passkey");
+      setError("Nhập email trước khi dùng Passkey");
       return;
     }
     setSubmitting(true);
@@ -84,7 +84,7 @@ export function useLogin() {
       setError(
         reason instanceof Error
           ? reason.message
-          : "Không thể đăng nhập bằng passkey",
+          : "Không thể đăng nhập bằng Passkey",
       );
       setSubmitting(false);
     }

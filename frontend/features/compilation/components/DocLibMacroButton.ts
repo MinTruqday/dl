@@ -36,7 +36,7 @@ export default class DocLibMacroButton implements BlockTool {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      label: data?.label || "DocLib Button",
+      label: data?.label || "Nút DocLib",
       macroId: data?.macroId || "macro_1",
     };
   }
@@ -64,15 +64,11 @@ export default class DocLibMacroButton implements BlockTool {
     btn.classList.add("doclib-macro-btn");
     btn.innerText = this.data.label;
     btn.addEventListener("click", () => {
-    btn.innerText = "Processing";
-      btn.style.opacity = "0.7";
-      setTimeout(() => {
-        btn.innerText = this.data.label;
-        btn.style.opacity = "1";
-        if (this.readOnly) {
-          alert(`Macro executed: ${this.data.macroId}`);
-        }
-      }, 1000);
+      const event = new CustomEvent("doclib:macro", {
+        bubbles: true,
+        detail: { macroId: this.data.macroId },
+      });
+      btn.dispatchEvent(event);
     });
 
     container.appendChild(btn);
@@ -83,16 +79,16 @@ export default class DocLibMacroButton implements BlockTool {
 
       const labelInput = document.createElement("input");
       labelInput.classList.add("doclib-macro-input");
-      labelInput.placeholder = "DocLib Name";
+      labelInput.placeholder = "Tên nút";
       labelInput.value = this.data.label;
       labelInput.addEventListener("input", () => {
-        this.data.label = labelInput.value || "DocLib Button";
+        this.data.label = labelInput.value || "Nút DocLib";
         btn.innerText = this.data.label;
       });
 
       const idInput = document.createElement("input");
       idInput.classList.add("doclib-macro-input");
-      idInput.placeholder = "DocLib Input";
+      idInput.placeholder = "Mã macro";
       idInput.value = this.data.macroId;
       idInput.addEventListener("input", () => {
         this.data.macroId = idInput.value;

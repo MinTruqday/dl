@@ -12,7 +12,6 @@ import { useLogin } from "../hooks/useLogin";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [passwordOpen, setPasswordOpen] = useState(false);
   const { submitting, error, passwordLogin, passkeyLogin, googleLogin } =
     useLogin();
 
@@ -45,18 +44,17 @@ export default function LoginPage() {
           />
         </div>
       )}
-      <AuthField
-        id="login-email"
-        name="email"
-        label="Email"
-        type="email"
-        autoComplete="email"
-        required
-        value={email}
-        onChange={(event) => setEmail(event.target.value)}
-      />
-      {passwordOpen && (
-        <form className="mt-5 space-y-5" onSubmit={submit}>
+      <form className="space-y-5" onSubmit={submit}>
+        <AuthField
+          id="login-email"
+          name="email"
+          label="Email"
+          type="email"
+          autoComplete="email"
+          required
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+        />
           <PasswordField
             id="login-password"
             name="password"
@@ -77,29 +75,28 @@ export default function LoginPage() {
           <Button type="submit" className="w-full" disabled={submitting}>
             {submitting ? "Đang xử lý" : "Đăng nhập"}
           </Button>
-        </form>
-      )}
-      {!passwordOpen && (
+      </form>
+      <div className="my-6 flex items-center gap-3" aria-hidden="true">
+        <span className="h-px flex-1 bg-border" />
+        <span className="text-[12px] text-ink-faint">Hoặc</span>
+        <span className="h-px flex-1 bg-border" />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
         <Button
           type="button"
-          className="mt-5 w-full"
+          variant="secondary"
           disabled={submitting}
           onClick={() => passkeyLogin(email)}
         >
-          {submitting ? "Đang xử lý" : "Đăng nhập bằng passkey"}
+          Passkey
         </Button>
-      )}
-      <div className="mt-3 grid gap-3 sm:grid-cols-2">
-        <button
+        <Button
           type="button"
-          className="flex min-h-11 items-center justify-center rounded-control border border-border px-4 py-2 text-[14px] font-semibold text-ink hover:bg-surface-quiet"
-          aria-expanded={passwordOpen}
-          onClick={() => setPasswordOpen((value) => !value)}
+          variant="secondary"
+          disabled={submitting}
+          onClick={googleLogin}
         >
-          {passwordOpen ? "Ẩn mật khẩu" : "Mật khẩu"}
-        </button>
-        <Button type="button" variant="secondary" disabled={submitting} onClick={googleLogin}>
-          Đăng nhập bằng Google
+          Google
         </Button>
       </div>
     </AuthFrame>

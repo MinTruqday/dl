@@ -33,6 +33,7 @@ class State:
         self.page_counter = 0
         self.source_url = None
         self.collection_scope = None
+        self.max_captured_assets = 100
 
     async def _handle_response(self, response: Response):
         if not self.is_capturing or not self.temp_dir:
@@ -91,6 +92,9 @@ class State:
             previous_count = self.page_counter
 
             while True:
+                if self.page_counter >= self.max_captured_assets:
+                    logger.info("[NXBST] Reached document asset limit")
+                    break
                 await page.mouse.wheel(0, 1000)
                 await page.keyboard.press("ArrowRight")
                 await asyncio.sleep(6)
@@ -256,7 +260,11 @@ class NxbstSource:
             }
 
     @staticmethod
-    async def run_list_collector(pages: int = 1, job_id: str | None = None):
+    async def run_list_collector(
+        pages: int = 1,
+        job_id: str | None = None,
+        max_documents: int = 1,
+    ):
         start_url = "https://stbook.vn/"
         logger.info("[NXBST] Scanning list from primary data source")
 
@@ -283,7 +291,7 @@ class NxbstSource:
                 documents_detected = 0
                 documents_queued = 0
                 pages_scanned = 0
-                for cat_url in category_urls:
+                for cat_url in sorted(category_urls):
                     logger.info("[NXBST] Accessing subcategory for extraction")
                     await page.goto(cat_url, timeout=60000)
                     await asyncio.sleep(3)
@@ -299,6 +307,8 @@ class NxbstSource:
 
                         found_documents = 0
                         for node in document_nodes:
+                            if documents_queued >= max_documents:
+                                break
                             href = await node.get_attribute("href")
                             if href:
                                 full_url = urllib.parse.urljoin(start_url, href)
@@ -324,6 +334,9 @@ class NxbstSource:
                         documents_detected += found_documents
                         pages_scanned += 1
 
+                        if documents_queued >= max_documents:
+                            break
+
                         logger.info("[NXBST] Document added to queue")
 
                         if current_page >= pages:
@@ -343,6 +356,8 @@ class NxbstSource:
                                 break
                         except Exception:
                             break
+                    if documents_queued >= max_documents:
+                        break
                 return {
                     "pages_scanned": pages_scanned,
                     "documents_detected": documents_detected,
