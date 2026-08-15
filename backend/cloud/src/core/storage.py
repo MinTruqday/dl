@@ -76,6 +76,8 @@ async def initialize_bucket():
             logger.info(f"Initializing storage bucket {bucket}")
             await storage_client.create_bucket(Bucket=bucket)
             logger.info(f"Storage bucket {bucket} initialized")
+    if "r2.cloudflarestorage.com" in MINIO_ENDPOINT:
+        return
     await storage_client.put_bucket_lifecycle_configuration(
         Bucket=MINIO_PRIVATE_BUCKET,
         LifecycleConfiguration={

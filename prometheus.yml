@@ -16,9 +16,14 @@ scrape_configs:
           - content:8000
           - engagement:8000
           - humanity:8000
-          - messaging:8000
           - notification:8000
           - rag:8000
           - search:8000
           - websocket:8000
           - worker:8000
+
+  - job_name: agentic-ai-harness
+    metrics_path: /evaluate/metrics
+    static_configs:
+      - targets:
+          - agentic_ai:8000
