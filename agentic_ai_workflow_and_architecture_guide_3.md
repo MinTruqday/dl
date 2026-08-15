@@ -43,14 +43,12 @@ flowchart LR
         Content[Content service]
         WS[WebSocket service]
         Web[Tavily và MCP server]
-        Neo4j[(Neo4j qua RAG service)]
     end
 
     Supervisor --> Mongo
     Auth --> Redis
     Knowledge --> RagSvc
     RagSvc --> Qdrant
-    RagSvc --> Neo4j
     API -. readiness .-> MinIO
     API -. readiness .-> MQ
     Router --> Content
@@ -301,7 +299,7 @@ flowchart TD
 | Agent                 | LangChain, LangGraph                                                | Prompt/model adapter, state graph, checkpoint và DAG orchestration   |
 | Model runtime         | Ollama hoặc API tương thích OpenAI                              | Chạy model chính được cấu hình bởi`LLM_MODEL`               |
 | Model/NLP             | Transformers, Sentence Transformers, CrossEncoder, NLI, NLLB        | Đa phương thức, rerank, kiểm chứng và dịch                    |
-| RAG                   | RAG service, Qdrant, BM25, Neo4j gián tiếp                        | Vector search, hybrid memory và knowledge graph                      |
+| RAG                   | RAG service, Qdrant, BM25                                          | Hybrid vector và lexical search cho tài liệu                         |
 | Dữ liệu             | MongoDB/Motor/PyMongo, Redis                                        | Lịch sử, checkpoint, cấu hình, cache, memory và session          |
 | Hàng đợi/lưu trữ | RabbitMQ, MinIO                                                     | Hạ tầng event/task và object storage của hệ thống               |
 | Web/công cụ         | Tavily, MCP SDK, Playwright, HTTPX                                  | Tìm web, công cụ ngoài và gọi microservice                      |

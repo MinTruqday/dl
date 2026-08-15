@@ -16,7 +16,7 @@ from src.core.security import (
     valid_internal_token,
 )
 from src.sockets.composition import composition_socket_manager
-from src.core.internal_services import document_exists
+from src.clients.content import document_exists
 
 
 router = APIRouter(prefix="/ws")

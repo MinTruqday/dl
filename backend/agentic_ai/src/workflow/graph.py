@@ -17,7 +17,7 @@ from langgraph.graph import END, StateGraph
 from loguru import logger
 from src.memory.management import memory_manager
 
-from src.integrations.knowledge_service import knowledge_client
+from src.clients.rag import rag_client
 from src.utils.processing import extract_text_from_base64
 from src.workflow.state import AgentState
 
@@ -62,7 +62,7 @@ try:
     from langchain_community.cache import RedisSemanticCache
 
     langchain.llm_cache = RedisSemanticCache(
-        redis_url=redis_url, embedding=knowledge_client
+        redis_url=redis_url, embedding=rag_client
     )
     logger.info("Redis semantic cache initialized")
 except Exception:
@@ -164,7 +164,7 @@ async def retrieve_db(state: AgentState):
     if document_ids and len(document_ids) >= 2:
         logger.info("Processing cross-document retrieval")
         try:
-            raw_documents = await knowledge_client.cross_document_retrieve(
+            raw_documents = await rag_client.cross_document_retrieve(
                 question,
                 document_ids,
                 k=6,
@@ -201,7 +201,7 @@ async def retrieve_db(state: AgentState):
     all_raw_documents = []
     for q in list(dict.fromkeys(queries))[:3]:
         try:
-            results = await knowledge_client.retrieve(
+            results = await rag_client.retrieve(
                 q,
                 document_ids=document_ids,
                 k=10,

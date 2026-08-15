@@ -10,9 +10,8 @@ from src.schemas.ingestion import (
     IngestResponse,
 )
 from src.services.pipeline import ingestion_pipeline
-from src.services.content_client import content_client
+from src.clients.content import content_client
 from src.services.conversion import document_parser
-from src.store.graph import graph_store
 from src.store.vector import vector_store
 from src.store.bm25 import bm25_store
 
@@ -58,7 +57,6 @@ async def ingest_document(
             status=result.get("status", "indexed"),
             chunks_count=result.get("chunks_count", 0),
             extraction_method=result.get("extraction_method", "local"),
-            graph_text=result.get("graph_text", ""),
         ),
         message="Nạp và chỉ mục hóa tài liệu thành công",
     )
@@ -143,7 +141,6 @@ async def delete_document(
         raise document_error(error)
     await vector_store.delete_by_document(document_id)
     await bm25_store.delete_by_document(document_id)
-    await graph_store.delete_document(document_id)
     await content_client.mark_unindexed(document_id)
     return APIResponse(
         data={"document_id": document_id, "status": "deleted"},

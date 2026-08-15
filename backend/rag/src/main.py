@@ -8,7 +8,6 @@ from loguru import logger
 from src.api.retrieval import router as retrieval_router
 from src.api.embedding import router as embedding_router
 from src.api.ingestion import router as ingestion_router
-from src.api.graph import router as graph_router
 from src.api.cache import router as cache_router
 
 from src.core.infrastructure.configuration import settings
@@ -17,7 +16,6 @@ from src.core.infrastructure.redis import redis_client
 from src.core.metrics import PrometheusMiddleware, metrics_endpoint
 from src.store.vector import vector_store
 from src.store.bm25 import bm25_store
-from src.store.graph import graph_store
 from src.services.embedding import embedder
 from src.services.retrieval import retriever
 
@@ -30,14 +28,12 @@ async def lifespan(app: FastAPI):
         raise RuntimeError("Embedding model dimension does not match the vector index")
     await vector_store.ensure_collection()
     await bm25_store.initialize(await vector_store.scroll_all())
-    await graph_store.ensure_schema()
     await retriever.initialize()
     logger.info("RAG Knowledge service initialized and ready")
     try:
         yield
     finally:
         await redis_client.close_redis()
-        await graph_store.close()
         await close_db()
 
 app = FastAPI(title="DocLib RAG", version=settings.VERSION, lifespan=lifespan)
@@ -58,7 +54,6 @@ app.add_middleware(
 app.include_router(retrieval_router, prefix="/rag")
 app.include_router(embedding_router, prefix="/rag/embedding")
 app.include_router(ingestion_router, prefix="/rag")
-app.include_router(graph_router, prefix="/rag/graph")
 app.include_router(cache_router, prefix="/rag/cache")
 
 @app.get("/health", include_in_schema=False)
@@ -89,11 +84,6 @@ async def readiness_check():
         )
     except Exception:
         checks["qdrant"] = "unavailable"
-    try:
-        await graph_store.verify_connectivity()
-        checks["neo4j"] = "ready"
-    except Exception:
-        checks["neo4j"] = "unavailable"
     checks["embedding"] = "ready" if embedder._model is not None else "unavailable"
     checks["reranker"] = "ready" if retriever._reranker is not None else "unavailable"
     try:

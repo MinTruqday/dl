@@ -5,8 +5,7 @@ from src.core.infrastructure.configuration import settings
 from src.store.vector import vector_store
 from src.store.bm25 import bm25_store
 from src.services.embedding import embedder
-from src.store.graph import graph_store
-from src.services.agentic_client import agentic_client
+from src.clients.agentic import agentic_client
 
 class RetrievalService:
     def __init__(self):
@@ -219,18 +218,6 @@ class RetrievalService:
                 seen_texts.add(text)
                 unique_documents.append(document)
 
-        if document_ids:
-            try:
-                graph_context = await self.graph_expand(document_ids, question)
-                if graph_context:
-                    unique_documents.append({
-                        "text": graph_context,
-                        "metadata": {"chunk_type": "graphrag_context", "source": "graphrag"},
-                        "score": 0.0,
-                    })
-            except Exception:
-                logger.exception("GraphRAG context augmentation failed")
-
         return unique_documents[:k]
 
     async def cross_document_retrieve(
@@ -301,21 +288,5 @@ class RetrievalService:
                 result[right] = doc
                 right -= 1
         return [d for d in result if d is not None]
-
-    async def graph_expand(
-        self, document_ids: List[str], seed_query: str
-    ) -> str:
-        try:
-            relations = await graph_store.expand(document_ids, seed_query)
-            if not relations:
-                return ""
-            lines = [
-                f"{e.get('source')} --[{e.get('relation')}]--> {e.get('target')}"
-                for e in relations
-            ]
-            return "Knowledge graph context:\n" + "\n".join(lines)
-        except Exception:
-            logger.exception("GraphRAG expansion error")
-            return ""
 
 retriever = RetrievalService()

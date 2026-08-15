@@ -155,49 +155,6 @@ def main():
             for document in multi_query["data"]["documents"]
         ), multi_query
 
-        status, graph_replaced = call(
-            "POST",
-            "/rag/graph/replace-document",
-            {
-                "document_id": DOCUMENT_ID,
-                "relations": [
-                    {
-                        "source": "DocLib",
-                        "relation": "VERIFIES",
-                        "target": "GraphRAG",
-                        "document_id": DOCUMENT_ID,
-                    }
-                ],
-                "requester_id": USER_ID,
-                "is_admin": False,
-            },
-        )
-        assert status == 200 and graph_replaced["data"]["status"] == "updated"
-        status, graph_expanded = call(
-            "POST",
-            "/rag/graph/expand",
-            {
-                "document_ids": [DOCUMENT_ID],
-                "seed_query": "DocLib GraphRAG",
-                "limit": 10,
-                "requester_id": USER_ID,
-                "is_admin": False,
-            },
-        )
-        assert status == 200 and graph_expanded["data"]["relations"], graph_expanded
-        status, graph_hidden = call(
-            "POST",
-            "/rag/graph/expand",
-            {
-                "document_ids": [DOCUMENT_ID],
-                "seed_query": "DocLib GraphRAG",
-                "limit": 10,
-                "requester_id": OTHER_USER_ID,
-                "is_admin": False,
-            },
-        )
-        assert status == 403, graph_hidden
-
         status, extracted = call(
             "POST",
             "/rag/extract",

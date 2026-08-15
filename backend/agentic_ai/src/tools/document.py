@@ -1017,8 +1017,8 @@ async def delete_document(
         )
         if response.status_code == 200:
             try:
-                from src.integrations.knowledge_service import knowledge_client
-                await knowledge_client.delete_document(
+                from src.clients.rag import rag_client
+                await rag_client.delete_document(
                     document_id,
                     settings.PLATFORM_SYSTEM_ID,
                     True,
@@ -1145,7 +1145,7 @@ async def recommend_documents(
     CRITICAL: Returns a structured summary of the top 3 matching documents including title, link, price, and match description.
     </contract>
     """
-    from src.services.content_client import ContentClient
+    from src.clients.content import ContentClient
 
     try:
         docs = await ContentClient.search(query)

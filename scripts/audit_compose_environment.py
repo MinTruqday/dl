@@ -11,7 +11,6 @@ sensitive = {
     "HF_TOKEN",
     "MINIO_ACCESS_KEY",
     "MINIO_SECRET_KEY",
-    "NEO4J_PASSWORD",
     "PAYOS_API_KEY",
     "PAYOS_CHECKSUM_KEY",
     "SMTP_PASS",

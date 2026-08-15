@@ -14,7 +14,7 @@ from src.core.infrastructure.mq import mq as mq_client
 from src.core.infrastructure.mongo import mongo
 from src.core.infrastructure.redis import redis
 from src.schemas.ingestion import Collection
-from src.services.content_client import collector_document_stats
+from src.clients.content import collector_document_stats
 from src.sources.anna import AnnaSource
 from src.sources.ctan import CtanSource
 from src.sources.nxbgd import NxbgdSource

@@ -145,7 +145,6 @@ class PromptType(Enum):
     EXTRACT_GLOSSARY = "extract_glossary"
     IMITATE_STYLE = "imitate_style"
     PLAN_REPLAN = "plan_replan"
-    GRAPHRAG_ENTITY_EXTRACTION = "graphrag_entity_extraction"
     AGENTIC_SEARCH_EVALUATION = "agentic_search_evaluation"
     MCP_AGENT = "mcp_agent"
     MEMORY_EXTRACTION = "memory_extraction"
@@ -386,52 +385,6 @@ Break down the query into up to 3 distinct search queries.
 Query: '{{query}}'""",
         PromptType.EVALUATION_HARNESS_PROMPT: """{instruction}
 {inp}""",
-        PromptType.GRAPHRAG_ENTITY_EXTRACTION: f"""{METIS_SYSTEM_BASE}
-
-<system_identity>
-You are the DocLib Knowledge Graph Extractor Agent.
-Your role is to extract distinct entities and their semantic relationships from text to build a highly accurate GraphRAG knowledge base.
-</system_identity>
-
-<objective>
-Analyze the provided text and extract knowledge graph entities and relations.
-</objective>
-
-<rules>
-1. Format your entire response as a STRICTLY VALID JSON object with one key named "relations" containing a list. Do not include markdown code blocks.
-2. Each item in "relations" must have exactly three keys: "source", "relation", and "target".
-3. "source" and "target" must be concise noun phrases (e.g., "DocLib", "User", "API Key").
-4. "relation" must be a concise, capitalized verb or action phrase (e.g., "USES", "CREATED_BY", "DEPENDS_ON").
-5. Ignore generic or conversational text. Focus only on factual relationships.
-</rules>
-
-<examples>
-<example_group title="Entity Extraction">
-<example>
-<text>John Doe is the CEO of OpenAI. He announced the release of GPT-5 yesterday.</text>
-<good_response>
-{{{{"relations": [
-    {{{{"source": "John Doe", "relation": "IS_CEO_OF", "target": "OpenAI"}}}},
-    {{{{"source": "John Doe", "relation": "ANNOUNCED", "target": "GPT-5"}}}}
-]}}}}
-</good_response>
-<bad_response>
-{{{{"relations": [
-    {{{{"source": "He", "relation": "announced", "target": "it"}}}}
-]}}}}
-</bad_response>
-<explanation>The bad response includes conversational text, fails to resolve pronouns (He -> John Doe), and uses lowercase relations.</explanation>
-</example>
-</example_group>
-</examples>
-
-<edge_cases>
-- If no meaningful relationships are found, return {{{{"relations": []}}}}.
-- If pronouns are used in the text, resolve them to the actual entity name whenever possible.
-</edge_cases>
-
-Text:
-{{text}}""",
         PromptType.AGENTIC_SEARCH_EVALUATION: f"""{METIS_SYSTEM_BASE}
 
 <system_identity>

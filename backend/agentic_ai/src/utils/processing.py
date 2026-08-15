@@ -1,7 +1,7 @@
 import base64
 
 from loguru import logger
-from src.integrations.knowledge_service import knowledge_client
+from src.clients.rag import rag_client
 
 async def extract_text_from_base64(
     base64_data: str,
@@ -24,7 +24,7 @@ async def extract_text_from_base64(
             return file_bytes.decode("utf-8", errors="replace")
 
         logger.info("Delegating attachment conversion to knowledge service")
-        return await knowledge_client.extract_attachment(base64_data, filename)
+        return await rag_client.extract_attachment(base64_data, filename)
     except Exception:
         logger.exception("File text extraction error")
         return ""

@@ -6,14 +6,14 @@ import httpx
 from src.core.infrastructure.configuration import settings
 
 
-class UserDirectory:
+class HumanityClient:
     @staticmethod
     async def get_by_id(user_id: str) -> Optional[dict]:
-        return await UserDirectory._get(f"/nguoi-dung/{quote(user_id, safe='')}")
+        return await HumanityClient._get(f"/nguoi-dung/{quote(user_id, safe='')}")
 
     @staticmethod
     async def get_by_email(email: str) -> Optional[dict]:
-        return await UserDirectory._get(f"/nguoi-dung/email/{quote(email, safe='')}")
+        return await HumanityClient._get(f"/nguoi-dung/email/{quote(email, safe='')}")
 
     @staticmethod
     async def _get(path: str) -> Optional[dict]:

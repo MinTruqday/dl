@@ -369,23 +369,6 @@ services:
     networks:
       - doclib_network
 
-  neo4j:
-    image: neo4j:5-community@sha256:d9dd3dc7d1c78fa959191ff02dbdcbefadceaf83eee23428fb92a58cac8ad3fe
-    container_name: doclib_neo4j
-    restart: unless-stopped
-    ports:
-      - 7474:7474
-      - 7687:7687
-    environment:
-      - NEO4J_AUTH=${NEO4J_USER}/${NEO4J_PASSWORD}
-      - NEO4J_PLUGINS=["apoc"]
-      - NEO4J_dbms_memory_heap_initial__size=256m
-      - NEO4J_dbms_memory_heap_max__size=512m
-    volumes:
-      - neo4j_data:/data
-    networks:
-      - doclib_network
-
   prometheus:
     image: prom/prometheus:v3.13.0@sha256:c6b27ea434f8389bfe233fbc7be381cf50587c286e871bc842008f5a1b1908a7
     container_name: doclib_prometheus
@@ -790,16 +773,12 @@ services:
       RAG_DB_NAME: ${RAG_DB_NAME:?RAG_DB_NAME is required}
       RABBITMQ_URI: ${RABBITMQ_URI:?RABBITMQ_URI is required}
       QDRANT_URL: ${QDRANT_URL:?QDRANT_URL is required}
-      NEO4J_URI: ${NEO4J_URI:?NEO4J_URI is required}
-      NEO4J_USER: ${NEO4J_USER:?NEO4J_USER is required}
-      NEO4J_PASSWORD: ${NEO4J_PASSWORD:?NEO4J_PASSWORD is required}
       EMBEDDING_MODEL: ${EMBEDDING_MODEL:?EMBEDDING_MODEL is required}
       RERANKER_MODEL: ${RERANKER_MODEL:?RERANKER_MODEL is required}
     depends_on:
       - mongodb
       - redis
       - qdrant
-      - neo4j
       - content
     volumes:
       - ./backend/rag/src:/app/src
@@ -819,7 +798,6 @@ volumes:
   rabbitmq_data: null
   minio_data: null
   qdrant_data: null
-  neo4j_data: null
   prometheus_data: null
   grafana_data: null
   hf_cache: null

@@ -6,7 +6,7 @@ from loguru import logger
 from pymongo.errors import DuplicateKeyError
 from src.schemas.announcement import AnnouncementCreate
 from src.repositories.announcement import AnnouncementRepository
-from src.services.humanity_client import HumanityClient
+from src.clients.humanity import HumanityClient
 
 class AnnouncementService:
 

@@ -321,24 +321,12 @@ async def _handle_document_uploaded(event: AgentEvent) -> Optional[str]:
 
     async def _run_ingest():
         try:
-            from src.integrations.knowledge_service import knowledge_client
-            from src.services.graph_indexing import graph_indexing_service
-            result = await knowledge_client.ingest_document(
+            from src.clients.rag import rag_client
+            result = await rag_client.ingest_document(
                 doc_id,
                 user_id,
                 True,
             )
-            graph_text = str(result.pop("graph_text", ""))
-            try:
-                result["graph_entities_count"] = await graph_indexing_service.index_document(
-                    doc_id,
-                    graph_text,
-                    user_id,
-                    True,
-                )
-            except Exception:
-                await knowledge_client.delete_document(doc_id, user_id, True)
-                raise
             logger.info(
                 f"Auto-ingest completed doc_id={doc_id} chunks={result.get('chunks', 0)} method={result.get('extraction_method')}"
             )

@@ -1,7 +1,5 @@
-import os
-import tempfile
 import asyncio
-from typing import Dict, List, Optional
+from typing import Dict
 from uuid6 import uuid7
 from loguru import logger
 from src.store.vector import vector_store
@@ -9,9 +7,8 @@ from src.store.bm25 import bm25_store
 from src.services.embedding import embedder
 from src.services.chunking import chunker
 from src.services.conversion import document_parser
-from src.services.ast_indexer import ASTIndexer
-from src.services.content_client import content_client
-from src.services.agentic_client import agentic_client
+from src.clients.content import content_client
+from src.clients.agentic import agentic_client
 
 class IngestionPipelineService:
     async def ingest_document(
@@ -69,14 +66,6 @@ class IngestionPipelineService:
             structure=document_structure,
         )
         first_pages = raw_markdown[:15000]
-
-        ast_chunks = await self._index_ast_if_code(
-            file_url,
-            visibility,
-            document_id,
-            metadata,
-        )
-        chunks.extend(ast_chunks)
 
         if chunks:
             safe_indices = await agentic_client.inspect_rag_chunks(
@@ -138,56 +127,6 @@ class IngestionPipelineService:
             "chunks_count": len(chunks),
             "extraction_method": extraction_method,
             "status": "indexed",
-            "graph_text": "\n".join(texts)[:8000],
         }
-
-    async def _index_ast_if_code(
-        self,
-        file_url: str,
-        visibility: str,
-        document_id: str,
-        metadata: Dict,
-    ) -> List[Dict]:
-        extension = os.path.splitext(file_url.split("?", 1)[0])[1].lower()
-        if extension not in {".py", ".js", ".ts", ".java", ".go", ".c", ".cpp", ".rs"}:
-            return []
-        file_bytes, _ = await document_parser._download_from_minio(
-            file_url,
-            visibility=visibility,
-        )
-        if not file_bytes:
-            return []
-        with tempfile.NamedTemporaryFile(suffix=extension, delete=False) as temporary:
-            temporary.write(file_bytes)
-            temporary_path = temporary.name
-        try:
-            nodes = await asyncio.to_thread(ASTIndexer().index_file, temporary_path)
-        finally:
-            await asyncio.to_thread(os.unlink, temporary_path)
-        chunks = []
-        for node in nodes:
-            snippet = node.get("snippet", "").strip()
-            if len(snippet) < 30:
-                continue
-            chunk_id = str(uuid7())
-            chunks.append(
-                {
-                    "id": chunk_id,
-                    "text": (
-                        f"[{node.get('type', 'code')}] "
-                        f"{node.get('name', '')}\n{snippet}"
-                    ),
-                    "metadata": {
-                        **metadata,
-                        "chunk_id": chunk_id,
-                        "chunk_type": "ast_code",
-                        "chunk_index": node.get("line", 0),
-                        "extraction_method": "ast",
-                        "ast_node_type": node.get("type", ""),
-                        "ast_node_name": node.get("name", ""),
-                    },
-                }
-            )
-        return chunks
 
 ingestion_pipeline = IngestionPipelineService()

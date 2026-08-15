@@ -887,7 +887,7 @@ def test_recommend_documents_tool():
     ]
 
     with patch(
-        "src.services.content_client.ContentClient.search",
+        "src.clients.content.ContentClient.search",
         new=AsyncMock(return_value=documents),
     ):
         result = asyncio.run(recommend_documents.ainvoke({"query": "ABC project"}, config={"configurable": {"token": "Bearer test"}}))
@@ -1237,7 +1237,7 @@ def test_sandbox_import_does_not_initialize_knowledge_service_client():
                 "import sys\n"
                 "from src.harness.sandbox import CodeSandbox\n"
                 "assert CodeSandbox\n"
-                "assert 'src.integrations.knowledge_service' not in sys.modules\n"
+                "assert 'src.clients.rag' not in sys.modules\n"
             ),
         ],
         cwd=os.path.abspath("."),
@@ -1500,7 +1500,7 @@ def test_semantic_document_search_returns_distinct_ranked_ids():
         role="reader",
     )
     with patch(
-            "src.integrations.knowledge_service.knowledge_client.retrieve",
+            "src.clients.rag.rag_client.retrieve",
             new=AsyncMock(return_value=chunks),
         ):
         result = asyncio.run(

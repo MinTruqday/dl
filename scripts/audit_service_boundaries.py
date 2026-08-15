@@ -24,8 +24,6 @@ for path in sorted(backend.glob("*/src/**/*.py")):
     ):
         violations.append(f"{path.relative_to(root)} {service}->DYNAMIC_DATABASE")
     relative = path.relative_to(backend).as_posix()
-    if service != "RAG" and ("from neo4j" in source or "settings.NEO4J_" in source):
-        violations.append(f"{path.relative_to(root)} {service}->RAG_GRAPH")
     if service == "AGENTIC_AI" and (
         "src.store.vector" in source
         or "src.store.graph" in source

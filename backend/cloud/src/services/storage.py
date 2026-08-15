@@ -1,4 +1,4 @@
-from src.services.user import UserDirectory
+from src.clients.humanity import HumanityClient
 from src.core.infrastructure.mongo import mongo
 from datetime import datetime, timezone
 from typing import List, Optional
@@ -50,7 +50,7 @@ class StorageService:
 
     @staticmethod
     async def get_storage_quota(owner_id: str) -> dict:
-        user = await UserDirectory.get_by_id(owner_id)
+        user = await HumanityClient.get_by_id(owner_id)
         limit = (
             user.get("storage_limit", 1 * 1024 * 1024 * 1024)
             if user
@@ -427,7 +427,7 @@ class StorageService:
         if role not in {"viewer", "editor"}:
             from fastapi import HTTPException
             raise HTTPException(status_code=422, detail="Vai trò chia sẻ không hợp lệ")
-        target_user = await UserDirectory.get_by_email(email)
+        target_user = await HumanityClient.get_by_email(email)
         if not target_user:
             from fastapi import HTTPException
 
@@ -839,4 +839,3 @@ class StorageService:
         )
         items = await cursor.to_list(length=None)
         return [StorageItemInDB(**item) for item in items]
-

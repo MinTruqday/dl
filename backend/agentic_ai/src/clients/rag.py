@@ -2,8 +2,8 @@ import httpx
 from typing import Dict, List, Optional
 from src.core.infrastructure.configuration import settings
 
-class KnowledgeServiceClient:
-    """Thin HTTP boundary to the standalone RAG/knowledge service."""
+class RagClient:
+    """Thin HTTP boundary to the standalone RAG service."""
 
     embedding_dimensions = 1024
 
@@ -18,8 +18,8 @@ class KnowledgeServiceClient:
             response.raise_for_status()
             data = response.json().get("data", {})
             embedding = data.get("embedding", [])
-            if len(embedding) != KnowledgeServiceClient.embedding_dimensions:
-                raise RuntimeError("Knowledge service embedding dimension mismatch")
+            if len(embedding) != RagClient.embedding_dimensions:
+                raise RuntimeError("RAG embedding dimension mismatch")
             return embedding
 
     @staticmethod
@@ -34,10 +34,10 @@ class KnowledgeServiceClient:
             data = response.json().get("data", {})
             embeddings = data.get("embeddings", [])
             if len(embeddings) != len(texts) or any(
-                len(embedding) != KnowledgeServiceClient.embedding_dimensions
+                len(embedding) != RagClient.embedding_dimensions
                 for embedding in embeddings
             ):
-                raise RuntimeError("Knowledge service batch embedding dimension mismatch")
+                raise RuntimeError("RAG batch embedding dimension mismatch")
             return embeddings
 
     @staticmethod
@@ -124,30 +124,6 @@ class KnowledgeServiceClient:
             response.raise_for_status()
             data = response.json().get("data", {})
             return data.get("documents", [])
-
-    @staticmethod
-    async def expand_graph(
-        document_ids: List[str],
-        seed_query: str,
-        limit: int = 20,
-        requester_id: Optional[str] = None,
-        is_admin: bool = False,
-    ) -> str:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(
-                f"{settings.RAG_URL}/rag/graph/expand",
-                json={
-                    "document_ids": document_ids,
-                    "seed_query": seed_query,
-                    "limit": limit,
-                    "requester_id": requester_id,
-                    "is_admin": is_admin,
-                },
-                headers={"X-Internal-Token": settings.SECRET_KEY},
-            )
-            response.raise_for_status()
-            data = response.json().get("data", {})
-            return data.get("context", "")
 
     @staticmethod
     async def get_cache(
@@ -252,25 +228,4 @@ class KnowledgeServiceClient:
             response.raise_for_status()
             return response.json().get("data", {})
 
-    @staticmethod
-    async def replace_graph(
-        document_id: str,
-        relations: List[Dict],
-        requester_id: str,
-        is_admin: bool = False,
-    ) -> Dict:
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            response = await client.post(
-                f"{settings.RAG_URL}/rag/graph/replace-document",
-                json={
-                    "document_id": document_id,
-                    "relations": relations,
-                    "requester_id": requester_id,
-                    "is_admin": is_admin,
-                },
-                headers={"X-Internal-Token": settings.SECRET_KEY},
-            )
-            response.raise_for_status()
-            return response.json().get("data", {})
-
-knowledge_client = KnowledgeServiceClient()
+rag_client = RagClient()

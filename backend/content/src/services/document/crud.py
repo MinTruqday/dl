@@ -12,7 +12,7 @@ from src.core.infrastructure.redis import redis
 from src.core.publication import trigger_document_publish_job
 from src.repositories.document import DocumentRepository
 from src.schemas.document import DocumentContentUpdate, DocumentCreate, DocumentInDB, DocumentStatus
-from src.services.collaboration_client import CollaborationClient
+from src.clients.collaboration import CollaborationClient
 from src.services.document.base import (
     serialize_document,
     is_admin,

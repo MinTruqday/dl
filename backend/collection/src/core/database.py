@@ -3,7 +3,7 @@ import uuid
 
 from loguru import logger
 
-from src.services.content_client import exchange_collected_document
+from src.clients.content import exchange_collected_document
 
 
 class Database:

@@ -7,7 +7,7 @@ from loguru import logger
 from src.core.infrastructure.mongo import mongo
 from src.repositories.document import DocumentRepository
 from src.schemas.document import DocumentStatus
-from src.services.engagement_client import EngagementClient
+from src.clients.engagement import EngagementClient
 from src.services.document.base import can_read_full, is_admin, serialize_document
 
 class DocumentMetadataService:

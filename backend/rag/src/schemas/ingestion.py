@@ -11,9 +11,7 @@ class IngestResponse(BaseModel):
     status: str
     chunks_count: int
     summary_generated: bool = False
-    graph_entities_count: int = 0
     extraction_method: str = "local"
-    graph_text: str = ""
 
 
 class AttachmentConversionRequest(BaseModel):

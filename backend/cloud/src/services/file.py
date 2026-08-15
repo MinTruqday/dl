@@ -6,7 +6,7 @@ from loguru import logger
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 from src.schemas.storage import StorageItemCreate, StorageItemInDB, StorageItemUpdate
-from src.services.user import UserDirectory
+from src.clients.humanity import HumanityClient
 
 class FileService:
     @staticmethod
@@ -84,7 +84,7 @@ class FileService:
 
     @staticmethod
     async def get_storage_quota(owner_id: str) -> dict:
-        user = await UserDirectory.get_by_id(owner_id)
+        user = await HumanityClient.get_by_id(owner_id)
         limit = (
             user.get("storage_limit", 1 * 1024 * 1024 * 1024)
             if user
