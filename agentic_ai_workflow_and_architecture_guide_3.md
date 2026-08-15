@@ -306,7 +306,7 @@ flowchart TD
 | Hàng đợi/lưu trữ | RabbitMQ, MinIO                                                     | Hạ tầng event/task và object storage của hệ thống               |
 | Web/công cụ         | Tavily, MCP SDK, Playwright, HTTPX                                  | Tìm web, công cụ ngoài và gọi microservice                      |
 | Bảo mật             | Presidio, spaCy, guardrails nội bộ, JWT, RestrictedPython         | PII, injection, secret leak, auth và sandbox tài nguyên giới hạn |
-| Tài liệu            | Docling, MarkItDown, PyMuPDF, pypdfium2, Pillow                     | Trích xuất và xử lý tài liệu/ảnh                              |
+| Tài liệu            | Docling, PyMuPDF, pypdfium2, Pillow                                 | Trích xuất và xử lý tài liệu/ảnh                              |
 | Fine-tuning           | PEFT, TRL, Datasets, Accelerate, bitsandbytes, MLX, llama.cpp, GGUF | LoRA/QLoRA, merge và xuất local model                               |
 | Quan sát             | Loguru, Prometheus metrics, AgentOps nội bộ                       | Trace ID, latency, token, tool call và security event                |
 | Triển khai           | Docker Compose, Traefik                                             | Container, dependency health và định tuyến service                |

@@ -8,8 +8,6 @@ from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 
-MODEL_ID = settings.DOCLING_MODEL
-
 class _DoclingModel:
     def __init__(self):
         from docling.document_converter import DocumentConverter, PdfFormatOption
@@ -95,29 +93,9 @@ class ConversionRag:
                 "page_count": page_count,
                 "docling_document": doc,
             }
-        except Exception as err:
-            logger.warning(f"Docling conversion fallback triggered for {file_path.name}: {err}")
-            markdown = ""
-            try:
-                from markitdown import MarkItDown
-                md = MarkItDown()
-                res = md.convert(str(file_path))
-                markdown = res.text_content
-                logger.info("Converted document using MarkItDown fallback")
-            except Exception as md_err:
-                logger.warning(f"MarkItDown fallback error for {file_path.name}: {md_err}")
-                try:
-                    markdown = file_path.read_text(encoding="utf-8", errors="ignore")
-                except Exception:
-                    markdown = ""
-
-            chunks = self._split_markdown_to_chunks(markdown)
-            return {
-                "markdown": markdown,
-                "chunks": chunks,
-                "chunk_count": len(chunks),
-                "page_count": 1,
-            }
+        except Exception:
+            logger.exception(f"Docling conversion failed for {file_path.name}")
+            raise
 
     async def parse_document(self, file_url: str, visibility: str = "public") -> Dict:
         file_bytes, file_ext = await self._download_from_minio(file_url, visibility=visibility)

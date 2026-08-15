@@ -16,6 +16,7 @@ from src.core.infrastructure.database import close_db, database, init_db
 from src.core.infrastructure.redis import redis_client
 from src.core.metrics import PrometheusMiddleware, metrics_endpoint
 from src.store.vector import vector_store
+from src.store.bm25 import bm25_store
 from src.store.graph import graph_store
 from src.services.embedding import embedder
 from src.services.retrieval import retriever
@@ -28,6 +29,7 @@ async def lifespan(app: FastAPI):
     if len(embedding) != embedder._dimensions:
         raise RuntimeError("Embedding model dimension does not match the vector index")
     await vector_store.ensure_collection()
+    await bm25_store.initialize(await vector_store.scroll_all())
     await graph_store.ensure_schema()
     await retriever.initialize()
     logger.info("RAG Knowledge service initialized and ready")

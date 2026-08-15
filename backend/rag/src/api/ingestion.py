@@ -9,6 +9,7 @@ from src.services.content_client import content_client
 from src.services.conversion import document_parser
 from src.store.graph import graph_store
 from src.store.vector import vector_store
+from src.store.bm25 import bm25_store
 
 router = APIRouter(
     route_class=LoggingRoute,
@@ -110,6 +111,7 @@ async def delete_document(
     except Exception as error:
         raise document_error(error)
     await vector_store.delete_by_document(document_id)
+    await bm25_store.delete_by_document(document_id)
     await graph_store.delete_document(document_id)
     await content_client.mark_unindexed(document_id)
     return APIResponse(

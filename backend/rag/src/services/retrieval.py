@@ -3,6 +3,7 @@ from typing import Dict, List, Optional
 from loguru import logger
 from src.core.infrastructure.configuration import settings
 from src.store.vector import vector_store
+from src.store.bm25 import bm25_store
 from src.services.embedding import embedder
 from src.store.graph import graph_store
 from src.services.agentic_client import agentic_client
@@ -50,6 +51,56 @@ class RetrievalService:
                 })
         return citations
 
+    @staticmethod
+    def _result_key(document: Dict) -> str:
+        if document.get("id"):
+            return str(document["id"])
+        metadata = document.get("metadata", {})
+        return "|".join(
+            [
+                str(metadata.get("document_id", "")),
+                str(metadata.get("chunk_id", "")),
+                document.get("text", ""),
+            ]
+        )
+
+    def _rrf_fuse(
+        self,
+        dense_documents: List[Dict],
+        sparse_documents: List[Dict],
+        rank_constant: int = 60,
+    ) -> List[Dict]:
+        fused: Dict[str, Dict] = {}
+        for source, documents in (
+            ("dense", dense_documents),
+            ("bm25", sparse_documents),
+        ):
+            for rank, document in enumerate(documents, start=1):
+                key = self._result_key(document)
+                entry = fused.setdefault(
+                    key,
+                    {
+                        **document,
+                        "rrf_score": 0.0,
+                        "retrieval_sources": [],
+                    },
+                )
+                entry["rrf_score"] += 1.0 / (rank_constant + rank)
+                if source not in entry["retrieval_sources"]:
+                    entry["retrieval_sources"].append(source)
+                if source == "dense":
+                    entry["dense_score"] = float(document.get("score", 0.0))
+                else:
+                    entry["bm25_score"] = float(
+                        document.get("bm25_score", document.get("score", 0.0))
+                    )
+        results = sorted(
+            fused.values(), key=lambda item: item["rrf_score"], reverse=True
+        )
+        for result in results:
+            result["score"] = result["rrf_score"]
+        return results
+
     async def retrieve(
         self,
         query: str,
@@ -59,43 +110,45 @@ class RetrievalService:
         requester_id: Optional[str] = None,
         is_admin: bool = False,
     ) -> List[Dict]:
-        if query_vector_override is not None:
-            query_vector = query_vector_override
-        else:
-            query_vector = await embedder.embed_query(query)
-
         current_reranker = self.reranker
-        fetch_limit = k * 3 if current_reranker else k
+        fetch_limit = min(max(k * 3, k), 100)
 
-        documents = await vector_store.query(
-            query_vector=query_vector,
-            document_ids=document_ids,
-            limit=fetch_limit,
-            requester_id=requester_id,
-            is_admin=is_admin,
+        async def dense_search():
+            query_vector = query_vector_override
+            if query_vector is None:
+                query_vector = await embedder.embed_query(query)
+            return await vector_store.query(
+                query_vector=query_vector,
+                document_ids=document_ids,
+                limit=fetch_limit,
+                requester_id=requester_id,
+                is_admin=is_admin,
+            )
+
+        dense_result, sparse_result = await asyncio.gather(
+            dense_search(),
+            bm25_store.search(
+                query=query,
+                document_ids=document_ids,
+                limit=fetch_limit,
+                requester_id=requester_id,
+                is_admin=is_admin,
+            ),
+            return_exceptions=True,
         )
-
+        if isinstance(dense_result, Exception):
+            logger.error("Dense retrieval failed: {}", type(dense_result).__name__)
+            dense_documents = []
+        else:
+            dense_documents = dense_result
+        if isinstance(sparse_result, Exception):
+            logger.error("BM25 retrieval failed: {}", type(sparse_result).__name__)
+            sparse_documents = []
+        else:
+            sparse_documents = sparse_result
+        documents = self._rrf_fuse(dense_documents, sparse_documents)
         if not documents:
             return []
-
-        try:
-            from rank_bm25 import BM25Okapi
-            tokenized_corpus = [doc.get("text", "").lower().split(" ") for doc in documents]
-            bm25 = BM25Okapi(tokenized_corpus)
-            tokenized_query = query.lower().split(" ")
-            bm25_scores = bm25.get_scores(tokenized_query)
-            
-            k_rrf = 60
-            for i, doc in enumerate(documents):
-                dense_rank = i + 1
-                sparse_rank = sorted(range(len(bm25_scores)), key=lambda k: bm25_scores[k], reverse=True).index(i) + 1
-                doc["rrf_score"] = (1 / (k_rrf + dense_rank)) + (1 / (k_rrf + sparse_rank))
-                
-            documents = sorted(documents, key=lambda x: x["rrf_score"], reverse=True)
-        except ImportError:
-            logger.warning("rank_bm25 not installed, skipping BM25 Hybrid Fusion")
-        except Exception:
-            logger.error("Hybrid search fusion error")
 
         if not current_reranker:
             return documents[:k]

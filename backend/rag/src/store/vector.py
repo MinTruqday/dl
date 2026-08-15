@@ -104,6 +104,7 @@ class VectorStore:
             )
             return [
                 {
+                    "id": str(hit.id),
                     "text": hit.payload.get("text", ""),
                     "metadata": {k: v for k, v in hit.payload.items() if k != "text"},
                     "score": hit.score,
@@ -113,6 +114,34 @@ class VectorStore:
         except Exception:
             logger.exception("Search query parsing and processing error")
             raise
+
+    async def scroll_all(self, batch_size: int = 256) -> List[Dict]:
+        """Read the complete corpus payload for rebuilding secondary indexes."""
+        documents: List[Dict] = []
+        offset = None
+        while True:
+            points, next_offset = await self.client.scroll(
+                collection_name=self.collection_name,
+                limit=batch_size,
+                offset=offset,
+                with_payload=True,
+                with_vectors=False,
+            )
+            for point in points:
+                payload = point.payload or {}
+                documents.append(
+                    {
+                        "id": str(point.id),
+                        "text": payload.get("text", ""),
+                        "metadata": {
+                            key: value for key, value in payload.items() if key != "text"
+                        },
+                    }
+                )
+            if next_offset is None:
+                break
+            offset = next_offset
+        return documents
 
     async def delete_by_document(self, document_id: str):
         try:

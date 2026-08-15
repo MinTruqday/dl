@@ -47,7 +47,6 @@ class Settings(BaseModel):
     RERANKER_MODEL: str = os.environ["RERANKER_MODEL"]
     NLLB_MODEL: str = os.environ["NLLB_MODEL"]
     NLI_MODEL_NAME: str = os.environ["NLI_MODEL_NAME"]
-    DOCLING_MODEL: str = os.environ["DOCLING_MODEL"]
     PLATFORM_SYSTEM_ID: str = os.environ["PLATFORM_SYSTEM_ID"]
     WEBSOCKET_URL: str = get_service_url("WEBSOCKET")
     RAG_URL: str = get_service_url("RAG")

@@ -19,8 +19,10 @@ ARG LLAMA_CPP_REV=305ba519ab61cdff8044922cba2347826a04453f
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential ca-certificates cmake git \
-    && git clone https://github.com/ggml-org/llama.cpp.git /opt/llama.cpp \
-    && git -C /opt/llama.cpp checkout --detach ${LLAMA_CPP_REV} \
+    && git init /opt/llama.cpp \
+    && git -C /opt/llama.cpp remote add origin https://github.com/ggml-org/llama.cpp.git \
+    && git -C /opt/llama.cpp fetch --depth 1 origin ${LLAMA_CPP_REV} \
+    && git -C /opt/llama.cpp checkout --detach FETCH_HEAD \
     && cmake -S /opt/llama.cpp -B /opt/llama.cpp/build \
         -DGGML_NATIVE=OFF -DLLAMA_CURL=OFF -DGGML_OPENMP=OFF \
     && cmake --build /opt/llama.cpp/build --config Release \

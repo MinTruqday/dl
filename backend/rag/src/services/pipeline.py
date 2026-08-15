@@ -5,6 +5,7 @@ from typing import Dict, List, Optional
 from uuid6 import uuid7
 from loguru import logger
 from src.store.vector import vector_store
+from src.store.bm25 import bm25_store
 from src.services.embedding import embedder
 from src.services.chunking import chunker
 from src.services.conversion import document_parser
@@ -47,44 +48,27 @@ class IngestionPipelineService:
             "file_url": file_url,
         }
 
-        chunks = []
-        doc_chunks = await document_parser.get_doc_chunks_for_ingestion(file_url, visibility=visibility)
+        parse_result = await document_parser.parse_document(
+            file_url,
+            visibility=visibility,
+        )
+        if parse_result.get("error"):
+            raise ValueError("Failed to convert document with Docling")
+        raw_markdown = parse_result.get("markdown", "")
+        document_structure = parse_result.get("structure", [])
 
         await vector_store.delete_by_document(document_id)
+        await bm25_store.delete_by_document(document_id)
 
-        if doc_chunks:
-            extraction_method = "ade"
-            first_pages = " ".join(
-                chunk.get("text", "") for chunk in doc_chunks[:5]
-            )[:15000]
-            for i, ac in enumerate(doc_chunks):
-                chunk_text = ac.get("text", "").strip()
-                if len(chunk_text) < 30:
-                    continue
-                chunk_id = str(uuid7())
-                chunk_meta = {
-                    **metadata,
-                    "chunk_id": chunk_id,
-                    "chunk_type": ac.get("chunk_type", "text"),
-                    "chunk_index": i,
-                    "extraction_method": "ade",
-                }
-                chunks.append({
-                    "id": chunk_id,
-                    "text": chunk_text,
-                    "metadata": chunk_meta,
-                })
-        else:
-            extraction_method = "local"
-            raw_text = await document_parser.get_markdown(
-                file_url,
-                visibility=visibility,
-            )
-            if not raw_text:
-                raise ValueError("Failed to extract document text")
-            extracted_chunks = await chunker.chunk_document(raw_text, metadata)
-            chunks.extend(extracted_chunks)
-            first_pages = raw_text[:15000]
+        if not raw_markdown:
+            raise ValueError("Failed to extract document text")
+        extraction_method = "docling_structure_semantic"
+        chunks = await chunker.chunk_document(
+            raw_markdown,
+            {**metadata, "extraction_method": extraction_method},
+            structure=document_structure,
+        )
+        first_pages = raw_markdown[:15000]
 
         ast_chunks = await self._index_ast_if_code(
             file_url,
@@ -144,6 +128,7 @@ class IngestionPipelineService:
             ids=ids, embeddings=embeddings, documents=texts, metadatas=metadatas
         )
         await vector_store.wait_upsert()
+        await bm25_store.upsert(chunks)
 
         await content_client.mark_indexed(document_id, len(chunks))
 

@@ -21,6 +21,10 @@ backend/.venv/
 .gitignore
 test_*.py
 !backend/agentic_ai/tests/test_regressions.py
+!backend/rag/tests/test_chunking.py
+!backend/rag/tests/test_conversion.py
+!backend/rag/tests/test_bm25.py
+!backend/rag/tests/test_retrieval_fusion.py
 mem0-main
 tectonic-master
 Anthropic
