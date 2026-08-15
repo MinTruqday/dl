@@ -1,13 +1,12 @@
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
-from src.core.logging_route import LoggingRoute
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 from src.core.dependency import CurrentUser, get_current_user
 from src.schemas.interaction import UserInstructionsRequest
 from src.services.workspace import workspace
 
-router = APIRouter(route_class=LoggingRoute)
+router = APIRouter()
 
 @router.get("/khong-gian/{session_id}")
 async def get_workspace(session_id: str, current_user: CurrentUser = Depends(get_current_user)):

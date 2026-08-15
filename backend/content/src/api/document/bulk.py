@@ -1,11 +1,10 @@
 from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException, Response
-from src.core.logging_route import LoggingRoute
 from src.core.response import APIResponse
 from src.api.dependency import get_current_user
 from src.services.document import DocumentService
 
-router = APIRouter(route_class=LoggingRoute)
+router = APIRouter()
 
 @router.post("/thao-tac-hang-loat/xoa", response_model=APIResponse[Any])
 async def bulk_delete_documents(req: dict, current_user=Depends(get_current_user)):

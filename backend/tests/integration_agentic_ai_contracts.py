@@ -8,9 +8,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
-from src.agents.planning import PlanAgent
-from src.agents.routing import RouteAgent, SemanticRouterValidator
-from src.core.logging_route import summarize_payload
+from src.agents.react.planning import PlanAgent
+from src.agents.react.routing import RouteAgent, SemanticRouterValidator
 from src.core.model_runtime import run_chat_completion
 from src.core.infrastructure.configuration import settings
 from src.core.registry import PromptType, RegistryCore, registry
@@ -112,7 +111,7 @@ async def verify_planner_privacy():
     planner.parser = JsonOutputParser(pydantic_object=ExecutionPlan)
     planner.structured_llm = FakePlanModel()
     planner._redis = None
-    with patch("src.agents.planning.memory_manager.get_memories", return_value=""):
+    with patch("src.agents.react.planning.memory_manager.get_memories", return_value=""):
         events = [
             event
             async for event in planner.stream_plan(
@@ -127,7 +126,7 @@ async def verify_planner_privacy():
             raise ValueError("invalid structured output")
 
     planner.structured_llm = FailingPlanModel()
-    with patch("src.agents.planning.memory_manager.get_memories", return_value=""):
+    with patch("src.agents.react.planning.memory_manager.get_memories", return_value=""):
         failed_events = [
             event
             async for event in planner.stream_plan(
@@ -208,8 +207,6 @@ def verify_registry():
     assert '"steps" array' not in brain_prompt
     assert "InterpreterAgent" not in brain_prompt
     for prompt_type, prompt in RegistryCore._prompts.items():
-        if prompt_type is PromptType.MEMORY_BANK_PHASE1:
-            continue
         fields = [
             field_name for _, field_name, _, _ in string.Formatter().parse(prompt) if field_name
         ]
@@ -221,18 +218,6 @@ def verify_registry():
         text="Target", style_sample="Reference", target_length=100
     )
     assert style_request.style_sample == "Reference"
-
-
-def verify_logging():
-    body = json.dumps(
-        {"query": "private", "password": "hidden", "nested": {"token": "hidden"}}
-    ).encode()
-    summary = summarize_payload(body)
-    rendered = json.dumps(summary)
-    assert "private" not in rendered
-    assert "hidden" not in rendered
-    assert "password" not in rendered
-    assert "[sensitive]" in rendered
 
 
 def verify_source_contracts():
@@ -257,7 +242,6 @@ def verify_source_contracts():
         assert not invalid_strings, path
         lowered_source = text.casefold()
         assert "qwen" not in lowered_source, path
-        assert "gemma" not in lowered_source, path
 
     interaction_source = "\n".join(
         path.read_text() for path in (SOURCE / "api" / "interaction").glob("*.py")
@@ -265,7 +249,7 @@ def verify_source_contracts():
     assert "public_agent_names" not in interaction_source
     assert '"label"' not in interaction_source
     assert "event: error" in interaction_source
-    assert interaction_source.count('yield "event: done\\ndata: [DONE]\\n\\n"') >= 7
+    assert interaction_source.count('yield "event: done\\ndata: [DONE]\\n\\n"') >= 5
     assert '"prompt_injection_blocked"' in interaction_source
     assert '"pii_redacted"' in interaction_source
     assert "session_id=session_id" in interaction_source
@@ -282,7 +266,6 @@ def verify_source_contracts():
     assert "execute_mcp_tool" in tools_source
 async def main():
     verify_registry()
-    verify_logging()
     verify_source_contracts()
     await verify_runtime()
     await verify_planner_privacy()

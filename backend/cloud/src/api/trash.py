@@ -1,12 +1,11 @@
 from typing import Any
 from fastapi import APIRouter, Depends
-from src.core.logging_route import LoggingRoute
 from src.core.response import APIResponse
 from src.api.dependency import get_db, require_role
 from src.core.dependency import CurrentUser, Role
 from src.services.trash import TrashService
 
-router = APIRouter(route_class=LoggingRoute, prefix="/thung-rac")
+router = APIRouter(prefix="/thung-rac")
 
 @router.post("/{item_id}/chuyen-vao", response_model=APIResponse[Any])
 async def move_to_trash(

@@ -7,13 +7,11 @@ from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.redis import redis
-from src.core.logic_logger import log_logic_execution
 from src.repositories.identity import IdentityRepository
 
 
 class GoogleService:
     @staticmethod
-    @log_logic_execution
     async def get_google_auth_url():
         if not settings.GOOGLE_CLIENT_ID or not settings.GOOGLE_REDIRECT_URI:
             raise HTTPException(
@@ -35,7 +33,6 @@ class GoogleService:
         return f"{settings.GOOGLE_AUTH_URL}?{query}"
 
     @staticmethod
-    @log_logic_execution
     async def handle_google_callback(code: str, state: str, client_ip: str):
         from src.services.session import SessionService
 

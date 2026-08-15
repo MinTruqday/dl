@@ -12,7 +12,7 @@ except ImportError:
 from langchain_core.messages import HumanMessage
 from langchain_core.tools import tool
 from pydantic import BaseModel
-from src.agents.routing import RouteAgent, SemanticRouterValidator
+from src.agents.react.routing import RouteAgent, SemanticRouterValidator
 from src.schemas.auth import CurrentUser
 from src.utils.huggingface import HFInferenceChat
 from src.utils.structured_output import (
@@ -353,7 +353,7 @@ def test_create_latex_document_tool():
 def test_action_agent_executes_editorjs_and_latex_creation():
     import json
     from unittest.mock import patch
-    from src.agents.acting import ActingAgent
+    from src.agents.react.acting import ActingAgent
 
     class FakeResponse:
         status_code = 201
@@ -395,7 +395,7 @@ def test_action_agent_executes_editorjs_and_latex_creation():
                 client=FakeActionToolClient(call),
                 model="tiny-test",
             )
-            with patch("src.agents.acting.llm", model):
+            with patch("src.agents.react.acting.llm", model):
                 results.append(
                     json.loads(
                         asyncio.run(
@@ -414,7 +414,7 @@ def test_action_agent_executes_editorjs_and_latex_creation():
 
 
 def test_mutating_tools_require_approval():
-    from src.agents.acting import _REQUIRES_APPROVAL_TOOLS
+    from src.agents.react.acting import _REQUIRES_APPROVAL_TOOLS
 
     expected = {
         "apply_editorjs_command",
@@ -897,7 +897,7 @@ def test_recommend_documents_tool():
 
 
 def test_generate_mindmap_tool(monkeypatch):
-    from src.agents import planning
+    from src.agents.react import planning
     from src.tools.mindmap import MindmapBranch, MindmapStructure, generate_mindmap
 
     class FakeStructuredModel:
@@ -1227,7 +1227,7 @@ def test_code_sandbox_terminates_infinite_execution():
     sandbox.cleanup()
 
 
-def test_sandbox_import_does_not_initialize_embedding_model():
+def test_sandbox_import_does_not_initialize_knowledge_service_client():
     import subprocess
 
     result = subprocess.run(
@@ -1238,7 +1238,7 @@ def test_sandbox_import_does_not_initialize_embedding_model():
                 "import sys\n"
                 "from src.harness.sandbox import CodeSandbox\n"
                 "assert CodeSandbox\n"
-                "assert 'src.rag.embedding' not in sys.modules\n"
+                "assert 'src.integrations.knowledge_service' not in sys.modules\n"
             ),
         ],
         cwd=os.path.abspath("."),
@@ -1250,7 +1250,7 @@ def test_sandbox_import_does_not_initialize_embedding_model():
 
 
 def test_interpreter_agent_real_execution():
-    from src.agents.interpreter import interpreter
+    from src.agents.specialists.code_interpreter import interpreter
     res = asyncio.run(interpreter.execute("```python\nprint('hello sandbox')\n```"))
     assert "hello sandbox" in res
 
@@ -1272,7 +1272,7 @@ def test_supervisor_infinite_loop_detection():
 
 
 def test_plan_validator_preserves_interpreter_agent():
-    from src.agents.routing import SemanticRouterValidator
+    from src.agents.react.routing import SemanticRouterValidator
     validator = SemanticRouterValidator()
     nodes = [{"id": "exec1", "agent": "InterpreterAgent", "task": "print(10)"}]
     validated = asyncio.run(validator.validate_plan(nodes))
@@ -1362,34 +1362,6 @@ def test_verification_fails_closed_when_model_is_unavailable():
         )
     assert hallucination.status == "failed"
     assert error.status == "failed"
-
-
-def test_episodic_memory_queries_are_user_scoped():
-    from src.memory.global_state import GlobalStateManager
-
-    class FakeCursor:
-        async def to_list(self, length):
-            return []
-
-    class FakeEpisodes:
-        def __init__(self):
-            self.query = None
-
-        def find(self, query, projection, sort, limit):
-            self.query = query
-            return FakeCursor()
-
-    manager = GlobalStateManager.__new__(GlobalStateManager)
-    manager._episodes = FakeEpisodes()
-    asyncio.run(
-        manager.get_recent_episodes(
-            k=3,
-            session_id="session-1",
-            user_id="user-1",
-        )
-    )
-    assert manager._episodes.query["session_id"] == "session-1"
-    assert manager._episodes.query["user_id"] == "user-1"
 
 
 def test_inference_request_models_enforce_public_bounds():
@@ -1483,10 +1455,6 @@ def test_database_setup_creates_operational_indexes():
         "finetune_samples",
         "finetune_jobs",
         "mcp_registry",
-        "global_preferences",
-        "global_project_context",
-        "episodic_memory",
-        "history_events",
         "ai_workspaces",
     } == set(created)
 
@@ -1499,8 +1467,6 @@ def test_prompt_json_examples_are_format_safe():
 
     malformed = []
     for prompt_type, prompt in RegistryCore._prompts.items():
-        if prompt_type is PromptType.MEMORY_BANK_PHASE1:
-            continue
         for _, field_name, _, _ in string.Formatter().parse(prompt):
             if field_name and (
                 field_name.startswith('"')
@@ -1538,7 +1504,7 @@ def test_semantic_document_search_returns_distinct_ranked_ids():
         role="reader",
     )
     with patch(
-            "src.rag.retrieval.retriever.retrieve",
+            "src.integrations.knowledge_service.knowledge_client.retrieve",
             new=AsyncMock(return_value=chunks),
         ):
         result = asyncio.run(
@@ -1610,45 +1576,6 @@ def test_document_finetuning_import_uses_structured_samples():
     stored = inserted_samples.await_args.args[0][0]
     assert stored["instruction"] == "What is verified"
     assert stored["output"] == "The supplied document is verified"
-
-
-def test_proactive_memory_outputs_are_strictly_validated():
-    from pydantic import ValidationError
-
-    from src.schemas.proactive import MemoryBankActions, MemoryIntervention
-
-    actions = MemoryBankActions.model_validate(
-        {
-            "calls": [
-                {
-                    "name": "memory_delete",
-                    "args": {"id": "obsolete_fact"},
-                }
-            ]
-        },
-        strict=True,
-    )
-    assert actions.calls[0].name == "memory_delete"
-    try:
-        MemoryBankActions.model_validate(
-            {
-                "calls": [
-                    {
-                        "name": "execute_shell",
-                        "args": {"id": "unsafe"},
-                    }
-                ]
-            },
-            strict=True,
-        )
-        assert False
-    except ValidationError:
-        pass
-    try:
-        MemoryIntervention(intervene=False, reminder="Unrequested reminder")
-        assert False
-    except ValidationError:
-        pass
 
 
 if __name__ == "__main__":

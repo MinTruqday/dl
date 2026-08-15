@@ -1,6 +1,5 @@
 from typing import Any, List, Optional
 
-from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Body, Depends, status
 from pydantic import BaseModel
 from src.api.dependency import get_current_user, get_db, require_role
@@ -11,7 +10,7 @@ from src.services.publication import PublicationService
 from src.core.response import APIResponse
 from src.core.dependency import CurrentUser, Role
 
-router = APIRouter(route_class=LoggingRoute, prefix="/xuat-ban")
+router = APIRouter(prefix="/xuat-ban")
 
 @router.post(
     "/{document_id}",

@@ -5,12 +5,10 @@ from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
-from src.core.logic_logger import log_logic_execution
 from src.schemas.storage import StorageItemCreate, StorageItemInDB
 
 class FolderService:
     @staticmethod
-    @log_logic_execution
     async def create_folder(name: str, parent_id: Optional[str], owner_id: str) -> StorageItemInDB:
         if parent_id:
             parent = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one(
@@ -33,7 +31,6 @@ class FolderService:
         return folder_item
 
     @staticmethod
-    @log_logic_execution
     async def get_folder_contents(folder_id: Optional[str], owner_id: str) -> List[dict]:
         query = {
             "owner_id": owner_id,
@@ -45,7 +42,6 @@ class FolderService:
         return items
 
     @staticmethod
-    @log_logic_execution
     async def get_folder_tree(owner_id: str) -> List[dict]:
         query = {
             "owner_id": owner_id,
@@ -57,7 +53,6 @@ class FolderService:
         return folders
 
     @staticmethod
-    @log_logic_execution
     async def rename_folder(folder_id: str, new_name: str, owner_id: str) -> dict:
         res = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.update_one(
             {"_id": folder_id, "owner_id": owner_id, "is_folder": True},
@@ -68,7 +63,6 @@ class FolderService:
         return {"status": "success", "folder_id": folder_id, "name": new_name}
 
     @staticmethod
-    @log_logic_execution
     async def move_folder(folder_id: str, new_parent_id: Optional[str], owner_id: str) -> dict:
         if new_parent_id == folder_id:
             raise HTTPException(status_code=400, detail="Không thể di chuyển thư mục vào chính nó")

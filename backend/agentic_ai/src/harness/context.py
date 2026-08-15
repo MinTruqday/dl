@@ -43,57 +43,10 @@ class ContextHarness:
     <metis_behavior>Strictly isolates context boundaries between different user sessions.</metis_behavior>
     </module_purpose>
     """
-    def __init__(self):
-        self._redis_client = None
-
-    def _get_redis(self):
-        if self._redis_client is None:
-            try:
-                import redis.asyncio as aioredis
-
-                from src.core.infrastructure.configuration import settings
-
-                self._redis_client = aioredis.from_url(
-                    settings.REDIS_URI, decode_responses=True
-                )
-            except Exception:
-                logger.exception("Redis connection error")
-        return self._redis_client
-
     async def _load_short_term_history(self, session_id: str) -> list:
-        redis = self._get_redis()
-        if not redis:
-            return []
-        try:
-            import json
+        from src.memory.short_term import short_term_memory
 
-            history_key = f"session:{session_id}:history"
-            summary_key = f"session:{session_id}:summary"
-            raw_items, summary = await asyncio.gather(
-                redis.lrange(history_key, 0, HISTORY_MAX_TURNS * 2 - 1),
-                redis.get(summary_key),
-            )
-            history = []
-            if summary:
-                history.append(
-                    {
-                        "role": "context",
-                        "content": (
-                            "<compacted_conversation>\n"
-                            f"{summary}\n"
-                            "</compacted_conversation>"
-                        ),
-                    }
-                )
-            for item in raw_items:
-                try:
-                    history.append(json.loads(item))
-                except (TypeError, json.JSONDecodeError):
-                    logger.warning("Discarded malformed short term history item")
-            return history
-        except Exception:
-            logger.exception("Error loading chat history from temporary storage")
-            return []
+        return await short_term_memory.get_short_term(session_id)
 
     async def _load_user_preferences(self, user_id: str) -> str:
         if not user_id:
@@ -174,59 +127,18 @@ class ContextHarness:
         return ctx
 
     async def save_turn(
-        self, session_id: str, role: str, content: str, ttl_seconds: int = 86400
+        self, session_id: str, role: str, content: str
     ):
-        redis = self._get_redis()
-        if not redis:
-            return
-        try:
-            import json
+        from src.memory.short_term import short_term_memory
 
-            key = f"session:{session_id}:history"
-            summary_key = f"session:{session_id}:summary"
-            payload = json.dumps({"role": role, "content": content})
-            async with redis.pipeline() as pipe:
-                pipe.rpush(key, payload)
-                pipe.expire(key, ttl_seconds)
-                await pipe.execute()
-            maximum_items = HISTORY_MAX_TURNS * 2
-            item_count = await redis.llen(key)
-            overflow_count = max(0, item_count - maximum_items)
-            if overflow_count:
-                overflow, previous_summary = await asyncio.gather(
-                    redis.lrange(key, 0, overflow_count - 1),
-                    redis.get(summary_key),
-                )
-                compacted_lines = []
-                if previous_summary:
-                    compacted_lines.append(previous_summary)
-                for item in overflow:
-                    try:
-                        turn = json.loads(item)
-                    except (TypeError, json.JSONDecodeError):
-                        continue
-                    compacted_lines.append(
-                        f"{turn.get('role', 'unknown')}: "
-                        f"{str(turn.get('content', ''))[:2000]}"
-                    )
-                compacted = "\n".join(compacted_lines)[-12000:]
-                async with redis.pipeline() as pipe:
-                    pipe.ltrim(key, overflow_count, -1)
-                    pipe.setex(summary_key, ttl_seconds, compacted)
-                    await pipe.execute()
-        except Exception:
-            logger.exception("Error saving interaction session")
+        await short_term_memory.save_short_term(
+            session_id, {"role": role, "content": content}
+        )
 
     async def clear_session(self, session_id: str):
-        redis = self._get_redis()
-        if not redis:
-            return
-        try:
-            await redis.delete(f"session:{session_id}:history")
-            await redis.delete(f"session:{session_id}:summary")
-            logger.info("Session history deleted")
-        except Exception:
-            logger.exception("Error deleting session from memory")
+        from src.memory.short_term import short_term_memory
+
+        await short_term_memory.clear(session_id)
 
     def apply_context_to_rag_state(self, ctx: AgentContext, rag_state: dict) -> dict:
         rag_state["chat_history"] = ctx.chat_history

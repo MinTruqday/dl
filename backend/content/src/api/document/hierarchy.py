@@ -1,12 +1,11 @@
 from typing import Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
-from src.core.logging_route import LoggingRoute
 from src.core.response import APIResponse
 from src.api.dependency import get_current_user
 from src.schemas.document import FolderCreate
 from src.services.document import DocumentService
 
-router = APIRouter(route_class=LoggingRoute)
+router = APIRouter()
 
 @router.get("/thu-muc", response_model=APIResponse[Any])
 async def get_folders(parent_id: Optional[str] = None, current_user=Depends(get_current_user)):

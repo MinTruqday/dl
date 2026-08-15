@@ -1017,8 +1017,8 @@ async def delete_document(
         )
         if response.status_code == 200:
             try:
-                from src.services.rag_client import rag_client
-                await rag_client.delete_document(
+                from src.integrations.knowledge_service import knowledge_client
+                await knowledge_client.delete_document(
                     document_id,
                     settings.PLATFORM_SYSTEM_ID,
                     True,

@@ -1,13 +1,11 @@
 import uuid
 from datetime import datetime, timezone
 from fastapi import HTTPException
-from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
 from src.repositories.cooperation import CooperationRepository, DocumentRepository
 
 class ActivityService:
     @staticmethod
-    @log_logic_execution
     async def log_activity(
         document_id: str, user_name: str, action: str, details: str
     ):
@@ -23,7 +21,6 @@ class ActivityService:
         )
 
     @staticmethod
-    @log_logic_execution
     async def get_activities(document_id: str, current_user) -> list:
         doc = await DocumentRepository.find_one(
             {
@@ -62,7 +59,6 @@ class ActivityService:
         ]
 
     @staticmethod
-    @log_logic_execution
     async def get_contribution_stats(document_id: str, current_user) -> list:
         doc = await DocumentRepository.find_one(
             {

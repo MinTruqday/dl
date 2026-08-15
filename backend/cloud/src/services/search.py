@@ -5,11 +5,9 @@ from typing import List
 from fastapi import HTTPException
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
-from src.core.logic_logger import log_logic_execution
 
 class SearchService:
     @staticmethod
-    @log_logic_execution
     async def duplicate_item(item_id: str, owner_id: str) -> dict:
         item = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one({"_id": item_id, "owner_id": owner_id})
         if not item or item.get("is_folder"):
@@ -28,7 +26,6 @@ class SearchService:
         return copy_doc
 
     @staticmethod
-    @log_logic_execution
     async def set_folder_color(folder_id: str, owner_id: str, color_hex: str) -> dict:
         if not re.fullmatch(r"#[0-9a-fA-F]{6}", color_hex):
             raise HTTPException(status_code=422, detail="Mã màu thư mục không hợp lệ")
@@ -42,7 +39,6 @@ class SearchService:
         return {"folder_id": folder_id, "color": color_hex}
 
     @staticmethod
-    @log_logic_execution
     async def update_item_tags(item_id: str, owner_id: str, tags: List[str]) -> dict:
         item = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one({"_id": item_id, "owner_id": owner_id})
         if not item:

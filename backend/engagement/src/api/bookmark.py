@@ -1,12 +1,11 @@
 from typing import Any
 from fastapi import APIRouter, Depends, Query
-from src.core.logging_route import LoggingRoute
 from src.core.response import APIResponse
 from src.api.dependency import get_current_user, get_db, CurrentUser
 from src.schemas.bookmark import BookmarkFolderCreate, BookmarkFolderAssign
 from src.services.bookmark import BookmarkService
 
-router = APIRouter(route_class=LoggingRoute, prefix="/dau-trang")
+router = APIRouter(prefix="/dau-trang")
 
 @router.post("/thu-muc", response_model=APIResponse[Any], status_code=201)
 async def create_bookmark_folder(

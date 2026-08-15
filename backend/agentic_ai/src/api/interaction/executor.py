@@ -3,8 +3,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Request
 from loguru import logger
 
-from src.core.logging_route import LoggingRoute
-from src.agents.routing import semantic_router
+from src.agents.react.routing import semantic_router
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 from src.core.registry import PromptType, registry
@@ -18,7 +17,7 @@ from src.workflow.orchestration import supervisor
 from src.services.workspace import workspace
 from src.services.token_accounting import start_accounting
 
-router = APIRouter(route_class=LoggingRoute)
+router = APIRouter()
 
 def _validate_audio(req: ChatRequest) -> None:
     if not req.audio_data:
@@ -172,7 +171,7 @@ async def chat_endpoint(
         final_answer = ""
 
         if route == "plan":
-            from src.agents.planning import planner
+            from src.agents.react.planning import planner
 
             steps = await planner.create_plan({**execution_data, "dry_run": True})
             await workspace.save_plan(req.session_id or "", req.user_id, steps)
@@ -208,7 +207,7 @@ async def chat_endpoint(
                 res = await chat_llm.ainvoke([HumanMessage(content=content)], max_tokens=128)
                 final_answer = res.content
         elif route == "knowledge":
-            from src.agents.analysis import researcher
+            from src.agents.specialists.knowledge import researcher
 
             final_answer = await researcher.execute(execution_data)
         else:

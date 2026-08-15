@@ -1,6 +1,5 @@
 from typing import Any
 
-from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends
 from src.api.dependency import get_current_user, get_db
 from src.services.version import VersionService
@@ -8,7 +7,7 @@ from src.services.version import VersionService
 from src.core.response import APIResponse
 from src.core.dependency import CurrentUser, Role
 
-router = APIRouter(route_class=LoggingRoute, prefix="/phien-ban")
+router = APIRouter(prefix="/phien-ban")
 
 @router.post(
     "/luu/{document_id}",

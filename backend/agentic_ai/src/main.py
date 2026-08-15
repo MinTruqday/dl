@@ -239,8 +239,6 @@ async def shutdown_event():
     try:
         from src.memory.management import memory_manager
         await memory_manager.close()
-        if memory_manager._redis:
-            await memory_manager._redis.aclose()
     except Exception:
         logger.exception("Memory manager shutdown failed")
     try:

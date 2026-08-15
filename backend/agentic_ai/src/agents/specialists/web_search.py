@@ -49,7 +49,7 @@ def _is_ssrf_attempt(query: str) -> bool:
             return True
     return False
 
-class EngineAgent:
+class WebSearchAgent:
     """
     <module_purpose>
     DocLib Engine Agent for real-time external information retrieval with caching and semantic re-ranking.
@@ -295,4 +295,4 @@ class EngineAgent:
         return "[]"
 
 
-search_engine = EngineAgent()
+search_engine = WebSearchAgent()

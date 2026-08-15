@@ -3,7 +3,7 @@ import json
 from langchain_core.messages import HumanMessage, SystemMessage
 from loguru import logger
 from src.core.registry import PromptType, registry
-from src.agents.planning import llm
+from src.agents.react.planning import llm
 from src.harness.agentops import agentops
 from src.harness.tool import ToolHarness
 from src.tools import tools

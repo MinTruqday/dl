@@ -7,13 +7,13 @@ from pymongo import MongoClient
 from langgraph.graph import END, StateGraph
 from loguru import logger
 from src.core.infrastructure.configuration import settings
-from src.agents.acting import actor
-from src.agents.interpreter import interpreter
-from src.agents.planning import planner
-from src.agents.reasoning import reasoner
-from src.agents.analysis import researcher
-from src.agents.generation import response_generator
-from src.agents.engine import search_engine
+from src.agents.react.acting import actor
+from src.agents.specialists.code_interpreter import interpreter
+from src.agents.react.planning import planner
+from src.agents.react.reasoning import reasoner
+from src.agents.specialists.knowledge import researcher
+from src.agents.specialists.response import response_generator
+from src.agents.specialists.web_search import search_engine
 from src.workflow.state import ActingState
 from uuid6 import uuid7
 
@@ -40,7 +40,7 @@ async def supervisor_node(state: ActingState):
 
     if not steps:
         nodes = await planner.create_plan(state["req_data"])
-        from src.agents.routing import plan_validator
+        from src.agents.react.routing import plan_validator
 
         nodes = await plan_validator.validate_plan(nodes)
 
@@ -171,30 +171,8 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
 
     req_data = state.get("req_data", {})
     session_id = req_data.get("session_id", "")
-    memory_context = None
-    if (
-        settings.AGENT_PROACTIVE_MEMORY_ENABLED
-        and session_id
-        and agent_name not in {"Knowledge", "Action"}
-    ):
-        from src.proactive.middleware import memory_middleware
-
-        trajectory = [
-            {"role": "assistant", "content": str(item)}
-            for item in state.get("consolidated_results", [])
-        ]
-        memory_context = await memory_middleware.process(
-            session_id=session_id,
-            trajectory=trajectory,
-            step_count=len(completed_tasks) + 1,
-            task_description="\n".join(str(task.get("task", "")) for task in my_tasks),
-            user_id=str(req_data.get("user_id", "")),
-        )
-
     async def _exec_task(task_obj):
         current_task = task_obj.get("task", "")
-        if memory_context:
-            current_task = f"{current_task}\n\n{memory_context}"
         try:
             if session_id:
                 from src.harness.governance import governance
@@ -242,27 +220,6 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
                     if eval_res.status == "FAIL":
                         replan_count += 1
                         logger.warning("Self-reflection failed, initiating replan sequence")
-                        try:
-                            from src.memory.management import memory_manager
-                            from src.utils.background import create_background_task
-
-                            user_id = req_data.get("user_id", "guest")
-                            mem_data = [
-                                {
-                                    "role": "system",
-                                    "content": "I attempted a task but failed. I must learn from this mistake for future reasoning.",
-                                },
-                                {
-                                    "role": "user",
-                                    "content": f"Task: {current_task}\nFailed Output: {res}\nFeedback: {eval_res.feedback}\nRevised Task for next time: {eval_res.revised_task}",
-                                },
-                            ]
-                            create_background_task(
-                                memory_manager.add_memory(mem_data, user_id),
-                                f"procedural-memory-{user_id}",
-                            )
-                        except Exception:
-                            logger.exception("Failed to inject procedural memory")
                         current_task = eval_res.revised_task or current_task
                         final_res = res
                     else:
@@ -445,7 +402,6 @@ class OrchestrationWorkflow:
         self.app = self.workflow.compile(checkpointer=self.checkpointer)
 
     async def execute_plan(self, req_data):
-        from src.memory.global_state import global_state
         from src.harness.governance import governance
         from src.loop.rubric import standard_rubric_middleware
         from src.loop.verification import verification
@@ -460,16 +416,6 @@ class OrchestrationWorkflow:
         user_id = str(req_data.get("user_id", ""))
         role = str(req_data.get("role", "reader"))
         governance.open_session(session_id, user_id, role)
-
-        project_context = await global_state.get_project_context_async(session_id)
-        if project_context:
-            req_data["global_context"] = project_context
-
-        recent_episodes = await global_state.get_recent_episodes(
-            k=3, session_id=session_id, user_id=user_id
-        )
-        if recent_episodes:
-            req_data["episodic_context"] = "\n---\n".join(recent_episodes)
 
         initial_state = {
             "req_data": req_data,
@@ -564,14 +510,6 @@ class OrchestrationWorkflow:
             for content in full_response_chunks:
                 yield {"type": "message", "chunk": content}
 
-            try:
-                await global_state.add_episodic_memory(
-                    session_id=session_id,
-                    summary=f"Query: {query[:200]}\nResponse summary: {combined[:500]}",
-                    user_id=user_id,
-                )
-            except Exception:
-                logger.exception("Episodic memory storage failed")
         finally:
             governance.close_session(session_id)
 

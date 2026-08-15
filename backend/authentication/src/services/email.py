@@ -1,7 +1,6 @@
 import asyncio
 import os
 import smtplib
-from src.core.logic_logger import log_logic_execution
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
@@ -12,7 +11,6 @@ from src.core.infrastructure.configuration import settings
 class EmailService:
 
     @staticmethod
-    @log_logic_execution
     async def send_reset_password_email(email: str, token: str):
         smtp_host = settings.SMTP_HOST
         smtp_port_raw = settings.SMTP_PORT

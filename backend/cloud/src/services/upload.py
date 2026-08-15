@@ -5,7 +5,6 @@ from fastapi import HTTPException
 from loguru import logger
 
 from src.core.infrastructure.configuration import settings
-from src.core.logic_logger import log_logic_execution
 from src.core.storage import generate_presigned_url, upload_file
 
 
@@ -68,7 +67,6 @@ class UploadService:
         return f"public/{kind}/{uuid.uuid4().hex}.{ext}"
 
     @staticmethod
-    @log_logic_execution
     async def upload_image(file, owner_id: str | None = None, is_system: bool = False):
         content_type = file.content_type or "application/octet-stream"
         ext = UploadService.validate_filename(file.filename, content_type, True)
@@ -84,7 +82,6 @@ class UploadService:
         return {"url": path, "filename": file.filename, "size": len(content), "content_type": content_type}
 
     @staticmethod
-    @log_logic_execution
     async def upload_document(file, owner_id: str | None = None, is_system: bool = False, is_message_attachment: bool = False, is_temporary: bool = False):
         content_type = file.content_type or "application/octet-stream"
         ext = UploadService.validate_filename(file.filename, content_type)
@@ -100,7 +97,6 @@ class UploadService:
         return {"url": path, "filename": file.filename, "extension": ext, "size": len(content), "content_type": content_type}
 
     @staticmethod
-    @log_logic_execution
     async def get_presigned_url(file_path: str):
         if ".." in file_path or file_path.startswith("/"):
             raise HTTPException(status_code=400, detail="Đường dẫn tệp tin không hợp lệ")
@@ -111,7 +107,6 @@ class UploadService:
             raise HTTPException(status_code=500, detail="Không thể khởi tạo liên kết tải xuống")
 
     @staticmethod
-    @log_logic_execution
     async def get_presigned_upload_url(filename: str, content_type: str, owner_id: str, is_system: bool = False, is_message_attachment: bool = False, is_temporary: bool = False):
         from src.core.storage import generate_presigned_put_url
 

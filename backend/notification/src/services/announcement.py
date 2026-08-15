@@ -1,4 +1,3 @@
-from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.redis import redis
 from datetime import datetime, timezone
 
@@ -12,7 +11,6 @@ from src.services.humanity_client import HumanityClient
 class AnnouncementService:
 
     @staticmethod
-    @log_logic_execution
     async def get_announcements(user_id: str, skip: int, limit: int, db):
         cursor = (
             AnnouncementRepository
@@ -33,7 +31,6 @@ class AnnouncementService:
         return {"items": docs, "total": total, "unread": unread}
 
     @staticmethod
-    @log_logic_execution
     async def mark_as_read(notif_id: str, user_id: str, db):
         result = await AnnouncementRepository.update_one(
             {"_id": notif_id, "target_user_id": user_id}, {"$set": {"is_read": True}}
@@ -46,7 +43,6 @@ class AnnouncementService:
         return {"id": notif_id}
 
     @staticmethod
-    @log_logic_execution
     async def mark_all_as_read(user_id: str, db):
         await AnnouncementRepository.update_many(
             {"target_user_id": user_id, "is_read": False}, {"$set": {"is_read": True}}
@@ -54,7 +50,6 @@ class AnnouncementService:
         return {"success": True}
 
     @staticmethod
-    @log_logic_execution
     async def delete_announcement(notif_id: str, user_id: str, db):
         result = await AnnouncementRepository.delete_one(
             {"_id": notif_id, "target_user_id": user_id}
@@ -67,7 +62,6 @@ class AnnouncementService:
         return {"id": notif_id}
 
     @staticmethod
-    @log_logic_execution
     async def create_announcement(data: AnnouncementCreate, db):
         if data.idempotency_key:
             existing = await AnnouncementRepository.find_one(

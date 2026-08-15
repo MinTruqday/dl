@@ -1,12 +1,11 @@
 from typing import Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
-from src.core.logging_route import LoggingRoute
 from src.core.response import APIResponse
 from src.api.dependency import get_db, require_role
 from src.core.dependency import CurrentUser, Role
 from src.services.folder import FolderService
 
-router = APIRouter(route_class=LoggingRoute, prefix="/thu-muc")
+router = APIRouter(prefix="/thu-muc")
 
 @router.post("", response_model=APIResponse[Any], status_code=201)
 async def create_folder(

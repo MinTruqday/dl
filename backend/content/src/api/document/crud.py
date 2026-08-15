@@ -1,6 +1,5 @@
 from typing import Any, List, Optional
 from fastapi import APIRouter, Body, Depends, Header, Query
-from src.core.logging_route import LoggingRoute
 from src.core.response import APIResponse
 from src.api.dependency import get_current_user, get_current_user_optional, require_role, CurrentUser, Role
 from src.schemas.document import (
@@ -12,7 +11,7 @@ from src.schemas.document import (
 )
 from src.services.document import DocumentService
 
-router = APIRouter(route_class=LoggingRoute)
+router = APIRouter()
 
 @router.post("", response_model=APIResponse[Any], status_code=201)
 async def create_document(

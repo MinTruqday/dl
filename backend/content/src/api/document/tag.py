@@ -1,12 +1,11 @@
 from typing import Any, List
 from fastapi import APIRouter, Depends, Query
-from src.core.logging_route import LoggingRoute
 from src.core.response import APIResponse
 from src.services.document import DocumentService
 from src.api.dependency import get_current_user
 from src.schemas.document import DocumentUpdate, ScheduleUpdate, TagsUpdate
 
-router = APIRouter(route_class=LoggingRoute)
+router = APIRouter()
 
 @router.get("/the-loai-va-nhan", response_model=APIResponse[Any])
 async def get_tags_categories():

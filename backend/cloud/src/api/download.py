@@ -1,12 +1,11 @@
 from typing import Any
 from fastapi import APIRouter, Depends, Query
-from src.core.logging_route import LoggingRoute
 from src.core.response import APIResponse
 from src.api.dependency import get_db, require_role
 from src.core.dependency import CurrentUser, Role
 from src.services.download import DownloadService
 
-router = APIRouter(route_class=LoggingRoute, prefix="/tai-ve")
+router = APIRouter(prefix="/tai-ve")
 
 @router.get("/{file_id}/duong-dan", response_model=APIResponse[Any])
 async def get_download_url(

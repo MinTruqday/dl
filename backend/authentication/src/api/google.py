@@ -1,10 +1,9 @@
-from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Request
 from typing import Any
 from src.core.response import APIResponse
 from src.services.google import GoogleService
 
-router = APIRouter(route_class=LoggingRoute, prefix="/google")
+router = APIRouter(prefix="/google")
 
 @router.get("/dang-nhap", response_model=APIResponse[Any])
 async def google_login():

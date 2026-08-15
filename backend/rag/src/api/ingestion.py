@@ -1,9 +1,14 @@
+import base64
+from pathlib import Path
+
 from fastapi import APIRouter, Depends, HTTPException
-from src.core.logging_route import LoggingRoute
-from src.core.logic_logger import log_logic_execution
 from src.core.response import APIResponse
 from src.core.dependency import CurrentUser, get_current_user_optional, verify_internal_token
-from src.schemas.ingestion import IngestRequest, IngestResponse
+from src.schemas.ingestion import (
+    AttachmentConversionRequest,
+    IngestRequest,
+    IngestResponse,
+)
 from src.services.pipeline import ingestion_pipeline
 from src.services.content_client import content_client
 from src.services.conversion import document_parser
@@ -12,7 +17,6 @@ from src.store.vector import vector_store
 from src.store.bm25 import bm25_store
 
 router = APIRouter(
-    route_class=LoggingRoute,
     dependencies=[Depends(verify_internal_token)],
 )
 
@@ -35,7 +39,6 @@ def document_error(error: Exception):
     )
 
 @router.post("/ingest", response_model=APIResponse[IngestResponse])
-@log_logic_execution
 async def ingest_document(
     req: IngestRequest,
     user: CurrentUser = Depends(get_current_user_optional),
@@ -61,7 +64,6 @@ async def ingest_document(
     )
 
 @router.post("/extract", response_model=APIResponse[dict])
-@log_logic_execution
 async def extract_document(
     req: IngestRequest,
     user: CurrentUser = Depends(get_current_user_optional),
@@ -89,8 +91,37 @@ async def extract_document(
         message="Trích xuất nội dung tài liệu thành công",
     )
 
+
+@router.post("/convert", response_model=APIResponse[dict])
+async def convert_attachment(req: AttachmentConversionRequest):
+    """Convert an ephemeral attachment; chunking remains a separate RAG stage."""
+    payload = req.data.split(",", 1)[-1]
+    try:
+        file_bytes = base64.b64decode(payload, validate=True)
+    except (ValueError, base64.binascii.Error):
+        raise HTTPException(status_code=422, detail="Invalid base64 attachment")
+    if not file_bytes:
+        raise HTTPException(status_code=422, detail="Empty attachment")
+    if len(file_bytes) > 25 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="Attachment exceeds 25 MB")
+
+    result = await document_parser.parse_bytes(
+        file_bytes,
+        Path(req.filename).suffix or ".pdf",
+    )
+    markdown = str(result.get("markdown") or "")
+    if not markdown:
+        raise HTTPException(status_code=422, detail="Document text unavailable")
+    return APIResponse(
+        data={
+            "markdown": markdown,
+            "structure": result.get("structure", []),
+            "page_count": result.get("page_count", 1),
+        },
+        message="Chuyển đổi tài liệu thành công",
+    )
+
 @router.delete("/document/{document_id}", response_model=APIResponse[dict])
-@log_logic_execution
 async def delete_document(
     document_id: str,
     requester_id: str = "",

@@ -1,6 +1,5 @@
 from typing import Any
 from fastapi import APIRouter, Depends
-from src.core.logging_route import LoggingRoute
 from src.api.dependency import get_db, require_role
 from src.schemas.cooperation import (
     CollaborationModeUpdate,
@@ -12,7 +11,7 @@ from src.services.cooperation import CooperationService
 from src.core.response import APIResponse
 from src.core.dependency import CurrentUser, Role
 
-router = APIRouter(route_class=LoggingRoute, prefix="/cong-tac")
+router = APIRouter(prefix="/cong-tac")
 
 MEMBER_ROLES = [Role.AUTHOR, Role.READER, Role.ADMIN]
 OWNER_ROLES = [Role.AUTHOR, Role.ADMIN]

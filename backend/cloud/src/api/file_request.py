@@ -2,12 +2,11 @@ from typing import Any, Optional
 from fastapi import APIRouter, Depends, Query, HTTPException, Body
 from src.api.dependency import get_db, require_role
 from src.core.dependency import CurrentUser, Role
-from src.core.logging_route import LoggingRoute
 from src.core.response import APIResponse
 from src.schemas.storage import FileRequestCreate, FileRequestResponse
 from src.services.file_request import FileRequestService
 
-router = APIRouter(route_class=LoggingRoute, prefix="/luu-tru")
+router = APIRouter(prefix="/luu-tru")
 
 @router.post("/yeu-cau-tai-len", response_model=APIResponse[FileRequestResponse], status_code=201)
 async def create_file_request(

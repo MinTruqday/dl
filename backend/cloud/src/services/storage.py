@@ -1,4 +1,3 @@
-from src.core.logic_logger import log_logic_execution
 from src.services.user import UserDirectory
 from src.core.infrastructure.mongo import mongo
 from datetime import datetime, timezone
@@ -14,7 +13,6 @@ from src.core.infrastructure.database import database
 class StorageService:
 
     @staticmethod
-    @log_logic_execution
     async def create_item(
         item: StorageItemCreate, owner_id: str
     ) -> StorageItemInDB:
@@ -51,7 +49,6 @@ class StorageService:
         return db_item
 
     @staticmethod
-    @log_logic_execution
     async def get_storage_quota(owner_id: str) -> dict:
         user = await UserDirectory.get_by_id(owner_id)
         limit = (
@@ -101,7 +98,6 @@ class StorageService:
         return {"used": used, "limit": limit}
 
     @staticmethod
-    @log_logic_execution
     async def create_shortcut(
         item_id: str, parent_id: Optional[str], owner_id: str
     ) -> Optional[StorageItemInDB]:
@@ -126,7 +122,6 @@ class StorageService:
         return shortcut
 
     @staticmethod
-    @log_logic_execution
     async def get_items_by_parent(
         parent_id: Optional[str],
         owner_id: str,
@@ -154,7 +149,6 @@ class StorageService:
         return [StorageItemInDB(**item) for item in items]
 
     @staticmethod
-    @log_logic_execution
     async def search_items(
         query_str: str, owner_id: str, type_filter: Optional[str] = None
     ) -> List[StorageItemInDB]:
@@ -176,7 +170,6 @@ class StorageService:
         return [StorageItemInDB(**item) for item in items]
 
     @staticmethod
-    @log_logic_execution
     async def get_item(
         item_id: str, owner_id: str = None
     ) -> Optional[StorageItemInDB]:
@@ -191,7 +184,6 @@ class StorageService:
         return None
 
     @staticmethod
-    @log_logic_execution
     async def get_accessible_item(item_id: str, user_id: str) -> Optional[StorageItemInDB]:
         item = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one({
             "_id": item_id,
@@ -201,7 +193,6 @@ class StorageService:
         return StorageItemInDB(**item) if item else None
 
     @staticmethod
-    @log_logic_execution
     async def update_item(
         item_id: str, owner_id: str, update_data: StorageItemUpdate
     ) -> Optional[StorageItemInDB]:
@@ -254,7 +245,6 @@ class StorageService:
         return None
 
     @staticmethod
-    @log_logic_execution
     async def delete_item(item_id: str, owner_id: str) -> bool:
         item = await StorageService.get_item(item_id, owner_id)
         if not item:
@@ -301,7 +291,6 @@ class StorageService:
         return True
 
     @staticmethod
-    @log_logic_execution
     async def _copy_children(source_parent_id: str, new_parent_id: str, owner_id: str):
         cursor = database.mongodb[settings.CLOUD_DB_NAME].storage_items.find(
             {"owner_id": owner_id, "parent_id": source_parent_id, "is_trashed": False}
@@ -321,7 +310,6 @@ class StorageService:
                 )
 
     @staticmethod
-    @log_logic_execution
     async def copy_item(
         item_id: str, owner_id: str, target_parent_id: Optional[str] = None
     ) -> Optional[StorageItemInDB]:
@@ -346,7 +334,6 @@ class StorageService:
         return new_item
 
     @staticmethod
-    @log_logic_execution
     async def add_version(
         item_id: str, owner_id: str, url: str, size: int
     ) -> Optional[StorageItemInDB]:
@@ -425,7 +412,6 @@ class StorageService:
         return await StorageService.get_item(item_id, owner_id)
 
     @staticmethod
-    @log_logic_execution
     async def get_public_item(share_token: str) -> Optional[StorageItemInDB]:
         item = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one(
             {"share_token": share_token, "is_public": True}
@@ -435,7 +421,6 @@ class StorageService:
         return None
 
     @staticmethod
-    @log_logic_execution
     async def share_item(
         item_id: str, email: str, role: str, owner_id: str
     ) -> dict:
@@ -480,7 +465,6 @@ class StorageService:
         return {"message": "Chia sẻ tệp hoàn tất"}
 
     @staticmethod
-    @log_logic_execution
     async def get_recent_items(
         owner_id: str,
         limit: int = Query(
@@ -502,7 +486,6 @@ class StorageService:
         return [StorageItemInDB(**item) for item in items]
 
     @staticmethod
-    @log_logic_execution
     async def lock_item(item_id: str, owner_id: str) -> Optional[StorageItemInDB]:
         item = await StorageService.get_item(item_id, owner_id)
         if not item or item.is_folder:
@@ -520,7 +503,6 @@ class StorageService:
         return StorageItemInDB(**result) if result else None
 
     @staticmethod
-    @log_logic_execution
     async def unlock_item(item_id: str, owner_id: str) -> Optional[StorageItemInDB]:
         item = await StorageService.get_item(item_id, owner_id)
         if not item or item.is_folder:
@@ -540,7 +522,6 @@ class StorageService:
         return StorageItemInDB(**result) if result else None
 
     @staticmethod
-    @log_logic_execution
     async def bulk_action(action: str, item_ids: List[str], target_parent_id: Optional[str], owner_id: str) -> dict:
         success_count = 0
         failed_count = 0
@@ -563,7 +544,6 @@ class StorageService:
         return {"success": success_count, "failed": failed_count}
 
     @staticmethod
-    @log_logic_execution
     async def get_versions(item_id: str, user_id: str) -> List[dict]:
         item = await StorageService.get_accessible_item(item_id, user_id)
         if not item or item.is_folder:
@@ -589,7 +569,6 @@ class StorageService:
         return results
 
     @staticmethod
-    @log_logic_execution
     async def rollback_version(item_id: str, version_id: str, owner_id: str) -> Optional[StorageItemInDB]:
         item = await StorageService.get_item(item_id, owner_id)
         if not item or item.is_folder:
@@ -634,7 +613,6 @@ class StorageService:
         return StorageItemInDB(**result) if result else None
 
     @staticmethod
-    @log_logic_execution
     async def set_starred(item_id: str, is_starred: bool, owner_id: str) -> Optional[StorageItemInDB]:
         item = await StorageService.get_item(item_id, owner_id)
         if not item:
@@ -650,7 +628,6 @@ class StorageService:
         return StorageItemInDB(**result) if result else None
 
     @staticmethod
-    @log_logic_execution
     async def set_tags_and_color(
         item_id: str,
         tags: Optional[List[str]],
@@ -680,7 +657,6 @@ class StorageService:
         return StorageItemInDB(**result) if result else None
 
     @staticmethod
-    @log_logic_execution
     async def get_trashed_items(owner_id: str) -> List[StorageItemInDB]:
         cursor = (
             database.mongodb[settings.CLOUD_DB_NAME]
@@ -691,7 +667,6 @@ class StorageService:
         return [StorageItemInDB(**item) for item in items]
 
     @staticmethod
-    @log_logic_execution
     async def restore_from_trash(item_id: str, owner_id: str) -> Optional[StorageItemInDB]:
         item = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one(
             {"_id": item_id, "owner_id": owner_id, "is_trashed": True}
@@ -719,7 +694,6 @@ class StorageService:
         return await StorageService.get_item(item_id, owner_id)
 
     @staticmethod
-    @log_logic_execution
     async def empty_trash(owner_id: str) -> dict:
         cursor = database.mongodb[settings.CLOUD_DB_NAME].storage_items.find(
             {"owner_id": owner_id, "is_trashed": True}
@@ -758,7 +732,6 @@ class StorageService:
         return {"deleted_count": len(ids)}
 
     @staticmethod
-    @log_logic_execution
     async def get_quota_analytics(owner_id: str) -> dict:
         quota = await StorageService.get_storage_quota(owner_id)
         total_limit = quota["limit"]
@@ -831,14 +804,12 @@ class StorageService:
         }
 
     @staticmethod
-    @log_logic_execution
     async def share_internal(
         item_id: str, email: str, role: str, owner_id: str
     ) -> dict:
         return await StorageService.share_item(item_id, email, role, owner_id)
 
     @staticmethod
-    @log_logic_execution
     async def revoke_internal_share(
         item_id: str, target_user_id: str, owner_id: str
     ) -> bool:
@@ -857,7 +828,6 @@ class StorageService:
         return res.modified_count > 0
 
     @staticmethod
-    @log_logic_execution
     async def get_shared_with_me_items(user_id: str) -> List[StorageItemInDB]:
         cursor = (
             database.mongodb[settings.CLOUD_DB_NAME]

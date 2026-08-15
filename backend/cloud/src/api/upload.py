@@ -16,7 +16,6 @@ from src.core.dependency import CurrentUser, Role
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 from src.core.infrastructure.redis import redis
-from src.core.logging_route import LoggingRoute
 from src.core.response import APIResponse
 from src.core.storage import download_file, get_bucket, get_storage_client
 from src.schemas.storage import StorageItemCreate
@@ -24,7 +23,7 @@ from src.schemas.upload import ConfirmUploadRequest, PresignedUrlRequest
 from src.services.storage import StorageService
 from src.services.upload import UploadService
 
-router = APIRouter(route_class=LoggingRoute, prefix="/tai-len")
+router = APIRouter(prefix="/tai-len")
 
 
 async def validate_svg(file: UploadFile):

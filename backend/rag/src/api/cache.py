@@ -1,7 +1,5 @@
 from fastapi import APIRouter, Depends
 from src.core.dependency import verify_internal_token
-from src.core.logging_route import LoggingRoute
-from src.core.logic_logger import log_logic_execution
 from src.core.response import APIResponse
 from src.schemas.cache import (
     CacheGetRequest,
@@ -11,12 +9,10 @@ from src.schemas.cache import (
 from src.services.cache import cache_service
 
 router = APIRouter(
-    route_class=LoggingRoute,
     dependencies=[Depends(verify_internal_token)],
 )
 
 @router.post("/get", response_model=APIResponse[CacheGetResponse])
-@log_logic_execution
 async def get_cache(req: CacheGetRequest):
     res = await cache_service.get_response(req.query_text, req.query_vector)
     return APIResponse(
@@ -25,7 +21,6 @@ async def get_cache(req: CacheGetRequest):
     )
 
 @router.post("/set", response_model=APIResponse[dict])
-@log_logic_execution
 async def set_cache(req: CacheSetRequest):
     await cache_service.set_response(req.query_text, req.response_text, req.query_vector)
     return APIResponse(

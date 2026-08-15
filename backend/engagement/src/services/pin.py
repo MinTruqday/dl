@@ -1,6 +1,5 @@
 from datetime import datetime, timezone
 from loguru import logger
-from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
 from src.repositories.pin import PinRepository
 from src.repositories.reading import DocumentRepository
@@ -8,7 +7,6 @@ from src.repositories.reading import DocumentRepository
 class PinService:
 
     @staticmethod
-    @log_logic_execution
     async def get_pinned_documents(current_user) -> list:
         profile = await mongo.find_one(
             "user_content_profiles", {"_id": str(current_user.id)}, projection={"pinned_documents": 1}
@@ -58,7 +56,6 @@ class PinService:
         return result
 
     @staticmethod
-    @log_logic_execution
     async def pin_document(document_id: str, current_user) -> dict:
         await mongo.update_one(
             "user_content_profiles",
@@ -89,7 +86,6 @@ class PinService:
         return {"status": "success", "message": "Ghim tài liệu vào danh sách ưu tiên hoàn tất"}
 
     @staticmethod
-    @log_logic_execution
     async def unpin_document(document_id: str, current_user) -> dict:
         await mongo.update_one(
             "user_content_profiles",
@@ -109,7 +105,6 @@ class PinService:
         }
 
     @staticmethod
-    @log_logic_execution
     async def set_pinned_documents(document_ids: list, current_user) -> dict:
         await mongo.update_one(
             "user_content_profiles",

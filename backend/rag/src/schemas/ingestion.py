@@ -14,3 +14,8 @@ class IngestResponse(BaseModel):
     graph_entities_count: int = 0
     extraction_method: str = "local"
     graph_text: str = ""
+
+
+class AttachmentConversionRequest(BaseModel):
+    data: str = Field(min_length=1, max_length=35_000_000)
+    filename: str = Field(default="attachment.pdf", min_length=1, max_length=255)

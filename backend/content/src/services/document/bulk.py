@@ -7,14 +7,12 @@ from typing import List, Optional
 from fastapi import HTTPException
 from loguru import logger
 
-from src.core.logic_logger import log_logic_execution
 from src.repositories.document import DocumentRepository
 from src.core.infrastructure.mongo import mongo
 from src.services.document.base import can_read_full
 
 class DocumentBulkService:
     @staticmethod
-    @log_logic_execution
     async def bulk_delete_documents(document_ids: List[str], current_user) -> dict:
         user_id = str(current_user.id)
         query = {"_id": {"$in": document_ids}, "creator_id": user_id, "is_deleted": {"$ne": True}}
@@ -25,7 +23,6 @@ class DocumentBulkService:
         return {"deleted_count": res.modified_count, "document_ids": document_ids}
 
     @staticmethod
-    @log_logic_execution
     async def bulk_restore_documents(document_ids: List[str], current_user) -> dict:
         user_id = str(current_user.id)
         query = {"_id": {"$in": document_ids}, "creator_id": user_id, "is_deleted": True}
@@ -36,7 +33,6 @@ class DocumentBulkService:
         return {"restored_count": res.modified_count, "document_ids": document_ids}
 
     @staticmethod
-    @log_logic_execution
     async def bulk_move_documents(document_ids: List[str], folder_id: Optional[str], current_user) -> dict:
         user_id = str(current_user.id)
         query = {"_id": {"$in": document_ids}, "creator_id": user_id}
@@ -54,7 +50,6 @@ class DocumentBulkService:
         return {"moved_count": res.modified_count, "folder_id": folder_id}
 
     @staticmethod
-    @log_logic_execution
     async def bulk_export_documents(document_ids: List[str], current_user) -> bytes:
         user_id = str(current_user.id)
         query = {"_id": {"$in": document_ids}, "is_deleted": {"$ne": True}}

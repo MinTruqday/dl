@@ -4,7 +4,6 @@ from fastapi import HTTPException
 from pymongo.errors import DuplicateKeyError
 from src.repositories.user import UserRepository
 from src.schemas.user import CreateUserRequest, Role
-from src.core.logic_logger import log_logic_execution
 from datetime import datetime, timedelta, timezone
 import re
 
@@ -31,7 +30,6 @@ class UserService:
         return result
 
     @staticmethod
-    @log_logic_execution
     async def create_user(req: CreateUserRequest) -> str:
         email = req.email.lower()
         slug = req.slug.lower()

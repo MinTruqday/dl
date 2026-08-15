@@ -2,14 +2,12 @@ from datetime import datetime, timezone
 import httpx
 from fastapi import HTTPException
 from loguru import logger
-from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.configuration import settings
 from src.repositories.cooperation import CooperationRepository, DocumentRepository
 from src.services.activity import ActivityService
 
 class MemberService:
     @staticmethod
-    @log_logic_execution
     async def get_collaborators(document_id: str, current_user) -> list:
         doc = await DocumentRepository.find_one(
             {
@@ -56,7 +54,6 @@ class MemberService:
         return collaborators
 
     @staticmethod
-    @log_logic_execution
     async def remove_collaborator(
         collaboration_id: str, current_user
     ) -> dict:
@@ -98,7 +95,6 @@ class MemberService:
         return {"message": "Xóa quyền truy cập của cộng tác viên khỏi tài liệu hoàn tất"}
 
     @staticmethod
-    @log_logic_execution
     async def update_collaborator_role(
         collaboration_id: str, role: str, current_user
     ) -> dict:
@@ -131,7 +127,6 @@ class MemberService:
         return {"message": "Cập nhật phân quyền cộng tác viên hoàn tất"}
 
     @staticmethod
-    @log_logic_execution
     async def transfer_ownership(
         document_id: str, new_owner_id: str, current_user
     ) -> dict:

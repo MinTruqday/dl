@@ -2,7 +2,6 @@ from src.core.infrastructure.mongo import mongo
 from src.core.dependency import CurrentUser
 from typing import Any
 
-from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
@@ -19,7 +18,7 @@ from src.schemas.identity import (
     VerifyCodeRequest,
 )
 
-router = APIRouter(route_class=LoggingRoute, prefix="/xac-thuc")
+router = APIRouter(prefix="/xac-thuc")
 
 @router.get("/ca-nhan", response_model=APIResponse[UserResponse])
 async def read_users_me(

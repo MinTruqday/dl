@@ -2,7 +2,6 @@ import uuid
 from datetime import datetime, timezone
 from fastapi import HTTPException, Query
 from loguru import logger
-from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
 from src.repositories.bookmark import BookmarkRepository
 from src.repositories.reading import DocumentRepository
@@ -10,7 +9,6 @@ from src.repositories.reading import DocumentRepository
 class BookmarkService:
 
     @staticmethod
-    @log_logic_execution
     async def toggle_bookmark(document_id: str, current_user) -> dict:
         user_id = str(current_user.id)
         profile = await mongo.find_one("user_content_profiles", {"_id": user_id})
@@ -44,7 +42,6 @@ class BookmarkService:
         return {"status": "success", "message": message, "is_bookmarked": is_bookmarked}
 
     @staticmethod
-    @log_logic_execution
     async def get_bookmarks(
         current_user,
         limit: int = Query(default=20, le=100),
@@ -86,7 +83,6 @@ class BookmarkService:
         ]
 
     @staticmethod
-    @log_logic_execution
     async def create_bookmark_folder(name: str, current_user) -> dict:
         folder = {
             "_id": str(uuid.uuid4()),
@@ -100,7 +96,6 @@ class BookmarkService:
         return folder
 
     @staticmethod
-    @log_logic_execution
     async def get_bookmark_folders(current_user) -> list:
         folders = (
             await mongo
@@ -123,7 +118,6 @@ class BookmarkService:
         ]
 
     @staticmethod
-    @log_logic_execution
     async def assign_bookmarks_to_folder(
         folder_id: str, bookmark_ids: list, current_user
     ) -> dict:
@@ -143,7 +137,6 @@ class BookmarkService:
         return {"message": "Cập nhật thông tin thư mục dấu trang hoàn tất"}
 
     @staticmethod
-    @log_logic_execution
     async def delete_bookmark_folder(folder_id: str, current_user) -> dict:
         result = await BookmarkRepository.delete_folder(
             {"_id": folder_id, "user_id": str(current_user.id)}

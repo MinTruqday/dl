@@ -21,14 +21,8 @@ python-multipart==0.0.9
 jinja2==3.1.3
 accelerate>=0.27.0
 huggingface-hub>=1.5.0,<2.0.0
-boto3>=1.28.57
 motor>=3.4.0
 pymongo<5.0.0
-pymupdf==1.24.2
-pypdfium2>=4.30.0
-beautifulsoup4>=4.12.0
-docling>=2.119.0,<3.0.0
-docling-core>=2.91.0,<3.0.0
 nest-asyncio
 Pillow==10.3.0
 RestrictedPython==7.4
@@ -48,7 +42,6 @@ mlx-lm>=0.17.0; sys_platform == "darwin"
 aio-pika==9.4.1
 PyJWT==2.8.0
 argon2-cffi==23.1.0
-aioboto3==12.3.0
 redis==5.2.1
 tenacity>=8.0.0
 docker>=7.0.0

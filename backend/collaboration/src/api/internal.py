@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Depends
 
 from src.core.dependency import verify_internal_token
-from src.core.logging_route import LoggingRoute
 from src.repositories.cooperation import CooperationRepository
 
-router = APIRouter(route_class=LoggingRoute, prefix="/cong-tac/noi-bo")
+router = APIRouter(prefix="/cong-tac/noi-bo")
 
 
 @router.post("/quyen", dependencies=[Depends(verify_internal_token)], include_in_schema=False)

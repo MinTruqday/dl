@@ -1,6 +1,5 @@
 import secrets
 import uuid
-from src.core.logic_logger import log_logic_execution
 from datetime import datetime, timedelta, timezone
 
 import httpx
@@ -16,7 +15,6 @@ from src.core.security.access import create_access_token, get_password_hash, ver
 class SessionService:
 
     @staticmethod
-    @log_logic_execution
     async def register_user(user_in: UserCreate, client_ip: str):
         config = await IdentityRepository.get_system_config()
         if config and (not config.get("registration_enabled", True)):
@@ -81,7 +79,6 @@ class SessionService:
         }
 
     @staticmethod
-    @log_logic_execution
     async def login_user(username: str, password: str, client_ip: str):
         is_email = "@" in username
         try:
@@ -174,7 +171,6 @@ class SessionService:
         }
 
     @staticmethod
-    @log_logic_execution
     async def revoke_all_sessions(current_user: UserInDB):
         user_id_str = str(current_user.id)
         await IdentityRepository.revoke_all_sessions(user_id_str)
@@ -182,7 +178,6 @@ class SessionService:
         return {"message": "Thực hiện đăng xuất khỏi tất cả các thiết bị hoàn tất"}
 
     @staticmethod
-    @log_logic_execution
     async def revoke_session(current_user):
         await IdentityRepository.revoke_session(
             str(current_user.id), current_user.session_id
@@ -190,7 +185,6 @@ class SessionService:
         return {"message": "Đăng xuất hoàn tất"}
 
     @staticmethod
-    @log_logic_execution
     async def forgot_password(email: str, client_ip: str):
         try:
             user = await IdentityRepository.get_user_by_email(email)
@@ -223,7 +217,6 @@ class SessionService:
         return {"status": "ok", "message": "Hệ thống đang tiến hành xử lý yêu cầu khôi phục mật khẩu"}
 
     @staticmethod
-    @log_logic_execution
     async def reset_password(token: str, new_password: str, client_ip: str):
         token_doc = await IdentityRepository.consume_password_reset_token(token)
         if not token_doc:
@@ -251,7 +244,6 @@ class SessionService:
         return {"status": "ok", "message": "Thực hiện thay đổi mật khẩu tài khoản hoàn tất"}
 
     @staticmethod
-    @log_logic_execution
     async def verify_reset_code(token: str, client_ip: str):
         token_doc = await IdentityRepository.get_valid_password_reset_token(token)
         if not token_doc or token_doc.get("expires_at") < datetime.now(timezone.utc):
@@ -261,7 +253,6 @@ class SessionService:
         return {"status": "ok", "message": "Xác thực mã bảo mật hoàn tất"}
 
     @staticmethod
-    @log_logic_execution
     async def issue_token_for_user(user_doc: dict, client_ip: str):
         if not user_doc.get("is_active", True):
             raise HTTPException(

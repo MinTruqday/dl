@@ -2,11 +2,10 @@ from typing import Any, List
 from fastapi import APIRouter, Body, Depends
 from src.api.dependency import require_role
 from src.core.dependency import CurrentUser, Role
-from src.core.logging_route import LoggingRoute
 from src.core.response import APIResponse
 from src.services.search import SearchService
 
-router = APIRouter(route_class=LoggingRoute, prefix="/luu-tru")
+router = APIRouter(prefix="/luu-tru")
 
 @router.post(
     "/nhan-ban/{item_id}",

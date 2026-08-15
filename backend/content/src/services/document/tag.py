@@ -1,11 +1,9 @@
 from typing import List
 from fastapi import HTTPException, Query
-from src.core.logic_logger import log_logic_execution
 from src.repositories.document import DocumentRepository
 
 class DocumentTagService:
     @staticmethod
-    @log_logic_execution
     async def get_tags_categories():
         pipeline = [
             {"$match": {"status": "published", "is_deleted": {"$ne": True}}},
@@ -39,7 +37,6 @@ class DocumentTagService:
         return {"categories": sorted(categories), "tags": sorted(tags)}
 
     @staticmethod
-    @log_logic_execution
     async def get_trending_tags(limit: int = Query(default=20, le=100)) -> List[str]:
         pipeline = [
             {"$match": {"status": "published", "is_deleted": {"$ne": True}}},

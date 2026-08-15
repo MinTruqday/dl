@@ -1,5 +1,4 @@
 from src.core.infrastructure.redis import redis
-from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import Response
 from loguru import logger
@@ -7,7 +6,7 @@ from src.schemas.composition import CompileRequest
 from src.engines.latex import LatexEngine
 from src.core.dependency import RateLimiting, get_current_user, CurrentUser
 
-router = APIRouter(route_class=LoggingRoute, prefix="/soan-thao/latex")
+router = APIRouter(prefix="/soan-thao/latex")
 
 @router.post("/bien-dich", dependencies=[Depends(RateLimiting(10, 60))])
 async def compile_latex(req: CompileRequest, current_user=Depends(get_current_user)):

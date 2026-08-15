@@ -1,4 +1,3 @@
-from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
 import asyncio
 import threading
@@ -21,7 +20,6 @@ class TrainingCancelled(Exception):
 
 from src.schemas.finetuning import FinetuneJobUpdate
 
-@log_logic_execution
 async def report_progress(job_id: str, data: dict):
     update_fields = FinetuneJobUpdate(**data).model_dump(exclude_none=True)
     if data.get("status") == "completed":
@@ -58,7 +56,6 @@ async def report_progress(job_id: str, data: dict):
 def _run_training_sync(job_id: str, config: dict, loop, cancel_event):
     from src.training.finetuning import run_finetune_job
 
-    @log_logic_execution
     async def _update(data):
         await report_progress(job_id, data)
 
@@ -111,7 +108,6 @@ def _run_training_sync(job_id: str, config: dict, loop, cancel_event):
     finally:
         active_jobs.pop(job_id, None)
 
-@log_logic_execution
 async def create_dataset(req: dict):
     logger.info(f"Started fine-tuning dataset creation for user_id={req.get('user_id')}")
     doc = {
@@ -127,12 +123,10 @@ async def create_dataset(req: dict):
     await FinetuneRepository.insert_dataset(doc)
     return doc
 
-@log_logic_execution
 async def list_datasets(user_id: str):
     cursor = mongo.find("finetune_datasets", {"user_id": user_id}).sort("created_at", -1)
     return await cursor.to_list(length=None)
 
-@log_logic_execution
 async def get_dataset(dataset_id: str, user_id: str):
     doc = await mongo.find_one("finetune_datasets", 
         {"_id": dataset_id, "user_id": user_id}
@@ -141,7 +135,6 @@ async def get_dataset(dataset_id: str, user_id: str):
         raise HTTPException(status_code=404, detail={"code": "finetuning_dataset_not_found"})
     return doc
 
-@log_logic_execution
 async def delete_dataset(dataset_id: str, user_id: str):
     
     result = await FinetuneRepository.delete_dataset(
@@ -154,7 +147,6 @@ async def delete_dataset(dataset_id: str, user_id: str):
         return {"success": True}
     raise HTTPException(status_code=404, detail={"code": "finetuning_dataset_not_found"})
 
-@log_logic_execution
 async def add_samples(dataset_id: str, req: dict):
     
     user_id = req.get("user_id")
@@ -185,7 +177,6 @@ async def add_samples(dataset_id: str, req: dict):
     )
     return {"added": len(documents), "total": total}
 
-@log_logic_execution
 async def get_samples(
     dataset_id: str,
     user_id: str,
@@ -200,7 +191,6 @@ async def get_samples(
     cursor = mongo.find("finetune_samples", {"dataset_id": dataset_id}).sort("created_at", 1).skip(int(skip)).limit(int(limit))
     return await cursor.to_list(length=None)
 
-@log_logic_execution
 async def delete_sample(dataset_id: str, sample_id: str, user_id: str):
     
     if not await FinetuneRepository.find_dataset(
@@ -222,7 +212,6 @@ async def delete_sample(dataset_id: str, sample_id: str, user_id: str):
         return {"success": True}
     raise HTTPException(status_code=404, detail={"code": "finetuning_sample_not_found"})
 
-@log_logic_execution
 async def import_feedback(req: dict):
     
     user_id = req.get("user_id")
@@ -275,7 +264,6 @@ async def import_feedback(req: dict):
         )
     return {"dataset_id": ds_id, "imported": len(samples)}
 
-@log_logic_execution
 async def import_documents(req: dict):
     user_id, doc_ids = req.get("user_id"), req.get("document_ids", [])
     from langchain_core.messages import HumanMessage
@@ -352,7 +340,6 @@ async def import_documents(req: dict):
     await FinetuneRepository.insert_samples(sample_documents)
     return {"dataset_id": dataset_id, "imported": len(sample_documents)}
 
-@log_logic_execution
 async def create_job(req: dict):
     
     ds_id, user_id = req.get("dataset_id"), req.get("user_id")
@@ -386,7 +373,6 @@ async def create_job(req: dict):
     await FinetuneRepository.insert_job(job)
     return job
 
-@log_logic_execution
 async def start_job(job_id: str, req: dict):
     
     job = await FinetuneRepository.find_job(
@@ -432,19 +418,16 @@ async def start_job(job_id: str, req: dict):
     thread.start()
     return {"status": "started", "job_id": job_id}
 
-@log_logic_execution
 async def list_jobs(user_id: str):
     cursor = mongo.find("finetune_jobs", {"user_id": user_id}).sort("created_at", -1)
     return await cursor.to_list(length=None)
 
-@log_logic_execution
 async def get_job(job_id: str, user_id: str):
     job = await mongo.find_one("finetune_jobs", {"_id": job_id, "user_id": user_id})
     if not job:
         raise HTTPException(status_code=404, detail={"code": "finetuning_job_not_found"})
     return job
 
-@log_logic_execution
 async def cancel_job(job_id: str, req: dict):
     job = await FinetuneRepository.find_job(
         {"_id": job_id, "user_id": req.get("user_id")}
@@ -471,7 +454,6 @@ async def cancel_job(job_id: str, req: dict):
         status_code=400, detail={"code": "finetuning_job_not_cancellable"}
     )
 
-@log_logic_execution
 async def deploy_model(job_id: str, req: dict):
     
     job = await FinetuneRepository.find_job(
@@ -550,7 +532,6 @@ async def deploy_model(job_id: str, req: dict):
     )
     return {"status": "deployed", "model_name": model_name}
 
-@log_logic_execution
 async def evaluate_model(job_id: str, req: dict):
     from src.loop.evaluation import evaluation
 

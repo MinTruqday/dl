@@ -244,12 +244,6 @@ def create_document_rubric(use_llm_judge: bool = False) -> Rubric:
     return Rubric(graders=graders, name="document")
 
 
-def create_financial_rubric() -> Rubric:
-    return Rubric(
-        graders=[ResponseLengthGrader(min_length=10), ErrorPrefixGrader(), ToolResultGrader()],
-        name="financial",
-    )
-
 AgentCallable = Callable[[str, dict], Coroutine[Any, Any, str]]
 
 class RubricMiddleware:
@@ -324,6 +318,3 @@ standard_rubric_middleware = RubricMiddleware(
 
 document_rubric_middleware = RubricMiddleware(
     rubric=create_document_rubric(use_llm_judge=False), max_retries=2)
-
-financial_rubric_middleware = RubricMiddleware(
-    rubric=create_financial_rubric(), max_retries=1)

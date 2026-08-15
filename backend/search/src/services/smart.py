@@ -1,14 +1,12 @@
 from typing import List, Optional
 import httpx
 from loguru import logger
-from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.configuration import settings
 from src.services.document import DocumentService
 
 class SmartService:
 
     @staticmethod
-    @log_logic_execution
     async def smart_search(
         query: str,
         limit: int,

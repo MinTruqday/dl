@@ -76,19 +76,6 @@ async def setup_indexes():
                 IndexModel([("owner_id", ASCENDING), ("name", ASCENDING)], unique=True),
                 IndexModel([("owner_id", ASCENDING), ("is_connected", ASCENDING)]),
             ],
-            "global_preferences": [
-                IndexModel([("key", ASCENDING)], unique=True),
-            ],
-            "global_project_context": [
-                IndexModel([("project_id", ASCENDING)], unique=True),
-            ],
-            "episodic_memory": [
-                IndexModel([("user_id", ASCENDING), ("session_id", ASCENDING), ("created_at", DESCENDING)]),
-                IndexModel([("expires_at", ASCENDING)], expireAfterSeconds=0),
-            ],
-            "history_events": [
-                IndexModel([("created_at", DESCENDING)]),
-            ],
             "ai_workspaces": [
                 IndexModel([("user_id", ASCENDING), ("updated_at", DESCENDING)]),
                 IndexModel([("user_id", ASCENDING), ("status", ASCENDING)]),

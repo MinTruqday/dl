@@ -5,13 +5,11 @@ from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
-from src.core.logic_logger import log_logic_execution
 from src.schemas.storage import StorageItemCreate, StorageItemInDB, StorageItemUpdate
 from src.services.user import UserDirectory
 
 class FileService:
     @staticmethod
-    @log_logic_execution
     async def create_file_record(item: StorageItemCreate, owner_id: str) -> StorageItemInDB:
         if item.parent_id:
             parent = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one(
@@ -37,7 +35,6 @@ class FileService:
         return db_item
 
     @staticmethod
-    @log_logic_execution
     async def get_file_by_id(file_id: str, owner_id: str) -> StorageItemInDB:
         doc = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one(
             {"_id": file_id, "owner_id": owner_id}
@@ -47,7 +44,6 @@ class FileService:
         return StorageItemInDB(**doc)
 
     @staticmethod
-    @log_logic_execution
     async def update_file_metadata(file_id: str, update_data: StorageItemUpdate, owner_id: str) -> StorageItemInDB:
         payload = update_data.model_dump(exclude_unset=True)
         payload["updated_at"] = datetime.now(timezone.utc)
@@ -61,7 +57,6 @@ class FileService:
         return StorageItemInDB(**res)
 
     @staticmethod
-    @log_logic_execution
     async def rename_file(file_id: str, new_name: str, owner_id: str) -> dict:
         res = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.update_one(
             {"_id": file_id, "owner_id": owner_id, "is_folder": False},
@@ -72,7 +67,6 @@ class FileService:
         return {"status": "success", "file_id": file_id, "name": new_name}
 
     @staticmethod
-    @log_logic_execution
     async def move_file(file_id: str, new_parent_id: Optional[str], owner_id: str) -> dict:
         if new_parent_id:
             parent = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one(
@@ -89,7 +83,6 @@ class FileService:
         return {"status": "success", "file_id": file_id, "parent_id": new_parent_id}
 
     @staticmethod
-    @log_logic_execution
     async def get_storage_quota(owner_id: str) -> dict:
         user = await UserDirectory.get_by_id(owner_id)
         limit = (

@@ -2,11 +2,9 @@ from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
-from src.core.logic_logger import log_logic_execution
 
 class TrashService:
     @staticmethod
-    @log_logic_execution
     async def move_to_trash(item_id: str, owner_id: str) -> dict:
         result = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.update_one(
             {"_id": item_id, "owner_id": owner_id},
@@ -17,7 +15,6 @@ class TrashService:
         return {"status": "success", "message": "Đã chuyển tệp/thư mục vào Thùng rác"}
 
     @staticmethod
-    @log_logic_execution
     async def restore_from_trash(item_id: str, owner_id: str) -> dict:
         result = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.update_one(
             {"_id": item_id, "owner_id": owner_id, "is_trashed": True},
@@ -28,13 +25,11 @@ class TrashService:
         return {"status": "success", "message": "Đã khôi phục tệp/thư mục từ Thùng rác"}
 
     @staticmethod
-    @log_logic_execution
     async def empty_trash(owner_id: str) -> dict:
         res = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.delete_many({"owner_id": owner_id, "is_trashed": True})
         return {"status": "success", "deleted_count": res.deleted_count, "message": "Đã dọn sạch Thùng rác"}
 
     @staticmethod
-    @log_logic_execution
     async def auto_purge_expired_trash(owner_id: str, days: int = 30) -> dict:
         cutoff = datetime.now(timezone.utc) - timedelta(days=days)
         query = {

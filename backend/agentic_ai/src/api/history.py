@@ -1,6 +1,5 @@
 from typing import Any, Dict, List, Optional
 
-from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends, HTTPException, Query
 from src.core.dependency import get_current_user, CurrentUser
 
@@ -8,7 +7,7 @@ from src.core.dependency import get_current_user, CurrentUser
 from src.services.history import HistoryService
 from src.schemas.history import MessageCreate, SessionCreate, SessionStateUpdate, SessionTitleUpdate
 
-router = APIRouter(route_class=LoggingRoute, prefix="/lich-su")
+router = APIRouter(prefix="/lich-su")
 
 
 @router.get("", response_model=List[dict])

@@ -1,6 +1,5 @@
 from typing import Any
 
-from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends, HTTPException
 from src.services.passkey import PasskeyService
 
@@ -8,7 +7,7 @@ from src.core.dependency import CurrentUser, RateLimiting, get_current_user
 from src.core.response import APIResponse
 from src.schemas.identity import PasskeyFinishRequest, PasskeyRequest
 
-router = APIRouter(route_class=LoggingRoute, prefix="/xac-thuc/khoa-bao-mat")
+router = APIRouter(prefix="/xac-thuc/khoa-bao-mat")
 
 @router.post(
     "/dang-nhap/bat-dau",

@@ -1,12 +1,10 @@
 from fastapi import HTTPException
 
-from src.core.logic_logger import log_logic_execution
 from src.services.storage import StorageService
 
 
 class VersionService:
     @staticmethod
-    @log_logic_execution
     async def create_file_version(
         file_id: str,
         owner_id: str,
@@ -26,7 +24,6 @@ class VersionService:
         }
 
     @staticmethod
-    @log_logic_execution
     async def get_file_versions(file_id: str, owner_id: str) -> list:
         item = await StorageService.get_item(file_id, owner_id)
         if not item or item.is_folder:
@@ -37,7 +34,6 @@ class VersionService:
         return [version.model_dump() for version in reversed(item.versions)]
 
     @staticmethod
-    @log_logic_execution
     async def restore_file_version(
         file_id: str,
         version_id: str,

@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Depends
-from src.core.logging_route import LoggingRoute
 from src.core.response import APIResponse
 from src.api.dependency import get_current_user, CurrentUser
 from src.services.preview import PreviewService
 
-router = APIRouter(route_class=LoggingRoute)
+router = APIRouter()
 
 @router.get("/xem-truoc/{item_id}", response_model=APIResponse[dict])
 async def preview_item_endpoint(

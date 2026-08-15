@@ -7,7 +7,6 @@ from src.services.access_request import AccessRequestService
 from src.services.task import TaskService
 from src.services.lock import LockService
 from src.services.snapshot import SnapshotService
-from src.core.logic_logger import log_logic_execution
 from src.repositories.cooperation import DocumentRepository
 from fastapi import HTTPException
 
@@ -63,7 +62,6 @@ class CooperationService:
     get_snapshots = SnapshotService.get_draft_snapshots
 
     @staticmethod
-    @log_logic_execution
     async def update_collab_access(
         document_id: str, access_level: str, current_user
     ) -> dict:

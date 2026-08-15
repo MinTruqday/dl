@@ -1,6 +1,5 @@
 from typing import List, Optional
 from fastapi import Query
-from src.core.logic_logger import log_logic_execution
 from src.repositories.document import DocumentRepository
 
 def serialize_document(doc: dict | None) -> dict | None:
@@ -17,7 +16,6 @@ def serialize_document(doc: dict | None) -> dict | None:
 class DocumentService:
 
     @staticmethod
-    @log_logic_execution
     async def search_documents(query: str, limit: int = Query(default=20, le=100)) -> List[dict]:
         cursor = DocumentRepository.find(
             {
@@ -45,7 +43,6 @@ class DocumentService:
         return [serialize_document(d) for d in documents]
 
     @staticmethod
-    @log_logic_execution
     async def get_ranked_public_documents(ranked_results: List[dict], limit: int) -> List[dict]:
         document_ids = [
             str(result["document_id"])

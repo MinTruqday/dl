@@ -1,13 +1,11 @@
 import re
 from typing import Optional
 from fastapi import HTTPException
-from src.core.logic_logger import log_logic_execution
 from src.repositories.cloud import CloudRepository
 
 class CloudService:
 
     @staticmethod
-    @log_logic_execution
     async def advanced_search(
         owner_id: str,
         query_text: Optional[str] = None,

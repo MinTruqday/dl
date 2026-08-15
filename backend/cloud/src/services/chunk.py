@@ -6,14 +6,12 @@ from fastapi import HTTPException
 from loguru import logger
 
 from src.core.infrastructure.configuration import settings
-from src.core.logic_logger import log_logic_execution
 from src.core.storage import upload_file
 from src.services.upload import UploadService
 from src.services.file import FileService
 
 class ChunkService:
     @staticmethod
-    @log_logic_execution
     async def save_chunk(
         upload_id: str,
         chunk_index: int,

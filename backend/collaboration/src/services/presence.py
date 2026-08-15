@@ -1,7 +1,6 @@
 import uuid
 from datetime import datetime, timezone
 from fastapi import HTTPException
-from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
 from src.repositories.cooperation import CooperationRepository, DocumentRepository
 from src.services.activity import ActivityService
@@ -98,7 +97,6 @@ class PresenceService:
         }
 
     @staticmethod
-    @log_logic_execution
     async def update_status(document_id: str, current_user) -> dict:
         await CooperationRepository.update_status(
             {"document_id": document_id, "user_id": str(current_user.id)},
@@ -113,7 +111,6 @@ class PresenceService:
         return {"message": "Đồng bộ hóa trạng thái hoạt động trực tuyến hoàn tất"}
 
     @staticmethod
-    @log_logic_execution
     async def get_online_collaborators(document_id: str) -> list:
         cutoff = datetime.now(timezone.utc).timestamp() - 60
         online_users = (
@@ -138,7 +135,6 @@ class PresenceService:
         return result
 
     @staticmethod
-    @log_logic_execution
     async def update_collaboration_mode(
         document_id: str, mode: str, current_user
     ) -> dict:
@@ -178,7 +174,6 @@ class PresenceService:
         }
 
     @staticmethod
-    @log_logic_execution
     async def get_collaboration_mode(document_id: str, current_user) -> dict:
         doc = await DocumentRepository.find_one({"_id": document_id})
         if not doc:
@@ -195,7 +190,6 @@ class PresenceService:
         }
 
     @staticmethod
-    @log_logic_execution
     async def update_collaboration_schedules(
         document_id: str, schedules: list, current_user
     ) -> dict:
@@ -251,7 +245,6 @@ class PresenceService:
         }
 
     @staticmethod
-    @log_logic_execution
     async def get_collaboration_schedules(document_id: str, current_user) -> dict:
         doc = await DocumentRepository.find_one({"_id": document_id})
         if not doc:

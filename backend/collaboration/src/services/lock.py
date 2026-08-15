@@ -1,12 +1,10 @@
 from datetime import datetime, timezone
 from fastapi import HTTPException
-from src.core.logic_logger import log_logic_execution
 from src.repositories.cooperation import CooperationRepository, DocumentRepository
 from src.services.activity import ActivityService
 
 class LockService:
     @staticmethod
-    @log_logic_execution
     async def acquire_lock(document_id: str, current_user) -> dict:
         doc = await DocumentRepository.find_one(
             {
@@ -52,7 +50,6 @@ class LockService:
         return {"message": "Nhận khóa quyền chỉnh sửa độc quyền thành công"}
 
     @staticmethod
-    @log_logic_execution
     async def release_lock(document_id: str, current_user) -> dict:
         existing = await CooperationRepository.find_lock({"document_id": document_id})
         if existing and existing.get("user_id") == str(current_user.id):
@@ -66,7 +63,6 @@ class LockService:
         return {"message": "Mở khóa tài liệu thành công"}
 
     @staticmethod
-    @log_logic_execution
     async def get_lock_status(document_id: str) -> dict:
         existing = await CooperationRepository.find_lock({"document_id": document_id})
         if not existing:

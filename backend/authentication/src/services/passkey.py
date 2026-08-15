@@ -7,7 +7,6 @@ from datetime import datetime, timezone
 import httpx
 from fastapi import HTTPException
 from loguru import logger
-from src.core.logic_logger import log_logic_execution
 from src.repositories.identity import IdentityRepository as AuthenticationRepository
 from webauthn import (
     generate_authentication_options,
@@ -40,7 +39,6 @@ EXPECTED_ORIGIN = ORIGINS if len(ORIGINS) > 1 else ORIGINS[0]
 class PasskeyService:
 
     @staticmethod
-    @log_logic_execution
     async def login_begin(email: str):
         user = await AuthenticationRepository.get_auth_credential_by_email(email)
         if not user:
@@ -70,7 +68,6 @@ class PasskeyService:
         return json.loads(options_to_json(options))
 
     @staticmethod
-    @log_logic_execution
     async def login_finish(email: str, credential_data: dict):
         user = await AuthenticationRepository.get_auth_credential_by_email(email)
         if not user:
@@ -136,7 +133,6 @@ class PasskeyService:
         return await SessionService.issue_token_for_user(user_doc, "passkey_login")
 
     @staticmethod
-    @log_logic_execution
     async def register_begin(email: str):
         user = await AuthenticationRepository.get_auth_credential_by_email(email)
         if not user:
@@ -173,7 +169,6 @@ class PasskeyService:
         return json.loads(options_to_json(options))
 
     @staticmethod
-    @log_logic_execution
     async def register_finish(email: str, credential_data: dict):
         user = await AuthenticationRepository.get_auth_credential_by_email(email)
         if not user:

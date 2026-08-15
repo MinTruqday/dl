@@ -6,7 +6,6 @@ from loguru import logger
 
 from src.core.dependency import CurrentUser, Role, get_current_user, verify_internal_token
 from src.core.infrastructure.configuration import settings
-from src.core.logging_route import LoggingRoute
 from src.core.model_runtime import run_chat_completion
 from src.utils.local_models import local_model_client
 from src.core.registry import PromptType, registry
@@ -44,7 +43,7 @@ from src.schemas.inference import (
     RagDocumentSummaryRequest,
 )
 
-router = APIRouter(route_class=LoggingRoute, prefix="/suy-luan")
+router = APIRouter(prefix="/suy-luan")
 
 client = local_model_client
 
@@ -229,9 +228,9 @@ async def semantic_document_search(
 ):
     """Return ranked document identifiers from the persisted vector index"""
     try:
-        from src.rag.retrieval import retriever
+        from src.integrations.knowledge_service import knowledge_client
 
-        chunks = await retriever.retrieve(
+        chunks = await knowledge_client.retrieve(
             req.query,
             k=req.limit,
             requester_id=str(current_user.id),
@@ -447,9 +446,9 @@ async def check_plagiarism(
     """Estimate plagiarism risk and return structured matching evidence"""
     logger.info("Plagiarism detection started")
     try:
-        from src.rag.retrieval import retriever
+        from src.integrations.knowledge_service import knowledge_client
 
-        matches = await retriever.retrieve(
+        matches = await knowledge_client.retrieve(
             req.content[:2000],
             k=5,
             requester_id=str(current_user.id),
@@ -553,9 +552,9 @@ async def suggest_citations(
     """Suggest citations for bounded content and source context"""
     logger.info("Citation suggestion started")
     try:
-        from src.rag.retrieval import retriever
+        from src.integrations.knowledge_service import knowledge_client
 
-        matches = await retriever.retrieve(
+        matches = await knowledge_client.retrieve(
             req.text[:500],
             k=3,
             requester_id=str(current_user.id),
@@ -638,11 +637,11 @@ async def multi_doc_synthesis(
     """Synthesize evidence from an authorized set of indexed documents"""
     logger.info("Multi-document synthesis started document_count={}", len(req.document_ids))
     try:
-        from src.rag.retrieval import retriever
+        from src.integrations.knowledge_service import knowledge_client
 
         all_context = []
         for doc_id in req.document_ids:
-            matches = await retriever.retrieve(
+            matches = await knowledge_client.retrieve(
                 req.query,
                 document_ids=[doc_id],
                 k=3,
@@ -674,9 +673,9 @@ async def extract_text(
     """Extract normalized text from an authorized cloud file"""
     logger.info("Document text extraction started")
     try:
-        from src.services.rag_client import rag_client
+        from src.integrations.knowledge_service import knowledge_client
 
-        extracted_text = await rag_client.extract_document(
+        extracted_text = await knowledge_client.extract_document(
             req.document_id,
             str(current_user.id),
             current_user.role == Role.ADMIN,
@@ -737,9 +736,9 @@ async def delete_vector_document(document_id: str):
     """Delete all indexed vectors for an internal document identifier"""
     logger.info(f"Started vector index deletion for document {document_id}")
     try:
-        from src.services.rag_client import rag_client
+        from src.integrations.knowledge_service import knowledge_client
 
-        await rag_client.delete_document(
+        await knowledge_client.delete_document(
             document_id,
             settings.PLATFORM_SYSTEM_ID,
             True,

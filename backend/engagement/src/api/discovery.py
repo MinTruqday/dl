@@ -1,11 +1,10 @@
 from typing import Any
 from fastapi import APIRouter, Depends, Query, status
-from src.core.logging_route import LoggingRoute
 from src.core.response import APIResponse
 from src.api.dependency import get_current_user_optional, get_db, CurrentUser
 from src.services.discovery import DiscoveryService
 
-router = APIRouter(route_class=LoggingRoute, prefix="/kham-pha")
+router = APIRouter(prefix="/kham-pha")
 
 @router.get("/the-loai", response_model=APIResponse[Any])
 async def get_tags_categories(db=Depends(get_db)):

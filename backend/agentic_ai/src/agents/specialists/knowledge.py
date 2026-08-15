@@ -1,7 +1,7 @@
 from loguru import logger
 from src.workflow.graph import knowledge_app
 
-class AnalysisAgent:
+class KnowledgeAgent:
     """
     <module_purpose>
     DocLib Analysis Agent for parsing raw user requests and preparing them for execution.
@@ -71,4 +71,4 @@ class AnalysisAgent:
             logger.exception("Knowledge base access error")
             raise RuntimeError("knowledge_pipeline_failed")
 
-researcher = AnalysisAgent()
+researcher = KnowledgeAgent()

@@ -1,6 +1,5 @@
 from typing import Any
 
-from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends, Query
 from src.schemas.announcement import AnnouncementCreate, AnnouncementSettings
 from src.services.announcement import AnnouncementService
@@ -10,7 +9,7 @@ from src.core.response import APIResponse
 from src.core.dependency import CurrentUser, verify_internal_token
 from src.repositories.announcement import AnnouncementRepository
 
-router = APIRouter(route_class=LoggingRoute, prefix="/thong-bao")
+router = APIRouter(prefix="/thong-bao")
 
 @router.get("", response_model=APIResponse[Any])
 async def get_announcements(

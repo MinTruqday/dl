@@ -1,7 +1,6 @@
 import secrets
 from typing import Any, List, Optional
 
-from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query
 from loguru import logger
 from src.api.dependency import get_db, require_role
@@ -24,7 +23,7 @@ from src.core.infrastructure.configuration import settings
 from src.core.response import APIResponse
 from src.core.dependency import CurrentUser, Role
 
-router = APIRouter(route_class=LoggingRoute, prefix="/luu-tru")
+router = APIRouter(prefix="/luu-tru")
 
 @router.post("/thu-muc", response_model=APIResponse[StorageItemResponse], status_code=201)
 async def create_folder(

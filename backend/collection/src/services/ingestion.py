@@ -13,7 +13,6 @@ from src.core.infrastructure.database import database
 from src.core.infrastructure.mq import mq as mq_client
 from src.core.infrastructure.mongo import mongo
 from src.core.infrastructure.redis import redis
-from src.core.logic_logger import log_logic_execution
 from src.schemas.ingestion import Collection
 from src.services.content_client import collector_document_stats
 from src.sources.anna import AnnaSource
@@ -30,7 +29,6 @@ SOURCE_QUEUES = {
 }
 
 
-@log_logic_execution
 async def trigger_collection(req: Collection):
     if req.source == "AnnaArchive":
         raise HTTPException(
@@ -90,7 +88,6 @@ async def trigger_collection(req: Collection):
         )
 
 
-@log_logic_execution
 async def stop_collection():
     try:
         await redis.set("stop_collection", "1")
@@ -120,7 +117,6 @@ async def stop_collection():
         raise HTTPException(status_code=503, detail="Không thể dừng tiến trình thu thập dữ liệu")
 
 
-@log_logic_execution
 async def get_active_jobs():
     jobs = await mongo.find(
         "collection_jobs",
@@ -145,7 +141,6 @@ async def get_active_jobs():
     ]
 
 
-@log_logic_execution
 async def get_collector_stats():
     collection = database.mongodb[settings.COLLECTION_DB_NAME].collection_jobs
     source_ids = ["annas-archive", "nxbst", "nxbgd", "ctan"]
@@ -194,7 +189,6 @@ async def get_collector_stats():
     }
 
 
-@log_logic_execution
 async def get_collector_logs():
     log_file = "logs/backend.log"
     if not os.path.isfile(log_file):

@@ -1,129 +1,111 @@
 import json
-from datetime import datetime, timezone
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import redis.asyncio as redis
 from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 
+
 class ShortTermMemory:
-    def __init__(self):
-        redis_url = settings.REDIS_URI
+    """Redis-backed conversation memory for the active session only."""
+
+    def __init__(self, ttl_seconds: int = 7200, max_turns: int | None = None):
+        self.ttl_seconds = ttl_seconds
+        self.max_turns = max_turns or settings.AGENT_HISTORY_MAX_TURNS
         try:
-            self._redis = redis.from_url(redis_url, decode_responses=True)
+            self._redis = redis.from_url(settings.REDIS_URI, decode_responses=True)
         except Exception:
-            logger.exception("Redis connection error")
+            logger.exception("Redis short-term memory initialization failed")
             self._redis = None
 
-        self._short_term_ttl = 3600 * 2
-        self._long_term_ttl = 86400 * 30
+    @staticmethod
+    def _history_key(session_id: str) -> str:
+        return f"session:{session_id}:history"
 
-    async def get_short_term(self, conversation_id: str) -> List[Dict]:
-        if not self._redis:
+    @staticmethod
+    def _summary_key(session_id: str) -> str:
+        return f"session:{session_id}:summary"
+
+    async def get_short_term(self, session_id: str) -> List[Dict]:
+        if not self._redis or not session_id:
+            return []
+        try:
+            items, summary = await self._redis.lrange(
+                self._history_key(session_id), 0, self.max_turns * 2 - 1
+            ), await self._redis.get(self._summary_key(session_id))
+            history: List[Dict] = []
+            if summary:
+                history.append(
+                    {
+                        "role": "context",
+                        "content": (
+                            "<compacted_conversation>\n"
+                            f"{summary}\n"
+                            "</compacted_conversation>"
+                        ),
+                    }
+                )
+            for item in items:
+                try:
+                    history.append(json.loads(item))
+                except (TypeError, json.JSONDecodeError):
+                    logger.warning("Discarded malformed short-term memory item")
+            return history
+        except Exception:
+            logger.exception("Short-term memory read failed")
             return []
 
-        key = f"memory:short:{conversation_id}"
-        try:
-            data = await self._redis.get(key)
-            if data:
-                return json.loads(data)
-        except Exception:
-            logger.exception("Error reading short-term memory data")
-        return []
-
-    async def save_short_term(self, conversation_id: str, entry: Dict):
-        if not self._redis:
+    async def save_short_term(self, session_id: str, entry: Dict) -> None:
+        if not self._redis or not session_id:
             return
-
-        key = f"memory:short:{conversation_id}"
+        key = self._history_key(session_id)
+        summary_key = self._summary_key(session_id)
         try:
-            history = await self.get_short_term(conversation_id)
-            history.append(entry)
+            async with self._redis.pipeline() as pipe:
+                pipe.rpush(key, json.dumps(entry, ensure_ascii=False))
+                pipe.expire(key, self.ttl_seconds)
+                await pipe.execute()
 
-            max_turns = 10
-            if len(history) > max_turns:
-                history = history[-max_turns:]
+            maximum_items = self.max_turns * 2
+            item_count = await self._redis.llen(key)
+            overflow_count = max(0, item_count - maximum_items)
+            if not overflow_count:
+                return
 
-            await self._redis.setex(
-                key, self._short_term_ttl, json.dumps(history, ensure_ascii=False)
+            overflow = await self._redis.lrange(key, 0, overflow_count - 1)
+            previous_summary = await self._redis.get(summary_key)
+            compacted_lines = [previous_summary] if previous_summary else []
+            for item in overflow:
+                try:
+                    turn = json.loads(item)
+                except (TypeError, json.JSONDecodeError):
+                    continue
+                compacted_lines.append(
+                    f"{turn.get('role', 'unknown')}: "
+                    f"{str(turn.get('content', ''))[:2000]}"
+                )
+            compacted = "\n".join(compacted_lines)[-12000:]
+            async with self._redis.pipeline() as pipe:
+                pipe.ltrim(key, overflow_count, -1)
+                pipe.setex(summary_key, self.ttl_seconds, compacted)
+                await pipe.execute()
+        except Exception:
+            logger.exception("Short-term memory write failed")
+
+    async def clear(self, session_id: str) -> None:
+        if not self._redis or not session_id:
+            return
+        try:
+            await self._redis.delete(
+                self._history_key(session_id), self._summary_key(session_id)
             )
         except Exception:
-            logger.exception("Error saving short-term memory data")
+            logger.exception("Short-term memory deletion failed")
 
-    async def save_long_term(self, user_id: str, entry: Dict):
-        if not self._redis:
-            return
+    async def close(self) -> None:
+        if self._redis:
+            await self._redis.aclose()
 
-        key = f"memory:long:{user_id}"
-        try:
-            existing = await self._redis.get(key)
-            history = json.loads(existing) if existing else []
 
-            history.append(entry)
-            if len(history) > 200:
-                history = history[-200:]
-
-            await self._redis.setex(
-                key, self._long_term_ttl, json.dumps(history, ensure_ascii=False)
-            )
-        except Exception:
-            logger.exception("Error storing long-term cache data")
-
-    async def get_long_term(self, user_id: str) -> List[Dict]:
-        if not self._redis:
-            return []
-
-        key = f"memory:long:{user_id}"
-        try:
-            data = await self._redis.get(key)
-            if data:
-                return json.loads(data)
-        except Exception:
-            logger.exception("Error retrieving long-term cache data")
-        return []
-
-    async def get_user_preferences(self, user_id: str) -> Dict:
-        history = await self.get_long_term(user_id)
-        if not history:
-            return {}
-
-        topics = {}
-        for entry in history:
-            document_id = entry.get("document_id")
-            if document_id:
-                topics[document_id] = topics.get(document_id, 0) + 1
-
-        sorted_topics = sorted(topics.items(), key=lambda x: x[1], reverse=True)
-
-        return {
-            "total_queries": len(history),
-            "frequent_documents": sorted_topics[:5],
-            "avg_quality": sum(e.get("answer_quality", 0) for e in history)
-            / max(len(history), 1),
-        }
-
-    async def save_memory_history(self, memory_id: str, action: str, old_text: Optional[str], new_text: Optional[str]):
-        if not self._redis:
-            return
-            
-        key = f"memory:history:{memory_id}"
-        try:
-            entry = {
-                "action": action,
-                "old_text": old_text,
-                "new_text": new_text,
-                "timestamp": datetime.now(timezone.utc).isoformat()
-            }
-            existing = await self._redis.get(key)
-            history = json.loads(existing) if existing else []
-            history.append(entry)
-            
-            await self._redis.setex(
-                key, self._long_term_ttl, json.dumps(history, ensure_ascii=False)
-            )
-        except Exception:
-            logger.exception(f"Error saving memory history for {memory_id}")
-
-ManagementMemory = ShortTermMemory
 short_term_memory = ShortTermMemory()

@@ -6,12 +6,10 @@ from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
-from src.core.logic_logger import log_logic_execution
 from src.core.storage import get_bucket, get_storage_client
 
 class DownloadService:
     @staticmethod
-    @log_logic_execution
     async def generate_download_url(file_id: str, owner_id: str, expires_in: int = 3600) -> dict:
         item = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one(
             {"_id": file_id, "owner_id": owner_id, "is_folder": False}

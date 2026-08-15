@@ -1,7 +1,5 @@
 from fastapi import APIRouter, Depends
 from src.core.dependency import verify_internal_token
-from src.core.logging_route import LoggingRoute
-from src.core.logic_logger import log_logic_execution
 from src.core.response import APIResponse
 from src.schemas.embedding import (
     EmbedQueryRequest,
@@ -12,12 +10,10 @@ from src.schemas.embedding import (
 from src.services.embedding import embedder
 
 router = APIRouter(
-    route_class=LoggingRoute,
     dependencies=[Depends(verify_internal_token)],
 )
 
 @router.post("/query", response_model=APIResponse[EmbeddingResponse])
-@log_logic_execution
 async def embed_single_query(req: EmbedQueryRequest):
     emb = await embedder.embed_query(req.text)
     return APIResponse(
@@ -26,7 +22,6 @@ async def embed_single_query(req: EmbedQueryRequest):
     )
 
 @router.post("/batch", response_model=APIResponse[BatchEmbeddingResponse])
-@log_logic_execution
 async def embed_batch_texts(req: EmbedBatchRequest):
     embs = await embedder.embed_batch(req.texts)
     return APIResponse(

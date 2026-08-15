@@ -2,7 +2,6 @@ import uuid
 from datetime import datetime, timezone
 from fastapi import HTTPException
 from loguru import logger
-from src.core.logic_logger import log_logic_execution
 from src.repositories.highlight import HighlightRepository
 from src.repositories.reading import DocumentRepository
 
@@ -11,7 +10,6 @@ ALLOWED_HIGHLIGHT_COLORS = ["#18181b", "#71717a", "#e4e4e7"]
 class HighlightService:
 
     @staticmethod
-    @log_logic_execution
     async def create_highlight(
         document_id: str, data: dict, current_user
     ) -> dict:
@@ -34,7 +32,6 @@ class HighlightService:
         return highlight
 
     @staticmethod
-    @log_logic_execution
     async def get_highlights(document_id: str, current_user) -> list:
         highlights = (
             await HighlightRepository
@@ -60,7 +57,6 @@ class HighlightService:
         ]
 
     @staticmethod
-    @log_logic_execution
     async def update_highlight_note(
         highlight_id: str, note: str, current_user
     ) -> dict:
@@ -75,7 +71,6 @@ class HighlightService:
         return {"message": "Cập nhật nội dung ghi chú cho đoạn văn bản nổi bật hoàn tất"}
 
     @staticmethod
-    @log_logic_execution
     async def delete_highlight(highlight_id: str, current_user) -> dict:
         result = await HighlightRepository.delete_one(
             {"_id": highlight_id, "user_id": str(current_user.id)}
@@ -88,7 +83,6 @@ class HighlightService:
         return {"message": "Dữ liệu đánh dấu văn bản đã được xóa vĩnh viễn khỏi hệ thống"}
 
     @staticmethod
-    @log_logic_execution
     async def get_all_notes(
         current_user,
         cursor: str = None,
@@ -146,7 +140,6 @@ class HighlightService:
         return result
 
     @staticmethod
-    @log_logic_execution
     async def export_highlights_markdown(
         document_id: str, current_user
     ) -> dict:

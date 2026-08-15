@@ -3,13 +3,12 @@ from typing import Any
 from fastapi import APIRouter, Depends
 
 from src.api.dependency import CurrentUser, get_current_user
-from src.core.logging_route import LoggingRoute
 from src.core.response import APIResponse
 from src.schemas.library import ReadingListCreate
 from src.services.library import LibraryService
 
 
-router = APIRouter(route_class=LoggingRoute, prefix="/thu-vien")
+router = APIRouter(prefix="/thu-vien")
 
 
 @router.post("/danh-sach", response_model=APIResponse[Any], status_code=201)

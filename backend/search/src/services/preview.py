@@ -1,11 +1,9 @@
 from fastapi import HTTPException
-from src.core.logic_logger import log_logic_execution
 from src.repositories.cloud import CloudRepository
 
 class PreviewService:
 
     @staticmethod
-    @log_logic_execution
     async def get_preview_payload(item_id: str, owner_id: str) -> dict:
         item = await CloudRepository.find_one({"_id": item_id, "owner_id": owner_id})
         if not item:

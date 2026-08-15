@@ -3,7 +3,6 @@ from datetime import datetime, timezone
 import httpx
 from fastapi import HTTPException
 from loguru import logger
-from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.mongo import mongo
 from src.repositories.cooperation import CooperationRepository, DocumentRepository
@@ -11,7 +10,6 @@ from src.services.activity import ActivityService
 
 class InviteService:
     @staticmethod
-    @log_logic_execution
     async def send_collaboration_invite(
         document_id: str, invitee_email: str, role: str, current_user
     ) -> dict:
@@ -81,7 +79,6 @@ class InviteService:
         }
 
     @staticmethod
-    @log_logic_execution
     async def get_my_collaboration_invites(current_user) -> list:
         invites = (
             await mongo
@@ -92,7 +89,6 @@ class InviteService:
         return invites
 
     @staticmethod
-    @log_logic_execution
     async def respond_to_collaboration_invite(
         invite_id: str, status: str, current_user
     ) -> dict:
@@ -130,7 +126,6 @@ class InviteService:
         return {"message": "Ghi nhận trạng thái phản hồi lời mời cộng tác hoàn tất"}
 
     @staticmethod
-    @log_logic_execution
     async def get_sent_pending_invites(document_id: str, current_user) -> list:
         doc = await DocumentRepository.find_one(
             {"_id": document_id, "creator_id": str(current_user.id)}
@@ -149,7 +144,6 @@ class InviteService:
         return invites
 
     @staticmethod
-    @log_logic_execution
     async def revoke_invite(invite_id: str, current_user) -> dict:
         invite = await CooperationRepository.find_invite(
             {"_id": invite_id, "status": "PENDING"}

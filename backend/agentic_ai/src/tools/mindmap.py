@@ -73,7 +73,7 @@ async def generate_mindmap(
     """
     structure = None
     try:
-        from src.agents.planning import llm
+        from src.agents.react.planning import llm
 
         prompt = registry.get(PromptType.MINDMAP_GENERATION).format(topic=topic)
         structure = await llm.with_structured_output(MindmapStructure).ainvoke(prompt)

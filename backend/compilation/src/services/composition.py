@@ -11,7 +11,6 @@ from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.redis import redis
-from src.core.logic_logger import log_logic_execution
 from src.repositories.composition import CompositionRepository
 from src.repositories.pomodoro import PomodoroRepository
 
@@ -54,7 +53,6 @@ class CompositionService:
         return response.json()["data"]
 
     @staticmethod
-    @log_logic_execution
     async def sync_keystroke_buffer(document_id: str, payload: dict, current_user, cache=None):
         await CompositionService.get_document(document_id, current_user, edit=True)
         user_id = str(current_user.id)
@@ -64,7 +62,6 @@ class CompositionService:
         return {"status": "synced", "timestamp": payload.get("timestamp")}
 
     @staticmethod
-    @log_logic_execution
     async def add_inline_suggestion(document_id: str, payload: dict, current_user):
         await CompositionService.get_document(document_id, current_user)
         suggestion_id = str(uuid.uuid4())
@@ -83,7 +80,6 @@ class CompositionService:
         return {"_id": suggestion_id}
 
     @staticmethod
-    @log_logic_execution
     async def resolve_suggestion(suggestion_id: str, payload: dict, current_user):
         suggestion = await CompositionRepository.find_suggestion({"_id": suggestion_id})
         if not suggestion:
@@ -114,7 +110,6 @@ class CompositionService:
         return {"status": payload["action"]}
 
     @staticmethod
-    @log_logic_execution
     async def sync_pomodoro_session(payload: dict, current_user):
         await CompositionService.get_document(payload["document_id"], current_user)
         session_id = str(uuid.uuid4())
@@ -131,7 +126,6 @@ class CompositionService:
         return {"_id": session_id, "status": "recorded"}
 
     @staticmethod
-    @log_logic_execution
     async def auto_save_draft(document_id: str, content: dict, current_user):
         document = await CompositionService.get_document(document_id, current_user, edit=True)
         serialized = json.dumps(content, ensure_ascii=False)
@@ -169,7 +163,6 @@ class CompositionService:
         return {"timestamp": now.isoformat()}
 
     @staticmethod
-    @log_logic_execution
     async def submit_for_review(document_id: str, current_user):
         document = await CompositionService.get_document(document_id, current_user, edit=True)
         if (
@@ -187,7 +180,6 @@ class CompositionService:
         return {"status": "pending_review"}
 
     @staticmethod
-    @log_logic_execution
     async def global_find_replace(
         document_id: str,
         search_term: str,
@@ -235,7 +227,6 @@ class CompositionService:
         return {"affected_fields": list(update)}
 
     @staticmethod
-    @log_logic_execution
     async def add_inline_comment(document_id: str, data: dict, current_user) -> dict:
         await CompositionService.get_document(document_id, current_user)
         comment_id = str(uuid.uuid4())
@@ -255,7 +246,6 @@ class CompositionService:
         return {"_id": comment_id}
 
     @staticmethod
-    @log_logic_execution
     async def get_inline_comments(document_id: str, current_user) -> List[dict]:
         await CompositionService.get_document(document_id, current_user)
         comments = await CompositionRepository.find_comments(
@@ -268,7 +258,6 @@ class CompositionService:
         return comments
 
     @staticmethod
-    @log_logic_execution
     async def resolve_comment(comment_id: str, current_user) -> dict:
         comment = await CompositionRepository.find_comment({"_id": comment_id})
         if not comment:
@@ -296,7 +285,6 @@ class CompositionService:
         return {"status": "resolved"}
 
     @staticmethod
-    @log_logic_execution
     async def get_version_diff(
         document_id: str,
         version_id_a: str,

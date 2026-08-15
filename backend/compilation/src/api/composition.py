@@ -1,4 +1,3 @@
-from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends
 from src.schemas.composition import (
     AutoSaveRequest,
@@ -14,7 +13,7 @@ from src.services.composition import CompositionService
 
 from src.core.dependency import get_current_user
 
-router = APIRouter(route_class=LoggingRoute, prefix="/soan-thao")
+router = APIRouter(prefix="/soan-thao")
 
 @router.post("/{document_id}/dong-bo")
 async def sync_keystroke_buffer(

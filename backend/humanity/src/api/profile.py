@@ -1,12 +1,11 @@
 from fastapi import APIRouter, Depends
 from typing import Any
-from src.core.logging_route import LoggingRoute
 from src.core.response import APIResponse
 from src.core.dependency import get_current_user, get_db, CurrentUser
 from src.services.user import UserService
 from src.schemas.user import AuthorApplication, ProfileUpdate, SettingsUpdate
 
-router = APIRouter(route_class=LoggingRoute, prefix="/ho-so")
+router = APIRouter(prefix="/ho-so")
 
 @router.get("/ca-nhan", response_model=APIResponse[Any])
 async def get_my_profile(current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)):

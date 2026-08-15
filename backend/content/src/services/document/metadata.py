@@ -5,7 +5,6 @@ from fastapi import HTTPException, Query
 from loguru import logger
 
 from src.core.infrastructure.mongo import mongo
-from src.core.logic_logger import log_logic_execution
 from src.repositories.document import DocumentRepository
 from src.schemas.document import DocumentStatus
 from src.services.engagement_client import EngagementClient
@@ -13,7 +12,6 @@ from src.services.document.base import can_read_full, is_admin, serialize_docume
 
 class DocumentMetadataService:
     @staticmethod
-    @log_logic_execution
     async def get_document_analytics(document_id: str, current_user):
         doc = await mongo.find_one(collection="documents", query={"_id": document_id})
         if not doc:
@@ -43,7 +41,6 @@ class DocumentMetadataService:
         }
 
     @staticmethod
-    @log_logic_execution
     async def get_document_academic(document_id: str, current_user):
         doc = await mongo.find_one(collection="documents", query={"_id": document_id})
         if not doc:
@@ -77,7 +74,6 @@ class DocumentMetadataService:
         }
 
     @staticmethod
-    @log_logic_execution
     async def get_approval_queue(cursor: str = None, limit: int = 50) -> list:
         query = {
             "status": DocumentStatus.PROCESSING_PUBLISH,
@@ -115,7 +111,6 @@ class DocumentMetadataService:
         ]
 
     @staticmethod
-    @log_logic_execution
     async def get_trending_documents(limit: int = Query(default=20, le=100)) -> List[dict]:
         docs_col = DocumentRepository
         cursor = (
@@ -129,7 +124,6 @@ class DocumentMetadataService:
         return [serialize_document(d) for d in documents]
 
     @staticmethod
-    @log_logic_execution
     async def get_suggested_documents(limit: int = Query(default=20, le=100)) -> List[dict]:
         docs_col = DocumentRepository
         cursor = (

@@ -17,8 +17,7 @@ from langgraph.graph import END, StateGraph
 from loguru import logger
 from src.memory.management import memory_manager
 
-from src.rag.embedding import embedder
-from src.rag.retrieval import retriever
+from src.integrations.knowledge_service import knowledge_client
 from src.utils.processing import extract_text_from_base64
 from src.workflow.state import AgentState
 
@@ -63,7 +62,7 @@ try:
     from langchain_community.cache import RedisSemanticCache
 
     langchain.llm_cache = RedisSemanticCache(
-        redis_url=redis_url, embedding=embedder
+        redis_url=redis_url, embedding=knowledge_client
     )
     logger.info("Redis semantic cache initialized")
 except Exception:
@@ -119,17 +118,17 @@ async def route_question(state: AgentState):
 def decide_initial_route(state: AgentState):
     return "generate_direct" if state.get("route") == "direct" else "preprocess_file"
 
-def preprocess_file(state: AgentState):
+async def preprocess_file(state: AgentState):
     updates = {}
     file_data = state.get("file_data")
     if file_data and file_data.startswith("data:"):
-        text = extract_text_from_base64(file_data)
+        text = await extract_text_from_base64(file_data)
         if text:
             updates["file_data"] = text
 
     folder_data = state.get("folder_data")
     if folder_data and folder_data.startswith("data:"):
-        text = extract_text_from_base64(folder_data)
+        text = await extract_text_from_base64(folder_data)
         if text:
             updates["folder_data"] = text
 
@@ -141,6 +140,22 @@ def _mask_pii(text: str) -> str:
     result = guardrails_engine.inspect_output(text)
     return result.get("sanitized_text", text)
 
+
+def _lost_in_the_middle_reorder(documents):
+    """Place the strongest results near both ends of the LLM context."""
+    if len(documents) <= 2:
+        return documents
+    ordered = [None] * len(documents)
+    left, right = 0, len(documents) - 1
+    for index, document in enumerate(documents):
+        if index % 2 == 0:
+            ordered[left] = document
+            left += 1
+        else:
+            ordered[right] = document
+            right -= 1
+    return [document for document in ordered if document is not None]
+
 async def retrieve_db(state: AgentState):
     question = state["question"]
     document_ids = state.get("document_ids", [])
@@ -149,7 +164,7 @@ async def retrieve_db(state: AgentState):
     if document_ids and len(document_ids) >= 2:
         logger.info("Processing cross-document retrieval")
         try:
-            raw_documents = await retriever.cross_document_retrieve(
+            raw_documents = await knowledge_client.cross_document_retrieve(
                 question,
                 document_ids,
                 k=6,
@@ -186,7 +201,7 @@ async def retrieve_db(state: AgentState):
     all_raw_documents = []
     for q in list(dict.fromkeys(queries))[:3]:
         try:
-            results = await retriever.retrieve(
+            results = await knowledge_client.retrieve(
                 q,
                 document_ids=document_ids,
                 k=10,
@@ -208,7 +223,7 @@ async def retrieve_db(state: AgentState):
                 scores = await asyncio.to_thread(reranker_model.predict, pairs)
                 scored_documents = list(zip(all_raw_documents, scores))
                 scored_documents.sort(key=lambda x: x[1], reverse=True)
-                top_documents = retriever._lost_in_the_middle_reorder(
+                top_documents = _lost_in_the_middle_reorder(
                     [doc for doc, score in scored_documents[:6]]
                 )[:3]
             except Exception:
@@ -227,7 +242,7 @@ async def retrieve_db(state: AgentState):
     return {"documents": list(set(extracted_documents)), "current_source": "db"}
 
 async def retrieve_internet(state: AgentState):
-    from src.agents.engine import search_engine
+    from src.agents.specialists.web_search import search_engine
 
     question = state["question"]
     try:
@@ -323,12 +338,8 @@ async def generate(state: AgentState):
     user_id = state.get("user_id")
     if not user_id:
         raise PermissionError("authentication_required")
-    usage_context = await memory_manager.get_user_preferences(user_id)
     behavioral_context = str(state.get("user_preferences", "")).strip()
-    user_context = (
-        f"{behavioral_context[:12000]}\n"
-        f"<usage_context>{usage_context}</usage_context>"
-    )
+    user_context = behavioral_context[:12000]
     if state.get("file_data"):
         documents.append(f"[Attached Personal Documents]\n{state['file_data'][:6000]}")
     if state.get("folder_data"):
@@ -393,7 +404,7 @@ async def grade_generation(state: AgentState):
     try:
         import asyncio
 
-        from src.agents.reasoning import reasoner
+        from src.agents.react.reasoning import reasoner
 
         documents_list = [
             {"text": d, "metadata": {"title": "Source"}} for d in documents

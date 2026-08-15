@@ -3,7 +3,7 @@ from langchain_core.messages import SystemMessage
 from src.core.infrastructure.configuration import settings
 from src.core.registry import PromptType, registry
 from src.schemas.memory import ExtractedGraph
-from src.services.rag_client import rag_client
+from src.integrations.knowledge_service import knowledge_client
 from src.utils.huggingface import create_chat_model
 
 
@@ -25,7 +25,7 @@ class GraphIndexingService:
             )
             result = await model.ainvoke([SystemMessage(content=prompt)])
             relations = [relation.model_dump() for relation in result.relations]
-        await rag_client.replace_graph(
+        await knowledge_client.replace_graph(
             document_id,
             relations,
             requester_id,

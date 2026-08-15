@@ -122,7 +122,15 @@ class ConversionService:
         if not file_bytes:
             return {"error": "File load failed"}
 
-        with tempfile.NamedTemporaryFile(suffix=file_ext, delete=False) as temporary:
+        return await self.parse_bytes(file_bytes, file_ext)
+
+    async def parse_bytes(self, file_bytes: bytes, file_ext: str = ".pdf") -> Dict:
+        """Convert in-memory document bytes without leaking conversion into callers."""
+        normalized_ext = file_ext.lower() if file_ext.startswith(".") else f".{file_ext.lower()}"
+        if not normalized_ext[1:].isalnum():
+            normalized_ext = ".pdf"
+
+        with tempfile.NamedTemporaryFile(suffix=normalized_ext, delete=False) as temporary:
             temporary.write(file_bytes)
             temporary_path = Path(temporary.name)
 

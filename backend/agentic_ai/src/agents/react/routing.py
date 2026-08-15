@@ -37,8 +37,8 @@ class SemanticRouterValidator:
         self._agent_embeddings: Optional[Dict[str, List[float]]] = None
 
     def _get_embedder(self):
-        from src.rag.embedding import embedder
-        return embedder
+        from src.integrations.knowledge_service import knowledge_client
+        return knowledge_client
 
     async def _compute_agent_embeddings(self) -> Dict[str, List[float]]:
         embedder = self._get_embedder()
@@ -106,8 +106,8 @@ class RouteAgent:
         self._intent_vecs = None
 
     def _get_embedder(self):
-        from src.rag.embedding import embedder
-        return embedder
+        from src.integrations.knowledge_service import knowledge_client
+        return knowledge_client
 
     async def _get_intent_vecs(self):
         if self._intent_vecs is None:

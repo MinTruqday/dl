@@ -3,7 +3,6 @@ import uuid
 from datetime import datetime, timezone, timedelta
 from fastapi import HTTPException
 from passlib.context import CryptContext
-from src.core.logic_logger import log_logic_execution
 from src.repositories.cooperation import CooperationRepository, DocumentRepository
 from src.services.activity import ActivityService
 from src.services.presence import PresenceService
@@ -12,7 +11,6 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 class LinkService:
     @staticmethod
-    @log_logic_execution
     async def generate_invite_code(document_id: str, current_user) -> dict:
         doc = await DocumentRepository.find_one(
             {"_id": document_id, "creator_id": str(current_user.id)}
@@ -49,7 +47,6 @@ class LinkService:
         }
 
     @staticmethod
-    @log_logic_execution
     async def join_via_invite_code(invite_code: str, current_user) -> dict:
         record = await CooperationRepository.find_invite_code(
             {"invite_code": invite_code.strip().upper()}
@@ -99,7 +96,6 @@ class LinkService:
         }
 
     @staticmethod
-    @log_logic_execution
     async def configure_share_link(
         document_id: str,
         is_active: bool,
@@ -176,7 +172,6 @@ class LinkService:
         }
 
     @staticmethod
-    @log_logic_execution
     async def get_share_link_config(document_id: str, current_user) -> dict:
         doc = await DocumentRepository.find_one(
             {"_id": document_id, "creator_id": str(current_user.id)}
@@ -210,7 +205,6 @@ class LinkService:
         }
 
     @staticmethod
-    @log_logic_execution
     async def get_public_share_link_info(share_token: str) -> dict:
         link = await CooperationRepository.find_share_link({"share_token": share_token})
         if not link or not link.get("is_active"):
@@ -233,7 +227,6 @@ class LinkService:
         }
 
     @staticmethod
-    @log_logic_execution
     async def join_via_share_link(
         share_token: str, password: str | None, current_user
     ) -> dict:

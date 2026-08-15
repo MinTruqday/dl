@@ -1,4 +1,3 @@
-from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import Response
 from loguru import logger
@@ -11,7 +10,7 @@ from src.engines.editorjs_capabilities import (
 )
 from src.core.dependency import RateLimiting, get_current_user
 
-router = APIRouter(route_class=LoggingRoute, prefix="/soan-thao/editorjs")
+router = APIRouter(prefix="/soan-thao/editorjs")
 
 
 @router.get("/capabilities")

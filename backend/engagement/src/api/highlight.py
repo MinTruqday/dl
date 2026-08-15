@@ -1,6 +1,5 @@
 from typing import Any
 from fastapi import APIRouter, Depends, Query
-from src.core.logging_route import LoggingRoute
 from src.core.response import APIResponse
 from src.api.dependency import get_current_user, get_db, CurrentUser
 from src.schemas.highlight import (
@@ -9,7 +8,7 @@ from src.schemas.highlight import (
 )
 from src.services.highlight import HighlightService
 
-router = APIRouter(route_class=LoggingRoute, prefix="/noi-bat")
+router = APIRouter(prefix="/noi-bat")
 
 @router.post(
     "/tai-lieu/{document_id}",

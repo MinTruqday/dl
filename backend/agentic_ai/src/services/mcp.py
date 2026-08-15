@@ -13,7 +13,6 @@ from urllib.parse import urlparse
 from bson import ObjectId
 
 from src.core.infrastructure.configuration import settings
-from src.core.logic_logger import log_logic_execution
 from src.repositories.mcp import MCPRepository
 
 
@@ -280,7 +279,6 @@ class MCPService:
         return connector
 
     @staticmethod
-    @log_logic_execution
     async def search_registry(keyword: str, owner_id: str) -> List[Dict[str, Any]]:
         query = {"is_connected": True, "owner_id": owner_id}
         if keyword:
@@ -300,7 +298,6 @@ class MCPService:
         ]
 
     @staticmethod
-    @log_logic_execution
     async def suggest_connector(
         directory_uuids: List[str], owner_id: str
     ) -> Dict[str, Any]:
@@ -321,7 +318,6 @@ class MCPService:
         }
 
     @staticmethod
-    @log_logic_execution
     async def execute_tool(
         directory_uuid: str, tool_name: str, arguments: dict, owner_id: str
     ) -> Any:
@@ -340,7 +336,6 @@ class MCPService:
             raise RuntimeError("mcp_tool_execution_failed") from exc
 
     @staticmethod
-    @log_logic_execution
     async def list_tools(directory_uuid: str, owner_id: str) -> list[dict]:
         connector = await MCPService._get_connector(directory_uuid, owner_id)
         try:

@@ -12,10 +12,9 @@ from pymongo import ReturnDocument
 from src.core.dependency import verify_internal_token
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
-from src.core.logging_route import LoggingRoute
 from src.services.document.base import can_read_full
 
-router = APIRouter(route_class=LoggingRoute)
+router = APIRouter()
 
 
 def normalize_internal_query(value: Any) -> Any:

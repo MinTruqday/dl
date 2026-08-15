@@ -9,7 +9,6 @@ from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.redis import redis
-from src.core.logic_logger import log_logic_execution
 from src.core.publication import trigger_document_publish_job
 from src.repositories.document import DocumentRepository
 from src.schemas.document import DocumentContentUpdate, DocumentCreate, DocumentInDB, DocumentStatus
@@ -24,7 +23,6 @@ from src.services.document.base import (
 
 class DocumentCrudService:
     @staticmethod
-    @log_logic_execution
     async def create_document(doc_in: DocumentCreate, current_user):
         slug = doc_in.slug
         if not slug:
@@ -83,7 +81,6 @@ class DocumentCrudService:
         return serialize_document(doc_data)
 
     @staticmethod
-    @log_logic_execution
     async def get_my_documents(
         current_user,
         q: str = None,
@@ -129,7 +126,6 @@ class DocumentCrudService:
         ]
 
     @staticmethod
-    @log_logic_execution
     async def update_document_content(
         document_id: str,
         update_data: DocumentContentUpdate,
@@ -233,7 +229,6 @@ class DocumentCrudService:
         return serialize_document(updated)
 
     @staticmethod
-    @log_logic_execution
     async def update_document(document_id: str, doc_update, current_user) -> dict:
         document = await DocumentRepository.find_one({"_id": document_id})
         if not document:
@@ -308,7 +303,6 @@ class DocumentCrudService:
         return serialize_document(updated)
 
     @staticmethod
-    @log_logic_execution
     async def list_documents(
         limit: int, cursor: str, q: str, sort_by: str, category: str = None, tag: str = None
     ):
@@ -339,7 +333,6 @@ class DocumentCrudService:
         return [serialize_document(d) for d in documents]
 
     @staticmethod
-    @log_logic_execution
     async def get_document_by_id(
         document_id: str, current_user, password: str = None
     ):
@@ -420,7 +413,6 @@ class DocumentCrudService:
         return serialized
 
     @staticmethod
-    @log_logic_execution
     async def get_document_by_slug(slug: str, current_user=None):
         document = await DocumentRepository.find_one(
             {
@@ -437,7 +429,6 @@ class DocumentCrudService:
         return await DocumentCrudService.get_document_by_id(str(document["_id"]), current_user)
 
     @staticmethod
-    @log_logic_execution
     async def soft_delete_document(document_id: str, current_user) -> dict:
         res = await DocumentRepository.update_one(
             {"_id": document_id, "creator_id": str(current_user.id), "is_deleted": {"$ne": True}},
@@ -451,7 +442,6 @@ class DocumentCrudService:
         return {"message": "Tài liệu đã được di chuyển vào thùng rác hệ thống"}
 
     @staticmethod
-    @log_logic_execution
     async def restore_document(document_id: str, current_user) -> dict:
         res = await DocumentRepository.update_one(
             {"_id": document_id, "creator_id": str(current_user.id), "is_deleted": True},
@@ -465,7 +455,6 @@ class DocumentCrudService:
         return {"message": "Tài liệu đã được khôi phục hoàn tất từ thùng rác"}
 
     @staticmethod
-    @log_logic_execution
     async def get_trash(current_user) -> list:
         docs = await (
             DocumentRepository.find({"creator_id": str(current_user.id), "is_deleted": True})
@@ -486,7 +475,6 @@ class DocumentCrudService:
         ]
 
     @staticmethod
-    @log_logic_execution
     async def toggle_star_document(document_id: str, current_user):
         document = await DocumentRepository.find_one(
             {"_id": document_id, "creator_id": str(current_user.id)}
@@ -504,7 +492,6 @@ class DocumentCrudService:
         return {"starred": starred}
 
     @staticmethod
-    @log_logic_execution
     async def set_document_password(document_id: str, password: str, current_user) -> dict:
         doc = await DocumentRepository.find_one(
             {"_id": document_id, "creator_id": str(current_user.id)}
@@ -528,7 +515,6 @@ class DocumentCrudService:
         return {"message": "Thiết lập mật khẩu bảo vệ tài liệu hoàn tất"}
 
     @staticmethod
-    @log_logic_execution
     async def get_document_preview(slug: str) -> dict:
         doc = await DocumentRepository.find_one(
             {

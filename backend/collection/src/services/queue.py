@@ -7,7 +7,6 @@ from pymongo import ReturnDocument
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 from src.core.infrastructure.mq import mq
-from src.core.logic_logger import log_logic_execution
 from src.sources.anna import AnnaSource
 from src.sources.ctan import CtanSource
 from src.sources.nxbgd import NxbgdSource
@@ -116,7 +115,6 @@ async def complete_batch_item(job_id: str | None, success: bool, error: str | No
     await finalize_batch(collection, row)
 
 
-@log_logic_execution
 async def run_worker():
     logger.info("Starting background message consumers")
 

@@ -1,14 +1,12 @@
 import uuid
 from datetime import datetime, timezone
 from fastapi import HTTPException
-from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
 from src.repositories.cooperation import CooperationRepository, DocumentRepository
 from src.services.activity import ActivityService
 
 class SnapshotService:
     @staticmethod
-    @log_logic_execution
     async def create_draft_snapshot(
         document_id: str, version_name: str, current_user
     ) -> dict:
@@ -47,7 +45,6 @@ class SnapshotService:
         }
 
     @staticmethod
-    @log_logic_execution
     async def get_draft_snapshots(document_id: str, current_user) -> list:
         doc = await DocumentRepository.find_one(
             {

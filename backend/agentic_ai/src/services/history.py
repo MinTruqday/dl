@@ -1,4 +1,3 @@
-from src.core.logic_logger import log_logic_execution
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 import uuid
@@ -14,7 +13,6 @@ class HistoryService:
     </module_purpose>
     """
     @staticmethod
-    @log_logic_execution
     async def create_session(data: dict) -> Dict[str, Any]:
         user_id = data.get("user_id")
         document_id = data.get("document_id")
@@ -42,7 +40,6 @@ class HistoryService:
         return session
 
     @staticmethod
-    @log_logic_execution
     async def get_user_sessions(
         user_id: str,
         document_id: Optional[str] = None,
@@ -62,7 +59,6 @@ class HistoryService:
         return await cursor.to_list(length=limit)
 
     @staticmethod
-    @log_logic_execution
     async def get_session_detail(session_id: str, user_id: str) -> Dict[str, Any]:
         session = await ChatRepository.find_ai_session(
             {"_id": session_id, "user_id": user_id}
@@ -80,7 +76,6 @@ class HistoryService:
         return session
 
     @staticmethod
-    @log_logic_execution
     async def update_title(session_id: str, data: dict, user_id: str) -> Dict[str, Any]:
         result = await ChatRepository.update_ai_session(
             {"_id": session_id, "user_id": user_id},
@@ -97,7 +92,6 @@ class HistoryService:
         return {"status": "success"}
 
     @staticmethod
-    @log_logic_execution
     async def update_state(session_id: str, data: dict, user_id: str) -> Dict[str, Any]:
         values = {
             key: bool(data[key])
@@ -116,7 +110,6 @@ class HistoryService:
         return {"status": "success"}
 
     @staticmethod
-    @log_logic_execution
     async def generate_title(
         session_id: str,
         user_id: str,
@@ -165,7 +158,6 @@ class HistoryService:
         return title
 
     @staticmethod
-    @log_logic_execution
     async def delete_session(session_id: str, user_id: str) -> Dict[str, Any]:
         result = await ChatRepository.delete_ai_session(
             {"_id": session_id, "user_id": user_id}
@@ -176,7 +168,6 @@ class HistoryService:
         return {"status": "success"}
 
     @staticmethod
-    @log_logic_execution
     async def add_message(session_id: str, data: dict) -> Dict[str, Any]:
         user_id = data.get("user_id")
         role = data.get("role")
@@ -200,7 +191,6 @@ class HistoryService:
         )
         return {"status": "success"}
     @staticmethod
-    @log_logic_execution
     async def search_by_keyword(user_id: str, keyword: str) -> List[Dict[str, Any]]:
         regex = {"$regex": keyword, "$options": "i"}
         matching_msgs = await (
@@ -222,7 +212,6 @@ class HistoryService:
         return await cursor.to_list(length=None)
 
     @staticmethod
-    @log_logic_execution
     async def get_recent_chats(user_id: str, days: int = 7) -> List[Dict[str, Any]]:
         from datetime import timedelta
         cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)

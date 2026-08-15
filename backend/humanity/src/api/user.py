@@ -1,12 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from typing import Any
-from src.core.logging_route import LoggingRoute
 from src.core.response import APIResponse
 from src.core.dependency import get_current_user, get_db, require_role, verify_internal_token, CurrentUser
 from src.services.user import UserService
 from src.schemas.user import Role, UpdateRoleRequest, UpdateStatusRequest, CreateUserRequest
 
-router = APIRouter(route_class=LoggingRoute, prefix="/nguoi-dung")
+router = APIRouter(prefix="/nguoi-dung")
 
 @router.get("", response_model=APIResponse[Any], dependencies=[Depends(require_role([Role.ADMIN]))])
 async def get_all_users(limit: int = 50, offset: int = 0, db=Depends(get_db)):

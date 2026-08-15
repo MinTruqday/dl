@@ -1,19 +1,16 @@
 from typing import Any, List, Optional
 import httpx
 from loguru import logger
-from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.configuration import settings
 from src.repositories.reading import DocumentRepository, ReadingRepository
 
 class DiscoveryService:
 
     @staticmethod
-    @log_logic_execution
     async def get_tags_categories() -> dict:
         return await DocumentRepository.taxonomy()
 
     @staticmethod
-    @log_logic_execution
     async def get_trending_documents(limit: int = 20) -> list:
         docs = (
             await DocumentRepository
@@ -36,7 +33,6 @@ class DiscoveryService:
         ]
 
     @staticmethod
-    @log_logic_execution
     async def get_personalized_recommendations(user_id: str, limit: int = 20) -> list:
         history = await ReadingRepository.find({"user_id": user_id}).sort("last_read_at", -1).limit(10).to_list(length=10)
         read_doc_ids = [h.get("document_id") for h in history if h.get("document_id")]

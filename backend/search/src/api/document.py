@@ -1,10 +1,9 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, Query
-from src.core.logging_route import LoggingRoute
 from src.core.response import APIResponse
 from src.services.document import DocumentService
 
-router = APIRouter(route_class=LoggingRoute)
+router = APIRouter()
 
 @router.get("/tai-lieu", response_model=APIResponse[List[dict]])
 async def search_documents_endpoint(

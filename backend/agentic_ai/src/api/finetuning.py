@@ -1,4 +1,3 @@
-from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Query, Depends
 import src.services.finetuning as finetune_service
 from src.core.dependency import get_current_user, require_role, CurrentUser
@@ -12,7 +11,6 @@ from src.schemas.finetuning import (
 )
 
 router = APIRouter(
-    route_class=LoggingRoute,
     prefix="/tinh-chinh",
     dependencies=[Depends(require_role([Role.ADMIN]))],
 )

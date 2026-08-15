@@ -6,13 +6,11 @@ from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.mongo import mongo
-from src.core.logic_logger import log_logic_execution
 from src.repositories.document import DocumentRepository
 from src.services.document.base import is_admin
 
 class DocumentHierarchyService:
     @staticmethod
-    @log_logic_execution
     async def get_folders(parent_id: Optional[str], current_user) -> list:
         query = {"creator_id": str(current_user.id)}
         if parent_id:
@@ -24,7 +22,6 @@ class DocumentHierarchyService:
         return folders
 
     @staticmethod
-    @log_logic_execution
     async def create_folder(name: str, parent_id: Optional[str], current_user) -> dict:
         folder_doc = {
             "name": name,
@@ -38,7 +35,6 @@ class DocumentHierarchyService:
         return folder_doc
 
     @staticmethod
-    @log_logic_execution
     async def delete_folder(folder_id: str, current_user) -> dict:
         folder = await mongo.find_one(
             "workspace_folders", {"_id": folder_id, "creator_id": str(current_user.id)}
@@ -52,7 +48,6 @@ class DocumentHierarchyService:
         return {"deleted": True}
 
     @staticmethod
-    @log_logic_execution
     async def move_document_to_folder(document_id: str, folder_id: Optional[str], current_user) -> dict:
         user_id = str(current_user.id)
         doc = await DocumentRepository.find_one({"_id": document_id, "creator_id": user_id})
@@ -68,7 +63,6 @@ class DocumentHierarchyService:
         return {"status": "moved", "document_id": document_id, "folder_id": folder_id}
 
     @staticmethod
-    @log_logic_execution
     async def transfer_document(document_id: str, new_owner_id: str, current_user) -> dict:
         doc = await mongo.find_one(
             "documents", {"_id": document_id, "creator_id": str(current_user.id)}

@@ -1,7 +1,6 @@
 from datetime import datetime, timezone
 
 from src.core.infrastructure.mongo import mongo
-from src.core.logging_route import LoggingRoute
 from fastapi import APIRouter, Depends
 from loguru import logger
 
@@ -9,7 +8,7 @@ from src.schemas.feedback import FeedbackRequest
 
 from src.core.dependency import CurrentUser, get_current_user
 
-router = APIRouter(route_class=LoggingRoute, prefix="/phan-hoi")
+router = APIRouter(prefix="/phan-hoi")
 
 @router.post("/phan-hoi")
 async def submit_feedback(

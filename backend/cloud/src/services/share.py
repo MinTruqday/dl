@@ -6,11 +6,9 @@ from typing import Optional
 from fastapi import HTTPException
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
-from src.core.logic_logger import log_logic_execution
 
 class ShareService:
     @staticmethod
-    @log_logic_execution
     async def create_protected_share_link(item_id: str, owner_id: str, password: Optional[str] = None, expires_in_hours: int = 24) -> dict:
         item = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one({"_id": item_id, "owner_id": owner_id})
         if not item:
@@ -48,7 +46,6 @@ class ShareService:
         }
 
     @staticmethod
-    @log_logic_execution
     async def validate_protected_share_link(token: str, password: Optional[str] = None) -> dict:
         link = await database.mongodb[settings.CLOUD_DB_NAME].storage_share_links.find_one({"_id": token})
         if not link:

@@ -4,8 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from loguru import logger
 
-from src.core.logging_route import LoggingRoute
-from src.agents.routing import semantic_router
+from src.agents.react.routing import semantic_router
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 from src.core.registry import PromptType, registry
@@ -24,7 +23,7 @@ from src.api.interaction.executor import (
     _persist_conversation_turns,
 )
 
-router = APIRouter(route_class=LoggingRoute)
+router = APIRouter()
 
 
 def _sanitize_stream_piece(piece: str) -> str:
@@ -168,7 +167,7 @@ async def chat_stream_endpoint(
             final_answer = ""
 
             if route == "plan":
-                from src.agents.planning import planner
+                from src.agents.react.planning import planner
 
                 steps = await planner.create_plan({**execution_data, "dry_run": True})
                 await workspace.save_plan(session_id, user_id, steps)
@@ -241,7 +240,7 @@ async def chat_stream_endpoint(
                         logger.exception("Unexpected error during LLM chat stream")
 
             elif route == "knowledge":
-                from src.agents.analysis import researcher
+                from src.agents.specialists.knowledge import researcher
 
                 final_answer = await researcher.execute(execution_data)
                 yield "event: message\ndata: " + json.dumps({"chunk": final_answer}) + "\n\n"
@@ -262,7 +261,7 @@ async def chat_stream_endpoint(
                     try:
                         req_dict = execution_data.copy()
 
-                        from src.agents.planning import planner
+                        from src.agents.react.planning import planner
 
                         async for chunk in planner.stream_plan(req_dict):
                             if chunk["type"] == "plan":

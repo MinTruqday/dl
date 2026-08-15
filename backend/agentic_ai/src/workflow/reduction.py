@@ -32,7 +32,7 @@ class SummarizeState(TypedDict):
 
 async def summarize_node(state: SummarizeState):
     from langchain_core.messages import HumanMessage
-    from src.agents.planning import llm
+    from src.agents.react.planning import llm
 
     from src.core.registry import registry, PromptType
     prompt = registry.get(PromptType.REDUCTION_SEGMENT_SUMMARY).format(chunk=state['chunk'])
@@ -41,7 +41,7 @@ async def summarize_node(state: SummarizeState):
 
 async def hierarchical_reduce_node(state: MapReduceState):
     from langchain_core.messages import HumanMessage
-    from src.agents.planning import llm
+    from src.agents.react.planning import llm
 
     summaries = state["summaries"]
 

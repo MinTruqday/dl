@@ -1,6 +1,5 @@
 from typing import Any
 from fastapi import APIRouter, Depends, File, Form, UploadFile
-from src.core.logging_route import LoggingRoute
 from src.core.response import APIResponse
 from src.api.dependency import get_db, require_role
 from src.core.dependency import CurrentUser, Role
@@ -9,7 +8,7 @@ from src.services.file import FileService
 from src.services.upload import UploadService
 from src.schemas.storage import StorageItemCreate
 
-router = APIRouter(route_class=LoggingRoute, prefix="/phan-doan")
+router = APIRouter(prefix="/phan-doan")
 
 @router.post("", response_model=APIResponse[Any], status_code=201)
 async def upload_chunk(

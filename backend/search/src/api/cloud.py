@@ -1,11 +1,10 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, Query
-from src.core.logging_route import LoggingRoute
 from src.core.response import APIResponse
 from src.api.dependency import get_current_user, CurrentUser
 from src.services.cloud import CloudService
 
-router = APIRouter(route_class=LoggingRoute)
+router = APIRouter()
 
 @router.get("/luu-tru", response_model=APIResponse[List[dict]])
 async def search_cloud_items_endpoint(

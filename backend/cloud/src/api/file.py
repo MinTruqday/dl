@@ -1,13 +1,12 @@
 from typing import Any, Optional
 from fastapi import APIRouter, Depends, HTTPException
-from src.core.logging_route import LoggingRoute
 from src.core.response import APIResponse
 from src.api.dependency import get_db, require_role
 from src.core.dependency import CurrentUser, Role
 from src.schemas.storage import StorageItemCreate, StorageItemUpdate
 from src.services.file import FileService
 
-router = APIRouter(route_class=LoggingRoute, prefix="/tep-tin")
+router = APIRouter(prefix="/tep-tin")
 
 @router.post("", response_model=APIResponse[Any], status_code=201)
 async def create_file_record(

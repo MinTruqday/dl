@@ -2,7 +2,11 @@ import httpx
 from typing import Dict, List, Optional
 from src.core.infrastructure.configuration import settings
 
-class RagClient:
+class KnowledgeServiceClient:
+    """Thin HTTP boundary to the standalone RAG/knowledge service."""
+
+    embedding_dimensions = 1024
+
     @staticmethod
     async def embed_query(text: str) -> List[float]:
         async with httpx.AsyncClient(timeout=30.0) as client:
@@ -13,7 +17,10 @@ class RagClient:
             )
             response.raise_for_status()
             data = response.json().get("data", {})
-            return data.get("embedding", [])
+            embedding = data.get("embedding", [])
+            if len(embedding) != KnowledgeServiceClient.embedding_dimensions:
+                raise RuntimeError("Knowledge service embedding dimension mismatch")
+            return embedding
 
     @staticmethod
     async def embed_batch(texts: List[str]) -> List[List[float]]:
@@ -25,7 +32,24 @@ class RagClient:
             )
             response.raise_for_status()
             data = response.json().get("data", {})
-            return data.get("embeddings", [])
+            embeddings = data.get("embeddings", [])
+            if len(embeddings) != len(texts) or any(
+                len(embedding) != KnowledgeServiceClient.embedding_dimensions
+                for embedding in embeddings
+            ):
+                raise RuntimeError("Knowledge service batch embedding dimension mismatch")
+            return embeddings
+
+    @staticmethod
+    async def extract_attachment(data: str, filename: str = "attachment.pdf") -> str:
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            response = await client.post(
+                f"{settings.RAG_URL}/rag/convert",
+                json={"data": data, "filename": filename},
+                headers={"X-Internal-Token": settings.SECRET_KEY},
+            )
+            response.raise_for_status()
+            return str(response.json().get("data", {}).get("markdown") or "")
 
     @staticmethod
     async def retrieve(
@@ -249,4 +273,4 @@ class RagClient:
             response.raise_for_status()
             return response.json().get("data", {})
 
-rag_client = RagClient()
+knowledge_client = KnowledgeServiceClient()

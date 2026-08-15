@@ -3,7 +3,6 @@ from pymongo.errors import DuplicateKeyError
 from pydantic import BaseModel, Field
 
 from src.repositories.mcp import MCPRepository
-from src.core.logging_route import LoggingRoute
 from src.schemas.mcp import RegisterServerRequest
 from src.core.dependency import CurrentUser, get_current_user, verify_internal_token
 from src.services.mcp import MCPService
@@ -20,7 +19,7 @@ class CallbackRequest(BaseModel):
     )
 
 
-router = APIRouter(route_class=LoggingRoute, prefix="/mcp")
+router = APIRouter(prefix="/mcp")
 
 
 @router.get("/presets")

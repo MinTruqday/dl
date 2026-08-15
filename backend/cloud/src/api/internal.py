@@ -4,11 +4,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from src.core.dependency import verify_internal_token
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
-from src.core.logging_route import LoggingRoute
 from src.core.storage import generate_presigned_url
 
 
-router = APIRouter(route_class=LoggingRoute, prefix="/noi-bo")
+router = APIRouter(prefix="/noi-bo")
 
 
 def serialize_internal(value: Any):

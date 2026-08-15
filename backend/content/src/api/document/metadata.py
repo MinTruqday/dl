@@ -1,11 +1,10 @@
 from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
-from src.core.logging_route import LoggingRoute
 from src.core.response import APIResponse
 from src.api.dependency import get_current_user, require_role, Role
 from src.services.document import DocumentService
 
-router = APIRouter(route_class=LoggingRoute)
+router = APIRouter()
 
 @router.get("/{document_id}/thong-ke", response_model=APIResponse[Any])
 async def get_document_analytics(document_id: str, current_user=Depends(get_current_user)):

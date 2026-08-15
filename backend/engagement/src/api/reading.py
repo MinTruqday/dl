@@ -5,14 +5,13 @@ from typing import Any
 from urllib.parse import urlparse
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query
-from src.core.logging_route import LoggingRoute
 from src.core.response import APIResponse
 from src.core.infrastructure.configuration import settings
 from src.api.dependency import get_current_user, get_db, CurrentUser
 from src.schemas.reading import ProgressUpdate
 from src.services.reading import ReadingService
 
-router = APIRouter(route_class=LoggingRoute, prefix="/doc-hieu")
+router = APIRouter(prefix="/doc-hieu")
 
 @router.get("/lich-su", response_model=APIResponse[Any])
 async def get_history(

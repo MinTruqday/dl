@@ -1,6 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException
-from src.core.logging_route import LoggingRoute
-from src.core.logic_logger import log_logic_execution
 from src.core.response import APIResponse
 from src.core.dependency import CurrentUser, get_current_user_optional, verify_internal_token
 from src.schemas.graph import (
@@ -12,7 +10,6 @@ from src.services.graph import graph_service
 from src.services.content_client import content_client
 
 router = APIRouter(
-    route_class=LoggingRoute,
     dependencies=[Depends(verify_internal_token)],
 )
 
@@ -29,7 +26,6 @@ def document_error(error: Exception):
     )
 
 @router.post("/expand", response_model=APIResponse[GraphExpandResponse])
-@log_logic_execution
 async def expand_graph(
     req: GraphExpandRequest,
     user: CurrentUser = Depends(get_current_user_optional),
@@ -52,7 +48,6 @@ async def expand_graph(
     )
 
 @router.post("/replace-document", response_model=APIResponse[dict])
-@log_logic_execution
 async def replace_document_graph(
     req: ReplaceDocumentGraphRequest,
     user: CurrentUser = Depends(get_current_user_optional),
@@ -76,7 +71,6 @@ async def replace_document_graph(
     )
 
 @router.delete("/document/{document_id}", response_model=APIResponse[dict])
-@log_logic_execution
 async def delete_document_graph(
     document_id: str,
     requester_id: str = "",

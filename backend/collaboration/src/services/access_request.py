@@ -1,7 +1,6 @@
 import uuid
 from datetime import datetime, timezone
 from fastapi import HTTPException
-from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.mongo import mongo
 from src.repositories.cooperation import CooperationRepository, DocumentRepository
 from src.services.activity import ActivityService
@@ -9,7 +8,6 @@ from src.services.presence import PresenceService
 
 class AccessRequestService:
     @staticmethod
-    @log_logic_execution
     async def create_access_request(
         document_id: str, requested_role: str, message: str | None, current_user
     ) -> dict:
@@ -81,7 +79,6 @@ class AccessRequestService:
         }
 
     @staticmethod
-    @log_logic_execution
     async def get_document_access_requests(document_id: str, current_user) -> list:
         doc = await DocumentRepository.find_one(
             {"_id": document_id, "creator_id": str(current_user.id)}
@@ -122,7 +119,6 @@ class AccessRequestService:
         ]
 
     @staticmethod
-    @log_logic_execution
     async def get_my_incoming_access_requests(current_user) -> list:
         requests = (
             await mongo
@@ -151,7 +147,6 @@ class AccessRequestService:
         ]
 
     @staticmethod
-    @log_logic_execution
     async def review_access_request(
         request_id: str, status: str, role: str | None, current_user
     ) -> dict:

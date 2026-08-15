@@ -1,6 +1,4 @@
 from fastapi import APIRouter, Depends
-from src.core.logging_route import LoggingRoute
-from src.core.logic_logger import log_logic_execution
 from src.core.response import APIResponse
 from src.core.dependency import CurrentUser, get_current_user_optional, verify_internal_token
 from src.schemas.retrieval import (
@@ -14,12 +12,10 @@ from src.schemas.retrieval import (
 from src.services.retrieval import retriever
 
 router = APIRouter(
-    route_class=LoggingRoute,
     dependencies=[Depends(verify_internal_token)],
 )
 
 @router.post("/retrieve", response_model=APIResponse[RetrieveResponse])
-@log_logic_execution
 async def retrieve_documents(
     req: RetrieveRequest,
     user: CurrentUser = Depends(get_current_user_optional),
@@ -57,7 +53,6 @@ async def retrieve_documents(
     )
 
 @router.post("/multi-query-retrieve", response_model=APIResponse[RetrieveResponse])
-@log_logic_execution
 async def multi_query_retrieve(
     req: MultiQueryRetrieveRequest,
     user: CurrentUser = Depends(get_current_user_optional),
@@ -94,7 +89,6 @@ async def multi_query_retrieve(
     )
 
 @router.post("/cross-document-retrieve", response_model=APIResponse[RetrieveResponse])
-@log_logic_execution
 async def cross_document_retrieve(
     req: CrossDocRetrieveRequest,
     user: CurrentUser = Depends(get_current_user_optional),
