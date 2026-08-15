@@ -67,11 +67,5 @@ class Settings(BaseModel):
     MCP_ALLOWED_REMOTE_HOSTS: str = os.environ["MCP_ALLOWED_REMOTE_HOSTS"]
     MCP_ALLOW_PRIVATE_NETWORKS: bool = os.environ["MCP_ALLOW_PRIVATE_NETWORKS"].lower() == "true"
     MCP_PRESET_ROOT: str = os.environ.get("MCP_PRESET_ROOT", "/opt/doclib-mcp")
-    FINETUNE_MODELS_DIR: str = os.environ["FINETUNE_MODELS_DIR"]
-    FINETUNE_ADAPTERS_DIR: str = os.environ["FINETUNE_ADAPTERS_DIR"]
-    FINETUNE_GGUF_DIR: str = os.environ["FINETUNE_GGUF_DIR"]
-    FINETUNE_BASE_MODEL: str = os.getenv(
-        "FINETUNE_BASE_MODEL", "google/gemma-4-E4B-it"
-    )
 
 settings = Settings()

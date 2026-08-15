@@ -1,4 +1,5 @@
 x-service-environment: &service-environment
+  PYTHONDONTWRITEBYTECODE: "1"
   PROJECT_NAME: ${PROJECT_NAME:?PROJECT_NAME is required}
   VERSION: ${VERSION:?VERSION is required}
   SECRET_KEY: ${SECRET_KEY:?SECRET_KEY is required}
@@ -185,7 +186,7 @@ services:
     container_name: doclib_notification
     restart: always
     ports:
-      - 8007:8000
+      - 8004:8000
     labels:
       - traefik.enable=true
       - traefik.http.routers.notification.rule=PathPrefix(`/thong-bao`)
@@ -215,11 +216,11 @@ services:
     container_name: doclib_agentic_ai
     restart: always
     ports:
-      - 8008:8000
+      - 8015:8000
       - 38470-38479:38470-38479
     labels:
       - traefik.enable=true
-      - traefik.http.routers.ai.rule=PathPrefix(`/lich-su`) || PathPrefix(`/phan-hoi`) || PathPrefix(`/suy-luan`) || PathPrefix(`/nap-du-lieu`) || PathPrefix(`/tinh-chinh`) || PathPrefix(`/tro-chuyen`) || PathPrefix(`/huan-luyen`) || PathPrefix(`/nhap-lieu`) || PathPrefix(`/su-kien`) || PathPrefix(`/tiep-nap`) || PathPrefix(`/ngat-qua-trinh`) || PathPrefix(`/mcp`)
+      - traefik.http.routers.ai.rule=PathPrefix(`/lich-su`) || PathPrefix(`/phan-hoi`) || PathPrefix(`/suy-luan`) || PathPrefix(`/nap-du-lieu`) || PathPrefix(`/tro-chuyen`) || PathPrefix(`/huan-luyen`) || PathPrefix(`/nhap-lieu`) || PathPrefix(`/su-kien`) || PathPrefix(`/tiep-nap`) || PathPrefix(`/ngat-qua-trinh`) || PathPrefix(`/mcp`)
       - traefik.http.services.ai.loadbalancer.server.port=8000
     environment:
       <<: [*service-environment, *minio-environment]
@@ -255,10 +256,6 @@ services:
       MCP_ALLOWED_REMOTE_HOSTS: ${MCP_ALLOWED_REMOTE_HOSTS}
       MCP_ALLOW_PRIVATE_NETWORKS: ${MCP_ALLOW_PRIVATE_NETWORKS:?MCP_ALLOW_PRIVATE_NETWORKS is required}
       MCP_PRESET_ROOT: /opt/doclib-mcp
-      FINETUNE_MODELS_DIR: /var/lib/doclib/finetune/models
-      FINETUNE_ADAPTERS_DIR: /var/lib/doclib/finetune/adapters
-      FINETUNE_GGUF_DIR: /var/lib/doclib/finetune/gguf
-      FINETUNE_BASE_MODEL: ${FINETUNE_BASE_MODEL:-google/gemma-4-E4B-it}
     depends_on:
       mongodb:
         condition: service_started
@@ -277,6 +274,46 @@ services:
     volumes:
       - ./backend/agentic_ai/src:/app/src
       - ./backend/agentic_ai/tests:/app/tests
+      - hf_cache:/home/appuser/.cache/huggingface
+    networks:
+      - doclib_network
+
+  finetune:
+    healthcheck: *app-healthcheck
+    build:
+      context: ./backend
+      dockerfile: ./finetune/Dockerfile
+    container_name: doclib_finetune
+    restart: always
+    ports:
+      - 8013:8000
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.finetune.rule=PathPrefix(`/tinh-chinh`)
+      - traefik.http.services.finetune.loadbalancer.server.port=8000
+    environment:
+      <<: *service-environment
+      AGENTIC_AI_DB_NAME: ${AGENTIC_AI_DB_NAME:?AGENTIC_AI_DB_NAME is required}
+      CONTENT_URL: http://content:8000
+      OLLAMA_URL: http://ollama:11434
+      LLM_MODEL: ${LLM_MODEL:?LLM_MODEL is required}
+      HF_TOKEN: ${HF_TOKEN:?HF_TOKEN is required}
+      FINETUNE_MODELS_DIR: /var/lib/doclib/finetune/models
+      FINETUNE_ADAPTERS_DIR: /var/lib/doclib/finetune/adapters
+      FINETUNE_GGUF_DIR: /var/lib/doclib/finetune/gguf
+      FINETUNE_BASE_MODEL: ${FINETUNE_BASE_MODEL:-google/gemma-4-E4B-it}
+    depends_on:
+      mongodb:
+        condition: service_started
+      redis:
+        condition: service_started
+      content:
+        condition: service_started
+      ollama:
+        condition: service_healthy
+    volumes:
+      - ./backend/finetune/src:/app/src
+      - ./backend/finetune/tests:/app/tests
       - hf_cache:/home/appuser/.cache/huggingface
       - finetune_data:/var/lib/doclib/finetune
     networks:
@@ -401,7 +438,7 @@ services:
     container_name: doclib_collection
     restart: always
     ports:
-      - 8005:8000
+      - 8012:8000
     labels:
       - traefik.enable=true
       - traefik.http.routers.collector.rule=PathPrefix(`/thu-thap`)
@@ -463,7 +500,7 @@ services:
     container_name: doclib_authentication
     restart: always
     ports:
-      - 8001:8000
+      - 8007:8000
     labels:
       - traefik.enable=true
       - traefik.http.routers.authentication.rule=PathPrefix(`/xac-thuc`) || PathPrefix(`/google`)
@@ -504,7 +541,7 @@ services:
     container_name: doclib_humanity
     restart: always
     ports:
-      - 8002:8000
+      - 8003:8000
     labels:
       - traefik.enable=true
       - traefik.http.routers.humanity.rule=PathPrefix(`/ho-so`) || PathPrefix(`/nguoi-dung`)
@@ -529,7 +566,7 @@ services:
     container_name: doclib_websocket
     restart: always
     ports:
-      - 8010:8000
+      - 8005:8000
     labels:
       - traefik.enable=true
       - traefik.http.routers.realtime.rule=PathPrefix(`/ws`)
@@ -561,7 +598,7 @@ services:
     container_name: doclib_content
     restart: always
     ports:
-      - 8004:8000
+      - 8010:8000
     labels:
       - traefik.enable=true
       - traefik.http.routers.content.rule=PathPrefix(`/tai-lieu`) || PathPrefix(`/phien-ban`) || PathPrefix(`/xuat-ban`)
@@ -591,7 +628,7 @@ services:
     container_name: doclib_collaboration
     restart: always
     ports:
-      - 8016:8000
+      - 8001:8000
     labels:
       - traefik.enable=true
       - traefik.http.routers.collaboration.rule=PathPrefix(`/cong-tac`)
@@ -617,7 +654,7 @@ services:
     container_name: doclib_engagement
     restart: always
     ports:
-      - 8017:8000
+      - 8002:8000
     labels:
       - traefik.enable=true
       - traefik.http.routers.engagement.rule=PathPrefix(`/doc-hieu`) || PathPrefix(`/dau-trang`) || PathPrefix(`/ghim`) || PathPrefix(`/kham-pha`) || PathPrefix(`/noi-bat`) || PathPrefix(`/thu-vien`)
@@ -645,7 +682,7 @@ services:
     container_name: doclib_search
     restart: always
     ports:
-      - 8018:8000
+      - 8006:8000
     labels:
       - traefik.enable=true
       - traefik.http.routers.search.rule=PathPrefix(`/tim-kiem`)
@@ -674,7 +711,7 @@ services:
     container_name: doclib_cloud
     restart: always
     ports:
-      - 8012:8000
+      - 8008:8000
     labels:
       - traefik.enable=true
       - traefik.http.routers.cloud.rule=PathPrefix(`/luu-tru`) || PathPrefix(`/tai-len`) || PathPrefix(`/tep-tin`) || PathPrefix(`/thu-muc`) || PathPrefix(`/phan-doan`) || PathPrefix(`/tai-ve`)
@@ -703,7 +740,7 @@ services:
     container_name: doclib_worker
     restart: always
     ports:
-      - 8015:8000
+      - 8009:8000
     labels:
       - traefik.enable=true
       - traefik.http.routers.worker.rule=PathPrefix(`/worker`)
@@ -743,7 +780,7 @@ services:
     container_name: doclib_rag
     restart: always
     ports:
-      - 8019:8000
+      - 8014:8000
     labels:
       - traefik.enable=true
       - traefik.http.routers.rag.rule=PathPrefix(`/rag`)

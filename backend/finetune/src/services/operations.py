@@ -10,18 +10,17 @@ from loguru import logger
 from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
-from src.repositories.finetuning import FinetuneRepository
-from src.repositories.chat import ChatRepository
+from src.repositories.storage import TrainingRepository
 
 active_jobs = {}
 
 class TrainingCancelled(Exception):
     pass
 
-from src.schemas.finetuning import FinetuneJobUpdate
+from src.schemas.contracts import TrainingJobUpdate
 
 async def report_progress(job_id: str, data: dict):
-    update_fields = FinetuneJobUpdate(**data).model_dump(exclude_none=True)
+    update_fields = TrainingJobUpdate(**data).model_dump(exclude_none=True)
     if data.get("status") == "completed":
         update_fields["completed_at"] = datetime.now(timezone.utc)
         update_fields["progress"] = 100.0
@@ -31,30 +30,30 @@ async def report_progress(job_id: str, data: dict):
             "loss": data["loss"],
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
-        await FinetuneRepository.update_job(
+        await TrainingRepository.update_job(
             {"_id": job_id}, {"$push": {"training_log": log_entry}}
         )
-        job = await FinetuneRepository.find_job({"_id": job_id})
+        job = await TrainingRepository.find_job({"_id": job_id})
         if job:
             best = job.get("best_loss")
             if best is None or data["loss"] < best:
                 update_fields["best_loss"] = data["loss"]
     if update_fields:
-        await FinetuneRepository.update_job(
+        await TrainingRepository.update_job(
             {"_id": job_id}, {"$set": update_fields}
         )
     status_value = data.get("status")
     if status_value in {"completed", "failed", "cancelled"}:
-        job = await FinetuneRepository.find_job({"_id": job_id})
+        job = await TrainingRepository.find_job({"_id": job_id})
         if job:
             dataset_status = "trained" if status_value == "completed" else "ready"
-            await FinetuneRepository.update_dataset(
+            await TrainingRepository.update_dataset(
                 {"_id": job["dataset_id"]},
                 {"$set": {"status": dataset_status}},
             )
 
 def _run_training_sync(job_id: str, config: dict, loop, cancel_event):
-    from src.training.finetuning import run_finetune_job
+    from src.training.pipeline import run_training_job
 
     async def _update(data):
         await report_progress(job_id, data)
@@ -69,7 +68,7 @@ def _run_training_sync(job_id: str, config: dict, loop, cancel_event):
         sync_update({"status": "running", "progress": 5})
 
         sync_update({"progress": 10, "status": "running"})
-        result = run_finetune_job(job_id, config, sync_update)
+        result = run_training_job(job_id, config, sync_update)
 
         adapter_path = result.get("adapter_path", "")
         final_loss = result.get("final_loss", 0)
@@ -120,7 +119,7 @@ async def create_dataset(req: dict):
         "status": "draft",
         "created_at": datetime.now(timezone.utc),
     }
-    await FinetuneRepository.insert_dataset(doc)
+    await TrainingRepository.insert_dataset(doc)
     return doc
 
 async def list_datasets(user_id: str):
@@ -137,11 +136,11 @@ async def get_dataset(dataset_id: str, user_id: str):
 
 async def delete_dataset(dataset_id: str, user_id: str):
     
-    result = await FinetuneRepository.delete_dataset(
+    result = await TrainingRepository.delete_dataset(
         {"_id": dataset_id, "user_id": user_id}
     )
     if result.deleted_count > 0:
-        await FinetuneRepository.delete_samples(
+        await TrainingRepository.delete_samples(
             {"dataset_id": dataset_id}
         )
         return {"success": True}
@@ -150,7 +149,7 @@ async def delete_dataset(dataset_id: str, user_id: str):
 async def add_samples(dataset_id: str, req: dict):
     
     user_id = req.get("user_id")
-    dataset = await FinetuneRepository.find_dataset(
+    dataset = await TrainingRepository.find_dataset(
         {"_id": dataset_id, "user_id": user_id}
     )
     if not dataset:
@@ -167,11 +166,11 @@ async def add_samples(dataset_id: str, req: dict):
         for s in req.get("samples", [])
     ]
     if documents:
-        await FinetuneRepository.insert_samples(documents)
-    total = await FinetuneRepository.count_samples(
+        await TrainingRepository.insert_samples(documents)
+    total = await TrainingRepository.count_samples(
         {"dataset_id": dataset_id}
     )
-    await FinetuneRepository.update_dataset(
+    await TrainingRepository.update_dataset(
         {"_id": dataset_id},
         {"$set": {"sample_count": total, "updated_at": datetime.now(timezone.utc)}},
     )
@@ -184,7 +183,7 @@ async def get_samples(
     limit: int = Query(default=20, le=100),
 ):
     
-    if not await FinetuneRepository.find_dataset(
+    if not await TrainingRepository.find_dataset(
         {"_id": dataset_id, "user_id": user_id}
     ):
         raise HTTPException(status_code=404, detail={"code": "finetuning_dataset_not_found"})
@@ -193,19 +192,19 @@ async def get_samples(
 
 async def delete_sample(dataset_id: str, sample_id: str, user_id: str):
     
-    if not await FinetuneRepository.find_dataset(
+    if not await TrainingRepository.find_dataset(
         {"_id": dataset_id, "user_id": user_id}
     ):
         raise HTTPException(status_code=404, detail={"code": "finetuning_dataset_not_found"})
     if (
-        await FinetuneRepository.delete_sample(
+        await TrainingRepository.delete_sample(
             {"_id": sample_id, "dataset_id": dataset_id}
         )
     ).deleted_count > 0:
-        total = await FinetuneRepository.count_samples(
+        total = await TrainingRepository.count_samples(
             {"dataset_id": dataset_id}
         )
-        await FinetuneRepository.update_dataset(
+        await TrainingRepository.update_dataset(
             {"_id": dataset_id},
             {"$set": {"sample_count": total, "updated_at": datetime.now(timezone.utc)}},
         )
@@ -219,7 +218,7 @@ async def import_feedback(req: dict):
     if not feedbacks:
         return {"imported": 0}
     ds_id = str(uuid.uuid4())
-    await FinetuneRepository.insert_dataset(
+    await TrainingRepository.insert_dataset(
         {
             "_id": ds_id,
             "user_id": user_id,
@@ -233,12 +232,12 @@ async def import_feedback(req: dict):
     )
     samples = []
     for fb in feedbacks:
-        msg = await ChatRepository.find_ai_message(
+        msg = await TrainingRepository.find_ai_message(
             {"_id": fb.get("message_id")}
         )
         if not msg:
             continue
-        prev = await ChatRepository.find_ai_message(
+        prev = await TrainingRepository.find_ai_message(
             {
                 "session_id": msg.get("session_id"),
                 "role": "user",
@@ -258,22 +257,19 @@ async def import_feedback(req: dict):
                 }
             )
     if samples:
-        await FinetuneRepository.insert_samples(samples)
-        await FinetuneRepository.update_dataset(
+        await TrainingRepository.insert_samples(samples)
+        await TrainingRepository.update_dataset(
             {"_id": ds_id}, {"$set": {"sample_count": len(samples), "status": "ready"}}
         )
     return {"dataset_id": ds_id, "imported": len(samples)}
 
 async def import_documents(req: dict):
     user_id, doc_ids = req.get("user_id"), req.get("document_ids", [])
-    from langchain_core.messages import HumanMessage
-    from src.schemas.finetuning import GeneratedSamples
-    from src.utils.huggingface import create_chat_model
+    from src.core.models import generate_training_samples
 
-    structured_model = create_chat_model().with_structured_output(GeneratedSamples)
     generated_samples = []
     for document_id in doc_ids:
-        document = await FinetuneRepository.find_document_context(
+        document = await TrainingRepository.find_document_context(
             {"_id": document_id}
         )
         if not document:
@@ -295,19 +291,7 @@ async def import_documents(req: dict):
         ][:10]
         for chunk in chunks:
             try:
-                from src.core.registry import PromptType, registry
-
-                prompt = registry.get(PromptType.FINETUNE_QA_GENERATION).format(
-                    chunk=chunk
-                )
-                generated = await structured_model.ainvoke(
-                    [HumanMessage(content=prompt)],
-                    max_tokens=1024,
-                    temperature=0.3,
-                )
-                generated_samples.extend(
-                    sample.model_dump() for sample in generated.samples
-                )
+                generated_samples.extend(await generate_training_samples(chunk))
             except Exception:
                 logger.exception("Training data extraction error")
     if not generated_samples:
@@ -316,7 +300,7 @@ async def import_documents(req: dict):
             detail={"code": "finetuning_sample_generation_failed"},
         )
     dataset_id = str(uuid.uuid4())
-    await FinetuneRepository.insert_dataset(
+    await TrainingRepository.insert_dataset(
         {
             "_id": dataset_id,
             "user_id": user_id,
@@ -337,13 +321,13 @@ async def import_documents(req: dict):
         }
         for sample in generated_samples
     ]
-    await FinetuneRepository.insert_samples(sample_documents)
+    await TrainingRepository.insert_samples(sample_documents)
     return {"dataset_id": dataset_id, "imported": len(sample_documents)}
 
 async def create_job(req: dict):
     
     ds_id, user_id = req.get("dataset_id"), req.get("user_id")
-    dataset = await FinetuneRepository.find_dataset(
+    dataset = await TrainingRepository.find_dataset(
         {"_id": ds_id, "user_id": user_id}
     )
     if not dataset:
@@ -370,12 +354,12 @@ async def create_job(req: dict):
         "training_log": [],
         "created_at": datetime.now(timezone.utc),
     }
-    await FinetuneRepository.insert_job(job)
+    await TrainingRepository.insert_job(job)
     return job
 
 async def start_job(job_id: str, req: dict):
     
-    job = await FinetuneRepository.find_job(
+    job = await TrainingRepository.find_job(
         {"_id": job_id, "user_id": req.get("user_id"), "status": "pending"}
     )
     if not job:
@@ -407,11 +391,11 @@ async def start_job(job_id: str, req: dict):
         args=(job_id, config, loop, cancel_event),
         daemon=True,
     )
-    await FinetuneRepository.update_job(
+    await TrainingRepository.update_job(
         {"_id": job_id},
         {"$set": {"status": "running", "started_at": datetime.now(timezone.utc)}},
     )
-    await FinetuneRepository.update_dataset(
+    await TrainingRepository.update_dataset(
         {"_id": job["dataset_id"]}, {"$set": {"status": "training"}}
     )
     active_jobs[job_id] = {"thread": thread, "cancel_event": cancel_event}
@@ -429,12 +413,12 @@ async def get_job(job_id: str, user_id: str):
     return job
 
 async def cancel_job(job_id: str, req: dict):
-    job = await FinetuneRepository.find_job(
+    job = await TrainingRepository.find_job(
         {"_id": job_id, "user_id": req.get("user_id")}
     )
     if not job:
         raise HTTPException(status_code=404, detail={"code": "finetuning_job_not_found"})
-    result = await FinetuneRepository.update_job(
+    result = await TrainingRepository.update_job(
         {
             "_id": job_id,
             "user_id": req.get("user_id"),
@@ -446,7 +430,7 @@ async def cancel_job(job_id: str, req: dict):
         active_job = active_jobs.get(job_id)
         if active_job:
             active_job["cancel_event"].set()
-        await FinetuneRepository.update_dataset(
+        await TrainingRepository.update_dataset(
             {"_id": job["dataset_id"]}, {"$set": {"status": "ready"}}
         )
         return {"status": "cancelled"}
@@ -456,7 +440,7 @@ async def cancel_job(job_id: str, req: dict):
 
 async def deploy_model(job_id: str, req: dict):
     
-    job = await FinetuneRepository.find_job(
+    job = await TrainingRepository.find_job(
         {"_id": job_id, "user_id": req.get("user_id"), "status": "completed"}
     )
     if not job:
@@ -517,7 +501,7 @@ async def deploy_model(job_id: str, req: dict):
             raise FileNotFoundError("model_artifact_not_found")
 
         model_name = repo_id
-        await FinetuneRepository.update_job(
+        await TrainingRepository.update_job(
             {"_id": job_id}, {"$set": {"merged_model_name": repo_id}}
         )
 
@@ -527,21 +511,18 @@ async def deploy_model(job_id: str, req: dict):
             status_code=500, detail={"code": "model_deployment_failed"}
         )
 
-    await FinetuneRepository.update_job(
+    await TrainingRepository.update_job(
         {"_id": job_id}, {"$set": {"status": "deployed"}}
     )
     return {"status": "deployed", "model_name": model_name}
 
 async def evaluate_model(job_id: str, req: dict):
-    from src.loop.evaluation import evaluation
+    from src.training.metrics import evaluate_samples
 
-    job = await FinetuneRepository.find_job(
+    job = await TrainingRepository.find_job(
         {"_id": job_id, "user_id": req.get("user_id")}
     )
     if not job:
         raise HTTPException(status_code=404, detail={"code": "finetuning_job_not_found"})
     model_name = job.get("merged_model_name") or job.get("base_model")
-    use_judge = req.get("use_judge", True)
-    evaluation._dataset = req.get("test_samples", [])
-    result = await evaluation.run_benchmark(model_name=model_name, use_judge=use_judge)
-    return result
+    return await evaluate_samples(req.get("test_samples", []), model_name)

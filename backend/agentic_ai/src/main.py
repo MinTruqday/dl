@@ -31,7 +31,6 @@ from src.loop.evaluation import evaluation
 from src.harness.orchestration import orchestration
 from src.api.interaction import router as chat
 from src.api.feedback import router as feedback
-from src.api.finetuning import router as finetune
 from src.api.history import router as history
 from src.api.inference import router as inference
 from src.api.ingestion import router as ingest
@@ -69,7 +68,6 @@ app.include_router(inference)
 app.include_router(chat)
 app.include_router(ingest)
 app.include_router(feedback)
-app.include_router(finetune)
 app.include_router(history)
 app.include_router(events)
 app.include_router(mcp_router)
@@ -169,26 +167,9 @@ async def harness_status():
     }
 async def startup_event():
     logger.info("Agentic AI system initialized")
-    from src.core.infrastructure.configuration import settings
     try:
         from src.core.infrastructure.database import init_db
         await init_db()
-        if settings.MONGODB_URI:
-            from src.core.infrastructure.database import database
-            db = database.mongodb[settings.AGENTIC_AI_DB_NAME]
-            await db["finetune_datasets"].create_index(
-                [("user_id", 1), ("created_at", -1)], background=True
-            )
-            await db["finetune_samples"].create_index(
-                [("dataset_id", 1), ("created_at", 1)], background=True
-            )
-            await db["finetune_jobs"].create_index(
-                [("user_id", 1), ("created_at", -1)], background=True
-            )
-            await db["finetune_jobs"].create_index(
-                [("dataset_id", 1), ("status", 1)], background=True
-            )
-            logger.info("MongoDB indexing initialized")
     except Exception:
         logger.exception("MongoDB indexing error")
     try:

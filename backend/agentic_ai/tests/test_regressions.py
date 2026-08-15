@@ -868,7 +868,6 @@ def test_sensitive_routes_require_authentication():
     protected = (
         ("/tro-chuyen", "post"),
         ("/tro-chuyen/phat-truc-tiep", "post"),
-        ("/tinh-chinh/tap-du-lieu", "post"),
         ("/lich-su", "post"),
     )
     for path, method in protected:
@@ -1451,9 +1450,6 @@ def test_database_setup_creates_operational_indexes():
         "ai_sessions",
         "ai_messages",
         "rag_feedback",
-        "finetune_datasets",
-        "finetune_samples",
-        "finetune_jobs",
         "mcp_registry",
         "ai_workspaces",
     } == set(created)
@@ -1519,64 +1515,6 @@ def test_semantic_document_search_returns_distinct_ranked_ids():
             {"document_id": "doc-a", "score": 0.8},
         ]
     }
-
-def test_document_finetuning_import_uses_structured_samples():
-    from unittest.mock import AsyncMock, MagicMock, patch
-
-    from src.schemas.finetuning import FinetuneSample, GeneratedSamples
-    from src.services.finetuning import import_documents
-
-    structured_model = MagicMock()
-    structured_model.ainvoke = AsyncMock(
-        return_value=GeneratedSamples(
-            samples=[
-                FinetuneSample(
-                    instruction="What is verified",
-                    output="The supplied document is verified",
-                )
-            ]
-        )
-    )
-    chat_model = MagicMock()
-    chat_model.with_structured_output.return_value = structured_model
-    inserted_datasets = AsyncMock()
-    inserted_samples = AsyncMock()
-    with (
-        patch(
-            "src.services.finetuning.FinetuneRepository.find_document_context",
-            new=AsyncMock(
-                return_value={
-                    "_id": "content-document",
-                    "content": " ".join(["grounded"] * 80),
-                }
-            ),
-        ),
-        patch(
-            "src.services.finetuning.FinetuneRepository.insert_dataset",
-            new=inserted_datasets,
-        ),
-        patch(
-            "src.services.finetuning.FinetuneRepository.insert_samples",
-            new=inserted_samples,
-        ),
-        patch("huggingface_hub.AsyncInferenceClient", return_value=MagicMock()),
-        patch("src.utils.huggingface.HFInferenceChat", return_value=chat_model),
-    ):
-        result = asyncio.run(
-            import_documents(
-                {
-                    "user_id": "admin",
-                    "document_ids": ["content-document"],
-                }
-            )
-        )
-    assert result["imported"] == 1
-    inserted_datasets.assert_awaited_once()
-    inserted_samples.assert_awaited_once()
-    stored = inserted_samples.await_args.args[0][0]
-    assert stored["instruction"] == "What is verified"
-    assert stored["output"] == "The supplied document is verified"
-
 
 if __name__ == "__main__":
     import inspect

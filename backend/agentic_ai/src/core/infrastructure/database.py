@@ -62,16 +62,6 @@ async def setup_indexes():
                 IndexModel([("user_id", ASCENDING), ("vote_type", ASCENDING)]),
                 IndexModel([("session_id", ASCENDING), ("message_id", ASCENDING)]),
             ],
-            "finetune_datasets": [
-                IndexModel([("user_id", ASCENDING), ("created_at", DESCENDING)]),
-            ],
-            "finetune_samples": [
-                IndexModel([("dataset_id", ASCENDING), ("created_at", ASCENDING)]),
-            ],
-            "finetune_jobs": [
-                IndexModel([("user_id", ASCENDING), ("created_at", DESCENDING)]),
-                IndexModel([("user_id", ASCENDING), ("status", ASCENDING)]),
-            ],
             "mcp_registry": [
                 IndexModel([("owner_id", ASCENDING), ("name", ASCENDING)], unique=True),
                 IndexModel([("owner_id", ASCENDING), ("is_connected", ASCENDING)]),

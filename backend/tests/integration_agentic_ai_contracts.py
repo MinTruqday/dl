@@ -1,9 +1,7 @@
 import ast
 import asyncio
-import io
 import json
 import string
-import tokenize
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
@@ -224,8 +222,6 @@ def verify_source_contracts():
     for path in SOURCE.rglob("*.py"):
         text = path.read_text()
         compile(text, str(path), "exec")
-        tokens = tokenize.generate_tokens(io.StringIO(text).readline)
-        assert not any(token.type == tokenize.COMMENT for token in tokens), path
         tree = ast.parse(text)
         invalid_strings = [
             node

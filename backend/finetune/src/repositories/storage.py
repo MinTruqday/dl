@@ -1,13 +1,11 @@
 from src.core.infrastructure.mongo import mongo
 from src.core.infrastructure.database import database
-from src.core.infrastructure.configuration import settings
-from src.services.content_client import ContentClient
+from src.clients.content import ContentClient
 
-class FinetuneRepository:
+class TrainingRepository:
     @staticmethod
     def _get_db():
-        db_name = settings.AGENTIC_AI_DB_NAME
-        return database.mongodb.get_database(db_name)
+        return database.mongodb
 
     @classmethod
     async def update_job(cls, *args, **kwargs):
@@ -59,6 +57,10 @@ class FinetuneRepository:
         if not document_id:
             return None
         return await ContentClient.get(document_id)
+
+    @classmethod
+    async def find_ai_message(cls, query, **kwargs):
+        return await mongo.find_one("ai_messages", query, **kwargs)
 
     @classmethod
     async def insert_one(cls, *args, **kwargs):

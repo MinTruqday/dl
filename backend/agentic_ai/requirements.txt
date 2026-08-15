@@ -19,7 +19,6 @@ tavily-python==0.3.1
 gunicorn==21.2.0
 python-multipart==0.0.9
 jinja2==3.1.3
-accelerate>=0.27.0
 huggingface-hub>=1.5.0,<2.0.0
 motor>=3.4.0
 pymongo<5.0.0
@@ -31,14 +30,7 @@ pandas==2.2.2
 numpy==1.26.4
 uuid6==2024.1.12
 langchain-ollama
-peft>=0.18.0,<1.0.0
-trl>=0.29.0,<1.0.0
-datasets>=4.0.0,<5.0.0
 teich>=0.3.3,<1.0.0
-# QLoRA runtime for NVIDIA Linux hosts/Colab. bitsandbytes has no supported
-# wheel for the arm64 development image used on Apple Silicon.
-bitsandbytes>=0.49.0; platform_system == "Linux" and platform_machine == "x86_64"
-mlx-lm>=0.17.0; sys_platform == "darwin"
 aio-pika==9.4.1
 PyJWT==2.8.0
 argon2-cffi==23.1.0
@@ -53,5 +45,3 @@ en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_
 protobuf>=6.33.5,<7.0.0
 click>=8.4.2,<9.0.0
 rank_bm25==0.2.2
-gguf==0.19.0
-sentencepiece==0.2.2

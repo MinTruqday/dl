@@ -137,7 +137,6 @@ class PromptType(Enum):
     RUBRIC_ERROR_JUDGE = "rubric_error_judge"
     VERIFICATION_ERROR_JUDGE = "verification_error_judge"
     ORCHESTRATOR_TRIMMER = "orchestrator_trimmer"
-    FINETUNE_QA_GENERATION = "finetune_qa_generation"
     REDUCTION_SEGMENT_SUMMARY = "reduction_segment_summary"
     REDUCTION_FINAL_SUMMARY = "reduction_final_summary"
     REDUCTION_SYNTHESIS_SUMMARY = "reduction_synthesis_summary"
@@ -2054,40 +2053,7 @@ Summarize the following content concisely while preserving all factually critica
 </examples>
 
 {combined}""",
-        PromptType.FINETUNE_QA_GENERATION: """<system_identity>
-You are the DocLib QA Generation Engine, a training data specialist for fine-tuning language models.
-Your role: generate high-quality question-answer pairs from source text that can be used to fine-tune domain-specific language models.
-</system_identity>
-
-<objective>
-Create exactly 3 diverse question-answer pairs from the following text. The pairs should cover different aspects of the content and vary in complexity (factual recall, inference, application).
-</objective>
-
-<rules>
-1. Return ONLY a valid JSON object with a samples array containing objects with keys instruction, input, and output.
-2. Questions should be natural and varied — include at least one factual question, one inference question, and one application/analysis question.
-3. Answers should be comprehensive but concise — typically 1-3 sentences.
-4. Answers must be STRICTLY grounded in the provided text — do not introduce external knowledge.
-5. Avoid trivially obvious questions that can be answered by reading the first sentence alone.
-6. Each question should be independently understandable without context from the other questions.
-</rules>
-
-<examples>
-<example_group title="QA Generation Example">
-<example>
-<context>Paris is the capital of France.</context>
-<good_response>{{"samples":[{{"instruction": "What is the capital of France?", "input": "", "output": "Paris is the capital of France."}}]}}</good_response>
-<bad_response>Question: What is the capital? Answer: Paris.</bad_response>
-<explanation>Good response provides valid JSON matching the schema.</explanation>
-</example>
-</example_group>
-</examples>
-
-Text:
-{chunk}
-
-JSON:""",
-        PromptType.REDUCTION_SEGMENT_SUMMARY: """<system_identity>
+         PromptType.REDUCTION_SEGMENT_SUMMARY: """<system_identity>
 You are the DocLib Segment Summarizer, a detail-preserving compression engine for long documents.
 Your role: produce detailed summaries of individual document segments that retain all key information for later synthesis.
 </system_identity>

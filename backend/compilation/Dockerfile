@@ -2,7 +2,9 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-ENV HOME=/home/doclibuser
+ENV HOME=/home/doclibuser \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl ca-certificates fontconfig pandoc ghostscript \
