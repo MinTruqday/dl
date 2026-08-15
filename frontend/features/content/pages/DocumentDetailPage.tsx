@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { Bookmark, Flag, Share2 } from "lucide-react";
+import { Bookmark, Share2 } from "lucide-react";
 import InlineState from "@/shared/components/common/InlineState";
 import PageHeader from "@/shared/components/layout/PageHeader";
 import SegmentedTabs from "@/shared/components/navigation/SegmentedTabs";
@@ -10,7 +10,6 @@ import PageLoader from "@/shared/components/common/PageLoader";
 import { Button } from "@/shared/components/ui/Button";
 import { useNoticeToast } from "@/shared/hooks/useNoticeToast";
 import DocumentDiscussion from "../components/DocumentDiscussion";
-import ReportDialog from "../components/ReportDialog";
 import { useDocumentDetails } from "../hooks/useDocumentDetails";
 
 type Tab = "content" | "chapters" | "discussion";
@@ -20,7 +19,6 @@ export default function DocumentDetailsPage() {
   const state = useDocumentDetails(slug);
   useNoticeToast(state.notice);
   const [tab, setTab] = useState<Tab>("content");
-  const [reportOpen, setReportOpen] = useState(false);
   if (state.loading) return <PageLoader rows={6} />;
   if (!state.document)
     return (
@@ -37,7 +35,6 @@ export default function DocumentDetailsPage() {
     );
   const document = state.document;
   const id = document._id ?? document.id;
-  const premiumLocked = document.is_premium && !document.has_purchased;
   return (
     <div className="w-full">
       <PageHeader
@@ -73,25 +70,9 @@ export default function DocumentDetailsPage() {
                 fill={state.bookmarked ? "currentColor" : "none"}
               />
             </Button>
-            <Button
-              size="icon"
-              variant="secondary"
-              aria-label="Báo cáo"
-              onClick={() => setReportOpen(true)}
-            >
-              <Flag size={17} />
+            <Button onClick={() => router.push(`/tai-lieu/xem-truoc/${id}`)}>
+              Đọc tài liệu
             </Button>
-            {premiumLocked ? (
-              <Button disabled={state.processing} onClick={state.purchase}>
-                {state.processing
-                  ? "Đang xử lý"
-                  : `Mua ${document.price_dl || 0} dl`}
-              </Button>
-            ) : (
-              <Button onClick={() => router.push(`/tai-lieu/xem-truoc/${id}`)}>
-                Đọc tài liệu
-              </Button>
-            )}
           </>
         }
         meta={
@@ -137,9 +118,7 @@ export default function DocumentDetailsPage() {
       {tab === "content" && (
         <section className="rounded-panel border border-border bg-surface p-6">
           <div className="prose max-w-none whitespace-pre-wrap text-[15px] leading-7 text-ink">
-            {premiumLocked
-              ? "Mua tài liệu để đọc toàn bộ nội dung"
-              : state.content || "Tài liệu chưa có nội dung"}
+            {state.content || "Tài liệu chưa có nội dung"}
           </div>
           {document.tags?.length > 0 && (
             <div className="mt-8 flex flex-wrap gap-2 border-t border-border pt-5">
@@ -169,9 +148,7 @@ export default function DocumentDetailsPage() {
                 <span className="text-[12px] text-ink-muted">
                   {chapter.word_count
                     ? `${Number(chapter.word_count).toLocaleString("vi-VN")} từ`
-                    : chapter.is_premium
-                      ? "Trả phí"
-                      : "Có thể đọc"}
+                    : "Có thể đọc"}
                 </span>
               </li>
             ))}
@@ -182,12 +159,6 @@ export default function DocumentDetailsPage() {
           />
         ))}
       {tab === "discussion" && <DocumentDiscussion documentId={id} />}
-      {reportOpen && (
-        <ReportDialog
-          onSubmit={state.report}
-          onClose={() => setReportOpen(false)}
-        />
-      )}
     </div>
   );
 }

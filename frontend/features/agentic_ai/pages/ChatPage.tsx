@@ -43,7 +43,6 @@ const toolLabels: Record<string, string> = {
   propose_document_edits: "Đề xuất chỉnh sửa",
   delete_document: "Xóa tài liệu",
   restore_document: "Khôi phục tài liệu",
-  execute_python: "Chạy mã Python",
   execute_mcp_tool: "Chạy công cụ MCP",
   manage_user_instructions: "Cập nhật chỉ dẫn cá nhân",
 };
@@ -57,7 +56,6 @@ const toolDescriptions: Record<string, string> = {
   propose_document_edits: "Tạo đề xuất chỉnh sửa để bạn xem lại.",
   delete_document: "Xóa tài liệu đã chọn.",
   restore_document: "Khôi phục tài liệu đã xóa.",
-  execute_python: "Chạy mã Python trong môi trường giới hạn.",
   execute_mcp_tool: "Gọi công cụ từ máy chủ MCP đã kết nối.",
   manage_user_instructions: "Thay đổi chỉ dẫn phản hồi của trợ lý.",
 };
@@ -181,17 +179,7 @@ export default function ChatPage() {
   useEffect(() => {
     if (chat.openedMode) setMode(chat.openedMode);
   }, [chat.openedMode]);
-  const advancedModesEnabled =
-    String(chat.user?.role || "").toLowerCase() === "admin" ||
-    ["PRO", "PREMIUM"].includes(
-      String(chat.user?.ai_tier || "BASIC").toUpperCase(),
-    );
-  useEffect(() => {
-    if (!advancedModesEnabled) {
-      if (mode !== "chat") setMode("chat");
-      if (thinkingEnabled) setThinkingEnabled(false);
-    }
-  }, [advancedModesEnabled, mode, thinkingEnabled]);
+  const advancedModesEnabled = true;
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (
@@ -216,22 +204,6 @@ export default function ChatPage() {
         detail="Đăng nhập để sử dụng trợ lý AI"
       />
     );
-  const daily = chat.quota?.windows?.find((window) => window.name === "daily");
-  const weekly = chat.quota?.windows?.find(
-    (window) => window.name === "weekly",
-  );
-  const formatQuota = (
-    label: string,
-    window?: { used_tokens?: number; limit_tokens?: number },
-  ) => {
-    if (!window) return `${label} —`;
-    const used = (window.used_tokens ?? 0).toLocaleString("vi-VN");
-    const limit =
-      (window.limit_tokens ?? -1) < 0
-        ? "Không giới hạn"
-        : (window.limit_tokens ?? 0).toLocaleString("vi-VN");
-    return `${label} ${used} / ${limit}`;
-  };
   return (
     <div className="flex h-[calc(100dvh-60px)] w-full overflow-hidden bg-surface">
       <aside className="hidden w-[288px] shrink-0 flex-col border-r border-border bg-surface md:flex">
@@ -333,10 +305,6 @@ export default function ChatPage() {
                   )?.title || "Cuộc trò chuyện"
                 : "Cuộc trò chuyện mới"}
             </h1>
-            <p className="mt-1 flex flex-wrap gap-x-2 text-[11px] leading-4 text-ink-muted">
-              <span>{formatQuota("Hạn mức ngày", daily)}</span>
-              <span>{formatQuota("Hạn mức tuần", weekly)}</span>
-            </p>
           </div>
           <div className="flex shrink-0 gap-1">
             <Button

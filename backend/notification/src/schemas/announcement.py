@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -29,5 +30,4 @@ class AnnouncementSettings(BaseModel):
     enable_comment_notifications: bool = True
     enable_mention_notifications: bool = True
     enable_system_notifications: bool = True
-    enable_email_digest: bool = False
 import uuid

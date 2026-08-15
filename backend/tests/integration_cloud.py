@@ -25,7 +25,7 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
         return None
 
 
-def token(user_id, session_id, role="reader", ai_tier="BASIC"):
+def token(user_id, session_id, role="reader"):
     now = datetime.now(timezone.utc)
     return jwt.encode(
         {
@@ -33,7 +33,6 @@ def token(user_id, session_id, role="reader", ai_tier="BASIC"):
             "uid": user_id,
             "sid": session_id,
             "role": role,
-            "ai_tier": ai_tier,
             "iat": now,
             "exp": now + timedelta(minutes=15),
         },
@@ -85,8 +84,8 @@ async def main():
     cache = redis.from_url(os.getenv("REDIS_URI", "redis://127.0.0.1:6379/0"), decode_responses=True)
     cloud = mongo[os.getenv("CLOUD_DB_NAME", "doclib_cloud")]
     humanity = mongo[os.getenv("HUMANITY_DB_NAME", "doclib_humanity")]
-    owner_token = token(OWNER_ID, OWNER_SESSION, ai_tier="PRO")
-    shared_token = token(SHARED_ID, SHARED_SESSION, ai_tier="PRO")
+    owner_token = token(OWNER_ID, OWNER_SESSION)
+    shared_token = token(SHARED_ID, SHARED_SESSION)
     object_paths = []
     try:
         await cache.sadd(f"user_sessions:{OWNER_ID}", OWNER_SESSION)

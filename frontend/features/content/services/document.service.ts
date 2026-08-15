@@ -47,83 +47,22 @@ export async function getDocumentDraftAPI(documentId: string) {
   return data;
 }
 
-export async function exportProtectedDocumentAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/thuy-an/${documentId}`, {
-    headers: getAuthHeaders(),
-  });
-  if (!res.ok) {
-    let detail = "Không thể xuất tài liệu bảo vệ";
-    try {
-      const data = await res.json();
-      detail = data.detail || data.message || detail;
-    } catch {}
-    throw new Error(detail);
-  }
-  return {
-    blob: await res.blob(),
-    contentDisposition: res.headers.get("content-disposition"),
-  };
-}
-
 export async function getDocumentWithPasswordAPI(
   documentId: string,
   password?: string,
-  shareToken?: string,
 ) {
   const token = getToken();
   const headers: Record<string, string> = token
     ? { Authorization: `Bearer ${token}` }
     : {};
   if (password) headers["x-document-password"] = password;
-  const params = new URLSearchParams();
-  if (shareToken) params.set("share_token", shareToken);
-  const suffix = params.size ? `?${params.toString()}` : "";
-  const res = await fetch(`${API_URL}/tai-lieu/${documentId}${suffix}`, { headers });
+  const res = await fetch(`${API_URL}/tai-lieu/${documentId}`, { headers });
   if (res.status === 401 || res.status === 403) {
     return { status: res.status, data: null };
   }
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Không thể tải tài liệu");
   return { status: res.status, data: data.data || data };
-}
-
-export async function getDocumentDecryptionKeyAPI(documentId: string) {
-  const token = getToken();
-  const res = await fetch(`${API_URL}/tai-lieu/${documentId}/khoa-giai-ma`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể xác thực tài liệu");
-  return data.data?.key || data.key;
-}
-
-export async function getProtectedDocumentPageAPI(
-  documentId: string,
-  pageNumber: number,
-  password?: string,
-  shareToken?: string,
-) {
-  const headers = getAuthHeaders();
-  if (password) headers["x-document-password"] = password;
-  const params = new URLSearchParams();
-  if (shareToken) params.set("share_token", shareToken);
-  const suffix = params.size ? `?${params.toString()}` : "";
-  const response = await fetch(
-    `${API_URL}/tai-lieu/${documentId}/trang-bao-ve/${pageNumber}${suffix}`,
-    { headers },
-  );
-  if (!response.ok) {
-    let detail = "Không thể kết xuất trang tài liệu";
-    try {
-      const data = await response.json();
-      detail = data.detail || detail;
-    } catch {}
-    throw new Error(detail);
-  }
-  return {
-    blob: await response.blob(),
-    pageCount: Number(response.headers.get("x-page-count") || 1),
-  };
 }
 
 export async function getDocumentsAPI(
@@ -433,16 +372,6 @@ export async function transferDocumentAPI(id: string, newOwnerId: string) {
   if (!res.ok)
     throw new Error(data.detail || "Lỗi chuyển giao quyền sở hữu tài liệu");
   return data;
-}
-
-export async function getAuditLogsAPI(id: string) {
-  if (!id || id === "undefined") return [];
-  const token = getToken();
-  const res = await fetch(`${API_URL}/tai-lieu/${id}/nhat-ky-hoat-dong`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!res.ok) return [];
-  return res.json();
 }
 
 export async function getDocumentAnalyticsAPI(id: string) {

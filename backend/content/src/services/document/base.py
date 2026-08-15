@@ -1,28 +1,7 @@
-import io
-import json
-import os
-import uuid
-import zipfile
-import base64
 from datetime import datetime, timezone
-from typing import Any, List
-
-import httpx
-from bson import ObjectId
-from fastapi import HTTPException, Query, status
-from loguru import logger
 from passlib.context import CryptContext
 
-from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import database
-from src.core.infrastructure.mongo import mongo
-from src.core.infrastructure.redis import redis
-from src.core.logic_logger import log_logic_execution
-from src.core.publication import trigger_document_publish_job
-from src.repositories.document import DocumentRepository
-from src.schemas.document import DocumentContentUpdate, DocumentCreate, DocumentInDB, DocumentStatus
-from src.services.drm_client import DrmClient
-from src.services.finance_client import FinanceClient
+from src.schemas.document import DocumentStatus
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -130,11 +109,6 @@ def get_effective_collaboration_status(document: dict, user_id: str | None = Non
         "closed_by": None,
     }
 
-async def has_purchase(user_id: str | None, document_id: str) -> bool:
-    if not user_id or not document_id:
-        return False
-    return await FinanceClient.has_purchase(user_id, document_id)
-
 async def can_read_full(document: dict, current_user) -> bool:
     if not document:
         return False
@@ -149,24 +123,4 @@ async def can_read_full(document: dict, current_user) -> bool:
         return False
     if document.get("visibility", "public") != "public":
         return False
-    if int(document.get("price_dl", 0) or 0) <= 0 and not document.get("is_premium"):
-        return True
-    return await has_purchase(user_id, str(document["_id"]))
-
-def fragment_document_content(content: str, key: bytes | None = None) -> list[str]:
-    if not content:
-        return []
-    if key:
-        from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-
-        cipher = AESGCM(key)
-        fragments = []
-        for index in range(0, len(content), 50000):
-            nonce = os.urandom(12)
-            encrypted = cipher.encrypt(nonce, content[index : index + 50000].encode("utf-8"), None)
-            fragments.append(base64.b64encode(nonce + encrypted).decode("utf-8"))
-        return fragments
-    return [
-        base64.b64encode(content[index : index + 50].encode("utf-8")).decode("utf-8")
-        for index in range(0, len(content), 50)
-    ]
+    return True

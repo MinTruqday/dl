@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
-  exportProtectedDocumentAPI,
   getDocumentDraftAPI,
   getMyDocumentsAPI,
   saveDocumentDraftAPI,
@@ -202,29 +201,19 @@ export function useEditorWorkspace() {
     }
   };
 
-  const exportFile = async (format: "pdf" | "docx" | "protected") => {
+  const exportFile = async (format: "pdf" | "docx") => {
     if (!documentId || !selectedDocument) return;
     setExporting(true);
     setError("");
     const basename = selectedDocument.title || "tai-lieu";
     try {
-      if (format === "protected") {
-        const result = await exportProtectedDocumentAPI(documentId);
-        const extension = result.contentDisposition?.includes(".pdf")
-          ? "pdf"
-          : selectedDocument.content_format === "doclibx"
-            ? "doclibx"
-            : "doclib";
-        download(result.blob, `${basename}.${extension}`);
-      } else {
-        const blob =
-          selectedDocument.content_format === "doclibx"
-            ? await exportLatexAPI(content, format)
-            : format === "docx"
-              ? await exportToWordAPI(content)
-              : await compilePreviewAPI(content);
-        download(blob, `${basename}.${format}`);
-      }
+      const blob =
+        selectedDocument.content_format === "doclibx"
+          ? await exportLatexAPI(content, format)
+          : format === "docx"
+            ? await exportToWordAPI(content)
+            : await compilePreviewAPI(content);
+      download(blob, `${basename}.${format}`);
       setNotice("Đã tải tệp xuất");
     } catch (reason) {
       setError(messageOf(reason));

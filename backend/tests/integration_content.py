@@ -1,5 +1,4 @@
 import asyncio
-import base64
 import json
 import os
 import urllib.error
@@ -9,7 +8,6 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 import jwt
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from motor.motor_asyncio import AsyncIOMotorClient
 import redis.asyncio as redis
 
@@ -51,7 +49,6 @@ async def main():
     cache = redis.from_url(os.environ["REDIS_URI"], decode_responses=True)
     content = mongo[os.getenv("CONTENT_DB_NAME", "doclib_content")]
     engagement = mongo[os.getenv("ENGAGEMENT_DB_NAME", "doclib_engagement")]
-    finance = mongo[os.getenv("FINANCE_DB_NAME", "doclib_finance")]
     humanity = mongo[os.getenv("HUMANITY_DB_NAME", "doclib_humanity")]
     notification = mongo[os.getenv("NOTIFICATION_DB_NAME", "doclib_notification")]
     author_token = token(AUTHOR_ID, AUTHOR_SESSION, "author")
@@ -220,26 +217,18 @@ async def main():
 
         status, payload = call("GET", f"/tai-lieu/{document_id}")
         assert status == 200
-        assert payload["data"].get("content") == ""
-        assert "content_fragments" not in payload["data"]
+        assert payload["data"].get("content") == long_content
         assert "access_password_hash" not in payload["data"]
-        assert call("GET", f"/tai-lieu/{document_id}/khoa-giai-ma")[0] == 403
 
         status, payload = call("GET", f"/tai-lieu/{document_id}", buyer_token)
         assert status == 200
-        assert "content_fragments" not in payload["data"]
+        assert payload["data"].get("content") == long_content
         search_inside = urllib.parse.quote("protected")
         assert call(
             "GET",
             f"/doc-hieu/tai-lieu/{document_id}/tim-kiem?q={search_inside}",
             buyer_token,
-        )[0] == 403
-        assert call(
-            "GET",
-            f"/tai-lieu/{document_id}/chi-so-hoc-thuat",
-            buyer_token,
-        )[0] == 403
-        await finance.purchases.insert_one({"_id": str(uuid.uuid4()), "user_id": BUYER_ID, "item_id": document_id, "status": "purchased", "created_at": datetime.now(timezone.utc)})
+        )[0] == 200
         assert call(
             "GET",
             f"/tai-lieu/{document_id}/chi-so-hoc-thuat",
@@ -247,13 +236,7 @@ async def main():
         )[0] == 200
         status, payload = call("GET", f"/tai-lieu/{document_id}", buyer_token)
         assert status == 200, payload
-        fragment = payload["data"]["content_fragments"][0]
-        assert "content" not in payload["data"]
-        status, key_payload = call("GET", f"/tai-lieu/{document_id}/khoa-giai-ma", buyer_token)
-        assert status == 200
-        raw = base64.b64decode(fragment)
-        plaintext = AESGCM(base64.b64decode(key_payload["data"]["key"])).decrypt(raw[:12], raw[12:], None).decode()
-        assert plaintext == long_content[:50000]
+        assert payload["data"]["content"] == long_content
         status, inside_payload = call(
             "GET",
             f"/doc-hieu/tai-lieu/{document_id}/tim-kiem?q={search_inside}",
@@ -318,9 +301,7 @@ async def main():
         await engagement.reading_history.delete_many({"user_id": BUYER_ID})
         await engagement.user_content_profiles.delete_many({"_id": BUYER_ID})
         await engagement.highlights.delete_many({"user_id": BUYER_ID})
-        await finance.purchases.delete_many({"user_id": BUYER_ID, "item_id": {"$in": document_ids}})
         await humanity.users.delete_many({"_id": {"$in": [AUTHOR_ID, BUYER_ID, ADMIN_ID]}})
-        await content.audit_logs.delete_many({"document_id": {"$in": document_ids}})
         await notification.announcements.delete_many({"target_user_id": AUTHOR_ID})
         await cache.delete(
             f"user_sessions:{AUTHOR_ID}",

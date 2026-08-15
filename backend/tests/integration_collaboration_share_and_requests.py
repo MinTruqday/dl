@@ -32,7 +32,6 @@ async def run():
                 "sid": session_id,
                 "role": role,
                 "permissions": [],
-                "ai_tier": "BASIC",
                 "exp": datetime.now(timezone.utc).timestamp() + 1800,
             },
             secret,

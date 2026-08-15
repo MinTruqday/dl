@@ -7,7 +7,6 @@ x-service-environment: &service-environment
   REDIS_URI: ${REDIS_URI:?REDIS_URI is required}
   PLATFORM_SYSTEM_ID: ${PLATFORM_SYSTEM_ID:?PLATFORM_SYSTEM_ID is required}
   INTERNAL_API_URL: ${INTERNAL_API_URL:?INTERNAL_API_URL is required}
-  PAYOS_API_URL: ${PAYOS_API_URL:?PAYOS_API_URL is required}
 
 x-minio-environment: &minio-environment
   MINIO_ENDPOINT: ${MINIO_ENDPOINT:?MINIO_ENDPOINT is required}
@@ -155,56 +154,26 @@ services:
     ports:
       - 3000:3000
     working_dir: /app
-    command: ./node_modules/.bin/next start --hostname 0.0.0.0 -p 3000
+    command: pnpm dev --turbo --hostname 0.0.0.0 -p 3000
     volumes:
       - ./frontend:/app
       - frontend_node_modules:/app/node_modules
       - ./packages:/packages
+      - frontend_next_cache:/app/.next
     environment:
-      HOSTNAME: 0.0.0.0
       WATCHPACK_POLLING: "true"
       CHOKIDAR_USEPOLLING: "true"
       NEXT_TELEMETRY_DISABLED: "1"
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
       NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL}
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/kham-pha').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
       interval: 30s
       timeout: 20s
       start_period: 30s
       retries: 3
     depends_on:
       - traefik
-    networks:
-      - doclib_network
-
-  finance:
-    healthcheck: *app-healthcheck
-    build:
-      context: ./backend
-      dockerfile: ./finance/Dockerfile
-    container_name: doclib_finance
-    restart: always
-    ports:
-      - 8006:8000
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.finance.rule=PathPrefix(`/rut-tien`) || PathPrefix(`/nap-tien`) || PathPrefix(`/kiem-tien`) || PathPrefix(`/vi-tien`)
-      - traefik.http.services.finance.loadbalancer.server.port=8000
-    environment:
-      <<: *service-environment
-      FINANCE_DB_NAME: ${FINANCE_DB_NAME:?FINANCE_DB_NAME is required}
-      RABBITMQ_URI: ${RABBITMQ_URI:?RABBITMQ_URI is required}
-      PAYOS_API_KEY: ${PAYOS_API_KEY:?PAYOS_API_KEY is required}
-      PAYOS_CHECKSUM_KEY: ${PAYOS_CHECKSUM_KEY:?PAYOS_CHECKSUM_KEY is required}
-      PAYOS_CLIENT_ID: ${PAYOS_CLIENT_ID:?PAYOS_CLIENT_ID is required}
-      PAYOS_RETURN_URL: ${PAYOS_RETURN_URL:?PAYOS_RETURN_URL is required}
-    depends_on:
-      - mongodb
-      - redis
-    volumes:
-      - ./backend/finance/src:/app/src
-      - ./backend/logs/finance:/app/logs
     networks:
       - doclib_network
 
@@ -224,11 +193,9 @@ services:
     environment:
       <<: *service-environment
       NOTIFICATION_DB_NAME: ${NOTIFICATION_DB_NAME:?NOTIFICATION_DB_NAME is required}
-      RABBITMQ_URI: ${RABBITMQ_URI:?RABBITMQ_URI is required}
     depends_on:
       - mongodb
       - redis
-      - rabbitmq
     volumes:
       - ./backend/notification/src:/app/src
       - ./backend/logs/notification:/app/logs
@@ -252,7 +219,7 @@ services:
       - 38470-38479:38470-38479
     labels:
       - traefik.enable=true
-      - traefik.http.routers.ai.rule=PathPrefix(`/lich-su`) || PathPrefix(`/phan-hoi`) || PathPrefix(`/suy-luan`) || PathPrefix(`/nap-du-lieu`) || PathPrefix(`/tinh-chinh`) || PathPrefix(`/tro-chuyen`) || PathPrefix(`/huan-luyen`) || PathPrefix(`/nhap-lieu`) || PathPrefix(`/su-kien`) || PathPrefix(`/toi-uu`) || PathPrefix(`/tiep-nap`) || PathPrefix(`/ngat-qua-trinh`) || PathPrefix(`/drm`) || PathPrefix(`/mcp`)
+      - traefik.http.routers.ai.rule=PathPrefix(`/lich-su`) || PathPrefix(`/phan-hoi`) || PathPrefix(`/suy-luan`) || PathPrefix(`/nap-du-lieu`) || PathPrefix(`/tinh-chinh`) || PathPrefix(`/tro-chuyen`) || PathPrefix(`/huan-luyen`) || PathPrefix(`/nhap-lieu`) || PathPrefix(`/su-kien`) || PathPrefix(`/tiep-nap`) || PathPrefix(`/ngat-qua-trinh`) || PathPrefix(`/mcp`)
       - traefik.http.services.ai.loadbalancer.server.port=8000
     environment:
       <<: [*service-environment, *minio-environment]
@@ -274,9 +241,6 @@ services:
       NLI_MODEL_NAME: ${NLI_MODEL_NAME:?NLI_MODEL_NAME is required}
       DOCLING_MODEL: ${DOCLING_MODEL:?DOCLING_MODEL is required}
       TAVILY_API_KEY: ${TAVILY_API_KEY:?TAVILY_API_KEY is required}
-      AGENT_FAILURE_RATE_THRESHOLD: ${AGENT_FAILURE_RATE_THRESHOLD:?AGENT_FAILURE_RATE_THRESHOLD is required}
-      AGENT_TOOL_FAILURE_THRESHOLD: ${AGENT_TOOL_FAILURE_THRESHOLD:?AGENT_TOOL_FAILURE_THRESHOLD is required}
-      AGENT_SECURITY_VIOLATION_THRESHOLD: ${AGENT_SECURITY_VIOLATION_THRESHOLD:?AGENT_SECURITY_VIOLATION_THRESHOLD is required}
       AGENT_SLOW_DURATION_MS_THRESHOLD: ${AGENT_SLOW_DURATION_MS_THRESHOLD:?AGENT_SLOW_DURATION_MS_THRESHOLD is required}
       AGENT_ROUTE_CONFIDENCE_THRESHOLD: ${AGENT_ROUTE_CONFIDENCE_THRESHOLD:?AGENT_ROUTE_CONFIDENCE_THRESHOLD is required}
       AGENT_EXECUTION_TIMEOUT_SECONDS: ${AGENT_EXECUTION_TIMEOUT_SECONDS:?AGENT_EXECUTION_TIMEOUT_SECONDS is required}
@@ -559,64 +523,6 @@ services:
     networks:
       - doclib_network
 
-  usage:
-    healthcheck: *app-healthcheck
-    build:
-      context: ./backend
-      dockerfile: ./usage/Dockerfile
-    container_name: doclib_usage
-    restart: always
-    ports:
-      - 8014:8000
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.usage.rule=PathPrefix(`/goi-cuoc`) || PathPrefix(`/han-muc`)
-      - traefik.http.services.usage.loadbalancer.server.port=8000
-    environment:
-      <<: *service-environment
-      USAGE_DB_NAME: ${USAGE_DB_NAME:?USAGE_DB_NAME is required}
-      LLM_MODEL: ${LLM_MODEL:?LLM_MODEL is required}
-    depends_on:
-      - mongodb
-      - redis
-    volumes:
-      - ./backend/usage/src:/app/src
-      - ./backend/logs/usage:/app/logs
-    networks:
-      - doclib_network
-
-  management:
-    healthcheck: *app-healthcheck
-    build:
-      context: ./backend
-      dockerfile: ./management/Dockerfile
-    container_name: doclib_management
-    restart: always
-    ports:
-      - 8003:8000
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.management.rule=PathPrefix(`/giam-sat`) || PathPrefix(`/kiem-toan`) || PathPrefix(`/quang-cao`) || PathPrefix(`/van-hanh`) || PathPrefix(`/do-luong`) || PathPrefix(`/phan-tich`)
-      - traefik.http.services.management.loadbalancer.server.port=8000
-    environment:
-      <<: [*service-environment, *minio-environment]
-      MANAGEMENT_DB_NAME: ${MANAGEMENT_DB_NAME:?MANAGEMENT_DB_NAME is required}
-      MIN_FILE_SIZE_BYTES: ${MIN_FILE_SIZE_BYTES:?MIN_FILE_SIZE_BYTES is required}
-      EMBEDDING_MODEL: ${EMBEDDING_MODEL:?EMBEDDING_MODEL is required}
-      RERANKER_MODEL: ${RERANKER_MODEL:?RERANKER_MODEL is required}
-      AGENTIC_REQUEST_TIMEOUT_SECONDS: ${MODEL_TIMEOUT_SECONDS:?MODEL_TIMEOUT_SECONDS is required}
-      LLM_MODEL: ${LLM_MODEL:?LLM_MODEL is required}
-      TAVILY_API_KEY: ${TAVILY_API_KEY:?TAVILY_API_KEY is required}
-    depends_on:
-      - mongodb
-      - redis
-      - minio
-    volumes:
-      - ./backend/management/src:/app/src
-      - ./backend/logs/management:/app/logs
-    networks:
-      - doclib_network
-
   websocket:
     healthcheck: *app-healthcheck
     build:
@@ -791,32 +697,6 @@ services:
     networks:
       - doclib_network
 
-  drm:
-    healthcheck: *app-healthcheck
-    build:
-      context: ./backend
-      dockerfile: ./drm/Dockerfile
-    container_name: doclib_drm
-    restart: always
-    ports:
-      - 8013:8000
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.drm.rule=PathPrefix(`/thuy-an`) || PathPrefix(`/ban-quyen`) || PathPrefix(`/giay-phep`) || PathPrefix(`/bao-ve`)
-      - traefik.http.routers.drm.priority=2
-      - traefik.http.services.drm.loadbalancer.server.port=8000
-    environment:
-      <<: *service-environment
-      DRM_DB_NAME: ${DRM_DB_NAME:?DRM_DB_NAME is required}
-    depends_on:
-      - mongodb
-      - redis
-    volumes:
-      - ./backend/drm/src:/app/src
-      - ./backend/logs/drm:/app/logs
-    networks:
-      - doclib_network
-
   worker:
     healthcheck: *app-healthcheck
     build:
@@ -911,4 +791,5 @@ volumes:
   finetune_data: null
   tectonic_cache_v2: null
   frontend_node_modules: null
+  frontend_next_cache: null
   ollama_data: null

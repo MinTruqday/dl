@@ -138,9 +138,6 @@ async def supervisor_node(state: ActingState):
         "Action": "action",
         "Knowledge": "knowledge",
         "Reasoning": "reasoning",
-        "SwarmAgent": "swarm",
-        "MCTSAgent": "mcts",
-        "SpawnerAgent": "spawner",
     }
 
     next_nodes = list(set([route_map.get(s.get("agent", "Action"), "action") for s in ready_tasks]))
@@ -224,7 +221,6 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
                         approval_policy=str(req_data.get("approval_policy", "manual")),
                         session_id=session_id,
                         approval_id=req_data.get("approval_id"),
-                        ai_tier=str(req_data.get("ai_tier", "BASIC")),
                     )
                 elif agent_name == "Knowledge":
                     res = await tool_callable.execute(req_data)
@@ -338,169 +334,6 @@ def _result_succeeded(result):
     return payload["status"] in {"success", "completed"}
 
 
-async def swarm_node(state: ActingState):
-    steps = state.get("steps", [])
-    task_status = state.get("task_status", {})
-    completed_tasks = state.get("completed_tasks", [])
-
-    my_tasks = [
-        s
-        for s in steps
-        if task_status.get(s["id"]) == "running" and s.get("agent", "Action") == "SwarmAgent"
-    ]
-    if not my_tasks:
-        return {}
-
-    from src.workflow.graph import llm
-    from src.agents.swarm import create_swarm_workflow
-    from src.agents.coder import CoderAgent
-    from src.agents.reviewer import ReviewerAgent
-    from src.agents.secops import SecOpsAgent
-    import asyncio
-
-    specialized_agents = {
-        "coder": CoderAgent(llm),
-        "reviewer": ReviewerAgent(llm),
-        "secops": SecOpsAgent(llm),
-    }
-    swarm_app = create_swarm_workflow(llm, specialized_agents)
-
-    async def _run_swarm(task_obj):
-        current_task = task_obj.get("task", "")
-        init_state = {
-            "task": current_task,
-            "is_complete": False,
-            "current_agent": "supervisor",
-            "messages": [],
-            "artifacts": {},
-        }
-        final_artifacts = {}
-        final_messages = []
-
-        from langgraph.errors import GraphRecursionError
-        from langchain_core.messages import AIMessage
-
-        try:
-            async for output in swarm_app.astream(init_state, {"recursion_limit": 15}):
-                for node_name, state_update in output.items():
-                    if "artifacts" in state_update:
-                        final_artifacts.update(state_update["artifacts"])
-                    if "messages" in state_update:
-                        final_messages = state_update["messages"]
-        except GraphRecursionError:
-            logger.warning("Swarm recursion limit reached. Halting swarm execution")
-            final_messages.append(
-                AIMessage(content=json.dumps({"status": "recursion_limit_reached"}))
-            )
-
-        messages = [msg.content for msg in final_messages if hasattr(msg, "content")]
-        return json.dumps(
-            {
-                "status": (
-                    "success"
-                    if final_artifacts.get("review_approved") is True
-                    and final_artifacts.get("security_approved") is True
-                    else "swarm_verification_failed"
-                ),
-                "artifacts": final_artifacts,
-                "messages": messages,
-            },
-            ensure_ascii=False,
-        )
-
-    task_results = await asyncio.gather(*[_run_swarm(t) for t in my_tasks])
-
-    for task, result in zip(my_tasks, task_results):
-        succeeded = _result_succeeded(result)
-        task_status[task["id"]] = "completed" if succeeded else "failed"
-        if succeeded and task["id"] not in completed_tasks:
-            completed_tasks.append(task["id"])
-
-    return {
-        "task_status": task_status,
-        "completed_tasks": completed_tasks,
-        "consolidated_results": [
-            f"[SwarmAgent - {t['id']}]:\n{res}" for t, res in zip(my_tasks, task_results)
-        ],
-        "last_agent_result": task_results[-1]
-        if task_results
-        else json.dumps({"status": "completed"}),
-    }
-
-
-async def mcts_node(state: ActingState):
-    steps = state.get("steps", [])
-    task_status = state.get("task_status", {})
-    completed_tasks = state.get("completed_tasks", [])
-
-    my_tasks = [
-        s
-        for s in steps
-        if task_status.get(s["id"]) == "running" and s.get("agent", "Action") == "MCTSAgent"
-    ]
-    if not my_tasks:
-        return {}
-
-    from src.workflow.graph import llm
-    from src.agents.mcts import MCTSGenerator
-    import asyncio
-
-    mcts_agent = MCTSGenerator(llm=llm, evaluator_llm=llm, max_iterations=3)
-
-    async def _run_mcts(task_obj):
-        current_task = task_obj.get("task", "")
-        init_state = {"task": current_task, "code": "", "approach": ""}
-        best_state = await mcts_agent.search(init_state)
-        code = best_state.get("code", "")
-        return json.dumps(
-            {
-                "status": "success" if code.strip() else "mcts_generation_failed",
-                "approach": best_state.get("approach", ""),
-                "code": code,
-            },
-            ensure_ascii=False,
-        )
-
-    task_results = await asyncio.gather(*[_run_mcts(t) for t in my_tasks])
-
-    for task, result in zip(my_tasks, task_results):
-        succeeded = _result_succeeded(result)
-        task_status[task["id"]] = "completed" if succeeded else "failed"
-        if succeeded and task["id"] not in completed_tasks:
-            completed_tasks.append(task["id"])
-
-    return {
-        "task_status": task_status,
-        "completed_tasks": completed_tasks,
-        "consolidated_results": [
-            f"[MCTSAgent - {t['id']}]:\n{res}" for t, res in zip(my_tasks, task_results)
-        ],
-        "last_agent_result": task_results[-1]
-        if task_results
-        else json.dumps({"status": "completed"}),
-    }
-
-
-async def spawner_node(state: ActingState):
-    from src.agents.spawner import AgentSpawner
-    from src.workflow.graph import llm
-
-    class SpawnerExecutor:
-        async def execute(self, task: str) -> str:
-            matching_task = next(
-                (
-                    item
-                    for item in state.get("steps", [])
-                    if item.get("task") and item.get("task") in task
-                ),
-                {},
-            )
-            role = matching_task.get("specialization") or "Domain specialist"
-            return await AgentSpawner(llm).spawn(role, task)
-
-    return await execute_tool_node(state, SpawnerExecutor(), "SpawnerAgent")
-
-
 async def trimmer_node(state: ActingState):
     results = state.get("consolidated_results", [])
     if not results:
@@ -570,9 +403,6 @@ workflow.add_node("search_engine", search_engine_node)
 workflow.add_node("action", actor_agent_node)
 workflow.add_node("knowledge", researcher_agent_node)
 workflow.add_node("reasoning", reasoner_agent_node)
-workflow.add_node("swarm", swarm_node)
-workflow.add_node("mcts", mcts_node)
-workflow.add_node("spawner", spawner_node)
 workflow.add_node("trimmer", trimmer_node)
 workflow.add_node("sanitizer", sanitizer_node)
 workflow.add_node("aggregator", aggregator_node)
@@ -685,9 +515,6 @@ class OrchestrationWorkflow:
                         "action",
                         "knowledge",
                         "reasoning",
-                        "swarm",
-                        "mcts",
-                        "spawner",
                     ]:
                         if not state_update.get("error"):
                             yield {

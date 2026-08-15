@@ -85,7 +85,6 @@ async def collected_metadata(
         "tags": tags,
         "content": None,
         "content_format": extension.lower(),
-        "price_dl": 0,
         "visibility": "private",
         "creator_id": settings.PLATFORM_SYSTEM_ID,
         "status": "draft",

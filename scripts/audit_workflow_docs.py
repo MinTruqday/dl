@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import ast
 import json
 import re
 from pathlib import Path
@@ -10,9 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 AGENTIC_GUIDE = ROOT / "agentic_ai_workflow_and_architecture_guide_3.md"
-DRM_GUIDE = ROOT / "drm_full_workflow_guide.md"
 COMPILATION_GUIDE = ROOT / "compilation_workflow_and_architecture_guide.md"
-WATERMARK_SOURCE = ROOT / "backend/drm/src/services/watermark.py"
 COMPILATION_COMPONENTS = ROOT / "frontend/features/compilation/components"
 STANDARD_EDITOR = COMPILATION_COMPONENTS / "StandardEditor.tsx"
 COMMAND_PALETTE = COMPILATION_COMPONENTS / "DocumentCommandPalette.tsx"
@@ -38,33 +35,12 @@ def _mermaid_blocks(text: str) -> list[str]:
     return blocks
 
 
-def _load_extension_function():
-    tree = ast.parse(WATERMARK_SOURCE.read_text(encoding="utf-8"))
-    function = next(
-        (
-            node
-            for node in tree.body
-            if isinstance(node, ast.FunctionDef)
-            and node.name == "protected_extension_for_format"
-        ),
-        None,
-    )
-    if function is None:
-        raise AssertionError("protected_extension_function_missing")
-    module = ast.Module(body=[function], type_ignores=[])
-    namespace: dict[str, object] = {}
-    exec(compile(module, str(WATERMARK_SOURCE), "exec"), namespace)
-    return namespace["protected_extension_for_format"]
-
-
 def main() -> None:
     agentic = AGENTIC_GUIDE.read_text(encoding="utf-8")
-    drm = DRM_GUIDE.read_text(encoding="utf-8")
     compilation = COMPILATION_GUIDE.read_text(encoding="utf-8")
 
     for guide_name, text, minimum_diagrams in (
         ("agentic_ai", agentic, 8),
-        ("drm", drm, 8),
         ("compilation", compilation, 10),
     ):
         assert "file:///" not in text, f"{guide_name}_contains_absolute_file_uri"
@@ -104,18 +80,6 @@ def main() -> None:
         "Supervisor DAG",
     ):
         assert required in agentic, f"agentic_technology_or_workflow_missing:{required}"
-
-    for required in (
-        "AES-256-GCM",
-        "RSA-OAEP",
-        "PyMuPDF",
-        "Content service",
-        "Finance service",
-        "Humanity service",
-        "`.doclib`",
-        "`.doclibx`",
-    ):
-        assert required in drm, f"drm_technology_or_workflow_missing:{required}"
 
     for required in (
         "Editor.js",
@@ -170,16 +134,9 @@ def main() -> None:
     workspace_hook = EDITOR_WORKSPACE_HOOK.read_text(encoding="utf-8")
     assert 'selectedDocument.content_format === "doclibx"' in workspace_hook
 
-    extension_for = _load_extension_function()
-    assert extension_for("doclib") == "doclib"
-    assert extension_for("doclibx") == "doclibx"
-    assert extension_for(" DOCLIBX ") == "doclibx"
-    assert extension_for("") == "doclib"
-
     print(
         "workflow_docs_audit_passed "
         f"agentic_diagrams={len(_mermaid_blocks(agentic))} "
-        f"drm_diagrams={len(_mermaid_blocks(drm))} "
         f"compilation_diagrams={len(_mermaid_blocks(compilation))}"
     )
 

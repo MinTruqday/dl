@@ -34,7 +34,6 @@ _EXPORTS = {
     "EventType": ("src.loop.event", "EventType"),
     "AgentEvent": ("src.loop.event", "AgentEvent"),
     "CronSchedule": ("src.loop.event", "CronSchedule"),
-    "hill_climbing_loop": ("src.loop.hill_climbing", "hill_climbing_loop"),
 }
 
 __all__ = list(_EXPORTS)

@@ -2,9 +2,7 @@ from src.services.document.base import (
     serialize_document,
     is_admin,
     get_effective_collaboration_status,
-    has_purchase,
     can_read_full,
-    fragment_document_content,
 )
 from src.services.document.crud import DocumentCrudService
 from src.services.document.hierarchy import DocumentHierarchyService
@@ -21,9 +19,7 @@ class DocumentService(
 ):
     _is_admin = staticmethod(is_admin)
     _get_effective_collaboration_status = staticmethod(get_effective_collaboration_status)
-    _has_purchase = staticmethod(has_purchase)
     _can_read_full = staticmethod(can_read_full)
-    _fragment_document_content = staticmethod(fragment_document_content)
 
 __all__ = [
     "DocumentService",

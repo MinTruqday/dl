@@ -21,13 +21,6 @@ async def get_document_academic(document_id: str, current_user=Depends(get_curre
         message="Truy xuất chỉ số học thuật hoàn tất",
     )
 
-@router.get("/{document_id}/nhat-ky-hoat-dong", response_model=APIResponse[Any])
-async def get_document_audit_logs(document_id: str, current_user=Depends(get_current_user)):
-    return APIResponse(
-        data=await DocumentService.get_document_audit_logs(document_id, current_user),
-        message="Truy xuất nhật ký kiểm toán hoàn tất",
-    )
-
 @router.get(
     "/hang-doi-duyet",
     response_model=APIResponse[Any],

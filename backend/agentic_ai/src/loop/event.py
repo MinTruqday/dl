@@ -312,16 +312,6 @@ class EventDrivenLoop:
 
 async def _handle_system_heartbeat(event: AgentEvent) -> Optional[str]:
     logger.info(f"EventDrivenLoop heartbeat ping from {event.source}")
-    payload = event.payload
-    if payload.get("check_hill_climbing", False):
-        try:
-            from src.loop.hill_climbing import hill_climbing_loop
-            create_background_task(
-                hill_climbing_loop.analyze_and_improve(),
-                f"hill-climbing-{event.event_id}",
-            )
-        except Exception:
-            logger.warning("Heartbeat hill climbing trigger failed")
     return "Heartbeat processed"
 
 
@@ -398,7 +388,7 @@ _heartbeat_schedule = CronSchedule(
     cron_expression="*/5 * * * *",
     interval_seconds=300,
     event_type=EventType.SYSTEM_HEARTBEAT,
-    payload_template={"check_hill_climbing": True},
+    payload_template={},
 )
 cron_scheduler.register(_heartbeat_schedule)
 

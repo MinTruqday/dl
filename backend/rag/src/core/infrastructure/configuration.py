@@ -5,10 +5,6 @@ def get_service_url(service_name_underscore: str) -> str:
     override = os.getenv(f"{service_name_underscore.upper()}_URL")
     if override:
         return override
-    k8s_host = os.getenv(f"{service_name_underscore.upper()}_SERVICE_HOST")
-    if k8s_host:
-        k8s_port = os.getenv(f"{service_name_underscore.upper()}_SERVICE_PORT", "80")
-        return f"http://{k8s_host}:{k8s_port}"
     return f"http://{service_name_underscore.lower()}:8000"
 
 class Settings(BaseModel):
@@ -33,7 +29,6 @@ class Settings(BaseModel):
     RERANKER_MODEL: str = os.environ["RERANKER_MODEL"]
     PLATFORM_SYSTEM_ID: str = os.environ["PLATFORM_SYSTEM_ID"]
     CONTENT_URL: str = get_service_url("CONTENT")
-    DRM_URL: str = get_service_url("DRM")
     AGENTIC_AI_URL: str = get_service_url("AGENTIC_AI")
     AGENTIC_REQUEST_TIMEOUT_SECONDS: float = float(
         os.getenv("AGENTIC_REQUEST_TIMEOUT_SECONDS", "900")

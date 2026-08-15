@@ -15,8 +15,8 @@ const guides = [
     href: "/soan-thao",
   },
   {
-    title: "Tài khoản và thanh toán",
-    detail: "Quản lý hồ sơ, bảo mật, số dư và giao dịch",
+    title: "Tài khoản và bảo mật",
+    detail: "Quản lý hồ sơ, quyền riêng tư và phiên đăng nhập",
     href: "/cai-dat",
   },
 ];
@@ -31,11 +31,6 @@ const faqs = [
     title: "Cách tạo tài liệu mới",
     detail:
       "Mở trình soạn thảo, chọn khởi tạo tài liệu và nhập nội dung trước khi cấu hình xuất bản",
-  },
-  {
-    title: "dl được sử dụng ở đâu",
-    detail:
-      "dl là đơn vị thanh toán trong DocLib, dùng để mua tài liệu và sử dụng các dịch vụ có tính phí",
   },
   {
     title: "Cách mời người cùng biên tập",

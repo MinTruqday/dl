@@ -64,7 +64,7 @@ export default function EditorWorkspace() {
     );
   }
 
-  const chooseExport = async (format: "pdf" | "docx" | "protected") => {
+  const chooseExport = async (format: "pdf" | "docx") => {
     setExportOpen(false);
     await editor.exportFile(format);
   };
@@ -246,16 +246,6 @@ export default function EditorWorkspace() {
                 </span>
               </button>
             )}
-            <button
-              type="button"
-              onClick={() => chooseExport("protected")}
-              className="flex w-full items-center justify-between py-3 text-left text-[14px] font-semibold hover:text-brand"
-            >
-              Tệp bảo vệ
-              <span className="text-[12px] font-normal text-ink-muted">
-                doclib
-              </span>
-            </button>
           </div>
         </ModalContent>
         <ModalFooter>

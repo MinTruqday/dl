@@ -1,9 +1,7 @@
 import {
-  BarChart3,
   Bell,
   CircleHelp,
   Database,
-  FileClock,
   FileText,
   FolderOpen,
   Library,
@@ -11,11 +9,7 @@ import {
   PenLine,
   Search,
   Settings,
-  ShieldCheck,
-  UserRound,
   UsersRound,
-  WalletCards,
-  Wrench,
 } from "lucide-react";
 
 export type NavigationItem = {
@@ -84,25 +78,11 @@ export const navigationGroups: NavigationGroup[] = [
         icon: FolderOpen,
         roles: ["author", "admin"],
       },
-      {
-        id: "analytics",
-        label: "Phân tích",
-        href: "/phan-tich",
-        icon: BarChart3,
-        roles: ["author", "admin"],
-      },
     ],
   },
   {
     label: "Quản trị",
     items: [
-      {
-        id: "audit",
-        label: "Kiểm toán",
-        href: "/kiem-toan",
-        icon: FileClock,
-        roles: ["admin"],
-      },
       {
         id: "collection",
         label: "Thu thập",
@@ -110,39 +90,11 @@ export const navigationGroups: NavigationGroup[] = [
         icon: Database,
         roles: ["admin"],
       },
-      {
-        id: "users",
-        label: "Người dùng",
-        href: "/nguoi-dung",
-        icon: UserRound,
-        roles: ["admin"],
-      },
-      {
-        id: "reports",
-        label: "Báo cáo",
-        href: "/bao-cao",
-        icon: ShieldCheck,
-        roles: ["admin"],
-      },
-      {
-        id: "operations",
-        label: "Vận hành",
-        href: "/van-hanh",
-        icon: Wrench,
-        roles: ["admin"],
-      },
     ],
   },
   {
     label: "Tài khoản",
     items: [
-      {
-        id: "wallet",
-        label: "Ví tiền",
-        href: "/vi-tien",
-        icon: WalletCards,
-        requireAuth: true,
-      },
       {
         id: "notifications",
         label: "Thông báo",

@@ -12,9 +12,6 @@ VALID_AGENTS = {
     "Action": "Performs file operations, editing, writing, and complex multi-tool tasks within the DocLib system",
     "Knowledge": "Retrieves information from the local document library using semantic vector search",
     "Reasoning": "Performs deep logical analysis, reasoning, evaluation, and multi-step problem solving",
-    "SwarmAgent": "Writes, reviews, and secures complex software code using a multi-agent team",
-    "MCTSAgent": "Solves complex logic problems by exploring multiple solution branches via Monte Carlo Tree Search",
-    "SpawnerAgent": "Creates one bounded temporary specialist for a domain not covered by the registered core agents"
 }
 
 

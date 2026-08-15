@@ -129,41 +129,6 @@ class ConversionRag:
             tmp_path = Path(tmp.name)
 
         try:
-            if file_ext in [".doclib", ".doclibx"]:
-                if len(file_bytes) < 60:
-                    return {"error": "invalid_doclib_file"}
-
-                import uuid
-                import base64
-                from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-                from src.services.drm_client import DrmClient
-
-                file_id_bytes = file_bytes[:16]
-                nonce = file_bytes[48:60]
-                ciphertext = file_bytes[60:]
-                file_id = str(uuid.UUID(bytes=file_id_bytes))
-
-                try:
-                    license_doc = await DrmClient.license_by_file(file_id)
-
-                    if not license_doc or not license_doc.get("aes_key"):
-                        return {"error": "document_decryption_license_not_found"}
-
-                    aes_key = base64.b64decode(license_doc.get("aes_key"))
-                    aesgcm = AESGCM(aes_key)
-                    decrypted_data = aesgcm.decrypt(nonce, ciphertext, None)
-                    raw_text = decrypted_data.decode("utf-8")
-                except Exception:
-                    return {"error": "document_decryption_failed"}
-
-                chunks = self._split_markdown_to_chunks(raw_text)
-                return {
-                    "markdown": raw_text,
-                    "chunks": chunks,
-                    "chunk_count": len(chunks),
-                    "page_count": 1
-                }
-
             loop = asyncio.get_event_loop()
             res = await loop.run_in_executor(None, self._parse_file_with_docling, tmp_path)
             res.pop("docling_document", None)

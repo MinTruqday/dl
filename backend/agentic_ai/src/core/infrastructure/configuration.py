@@ -9,10 +9,6 @@ def get_service_url(service_name_underscore: str) -> str:
     override = os.getenv(f"{service_name_underscore.upper()}_URL")
     if override:
         return override
-    k8s_host = os.getenv(f"{service_name_underscore.upper()}_SERVICE_HOST")
-    if k8s_host:
-        k8s_port = os.getenv(f"{service_name_underscore.upper()}_SERVICE_PORT", "80")
-        return f"http://{k8s_host}:{k8s_port}"
     return f"http://{service_name_underscore.lower()}:8000"
 
 
@@ -31,7 +27,6 @@ class Settings(BaseModel):
     RABBITMQ_URI: str = os.environ["RABBITMQ_URI"]
     QDRANT_URL: str = os.environ["QDRANT_URL"]
     DOCKER_HOST: str = os.environ["DOCKER_HOST"]
-    PAYOS_API_URL: str = os.environ["PAYOS_API_URL"]
     MINIO_ENDPOINT: str = os.environ["MINIO_ENDPOINT"]
     MINIO_ACCESS_KEY: str = os.environ["MINIO_ACCESS_KEY"]
     MINIO_SECRET_KEY: str = os.environ["MINIO_SECRET_KEY"]
@@ -54,16 +49,10 @@ class Settings(BaseModel):
     NLI_MODEL_NAME: str = os.environ["NLI_MODEL_NAME"]
     DOCLING_MODEL: str = os.environ["DOCLING_MODEL"]
     PLATFORM_SYSTEM_ID: str = os.environ["PLATFORM_SYSTEM_ID"]
-    MANAGEMENT_URL: str = get_service_url("MANAGEMENT")
-    USAGE_URL: str = get_service_url("USAGE")
-    DRM_URL: str = get_service_url("DRM")
     WEBSOCKET_URL: str = get_service_url("WEBSOCKET")
     RAG_URL: str = get_service_url("RAG")
     AGENTIC_AI_DB_NAME: str = os.environ["AGENTIC_AI_DB_NAME"]
     CONTENT_URL: str = get_service_url("CONTENT")
-    AGENT_FAILURE_RATE_THRESHOLD: float = float(os.environ["AGENT_FAILURE_RATE_THRESHOLD"])
-    AGENT_TOOL_FAILURE_THRESHOLD: int = int(os.environ["AGENT_TOOL_FAILURE_THRESHOLD"])
-    AGENT_SECURITY_VIOLATION_THRESHOLD: int = int(os.environ["AGENT_SECURITY_VIOLATION_THRESHOLD"])
     AGENT_SLOW_DURATION_MS_THRESHOLD: int = int(os.environ["AGENT_SLOW_DURATION_MS_THRESHOLD"])
     AGENT_ROUTE_CONFIDENCE_THRESHOLD: float = float(os.environ["AGENT_ROUTE_CONFIDENCE_THRESHOLD"])
     AGENT_EXECUTION_TIMEOUT_SECONDS: int = int(os.environ["AGENT_EXECUTION_TIMEOUT_SECONDS"])

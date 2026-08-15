@@ -29,9 +29,6 @@ def _localize_plan_tasks(nodes: List[Dict[str, Any]], query: str) -> List[Dict[s
         "EngineAgent": "Tìm thông tin bên ngoài cần thiết cho yêu cầu",
         "Reasoning": "Phân tích và tổng hợp kết quả cho yêu cầu",
         "InterpreterAgent": "Diễn giải dữ liệu cần thiết cho yêu cầu",
-        "SwarmAgent": "Triển khai và kiểm tra mã nguồn cho yêu cầu",
-        "MCTSAgent": "Đánh giá các phương án giải quyết yêu cầu",
-        "SpawnerAgent": "Thực hiện phần chuyên môn cần thiết cho yêu cầu",
     }
     localized = []
     for node in nodes:

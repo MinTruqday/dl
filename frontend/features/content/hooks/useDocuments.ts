@@ -140,7 +140,6 @@ export function useDocuments() {
         category: "Chưa phân loại",
         pages_count: 0,
         publisher_name: user?.full_name || "DocLib",
-        price_dl: 0,
         visibility: input.visibility,
         status: "draft",
         file_url: "",

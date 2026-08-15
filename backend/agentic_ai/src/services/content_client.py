@@ -22,30 +22,6 @@ class ContentClient:
         return await cls.exchange("get_accessible_document", document_id=document_id, user_id=user_id, is_admin=is_admin, edit=True)
 
     @classmethod
-    async def drm_content(
-        cls,
-        document_id: str,
-        user_id: str,
-        purpose: str = "index",
-        is_admin: bool = False,
-    ):
-        async with httpx.AsyncClient(timeout=20.0) as client:
-            response = await client.get(
-                f"{settings.DRM_URL}/bao-ve/noi-bo/noi-dung-ai",
-                params={
-                    "document_id": document_id,
-                    "user_id": user_id,
-                    "purpose": purpose,
-                    "is_admin": str(is_admin).lower(),
-                },
-                headers={"X-Internal-Token": settings.SECRET_KEY},
-            )
-        if response.status_code in {403, 404}:
-            return None
-        response.raise_for_status()
-        return response.json().get("data")
-
-    @classmethod
     async def get(cls, document_id: str):
         return await cls.exchange("get_document", document_id=document_id)
 

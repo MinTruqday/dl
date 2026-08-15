@@ -7,7 +7,6 @@ const sections = [
   { href: "/soan-thao/cau-hinh", label: "Cấu hình" },
   { href: "/soan-thao/binh-luan", label: "Bình luận" },
   { href: "/soan-thao/lich-su", label: "Phiên bản" },
-  { href: "/soan-thao/so-lieu", label: "Số liệu" },
 ];
 
 export default function DocumentWorkspaceNavigation() {

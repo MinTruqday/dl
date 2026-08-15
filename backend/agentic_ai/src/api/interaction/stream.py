@@ -1,6 +1,5 @@
 import json
 from datetime import datetime, timezone
-import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from loguru import logger
@@ -18,15 +17,11 @@ from src.schemas.interaction import ChatRequest
 from src.core.dependency import CurrentUser, get_current_user
 from src.workflow.orchestration import supervisor
 from src.services.workspace import workspace
-from src.services.token_accounting import current_usage, start_accounting
+from src.services.token_accounting import start_accounting
 from src.api.interaction.executor import (
-    require_mode_tier,
     _validate_audio,
     _validate_image,
     _persist_conversation_turns,
-    _reserve_upload_quota,
-    _reserve_ai_quota,
-    _consume_ai_quota,
 )
 
 router = APIRouter(route_class=LoggingRoute)
@@ -48,14 +43,12 @@ def _sanitize_stream_piece(piece: str) -> str:
 async def chat_capabilities(
     current_user: CurrentUser = Depends(get_current_user),
 ):
-    """Return model and interaction capabilities for the authenticated user's tier."""
-    is_admin = current_user.role.value == "admin"
-    tier = current_user.ai_tier.value
+    """Return model and interaction capabilities for the authenticated user."""
     return {
         "model": settings.LLM_MODEL,
-        "audio_input": is_admin or tier != "BASIC",
+        "audio_input": True,
         "code_execution": True,
-        "mcp": is_admin or tier in {"PRO", "PREMIUM"},
+        "mcp": True,
     }
 
 @router.post("/phat-truc-tiep")
@@ -69,8 +62,6 @@ async def chat_stream_endpoint(
     user_id = str(current_user.id)
     req.user_id = user_id
     req.role = current_user.role.value
-    req.ai_tier = current_user.ai_tier.value
-    require_mode_tier(req.mode, req.ai_tier, req.role, req.thinking)
 
     token = request.headers.get("Authorization")
     if token:
@@ -78,12 +69,6 @@ async def chat_stream_endpoint(
 
     async def response_generator():
         yield "event: start\ndata: {}\n\n"
-        is_quota_ok, quota_code = await _reserve_upload_quota(req)
-        if not is_quota_ok:
-            yield f"event: error\ndata: {json.dumps({'code': quota_code})}\n\n"
-            yield "event: done\ndata: [DONE]\n\n"
-            return
-
         try:
             _validate_image(req)
             _validate_audio(req)
@@ -123,13 +108,6 @@ async def chat_stream_endpoint(
         mode_directive = await workspace.mode_context(session_id, user_id, req.mode)
 
         try:
-            quota_ok, quota_code = await _reserve_ai_quota(req)
-            if not quota_ok:
-                yield f"event: error\ndata: {json.dumps({'code': quota_code})}\n\n"
-                agentops.record_session_end(session_id, "failed")
-                yield "event: done\ndata: [DONE]\n\n"
-                return
-
             start_accounting()
 
             if req.document_ids:
@@ -232,10 +210,7 @@ async def chat_stream_endpoint(
                         yield "event: model\ndata: " + json.dumps(
                             {
                                 "model": active_model,
-                                "audio_input": (
-                                    str(req.role).lower() == "admin"
-                                    or str(req.ai_tier).upper() != "BASIC"
-                                ),
+                                "audio_input": True,
                             }
                         ) + "\n\n"
                         raw_answer = ""
@@ -368,7 +343,6 @@ async def chat_stream_endpoint(
 
             if final_answer:
                 final_answer = await security.ascan_output(final_answer, session_id=session_id)
-            await _consume_ai_quota(req, original_query, final_answer, current_usage())
 
             await _persist_conversation_turns(
                 session_id,

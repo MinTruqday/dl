@@ -1,5 +1,5 @@
 from typing import Any, List, Optional
-from fastapi import APIRouter, Body, Depends, Header, HTTPException, Query, UploadFile, File, Response
+from fastapi import APIRouter, Body, Depends, Header, Query
 from src.core.logging_route import LoggingRoute
 from src.core.response import APIResponse
 from src.api.dependency import get_current_user, get_current_user_optional, require_role, CurrentUser, Role
@@ -11,9 +11,6 @@ from src.schemas.document import (
     DocumentUpdate,
 )
 from src.services.document import DocumentService
-from src.services.protected_rendering import ProtectedRenderingService
-from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import database
 
 router = APIRouter(route_class=LoggingRoute)
 
@@ -27,14 +24,6 @@ async def create_document(
         message="Khởi tạo tài liệu hoàn tất",
         status=201,
     )
-
-@router.post("/ket-nhap", response_model=APIResponse[Any], status_code=201)
-async def import_document(file: UploadFile = File(...), current_user=Depends(get_current_user)):
-    try:
-        data = await DocumentService.import_document_from_file(file, current_user)
-        return APIResponse(data=data, message="Nhập tài liệu hoàn tất", status=201)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
 
 @router.get("/ca-nhan", response_model=APIResponse[Any])
 async def get_my_documents(
@@ -106,45 +95,11 @@ async def get_document_preview(slug: str):
 async def get_document(
     document_id: str,
     password: Optional[str] = Header(None, alias="x-document-password"),
-    share_token: Optional[str] = Query(None, max_length=256),
     current_user=Depends(get_current_user_optional),
 ):
     return APIResponse(
-        data=await DocumentService.get_document_by_id(
-            document_id, current_user, password=password, share_token=share_token
-        ),
+        data=await DocumentService.get_document_by_id(document_id, current_user, password=password),
         message="Truy xuất tài liệu hoàn tất",
-    )
-
-
-@router.get("/{document_id}/trang-bao-ve/{page_number}")
-async def get_protected_document_page(
-    document_id: str,
-    page_number: int,
-    password: Optional[str] = Header(None, alias="x-document-password"),
-    share_token: Optional[str] = Query(None, max_length=256),
-    current_user=Depends(get_current_user_optional),
-) -> Response:
-    resolved = await DocumentService.get_document_by_id(
-        document_id, current_user, password, share_token
-    )
-    if not resolved.get("drm_settings", {}).get("ghost_font_active"):
-        raise HTTPException(status_code=403, detail="Chế độ kết xuất bảo vệ không được áp dụng")
-    raw = await database.mongodb[settings.CONTENT_DB_NAME].documents.find_one(
-        {"_id": document_id, "is_deleted": {"$ne": True}},
-        {"file_url": 1, "pdf_url": 1, "content_format": 1},
-    )
-    if not raw or str(raw.get("content_format", "")).lower() != "pdf":
-        raise HTTPException(
-            status_code=422, detail="Định dạng tài liệu không hỗ trợ kết xuất bảo vệ"
-        )
-    page, page_count = await ProtectedRenderingService.render_pdf_page(
-        str(raw.get("file_url") or raw.get("pdf_url") or ""), page_number
-    )
-    return Response(
-        content=page,
-        media_type="image/png",
-        headers={"Cache-Control": "private, no-store", "X-Page-Count": str(page_count)},
     )
 
 @router.put("/{document_id}/noi-dung", response_model=APIResponse[Any])
@@ -194,17 +149,6 @@ async def set_document_password(
         data=await DocumentService.set_document_password(document_id, body.password, current_user),
         message="Cập nhật mật khẩu tài liệu hoàn tất",
     )
-
-@router.get("/{document_id}/khoa-giai-ma", response_model=APIResponse[Any])
-async def get_decryption_key(
-    document_id: str,
-    current_user: CurrentUser = Depends(get_current_user_optional),
-):
-    return APIResponse(
-        data=await DocumentService.get_document_decryption_key(document_id, current_user),
-        message="Lấy khóa giải mã thành công",
-    )
-
 
 @router.post("/{document_id}/mo-khoa", response_model=APIResponse[Any])
 async def unlock_document(

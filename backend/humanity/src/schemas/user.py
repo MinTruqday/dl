@@ -35,7 +35,6 @@ class UserBase(BaseModel):
     social_links: Optional[Dict[str, str]] = Field(default_factory=dict)
     pinned_documents: List[str] = Field(default_factory=list)
     bookmarks: List[str] = Field(default_factory=list)
-    wallet_balance: int = 0
     is_shadowbanned: bool = False
     permissions: List[str] = Field(default_factory=list)
     donation_link: Optional[str] = None

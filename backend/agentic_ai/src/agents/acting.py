@@ -25,7 +25,6 @@ _REQUIRES_APPROVAL_TOOLS = frozenset(
         "restore_document",
         "update_document_metadata",
         "execute_mcp_tool",
-        "execute_python",
     }
 )
 
@@ -37,7 +36,6 @@ _AUTO_SAFE_TOOLS = frozenset(
         "edit_document_text",
         "propose_document_edits",
         "update_document_metadata",
-        "execute_python",
     }
 )
 
@@ -85,13 +83,6 @@ class ActingAgent:
         normalized = action.casefold()
         intent_tools = {
             "create_document": ("create_document", "tạo tài liệu", "tạo một tài liệu"),
-            "execute_python": (
-                "execute_python",
-                "chạy python",
-                "chạy mã python",
-                "công cụ chạy mã",
-                "thực thi python",
-            ),
             "read_document": ("read_document", "đọc tài liệu"),
             "get_my_documents": ("get_my_documents", "tài liệu của tôi"),
             "delete_document": ("delete_document", "xóa tài liệu"),
@@ -114,7 +105,6 @@ class ActingAgent:
         approval_policy: str = "manual",
         session_id: str = "",
         approval_id: str = None,
-        ai_tier: str = "BASIC",
     ) -> str:
         if not token and action != "public_query":
             return json.dumps({"status": "authentication_required"})
@@ -200,12 +190,6 @@ class ActingAgent:
                     return json.dumps({"status": "tool_unavailable"})
 
                 selected_tool = self.tool_map[tool_name]
-                if tool_name in {
-                    "search_mcp_connectors",
-                    "suggest_mcp_connectors",
-                    "execute_mcp_tool",
-                } and str(ai_tier).upper() not in {"PRO", "PREMIUM"}:
-                    return json.dumps({"status": "advanced_mode_requires_pro"})
                 approved_automatically = auto_approve or (
                     approval_policy == "auto_safe" and tool_name in _AUTO_SAFE_TOOLS
                 )

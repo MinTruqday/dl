@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import PageLoader from "@/shared/components/common/PageLoader";
 import { Button } from "@/shared/components/ui/Button";
@@ -79,16 +78,7 @@ export default function SettingsPage() {
 
   return (
     <div className="w-full">
-      <PageHeader
-        title="Cài đặt"
-        actions={
-          settings.user.role === "admin" && (
-            <Link href="/van-hanh" className="secondary-button">
-              Mở vận hành
-            </Link>
-          )
-        }
-      />
+      <PageHeader title="Cài đặt" />
       {settings.error && (
         <div className="mb-6">
           <InlineState

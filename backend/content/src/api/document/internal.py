@@ -337,58 +337,6 @@ async def exchange_internal_document(req: dict):
         document.pop("password", None)
         document.pop("access_password_hash", None)
         return {"data": document}
-    if action == "list_creator_documents":
-        creator_id = str(req.get("creator_id", ""))
-        rows = await documents.find(
-            {"creator_id": creator_id, "is_deleted": {"$ne": True}},
-            {"title": 1, "slug": 1, "views": 1, "view_count": 1, "price_dl": 1, "price_dls": 1},
-        ).to_list(length=None)
-        for row in rows:
-            row["_id"] = str(row["_id"])
-        return {"data": rows}
-    if action == "list_analytics_documents":
-        creator_id = str(req.get("creator_id") or "").strip()
-        search = str(req.get("search") or "").strip()
-        query = {"status": "published", "is_deleted": {"$ne": True}}
-        if creator_id:
-            query["creator_id"] = creator_id
-        if search:
-            query["title"] = {"$regex": re.escape(search), "$options": "i"}
-        rows = await documents.find(
-            query,
-            {
-                "title": 1,
-                "slug": 1,
-                "views": 1,
-                "view_count": 1,
-                "price_dl": 1,
-                "price_dls": 1,
-                "is_drm_protected": 1,
-                "creator_id": 1,
-                "created_at": 1,
-            },
-        ).to_list(length=None)
-        for row in rows:
-            row["_id"] = str(row["_id"])
-        return {"data": rows}
-    if action == "update_pricing":
-        actor_id = str(req.get("actor_id", ""))
-        is_admin = bool(req.get("is_admin", False))
-        query = {"_id": document_id, "is_deleted": {"$ne": True}}
-        if not is_admin:
-            query["creator_id"] = actor_id
-        values = {
-            "price_dl": max(0, int(req.get("price_dl", 0))),
-            "is_drm_protected": bool(req.get("is_drm_protected", True)),
-            "is_premium": int(req.get("price_dl", 0)) > 0,
-            "updated_at": datetime.now(timezone.utc),
-        }
-        result = await documents.update_one(query, {"$set": values})
-        if result.matched_count != 1:
-            raise HTTPException(
-                status_code=404, detail="Không tìm thấy tài liệu hoặc thiếu quyền cập nhật"
-            )
-        return {"data": {"document_id": document_id, **values}}
     if action == "update_index":
         result = await documents.update_one(
             {"_id": document_id, "is_deleted": {"$ne": True}},
@@ -402,30 +350,6 @@ async def exchange_internal_document(req: dict):
             },
         )
         return {"data": {"updated": result.matched_count == 1}}
-    if action == "update_drm_policy":
-        allowed = {
-            "disable_copy",
-            "disable_print",
-            "hide_from_search",
-            "watermark_enabled",
-            "allow_internal_ai",
-            "license_valid_days",
-            "max_open_count",
-            "ghost_font_enabled",
-            "ghost_font_exemption_scope",
-            "ghost_font_exempt_user_ids",
-            "protection_tier",
-        }
-        values = {
-            key: value for key, value in dict(req.get("values") or {}).items() if key in allowed
-        }
-        result = await documents.update_one(
-            {"_id": document_id, "is_deleted": {"$ne": True}},
-            {"$set": {"drm_settings": values, "updated_at": datetime.now(timezone.utc)}},
-        )
-        if result.matched_count != 1:
-            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
-        return {"data": {"document_id": document_id, "drm_settings": values}}
     if action == "upsert_collected":
         payload = dict(req.get("document") or {})
         identity = payload.get("source_url") or payload.get("file_url")
@@ -523,7 +447,6 @@ async def exchange_internal_document(req: dict):
         search_filter = {
             "status": "published",
             "is_deleted": {"$ne": True},
-            "drm_settings.hide_from_search": {"$ne": True},
         }
         if text:
             search_filter["$or"] = [
@@ -538,7 +461,6 @@ async def exchange_internal_document(req: dict):
                     {
                         "status": "published",
                         "is_deleted": {"$ne": True},
-                        "drm_settings.hide_from_search": {"$ne": True},
                     }
                 )
                 .limit(3)
@@ -551,7 +473,6 @@ async def exchange_internal_document(req: dict):
                     "id": str(row["_id"]),
                     "title": row.get("title", ""),
                     "slug": row.get("slug", ""),
-                    "price_dl": row.get("price_dl", 0),
                     "summary": row.get("summary") or row.get("description") or "",
                 }
             )

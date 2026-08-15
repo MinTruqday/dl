@@ -1,6 +1,5 @@
 import json
 from datetime import datetime, timezone
-import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 from loguru import logger
 
@@ -17,28 +16,13 @@ from src.schemas.interaction import ChatRequest
 from src.core.dependency import CurrentUser, get_current_user
 from src.workflow.orchestration import supervisor
 from src.services.workspace import workspace
-from src.services.token_accounting import current_usage, start_accounting
+from src.services.token_accounting import start_accounting
 
 router = APIRouter(route_class=LoggingRoute)
-
-def require_mode_tier(
-    mode: str,
-    tier: str,
-    role: str = "",
-    thinking: bool = False,
-) -> None:
-    if (
-        (mode != "chat" or thinking)
-        and str(role).lower() != "admin"
-        and str(tier).upper() not in {"PRO", "PREMIUM"}
-    ):
-        raise HTTPException(status_code=403, detail={"code": "advanced_mode_requires_pro"})
 
 def _validate_audio(req: ChatRequest) -> None:
     if not req.audio_data:
         return
-    if str(req.role).lower() != "admin" and str(req.ai_tier).upper() == "BASIC":
-        raise RuntimeError("audio_input_requires_pro")
     from src.utils.multimodal import validate_audio
     validate_audio(req.audio_data)
 
@@ -94,76 +78,6 @@ async def _persist_conversation_turns(
     except Exception:
         logger.exception("Chat history persistence to database error")
 
-async def _reserve_upload_quota(req: ChatRequest):
-    item_type = None
-    if req.folder_data:
-        item_type = "folder"
-    elif req.file_data:
-        item_type = "document"
-    if item_type is None:
-        return True, None
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            res = await client.post(
-                f"{settings.USAGE_URL}/han-muc/tai-len/dat-cho",
-                json={"item_type": item_type},
-                headers={"Authorization": f"Bearer {req.token}"},
-            )
-            if res.status_code == 200:
-                return True, None
-            if res.status_code in {403, 429}:
-                return False, "upload_quota_exceeded"
-    except Exception:
-        logger.exception("Quota reservation request error")
-    return True, None
-
-async def _reserve_ai_quota(req: ChatRequest):
-    if str(req.role).lower() == "admin":
-        return True, None
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            res = await client.get(
-                f"{settings.USAGE_URL}/han-muc/xac-minh",
-                params={
-                    "user_id": req.user_id,
-                    "role": req.role,
-                    "ai_tier": req.ai_tier,
-                    "feature": req.mode,
-                },
-                headers={"X-Internal-Token": settings.SECRET_KEY},
-            )
-            if res.status_code == 200:
-                return True, None
-            if res.status_code == 429:
-                return False, "ai_quota_exceeded"
-    except Exception:
-        logger.exception("AI quota reservation request error")
-    return True, None
-
-async def _consume_ai_quota(req: ChatRequest, query: str, answer: str, usage: dict):
-    if not req.user_id or str(req.role).lower() == "admin":
-        return
-    input_tokens = int(usage.get("input_tokens", 0) or max(1, len(query) // 4))
-    output_tokens = int(usage.get("output_tokens", 0) or max(1, len(answer) // 4))
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            await client.post(
-                f"{settings.USAGE_URL}/han-muc/su-dung",
-                json={
-                    "user_id": req.user_id,
-                    "feature": req.mode,
-                    "role": req.role,
-                    "ai_tier": req.ai_tier,
-                    "input_tokens": input_tokens,
-                    "output_tokens": output_tokens,
-                    "cached_tokens": int(usage.get("cached_tokens", 0) or 0),
-                    "tool_tokens": int(usage.get("tool_tokens", 0) or 0),
-                },
-                headers={"X-Internal-Token": settings.SECRET_KEY},
-            )
-    except Exception:
-        logger.exception("AI quota consumption request error")
-
 @router.post("")
 async def chat_endpoint(
     req: ChatRequest,
@@ -173,16 +87,10 @@ async def chat_endpoint(
     """Execute one authenticated assistant interaction and return its final result."""
     req.user_id = str(current_user.id)
     req.role = current_user.role.value
-    req.ai_tier = current_user.ai_tier.value
-    require_mode_tier(req.mode, req.ai_tier, req.role, req.thinking)
     logger.info("Chat request started query_chars={}", len(req.query))
     token = request.headers.get("Authorization")
     if token:
         req.token = token.replace("Bearer ", "")
-
-    is_quota_ok, quota_code = await _reserve_upload_quota(req)
-    if not is_quota_ok:
-        return {"answer": "", "route": "error", "error_code": quota_code}
 
     try:
         _validate_image(req)
@@ -204,9 +112,6 @@ async def chat_endpoint(
     execution_data = {**req.model_dump(), "mode_directive": mode_directive}
 
     try:
-        quota_ok, quota_code = await _reserve_ai_quota(req)
-        if not quota_ok:
-            return {"answer": "", "route": "error", "error_code": quota_code}
         start_accounting()
         ctx = await context.build_context(
             session_id=req.session_id or "",
@@ -320,7 +225,6 @@ async def chat_endpoint(
                     )
 
         final_answer = await security.ascan_output(final_answer)
-        await _consume_ai_quota(req, original_query, final_answer, current_usage())
         await _persist_conversation_turns(
             req.session_id or "",
             req.user_id,

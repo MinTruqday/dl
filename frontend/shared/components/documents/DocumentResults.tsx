@@ -16,9 +16,6 @@ export type DocumentSummary = {
   views?: number;
   views_count?: number;
   average_rating?: number;
-  price?: number;
-  price_dl?: number;
-  is_premium?: boolean;
 };
 
 type DocumentResultsProps = {
@@ -87,7 +84,6 @@ export default function DocumentResults({
           document.author?.username ||
           document.author_name ||
           "Chưa rõ tác giả";
-        const price = Number(document.price_dl ?? document.price ?? 0);
         return (
           <article
             key={id}
@@ -136,11 +132,6 @@ export default function DocumentResults({
                     document.views_count ?? document.views ?? 0,
                   ).toLocaleString("vi-VN")}{" "}
                   lượt xem
-                </p>
-                <p className="mt-1 font-semibold text-ink">
-                  {price > 0 || document.is_premium
-                    ? `${price.toLocaleString("vi-VN")} dl`
-                    : "Miễn phí"}
                 </p>
               </div>
             </Link>

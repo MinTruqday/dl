@@ -1,15 +1,11 @@
 from src.core.logic_logger import log_logic_execution
 from src.core.infrastructure.redis import redis
-from src.core.infrastructure.mongo import mongo
 from datetime import datetime, timezone
 
 from fastapi import HTTPException, status
 from loguru import logger
 from pymongo.errors import DuplicateKeyError
-from src.schemas.announcement import Announcement, AnnouncementCreate
-
-from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import database
+from src.schemas.announcement import AnnouncementCreate
 from src.repositories.announcement import AnnouncementRepository
 from src.services.humanity_client import HumanityClient
 

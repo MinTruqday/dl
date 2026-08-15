@@ -25,7 +25,6 @@ class ChatRequest(BaseModel):
     attachments: list[dict] = Field(default_factory=list, max_length=100, description="<input_context>List of attached files.</input_context>")
     mode: Literal["chat", "work", "goal", "learn", "plan"] = Field(default="chat", description="<conditional_output>Execution behavior selected for this request.</conditional_output>")
     approval_policy: Literal["manual", "auto_safe"] = Field(default="manual", description="<critical_instructions>Policy controlling whether eligible reversible tools may run without an approval prompt.</critical_instructions>")
-    ai_tier: Literal["BASIC", "PRO", "PREMIUM"] = Field(default="BASIC", description="<critical_instructions>Authenticated subscription tier used to enforce advanced mode and MCP access.</critical_instructions>")
 
 
 class UserInstructionsRequest(BaseModel):

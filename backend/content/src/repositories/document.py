@@ -22,10 +22,6 @@ class DocumentRepository:
         return await mongo.insert_one("document_revisions", *args, **kwargs)
 
     @classmethod
-    async def insert_audit_log(cls, *args, **kwargs):
-        return await mongo.insert_one("audit_logs", *args, **kwargs)
-
-    @classmethod
     async def insert_version(cls, *args, **kwargs):
         return await mongo.insert_one("document_versions", *args, **kwargs)
 

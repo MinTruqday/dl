@@ -23,18 +23,9 @@ class CallbackRequest(BaseModel):
 router = APIRouter(route_class=LoggingRoute, prefix="/mcp")
 
 
-def require_mcp_tier(current_user: CurrentUser) -> None:
-    if (
-        current_user.role.value != "admin"
-        and current_user.ai_tier.value not in {"PRO", "PREMIUM"}
-    ):
-        raise HTTPException(status_code=403, detail={"code": "mcp_requires_pro"})
-
-
 @router.get("/presets")
 async def list_mcp_presets(current_user: CurrentUser = Depends(get_current_user)):
     """Return only built-in connectors that pass a live MCP handshake and tool probe."""
-    require_mcp_tier(current_user)
     return {"status": "success", "presets": await MCPService.available_presets()}
 
 
@@ -44,7 +35,6 @@ async def connect_mcp_preset(
     current_user: CurrentUser = Depends(get_current_user),
 ):
     """Connect an immutable, server-owned preset after probing it again."""
-    require_mcp_tier(current_user)
     try:
         doc = MCPService.preset_connector(preset_id)
     except LookupError:
@@ -122,7 +112,6 @@ async def register_mcp_server(
     current_user: CurrentUser = Depends(get_current_user),
 ):
     """Register an MCP server owned exclusively by the authenticated user"""
-    require_mcp_tier(current_user)
     if req.server_type == "stdio" and current_user.role.value != "admin":
         raise HTTPException(status_code=403, detail={"code": "mcp_stdio_requires_admin"})
     doc = req.model_dump()
@@ -184,7 +173,6 @@ async def probe_mcp_server(
     """Probe one user-owned MCP server and persist its current connection and tool state"""
     from bson import ObjectId
 
-    require_mcp_tier(current_user)
     if not ObjectId.is_valid(server_id):
         raise HTTPException(status_code=404, detail={"code": "mcp_connector_not_found"})
     try:
@@ -219,7 +207,6 @@ async def probe_mcp_server(
 @router.get("/servers")
 async def list_mcp_servers(current_user: CurrentUser = Depends(get_current_user)):
     """List MCP server connections owned by the authenticated user"""
-    require_mcp_tier(current_user)
     cursor = MCPRepository.search_connectors({"owner_id": current_user.id}, limit=100)
     docs = await cursor.to_list(length=None)
     for d in docs:
@@ -236,7 +223,6 @@ async def delete_mcp_server(
     """Delete one MCP server owned by the authenticated user"""
     from bson import ObjectId
 
-    require_mcp_tier(current_user)
     if not ObjectId.is_valid(server_id):
         raise HTTPException(status_code=404, detail={"code": "mcp_connector_not_found"})
     result = await MCPRepository.delete_connector(

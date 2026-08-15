@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: doclib-config
-data:
-  MONGODB_URI: "mongodb://mongodb:27017/doclib"
-  REDIS_URI: "redis://redis:6379/0"

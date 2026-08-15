@@ -1,7 +1,6 @@
 import json
 from typing import List
 
-import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from loguru import logger
 
@@ -44,62 +43,10 @@ from src.schemas.inference import (
     RagChunkSafetyRequest,
     RagDocumentSummaryRequest,
 )
-from src.schemas.auth import Tier
 
 router = APIRouter(route_class=LoggingRoute, prefix="/suy-luan")
 
 client = local_model_client
-
-async def _check_quota(current_user: CurrentUser):
-    if current_user.role == Role.ADMIN:
-        return {"req_reset_hours": 24}
-    logger.info("AI quota verification started")
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as c:
-            resp = await c.get(
-                f"{settings.USAGE_URL}/han-muc/xac-minh",
-                params={
-                    "user_id": str(current_user.id),
-                    "role": current_user.role.value,
-                    "ai_tier": current_user.ai_tier.value,
-                    "feature": "chat",
-                },
-                headers={"X-Internal-Token": settings.SECRET_KEY},
-            )
-            if resp.status_code != 200:
-                raise HTTPException(
-                    status_code=429,
-                    detail={"code": "ai_quota_exceeded"},
-                )
-            return resp.json().get("data", {})
-    except HTTPException:
-        raise
-    except Exception:
-        logger.exception("AI quota verification error")
-        raise HTTPException(status_code=503, detail={"code": "quota_service_unavailable"})
-
-async def _consume_quota(
-    current_user: CurrentUser, tokens: int, req_reset_hours: int = 24
-):
-    if current_user.role == Role.ADMIN:
-        return
-    logger.info("AI quota consumption started tokens={}", tokens)
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as c:
-            response = await c.post(
-                f"{settings.USAGE_URL}/han-muc/su-dung",
-                json={
-                    "user_id": str(current_user.id),
-                    "feature": "chat",
-                    "req_reset_hours": req_reset_hours,
-                    "tokens": tokens,
-                },
-                headers={"X-Internal-Token": settings.SECRET_KEY},
-            )
-            response.raise_for_status()
-    except Exception:
-        logger.exception("AI quota consumption error")
-        raise HTTPException(status_code=503, detail={"code": "quota_consumption_failed"})
 
 async def _chat_direct(
     messages: List[dict],
@@ -168,27 +115,20 @@ def _public_ai_error(operation: str, exc: Exception) -> HTTPException:
         detail={"code": f"{operation}_failed"},
     )
 
-async def _run_ai_with_quota(
+async def _run_ai(
     current_user: CurrentUser,
     messages: List[dict],
     max_tokens: int = 500,
     temperature: float = 0.3,
 ) -> str:
-    limits = await _check_quota(current_user)
-    result = await _chat_direct(
+    return await _chat_direct(
         messages,
         max_tokens,
         temperature,
         settings.LLM_MODEL,
     )
 
-    prompt_len = sum(len(m.get("content", "")) for m in messages)
-    tokens_used = (prompt_len + len(result)) // 4
-    await _consume_quota(current_user, tokens_used, limits.get("req_reset_hours", 24))
-
-    return result
-
-async def _run_structured_ai_with_quota(
+async def _run_structured_ai(
     current_user: CurrentUser,
     messages: List[dict],
     schema,
@@ -198,7 +138,6 @@ async def _run_structured_ai_with_quota(
     from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
     from src.utils.huggingface import create_chat_model
 
-    limits = await _check_quota(current_user)
     structured_model = create_chat_model(settings.LLM_MODEL).with_structured_output(schema)
     message_types = {
         "assistant": AIMessage,
@@ -211,19 +150,11 @@ async def _run_structured_ai_with_quota(
         )
         for message in messages
     ]
-    result = await structured_model.ainvoke(
+    return await structured_model.ainvoke(
         structured_messages,
         max_tokens=max_tokens,
         temperature=temperature,
     )
-    prompt_len = sum(len(message.get("content", "")) for message in messages)
-    tokens_used = (prompt_len + len(result.model_dump_json())) // 4
-    await _consume_quota(
-        current_user,
-        tokens_used,
-        limits.get("req_reset_hours", 24),
-    )
-    return result
 
 @router.post("/tao-noi-dung")
 async def generate_text(
@@ -232,7 +163,7 @@ async def generate_text(
     """Generate bounded text under the authenticated user quota"""
     logger.info("Text generation started")
     try:
-        result = await _run_ai_with_quota(
+        result = await _run_ai(
             current_user,
             messages=[{"role": "user", "content": req.prompt}],
             max_tokens=req.max_tokens,
@@ -253,7 +184,7 @@ async def translate_text(
         prompt = registry.get(PromptType.TRANSLATE).format(
             target_lang=req.target_lang, text=req.text
         )
-        result = await _run_ai_with_quota(
+        result = await _run_ai(
             current_user,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=min(len(req.text) * 3, 4000),
@@ -275,7 +206,7 @@ async def generate_quick_replies(
         prompt = registry.get(PromptType.QUICK_REPLIES).format(
             history=history_text
         )
-        result = await _run_structured_ai_with_quota(
+        result = await _run_structured_ai(
             current_user,
             messages=[{"role": "user", "content": prompt}],
             schema=QuickRepliesOutput,
@@ -298,7 +229,6 @@ async def semantic_document_search(
 ):
     """Return ranked document identifiers from the persisted vector index"""
     try:
-        limits = await _check_quota(current_user)
         from src.rag.retrieval import retriever
 
         chunks = await retriever.retrieve(
@@ -324,11 +254,6 @@ async def semantic_document_search(
                 reverse=True,
             )[: req.limit]
         ]
-        await _consume_quota(
-            current_user,
-            max(1, len(req.query) // 4),
-            limits.get("req_reset_hours", 24),
-        )
         return {"results": ranked}
     except Exception as exc:
         raise _public_ai_error("semantic_document_search", exc)
@@ -458,7 +383,7 @@ async def generate_code(
         prompt = registry.get(PromptType.CODE_GENERATION).format(
             language=req.language, prompt=req.prompt
         )
-        result = await _run_ai_with_quota(
+        result = await _run_ai(
             current_user,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=1024,
@@ -474,17 +399,8 @@ async def grammar_check(
 ):
     """Check and correct grammar for an eligible authenticated user"""
     try:
-        if (
-            current_user.role != Role.ADMIN
-            and current_user.ai_tier.value != Tier.PREMIUM.value
-        ):
-            raise HTTPException(
-                status_code=403,
-                detail={"code": "premium_tier_required"},
-            )
-
         prompt = registry.get(PromptType.GRAMMAR_CHECK).format(text=req.text)
-        result = await _run_ai_with_quota(
+        result = await _run_ai(
             current_user,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=min(len(req.text) + 200, 4000),
@@ -513,7 +429,7 @@ async def summarize_text(
         prompt = registry.get(PromptType.SUMMARIZE).format(
             language=req.language, text=req.text
         )
-        result = await _run_ai_with_quota(
+        result = await _run_ai(
             current_user,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=300,
@@ -531,16 +447,6 @@ async def check_plagiarism(
     """Estimate plagiarism risk and return structured matching evidence"""
     logger.info("Plagiarism detection started")
     try:
-        if (
-            current_user.role != Role.ADMIN
-            and current_user.ai_tier.value != Tier.PREMIUM.value
-        ):
-            logger.warning("Plagiarism detection access denied due to service tier")
-            raise HTTPException(
-                status_code=403,
-                detail={"code": "premium_tier_required"}
-            )
-
         from src.rag.retrieval import retriever
 
         matches = await retriever.retrieve(
@@ -569,7 +475,7 @@ async def check_plagiarism(
         prompt = registry.get(PromptType.PLAGIARISM_DETECTION).format(
             text=req.content[:1000], context=context
         )
-        result = await _run_structured_ai_with_quota(
+        result = await _run_structured_ai(
             current_user,
             messages=[{"role": "user", "content": prompt}],
             schema=PlagiarismResult,
@@ -610,7 +516,7 @@ async def unified_action(
             logger.warning(f"Invalid unified action requested {req.action}")
             raise HTTPException(status_code=400, detail={"code": "invalid_action"})
 
-        result = await _run_ai_with_quota(
+        result = await _run_ai(
             current_user,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=500,
@@ -628,18 +534,8 @@ async def get_synonyms(
     """Generate context aware synonyms for eligible users"""
     logger.info("Synonym retrieval started")
     try:
-        if (
-            current_user.role != Role.ADMIN
-            and current_user.ai_tier.value != Tier.PREMIUM.value
-        ):
-            logger.warning("Synonym retrieval access denied due to service tier")
-            raise HTTPException(
-                status_code=403,
-                detail={"code": "premium_tier_required"}
-            )
-
         prompt = registry.get(PromptType.SYNONYMS).format(text=req.text)
-        result = await _run_ai_with_quota(
+        result = await _run_ai(
             current_user,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=100,
@@ -657,16 +553,6 @@ async def suggest_citations(
     """Suggest citations for bounded content and source context"""
     logger.info("Citation suggestion started")
     try:
-        if (
-            current_user.role != Role.ADMIN
-            and current_user.ai_tier.value != Tier.PREMIUM.value
-        ):
-            logger.warning("Citation suggestion access denied due to service tier")
-            raise HTTPException(
-                status_code=403,
-                detail={"code": "premium_tier_required"}
-            )
-
         from src.rag.retrieval import retriever
 
         matches = await retriever.retrieve(
@@ -686,7 +572,7 @@ async def suggest_citations(
         prompt = registry.get(PromptType.SUGGEST_CITATIONS).format(
             style=req.style, text=req.text, sources="\\n".join(sources)
         )
-        result = await _run_ai_with_quota(
+        result = await _run_ai(
             current_user,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=500,
@@ -704,21 +590,11 @@ async def transform_tone(
     """Rewrite bounded content using the requested tone"""
     logger.info("Tone transformation started")
     try:
-        if (
-            current_user.role != Role.ADMIN
-            and current_user.ai_tier.value != Tier.PREMIUM.value
-        ):
-            logger.warning("Tone transformation access denied due to service tier")
-            raise HTTPException(
-                status_code=403,
-                detail={"code": "premium_tier_required"}
-            )
-
         action = "expand and transform" if req.expansion else "transform"
         prompt = registry.get(PromptType.TRANSFORM_TONE).format(
             action=action.capitalize(), tone=req.tone, text=req.text
         )
-        result = await _run_ai_with_quota(
+        result = await _run_ai(
             current_user,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=1000 if req.expansion else 500,
@@ -736,16 +612,6 @@ async def peer_review(
     """Review bounded content against the requested criteria"""
     logger.info("Content review started")
     try:
-        if (
-            current_user.role != Role.ADMIN
-            and current_user.ai_tier.value != Tier.PREMIUM.value
-        ):
-            logger.warning("Content review access denied due to service tier")
-            raise HTTPException(
-                status_code=403,
-                detail={"code": "premium_tier_required"}
-            )
-
         criteria_str = (
             ", ".join(req.criteria)
             if req.criteria
@@ -754,7 +620,7 @@ async def peer_review(
         prompt = registry.get(PromptType.CONTENT_REVIEW).format(
             criteria_str=criteria_str, text=req.text[:3000]
         )
-        result = await _run_ai_with_quota(
+        result = await _run_ai(
             current_user,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=1024,
@@ -789,7 +655,7 @@ async def multi_doc_synthesis(
         prompt = registry.get(PromptType.MULTI_DOC_SYNTHESIS).format(
             query=req.query, context="\\n".join(all_context[:10])
         )
-        result = await _run_ai_with_quota(
+        result = await _run_ai(
             current_user,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=1024,
@@ -851,7 +717,7 @@ async def analyze_document(
             context=req.context[:3000],
         )
 
-        result = await _run_structured_ai_with_quota(
+        result = await _run_structured_ai(
             current_user,
             messages=[{"role": "user", "content": prompt}],
             schema=DocumentAnalysisResult,
@@ -892,7 +758,7 @@ async def extract_glossary(
     logger.info("Glossary extraction started")
     try:
         prompt = registry.get(PromptType.EXTRACT_GLOSSARY).format(text=req.text)
-        result = await _run_structured_ai_with_quota(
+        result = await _run_structured_ai(
             current_user,
             messages=[{"role": "user", "content": prompt}],
             schema=GlossaryResult,
@@ -912,7 +778,7 @@ async def imitate_style(
     logger.info("Style imitation started")
     try:
         prompt = registry.get(PromptType.IMITATE_STYLE).format(reference_text=req.style_sample, text=req.text)
-        result = await _run_ai_with_quota(
+        result = await _run_ai(
             current_user,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=min(req.target_length or 2000, 4000),
@@ -932,7 +798,7 @@ async def draft_with_memory(
     try:
         from src.core.registry import registry, PromptType
         prompt = registry.get(PromptType.DRAFT_WITH_MEMORY).format(prompt=req.prompt)
-        result = await _run_ai_with_quota(
+        result = await _run_ai(
             current_user,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=2000,
@@ -952,7 +818,7 @@ async def extract_to_storage(
     try:
         from src.core.registry import registry, PromptType
         prompt = registry.get(PromptType.EXTRACT_TO_ARTIFACTS).format(goals=', '.join(req.extraction_goals), text=req.text[:3000])
-        result = await _run_structured_ai_with_quota(
+        result = await _run_structured_ai(
             current_user,
             messages=[{"role": "user", "content": prompt}],
             schema=ArtifactExtractionResult,
@@ -973,7 +839,7 @@ async def web_fact_check(
     try:
         from src.core.registry import registry, PromptType
         prompt = registry.get(PromptType.WEB_FACT_CHECK).format(text=req.text[:3000])
-        result = await _run_ai_with_quota(
+        result = await _run_ai(
             current_user,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=2000,
@@ -993,7 +859,7 @@ async def compliance_screen(
     try:
         from src.core.registry import registry, PromptType
         prompt = registry.get(PromptType.COMPLIANCE_SCREENER).format(text=req.text[:3000])
-        result = await _run_ai_with_quota(
+        result = await _run_ai(
             current_user,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=2000,
@@ -1013,7 +879,7 @@ async def semantic_diff(
     try:
         from src.core.registry import registry, PromptType
         prompt = registry.get(PromptType.SEMANTIC_DIFF).format(text1=req.text1[:2000], text2=req.text2[:2000])
-        result = await _run_ai_with_quota(
+        result = await _run_ai(
             current_user,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=2000,

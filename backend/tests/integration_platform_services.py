@@ -1,5 +1,4 @@
 import asyncio
-import base64
 import json
 import os
 import urllib.error
@@ -9,8 +8,6 @@ from datetime import datetime, timedelta, timezone
 
 import jwt
 import redis.asyncio as redis
-from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import padding, rsa
 from motor.motor_asyncio import AsyncIOMotorClient
 
 
@@ -19,13 +16,10 @@ USER_ID = f"plat-user-{uuid.uuid4().hex[:12]}"
 OTHER_USER_ID = f"plat-other-{uuid.uuid4().hex[:12]}"
 USER_SESSION = str(uuid.uuid4())
 OTHER_SESSION = str(uuid.uuid4())
-DOCUMENT_ID = f"plat-document-{uuid.uuid4()}"
-FILE_ID = f"plat-file-{uuid.uuid4()}"
-LICENSE_ID = f"plat-license-{uuid.uuid4()}"
 
 
 def create_token(
-    user_id: str, session_id: str, role: str = "author", ai_tier: str = "BASIC"
+    user_id: str, session_id: str, role: str = "author"
 ) -> str:
     now = datetime.now(timezone.utc)
     return jwt.encode(
@@ -34,7 +28,6 @@ def create_token(
             "uid": user_id,
             "sid": session_id,
             "role": role,
-            "ai_tier": ai_tier,
             "iat": now,
             "exp": now + timedelta(minutes=15),
         },
@@ -76,14 +69,11 @@ async def main():
     cache = redis.from_url(os.environ["REDIS_URI"], decode_responses=True)
     humanity = mongo[os.getenv("HUMANITY_DB_NAME", "doclib_humanity")]
     notification = mongo[os.getenv("NOTIFICATION_DB_NAME", "doclib_notification")]
-    content = mongo[os.getenv("CONTENT_DB_NAME", "doclib_content")]
-    drm = mongo[os.getenv("DRM_DB_NAME", "doclib_drm")]
-    user_token = create_token(USER_ID, USER_SESSION, ai_tier="PREMIUM")
+    user_token = create_token(USER_ID, USER_SESSION)
     other_token = create_token(OTHER_USER_ID, OTHER_SESSION)
-    raw_key = os.urandom(32)
     notification_id = None
     try:
-        for service in ["humanity", "notification", "drm"]:
+        for service in ["humanity", "notification"]:
             assert call(service, "GET", "/ready")[0] == 200
 
         user_payload = {
@@ -185,165 +175,12 @@ async def main():
             == 200
         )
 
-        await content.documents.insert_one(
-            {
-                "_id": DOCUMENT_ID,
-                "slug": f"plat-drm-{uuid.uuid4().hex}",
-                "creator_id": USER_ID,
-                "title": "Platform DRM",
-                "status": "published",
-                "visibility": "public",
-                "content": "Protected platform content",
-                "is_deleted": False,
-            }
-        )
-        status, drm_settings = call(
-            "drm",
-            "PUT",
-            f"/ban-quyen/{DOCUMENT_ID}",
-            {
-                "disable_copy": True,
-                "disable_print": True,
-                "hide_from_search": True,
-                "watermark_enabled": True,
-                "allow_internal_ai": True,
-                "license_valid_days": 7,
-                "max_open_count": 12,
-                "ghost_font_exemption_scope": "private_link",
-            },
-            bearer=user_token,
-        )
-        assert status == 200 and drm_settings["data"]["disable_copy"] is True
-        assert drm_settings["data"]["profile"] == "doclib-drm-2026"
-        assert drm_settings["data"]["ghost_font_enabled"] is True
-        private_link_token = drm_settings["data"]["ghost_font_private_link_token"]
-        assert private_link_token
-        synced_document = await content.documents.find_one({"_id": DOCUMENT_ID})
-        assert synced_document["drm_settings"]["disable_print"] is True
-        assert synced_document["drm_settings"]["license_valid_days"] == 7
-        status, search_result = call(
-            "content",
-            "POST",
-            "/tai-lieu/noi-bo/trao-doi",
-            {"action": "search_documents", "query": "Platform DRM"},
-            internal=True,
-        )
-        assert status == 200
-        assert DOCUMENT_ID not in {row["id"] for row in search_result["data"]}
-        status, protected_view = call(
-            "content", "GET", f"/tai-lieu/{DOCUMENT_ID}", bearer=other_token
-        )
-        assert status == 200, protected_view
-        assert protected_view["data"]["drm_settings"]["ghost_font_active"] is True
-        status, private_link_view = call(
-            "content", "GET", f"/tai-lieu/{DOCUMENT_ID}?share_token={private_link_token}"
-        )
-        assert status == 200, private_link_view
-        assert private_link_view["data"]["drm_settings"]["ghost_font_active"] is False
-        assert private_link_view["data"]["content"] == "Protected platform content"
-        assert (
-            call(
-                "drm",
-                "PUT",
-                f"/ban-quyen/{DOCUMENT_ID}",
-                {"disable_copy": False, "hide_from_search": False},
-                bearer=other_token,
-            )[0]
-            == 403
-        )
-
-        pro_token = create_token(USER_ID, USER_SESSION, ai_tier="PRO")
-        status, pro_settings = call(
-            "drm",
-            "PUT",
-            f"/ban-quyen/{DOCUMENT_ID}",
-            {"disable_copy": True, "watermark_enabled": True, "ghost_font_enabled": True},
-            bearer=pro_token,
-        )
-        assert status == 200, pro_settings
-        assert pro_settings["data"]["profile"] == "doclib-watermark"
-        assert pro_settings["data"]["watermark_enabled"] is True
-        assert pro_settings["data"]["disable_copy"] is False
-        assert pro_settings["data"]["ghost_font_enabled"] is False
-
-        basic_token = create_token(USER_ID, USER_SESSION, ai_tier="BASIC")
-        status, basic_settings = call(
-            "drm",
-            "PUT",
-            f"/ban-quyen/{DOCUMENT_ID}",
-            {"watermark_enabled": True, "ghost_font_enabled": True},
-            bearer=basic_token,
-        )
-        assert status == 200, basic_settings
-        assert basic_settings["data"]["profile"] == "doclib-standard"
-        assert basic_settings["data"]["watermark_enabled"] is False
-        assert basic_settings["data"]["ghost_font_enabled"] is False
-
-        await drm.drm_licenses.insert_one(
-            {
-                "_id": LICENSE_ID,
-                "file_id": FILE_ID,
-                "document_id": DOCUMENT_ID,
-                "user_id": USER_ID,
-                "aes_key": base64.b64encode(raw_key).decode("ascii"),
-                "status": "ACTIVE",
-                "open_count": 0,
-                "created_at": datetime.now(timezone.utc),
-            }
-        )
-        private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-        public_key = (
-            private_key.public_key()
-            .public_bytes(
-                serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo
-            )
-            .decode("ascii")
-        )
-        status, license_token = call(
-            "drm",
-            "POST",
-            "/giay-phep/kiem-tra",
-            {
-                "file_id": FILE_ID,
-                "client_public_key": public_key,
-                "hardware_signature": "platform-device-a",
-            },
-            bearer=user_token,
-        )
-        assert status == 200, license_token
-        decrypted = private_key.decrypt(
-            base64.b64decode(license_token["encrypted_aes_key"]),
-            padding.OAEP(
-                mgf=padding.MGF1(algorithm=hashes.SHA256()), algorithm=hashes.SHA256(), label=None
-            ),
-        )
-        assert decrypted == raw_key
-        assert (
-            call(
-                "drm",
-                "POST",
-                "/giay-phep/kiem-tra",
-                {
-                    "file_id": FILE_ID,
-                    "client_public_key": public_key,
-                    "hardware_signature": "platform-device-b",
-                },
-                bearer=user_token,
-            )[0]
-            == 403
-        )
         print("platform services integration passed")
     finally:
         await humanity.users.delete_many({"_id": {"$in": [USER_ID, OTHER_USER_ID]}})
         await notification.notifications.delete_many({"target_user_id": USER_ID})
         await notification.notification_settings.delete_one({"_id": USER_ID})
-        await content.documents.delete_one({"_id": DOCUMENT_ID})
-        await drm.drm_licenses.delete_one({"_id": LICENSE_ID})
-        await drm.document_drm_settings.delete_many({"document_id": DOCUMENT_ID})
-        await drm.audit_logs.delete_many({"document_id": DOCUMENT_ID})
         await cache.delete(f"user_sessions:{USER_ID}", f"user_sessions:{OTHER_USER_ID}")
-        async for key in cache.scan_iter(match=f"drm:*:{USER_ID}:*"):
-            await cache.delete(key)
         await cache.aclose()
         mongo.close()
 

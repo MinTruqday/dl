@@ -49,11 +49,6 @@ export function getUserFromToken(token = getToken()) {
       full_name: payload.full_name || payload.sub,
       slug: payload.slug || "",
       role: payload.role || "reader",
-      wallet_balance: 0,
-      ai_tier:
-        String(payload.role || "").toLowerCase() === "admin"
-          ? "PREMIUM"
-          : payload.ai_tier || "BASIC",
     };
   } catch {
     return null;

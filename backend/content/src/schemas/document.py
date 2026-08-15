@@ -33,7 +33,6 @@ class DocumentBase(BaseModel):
     tags: List[str] = Field(default_factory=list, max_length=50)
     content: Optional[Any] = None
     content_format: Optional[DocumentContentFormat] = DocumentContentFormat.DOCLIB
-    price_dl: int = Field(default=0, ge=0, le=1_000_000_000)
     visibility: str = Field(default="public", pattern=r"^(public|private|unlisted)$")
     category: Optional[str] = "Uncategorized"
     pages_count: Optional[int] = 0
@@ -44,7 +43,6 @@ class DocumentBase(BaseModel):
     deleted_at: Optional[datetime] = None
     publisher_name: Optional[str] = None
     folder_id: Optional[str] = None
-    drm_settings: Optional[dict] = None
     publish_at: Optional[datetime] = None
     draft_content: Optional[Any] = None
     toc: List[dict] = Field(default_factory=list)
@@ -64,9 +62,7 @@ class DocumentUpdate(BaseModel):
     cover_url: Optional[str] = None
     tags: Optional[List[str]] = None
     category: Optional[str] = None
-    price_dl: Optional[int] = Field(default=None, ge=0, le=1_000_000_000)
     folder_id: Optional[str] = None
-    drm_settings: Optional[dict] = None
     publish_at: Optional[datetime] = None
     scheduled_publish_at: Optional[datetime] = None
     expected_version: Optional[datetime] = None
@@ -78,7 +74,6 @@ class DocumentInDB(DocumentBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
     creator_id: str
     status: DocumentStatus = DocumentStatus.DRAFT
-    drm_fingerprint: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     views: int = 0
@@ -91,7 +86,6 @@ class DocumentResponse(DocumentBase):
     status: DocumentStatus
     created_at: datetime
     views: int = 0
-    has_purchased: bool = False
 
 class DocumentPasswordRequest(BaseModel):
     password: str = Field(min_length=8, max_length=200)
@@ -187,5 +181,3 @@ class CollaborationModeUpdate(BaseModel):
 
 class CollaborationScheduleUpdate(BaseModel):
     schedules: List[CollaborationScheduleRule]
-
-

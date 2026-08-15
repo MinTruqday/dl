@@ -15,13 +15,9 @@ from src.core.model_runtime import run_chat_completion
 from src.core.infrastructure.configuration import settings
 from src.core.registry import PromptType, RegistryCore, registry
 from src.harness.failure import failure
-from src.loop.hill_climbing import ImprovementSuggestion, IssueDetector, PromptOptimizer
 from src.schemas.inference import StyleImitationRequest
 from src.workflow.orchestration import execute_tool_node, sanitizer_node, supervisor
 from src.utils.local_models import LocalModelClient
-from src.api.interaction import require_mode_tier
-from src.api.mcp import require_mcp_tier
-from fastapi import HTTPException
 
 
 ROOT = Path("/app")
@@ -73,10 +69,8 @@ class FakeActionTool:
         approval_policy="manual",
         session_id="",
         approval_id=None,
-        ai_tier="BASIC",
     ):
         assert auto_approve is True
-        assert ai_tier == "BASIC"
         return "Action completed"
 
 
@@ -286,62 +280,6 @@ def verify_source_contracts():
     assert not any("À" <= character <= "ỹ" for character in workspace_source)
     tools_source = (SOURCE / "tools" / "__init__.py").read_text()
     assert "execute_mcp_tool" in tools_source
-    require_mode_tier("work", "PRO")
-    require_mode_tier("learn", "PREMIUM")
-    require_mode_tier("goal", "BASIC", "admin")
-    require_mcp_tier(
-        SimpleNamespace(
-            role=SimpleNamespace(value="admin"),
-            ai_tier=SimpleNamespace(value="BASIC"),
-        )
-    )
-    try:
-        require_mode_tier("goal", "BASIC")
-        raise AssertionError("Basic tier was allowed to use an advanced mode")
-    except HTTPException as error:
-        assert error.status_code == 403
-
-
-async def verify_failure_and_improvement_contracts():
-    assert failure.classify(TimeoutError("arbitrary")) == "TOOL_TIMEOUT"
-    assert failure.classify(RuntimeError("TimeoutError occurred")) == "UNKNOWN"
-
-    detector = IssueDetector()
-    issues = detector.detect_from_stats(
-        {
-            "failure_rate": detector.FAILURE_RATE_THRESHOLD + 0.1,
-            "total_traces": 20,
-            "tool_failures": {},
-            "security_violations": 0,
-            "avg_duration_ms": 0,
-        },
-        [{"session_id": "one", "status": "failed"}],
-    )
-    assert issues[0].category == "execution_failure"
-    evidence = json.loads(issues[0].description)
-    assert evidence["failure_rate"] > evidence["threshold"]
-
-    optimizer = PromptOptimizer()
-    original = registry.get(PromptType.CHAT_ASSISTANT)
-    suggestion = ImprovementSuggestion(
-        improvement_id="contract-improvement",
-        issue_id="contract-issue",
-        improvement_type="prompt_tweak",
-        title="contract",
-        description="contract",
-        proposed_change="contract",
-        proposed_config={
-            "prompt_type": "CHAT_ASSISTANT",
-            "action": "append_suffix",
-            "suffix": "\n<contract_test>active</contract_test>",
-        },
-    )
-    assert await optimizer.apply_improvement(suggestion)
-    assert registry.get(PromptType.CHAT_ASSISTANT) != original
-    assert await optimizer.rollback_improvement(suggestion)
-    assert registry.get(PromptType.CHAT_ASSISTANT) == original
-
-
 async def main():
     verify_registry()
     verify_logging()
@@ -351,7 +289,6 @@ async def main():
     await verify_routing()
     await verify_action_workflow()
     await verify_trimmed_results()
-    await verify_failure_and_improvement_contracts()
     print("agentic ai contracts passed")
 
 

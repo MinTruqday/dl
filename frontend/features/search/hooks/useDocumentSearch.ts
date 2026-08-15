@@ -6,13 +6,11 @@ import { searchDocumentsAPI } from "@/features/search/services/search.service";
 import type { DocumentSummary } from "@/shared/components/documents/DocumentResults";
 
 export type SearchFilters = {
-  price: "all" | "free" | "paid";
   time: "all" | "day" | "week" | "month";
   sort: "latest" | "most_viewed";
 };
 
 const initialFilters: SearchFilters = {
-  price: "all",
   time: "all",
   sort: "latest",
 };
@@ -83,9 +81,6 @@ export function useDocumentSearch() {
     }[filters.time];
     return documents
       .filter((document) => {
-        const price = Number(document.price_dl ?? document.price ?? 0);
-        if (filters.price === "free" && price > 0) return false;
-        if (filters.price === "paid" && price <= 0) return false;
         if (windowByTime !== Infinity && document.created_at) {
           const createdAt = new Date(document.created_at).getTime();
           if (!Number.isFinite(createdAt) || now - createdAt > windowByTime)

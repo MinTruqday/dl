@@ -8,11 +8,6 @@ class Role(str, Enum):
     AUTHOR = "author"
     ADMIN = "admin"
 
-class Tier(str, Enum):
-    BASIC = "BASIC"
-    PRO = "PRO"
-    PREMIUM = "PREMIUM"
-
 class CurrentUser(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="ignore")
 
@@ -23,8 +18,6 @@ class CurrentUser(BaseModel):
     is_active: bool = Field(default=True, description="<conditional_output>Whether the user account is active.</conditional_output>")
     full_name: str = Field(default="", description="<input_context>User's full name.</input_context>")
     slug: str = Field(default="", description="<input_context>URL-friendly username or slug.</input_context>")
-    is_premium: bool = Field(default=False, description="<conditional_output>Whether the user has premium access.</conditional_output>")
-    ai_tier: Tier = Field(default=Tier.BASIC, description="<conditional_output>The active AI service tier.</conditional_output>")
     
     @field_validator("role", mode="before")
     @classmethod

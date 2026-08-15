@@ -15,15 +15,7 @@ const sections = [
     title: "Nội dung và bản quyền",
     paragraphs: [
       "Tác giả giữ quyền đối với nội dung do mình đăng tải và chịu trách nhiệm về quyền sử dụng các tài liệu nguồn",
-      "Người đọc chỉ được sử dụng tài liệu trong phạm vi giấy phép đi kèm và không được sao chép phân phối hoặc bán lại khi chưa có chấp thuận",
-    ],
-  },
-  {
-    id: "thanh-toan",
-    title: "Thanh toán",
-    paragraphs: [
-      "Giao dịch bằng dl được ghi nhận trong lịch sử ví và được xử lý theo mức giá hiển thị tại thời điểm xác nhận",
-      "Yêu cầu xử lý giao dịch sai cần được gửi qua trang trợ giúp cùng mã giao dịch để đối chiếu",
+      "Người đọc cần tôn trọng quyền tác giả và không phân phối lại nội dung khi chưa có chấp thuận",
     ],
   },
   {

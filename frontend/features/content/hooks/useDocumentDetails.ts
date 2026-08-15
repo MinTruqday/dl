@@ -3,47 +3,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import { toggleBookmarkAPI } from "@/features/engagement/services/bookmark.service";
-import {
-  getDocumentBySlugAPI,
-  getDocumentDecryptionKeyAPI,
-} from "@/features/content/services/document.service";
-import { purchaseDocumentAPI } from "@/features/finance/services/monetization.service";
-import { submitReportAPI } from "@/features/management/services/user_feedback.service";
+import { getDocumentBySlugAPI } from "@/features/content/services/document.service";
 import {
   pinDocumentAPI,
   unpinDocumentAPI,
 } from "@/features/engagement/services/reading.service";
-
-async function decryptFragments(document: any) {
-  if (!Array.isArray(document.content_fragments))
-    return document.content || document.description || "";
-  const encodedKey = await getDocumentDecryptionKeyAPI(
-    document._id ?? document.id,
-  );
-  const keyRaw = atob(encodedKey);
-  const keyBytes = Uint8Array.from(keyRaw, (character) =>
-    character.charCodeAt(0),
-  );
-  const key = await crypto.subtle.importKey(
-    "raw",
-    keyBytes,
-    { name: "AES-GCM" },
-    false,
-    ["decrypt"],
-  );
-  const chunks: string[] = [];
-  for (const fragment of document.content_fragments) {
-    const raw = atob(fragment);
-    const bytes = Uint8Array.from(raw, (character) => character.charCodeAt(0));
-    const output = await crypto.subtle.decrypt(
-      { name: "AES-GCM", iv: bytes.slice(0, 12) },
-      key,
-      bytes.slice(12),
-    );
-    chunks.push(new TextDecoder().decode(output));
-  }
-  return chunks.join("");
-}
 
 export function useDocumentDetails(slug: string) {
   const { user } = useAuth();
@@ -65,11 +29,7 @@ export function useDocumentDetails(slug: string) {
       setDocument(row);
       setBookmarked(Boolean(row.is_bookmarked));
       setPinned(Boolean(row.is_pinned));
-      try {
-        setContent(await decryptFragments(row));
-      } catch {
-        setContent(row.description || "Không thể giải mã nội dung");
-      }
+      setContent(row.content || row.description || "");
     } catch (cause) {
       setError(
         cause instanceof Error ? cause.message : "Không thể tải tài liệu",
@@ -95,22 +55,6 @@ export function useDocumentDetails(slug: string) {
       setProcessing(false);
     }
   };
-  const purchase = async () => {
-    if (!user) return setError("Đăng nhập để mua tài liệu");
-    setProcessing(true);
-    setError("");
-    try {
-      await purchaseDocumentAPI(document._id ?? document.id);
-      setDocument((current: any) => ({ ...current, has_purchased: true }));
-      setNotice("Đã mua tài liệu");
-    } catch (cause) {
-      setError(
-        cause instanceof Error ? cause.message : "Không thể mua tài liệu",
-      );
-    } finally {
-      setProcessing(false);
-    }
-  };
   const pin = async () => {
     if (!user) return setError("Đăng nhập để ghim tài liệu");
     setProcessing(true);
@@ -130,25 +74,6 @@ export function useDocumentDetails(slug: string) {
     await navigator.clipboard.writeText(window.location.href);
     setNotice("Đã sao chép liên kết");
   };
-  const report = async (reason: string, description: string) => {
-    setProcessing(true);
-    setError("");
-    try {
-      await submitReportAPI({
-        item_id: document._id ?? document.id,
-        item_type: "document",
-        reason,
-        description,
-      });
-      setNotice("Đã gửi báo cáo");
-      return true;
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Không thể gửi báo cáo");
-      return false;
-    } finally {
-      setProcessing(false);
-    }
-  };
   return {
     user,
     document,
@@ -162,9 +87,7 @@ export function useDocumentDetails(slug: string) {
     clearNotice: () => setNotice(""),
     reload,
     bookmark,
-    purchase,
     pin,
     share,
-    report,
   };
 }

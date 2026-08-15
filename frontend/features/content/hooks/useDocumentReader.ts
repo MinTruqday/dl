@@ -17,10 +17,7 @@ import {
   getBookmarksAPI,
   toggleBookmarkAPI,
 } from "@/features/engagement/services/bookmark.service";
-import {
-  getDocumentDecryptionKeyAPI,
-  getDocumentWithPasswordAPI,
-} from "@/features/content/services/document.service";
+import { getDocumentWithPasswordAPI } from "@/features/content/services/document.service";
 import {
   createHighlightAPI,
   deleteHighlightAPI,
@@ -28,39 +25,11 @@ import {
 } from "@/features/engagement/services/highlight.service";
 
 type Message = { id: string; role: "user" | "assistant"; content: string };
-async function decrypt(document: any, id: string) {
-  if (!Array.isArray(document.content_fragments))
-    return document.content || document.description || "";
-  const rawKey = atob(
-    await getDocumentDecryptionKeyAPI(document._id ?? document.id ?? id),
-  );
-  const key = await crypto.subtle.importKey(
-    "raw",
-    Uint8Array.from(rawKey, (value) => value.charCodeAt(0)),
-    { name: "AES-GCM" },
-    false,
-    ["decrypt"],
-  );
-  const parts: string[] = [];
-  for (const fragment of document.content_fragments) {
-    const raw = atob(fragment);
-    const bytes = Uint8Array.from(raw, (value) => value.charCodeAt(0));
-    const output = await crypto.subtle.decrypt(
-      { name: "AES-GCM", iv: bytes.slice(0, 12) },
-      key,
-      bytes.slice(12),
-    );
-    parts.push(new TextDecoder().decode(output));
-  }
-  return parts.join("");
-}
-
 export function useDocumentReader(
   id: string,
   rawUrl: string | null,
   rawName: string | null,
   initialPassword: string | null,
-  shareToken: string | null,
 ) {
   const [document, setDocument] = useState<any>(null);
   const [content, setContent] = useState("");
@@ -95,7 +64,6 @@ export function useDocumentReader(
         const response = await getDocumentWithPasswordAPI(
           id,
           password || initialPassword || undefined,
-          shareToken || undefined,
         );
         if (response.status === 401) {
           setError("Đăng nhập để mở tài liệu");
@@ -112,11 +80,7 @@ export function useDocumentReader(
         }
         setDocument(row);
         setLocked(false);
-        try {
-          setContent(await decrypt(row, id));
-        } catch {
-          setContent(row.description || "Không thể giải mã nội dung");
-        }
+        setContent(row.content || row.description || "");
         if (row.content_format === "zip" && row.file_url)
           setArchive(await getArchiveTreeAPI(row.file_url));
         const [highlightResponse, bookmarkResponse, sessionResponse] =
@@ -139,32 +103,9 @@ export function useDocumentReader(
         setLoading(false);
       }
     },
-    [id, rawUrl, rawName, initialPassword, shareToken],
+    [id, rawUrl, rawName, initialPassword],
   );
   useEffect(() => void load(), [load]);
-  useEffect(() => {
-    if (!document?.drm_settings?.disable_copy) return;
-    const prevent = (event: Event) => event.preventDefault();
-    window.addEventListener("copy", prevent);
-    window.addEventListener("contextmenu", prevent);
-    return () => {
-      window.removeEventListener("copy", prevent);
-      window.removeEventListener("contextmenu", prevent);
-    };
-  }, [document]);
-  useEffect(() => {
-    if (!document?.drm_settings?.disable_print) return;
-    const preventPrint = (event: KeyboardEvent) => {
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "p")
-        event.preventDefault();
-    };
-    globalThis.document.documentElement.classList.add("drm-print-disabled");
-    window.addEventListener("keydown", preventPrint);
-    return () => {
-      globalThis.document.documentElement.classList.remove("drm-print-disabled");
-      window.removeEventListener("keydown", preventPrint);
-    };
-  }, [document]);
 
   const ask = async (question: string, thinking: boolean) => {
     if (!question.trim()) return;

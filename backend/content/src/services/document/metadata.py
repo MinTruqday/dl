@@ -8,7 +8,6 @@ from src.core.infrastructure.mongo import mongo
 from src.core.logic_logger import log_logic_execution
 from src.repositories.document import DocumentRepository
 from src.schemas.document import DocumentStatus
-from src.services.finance_client import FinanceClient
 from src.services.engagement_client import EngagementClient
 from src.services.document.base import can_read_full, is_admin, serialize_document
 
@@ -33,7 +32,6 @@ class DocumentMetadataService:
         total_words = len(text_content.split()) if text_content else 0
         avg_read_time_min = max(1, total_words // 200)
         engagement_stats = await EngagementClient.document_stats(document_id)
-        purchase_count = await FinanceClient.purchase_count(document_id)
         return {
             "views": views,
             "avg_read_time": f"{avg_read_time_min} minutes",
@@ -42,7 +40,6 @@ class DocumentMetadataService:
             "saves": int(engagement_stats.get("saves", 0)),
             "reads": int(engagement_stats.get("reads", 0)),
             "highlights": int(engagement_stats.get("highlights", 0)),
-            "purchases": purchase_count,
         }
 
     @staticmethod
@@ -78,35 +75,6 @@ class DocumentMetadataService:
             "readability_score": round(readability_score, 1),
             "content_format": doc.get("content_format", "html"),
         }
-
-    @staticmethod
-    @log_logic_execution
-    async def get_document_audit_logs(document_id: str, current_user) -> list:
-        doc = await DocumentRepository.find_one({"_id": document_id})
-        if not doc:
-            raise HTTPException(
-                status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn"
-            )
-        user_id = str(current_user.id)
-        if doc.get("creator_id") != user_id and not is_admin(current_user):
-            raise HTTPException(status_code=403, detail="Bạn không có quyền xem nhật ký kiểm toán")
-        logs = await mongo.find("audit_logs", {"document_id": document_id}).sort(
-            "timestamp", -1
-        ).limit(100).to_list(length=100)
-        return [
-            {
-                "_id": str(log["_id"]),
-                "action": log.get("action"),
-                "actor_id": log.get("actor_id"),
-                "reason": log.get("reason"),
-                "timestamp": (
-                    log["timestamp"].isoformat()
-                    if isinstance(log.get("timestamp"), datetime)
-                    else log.get("timestamp")
-                ),
-            }
-            for log in logs
-        ]
 
     @staticmethod
     @log_logic_execution

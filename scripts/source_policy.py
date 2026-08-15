@@ -24,10 +24,6 @@ INTERNAL_UUID7_COUNTS = {
     "backend/rag/src/services/pipeline.py": 3,
     "backend/engagement/src/services/library.py": 1,
     "backend/collection/src/sources/nxbst.py": 3,
-    "backend/finance/src/services/purchase.py": 1,
-    "backend/finance/src/services/transfer.py": 1,
-    "backend/management/src/services/health.py": 2,
-    "backend/management/src/services/telemetry.py": 1,
 }
 
 
@@ -595,17 +591,12 @@ def scan_fail_open_contracts(issues):
     forbidden = {
         "issued_fallback": "fabricated_security_success",
         "Fingerprint verified fallback": "fabricated_security_success",
-        "DRM AES key HTTP fallback": "fabricated_security_success",
-        "DRM trust profile HTTP fallback": "fabricated_security_success",
-        "DRM document risk HTTP fallback": "fabricated_security_success",
         "Redis idempotency lock bypass": "financial_lock_bypass",
         "[Dịch tự động": "fabricated_ai_result",
         '"replies": ["Đã rõ thông tin"': "fabricated_ai_result",
     }
     roots = [
         ROOT / "backend" / "agentic_ai" / "src",
-        ROOT / "backend" / "drm" / "src",
-        ROOT / "backend" / "finance" / "src",
         ROOT / "backend" / "messaging" / "src",
     ]
     for root in roots:

@@ -11,13 +11,11 @@ import {
 } from "@/features/collaboration/services/collaboration.service";
 import {
   getFoldersAPI,
-  getDocumentDraftAPI,
   getMyDocumentsAPI,
   transferDocumentAPI,
   updateDocumentAPI,
   updateTagsAPI,
 } from "@/features/content/services/document.service";
-import { updateDRMSettingsAPI } from "@/features/drm/services/drm.service";
 
 export function useDocumentConfiguration() {
   const { user } = useAuth();
@@ -28,19 +26,6 @@ export function useDocumentConfiguration() {
   const [documentId, setDocumentId] = useState("");
   const [collaborators, setCollaborators] = useState<any[]>([]);
   const [tags, setTags] = useState<string[]>([]);
-  const [disableCopy, setDisableCopy] = useState(false);
-  const [disablePrint, setDisablePrint] = useState(false);
-  const [hideFromSearch, setHideFromSearch] = useState(false);
-  const [watermarkEnabled, setWatermarkEnabled] = useState(false);
-  const [allowInternalAi, setAllowInternalAi] = useState(true);
-  const [licenseValidDays, setLicenseValidDays] = useState(30);
-  const [maxOpenCount, setMaxOpenCount] = useState(100);
-  const [ghostFontEnabled, setGhostFontEnabled] = useState(true);
-  const [ghostFontExemptionScope, setGhostFontExemptionScope] = useState<
-    "owner_only" | "private_link" | "selected_users" | "everyone"
-  >("owner_only");
-  const [ghostFontExemptUserIds, setGhostFontExemptUserIds] = useState<string[]>([]);
-  const [ghostFontPrivateLink, setGhostFontPrivateLink] = useState("");
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -91,29 +76,6 @@ export function useDocumentConfiguration() {
   useEffect(() => {
     setTags(document?.tags ?? []);
     void loadCollaborators();
-    if (!documentId) return;
-    let active = true;
-    void getDocumentDraftAPI(documentId)
-      .then((response) => {
-        if (!active) return;
-        const settings = (response.data ?? response).drm_settings ?? {};
-        setDisableCopy(Boolean(settings.disable_copy));
-        setDisablePrint(Boolean(settings.disable_print));
-        setHideFromSearch(Boolean(settings.hide_from_search));
-        setWatermarkEnabled(Boolean(settings.watermark_enabled));
-        setAllowInternalAi(settings.allow_internal_ai !== false);
-        setLicenseValidDays(Number(settings.license_valid_days ?? 30));
-        setMaxOpenCount(Number(settings.max_open_count ?? 100));
-        setGhostFontEnabled(settings.ghost_font_enabled !== false);
-        setGhostFontExemptionScope(
-          settings.ghost_font_exemption_scope ?? "owner_only",
-        );
-        setGhostFontExemptUserIds(settings.ghost_font_exempt_user_ids ?? []);
-      })
-      .catch(() => undefined);
-    return () => {
-      active = false;
-    };
   }, [document, documentId, loadCollaborators]);
 
   const run = async (
@@ -162,33 +124,6 @@ export function useDocumentConfiguration() {
       () => updateDocumentAPI(documentId, { folder_id: folderId || null }),
       "Đã chuyển thư mục",
     );
-  const saveDrm = async () => {
-    const result: any = await run(
-      "drm",
-      () =>
-        updateDRMSettingsAPI(documentId, {
-          disable_copy: disableCopy,
-          disable_print: disablePrint,
-          hide_from_search: hideFromSearch,
-          watermark_enabled: watermarkEnabled,
-          allow_internal_ai: allowInternalAi,
-          license_valid_days: Math.max(1, Math.min(365, licenseValidDays || 30)),
-          max_open_count: Math.max(1, Math.min(10000, maxOpenCount || 100)),
-          ghost_font_enabled: ghostFontEnabled,
-          ghost_font_exemption_scope: ghostFontExemptionScope,
-          ghost_font_exempt_user_ids: ghostFontExemptUserIds,
-        }),
-      "Đã cập nhật bảo vệ nội dung",
-    );
-    const token =
-      result?.data?.ghost_font_private_link_token ??
-      result?.ghost_font_private_link_token;
-    if (token)
-      setGhostFontPrivateLink(
-        `${window.location.origin}/tai-lieu/xem-truoc/${documentId}?drm=${encodeURIComponent(token)}`,
-      );
-    return result;
-  };
   const ingest = () =>
     run(
       "ingest",
@@ -229,28 +164,6 @@ export function useDocumentConfiguration() {
     document,
     collaborators,
     tags,
-    disableCopy,
-    setDisableCopy,
-    disablePrint,
-    setDisablePrint,
-    hideFromSearch,
-    setHideFromSearch,
-    watermarkEnabled,
-    setWatermarkEnabled,
-    allowInternalAi,
-    setAllowInternalAi,
-    licenseValidDays,
-    setLicenseValidDays,
-    maxOpenCount,
-    setMaxOpenCount,
-    ghostFontEnabled,
-    setGhostFontEnabled,
-    ghostFontExemptionScope,
-    setGhostFontExemptionScope,
-    ghostFontExemptUserIds,
-    setGhostFontExemptUserIds,
-    ghostFontPrivateLink,
-    tier: String(user?.ai_tier || "BASIC").toUpperCase(),
     loading,
     processing,
     error,
@@ -260,7 +173,6 @@ export function useDocumentConfiguration() {
     addTag,
     removeTag,
     moveFolder,
-    saveDrm,
     ingest,
     invite,
     removeCollaborator,

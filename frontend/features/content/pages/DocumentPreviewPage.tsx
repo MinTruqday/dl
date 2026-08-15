@@ -7,8 +7,6 @@ import InlineState from "@/shared/components/common/InlineState";
 import PageLoader from "@/shared/components/common/PageLoader";
 import { Button } from "@/shared/components/ui/Button";
 import ReaderPanel from "../components/ReaderPanel";
-import GhostTextCanvas from "../components/GhostTextCanvas";
-import ProtectedPdfViewer from "../components/ProtectedPdfViewer";
 import { useDocumentReader } from "../hooks/useDocumentReader";
 import { useNoticeToast } from "@/shared/hooks/useNoticeToast";
 
@@ -21,7 +19,6 @@ export default function DocumentReaderPage() {
     search.get("url"),
     search.get("name"),
     search.get("pwd"),
-    search.get("drm"),
   );
   useNoticeToast(reader.notice);
   const [password, setPassword] = useState("");
@@ -67,21 +64,6 @@ export default function DocumentReaderPage() {
       ["pdf", "html"].includes(String(document.content_format).toLowerCase()));
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-surface">
-      {document.drm_settings?.watermark_enabled && (
-        <div
-          aria-hidden="true"
-          className="pointer-events-none fixed inset-0 z-[70] grid grid-cols-3 content-around overflow-hidden opacity-[0.09]"
-        >
-          {Array.from({ length: 18 }, (_, index) => (
-            <span
-              key={index}
-              className="-rotate-12 whitespace-nowrap text-center text-[13px] font-semibold text-ink"
-            >
-              {document.drm_settings.watermark_text || "DocLib"}
-            </span>
-          ))}
-        </div>
-      )}
       <header className="flex h-[60px] shrink-0 items-center justify-between gap-4 border-b border-border bg-surface px-4">
         <div className="flex min-w-0 items-center gap-3">
           <Button size="sm" variant="ghost" onClick={() => router.back()}>
@@ -135,14 +117,7 @@ export default function DocumentReaderPage() {
       )}
       <div className="flex min-h-0 flex-1">
         <main className="min-w-0 flex-1 overflow-auto bg-surface-quiet p-4 md:p-8">
-          {document.drm_settings?.protected_pdf ? (
-            <ProtectedPdfViewer
-              documentId={id}
-              password={password || search.get("pwd") || undefined}
-              shareToken={search.get("drm") || undefined}
-              zoom={zoom}
-            />
-          ) : document.content_format === "zip" ? (
+          {document.content_format === "zip" ? (
             <div className="mx-auto min-h-full max-w-4xl rounded-workspace border border-border bg-surface p-6">
               <h1 className="mb-5 text-[18px] font-semibold text-ink">
                 {reader.archiveFile?.name || "Chọn tệp từ bảng công cụ"}
@@ -167,15 +142,9 @@ export default function DocumentReaderPage() {
               <h1 className="mb-8 text-[26px] font-semibold tracking-[-0.02em] text-ink">
                 {document.title}
               </h1>
-              {document.drm_settings?.ghost_font_active ? (
-                <GhostTextCanvas
-                  content={reader.content || "Tài liệu chưa có nội dung"}
-                />
-              ) : (
-                <div className="whitespace-pre-wrap text-[16px] leading-8 text-ink">
-                  {reader.content || "Tài liệu chưa có nội dung"}
-                </div>
-              )}
+              <div className="whitespace-pre-wrap text-[16px] leading-8 text-ink">
+                {reader.content || "Tài liệu chưa có nội dung"}
+              </div>
             </article>
           )}
         </main>

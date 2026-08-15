@@ -12,12 +12,7 @@ export function middleware(request: NextRequest) {
       pathname === "/tai-lieu" ||
       pathname.startsWith("/cong-tac") ||
       pathname.startsWith("/luu-tru") ||
-      pathname.startsWith("/phan-tich") ||
-      pathname.startsWith("/kiem-toan") ||
-      pathname.startsWith("/thu-thap") ||
-      pathname.startsWith("/nguoi-dung") ||
-      pathname.startsWith("/bao-cao") ||
-      pathname.startsWith("/van-hanh")
+      pathname.startsWith("/thu-thap")
     ) {
       return NextResponse.redirect(new URL("/", request.url));
     }
@@ -25,11 +20,7 @@ export function middleware(request: NextRequest) {
 
   if (token && role === "author") {
     if (
-      pathname.startsWith("/kiem-toan") ||
-      pathname.startsWith("/thu-thap") ||
-      pathname.startsWith("/nguoi-dung") ||
-      pathname.startsWith("/bao-cao") ||
-      pathname.startsWith("/van-hanh")
+      pathname.startsWith("/thu-thap")
     ) {
       return NextResponse.redirect(new URL("/soan-thao", request.url));
     }

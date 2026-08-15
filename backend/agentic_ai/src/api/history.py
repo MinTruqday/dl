@@ -27,12 +27,6 @@ async def create_session(
     data: SessionCreate, current_user: CurrentUser = Depends(get_current_user)
 ):
     """Create a conversation session for the authenticated user"""
-    if (
-        data.mode != "chat"
-        and current_user.role.value != "admin"
-        and current_user.ai_tier.value not in {"PRO", "PREMIUM"}
-    ):
-        raise HTTPException(status_code=403, detail={"code": "advanced_mode_requires_pro"})
     payload = data.model_dump()
     payload["user_id"] = str(current_user.id)
     return await HistoryService.create_session(payload)

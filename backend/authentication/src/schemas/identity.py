@@ -26,11 +26,6 @@ class Role(str, Enum):
     AUTHOR = "author"
     ADMIN = "admin"
 
-class Tier(str, Enum):
-    BASIC = "BASIC"
-    PRO = "PRO"
-    PREMIUM = "PREMIUM"
-
 class UserBase(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
@@ -43,8 +38,6 @@ class UserBase(BaseModel):
     social_links: Optional[Dict[str, str]] = Field(default_factory=dict)
     pinned_documents: List[str] = Field(default_factory=list)
     bookmarks: List[str] = Field(default_factory=list)
-    is_premium: bool = False
-    wallet_balance: int = 0
     is_shadowbanned: bool = False
     permissions: List[str] = Field(default_factory=list)
     donation_link: Optional[str] = None
@@ -55,7 +48,6 @@ class UserBase(BaseModel):
         default=20 * 1024 * 1024 * 1024,
         le=100 * 1024 * 1024 * 1024,
     )
-    ai_tier: Tier = Tier.BASIC
 
     @field_validator("kyc_status", "creator_status", mode="before")
     @classmethod

@@ -27,8 +27,6 @@ class CurrentUser(BaseModel):
     is_active: bool = True
     full_name: str = ""
     slug: str = ""
-    is_premium: bool = False
-    ai_tier: str = "BASIC"
     session_id: str = ""
 
     @field_validator("role", mode="before")
@@ -80,8 +78,6 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
         "email": email,
         "role": payload.get("role", "reader"),
         "permissions": payload.get("permissions", []),
-        "is_premium": payload.get("is_premium", False),
-        "ai_tier": "PREMIUM" if str(payload.get("role", "")).lower() == "admin" else payload.get("ai_tier", "BASIC"),
         "session_id": session_id,
         "full_name": payload.get("full_name", ""),
         "slug": payload.get("slug", ""),

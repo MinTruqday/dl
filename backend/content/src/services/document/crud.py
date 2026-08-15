@@ -1,41 +1,24 @@
-import io
 import json
-import os
 import uuid
-import zipfile
-import hashlib
-import hmac
-import base64
 import re
 import unicodedata
 from datetime import datetime, timezone
-from typing import Any, List
-
 import httpx
-from bson import ObjectId
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from fastapi import HTTPException, Query, status
+from fastapi import HTTPException
 from loguru import logger
-from passlib.context import CryptContext
 
 from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import database
-from src.core.infrastructure.mongo import mongo
 from src.core.infrastructure.redis import redis
 from src.core.logic_logger import log_logic_execution
 from src.core.publication import trigger_document_publish_job
 from src.repositories.document import DocumentRepository
 from src.schemas.document import DocumentContentUpdate, DocumentCreate, DocumentInDB, DocumentStatus
-from src.services.drm_client import DrmClient
 from src.services.collaboration_client import CollaborationClient
-from src.services.finance_client import FinanceClient
 from src.services.document.base import (
     serialize_document,
     is_admin,
     get_effective_collaboration_status,
-    has_purchase,
     can_read_full,
-    fragment_document_content,
     pwd_context,
 )
 
@@ -101,54 +84,6 @@ class DocumentCrudService:
 
     @staticmethod
     @log_logic_execution
-    async def import_document_from_file(file, current_user) -> dict:
-        content_bytes = await file.read()
-        if len(content_bytes) < 60:
-            raise ValueError("Tệp tin không hợp lệ hoặc bị hỏng")
-
-        file_id_bytes = content_bytes[:16]
-        file_hash = content_bytes[16:48]
-        nonce = content_bytes[48:60]
-        ciphertext = content_bytes[60:]
-
-        file_id = str(uuid.UUID(bytes=file_id_bytes))
-
-        license_doc = await DrmClient.license_by_file(file_id)
-        if not license_doc:
-            raise ValueError("Không tìm thấy giấy phép hợp lệ cho tài liệu này")
-        if license_doc.get("status") != "ACTIVE":
-            raise ValueError("Giấy phép tài liệu đã hết hiệu lực")
-        if license_doc.get("user_id") != str(current_user.id) and not is_admin(current_user):
-            raise ValueError("Bạn không có quyền truy cập tài liệu này")
-
-        encoded_key = license_doc.get("aes_key")
-        if not encoded_key:
-            raise ValueError("Giấy phép tài liệu bị hỏng (thiếu khóa giải mã)")
-
-        aes_key = base64.b64decode(encoded_key)
-
-        try:
-            aesgcm = AESGCM(aes_key)
-            decrypted_data = aesgcm.decrypt(nonce, ciphertext, None)
-        except Exception:
-            raise ValueError("Giải mã tài liệu thất bại, tệp tin có thể đã bị can thiệp")
-
-        if hashlib.sha256(decrypted_data).digest() != file_hash:
-            raise ValueError("Dữ liệu tài liệu không toàn vẹn")
-
-        raw_content = decrypted_data.decode("utf-8")
-        ext = file.filename.split(".")[-1].lower() if file.filename else "doclib"
-        content_format = "doclibx" if ext == "doclibx" else "doclib"
-
-        doc_in = DocumentCreate(
-            title=file.filename.split(".")[0] if file.filename else "Imported Document",
-            content=raw_content,
-            content_format=content_format,
-        )
-        return await DocumentCrudService.create_document(doc_in, current_user)
-
-    @staticmethod
-    @log_logic_execution
     async def get_my_documents(
         current_user,
         q: str = None,
@@ -183,7 +118,6 @@ class DocumentCrudService:
                 "status": document.get("status", "draft"),
                 "content_format": document.get("content_format", "doclib"),
                 "cover_url": document.get("cover_url"),
-                "drm_settings": document.get("drm_settings", {}),
                 "views": document.get("views", 0),
                 "created_at": (
                     document["created_at"].isoformat()
@@ -382,7 +316,6 @@ class DocumentCrudService:
             "status": DocumentStatus.PUBLISHED,
             "is_deleted": {"$ne": True},
             "visibility": "public",
-            "drm_settings.hide_from_search": {"$ne": True},
         }
         if q:
             query["$or"] = [
@@ -408,31 +341,13 @@ class DocumentCrudService:
     @staticmethod
     @log_logic_execution
     async def get_document_by_id(
-        document_id: str, current_user, password: str = None, share_token: str | None = None
+        document_id: str, current_user, password: str = None
     ):
         user_id = str(current_user.id) if current_user else None
         document = await DocumentRepository.find_one({"_id": document_id})
         if not document:
             raise HTTPException(
                 status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn"
-            )
-
-        drm_document = None
-        try:
-            drm_document = await DrmClient.document_settings(str(document["_id"]))
-        except Exception:
-            logger.exception("Failed to retrieve DRM settings")
-
-        share_token_valid = False
-        if (
-            drm_document
-            and share_token
-            and drm_document.get("ghost_font_exemption_scope") == "private_link"
-        ):
-            expected_hash = str(drm_document.get("ghost_font_private_link_hash") or "")
-            supplied_hash = hashlib.sha256(share_token.encode("utf-8")).hexdigest()
-            share_token_valid = bool(
-                expected_hash and hmac.compare_digest(supplied_hash, expected_hash)
             )
 
         is_coauthor = user_id in document.get("coauthors", [])
@@ -461,7 +376,6 @@ class DocumentCrudService:
             not is_creator
             and not is_coauthor
             and document.get("status") != DocumentStatus.PUBLISHED
-            and not share_token_valid
             and not is_admin(current_user)
         ):
             raise HTTPException(
@@ -496,73 +410,13 @@ class DocumentCrudService:
             if rate_limit_key and redis:
                 await redis.delete(rate_limit_key)
 
-        can_view_full_content = share_token_valid or await can_read_full(document, current_user)
+        can_view_full_content = await can_read_full(document, current_user)
         if not can_view_full_content and document.get("status") == DocumentStatus.PUBLISHED:
             preview_limit = max(0, int(document.get("preview_pages", 5) or 0))
             document["content"] = (document.get("content") or "")[: preview_limit * 1000]
-            document["has_purchased"] = False
 
         serialized = serialize_document(document)
         serialized["can_read_full"] = can_view_full_content
-        aes_key = AESGCM.generate_key(bit_length=256)
-        if redis and can_view_full_content:
-            await redis.setex(
-                f"aes_key:{serialized['_id']}:{user_id or 'guest'}",
-                300,
-                base64.b64encode(aes_key).decode("utf-8"),
-            )
-
-        if drm_document:
-            serialized["drm_settings"] = {
-                "disable_copy": drm_document.get("disable_copy", False),
-                "disable_print": drm_document.get("disable_print", False),
-                "hide_from_search": drm_document.get("hide_from_search", False),
-                "watermark_enabled": drm_document.get("watermark_enabled", False),
-                "allow_internal_ai": drm_document.get("allow_internal_ai", True),
-                "license_valid_days": drm_document.get("license_valid_days", 30),
-                "max_open_count": drm_document.get("max_open_count", 100),
-                "ghost_font_enabled": drm_document.get("ghost_font_enabled", False),
-                "ghost_font_exemption_scope": drm_document.get(
-                    "ghost_font_exemption_scope", "owner_only"
-                ),
-                "protection_tier": drm_document.get("protection_tier", "BASIC"),
-                "watermark_text": f"DocLib {user_id or 'guest'}",
-            }
-            ghost_scope = drm_document.get("ghost_font_exemption_scope", "owner_only")
-            ghost_exempt = user_id == serialized.get("creator_id")
-            if ghost_scope == "everyone":
-                ghost_exempt = True
-            elif ghost_scope == "selected_users":
-                ghost_exempt = user_id in set(
-                    drm_document.get("ghost_font_exempt_user_ids") or []
-                )
-            elif ghost_scope == "private_link":
-                ghost_exempt = share_token_valid
-            serialized["drm_settings"]["ghost_font_active"] = bool(
-                drm_document.get("ghost_font_enabled", False) and not ghost_exempt
-            )
-            serialized["drm_settings"]["text_delivery"] = (
-                "canvas" if serialized["drm_settings"]["ghost_font_active"] else "text"
-            )
-            if (
-                serialized["drm_settings"]["ghost_font_active"]
-                and str(serialized.get("content_format", "")).lower() == "pdf"
-            ):
-                serialized.pop("file_url", None)
-                serialized.pop("pdf_url", None)
-                serialized["drm_settings"]["protected_pdf"] = True
-
-        if (
-            serialized.get("content")
-            and user_id != serialized.get("creator_id")
-            and can_view_full_content
-            and not share_token_valid
-        ):
-            serialized["content_fragments"] = fragment_document_content(
-                serialized["content"], aes_key
-            )
-            del serialized["content"]
-
         return serialized
 
     @staticmethod
@@ -672,28 +526,6 @@ class DocumentCrudService:
         )
         logger.info("Document password protection enabled")
         return {"message": "Thiết lập mật khẩu bảo vệ tài liệu hoàn tất"}
-
-    @staticmethod
-    @log_logic_execution
-    async def get_document_decryption_key(document_id: str, current_user):
-        user_id = str(current_user.id) if current_user else "guest"
-        document = await DocumentRepository.find_one({"_id": document_id})
-        if not document or not await can_read_full(document, current_user):
-            raise HTTPException(status_code=403, detail="Bạn không có quyền giải mã tài liệu này")
-        if redis:
-            encoded_key = await redis.get(f"aes_key:{document_id}:{user_id}")
-            if encoded_key:
-                return {
-                    "key": (
-                        encoded_key.decode("utf-8")
-                        if isinstance(encoded_key, bytes)
-                        else encoded_key
-                    )
-                }
-        raise HTTPException(
-            status_code=403,
-            detail="Khóa giải mã tài liệu không hợp lệ hoặc đã quá hạn sử dụng",
-        )
 
     @staticmethod
     @log_logic_execution

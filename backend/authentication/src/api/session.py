@@ -45,32 +45,10 @@ async def read_users_me(
         logging.error(f"Exception fetching profile {e}")
         user_doc = None
 
-    try:
-        from src.core.infrastructure.configuration import settings
-        import httpx
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            resp_usage = await client.get(
-                f"{settings.USAGE_URL}/goi-cuoc/{current_user.id}",
-                headers={"X-Internal-Token": settings.SECRET_KEY},
-                timeout=10.0,
-            )
-            if resp_usage.status_code == 200:
-                usage_doc = resp_usage.json().get("data", {})
-                if user_doc:
-                    user_doc["ai_tier"] = usage_doc.get("ai_tier", "BASIC")
-                    user_doc["is_premium"] = usage_doc.get("is_premium", False)
-    except Exception as e:
-        import logging
-        logging.error(f"Exception fetching usage tier {e}")
-
     if not user_doc:
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Không tìm thấy thông tin tài khoản người dùng")
 
-    if str(user_doc.get("role", "")).lower() == "admin":
-        user_doc["ai_tier"] = "PREMIUM"
-        user_doc["is_premium"] = True
-        
     user_data = user_doc
     user_data["_id"] = str(user_doc["_id"])
     if "created_at" not in user_data:

@@ -44,7 +44,6 @@ async def main():
             "uid": ADMIN_ID,
             "sid": SESSION_ID,
             "role": "admin",
-            "ai_tier": "PREMIUM",
             "iat": now,
             "exp": now + timedelta(minutes=15),
         },

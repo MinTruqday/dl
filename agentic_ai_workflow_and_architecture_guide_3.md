@@ -41,8 +41,6 @@ flowchart LR
     subgraph Services[Dịch vụ DocLib và bên ngoài]
         RagSvc[RAG service]
         Content[Content service]
-        Usage[Usage service]
-        DRM[DRM service]
         WS[WebSocket service]
         Web[Tavily và MCP server]
         Neo4j[(Neo4j qua RAG service)]
@@ -55,9 +53,7 @@ flowchart LR
     RagSvc --> Neo4j
     API -. readiness .-> MinIO
     API -. readiness .-> MQ
-    Quota --> Usage
     Router --> Content
-    Tools --> DRM
     Tools --> Web
     API --> WS
 ```
@@ -184,15 +180,11 @@ flowchart TD
     ChooseCapability -->|Thao tác công cụ| RunTool[Giao task cho action tools]
     ChooseCapability -->|Nghiên cứu| RunResearch[Giao task cho knowledge researcher]
     ChooseCapability -->|Lập luận| RunReasoning[Giao task cho reasoning agent]
-    ChooseCapability -->|Mã nguồn và bảo mật| RunSwarm[Giao task cho coder, reviewer hoặc SecOps]
-    ChooseCapability -->|Chuyên môn khác| RunSpecialist[Giao task cho specialist phù hợp]
     RunInterpreter --> RecordTask
     RunSearch --> RecordTask
     RunTool --> RecordTask
     RunResearch --> RecordTask
-    RunReasoning --> RecordTask
-    RunSwarm --> RecordTask
-    RunSpecialist --> RecordTask[Ghi trạng thái và artifact của task]
+    RunReasoning --> RecordTask[Ghi trạng thái và kết quả của task]
     RecordTask --> AllFinished
     AllFinished -->|Không| PickReadyTask
     AllFinished -->|Có| TrimResult[Rút gọn artifact vượt giới hạn]
@@ -254,9 +246,9 @@ flowchart TD
     PublishModel --> End([Kết thúc: ghi nhận model đã triển khai])
 ```
 
-## 9. Sự kiện, bộ nhớ và vòng cải tiến
+## 9. Sự kiện và bộ nhớ
 
-### 9.1 Xử lý sự kiện và đề xuất cải tiến
+### 9.1 Xử lý sự kiện
 
 ```mermaid
 flowchart TD
@@ -266,20 +258,7 @@ flowchart TD
     NeedIndex -->|Có| IngestDocument[Chạy workflow tiếp nạp tài liệu]
     NeedIndex -->|Không| RecordTrace[Ghi trace vận hành]
     IngestDocument --> RecordTrace
-    RecordTrace --> EnoughData{Đã đủ dữ liệu để đánh giá cải tiến?}
-    EnoughData -->|Không| End([Kết thúc: lưu kết quả xử lý sự kiện])
-    EnoughData -->|Có| AnalyzeMetrics[Phân tích thống kê bằng hill-climbing]
-    AnalyzeMetrics --> HasProposal{Có thay đổi cấu hình hoặc prompt đáng đề xuất?}
-    HasProposal -->|Không| End
-    HasProposal -->|Có| CreateProposal[Tạo đề xuất và chờ ADMIN duyệt]
-    CreateProposal --> Approved{ADMIN phê duyệt?}
-    Approved -->|Không| RejectProposal([Kết thúc: đánh dấu đề xuất bị từ chối])
-    Approved -->|Có| ApplyProposal[Áp dụng thay đổi thuộc phạm vi cho phép]
-    ApplyProposal --> ObserveImpact[Theo dõi tác động sau thay đổi]
-    ObserveImpact --> NeedRollback{Kết quả xấu hoặc ADMIN yêu cầu hoàn tác?}
-    NeedRollback -->|Có| RollbackChange[Khôi phục cấu hình trước đó]
-    NeedRollback -->|Không| End
-    RollbackChange --> End
+    RecordTrace --> End([Kết thúc: lưu kết quả xử lý sự kiện])
 ```
 
 ### 9.2 Ghi nhớ sau hội thoại
@@ -310,9 +289,7 @@ flowchart TD
 | Tinh chỉnh  | `/tinh-chinh`                                        | Dataset, sample, job, hủy, đánh giá và triển khai                                      |
 | MCP          | `/mcp`                                               | Preset, server, kiểm tra kết nối và callback                                             |
 | Sự kiện    | `/su-kien`                                           | Webhook, lịch chạy, lịch sử và trigger                                                  |
-| Tự tối ưu | `/toi-uu`                                            | Vấn đề, đề xuất, phê duyệt và hoàn tác                                            |
 | Can thiệp   | `/ngat-qua-trinh`                                    | Hủy phiên và phản hồi yêu cầu phê duyệt                                             |
-| DRM nội bộ | `/drm`                                               | Đánh giá policy DRM rủi ro cao                                                           |
 | Vận hành   | `/health`, `/ready`, `/metrics`, `/evaluate/*` | Liveness, readiness và telemetry                                                            |
 
 ## 11. Công nghệ đang sử dụng

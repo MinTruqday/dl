@@ -20,10 +20,6 @@ import {
   updateAiSessionStateAPI,
 } from "@/features/agentic_ai/services/interaction.service";
 import { uploadChatAttachmentAPI } from "@/features/cloud/services/upload.service";
-import {
-  getMyQuotaAPI,
-  QuotaUsage,
-} from "@/features/usage/services/quota.service";
 
 export type ChatMessage = {
   id: string;
@@ -54,10 +50,6 @@ export type ChatAttachmentSelection = {
 };
 
 const streamErrors: Record<string, string> = {
-  ai_quota_exceeded: "Đã sử dụng hết hạn mức AI",
-  quota_service_unavailable: "Không thể kiểm tra hạn mức AI",
-  upload_quota_exceeded: "Đã sử dụng hết hạn mức tải lên",
-  upload_quota_verification_failed: "Không thể kiểm tra hạn mức tải lên",
   document_access_denied: "Không có quyền đọc tài liệu",
   document_access_verification_failed: "Không thể xác minh quyền tài liệu",
   input_security_blocked: "Yêu cầu bị chặn bởi chính sách an toàn",
@@ -65,7 +57,6 @@ const streamErrors: Record<string, string> = {
   orchestration_failed: "Không thể thực hiện kế hoạch",
   response_verification_failed: "Kết quả không vượt qua bước kiểm chứng",
   chat_stream_failed: "Luồng phản hồi bị gián đoạn",
-  advanced_mode_requires_pro: "Chế độ này cần gói Pro hoặc Premium",
   multimodal_processing_failed: "Không thể xử lý tệp đa phương tiện",
 };
 
@@ -106,7 +97,6 @@ export function useChat(documentId?: string | null) {
   const [sessions, setSessions] = useState<any[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [quota, setQuota] = useState<QuotaUsage | null>(null);
   const [instructions, setInstructions] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -128,10 +118,9 @@ export function useChat(documentId?: string | null) {
     if (!user) return setLoading(false);
     setLoading(true);
     try {
-      const [sessionResponse, quotaResponse, instructionResponse, capabilities] =
+      const [sessionResponse, instructionResponse, capabilities] =
         await Promise.all([
           getAiSessionsAPI(undefined, user._id),
-          getMyQuotaAPI(),
           getUserInstructionsAPI(),
         getAiCapabilitiesAPI().catch(() => ({
           model: "",
@@ -140,7 +129,6 @@ export function useChat(documentId?: string | null) {
         })),
         ]);
       setSessions(sessionResponse.data ?? sessionResponse ?? []);
-      setQuota(quotaResponse);
       setInstructions(
         instructionResponse.data?.instructions ??
           instructionResponse.instructions ??
@@ -502,7 +490,6 @@ export function useChat(documentId?: string | null) {
     sessions,
     sessionId,
     messages,
-    quota,
     instructions,
     loading,
     sending,

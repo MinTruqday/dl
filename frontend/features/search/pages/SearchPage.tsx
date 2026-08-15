@@ -81,29 +81,6 @@ function SearchResultsContent() {
               <option value="month">30 ngày</option>
             </select>
           </div>
-          <div>
-            <label
-              htmlFor="search-price"
-              className="mb-2 block text-[12px] font-semibold text-ink-muted"
-            >
-              Mức giá
-            </label>
-            <select
-              id="search-price"
-              className="apple-input w-full"
-              value={filters.price}
-              onChange={(event) =>
-                setFilters({
-                  ...filters,
-                  price: event.target.value as typeof filters.price,
-                })
-              }
-            >
-              <option value="all">Tất cả</option>
-              <option value="free">Miễn phí</option>
-              <option value="paid">Có phí</option>
-            </select>
-          </div>
         </div>
       )}
 

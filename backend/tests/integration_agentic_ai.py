@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, patch
 import jwt
 
 from src.agents.routing import RouteAgent, SemanticRouterValidator
-from src.schemas.auth import CurrentUser, Tier
+from src.schemas.auth import CurrentUser
 from src.tools.http_client import check_system_access
 
 
@@ -82,7 +82,6 @@ async def main():
     assert status == 200 and unsafe_chunks["safe_indices"] == [], unsafe_chunks
 
     user = CurrentUser(_id="agentic-user", email="agentic@example.com")
-    assert user.ai_tier is Tier.BASIC
     route_agent = RouteAgent()
     route_agent._get_embedder = lambda: FakeEmbedder()
     route = await route_agent.execute("hello there")
@@ -104,7 +103,6 @@ async def main():
             "sub": "admin@example.com",
             "role": "admin",
             "sid": "agentic-admin-session",
-            "ai_tier": "PREMIUM",
         },
         SECRET_KEY,
         algorithm="HS256",
@@ -115,18 +113,6 @@ async def main():
             "sub": "reader@example.com",
             "role": "reader",
             "sid": "agentic-integration-session",
-            "ai_tier": "BASIC",
-        },
-        SECRET_KEY,
-        algorithm="HS256",
-    )
-    pro_token = jwt.encode(
-        {
-            "uid": "reader",
-            "sub": "reader@example.com",
-            "role": "reader",
-            "sid": "agentic-integration-session",
-            "ai_tier": "PRO",
         },
         SECRET_KEY,
         algorithm="HS256",
@@ -146,82 +132,17 @@ async def main():
     )
     assert status == 401, premium_error
 
-    request = urllib.request.Request(
-        "http://127.0.0.1:8000/suy-luan/kiem-tra-ngu-phap",
-        data=json.dumps({"text": "DOCLIB_PRIVATE_SENTINEL"}).encode("utf-8"),
-        headers={"Content-Type": "application/json", "Authorization": f"Bearer {reader_token}"},
-        method="POST",
-    )
-    try:
-        urllib.request.urlopen(request, timeout=30)
-        raise AssertionError("Basic account unexpectedly accessed premium grammar check")
-    except urllib.error.HTTPError as error:
-        premium_error = json.loads(error.read())
-        assert error.code == 403, premium_error
-        assert premium_error["detail"] == {"code": "premium_tier_required"}
+    assert call(
+        "POST",
+        "/suy-luan/kiem-tra-ngu-phap",
+        {"text": "DOCLIB_PRIVATE_SENTINEL"},
+        bearer=reader_token,
+    )[0] == 200
 
-    drm_request = {
-        "user_id": "agentic-drm-user",
-        "document_id": "agentic-drm-document",
-        "client_ip": "10.10.10.10",
-        "device_fingerprint": "agentic-device-fingerprint",
-    }
-    assert call("POST", "/drm/danh-gia", drm_request)[0] == 403
     from motor.motor_asyncio import AsyncIOMotorClient
 
     mongo = AsyncIOMotorClient(os.environ["MONGODB_URI"])
-    humanity = mongo[os.getenv("HUMANITY_DB_NAME", "doclib_humanity")]
-    content = mongo[os.getenv("CONTENT_DB_NAME", "doclib_content")]
-    drm = mongo[os.getenv("DRM_DB_NAME", "doclib_drm")]
     agentic = mongo[os.getenv("AGENTIC_AI_DB_NAME", "doclib_agentic_ai")]
-    await humanity.users.replace_one(
-        {"_id": drm_request["user_id"]},
-        {
-            "_id": drm_request["user_id"],
-            "email": "agentic-drm@example.com",
-            "is_active": True,
-            "role": "reader",
-        },
-        upsert=True,
-    )
-    await content.documents.replace_one(
-        {"_id": drm_request["document_id"]},
-        {
-            "_id": drm_request["document_id"],
-            "slug": "agentic-drm-integration",
-            "title": "Agentic DRM integration",
-            "status": "published",
-            "visibility": "public",
-            "is_deleted": False,
-        },
-        upsert=True,
-    )
-    await drm.drm_licenses.replace_one(
-        {"_id": "agentic-drm-license"},
-        {
-            "_id": "agentic-drm-license",
-            "file_id": "agentic-drm-file",
-            "document_id": drm_request["document_id"],
-            "user_id": drm_request["user_id"],
-            "status": "ACTIVE",
-            "hardware_signature": drm_request["device_fingerprint"],
-            "recent_accesses": [{"ip": drm_request["client_ip"]}],
-        },
-        upsert=True,
-    )
-    status, policy = call("POST", "/drm/danh-gia", drm_request, internal=True)
-    assert status == 200, policy
-    assert policy["data"]["decision"] in {"LEVEL_0", "LEVEL_1", "LEVEL_2", "LEVEL_3", "BLOCKED"}
-    missing_fingerprint = dict(drm_request)
-    missing_fingerprint.pop("device_fingerprint")
-    status, blocked_policy = call("POST", "/drm/danh-gia", missing_fingerprint, internal=True)
-    assert status == 200, blocked_policy
-    assert blocked_policy["data"]["decision"] == "BLOCKED"
-    assert blocked_policy["data"]["enable_aes_encryption"] is False
-    await humanity.users.delete_one({"_id": drm_request["user_id"]})
-    await content.documents.delete_one({"_id": drm_request["document_id"]})
-    await drm.drm_licenses.delete_one({"_id": "agentic-drm-license"})
-
     assert (
         call("POST", "/tinh-chinh/tap-du-lieu", {"name": "Denied dataset"}, bearer=reader_token)[0]
         == 403
@@ -266,16 +187,11 @@ async def main():
     assert detail["messages"][0]["attachments"][0]["name"] == "evidence.txt"
     assert call("DELETE", f"/lich-su/{session_id}", bearer=reader_token)[0] == 200
     assert await agentic.ai_messages.count_documents({"session_id": session_id}) == 0
-    status, mode_error = call(
+    status, work_session = call(
         "POST", "/lich-su", {"first_query": "Basic work", "mode": "work"}, bearer=reader_token
     )
-    assert status == 403, mode_error
-    assert mode_error["detail"] == {"code": "advanced_mode_requires_pro"}
-    status, pro_session = call(
-        "POST", "/lich-su", {"first_query": "Pro work", "mode": "work"}, bearer=pro_token
-    )
-    assert status == 200, pro_session
-    await agentic.ai_sessions.delete_one({"_id": pro_session["_id"]})
+    assert status == 200, work_session
+    await agentic.ai_sessions.delete_one({"_id": work_session["_id"]})
     await agentic.finetune_datasets.delete_one({"_id": dataset_id})
 
     from src.main import app
@@ -285,7 +201,6 @@ async def main():
         ("/tro-chuyen", "post"),
         ("/tro-chuyen/phat-truc-tiep", "post"),
         ("/tinh-chinh/tap-du-lieu", "post"),
-        ("/toi-uu/cau-hinh", "patch"),
         ("/lich-su", "post"),
         ("/mcp/servers", "post"),
     ]:

@@ -1163,7 +1163,6 @@ async def recommend_documents(
                 "id": doc_id,
                 "title": doc.get("title") or "",
                 "slug": doc.get("slug", ""),
-                "price_dl": doc.get("price_dl", 0),
                 "summary": doc.get("summary") or doc.get("description") or "",
                 "url": f"/tai-lieu/xem-truoc/{doc_id}",
             })

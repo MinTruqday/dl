@@ -114,7 +114,6 @@ class SessionService:
         role = "reader"
         is_active = True
         user_data = None
-        ai_tier = "BASIC"
         
         async with httpx.AsyncClient() as client:
             try:
@@ -136,23 +135,8 @@ class SessionService:
             except Exception:
                 logger.exception("Failed to fetch user profile details from Humanity service during login")
                 raise HTTPException(status_code=503, detail="Không thể xác minh trạng thái tài khoản")
-            try:
-                usage_response = await client.get(
-                    f"{settings.USAGE_URL}/goi-cuoc/{user_id_str}",
-                    headers={"X-Internal-Token": settings.SECRET_KEY},
-                    timeout=5.0,
-                )
-                if usage_response.status_code == 200:
-                    ai_tier = usage_response.json().get("data", {}).get(
-                        "ai_tier", "BASIC"
-                    )
-            except Exception:
-                logger.exception("Failed to fetch AI tier during login")
-
         if not is_active:
             raise HTTPException(status_code=403, detail="Tài khoản hiện đang bị khóa hoặc ở trạng thái không hoạt động")
-
-        effective_ai_tier = "PREMIUM" if str(role).lower() == "admin" else ai_tier
 
         session_id = str(uuid.uuid4())
         from src.core.infrastructure.redis import redis
@@ -169,12 +153,6 @@ class SessionService:
                 "role": role,
                 "uid": user_id_str,
                 "permissions": user_data.get("permissions", []),
-                "is_premium": (
-                    True
-                    if str(role).lower() == "admin"
-                    else user_data.get("is_premium", False)
-                ),
-                "ai_tier": effective_ai_tier,
                 "full_name": user_data.get("full_name", ""),
                 "slug": user_data.get("slug", ""),
             }
@@ -299,11 +277,6 @@ class SessionService:
             settings.REFRESH_TOKEN_EXPIRE_DAYS * 86400,
         )
         role = user_doc.get("role", "reader")
-        effective_ai_tier = (
-            "PREMIUM"
-            if str(role).lower() == "admin"
-            else user_doc.get("ai_tier", "BASIC")
-        )
         access_token = create_access_token(
             data={
                 "sub": user_doc["email"],
@@ -311,12 +284,6 @@ class SessionService:
                 "role": role,
                 "uid": str(user_doc.get("_id", "")),
                 "permissions": user_doc.get("permissions", []),
-                "is_premium": (
-                    True
-                    if str(role).lower() == "admin"
-                    else user_doc.get("is_premium", False)
-                ),
-                "ai_tier": effective_ai_tier,
                 "full_name": user_doc.get("full_name", ""),
                 "slug": user_doc.get("slug", ""),
             }

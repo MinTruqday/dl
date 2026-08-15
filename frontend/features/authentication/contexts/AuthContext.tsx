@@ -23,8 +23,6 @@ interface User {
   role: string;
   avatar_url?: string;
   bio?: string;
-  wallet_balance: number;
-  ai_tier?: string;
 }
 
 interface AuthProps {

@@ -142,9 +142,7 @@ class UserService:
         allowed_fields = {
             "bookmarks",
             "pinned_documents",
-            "wallet_balance",
             "storage_limit",
-            "is_premium",
             "creator_status",
             "kyc_status",
             "is_verified",
