@@ -37,20 +37,27 @@ async def _persist_conversation_turns(
     user_content: str,
     assistant_content: str,
     attachments: list[dict],
+    *,
+    persist_user: bool = True,
 ) -> None:
-    if not session_id or not assistant_content:
+    if not session_id:
         return
-    await context.save_turn(session_id, "user", user_content)
-    await context.save_turn(session_id, "assistant", assistant_content)
     try:
         from src.memory.management import memory_manager
         from src.services.history import HistoryService
         from src.utils.background import create_background_task
 
-        user_message = {"user_id": user_id, "role": "user", "content": user_content}
-        if attachments:
-            user_message["attachments"] = attachments
-        await HistoryService.add_message(session_id, user_message)
+        if persist_user and user_content:
+            await context.save_turn(session_id, "user", user_content)
+            user_message = {"user_id": user_id, "role": "user", "content": user_content}
+            if attachments:
+                user_message["attachments"] = attachments
+            await HistoryService.add_message(session_id, user_message)
+
+        if not assistant_content:
+            return
+
+        await context.save_turn(session_id, "assistant", assistant_content)
         await HistoryService.add_message(
             session_id,
             {"user_id": user_id, "role": "assistant", "content": assistant_content},

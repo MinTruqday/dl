@@ -26,6 +26,7 @@ export type ChatMessage = {
   role: "user" | "assistant";
   content: string;
   attachment?: string;
+  pending?: boolean;
 };
 export type ChatMode = "chat" | "work" | "goal" | "learn" | "plan";
 export type ChatPlanStep = {
@@ -55,6 +56,7 @@ const streamErrors: Record<string, string> = {
   input_security_blocked: "Yêu cầu bị chặn bởi chính sách an toàn",
   planning_model_failed: "Không thể lập kế hoạch",
   orchestration_failed: "Không thể thực hiện kế hoạch",
+  model_generation_failed: "Mô hình AI không thể tạo câu trả lời",
   response_verification_failed: "Kết quả không vượt qua bước kiểm chứng",
   chat_stream_failed: "Luồng phản hồi bị gián đoạn",
   multimodal_processing_failed: "Không thể xử lý tệp đa phương tiện",
@@ -264,6 +266,8 @@ export function useChat(documentId?: string | null) {
     let activeSession = sessionId;
     let approvalTimer: ReturnType<typeof setInterval> | null = null;
     let responseTimer: ReturnType<typeof setTimeout> | null = null;
+    let pendingAssistantId = "";
+    let responseTimedOut = false;
     try {
       const effectiveText =
         text.trim() ||
@@ -328,15 +332,17 @@ export function useChat(documentId?: string | null) {
         attachment: attachments.map((item) => item.filename).join(", ") || undefined,
       };
       const assistantId = crypto.randomUUID();
+      pendingAssistantId = assistantId;
       setMessages((rows) => [
         ...rows,
         userMessage,
+        { id: assistantId, role: "assistant", content: "", pending: true },
       ]);
       requestController.current = new AbortController();
       responseTimer = setTimeout(() => {
-        setError("AI chưa phản hồi trong thời gian cho phép");
+        responseTimedOut = true;
         requestController.current?.abort();
-      }, 90_000);
+      }, 300_000);
       const response = await streamAiChatAPI(
         {
           query: effectiveText,
@@ -422,11 +428,16 @@ export function useChat(documentId?: string | null) {
               if (!existing)
                 return [...rows, { id: assistantId, role: "assistant", content: answer }];
               return rows.map((message) =>
-                message.id === assistantId ? { ...message, content: answer } : message,
+                message.id === assistantId
+                  ? { ...message, content: answer, pending: false }
+                  : message,
               );
             });
           }
         }
+      }
+      if (!answer) {
+        throw new Error("Mô hình AI không trả về nội dung");
       }
       if (activeSession && mode !== "chat") {
         const currentWorkspace = await getAiWorkspaceAPI(activeSession).catch(
@@ -450,9 +461,26 @@ export function useChat(documentId?: string | null) {
       await reload();
       return true;
     } catch (cause) {
-      if (cause instanceof DOMException && cause.name === "AbortError") return true;
-      setError(
-        cause instanceof Error ? cause.message : "Không thể gửi yêu cầu",
+      const message = responseTimedOut
+        ? "AI phản hồi quá lâu. Hãy thử lại với câu hỏi ngắn hơn."
+        : cause instanceof DOMException && cause.name === "AbortError"
+          ? ""
+          : cause instanceof Error
+            ? cause.message
+            : "Không thể gửi yêu cầu";
+      if (message) {
+        setMessages((rows) =>
+          rows.map((row) =>
+            row.id === pendingAssistantId
+              ? { ...row, content: message, pending: false }
+              : row,
+          ),
+        );
+        setError(message);
+        return false;
+      }
+      setMessages((rows) =>
+        rows.filter((row) => row.id !== pendingAssistantId),
       );
       return false;
     } finally {

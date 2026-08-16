@@ -256,6 +256,10 @@ services:
       MCP_ALLOWED_REMOTE_HOSTS: ${MCP_ALLOWED_REMOTE_HOSTS}
       MCP_ALLOW_PRIVATE_NETWORKS: ${MCP_ALLOW_PRIVATE_NETWORKS:?MCP_ALLOW_PRIVATE_NETWORKS is required}
       MCP_PRESET_ROOT: /opt/doclib-mcp
+      LANGSMITH_TRACING: ${LANGSMITH_TRACING:-false}
+      LANGSMITH_ENDPOINT: ${LANGSMITH_ENDPOINT:-https://api.smith.langchain.com}
+      LANGSMITH_API_KEY: ${LANGSMITH_API_KEY:-}
+      LANGSMITH_PROJECT: ${LANGSMITH_PROJECT:-DocLib}
     depends_on:
       mongodb:
         condition: service_started

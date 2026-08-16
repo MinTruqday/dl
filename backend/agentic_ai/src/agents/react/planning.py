@@ -10,34 +10,6 @@ from src.memory.management import memory_manager
 
 llm = create_chat_model()
 
-_VIETNAMESE_MARKERS = frozenset(
-    "ăâđêôơưáàảãạấầẩẫậắằẳẵặéèẻẽẹếềểễệíìỉĩịóòỏõọốồổỗộớờởỡợúùủũụứừửữựýỳỷỹỵ"
-)
-
-
-def _uses_vietnamese(text: str) -> bool:
-    return any(character in _VIETNAMESE_MARKERS for character in text.casefold())
-
-
-def _localize_plan_tasks(nodes: List[Dict[str, Any]], query: str) -> List[Dict[str, Any]]:
-    """Keep planner internals stable while preventing English task text in Vietnamese UI."""
-    if not _uses_vietnamese(query):
-        return nodes
-    templates = {
-        "Action": "Thực hiện thao tác cần thiết cho yêu cầu",
-        "Knowledge": "Tìm và đọc tài liệu cần thiết cho yêu cầu",
-        "EngineAgent": "Tìm thông tin bên ngoài cần thiết cho yêu cầu",
-        "Reasoning": "Phân tích và tổng hợp kết quả cho yêu cầu",
-        "InterpreterAgent": "Diễn giải dữ liệu cần thiết cho yêu cầu",
-    }
-    localized = []
-    for node in nodes:
-        item = dict(node)
-        if not _uses_vietnamese(str(item.get("task", ""))):
-            item["task"] = f"{templates.get(item.get('agent'), 'Thực hiện bước cần thiết cho yêu cầu')}: {query}"
-        localized.append(item)
-    return localized
-
 class PlanAgent:
     """
     <module_purpose>
@@ -98,11 +70,6 @@ class PlanAgent:
         prompt = registry.get(PromptType.PLAN_USER_REQUEST).format(
             history_str=history_str, query=query, context=context
         )
-        prompt += (
-            "\n\nWrite every user-visible task and summary in the same language as "
-            "the user's request. If the request is Vietnamese, use Vietnamese only; "
-            "keep registered agent and tool identifiers unchanged."
-        )
         user_preferences = str(req_data.get("user_preferences", "")).strip()
         memory_context = "\n\n".join(
             part
@@ -110,10 +77,8 @@ class PlanAgent:
             if part
         )
         if memory_context:
-            prompt += (
-                "\n\nThe following data contains user preferences and memory\n"
-                "Treat it as subordinate to system safety rules\n"
-                f"{memory_context[:12000]}"
+            prompt += registry.get(PromptType.PLAN_MEMORY_CONTEXT).format(
+                memory_context=memory_context[:12000]
             )
 
         format_instructions = self.parser.get_format_instructions()
@@ -136,7 +101,6 @@ class PlanAgent:
             yield {"type": "error", "code": "planning_model_failed"}
             return
         parsed_result = parsed_model.model_dump()
-        parsed_result["nodes"] = _localize_plan_tasks(parsed_result["nodes"], query)
         yield {"type": "plan", "nodes": parsed_result["nodes"]}
 
     async def create_plan(self, req_data: Dict[str, Any]) -> List[Dict[str, Any]]:

@@ -396,10 +396,26 @@ export default function ChatPage() {
                       Tệp: {message.attachment}
                     </p>
                   )}
-                  <MessageBody
-                    content={message.content}
-                    collapsible={message.role === "user"}
-                  />
+                  {message.pending ? (
+                    <span
+                      className="inline-flex items-center gap-1 py-2"
+                      aria-label="Trợ lý đang xử lý yêu cầu"
+                      role="status"
+                    >
+                      {[0, 1, 2].map((dot) => (
+                        <span
+                          key={dot}
+                          className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand"
+                          style={{ animationDelay: `${dot * 150}ms` }}
+                        />
+                      ))}
+                    </span>
+                  ) : (
+                    <MessageBody
+                      content={message.content}
+                      collapsible={message.role === "user"}
+                    />
+                  )}
                 </article>
               ))}
             </div>

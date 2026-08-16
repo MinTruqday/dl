@@ -104,6 +104,13 @@ async def chat_stream_endpoint(
         req.query = original_query
         agentops.record_session_start(session_id, user_id, original_query)
         await workspace.start(session_id, user_id, req.mode, original_query, req.approval_policy)
+        await _persist_conversation_turns(
+            session_id,
+            user_id,
+            original_query,
+            "",
+            req.attachments,
+        )
         mode_directive = await workspace.mode_context(session_id, user_id, req.mode)
 
         try:
@@ -238,6 +245,11 @@ async def chat_stream_endpoint(
                         )
                     except Exception:
                         logger.exception("Unexpected error during LLM chat stream")
+                        yield (
+                            "event: error\ndata: "
+                            + json.dumps({"code": "model_generation_failed"})
+                            + "\n\n"
+                        )
 
             elif route == "knowledge":
                 from src.agents.specialists.knowledge import researcher
@@ -349,6 +361,7 @@ async def chat_stream_endpoint(
                 original_query,
                 final_answer,
                 req.attachments,
+                persist_user=False,
             )
 
             await workspace.finish(session_id, user_id, req.mode, bool(final_answer))
