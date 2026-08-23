@@ -9,15 +9,12 @@ from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.redis import redis
-from src.core.publication import trigger_document_publish_job
 from src.repositories.document import DocumentRepository
 from src.schemas.document import DocumentContentUpdate, DocumentCreate, DocumentInDB, DocumentStatus
-from src.clients.collaboration import CollaborationClient
 from src.clients.rag import rag_client
 from src.services.document.base import (
     serialize_document,
     is_admin,
-    get_effective_collaboration_status,
     can_read_full,
     pwd_context,
 )
@@ -55,10 +52,7 @@ class DocumentCrudService:
         doc_doc = DocumentInDB(**doc_dict, creator_id=str(current_user.id))
         doc_data = doc_doc.model_dump(by_alias=True)
         doc_data["views"] = 0
-        doc_data["reads_count"] = 0
         doc_data["is_deleted"] = False
-        doc_data["coauthors"] = []
-        doc_data["invited_users"] = []
         doc_data["created_at"] = datetime.now(timezone.utc)
         doc_data["updated_at"] = datetime.now(timezone.utc)
 
@@ -82,12 +76,6 @@ class DocumentCrudService:
             except Exception:
                 logger.exception("Create ingest webhook failed")
 
-        if doc_data.get("status") == DocumentStatus.PUBLISHED:
-            try:
-                await trigger_document_publish_job(doc_data["_id"])
-            except Exception:
-                logger.exception("Publish event notification failed")
-
         return serialize_document(doc_data)
 
     @staticmethod
@@ -98,10 +86,7 @@ class DocumentCrudService:
         limit: int = 50,
     ):
         user_id = str(current_user.id)
-        query = {
-            "$or": [{"creator_id": user_id}, {"coauthors": user_id}],
-            "is_deleted": {"$ne": True},
-        }
+        query = {"creator_id": user_id, "is_deleted": {"$ne": True}}
         if q:
             escaped_query = re.escape(q)
             query["$and"] = [
@@ -163,32 +148,12 @@ class DocumentCrudService:
             )
 
         user_id = str(current_user.id)
-        is_coauthor = user_id in document.get("coauthors", [])
         is_creator = document.get("creator_id") == user_id
 
-        status_info = get_effective_collaboration_status(
-            document, user_id=user_id, is_adm=is_admin(current_user)
-        )
-        if not status_info["can_edit"]:
-            raise HTTPException(
-                status_code=403,
-                detail="Tài liệu đã đóng chế độ chỉnh sửa hoặc bạn không có quyền cập nhật",
-            )
-
-        if not is_creator and not is_coauthor and not is_admin(current_user):
+        if not is_creator and not is_admin(current_user):
             raise HTTPException(
                 status_code=403,
                 detail="Bạn không có quyền chỉnh sửa nội dung tài liệu này",
-            )
-        if (
-            is_coauthor
-            and not is_creator
-            and not is_admin(current_user)
-            and not await CollaborationClient.can_edit(document_id, user_id)
-        ):
-            raise HTTPException(
-                status_code=403,
-                detail="Vai trò cộng tác hiện tại không có quyền chỉnh sửa nội dung",
             )
 
         if update_data.expected_version:
@@ -262,10 +227,9 @@ class DocumentCrudService:
             )
 
         user_id = str(current_user.id)
-        is_coauthor = user_id in document.get("coauthors", [])
         is_creator = document.get("creator_id") == user_id
 
-        if not is_creator and not is_coauthor and not is_admin(current_user):
+        if not is_creator and not is_admin(current_user):
             raise HTTPException(
                 status_code=403,
                 detail="Bạn không có quyền cập nhật thông tin tài liệu này",
@@ -417,22 +381,11 @@ class DocumentCrudService:
                 status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn"
             )
 
-        is_coauthor = user_id in document.get("coauthors", [])
         is_creator = document.get("creator_id") == user_id
-
-        status_info = get_effective_collaboration_status(
-            document, user_id=user_id, is_adm=is_admin(current_user)
-        )
-        if not status_info["can_view"]:
-            raise HTTPException(
-                status_code=403,
-                detail="Tài liệu đã đóng hoàn toàn hoặc đã hết thời hạn cho phép truy cập",
-            )
 
         if (
             document.get("is_deleted") is True
             and not is_creator
-            and not is_coauthor
             and not is_admin(current_user)
         ):
             raise HTTPException(
@@ -441,7 +394,6 @@ class DocumentCrudService:
 
         if (
             not is_creator
-            and not is_coauthor
             and document.get("status") != DocumentStatus.PUBLISHED
             and not is_admin(current_user)
         ):
@@ -450,7 +402,7 @@ class DocumentCrudService:
                 detail="Tài liệu hiện đang ở trạng thái nháp và chưa được công bố",
             )
 
-        if document.get("is_password_protected") and not is_creator and not is_coauthor:
+        if document.get("is_password_protected") and not is_creator:
             if not password:
                 return {
                     "_id": str(document["_id"]),

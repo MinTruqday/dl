@@ -114,7 +114,6 @@ export function useChat(documentId?: string | null) {
   const [approvals, setApprovals] = useState<ChatApproval[]>([]);
   const [activeModel, setActiveModel] = useState("");
   const [audioAvailable, setAudioAvailable] = useState(false);
-  const [mcpAvailable, setMcpAvailable] = useState(false);
   const requestController = useRef<AbortController | null>(null);
   const reload = useCallback(async () => {
     if (!user) return setLoading(false);
@@ -127,7 +126,6 @@ export function useChat(documentId?: string | null) {
         getAiCapabilitiesAPI().catch(() => ({
           model: "",
           audio_input: false,
-          mcp: false,
         })),
         ]);
       setSessions(sessionResponse.data ?? sessionResponse ?? []);
@@ -138,7 +136,6 @@ export function useChat(documentId?: string | null) {
       );
       setActiveModel(String(capabilities.model ?? ""));
       setAudioAvailable(Boolean(capabilities.audio_input));
-      setMcpAvailable(Boolean(capabilities.mcp));
     } catch (cause) {
       setError(
         cause instanceof Error ? cause.message : "Không thể tải trò chuyện",
@@ -529,7 +526,6 @@ export function useChat(documentId?: string | null) {
     approvals,
     activeModel,
     audioAvailable,
-    mcpAvailable,
     clearNotice: () => setNotice(""),
     reportError: setError,
     reload,

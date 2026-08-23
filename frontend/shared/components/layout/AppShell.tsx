@@ -233,14 +233,8 @@ export default function AppShell({ children, requireAuth }: AppShellProps) {
                         </p>
                       </div>
                       <Link
-                        href="/ho-so"
-                        className="mt-1 block rounded-control px-3 py-2 text-[14px] hover:bg-surface-quiet"
-                      >
-                        Hồ sơ
-                      </Link>
-                      <Link
                         href="/cai-dat"
-                        className="block rounded-control px-3 py-2 text-[14px] hover:bg-surface-quiet"
+                        className="mt-1 block rounded-control px-3 py-2 text-[14px] hover:bg-surface-quiet"
                       >
                         Cài đặt
                       </Link>

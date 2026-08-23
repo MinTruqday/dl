@@ -1,9 +1,0 @@
-from src.api.invite import router as invite_router
-from src.api.member import router as member_router
-from src.api.link import router as link_router
-from src.api.access_request import router as access_request_router
-from src.api.presence import router as presence_router
-from src.api.activity import router as activity_router
-from src.api.task import router as task_router
-from src.api.lock import router as lock_router
-from src.api.snapshot import router as snapshot_router

@@ -19,8 +19,6 @@ INTERNAL_UUID7_COUNTS = {
     "backend/agentic_ai/src/loop/event.py": 3,
     "backend/agentic_ai/src/memory/long_term.py": 1,
     "backend/agentic_ai/src/workflow/orchestration.py": 1,
-    "backend/engagement/src/services/library.py": 1,
-    "backend/finetune/src/services/operations.py": 3,
 }
 
 
@@ -620,7 +618,6 @@ def scan_identifier_policy(issues):
     required_secret_generators = {
         "backend/cloud/src/api/storage.py": "secrets.token_urlsafe(",
         "backend/cloud/src/services/share.py": "secrets.token_urlsafe(",
-        "backend/collaboration/src/services/link.py": "secrets.token_hex(",
     }
     for path, marker in required_secret_generators.items():
         if marker not in (ROOT / path).read_text(encoding="utf-8"):

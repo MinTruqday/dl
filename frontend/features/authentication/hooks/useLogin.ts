@@ -23,7 +23,7 @@ export function useLogin() {
     const requested = searchParams.get("next") || "";
     const destination = requested.startsWith("/") && !requested.startsWith("//") && !requested.startsWith("/dang-nhap")
       ? requested
-      : "/kham-pha";
+      : "/cai-dat/vai-tro";
     sessionStorage.removeItem("doclib_return_path");
     router.replace(destination);
   };

@@ -7,7 +7,6 @@ from loguru import logger
 from src.core.infrastructure.mongo import mongo
 from src.repositories.document import DocumentRepository
 from src.schemas.document import DocumentStatus
-from src.clients.engagement import EngagementClient
 from src.services.document.base import can_read_full, is_admin, serialize_document
 
 class DocumentMetadataService:
@@ -29,15 +28,11 @@ class DocumentMetadataService:
         )
         total_words = len(text_content.split()) if text_content else 0
         avg_read_time_min = max(1, total_words // 200)
-        engagement_stats = await EngagementClient.document_stats(document_id)
         return {
             "views": views,
             "avg_read_time": f"{avg_read_time_min} minutes",
             "avg_read_time_min": avg_read_time_min,
             "total_words": total_words,
-            "saves": int(engagement_stats.get("saves", 0)),
-            "reads": int(engagement_stats.get("reads", 0)),
-            "highlights": int(engagement_stats.get("highlights", 0)),
         }
 
     @staticmethod

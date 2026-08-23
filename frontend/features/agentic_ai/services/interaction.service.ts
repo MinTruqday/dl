@@ -3,26 +3,6 @@ import {
   getAuthHeaders,
   getToken,
 } from "@/shared/services/api-client";
-
-export async function processTextAPI(
-  text: string,
-  action: string,
-  context: string = "",
-  targetLang: string = "Vietnamese",
-) {
-  const res = await fetch(`${API_URL}/suy-luan/hanh-dong`, {
-    method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ text, action, context, target_lang: targetLang }),
-  });
-  const data = await res.json();
-  if (!res.ok)
-    throw new Error(
-      data.message || "Không thể xử lý văn bản",
-    );
-  return data;
-}
-
 export async function getAiSessionsAPI(documentId?: string, userId?: string) {
   const params = new URLSearchParams();
   if (documentId) params.set("document_id", documentId);
@@ -183,111 +163,6 @@ export async function resolveAiApprovalAPI(
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Không thể gửi lựa chọn xác nhận");
   return data.data;
-}
-
-export async function queryRagAPI(
-  documentId: string,
-  query: string,
-  thinking: boolean = false,
-  sessionId?: string,
-) {
-  const res = await fetch(`${API_URL}/tro-chuyen`, {
-    method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({
-      document_ids: [documentId],
-      query,
-      thinking,
-      session_id: sessionId,
-    }),
-  });
-  const data = await res.json();
-  if (!res.ok)
-    throw new Error(
-      data.message || "Không thể trả lời từ dữ liệu tài liệu",
-    );
-  return data;
-}
-
-export async function translateTextAPI(
-  text: string,
-  targetLang: string = "vi",
-) {
-  const res = await fetch(`${API_URL}/suy-luan/dich-thuat`, {
-    method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ text, target_lang: targetLang }),
-  });
-  const data = await res.json();
-  if (!res.ok)
-    throw new Error(
-      data.message || "Không thể dịch nội dung",
-    );
-  return data;
-}
-
-export async function suggestCitationsAPI(text: string, style: string = "APA") {
-  const res = await fetch(`${API_URL}/suy-luan/trich-dan-thong-minh`, {
-    method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ text, style }),
-  });
-  const data = await res.json();
-  if (!res.ok)
-    throw new Error(
-      data.message || "Không thể đề xuất trích dẫn",
-    );
-  return data;
-}
-
-export async function transformToneAPI(
-  text: string,
-  tone: string,
-  expansion: boolean = false,
-) {
-  const res = await fetch(`${API_URL}/suy-luan/bien-doi-van-ban`, {
-    method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ text, tone, expansion }),
-  });
-  const data = await res.json();
-  if (!res.ok)
-    throw new Error(
-      data.message || "Không thể chuyển đổi văn bản",
-    );
-  return data;
-}
-
-export async function peerReviewAPI(text: string, criteria: string[] = []) {
-  const res = await fetch(`${API_URL}/suy-luan/kiem-duyet-noi-dung`, {
-    method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ text, criteria }),
-  });
-  const data = await res.json();
-  if (!res.ok)
-    throw new Error(
-      data.message || "Không thể kiểm tra nội dung",
-    );
-  return data;
-}
-
-export async function multiDocSynthesisAPI(
-  documentIds: string[],
-  query: string,
-) {
-  const res = await fetch(`${API_URL}/suy-luan/tong-hop-tai-lieu`, {
-    method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ document_ids: documentIds, query }),
-  });
-  const data = await res.json();
-  if (!res.ok)
-    throw new Error(
-      data.message ||
-        "Không thể tổng hợp tài liệu",
-    );
-  return data;
 }
 
 export async function getUserInstructionsAPI() {

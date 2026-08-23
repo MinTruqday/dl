@@ -19,7 +19,7 @@ def main():
     frontend = compose.split("\n  frontend:\n", 1)[1].split("\n  notification:\n", 1)[0]
     if "env_file:" in frontend:
         issues.append("docker-compose.yml:frontend_secret_env_file")
-    for required in ("NEXT_PUBLIC_API_URL", "NEXT_PUBLIC_WS_URL"):
+    for required in ("NEXT_PUBLIC_API_URL",):
         if required not in frontend:
             issues.append(f"docker-compose.yml:frontend_missing_{required.lower()}")
 

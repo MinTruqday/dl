@@ -1,7 +1,6 @@
 from src.services.document.base import (
     serialize_document,
     is_admin,
-    get_effective_collaboration_status,
     can_read_full,
 )
 from src.services.document.crud import DocumentCrudService
@@ -18,7 +17,6 @@ class DocumentService(
     DocumentBulkService,
 ):
     _is_admin = staticmethod(is_admin)
-    _get_effective_collaboration_status = staticmethod(get_effective_collaboration_status)
     _can_read_full = staticmethod(can_read_full)
 
 __all__ = [

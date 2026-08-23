@@ -45,10 +45,8 @@ class Settings(BaseModel):
     MODEL_TIMEOUT_SECONDS: float = float(os.environ["MODEL_TIMEOUT_SECONDS"])
     MODEL_KEEP_ALIVE: str = os.environ["MODEL_KEEP_ALIVE"]
     RERANKER_MODEL: str = os.environ["RERANKER_MODEL"]
-    NLLB_MODEL: str = os.environ["NLLB_MODEL"]
     NLI_MODEL_NAME: str = os.environ["NLI_MODEL_NAME"]
     PLATFORM_SYSTEM_ID: str = os.environ["PLATFORM_SYSTEM_ID"]
-    WEBSOCKET_URL: str = get_service_url("WEBSOCKET")
     RAG_URL: str = get_service_url("RAG")
     ASSESSMENT_URL: str = get_service_url("ASSESSMENT")
     AGENTIC_AI_DB_NAME: str = os.environ["AGENTIC_AI_DB_NAME"]
@@ -64,9 +62,4 @@ class Settings(BaseModel):
     AGENT_ARCHIVE_MAX_FILES: int = int(os.environ["AGENT_ARCHIVE_MAX_FILES"])
     AGENT_ARCHIVE_MAX_UNCOMPRESSED_BYTES: int = int(os.environ["AGENT_ARCHIVE_MAX_UNCOMPRESSED_BYTES"])
     AGENT_ARCHIVE_MAX_COMPRESSION_RATIO: float = float(os.environ["AGENT_ARCHIVE_MAX_COMPRESSION_RATIO"])
-    MCP_ALLOWED_STDIO_COMMANDS: str = os.environ["MCP_ALLOWED_STDIO_COMMANDS"]
-    MCP_ALLOWED_REMOTE_HOSTS: str = os.environ["MCP_ALLOWED_REMOTE_HOSTS"]
-    MCP_ALLOW_PRIVATE_NETWORKS: bool = os.environ["MCP_ALLOW_PRIVATE_NETWORKS"].lower() == "true"
-    MCP_PRESET_ROOT: str = os.environ.get("MCP_PRESET_ROOT", "/opt/doclib-mcp")
-
 settings = Settings()

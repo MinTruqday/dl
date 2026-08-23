@@ -18,7 +18,6 @@ _REQUIRES_APPROVAL_TOOLS = frozenset(
         "manage_user_instructions",
         "restore_document",
         "update_document_metadata",
-        "execute_mcp_tool",
         "create_question_draft",
         "create_revision_draft",
         "import_assessment",

@@ -35,7 +35,6 @@ from src.api.history import router as history
 from src.api.inference import router as inference
 from src.api.ingestion import router as ingest
 from src.api.events import router as events
-from src.api.mcp import router as mcp_router
 from src.api.interrupt import router as interrupt_router
 
 app = FastAPI(title="DocLib Agentic AI", version=settings.VERSION)
@@ -70,7 +69,6 @@ app.include_router(ingest)
 app.include_router(feedback)
 app.include_router(history)
 app.include_router(events)
-app.include_router(mcp_router)
 app.include_router(interrupt_router)
 @app.get("/health")
 async def health_check():

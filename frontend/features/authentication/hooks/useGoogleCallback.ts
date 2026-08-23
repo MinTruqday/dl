@@ -32,7 +32,7 @@ export function useGoogleCallback() {
         else {
           const requested = sessionStorage.getItem("doclib_return_path") || "";
           sessionStorage.removeItem("doclib_return_path");
-          router.replace(requested.startsWith("/") && !requested.startsWith("//") && !requested.startsWith("/dang-nhap") ? requested : "/kham-pha");
+          router.replace(requested.startsWith("/") && !requested.startsWith("//") && !requested.startsWith("/dang-nhap") ? requested : "/cai-dat/vai-tro");
         }
       } catch (reason) {
         if (active)
@@ -55,7 +55,7 @@ export function useGoogleCallback() {
     finish: () => {
       const requested = sessionStorage.getItem("doclib_return_path") || "";
       sessionStorage.removeItem("doclib_return_path");
-      router.replace(requested.startsWith("/") && !requested.startsWith("//") && !requested.startsWith("/dang-nhap") ? requested : "/kham-pha");
+      router.replace(requested.startsWith("/") && !requested.startsWith("//") && !requested.startsWith("/dang-nhap") ? requested : "/cai-dat/vai-tro");
     },
     back: () => router.replace("/dang-nhap"),
   };

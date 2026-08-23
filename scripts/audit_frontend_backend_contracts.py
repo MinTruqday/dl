@@ -131,7 +131,15 @@ def main() -> int:
         ):
             missing.append((method, frontend_path, source, line))
     unexpected_external = [
-        entry for entry in external if entry[2] not in EXTERNAL_FETCH_ARGUMENTS
+        entry
+        for entry in external
+        if entry[2] not in EXTERNAL_FETCH_ARGUMENTS
+        and not (
+            entry[2] == "input"
+            and entry[0].as_posix().endswith(
+                "frontend/shared/services/api-client.ts"
+            )
+        )
     ]
     if unexpected_external:
         for source, line, argument in unexpected_external:

@@ -24,7 +24,6 @@ import PageLoader from "@/shared/components/common/PageLoader";
 import { Button } from "@/shared/components/ui/Button";
 import { useNoticeToast } from "@/shared/hooks/useNoticeToast";
 import ChatInstructionsModal from "../components/ChatInstructionsModal";
-import McpPresetModal from "../components/McpPresetModal";
 import { ChatMode, useChat } from "../hooks/useChat";
 
 const modes: Array<{ value: ChatMode; label: string; detail: string }> = [
@@ -44,7 +43,6 @@ const toolLabels: Record<string, string> = {
   propose_document_edits: "Đề xuất chỉnh sửa",
   delete_document: "Xóa tài liệu",
   restore_document: "Khôi phục tài liệu",
-  execute_mcp_tool: "Chạy công cụ MCP",
   manage_user_instructions: "Cập nhật chỉ dẫn cá nhân",
   create_question_draft: "Tạo câu hỏi nháp",
   create_revision_draft: "Tạo đề xuất sửa bản nháp",
@@ -65,7 +63,6 @@ const toolDescriptions: Record<string, string> = {
   propose_document_edits: "Tạo đề xuất chỉnh sửa để bạn xem lại.",
   delete_document: "Xóa tài liệu đã chọn.",
   restore_document: "Khôi phục tài liệu đã xóa.",
-  execute_mcp_tool: "Gọi công cụ từ máy chủ MCP đã kết nối.",
   manage_user_instructions: "Thay đổi chỉ dẫn phản hồi của trợ lý.",
   create_question_draft: "Tạo QuestionDraft để giáo viên rà soát.",
   create_revision_draft: "Tạo proposal sửa bản nháp và chờ giáo viên duyệt.",
@@ -150,7 +147,6 @@ export default function ChatPage() {
     "manual",
   );
   const [instructionsOpen, setInstructionsOpen] = useState(false);
-  const [mcpOpen, setMcpOpen] = useState(false);
   const [renamingId, setRenamingId] = useState("");
   const [renameValue, setRenameValue] = useState("");
   const [recording, setRecording] = useState(false);
@@ -539,18 +535,6 @@ export default function ChatPage() {
                       </button>
                       {advancedModesEnabled && (
                         <div className="mt-1 border-t border-border pt-1">
-                          {chat.mcpAvailable && (
-                            <button
-                              type="button"
-                              className="flex w-full items-center rounded-control px-3 py-2 text-left text-[13px] text-ink hover:bg-surface-quiet"
-                              onClick={() => {
-                                setAttachmentMenuOpen(false);
-                                setMcpOpen(true);
-                              }}
-                            >
-                              Kết nối MCP
-                            </button>
-                          )}
                           {[
                             { value: "work" as ChatMode, label: "Công việc" },
                             { value: "plan" as ChatMode, label: "Kế hoạch" },
@@ -654,7 +638,6 @@ export default function ChatPage() {
         initial={chat.instructions}
         save={chat.saveInstructions}
       />
-      <McpPresetModal open={mcpOpen} onClose={() => setMcpOpen(false)} />
     </div>
   );
 }

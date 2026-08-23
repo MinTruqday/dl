@@ -10,7 +10,6 @@ from src.tools.document import (
 )
 from src.tools.mindmap import generate_mindmap
 from src.tools.instructions import manage_user_instructions
-from src.tools.mcp import execute_mcp_tool, search_mcp_connectors, suggest_mcp_connectors
 from src.workflow.reduction import agent_summarize_long_document
 from src.tools.assessment import (
     analyze_question,
@@ -47,9 +46,6 @@ tools = [
     delete_document,
     restore_document,
     get_document_analytics,
-    search_mcp_connectors,
-    suggest_mcp_connectors,
-    execute_mcp_tool,
     get_curriculum_context,
     get_teacher_material_context,
     map_question_to_curriculum,

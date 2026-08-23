@@ -64,13 +64,10 @@ class DocumentBase(BaseModel):
     category: Optional[str] = "Uncategorized"
     pages_count: Optional[int] = 0
     preview_pages: int = Field(default=5, ge=0, le=1000)
-    scheduled_publish_at: Optional[datetime] = None
-    coauthors: List[str] = Field(default_factory=list)
     is_deleted: bool = False
     deleted_at: Optional[datetime] = None
     publisher_name: Optional[str] = None
     folder_id: Optional[str] = None
-    publish_at: Optional[datetime] = None
     draft_content: Optional[Any] = None
     toc: List[dict] = Field(default_factory=list)
     reading_time_minutes: int = 0
@@ -91,8 +88,6 @@ class DocumentUpdate(BaseModel):
     tags: Optional[List[str]] = None
     category: Optional[str] = None
     folder_id: Optional[str] = None
-    publish_at: Optional[datetime] = None
-    scheduled_publish_at: Optional[datetime] = None
     expected_version: Optional[datetime] = None
     file_url: Optional[str] = None
     content_format: Optional[DocumentContentFormat] = None
@@ -121,94 +116,9 @@ class DocumentResponse(DocumentBase):
 class DocumentPasswordRequest(BaseModel):
     password: str = Field(min_length=8, max_length=200)
 
-class SchedulePublishRequest(BaseModel):
-    publish_at: datetime
-
-class SeoMetadataRequest(BaseModel):
-    tags: List[str] = Field(default_factory=list)
-    keywords: List[str] = Field(default_factory=list)
-    slug: str = ""
-    description: str = ""
-
-class CoauthorInviteRequest(BaseModel):
-    document_id: Optional[str] = None
-    email: str
-    role: str = "editor"
-
-class CollaborationResponse(BaseModel):
-    status: str
-
-
-class TransferOwnershipRequest(BaseModel):
-    user_id: str
-
-class UpdateCollaboratorRoleRequest(BaseModel):
-    role: str
-
-class CollabMemoCreateRequest(BaseModel):
-    message: str
-
-class UpdateCollabAccessRequest(BaseModel):
-    access_level: str
-
-class CreateDraftSnapshotRequest(BaseModel):
-    version_name: str
-
-class CollabTaskCreateRequest(BaseModel):
-    task_desc: str
-    assigned_to: Optional[str] = None
-
-class UpdateTaskStatusRequest(BaseModel):
-    is_done: bool
-
-class TaskCommentCreateRequest(BaseModel):
-    comment_text: str
-
 class FolderCreate(BaseModel):
     name: str
     parent_id: Optional[str] = None
 
 class TagsUpdate(BaseModel):
     tags: List[str]
-
-class ScheduleUpdate(BaseModel):
-    publish_at: datetime
-
-
-class CollaborationShareLinkConfig(BaseModel):
-    is_active: bool = True
-    password: Optional[str] = None
-    default_role: str = "editor"
-    expires_in_hours: Optional[int] = None
-
-
-class CollaborationShareLinkJoin(BaseModel):
-    password: Optional[str] = None
-
-
-class CollaborationAccessRequestCreate(BaseModel):
-    requested_role: str = "editor"
-    message: Optional[str] = None
-
-
-class CollaborationAccessRequestReview(BaseModel):
-    status: str
-    role: Optional[str] = None
-
-
-class CollaborationScheduleRule(BaseModel):
-    id: Optional[str] = None
-    title: Optional[str] = None
-    start_at: Optional[datetime] = None
-    end_at: datetime
-    mode: str = "EDIT"
-    fallback_mode: str = "READ_ONLY"
-    is_active: bool = True
-
-
-class CollaborationModeUpdate(BaseModel):
-    collaboration_mode: str
-
-
-class CollaborationScheduleUpdate(BaseModel):
-    schedules: List[CollaborationScheduleRule]

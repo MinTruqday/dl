@@ -47,7 +47,6 @@ async def chat_capabilities(
         "model": settings.LLM_MODEL,
         "audio_input": True,
         "code_execution": True,
-        "mcp": True,
     }
 
 @router.post("/phat-truc-tiep")

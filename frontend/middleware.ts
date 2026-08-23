@@ -3,28 +3,10 @@ import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
-  const role = request.cookies.get("role")?.value || "reader";
   const { pathname } = request.nextUrl;
 
-  if (token && role === "reader") {
-    if (
-      pathname.startsWith("/soan-thao") ||
-      pathname === "/tai-lieu" ||
-      pathname.startsWith("/cong-tac") ||
-      pathname.startsWith("/luu-tru") ||
-      pathname.startsWith("/thu-thap")
-    ) {
-      return NextResponse.redirect(new URL("/", request.url));
-    }
-  }
-
-  if (token && role === "author") {
-    if (
-      pathname.startsWith("/thu-thap")
-    ) {
-      return NextResponse.redirect(new URL("/soan-thao", request.url));
-    }
-  }
+  if (!token && pathname.startsWith("/quan-tri"))
+    return NextResponse.redirect(new URL("/dang-nhap", request.url));
 
   return NextResponse.next();
 }

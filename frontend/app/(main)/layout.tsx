@@ -12,10 +12,7 @@ export default function MainLayout({
   const pathname = usePathname();
 
   const isPublic =
-    pathname.startsWith("/kham-pha") ||
-    pathname.startsWith("/tai-lieu/") ||
-    pathname.startsWith("/dieu-khoan") ||
-    pathname.startsWith("/tro-giup");
+    pathname.startsWith("/dieu-khoan") || pathname.startsWith("/tro-giup");
 
   return (
     <Suspense

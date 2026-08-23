@@ -89,7 +89,6 @@ def test_chat_capabilities_are_available_without_subscription_tiers():
 
     assert capabilities["model"] == settings.LLM_MODEL
     assert capabilities["audio_input"] is True
-    assert capabilities["mcp"] is True
 
 
 def test_prompt_injection_markers_are_blocked_without_model_generation():
@@ -457,53 +456,6 @@ def test_parallel_workflow_state_reducers_preserve_all_agent_updates():
 
 
 
-def test_existing_mcp_preset_is_reprobed_and_refreshed():
-    from types import SimpleNamespace
-    from unittest.mock import AsyncMock, patch
-    from bson import ObjectId
-    from src.api.mcp import connect_mcp_preset
-
-    existing_id = ObjectId()
-    tools = [{"name": "list_pages", "description": "", "input_schema": {}}]
-    update = AsyncMock()
-    with (
-        patch(
-            "src.api.mcp.MCPRepository.find_connector",
-            new=AsyncMock(
-                return_value={
-                    "_id": existing_id,
-                    "owner_id": "admin-1",
-                    "preset_id": "chrome-devtools",
-                    "command": "/stale/node",
-                    "args": [],
-                }
-            ),
-        ),
-        patch(
-            "src.api.mcp.MCPService.probe_definition",
-            new=AsyncMock(return_value=tools),
-        ) as probe,
-        patch("src.api.mcp.MCPRepository.update_connector", new=update),
-    ):
-        result = asyncio.run(
-            connect_mcp_preset(
-                "chrome-devtools",
-                current_user=SimpleNamespace(
-                    id="admin-1",
-                    role=SimpleNamespace(value="admin"),
-                ),
-            )
-        )
-    assert result["already_connected"] is True
-    assert result["tools"] == tools
-    probe.assert_awaited_once()
-    update.assert_awaited_once()
-    update_payload = update.await_args.args[1]["$set"]
-    assert update_payload["preset_id"] == "chrome-devtools"
-    assert update_payload["is_connected"] is True
-    assert update_payload["tool_names"] == ["list_pages"]
-
-
 def test_intervention_approval_is_owner_scoped_and_single_use():
     from src.loop.intervention import InterventionHarness
 
@@ -772,219 +724,6 @@ def test_advanced_mode_context_keeps_persistent_objective():
     assert "language used by the user" in mode_context
 
 
-def test_mcp_stdio_allowlist_matches_complete_command():
-    from unittest.mock import patch
-
-    from src.core.infrastructure.configuration import settings
-    from src.services.mcp import MCPService
-
-    with patch.object(settings, "MCP_ALLOWED_STDIO_COMMANDS", "npx -y approved-server"):
-        asyncio.run(
-            MCPService.validate_connector(
-                {"server_type": "stdio", "command": "npx", "args": ["-y", "approved-server"]}
-            )
-        )
-        denied = False
-        try:
-            asyncio.run(
-                MCPService.validate_connector(
-                    {"server_type": "stdio", "command": "npx", "args": ["-y", "other-server"]}
-                )
-            )
-        except PermissionError:
-            denied = True
-    assert denied is True
-
-
-def test_mcp_builtin_presets_are_immutable_and_only_verified_choices_are_returned():
-    from unittest.mock import AsyncMock, patch
-
-    from src.core.infrastructure.configuration import settings
-    from src.services.mcp import MCPService
-
-    trusted = MCPService.preset_connector("reqwise-figma")
-    with patch.object(settings, "MCP_ALLOWED_STDIO_COMMANDS", ""):
-        asyncio.run(MCPService.validate_connector(trusted))
-        tampered = {**trusted, "args": ["/tmp/untrusted.js"]}
-        with pytest.raises(PermissionError):
-            asyncio.run(MCPService.validate_connector(tampered))
-
-    MCPService._preset_cache = (0.0, [])
-    verified_tools = [{"name": "figma_status", "description": "", "input_schema": {}}]
-    with patch.object(
-        MCPService,
-        "probe_definition",
-        new=AsyncMock(side_effect=[verified_tools, RuntimeError("unavailable")]),
-    ):
-        choices = asyncio.run(MCPService.available_presets(force=True))
-    assert [choice["id"] for choice in choices] == ["reqwise-figma"]
-    assert choices[0]["verified"] is True
-
-
-def test_mcp_remote_connector_requires_https_allowlist():
-    from unittest.mock import patch
-
-    from src.core.infrastructure.configuration import settings
-    from src.services.mcp import MCPService
-
-    with patch.object(settings, "MCP_ALLOWED_REMOTE_HOSTS", "connector.example.com"):
-        denied = False
-        try:
-            asyncio.run(
-                MCPService.validate_connector(
-                    {"server_type": "streamable_http", "url": "http://connector.example.com/mcp"}
-                )
-            )
-        except PermissionError:
-            denied = True
-    assert denied is True
-
-
-def test_mcp_user_remote_connector_accepts_public_https_without_global_allowlist():
-    import socket
-    from unittest.mock import patch
-
-    from src.core.infrastructure.configuration import settings
-    from src.services.mcp import MCPService
-
-    addresses = [
-        (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("93.184.216.34", 443))
-    ]
-    with (
-        patch.object(settings, "MCP_ALLOWED_REMOTE_HOSTS", ""),
-        patch("src.services.mcp.socket.getaddrinfo", return_value=addresses),
-    ):
-        asyncio.run(
-            MCPService.validate_connector(
-                {"server_type": "streamable_http", "url": "https://connector.example.com/mcp"}
-            )
-        )
-
-
-def test_mcp_user_connector_is_probed_before_it_is_kept():
-    from types import SimpleNamespace
-    from unittest.mock import AsyncMock, patch
-
-    from bson import ObjectId
-    from src.api.mcp import register_mcp_server
-    from src.schemas.mcp import RegisterServerRequest
-
-    connector_id = ObjectId()
-    tools = [{"name": "search", "description": "", "input_schema": {}}]
-    insert = AsyncMock(return_value=SimpleNamespace(inserted_id=connector_id))
-    update = AsyncMock()
-    with (
-        patch("src.api.mcp.MCPService.validate_connector", new=AsyncMock()),
-        patch("src.api.mcp.MCPRepository.insert_connector", new=insert),
-        patch("src.api.mcp.MCPService.list_tools", new=AsyncMock(return_value=tools)),
-        patch("src.api.mcp.MCPRepository.update_connector", new=update),
-    ):
-        result = asyncio.run(
-            register_mcp_server(
-                RegisterServerRequest(
-                    name="Máy chủ của tôi",
-                    description="Tìm kiếm tài liệu",
-                    server_type="streamable_http",
-                    url="https://connector.example.com/mcp",
-                ),
-                current_user=SimpleNamespace(
-                    id="user-1",
-                    role=SimpleNamespace(value="reader"),
-                ),
-            )
-        )
-    assert result["status"] == "success"
-    assert result["tools"] == tools
-    assert "preset_id" not in insert.await_args.args[0]
-    saved = update.await_args.args[1]["$set"]
-    assert saved["is_connected"] is True
-    assert saved["tool_names"] == ["search"]
-
-
-def test_mcp_failed_user_connector_is_removed_for_retry():
-    from types import SimpleNamespace
-    from unittest.mock import AsyncMock, patch
-
-    from bson import ObjectId
-    from fastapi import HTTPException
-    from src.api.mcp import register_mcp_server
-    from src.schemas.mcp import RegisterServerRequest
-
-    connector_id = ObjectId()
-    delete = AsyncMock()
-    with (
-        patch("src.api.mcp.MCPService.validate_connector", new=AsyncMock()),
-        patch(
-            "src.api.mcp.MCPRepository.insert_connector",
-            new=AsyncMock(return_value=SimpleNamespace(inserted_id=connector_id)),
-        ),
-        patch(
-            "src.api.mcp.MCPService.list_tools",
-            new=AsyncMock(side_effect=RuntimeError("unavailable")),
-        ),
-        patch("src.api.mcp.MCPRepository.delete_connector", new=delete),
-    ):
-        try:
-            asyncio.run(
-                register_mcp_server(
-                    RegisterServerRequest(
-                        name="Máy chủ lỗi",
-                        description="Kiểm thử kết nối lỗi",
-                        server_type="sse",
-                        url="https://connector.example.com/sse",
-                    ),
-                    current_user=SimpleNamespace(
-                        id="user-1",
-                        role=SimpleNamespace(value="reader"),
-                    ),
-                )
-            )
-            assert False
-        except HTTPException as error:
-            assert error.status_code == 502
-            assert error.detail["code"] == "mcp_connection_failed"
-    delete.assert_awaited_once()
-    assert delete.await_args.args[0] == {
-        "_id": connector_id,
-        "owner_id": "user-1",
-    }
-
-
-def test_mcp_secret_is_encrypted_and_bound_to_owner():
-    from src.services.mcp import MCPService
-
-    encrypted = MCPService.seal_secret("private-token", "user-1")
-    assert "private-token" not in encrypted
-    assert MCPService._open_secret(encrypted, "user-1") == "private-token"
-    denied = False
-    try:
-        MCPService._open_secret(encrypted, "user-2")
-    except Exception:
-        denied = True
-    assert denied is True
-
-
-def test_mcp_connector_lookup_is_owner_scoped():
-    from unittest.mock import AsyncMock, patch
-
-    from src.repositories.mcp import MCPRepository
-    from src.services.mcp import MCPService
-
-    connector_id = "507f1f77bcf86cd799439011"
-    lookup = AsyncMock(return_value=None)
-    with patch.object(MCPRepository, "find_connector", new=lookup):
-        denied = False
-        try:
-            asyncio.run(MCPService._get_connector(connector_id, "user-1"))
-        except LookupError:
-            denied = True
-    assert denied is True
-    query = lookup.await_args.args[0]
-    assert str(query["_id"]) == connector_id
-    assert query["owner_id"] == "user-1"
-
-
-
 def test_code_sandbox_real_execution():
     from src.harness.sandbox import CodeSandbox
     sandbox = CodeSandbox()
@@ -1177,22 +916,18 @@ def test_verification_fails_closed_when_model_is_unavailable():
     assert error.status == "failed"
 
 
-def test_inference_request_models_enforce_public_bounds():
+def test_inference_request_models_enforce_internal_bounds():
     from pydantic import ValidationError
 
-    from src.schemas.inference import QuickRepliesRequest, TranslationRequest
+    from src.schemas.inference import RagChunkSafetyRequest, RetrievalExpansionRequest
 
     try:
-        QuickRepliesRequest(context="x" * 20001)
+        RetrievalExpansionRequest(question="x" * 10001)
         assert False
     except ValidationError:
         pass
     try:
-        TranslationRequest(
-            text="Valid text",
-            target_language="English",
-            max_tokens=4001,
-        )
+        RagChunkSafetyRequest(texts=["valid"] * 501)
         assert False
     except ValidationError:
         pass
@@ -1264,7 +999,6 @@ def test_database_setup_creates_operational_indexes():
         "ai_sessions",
         "ai_messages",
         "rag_feedback",
-        "mcp_registry",
         "ai_workspaces",
     } == set(created)
 
@@ -1285,50 +1019,6 @@ def test_prompt_json_examples_are_format_safe():
             ):
                 malformed.append((prompt_type.value, field_name))
     assert malformed == []
-
-
-def test_semantic_document_search_returns_distinct_ranked_ids():
-    from unittest.mock import AsyncMock, patch
-
-    from src.api.inference import semantic_document_search
-    from src.schemas.auth import CurrentUser
-    from src.schemas.inference import SemanticSearchRequest
-
-    chunks = [
-        {
-            "score": 0.7,
-            "metadata": {"document_id": "doc-a"},
-        },
-        {
-            "score": 0.9,
-            "metadata": {"document_id": "doc-b"},
-        },
-        {
-            "score": 0.8,
-            "metadata": {"document_id": "doc-a"},
-        },
-    ]
-    user = CurrentUser(
-        _id="semantic-user",
-        email="semantic@example.com",
-        role="reader",
-    )
-    with patch(
-            "src.clients.rag.rag_client.retrieve",
-            new=AsyncMock(return_value=chunks),
-        ):
-        result = asyncio.run(
-            semantic_document_search(
-                SemanticSearchRequest(query="ranked documents", limit=5),
-                user,
-            )
-        )
-    assert result == {
-        "results": [
-            {"document_id": "doc-b", "score": 0.9},
-            {"document_id": "doc-a", "score": 0.8},
-        ]
-    }
 
 
 def test_assessment_generation_is_guarded_and_structured():

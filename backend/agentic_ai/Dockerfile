@@ -1,20 +1,3 @@
-FROM node:24-bookworm-slim AS mcp-build
-
-ARG REQWISE_FIGMA_REV=c6b75b9fc1aa315bc75633bd70b6c9b297d04ce4
-
-RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates \
-    && git clone https://github.com/hoangpm96/reqwise-figma-mcp.git /opt/doclib-mcp/reqwise \
-    && git -C /opt/doclib-mcp/reqwise checkout --detach ${REQWISE_FIGMA_REV} \
-    && npm --prefix /opt/doclib-mcp/reqwise ci --include=dev \
-    && npm --prefix /opt/doclib-mcp/reqwise run build \
-    && npm --prefix /opt/doclib-mcp/reqwise prune --omit=dev \
-    && npm install --prefix /opt/doclib-mcp/chrome --omit=dev chrome-devtools-mcp@1.6.0 \
-    && rm -rf /var/lib/apt/lists/* /root/.npm
-
-RUN npm install --prefix /opt/doclib-mcp/reqwise --omit=dev --save-exact @hono/node-server@1.19.15 hono@4.12.34 fast-uri@3.1.5 ip-address@10.3.1 \
-    && npm audit --prefix /opt/doclib-mcp/reqwise --omit=dev --audit-level=low \
-    && npm audit --prefix /opt/doclib-mcp/chrome --omit=dev --audit-level=low
-
 FROM ghcr.io/astral-sh/uv:latest AS uv-build
 
 FROM python:3.11-slim
@@ -45,9 +28,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get purge -y build-essential \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
-
-COPY --from=mcp-build /usr/local/ /usr/local/
-COPY --from=mcp-build /opt/doclib-mcp/ /opt/doclib-mcp/
 
 RUN apt-get update && apt-get install -y --no-install-recommends chromium \
     && rm -rf /var/lib/apt/lists/*

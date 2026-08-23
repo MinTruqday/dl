@@ -6,7 +6,7 @@ from loguru import logger
 from pymongo.errors import DuplicateKeyError
 from src.schemas.announcement import AnnouncementCreate
 from src.repositories.announcement import AnnouncementRepository
-from src.clients.humanity import HumanityClient
+from src.clients.authentication import AuthenticationClient
 
 class AnnouncementService:
 
@@ -69,7 +69,7 @@ class AnnouncementService:
             )
             if existing:
                 return {"id": str(existing["_id"]), "duplicate": True}
-        profile = await HumanityClient.get(data.target_user_id)
+        profile = await AuthenticationClient.get(data.target_user_id)
         if not profile:
             raise HTTPException(status_code=404, detail="Không tìm thấy người nhận thông báo")
         notif_id = str(uuid.uuid4())

@@ -1,12 +1,11 @@
 import {
   API_URL,
-  WS_URL,
   authenticatedFetch,
   getAuthHeaders,
   getToken,
 } from "@/shared/services/api-client";
 
-export { API_URL, WS_URL, getAuthHeaders, getToken };
+export { API_URL, getAuthHeaders, getToken };
 
 export function setToken(token: string) {
   if (typeof window !== "undefined") {

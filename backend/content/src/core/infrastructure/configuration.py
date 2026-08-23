@@ -24,8 +24,6 @@ class Settings(BaseModel):
     AGENTIC_AI_URL: str = get_service_url("AGENTIC_AI")
     RAG_URL: str = get_service_url("RAG")
     NOTIFICATION_URL: str = get_service_url("NOTIFICATION")
-    COLLABORATION_URL: str = get_service_url("COLLABORATION")
-    ENGAGEMENT_URL: str = get_service_url("ENGAGEMENT")
     CONTENT_DB_NAME: str = os.environ["CONTENT_DB_NAME"]
     MINIO_ENDPOINT: str = os.environ["MINIO_ENDPOINT"]
     MINIO_PUBLIC_URL: str = os.environ["MINIO_PUBLIC_URL"]

@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Query
 from src.core.response import APIResponse
 from src.services.document import DocumentService
 from src.api.dependency import get_current_user
-from src.schemas.document import DocumentUpdate, ScheduleUpdate, TagsUpdate
+from src.schemas.document import DocumentUpdate, TagsUpdate
 
 router = APIRouter()
 
@@ -44,24 +44,4 @@ async def update_tags(
     return APIResponse(
         data=result,
         message="Cập nhật danh sách thẻ phân loại tài liệu hoàn tất",
-    )
-
-
-@router.put("/{document_id}/len-lich", response_model=APIResponse[Any])
-async def schedule_publish(
-    document_id: str,
-    req: ScheduleUpdate,
-    current_user=Depends(get_current_user),
-):
-    result = await DocumentService.update_document(
-        document_id,
-        DocumentUpdate(
-            publish_at=req.publish_at,
-            scheduled_publish_at=req.publish_at,
-        ),
-        current_user,
-    )
-    return APIResponse(
-        data=result,
-        message="Thiết lập lịch trình xuất bản tự động cho tài liệu hoàn tất",
     )
