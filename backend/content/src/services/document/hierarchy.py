@@ -75,7 +75,7 @@ class DocumentHierarchyService:
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.get(
-                    f"{settings.HUMANITY_URL}/nguoi-dung/{new_owner_id}",
+                    f"{settings.AUTHENTICATION_URL}/xac-thuc/noi-bo/tai-khoan/{new_owner_id}",
                     headers={"X-Internal-Token": settings.SECRET_KEY},
                 )
                 if resp.status_code == 200:

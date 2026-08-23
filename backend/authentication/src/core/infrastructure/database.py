@@ -33,6 +33,11 @@ async def setup_indexes():
         partialFilterExpression={"slug": {"$type": "string"}},
     )
     await db["sessions"].create_index([("user_id", 1), ("revoked_at", 1)])
+    await db["sessions"].create_index(
+        "refresh_token_hash",
+        unique=True,
+        partialFilterExpression={"refresh_token_hash": {"$type": "string"}},
+    )
     await db["sessions"].create_index("expires_at", expireAfterSeconds=0)
     await db["password_reset_tokens"].create_index(
         "token_hash",

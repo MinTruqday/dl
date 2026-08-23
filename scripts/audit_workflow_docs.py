@@ -61,7 +61,7 @@ def main() -> None:
                 visible_labels.extend(re.findall(r"\{([^{}]+)\}", line))
                 visible_labels.extend(re.findall(r"\|([^|]+)\|", line))
             assert not any(
-                re.search(r"[,\.:;?!…]", label) for label in visible_labels
+                re.search(rf"[,\.:;?!{chr(0x2026)}]", label) for label in visible_labels
             ), f"{prefix}_contains_sentence_punctuation"
             assert "-->|Có|" in workflow or "-->|Không|" in workflow, (
                 f"{prefix}_missing_named_decision_branch"

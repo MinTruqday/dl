@@ -1,24 +1,25 @@
 import {
-  Bell,
-  CircleHelp,
+  Activity,
+  BarChart3,
+  BookOpen,
+  ClipboardList,
   Database,
   FileText,
-  FolderOpen,
-  Library,
-  MessageCircle,
+  GraduationCap,
+  LayoutDashboard,
   PenLine,
-  Search,
   Settings,
-  UsersRound,
+  Shield,
 } from "lucide-react";
 
 export type NavigationItem = {
   id: string;
   label: string;
   href: string;
-  icon: typeof Search;
+  icon: typeof LayoutDashboard;
   requireAuth?: boolean;
   roles?: string[];
+  personas?: string[];
 };
 
 export type NavigationGroup = {
@@ -28,106 +29,51 @@ export type NavigationGroup = {
 
 export const navigationGroups: NavigationGroup[] = [
   {
-    label: "Không gian làm việc",
+    label: "Giáo viên",
     items: [
-      { id: "explore", label: "Khám phá", href: "/kham-pha", icon: Search },
-      {
-        id: "library",
-        label: "Thư viện",
-        href: "/thu-vien",
-        icon: Library,
-        requireAuth: true,
-      },
-      {
-        id: "chat",
-        label: "Trò chuyện",
-        href: "/tro-chuyen",
-        icon: MessageCircle,
-        requireAuth: true,
-      },
+      { id: "teacher-dashboard", label: "Tổng quan", href: "/giao-vien", icon: LayoutDashboard, roles: ["author", "admin"], personas: ["teacher"] },
+      { id: "assessments", label: "Bài đánh giá", href: "/giao-vien/de", icon: ClipboardList, roles: ["author", "admin"], personas: ["teacher"] },
+      { id: "composer", label: "Soạn đề", href: "/giao-vien/de/soan-thao", icon: PenLine, roles: ["author", "admin"], personas: ["teacher"] },
+      { id: "question-bank", label: "Ngân hàng câu hỏi", href: "/giao-vien/cau-hoi", icon: BookOpen, roles: ["author", "admin"], personas: ["teacher"] },
+      { id: "review-queue", label: "Chờ rà soát", href: "/giao-vien/cau-hoi/ra-soat", icon: Shield, roles: ["author", "admin"], personas: ["teacher"] },
+      { id: "materials", label: "Tài liệu của tôi", href: "/giao-vien/tai-lieu", icon: FileText, roles: ["author", "admin"], personas: ["teacher"] },
+      { id: "insights", label: "Hiệu chỉnh", href: "/giao-vien/hieu-chinh", icon: BarChart3, roles: ["author", "admin"], personas: ["teacher"] },
     ],
   },
   {
-    label: "Sáng tác",
+    label: "Học sinh",
     items: [
-      {
-        id: "compose",
-        label: "Soạn thảo",
-        href: "/soan-thao",
-        icon: PenLine,
-        roles: ["author", "admin"],
-      },
-      {
-        id: "documents",
-        label: "Tài liệu",
-        href: "/tai-lieu",
-        icon: FileText,
-        roles: ["author", "admin"],
-      },
-      {
-        id: "collaboration",
-        label: "Cộng tác",
-        href: "/cong-tac",
-        icon: UsersRound,
-        roles: ["author", "admin"],
-      },
-      {
-        id: "storage",
-        label: "Lưu trữ",
-        href: "/luu-tru",
-        icon: FolderOpen,
-        roles: ["author", "admin"],
-      },
+      { id: "student-dashboard", label: "Năng lực", href: "/hoc-sinh", icon: GraduationCap, requireAuth: true, personas: ["student"] },
+      { id: "assigned", label: "Bài được giao", href: "/hoc-sinh/bai-duoc-giao", icon: ClipboardList, requireAuth: true, personas: ["student"] },
+      { id: "history", label: "Lịch sử", href: "/hoc-sinh/lich-su", icon: Activity, requireAuth: true, personas: ["student"] },
     ],
   },
   {
     label: "Quản trị",
     items: [
-      {
-        id: "collection",
-        label: "Thu thập",
-        href: "/thu-thap",
-        icon: Database,
-        roles: ["admin"],
-      },
+      { id: "curriculum", label: "Chương trình học", href: "/quan-tri/chuong-trinh", icon: Database, roles: ["admin"] },
+      { id: "operations", label: "Vận hành mô hình", href: "/quan-tri/van-hanh", icon: Activity, roles: ["admin"] },
+      { id: "security", label: "Nhật ký bảo mật", href: "/quan-tri/bao-mat", icon: Shield, roles: ["admin"] },
     ],
   },
   {
     label: "Tài khoản",
     items: [
-      {
-        id: "notifications",
-        label: "Thông báo",
-        href: "/thong-bao",
-        icon: Bell,
-        requireAuth: true,
-      },
-      {
-        id: "settings",
-        label: "Cài đặt",
-        href: "/cai-dat",
-        icon: Settings,
-        requireAuth: true,
-      },
-      {
-        id: "help",
-        label: "Trợ giúp",
-        href: "/tro-giup",
-        icon: CircleHelp,
-        requireAuth: true,
-      },
+      { id: "settings", label: "Cài đặt", href: "/cai-dat", icon: Settings, requireAuth: true },
+      { id: "persona-settings", label: "Vai trò sử dụng", href: "/cai-dat/vai-tro", icon: GraduationCap, requireAuth: true },
     ],
   },
 ];
 
-export function availableNavigation(groups: NavigationGroup[], user: any) {
+export function availableNavigation(groups: NavigationGroup[], user: any, personas: string[] = []) {
   return groups
     .map((group) => ({
       ...group,
       items: group.items.filter((item) => {
         if (item.requireAuth && !user) return false;
-        if (!item.roles) return true;
-        return item.roles.includes(String(user?.role || "").toLowerCase());
+        if (item.roles && !item.roles.includes(String(user?.role || "").toLowerCase())) return false;
+        if (!item.personas || !personas.length || String(user?.role || "").toLowerCase() === "admin") return true;
+        return item.personas.some((persona) => personas.includes(persona));
       }),
     }))
     .filter((group) => group.items.length > 0);

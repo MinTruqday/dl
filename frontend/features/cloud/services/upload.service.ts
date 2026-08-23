@@ -1,5 +1,6 @@
 import {
   API_URL,
+  authenticatedFetch,
   getAuthHeaders,
 } from "@/shared/services/api-client";
 
@@ -8,7 +9,7 @@ async function doDirectUpload(
   isSystem: boolean,
   isMessageAttachment: boolean,
 ) {
-  const reqRes = await fetch(`${API_URL}/tai-len/presigned-url`, {
+  const reqRes = await authenticatedFetch(`${API_URL}/tai-len/presigned-url`, {
     method: "POST",
     headers: {
       ...getAuthHeaders(),
@@ -44,7 +45,7 @@ async function doDirectUpload(
   if (!putRes.ok)
     throw new Error("Lỗi đẩy luồng dữ liệu (Stream) lên máy chủ lưu trữ");
 
-  const confirmRes = await fetch(`${API_URL}/tai-len/xac-nhan`, {
+  const confirmRes = await authenticatedFetch(`${API_URL}/tai-len/xac-nhan`, {
     method: "POST",
     headers: {
       ...getAuthHeaders(),

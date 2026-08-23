@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Response
 from typing import Any
+from src.api.cookies import set_refresh_cookie
 from src.core.response import APIResponse
 from src.services.google import GoogleService
 
@@ -15,10 +16,11 @@ async def google_login():
     )
 
 @router.get("/callback", response_model=APIResponse[Any])
-async def google_callback(code: str, state: str, request: Request):
+async def google_callback(code: str, state: str, request: Request, response: Response):
     client_ip = request.client.host if request.client else "unknown"
+    token_data = await GoogleService.handle_google_callback(code, state, client_ip)
     return APIResponse(
-        data=await GoogleService.handle_google_callback(code, state, client_ip),
+        data=set_refresh_cookie(response, request, token_data),
         message="Xác thực tài khoản thông qua liên kết ngoài hoàn tất",
         status=200,
     )

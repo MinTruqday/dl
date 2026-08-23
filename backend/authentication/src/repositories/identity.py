@@ -64,7 +64,7 @@ class IdentityRepository:
         return await mongo.insert_one("audit_logs", log_data)
 
     @staticmethod
-    async def register_session(user_id: str, session_id: str, ip: str):
+    async def register_session(user_id: str, session_id: str, ip: str, refresh_token: str):
         now = datetime.now(timezone.utc)
         return await mongo.insert_one(
             "sessions",
@@ -72,10 +72,31 @@ class IdentityRepository:
                 "_id": session_id,
                 "user_id": user_id,
                 "ip": ip,
+                "refresh_token_hash": IdentityRepository._token_hash(refresh_token),
                 "created_at": now,
+                "last_refreshed_at": now,
                 "expires_at": now + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
                 "revoked_at": None,
             },
+        )
+
+    @staticmethod
+    async def rotate_refresh_token(refresh_token: str, replacement: str, ip: str):
+        now = datetime.now(timezone.utc)
+        return await mongo.get_db()["sessions"].find_one_and_update(
+            {
+                "refresh_token_hash": IdentityRepository._token_hash(refresh_token),
+                "revoked_at": None,
+                "expires_at": {"$gt": now},
+            },
+            {
+                "$set": {
+                    "refresh_token_hash": IdentityRepository._token_hash(replacement),
+                    "last_refreshed_at": now,
+                    "last_ip": ip,
+                }
+            },
+            return_document=ReturnDocument.AFTER,
         )
 
     @staticmethod

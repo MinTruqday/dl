@@ -16,14 +16,8 @@ class Settings(BaseModel):
     MONGODB_URI: str = os.environ["MONGODB_URI"]
     RABBITMQ_URI: str = os.environ["RABBITMQ_URI"]
     WORKER_DB_NAME: str = os.environ["WORKER_DB_NAME"]
-    MINIO_ENDPOINT: str = os.environ["MINIO_ENDPOINT"]
-    MINIO_ACCESS_KEY: str = os.environ["MINIO_ACCESS_KEY"]
-    MINIO_SECRET_KEY: str = os.environ["MINIO_SECRET_KEY"]
-    MINIO_PRIVATE_BUCKET: str = os.environ["MINIO_PRIVATE_BUCKET"]
-    MAX_COMPILE_INPUT_BYTES: int = int(os.environ["MAX_COMPILE_INPUT_BYTES"])
-    MAX_COMPILE_OUTPUT_BYTES: int = int(os.environ["MAX_COMPILE_OUTPUT_BYTES"])
     WORKER_MAX_RETRIES: int = int(os.environ["WORKER_MAX_RETRIES"])
-    CONTENT_URL: str = get_service_url("CONTENT")
+    ASSESSMENT_URL: str = get_service_url("ASSESSMENT")
 
 
 settings = Settings()

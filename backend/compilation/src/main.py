@@ -1,16 +1,14 @@
 import sys
 from contextlib import asynccontextmanager
 
+import httpx
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from loguru import logger
 
-from src.api.composition import router as composition_router
-from src.api.editorjs import router as editorjs_router
-from src.api.latex import router as latex_router
+from src.api.assessment_export import router as assessment_export_router
 from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import close_db, database, init_db
 from src.core.infrastructure.redis import redis
 from src.core.metrics import PrometheusMiddleware, metrics_endpoint
 from src.core.middleware import add_trace_id_header, trace_id_filter
@@ -27,12 +25,12 @@ logger.add(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await init_db()
+    await redis.ping()
     logger.info("Document compilation service initialized")
     try:
         yield
     finally:
-        await close_db()
+        await redis.aclose()
 
 
 app = FastAPI(title="DocLib Compilation", version=settings.VERSION, lifespan=lifespan)
@@ -50,9 +48,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.include_router(latex_router)
-app.include_router(editorjs_router)
-app.include_router(composition_router)
+app.include_router(assessment_export_router)
 
 
 @app.get("/health", include_in_schema=False)
@@ -63,10 +59,11 @@ async def health_check():
 @app.get("/ready", include_in_schema=False)
 async def readiness_check():
     try:
-        if database.mongodb is None:
-            raise RuntimeError("MongoDB is not initialized")
-        await database.mongodb.admin.command("ping")
         await redis.ping()
+        async with httpx.AsyncClient(timeout=3) as client:
+            response = await client.get(f"{settings.ASSESSMENT_URL}/ready")
+        if response.status_code != 200:
+            raise RuntimeError("Assessment is not ready")
     except Exception:
         logger.exception("Compilation readiness check failed")
         return JSONResponse(status_code=503, content={"status": "not_ready"})

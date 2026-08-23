@@ -13,6 +13,7 @@ from src.core.publication import trigger_document_publish_job
 from src.repositories.document import DocumentRepository
 from src.schemas.document import DocumentContentUpdate, DocumentCreate, DocumentInDB, DocumentStatus
 from src.clients.collaboration import CollaborationClient
+from src.clients.rag import rag_client
 from src.services.document.base import (
     serialize_document,
     is_admin,
@@ -38,6 +39,15 @@ class DocumentCrudService:
             slug = f"{slug}-{uuid.uuid4().hex[:8]}"
 
         doc_dict = doc_in.model_dump(exclude={"password"})
+        if doc_dict.get("education_metadata"):
+            doc_dict["education_metadata"].update(
+                {
+                    "source_type": "teacher_material",
+                    "authority": "supplementary",
+                    "mapping_status": "needs_review",
+                }
+            )
+            doc_dict["visibility"] = "private"
         doc_dict["slug"] = slug
         if not doc_dict.get("publisher_name"):
             doc_dict["publisher_name"] = current_user.full_name
@@ -115,11 +125,26 @@ class DocumentCrudService:
                 "status": document.get("status", "draft"),
                 "content_format": document.get("content_format", "doclib"),
                 "cover_url": document.get("cover_url"),
+                "file_url": document.get("file_url"),
+                "education_metadata": document.get("education_metadata"),
+                "is_indexed": document.get("is_indexed", False),
+                "indexing_status": document.get("indexing_status", "not_started"),
+                "indexing_error": document.get("indexing_error"),
+                "index_report": document.get("index_report", {"failed_chunks": [], "quarantined_chunks": []}),
+                "extraction_method": document.get("extraction_method"),
+                "extracted_text_available": bool(document.get("extracted_text")),
+                "extracted_text_truncated": bool(document.get("extracted_text_truncated")),
+                "chunks_count": document.get("chunks_count", 0),
                 "views": document.get("views", 0),
                 "created_at": (
                     document["created_at"].isoformat()
                     if isinstance(document.get("created_at"), datetime)
                     else document.get("created_at")
+                ),
+                "updated_at": (
+                    document["updated_at"].isoformat()
+                    if isinstance(document.get("updated_at"), datetime)
+                    else document.get("updated_at")
                 ),
             }
             for document in documents
@@ -251,6 +276,14 @@ class DocumentCrudService:
             if hasattr(doc_update, "model_dump")
             else dict(doc_update)
         )
+        if update_data.get("education_metadata"):
+            update_data["education_metadata"].update(
+                {
+                    "source_type": "teacher_material",
+                    "authority": "supplementary",
+                    "mapping_status": "needs_review",
+                }
+            )
         expected_version = update_data.pop("expected_version", None)
         if expected_version:
             stored_version = document.get("updated_at")
@@ -289,18 +322,59 @@ class DocumentCrudService:
                 await redis.delete(f"document:slug:{document.get('slug')}")
 
         if update_data.get("file_url"):
+            await DocumentRepository.update_one(
+                {"_id": document_id},
+                {
+                    "$set": {"indexing_status": "queued", "is_indexed": False},
+                    "$unset": {"indexing_error": ""},
+                },
+            )
             try:
                 async with httpx.AsyncClient(timeout=5.0) as client:
-                    await client.post(
+                    response = await client.post(
                         f"{settings.AGENTIC_AI_URL}/su-kien/webhook/tai-lieu-dang-tai",
                         params={"document_id": document_id, "user_id": document.get("creator_id", "")},
                         headers={"X-Internal-Token": settings.SECRET_KEY},
                     )
+                    response.raise_for_status()
             except Exception:
-                logger.warning(f"Ingest webhook dispatch failed for document_id={document_id}")
+                await DocumentRepository.update_one(
+                    {"_id": document_id},
+                    {"$set": {"indexing_status": "failed", "indexing_error": "indexing_dispatch_failed"}},
+                )
+                logger.exception(f"Ingest webhook dispatch failed for document_id={document_id}")
 
         updated = await DocumentRepository.find_one({"_id": document_id})
         return serialize_document(updated)
+
+    @staticmethod
+    async def retry_document_indexing(document_id: str, current_user):
+        document = await DocumentRepository.find_one({"_id": document_id, "is_deleted": {"$ne": True}})
+        if not document:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+        if document.get("creator_id") != str(current_user.id) and not is_admin(current_user):
+            raise HTTPException(status_code=403, detail="Không có quyền lập chỉ mục tài liệu")
+        if not document.get("file_url"):
+            raise HTTPException(status_code=422, detail="Tài liệu chưa có tệp nguồn")
+        await DocumentRepository.update_one(
+            {"_id": document_id},
+            {"$set": {"indexing_status": "queued"}, "$unset": {"indexing_error": ""}},
+        )
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                response = await client.post(
+                    f"{settings.AGENTIC_AI_URL}/su-kien/webhook/tai-lieu-dang-tai",
+                    params={"document_id": document_id, "user_id": document.get("creator_id", "")},
+                    headers={"X-Internal-Token": settings.SECRET_KEY},
+                )
+                response.raise_for_status()
+        except Exception:
+            await DocumentRepository.update_one(
+                {"_id": document_id},
+                {"$set": {"indexing_status": "failed", "indexing_error": "indexing_dispatch_failed"}},
+            )
+            raise HTTPException(status_code=503, detail="Không thể đưa tài liệu vào hàng đợi lập chỉ mục")
+        return serialize_document(await DocumentRepository.find_one({"_id": document_id}))
 
     @staticmethod
     async def list_documents(
@@ -430,6 +504,14 @@ class DocumentCrudService:
 
     @staticmethod
     async def soft_delete_document(document_id: str, current_user) -> dict:
+        document = await DocumentRepository.find_one(
+            {"_id": document_id, "creator_id": str(current_user.id), "is_deleted": {"$ne": True}}
+        )
+        if not document:
+            raise HTTPException(
+                status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn"
+            )
+        await rag_client.delete_document(document_id, str(current_user.id), is_admin(current_user))
         res = await DocumentRepository.update_one(
             {"_id": document_id, "creator_id": str(current_user.id), "is_deleted": {"$ne": True}},
             {"$set": {"is_deleted": True, "deleted_at": datetime.now(timezone.utc)}},
@@ -451,6 +533,9 @@ class DocumentCrudService:
             raise HTTPException(
                 status_code=404, detail="Hệ thống không tìm thấy tài liệu yêu cầu trong thùng rác"
             )
+        restored = await DocumentRepository.find_one({"_id": document_id, "creator_id": str(current_user.id)})
+        if restored and restored.get("file_url"):
+            await DocumentCrudService.retry_document_indexing(document_id, current_user)
         logger.info("Document restored from recycle bin")
         return {"message": "Tài liệu đã được khôi phục hoàn tất từ thùng rác"}
 

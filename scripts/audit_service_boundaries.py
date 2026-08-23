@@ -1,12 +1,25 @@
 import re
+import subprocess
 from pathlib import Path
 
 
 root = Path(__file__).resolve().parents[1]
 backend = root / "backend"
+active_services = set(
+    subprocess.run(
+        ["docker", "compose", "config", "--services"],
+        cwd=root,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.split()
+)
 violations = []
 for path in sorted(backend.glob("*/src/**/*.py")):
-    service = path.relative_to(backend).parts[0].upper()
+    service_name = path.relative_to(backend).parts[0]
+    if service_name not in active_services:
+        continue
+    service = service_name.upper()
     source = path.read_text(encoding="utf-8")
     for line_number, line in enumerate(source.splitlines(), 1):
         for owner in re.findall(r"settings\.([A-Z_]+)_DB_NAME", line):

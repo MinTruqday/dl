@@ -8,6 +8,8 @@ from qdrant_client.http.models import (
     Filter,
     MatchAny,
     MatchValue,
+    PayloadSchemaType,
+    PointIdsList,
     PointStruct,
     VectorParams,
 )
@@ -36,6 +38,34 @@ class VectorStore:
                     vectors_config=VectorParams(
                         size=embedder._dimensions, distance=Distance.COSINE
                     ),
+                )
+            for field in [
+                "creator_id",
+                "owner_id",
+                "source_type",
+                "authority",
+                "education_level",
+                "subject",
+                "target_program",
+                "chapter_id",
+                "lesson_id",
+                "section_id",
+                "concept_ids",
+                "skill_ids",
+                "learning_objective_ids",
+                "document_id",
+                "visibility",
+                "source_version",
+                "mapping_status",
+                "content_type",
+                "conflict_key",
+                "claim_value",
+            ]:
+                await self.client.create_payload_index(
+                    collection_name=self.collection_name,
+                    field_name=field,
+                    field_schema=PayloadSchemaType.KEYWORD,
+                    wait=True,
                 )
         except Exception:
             logger.exception("System search index structure initialization error")
@@ -72,25 +102,35 @@ class VectorStore:
         limit: int = 20,
         requester_id: Optional[str] = None,
         is_admin: bool = False,
+        metadata_filters: Optional[Dict] = None,
     ) -> List[Dict]:
         must = []
         if document_ids:
             must.append(
                 FieldCondition(key="document_id", match=MatchAny(any=document_ids))
             )
-        should = []
+        for key, value in (metadata_filters or {}).items():
+            if value is None:
+                continue
+            match = MatchAny(any=value) if isinstance(value, list) else MatchValue(value=value)
+            must.append(FieldCondition(key=key, match=match))
         if not is_admin:
-            should.append(
-                FieldCondition(key="visibility", match=MatchValue(value="public"))
-            )
+            access_conditions = [
+                Filter(
+                    must=[FieldCondition(key="visibility", match=MatchValue(value="public"))],
+                    must_not=[FieldCondition(key="source_type", match=MatchValue(value="teacher_material"))],
+                ),
+                FieldCondition(key="source_type", match=MatchValue(value="curriculum")),
+            ]
             if requester_id:
-                should.append(
-                    FieldCondition(
-                        key="creator_id",
-                        match=MatchValue(value=str(requester_id)),
-                    )
+                access_conditions.extend(
+                    [
+                        FieldCondition(key="owner_id", match=MatchValue(value=str(requester_id))),
+                        FieldCondition(key="creator_id", match=MatchValue(value=str(requester_id))),
+                    ]
                 )
-        query_filter = Filter(must=must, should=should) if must or should else None
+            must.append(Filter(should=access_conditions))
+        query_filter = Filter(must=must) if must else None
 
         if limit < 1 or limit > 100:
             raise ValueError("Vector query limit must be between 1 and 100")
@@ -158,5 +198,33 @@ class VectorStore:
         except Exception:
             logger.exception("Search index deletion error")
             raise
+
+    async def ids_by_document(self, document_id: str) -> List[str]:
+        point_ids = []
+        offset = None
+        while True:
+            points, next_offset = await self.client.scroll(
+                collection_name=self.collection_name,
+                scroll_filter=Filter(
+                    must=[FieldCondition(key="document_id", match=MatchValue(value=document_id))]
+                ),
+                limit=256,
+                offset=offset,
+                with_payload=False,
+                with_vectors=False,
+            )
+            point_ids.extend(str(point.id) for point in points)
+            if next_offset is None:
+                return point_ids
+            offset = next_offset
+
+    async def delete_ids(self, point_ids: List[str]):
+        if not point_ids:
+            return
+        await self.client.delete(
+            collection_name=self.collection_name,
+            points_selector=PointIdsList(points=point_ids),
+            wait=True,
+        )
 
 vector_store = VectorStore()

@@ -1,4 +1,4 @@
-from src.clients.humanity import HumanityClient
+from src.clients.accounts import AccountClient
 from src.core.infrastructure.mongo import mongo
 from datetime import datetime, timezone
 from typing import List, Optional
@@ -50,12 +50,7 @@ class StorageService:
 
     @staticmethod
     async def get_storage_quota(owner_id: str) -> dict:
-        user = await HumanityClient.get_by_id(owner_id)
-        limit = (
-            user.get("storage_limit", 1 * 1024 * 1024 * 1024)
-            if user
-            else 1 * 1024 * 1024 * 1024
-        )
+        limit = settings.DEFAULT_STORAGE_LIMIT_BYTES
         
         pipeline = [
             {"$match": {"owner_id": owner_id, "is_folder": False, "is_shortcut": False}},
@@ -427,7 +422,7 @@ class StorageService:
         if role not in {"viewer", "editor"}:
             from fastapi import HTTPException
             raise HTTPException(status_code=422, detail="Vai trò chia sẻ không hợp lệ")
-        target_user = await HumanityClient.get_by_email(email)
+        target_user = await AccountClient.get_by_email(email)
         if not target_user:
             from fastapi import HTTPException
 

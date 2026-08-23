@@ -50,6 +50,7 @@ class Settings(BaseModel):
     PLATFORM_SYSTEM_ID: str = os.environ["PLATFORM_SYSTEM_ID"]
     WEBSOCKET_URL: str = get_service_url("WEBSOCKET")
     RAG_URL: str = get_service_url("RAG")
+    ASSESSMENT_URL: str = get_service_url("ASSESSMENT")
     AGENTIC_AI_DB_NAME: str = os.environ["AGENTIC_AI_DB_NAME"]
     CONTENT_URL: str = get_service_url("CONTENT")
     AGENT_SLOW_DURATION_MS_THRESHOLD: int = int(os.environ["AGENT_SLOW_DURATION_MS_THRESHOLD"])

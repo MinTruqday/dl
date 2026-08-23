@@ -4,7 +4,6 @@ import hmac
 import json
 from datetime import datetime, timezone
 
-import httpx
 from fastapi import HTTPException
 from loguru import logger
 from src.repositories.identity import IdentityRepository as AuthenticationRepository
@@ -112,25 +111,9 @@ class PasskeyService:
         await AuthenticationRepository.update_passkey_sign_count(
             user["_id"], credential_id_b64, verification.new_sign_count
         )
-        user_doc = None
-        try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                resp = await client.get(
-                    f"{settings.HUMANITY_URL}/nguoi-dung/email/{email}",
-                    headers={"X-Internal-Token": settings.SECRET_KEY},
-                    timeout=10.0,
-                )
-                if resp.status_code == 200:
-                    user_doc = resp.json().get("data")
-        except Exception:
-            logger.exception("Failed to fetch user profile after passkey verification")
-
-        if not user_doc:
-            raise HTTPException(status_code=401, detail="Quá trình xác minh định danh tài khoản gặp sự cố")
-
         from src.services.session import SessionService
 
-        return await SessionService.issue_token_for_user(user_doc, "passkey_login")
+        return await SessionService.issue_token_for_user(user, "passkey_login")
 
     @staticmethod
     async def register_begin(email: str):

@@ -1,0 +1,31 @@
+services:
+  model_stub:
+    image: doclib-agentic_ai
+    container_name: doclib_model_stub
+    command: ["python", "/test-support/model_provider_stub.py"]
+    restart: "no"
+    volumes:
+      - ./backend/agentic_ai/tests/model_provider_stub.py:/test-support/model_provider_stub.py:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/tags', timeout=5)"]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+    networks:
+      - doclib_network
+
+  agentic_ai:
+    environment:
+      LLM_MODEL: integration-model
+      PRIMARY_MODEL_STYLE: ollama
+      PRIMARY_MODEL_URL: http://model_stub:8000/api/chat
+      PRIMARY_MODEL_HEALTH_URL: http://model_stub:8000/api/tags
+      MODEL_TIMEOUT_SECONDS: 10
+    depends_on:
+      model_stub:
+        condition: service_healthy
+
+  assessment:
+    environment:
+      ASSESSMENT_ALLOW_TEST_IDENTITY: "true"
+      CALIBRATION_MIN_SAMPLE_SIZE: "2"

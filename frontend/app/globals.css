@@ -129,6 +129,14 @@
     @apply min-h-11 rounded-control border border-border-strong bg-surface px-3.5 py-2.5 text-[15px] text-ink outline-none transition duration-150 placeholder:text-ink-faint focus:border-brand focus:ring-2 focus:ring-brand-soft disabled:cursor-not-allowed disabled:bg-surface-quiet;
   }
 
+  .apple-button {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand px-4 py-2.5 text-[14px] font-semibold text-white transition hover:bg-brand-hover active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .apple-button-secondary {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-border-strong bg-surface px-4 py-2.5 text-[14px] font-semibold text-ink transition hover:bg-surface-quiet active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
   .product-heading {
     @apply text-[24px] font-semibold leading-tight tracking-[-0.02em] text-ink md:text-[28px];
   }
@@ -141,43 +149,58 @@
     @apply animate-pulse rounded-control bg-surface-quiet;
   }
 
-  .doclib-editor .codex-editor__redactor {
-    padding-bottom: 160px !important;
+  .editor-tool {
+    @apply flex h-9 w-9 items-center justify-center rounded-control text-ink-muted transition hover:bg-surface hover:text-ink aria-pressed:bg-brand-soft aria-pressed:text-brand;
   }
 
-  .doclib-editor .ce-block__content,
-  .doclib-editor .ce-toolbar__content {
-    max-width: 760px;
+  .assessment-tiptap {
+    @apply px-5 py-4 text-[15px] leading-7 text-ink outline-none;
   }
 
-  .doclib-editor .ce-toolbar__plus,
-  .doclib-editor .ce-toolbar__settings-btn {
-    border-radius: 9px;
-    color: hsl(var(--ink-muted));
+  .assessment-tiptap > * + * {
+    margin-top: 0.7rem;
   }
 
-  .doclib-editor .ce-toolbar__plus:hover,
-  .doclib-editor .ce-toolbar__settings-btn:hover {
-    background: hsl(var(--surface-quiet));
-    color: hsl(var(--ink));
+  .assessment-tiptap h2 {
+    @apply text-[21px] font-semibold tracking-[-0.02em];
   }
 
-  .doclib-editor .ce-popover,
-  .doclib-editor .ce-inline-toolbar {
-    border: 1px solid hsl(var(--border));
-    border-radius: 12px;
-    background: hsl(var(--surface));
-    box-shadow: 0 14px 38px rgb(32 32 30 / 10%);
+  .assessment-tiptap ul {
+    @apply list-disc pl-6;
   }
 
-  .doclib-editor .ce-popover-item,
-  .doclib-editor .ce-inline-tool {
-    border-radius: 9px;
+  .assessment-tiptap table {
+    @apply w-full border-collapse overflow-hidden rounded-control;
   }
 
-  .doclib-editor .ce-popover-item:hover,
-  .doclib-editor .ce-inline-tool:hover {
-    background: hsl(var(--surface-quiet));
+  .assessment-tiptap th,
+  .assessment-tiptap td {
+    @apply min-w-20 border border-border px-3 py-2 align-top;
+  }
+
+  .assessment-tiptap th {
+    @apply bg-surface-quiet text-left font-semibold;
+  }
+
+  .assessment-tiptap img {
+    @apply max-h-[520px] max-w-full rounded-control border border-border object-contain;
+  }
+
+  .assessment-question-ref {
+    @apply rounded-control border border-dashed border-brand bg-brand-soft px-4 py-3 text-[13px] font-semibold text-brand;
+  }
+
+  .assessment-section {
+    @apply rounded-panel border border-border p-4;
+  }
+
+  .assessment-page-break {
+    @apply my-6 border-t border-dashed border-border-strong;
+  }
+
+  .assessment-page-break::after {
+    content: "Ngắt trang";
+    @apply relative -top-3 mx-auto block w-fit bg-surface px-2 text-[11px] text-ink-faint;
   }
 }
 

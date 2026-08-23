@@ -2,24 +2,12 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-ENV HOME=/home/doclibuser \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl ca-certificates fontconfig pandoc ghostscript \
-    fonts-wine \
-    libpango-1.0-0 libpangoft2-1.0-0 libpangocairo-1.0-0 \
-    libcairo2 libgdk-pixbuf-2.0-0 libffi-dev \
-    fonts-dejavu fonts-liberation fonts-noto-cjk \
-    && fc-cache -f -v \
-    && ARCH=$(uname -m) && \
-    if [ "$ARCH" = "aarch64" ]; then \
-    URL="https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.15.0/tectonic-0.15.0-aarch64-unknown-linux-musl.tar.gz"; \
-    else \
-    URL="https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.15.0/tectonic-0.15.0-x86_64-unknown-linux-gnu.tar.gz"; \
-    fi && \
-    curl -fsSL "$URL" | tar -xz -C /usr/local/bin/ tectonic \
+    fonts-dejavu-core \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY compilation/requirements.txt .
@@ -27,9 +15,9 @@ COPY compilation/requirements.txt .
 RUN pip install -q --no-cache-dir -r requirements.txt
 
 COPY compilation/src/ ./src/
+COPY compilation/tests/ ./tests/
 
 RUN groupadd --gid 10001 doclibuser && useradd --uid 10001 --gid doclibuser -m doclibuser && \
-    mkdir -p /home/doclibuser/.cache/Tectonic && \
     chown -R doclibuser:doclibuser /home/doclibuser /app
 USER 10001:10001
 

@@ -50,6 +50,17 @@ async def setup_indexes():
         await db["documents"].create_index([("title", "text"), ("description", "text"), ("author", "text")], background=True)
         await db["documents"].create_index([("creator_id", 1)], background=True)
         await db["documents"].create_index([("source_url", 1)], background=True)
+        await db["documents"].create_index([("content_hash", 1)], background=True)
+        await db["documents"].create_index([("source_url", 1), ("source_is_current", 1)], background=True)
+        await db["documents"].create_index(
+            [("source_url", 1), ("content_hash", 1)],
+            unique=True,
+            partialFilterExpression={
+                "source_url": {"$type": "string"},
+                "content_hash": {"$type": "string"},
+            },
+            background=True,
+        )
         await db["documents"].create_index([("creator_id", 1), ("created_at", -1)], background=True)
         await db["documents"].create_index([("status", 1), ("is_deleted", 1), ("created_at", -1)], background=True)
         await db["documents"].create_index([("status", 1), ("is_deleted", 1), ("views", -1)], background=True)

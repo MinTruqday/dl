@@ -24,3 +24,15 @@ async def get_collector_stats(current_user = Depends(get_current_user)):
 @router.get("/nhat-ky", dependencies=[Depends(require_role([Role.ADMIN]))])
 async def get_collector_logs(current_user = Depends(get_current_user)):
     return await collector_service.get_collector_logs()
+
+@router.get("/jobs", dependencies=[Depends(require_role([Role.ADMIN]))])
+async def get_collection_jobs(status: str | None = None, current_user = Depends(get_current_user)):
+    return await collector_service.get_collection_jobs(status)
+
+@router.post("/jobs/{job_id}/cancel", dependencies=[Depends(require_role([Role.ADMIN]))])
+async def cancel_collection_job(job_id: str, current_user = Depends(get_current_user)):
+    return await collector_service.cancel_collection_job(job_id)
+
+@router.post("/jobs/{job_id}/retry", dependencies=[Depends(require_role([Role.ADMIN]))])
+async def retry_collection_job(job_id: str, current_user = Depends(get_current_user)):
+    return await collector_service.retry_collection_job(job_id)

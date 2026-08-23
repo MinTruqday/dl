@@ -55,14 +55,48 @@ class ContentClient:
             raise PermissionError("Document access denied")
         return document
 
-    async def mark_indexed(self, document_id: str, chunks_count: int):
+    async def mark_indexed(
+        self,
+        document_id: str,
+        chunks_count: int,
+        index_report: dict | None = None,
+        extracted_text: str = "",
+        extraction_method: str = "",
+    ):
         return await self.request(
             {
                 "operation": "update_one",
                 "query": {"_id": document_id},
                 "update": {
-                    "$set": {"chunks_count": chunks_count, "is_indexed": True}
+                    "$set": {
+                        "chunks_count": chunks_count,
+                        "is_indexed": True,
+                        "indexing_status": "indexed",
+                        "index_report": index_report or {"failed_chunks": [], "quarantined_chunks": []},
+                        "extracted_text": extracted_text[:200000],
+                        "extracted_text_truncated": len(extracted_text) > 200000,
+                        "extraction_method": extraction_method,
+                    },
+                    "$unset": {"indexing_error": ""},
                 },
+            }
+        )
+
+    async def mark_indexing(self, document_id: str):
+        return await self.request(
+            {
+                "operation": "update_one",
+                "query": {"_id": document_id},
+                "update": {"$set": {"indexing_status": "indexing"}, "$unset": {"indexing_error": ""}},
+            }
+        )
+
+    async def mark_index_failed(self, document_id: str, error_code: str):
+        return await self.request(
+            {
+                "operation": "update_one",
+                "query": {"_id": document_id},
+                "update": {"$set": {"indexing_status": "failed", "indexing_error": error_code}},
             }
         )
 
@@ -71,7 +105,7 @@ class ContentClient:
             {
                 "operation": "update_one",
                 "query": {"_id": document_id},
-                "update": {"$set": {"chunks_count": 0, "is_indexed": False}},
+                "update": {"$set": {"chunks_count": 0, "is_indexed": False, "indexing_status": "not_started"}},
             }
         )
 

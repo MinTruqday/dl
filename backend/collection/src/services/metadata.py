@@ -23,6 +23,22 @@ def document_slug(title: str, source_url: str) -> str:
     return f"{base[:120].rstrip('-')}-{digest}"
 
 
+def infer_subject(title: str) -> str | None:
+    normalized = unicodedata.normalize("NFKD", title).encode("ascii", "ignore").decode().casefold()
+    subjects = {
+        "toan": "math",
+        "vat ly": "physics",
+        "hoa hoc": "chemistry",
+        "sinh hoc": "biology",
+        "ngu van": "literature",
+        "tieng anh": "english",
+        "lich su": "history",
+        "dia ly": "geography",
+        "tin hoc": "informatics",
+    }
+    return next((code for marker, code in subjects.items() if marker in normalized), None)
+
+
 async def pdf_cover(local_path: str, object_prefix: str) -> tuple[str | None, int]:
     document = fitz.open(local_path)
     try:
@@ -69,15 +85,34 @@ async def collected_metadata(
             local_path, f"system/collection/{storage_key}/{slug}"
         )
     tags = [source_name, *normalized_authors]
+    target_grade = str(payload.get("collection_scope", {}).get("value") or "")
+    grade_number = int(target_grade) if target_grade.isdigit() else None
+    education_level = None
+    if grade_number is not None:
+        education_level = "TIỂU HỌC" if grade_number <= 5 else "THCS" if grade_number <= 9 else "THPT"
+    subject = payload.get("subject") or infer_subject(title)
+    source_version = str(payload.get("content_hash") or hashlib.sha256(f"{source_url}:{file_url}".encode()).hexdigest())
     return {
         "title": title,
         "slug": slug,
         "description": "",
         "author_name": author,
-        "publisher_name": "DocLib",
+        "publisher_name": source_name,
+        "publisher": "NXBGD" if storage_key == "nxbgd" else source_name,
         "file_url": file_url,
         "source_url": source_url,
         "source_name": source_name,
+        "source_type": "curriculum" if storage_key == "nxbgd" else "supplementary",
+        "authority": "official" if storage_key == "nxbgd" else "supplementary",
+        "education_level": education_level,
+        "target_program": f"grade_{target_grade}" if target_grade else None,
+        "subject": subject,
+        "book_title": title,
+        "collector_version": settings.VERSION,
+        "source_version": source_version,
+        "content_hash": payload.get("content_hash"),
+        "mapping_status": "needs_review",
+        "mapping_confidence": 0.55 if target_grade and subject else 0.35 if target_grade else 0.0,
         "collection_scope": payload.get("collection_scope"),
         "pdf_url": pdf_url or (file_url if extension.lower() == "pdf" else None),
         "markdown_url": markdown_url,
@@ -88,14 +123,8 @@ async def collected_metadata(
         "visibility": "private",
         "creator_id": settings.PLATFORM_SYSTEM_ID,
         "status": "draft",
-        "collection_status": "ready_for_review",
+        "collection_status": "ready_for_mapping",
         "pages_count": pages_count,
         "views": 0,
         "collected_at": datetime.now(timezone.utc),
     }
-
-
-async def anna_metadata(payload: dict, local_path: str, file_url: str, extension: str) -> dict:
-    return await collected_metadata(
-        payload, local_path, file_url, extension, "Anna Archive", "anna_archive"
-    )

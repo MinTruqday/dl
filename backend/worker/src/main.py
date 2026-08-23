@@ -1,4 +1,5 @@
 import hmac
+import hashlib
 import uuid
 from contextlib import asynccontextmanager
 
@@ -10,7 +11,6 @@ from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import close_db, database, init_db, record_job
 from src.core.infrastructure.mq import mq
 from src.core.metrics import PrometheusMiddleware, metrics_endpoint
-from src.core.storage import close_storage, init_storage, storage_ready
 from src.jobs.task import worker_runner
 
 
@@ -27,13 +27,11 @@ def require_internal_token(x_internal_token: str = Header(default="")):
 async def lifespan(app: FastAPI):
     try:
         await init_db()
-        await init_storage()
         await worker_runner.start()
         yield
     finally:
         await worker_runner.close()
         await mq.aclose()
-        await close_storage()
         await close_db()
 
 
@@ -46,12 +44,12 @@ app.add_middleware(PrometheusMiddleware, service_name="worker")
 app.add_route("/metrics", metrics_endpoint("worker"))
 
 
-class CompileRequest(BaseModel):
+class AssessmentCalibrationRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    document_id: str = Field(min_length=1, max_length=128)
-    creator_id: str | None = Field(default=None, min_length=1, max_length=128)
-    tex_content: str = Field(min_length=1, max_length=settings.MAX_COMPILE_INPUT_BYTES)
+    owner_id: str = Field(min_length=1, max_length=128)
+    owner_email: str = Field(min_length=1, max_length=320)
+    payload: dict
 
 
 @app.get("/health", include_in_schema=False)
@@ -68,16 +66,10 @@ async def ready():
     except Exception:
         checks["mongodb"] = "unavailable"
     try:
-        await mq.get_queue("tectonic_queue")
-        await mq.get_queue("document_publish_queue")
+        await mq.get_queue("assessment_calibration_queue")
         checks["rabbitmq"] = "ready"
     except Exception:
         checks["rabbitmq"] = "unavailable"
-    try:
-        await storage_ready()
-        checks["object_storage"] = "ready"
-    except Exception:
-        checks["object_storage"] = "unavailable"
     checks["consumers"] = "ready" if worker_runner.is_running() else "unavailable"
     ready_state = all(value == "ready" for value in checks.values())
     return JSONResponse(
@@ -91,28 +83,20 @@ async def ready():
 
 
 @app.post(
-    "/worker/internal/documents/compile",
+    "/worker/internal/assessment/calibration",
     dependencies=[Depends(require_internal_token)],
+    status_code=202,
 )
-async def enqueue_compile(payload: CompileRequest):
-    job_id = f"compile-{uuid.uuid4()}"
-    task_payload = {
-        "job_id": job_id,
-        "document_id": payload.document_id,
-        "creator_id": payload.creator_id,
-        "tex_content": payload.tex_content,
-    }
-    await record_job(
-        job_id,
-        {"status": "queued"},
-        {
-            "kind": "compile",
-            "document_id": payload.document_id,
-            "creator_id": payload.creator_id,
-        },
-    )
+async def enqueue_assessment_calibration(payload: AssessmentCalibrationRequest):
+    idempotency_key = str(payload.payload.get("idempotency_key") or "")
+    job_id = f"calibration-{hashlib.sha256(idempotency_key.encode()).hexdigest()[:40]}" if idempotency_key else f"calibration-{uuid.uuid4()}"
+    existing = await database.mongodb[settings.WORKER_DB_NAME].worker_jobs.find_one({"_id": job_id})
+    if existing:
+        return {"job_id": job_id, "status": existing["status"]}
+    task_payload = {"job_id": job_id, **payload.model_dump()}
+    await record_job(job_id, {"status": "queued"}, {"kind": "assessment_calibration", "owner_id": payload.owner_id})
     try:
-        await mq.publish("tectonic_queue", task_payload)
+        await mq.publish("assessment_calibration_queue", task_payload)
     except Exception:
         await record_job(job_id, {"status": "failed", "error": "Queue unavailable"})
         raise HTTPException(status_code=503, detail="Worker queue is unavailable")

@@ -1,7 +1,9 @@
 import asyncio
 
 from src.services import retrieval
-from src.services.retrieval import RetrievalService
+import pytest
+
+from src.services.retrieval import RetrievalService, RetrievalUnavailableError
 
 
 def test_rrf_fuses_independent_dense_and_bm25_candidates():
@@ -85,3 +87,17 @@ def test_retrieve_keeps_bm25_when_query_embedding_fails(monkeypatch):
 
     assert [item["id"] for item in results] == ["lexical-only"]
     assert results[0]["retrieval_sources"] == ["bm25"]
+
+
+def test_retrieve_fails_explicitly_when_dense_and_sparse_are_unavailable(monkeypatch):
+    service = RetrievalService()
+    service._reranker = False
+
+    async def failed(*_args, **_kwargs):
+        raise RuntimeError("unavailable")
+
+    monkeypatch.setattr(retrieval.embedder, "embed_query", failed)
+    monkeypatch.setattr(retrieval.bm25_store, "search", failed)
+
+    with pytest.raises(RetrievalUnavailableError):
+        asyncio.run(service.retrieve("curriculum evidence", k=1))

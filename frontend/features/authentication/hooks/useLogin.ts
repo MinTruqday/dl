@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import {
   getGoogleLoginUrlAPI,
@@ -13,13 +13,19 @@ import { b64urlToBuffer, bufferToB64url } from "../lib/webauthn";
 
 export function useLogin() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { loginState } = useAuth() as any;
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   const finish = async (token: string) => {
     await loginState(token);
-    router.push("/kham-pha");
+    const requested = searchParams.get("next") || "";
+    const destination = requested.startsWith("/") && !requested.startsWith("//") && !requested.startsWith("/dang-nhap")
+      ? requested
+      : "/kham-pha";
+    sessionStorage.removeItem("doclib_return_path");
+    router.replace(destination);
   };
 
   const passwordLogin = async (email: string, password: string) => {
@@ -95,6 +101,10 @@ export function useLogin() {
     setSubmitting(true);
     setError("");
     try {
+      const requested = searchParams.get("next") || "";
+      if (requested.startsWith("/") && !requested.startsWith("//") && !requested.startsWith("/dang-nhap")) {
+        sessionStorage.setItem("doclib_return_path", requested);
+      }
       window.location.assign(await getGoogleLoginUrlAPI());
     } catch (reason) {
       setError(

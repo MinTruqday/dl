@@ -39,9 +39,6 @@ class ConversionService:
             pdf_options = PdfPipelineOptions()
             pdf_options.do_ocr = True
             pdf_options.do_table_structure = True
-            # RapidOCR otherwise downloads its models inside site-packages, which
-            # is read-only for the non-root Docker user. Keep them in the same
-            # persistent, writable cache volume as the other document models.
             hf_home = Path(
                 os.environ.get(
                     "HF_HOME",

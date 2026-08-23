@@ -30,7 +30,6 @@ class Settings(BaseModel):
     MAX_DOWNLOAD_SIZE_BYTES: int = int(os.environ["MAX_DOWNLOAD_SIZE_BYTES"])
     PLATFORM_SYSTEM_ID: str = os.environ["PLATFORM_SYSTEM_ID"]
     COLLECTION_DB_NAME: str = os.environ["COLLECTION_DB_NAME"]
-    FLARESOLVERR_URL: str = os.environ["FLARESOLVERR_URL"]
     CONTENT_URL: str = get_service_url("CONTENT")
 
 settings = Settings()

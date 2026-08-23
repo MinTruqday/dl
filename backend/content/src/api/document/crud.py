@@ -123,6 +123,17 @@ async def update_document(
         message="Cập nhật thông tin tài liệu hoàn tất",
     )
 
+
+@router.post("/{document_id}/lap-chi-muc-lai", response_model=APIResponse[Any])
+async def retry_document_indexing(
+    document_id: str,
+    current_user=Depends(require_role([Role.AUTHOR, Role.ADMIN])),
+):
+    return APIResponse(
+        data=await DocumentService.retry_document_indexing(document_id, current_user),
+        message="Đã đưa tài liệu vào hàng đợi lập chỉ mục",
+    )
+
 @router.delete(
     "/{document_id}",
     response_model=APIResponse[Any],

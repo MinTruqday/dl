@@ -35,6 +35,14 @@ def test_semantic_refinement_uses_docling_structure(monkeypatch):
         item["metadata"]["chunk_type"] == "docling_structure_semantic"
         for item in chunks
     )
+    repeated = asyncio.run(
+        service.chunk_document(
+            "ignored Markdown fallback",
+            {"document_id": "doc-1"},
+            structure=structure,
+        )
+    )
+    assert [item["id"] for item in repeated] == [item["id"] for item in chunks]
 
 
 def test_size_guard_runs_after_semantic_refinement(monkeypatch):

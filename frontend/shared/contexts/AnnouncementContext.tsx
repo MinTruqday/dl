@@ -42,12 +42,13 @@ export function AnnouncementProvider({
 }: {
   children: React.ReactNode;
 }) {
+  const notificationEnabled = process.env.NEXT_PUBLIC_NOTIFICATION_ENABLED === "true";
   const { user } = useAuth();
   const { showToast } = useToast();
   const [announcements, setAnnouncements] = useState<AnnouncementItem[]>([]);
 
   const fetchAnnouncements = useCallback(async () => {
-    if (!user) return;
+    if (!user || !notificationEnabled) return;
     try {
       const data = await getAnnouncementsAPI();
       let arr = data.data || data || [];
@@ -56,7 +57,7 @@ export function AnnouncementProvider({
     } catch (e) {
       console.error("Error fetching global announcements:", e);
     }
-  }, [user]);
+  }, [notificationEnabled, user]);
 
   const markAsRead = useCallback(async (id: string) => {
     try {
@@ -70,7 +71,7 @@ export function AnnouncementProvider({
   }, []);
 
   useEffect(() => {
-    if (!user) {
+    if (!user || !notificationEnabled) {
       setAnnouncements([]);
       return;
     }
@@ -84,7 +85,7 @@ export function AnnouncementProvider({
     return () => {
       clearInterval(interval);
     };
-  }, [user, fetchAnnouncements]);
+  }, [notificationEnabled, user, fetchAnnouncements]);
 
   const unreadCount = Array.isArray(announcements)
     ? announcements.filter((n) => !n.is_read).length

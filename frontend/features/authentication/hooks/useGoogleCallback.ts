@@ -14,21 +14,26 @@ export function useGoogleCallback() {
 
   useEffect(() => {
     const code = params.get("code");
-    if (!code) {
+    const state = params.get("state");
+    if (!code || !state) {
       setError("Thiếu mã xác thực từ Google");
       return;
     }
     let active = true;
     const complete = async () => {
       try {
-        const data = await completeGoogleLoginAPI(code);
+        const data = await completeGoogleLoginAPI(code, state);
         if (!data.access_token)
           throw new Error("Không nhận được quyền truy cập");
         await loginState(data.access_token);
         if (!active) return;
         if (!data.user?.has_passkey && data.user?.email)
           setEmailForPasskey(data.user.email);
-        else router.replace("/kham-pha");
+        else {
+          const requested = sessionStorage.getItem("doclib_return_path") || "";
+          sessionStorage.removeItem("doclib_return_path");
+          router.replace(requested.startsWith("/") && !requested.startsWith("//") && !requested.startsWith("/dang-nhap") ? requested : "/kham-pha");
+        }
       } catch (reason) {
         if (active)
           setError(
@@ -47,7 +52,11 @@ export function useGoogleCallback() {
   return {
     emailForPasskey,
     error,
-    finish: () => router.replace("/kham-pha"),
+    finish: () => {
+      const requested = sessionStorage.getItem("doclib_return_path") || "";
+      sessionStorage.removeItem("doclib_return_path");
+      router.replace(requested.startsWith("/") && !requested.startsWith("//") && !requested.startsWith("/dang-nhap") ? requested : "/kham-pha");
+    },
     back: () => router.replace("/dang-nhap"),
   };
 }

@@ -1,6 +1,7 @@
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from src.api.cookies import set_refresh_cookie
 from src.services.passkey import PasskeyService
 
 from src.core.dependency import CurrentUser, RateLimiting, get_current_user
@@ -26,11 +27,10 @@ async def passkey_login_begin(payload: PasskeyRequest):
     response_model=APIResponse[Any],
     dependencies=[Depends(RateLimiting(calls=5, period=60))],
 )
-async def passkey_login_finish(payload: PasskeyFinishRequest):
+async def passkey_login_finish(payload: PasskeyFinishRequest, request: Request, response: Response):
+    token_data = await PasskeyService.login_finish(payload.email, payload.credential)
     return APIResponse(
-        data=await PasskeyService.login_finish(
-            payload.email, payload.credential
-        ),
+        data=set_refresh_cookie(response, request, token_data),
         message="Xác thực thông tin thông qua mã bảo mật hoàn tất",
         status=200,
     )

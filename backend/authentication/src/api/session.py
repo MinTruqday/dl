@@ -1,19 +1,17 @@
-from src.core.infrastructure.mongo import mongo
-from src.core.dependency import CurrentUser
+from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
-from pydantic import BaseModel, EmailStr
+from src.api.cookies import set_refresh_cookie
 from src.services.session import SessionService
 
-from src.core.dependency import RateLimiting, get_current_user
+from src.core.dependency import CurrentUser, RateLimiting, get_current_user
 from src.core.response import APIResponse
 from src.schemas.identity import (
     ForgotPasswordRequest,
     ResetPasswordRequest,
     UserCreate,
-    UserInDB,
     UserResponse,
     VerifyCodeRequest,
 )
@@ -24,37 +22,27 @@ router = APIRouter(prefix="/xac-thuc")
 async def read_users_me(
     current_user: CurrentUser = Depends(get_current_user)
 ):
-    try:
-        from src.core.infrastructure.configuration import settings
-        import httpx
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.get(
-                f"{settings.HUMANITY_URL}/nguoi-dung/{current_user.id}",
-                headers={"X-Internal-Token": settings.SECRET_KEY},
-                timeout=10.0,
-            )
-            if resp.status_code == 200:
-                user_doc = resp.json().get("data")
-            else:
-                import logging
-                logging.error(f"Failed to fetch profile: {resp.status_code} {resp.text}")
-                user_doc = None
-    except Exception as e:
-        import logging
-        logging.error(f"Exception fetching profile {e}")
-        user_doc = None
-
+    from src.repositories.identity import IdentityRepository
+    user_doc = await IdentityRepository.get_auth_credential_by_id(str(current_user.id))
     if not user_doc:
-        from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Không tìm thấy thông tin tài khoản người dùng")
 
-    user_data = user_doc
+    user_data = dict(user_doc)
     user_data["_id"] = str(user_doc["_id"])
-    if "created_at" not in user_data:
-        from datetime import datetime, timezone
-        user_data["created_at"] = datetime.now(timezone.utc)
+    user_data.pop("password_hash", None)
     passkeys = user_doc.get("passkeys", [])
-    user_data["has_passkey"] = len(passkeys) > 0
+    user_data.pop("passkeys", None)
+    user_data.update(
+        {
+            "email": user_doc.get("email", current_user.email),
+            "full_name": user_doc.get("full_name") or current_user.full_name or "Người dùng DocLib",
+            "slug": user_doc.get("slug") or str(user_doc.get("email", current_user.email)).split("@", 1)[0],
+            "role": user_doc.get("role", "reader"),
+            "permissions": user_doc.get("permissions") or [],
+            "created_at": user_doc.get("created_at") or datetime.now(timezone.utc),
+            "has_passkey": len(passkeys) > 0,
+        }
+    )
     
     return APIResponse(
         data=user_data,
@@ -85,13 +73,15 @@ async def register_user(
 )
 async def login(
     request: Request,
+    response: Response,
     form_data: OAuth2PasswordRequestForm = Depends(),
 ) -> Any:
     client_ip = request.client.host if request.client else "unknown"
+    token_data = await SessionService.login_user(
+        form_data.username, form_data.password, client_ip
+    )
     return APIResponse(
-        data=await SessionService.login_user(
-            form_data.username, form_data.password, client_ip
-        ),
+        data=set_refresh_cookie(response, request, token_data),
         message="Xác thực thông tin và cấp quyền truy cập hệ thống hoàn tất",
         status=status.HTTP_200_OK,
     )
@@ -144,15 +134,38 @@ async def verify_code(
     )
 
 @router.post("/dang-xuat", response_model=APIResponse[Any])
-async def logout(current_user: CurrentUser = Depends(get_current_user)):
+async def logout(response: Response, current_user: CurrentUser = Depends(get_current_user)):
+    response.delete_cookie("doclib_refresh_token", path="/")
     return APIResponse(
         data=await SessionService.revoke_session(current_user),
         message="Đăng xuất hoàn tất",
     )
 
 @router.post("/dang-xuat-tat-ca", response_model=APIResponse[Any])
-async def logout_all(current_user: CurrentUser = Depends(get_current_user)):
+async def logout_all(response: Response, current_user: CurrentUser = Depends(get_current_user)):
+    response.delete_cookie("doclib_refresh_token", path="/")
     return APIResponse(
         data=await SessionService.revoke_all_sessions(current_user),
         message="Đăng xuất khỏi tất cả thiết bị hoàn tất",
+    )
+
+
+@router.post(
+    "/lam-moi-phien",
+    response_model=APIResponse[Any],
+    dependencies=[Depends(RateLimiting(calls=20, period=60))],
+)
+async def refresh_session(
+    request: Request,
+    response: Response,
+    doclib_refresh_token: str | None = Cookie(default=None),
+):
+    if not doclib_refresh_token:
+        raise HTTPException(status_code=401, detail="Không tìm thấy phiên làm mới")
+    client_ip = request.client.host if request.client else "unknown"
+    token_data = await SessionService.refresh_session(doclib_refresh_token, client_ip)
+    return APIResponse(
+        data=set_refresh_cookie(response, request, token_data),
+        message="Làm mới phiên đăng nhập hoàn tất",
+        status=status.HTTP_200_OK,
     )

@@ -1,5 +1,23 @@
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class CurriculumFilters(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    education_level: Optional[str] = None
+    subject: Optional[str] = None
+    target_program: Optional[str] = None
+    chapter_id: Optional[str] = None
+    lesson_id: Optional[str] = None
+    section_id: Optional[str] = None
+    concept_ids: Optional[List[str]] = None
+    skill_ids: Optional[List[str]] = None
+    learning_objective_ids: Optional[List[str]] = None
+    content_type: Optional[str] = None
+    source_type: Optional[str] = None
+    authority: Optional[List[str]] = None
+    source_version: Optional[str] = None
 
 class RetrieveRequest(BaseModel):
     query: str = Field(description="Nội dung truy vấn")
@@ -8,6 +26,7 @@ class RetrieveRequest(BaseModel):
     query_vector_override: Optional[List[float]] = Field(default=None, description="Vector truy vấn ghi đè nếu có")
     requester_id: Optional[str] = None
     is_admin: bool = False
+    metadata_filters: CurriculumFilters = Field(default_factory=CurriculumFilters)
 
 class MultiQueryRetrieveRequest(BaseModel):
     question: str = Field(description="Câu hỏi truy vấn đa chiều")
@@ -15,6 +34,7 @@ class MultiQueryRetrieveRequest(BaseModel):
     k: int = Field(default=5, ge=1, le=100, description="Số lượng kết quả tối đa cần lấy")
     requester_id: Optional[str] = None
     is_admin: bool = False
+    metadata_filters: CurriculumFilters = Field(default_factory=CurriculumFilters)
 
 class CrossDocRetrieveRequest(BaseModel):
     question: str = Field(description="Câu hỏi truy vấn liên tài liệu")
@@ -22,6 +42,7 @@ class CrossDocRetrieveRequest(BaseModel):
     k: int = Field(default=5, ge=1, le=100, description="Số lượng kết quả tối đa cần lấy")
     requester_id: Optional[str] = None
     is_admin: bool = False
+    metadata_filters: CurriculumFilters = Field(default_factory=CurriculumFilters)
 
 class RetrievedDocument(BaseModel):
     text: str
@@ -38,3 +59,4 @@ class CitationItem(BaseModel):
 class RetrieveResponse(BaseModel):
     documents: List[RetrievedDocument]
     citations: List[CitationItem] = Field(default_factory=list)
+    conflicts: List[Dict[str, Any]] = Field(default_factory=list)

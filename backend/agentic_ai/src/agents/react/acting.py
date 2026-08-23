@@ -14,27 +14,30 @@ _MAX_ATTEMPTS = 3
 
 _REQUIRES_APPROVAL_TOOLS = frozenset(
     {
-        "create_document",
-        "apply_editorjs_command",
         "delete_document",
-        "edit_document_block",
-        "edit_document_text",
         "manage_user_instructions",
-        "propose_document_edits",
-        "replace_document_content",
         "restore_document",
         "update_document_metadata",
         "execute_mcp_tool",
+        "create_question_draft",
+        "create_revision_draft",
+        "import_assessment",
+        "map_question_to_curriculum",
+        "record_teacher_difficulty_estimate",
+        "propose_question_revision",
+        "publish_assessment_version",
+        "run_calibration",
+    }
+)
+
+_HUMAN_ONLY_APPROVAL_TOOLS = frozenset(
+    {
+        "publish_assessment_version",
     }
 )
 
 _AUTO_SAFE_TOOLS = frozenset(
     {
-        "create_document",
-        "apply_editorjs_command",
-        "edit_document_block",
-        "edit_document_text",
-        "propose_document_edits",
         "update_document_metadata",
     }
 )
@@ -42,6 +45,13 @@ _AUTO_SAFE_TOOLS = frozenset(
 
 def _is_validation_error(exc: Exception) -> bool:
     return "validation error" in str(exc).lower() or "validation" in str(type(exc)).lower()
+
+
+def _can_approve_automatically(tool_name: str, auto_approve: bool, approval_policy: str) -> bool:
+    return tool_name not in _HUMAN_ONLY_APPROVAL_TOOLS and (
+        auto_approve
+        or (approval_policy == "auto_safe" and tool_name in _AUTO_SAFE_TOOLS)
+    )
 
 
 class ActingAgent:
@@ -82,7 +92,6 @@ class ActingAgent:
     def _candidate_tools(self, action: str):
         normalized = action.casefold()
         intent_tools = {
-            "create_document": ("create_document", "tạo tài liệu", "tạo một tài liệu"),
             "read_document": ("read_document", "đọc tài liệu"),
             "get_my_documents": ("get_my_documents", "tài liệu của tôi"),
             "delete_document": ("delete_document", "xóa tài liệu"),
@@ -190,15 +199,16 @@ class ActingAgent:
                     return json.dumps({"status": "tool_unavailable"})
 
                 selected_tool = self.tool_map[tool_name]
-                approved_automatically = auto_approve or (
-                    approval_policy == "auto_safe" and tool_name in _AUTO_SAFE_TOOLS
+                approved_automatically = _can_approve_automatically(
+                    tool_name,
+                    auto_approve,
+                    approval_policy,
                 )
                 risk_level = (
                     "high"
                     if tool_name
                     in {
                         "delete_document",
-                        "replace_document_content",
                         "restore_document",
                     }
                     else "medium"
@@ -206,12 +216,13 @@ class ActingAgent:
                 if tool_name in _REQUIRES_APPROVAL_TOOLS:
                     from src.loop.intervention import intervention
 
-                    approved_automatically = approved_automatically or intervention.has_session_grant(
-                        session_id,
-                        str(user_id),
-                        tool_name,
-                        risk_level,
-                    )
+                    if tool_name not in _HUMAN_ONLY_APPROVAL_TOOLS:
+                        approved_automatically = approved_automatically or intervention.has_session_grant(
+                            session_id,
+                            str(user_id),
+                            tool_name,
+                            risk_level,
+                        )
                 if tool_name in _REQUIRES_APPROVAL_TOOLS and not approved_automatically:
                     if approval_id:
                         approved = await intervention.consume_approval(

@@ -1,3 +1,5 @@
-import DocumentConfigurationPage from "@/features/compilation/pages/DocumentConfigurationPage";
+import { redirect } from "next/navigation";
 
-export default DocumentConfigurationPage;
+export default function Page() {
+  redirect("/cai-dat");
+}

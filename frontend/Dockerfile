@@ -15,7 +15,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY frontend/ .
 COPY packages/ ../packages/
-RUN mkdir -p public && pnpm run build
+RUN mkdir -p public && pnpm run test:assessment && pnpm run build
 
 FROM base AS runner
 WORKDIR /app

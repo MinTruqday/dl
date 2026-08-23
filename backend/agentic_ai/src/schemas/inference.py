@@ -1,4 +1,4 @@
-from typing import Annotated, List, Optional
+from typing import Annotated, Any, List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -105,6 +105,44 @@ class RagDocumentSummaryRequest(BaseModel):
 
 class StructuredInferenceResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
+
+class AssessmentQuestionGenerationRequest(BaseModel):
+    education_level: str = Field(min_length=1, max_length=100, description="<constraints>Cấp học của câu hỏi</constraints>")
+    target_program: str = Field(min_length=1, max_length=100, description="<constraints>Chương trình đích</constraints>")
+    subject: str = Field(min_length=1, max_length=100, description="<constraints>Môn học đích</constraints>")
+    topic: str = Field(min_length=1, max_length=500, description="<constraints>Chủ đề cần đánh giá</constraints>")
+    question_type: Literal["single_choice", "multiple_choice", "true_false", "matching", "ordering", "numeric", "symbolic_math", "short_answer", "essay"] = Field(description="<constraints>Loại câu hỏi có cấu trúc</constraints>")
+    target_difficulty: float = Field(ge=1, le=5, description="<constraints>Mức độ khó mục tiêu từ một đến năm</constraints>")
+    cognitive_level: Optional[str] = Field(default=None, max_length=100, description="<constraints>Mức nhận thức tùy chọn</constraints>")
+    evidence: List[dict[str, Any]] = Field(min_length=1, max_length=20, description="<input_context>Bằng chứng RAG đã kiểm soát quyền và provenance</input_context>")
+
+class GeneratedQuestionOption(StructuredInferenceResult):
+    id: str = Field(min_length=1, max_length=20, description="<output_format>Mã phương án ổn định</output_format>")
+    text: str = Field(min_length=1, max_length=2000, description="<output_format>Nội dung phương án</output_format>")
+
+class GeneratedAssessmentQuestion(StructuredInferenceResult):
+    stem: str = Field(min_length=1, max_length=5000, description="<output_format>Nội dung câu hỏi không chứa đáp án</output_format>")
+    options: List[GeneratedQuestionOption] = Field(default_factory=list, max_length=12, description="<output_format>Các phương án có cấu trúc nếu loại câu yêu cầu</output_format>")
+    answer_key: dict[str, Any] = Field(description="<output_format>Đáp án theo schema của loại câu hỏi</output_format>")
+    solution: str = Field(min_length=1, max_length=5000, description="<output_format>Lời giải dựa trên bằng chứng</output_format>")
+    primary_concept: str = Field(min_length=1, max_length=500, description="<output_format>Khái niệm chính được đo</output_format>")
+    primary_skill: str = Field(min_length=1, max_length=500, description="<output_format>Kỹ năng chính được đo</output_format>")
+    learning_objective: str = Field(min_length=1, max_length=1000, description="<output_format>Mục tiêu học tập được đo</output_format>")
+
+class DirectDifficultyJudgmentRequest(BaseModel):
+    question_type: str = Field(min_length=1, max_length=100, description="<input_context>Loại câu hỏi cần đánh giá trực tiếp</input_context>")
+    stem: str = Field(min_length=1, max_length=10000, description="<input_context>Nội dung câu hỏi cần đánh giá trực tiếp</input_context>")
+    options: list[str] = Field(default_factory=list, max_length=20, description="<input_context>Các phương án trả lời nếu có</input_context>")
+    answer_key: dict[str, Any] = Field(default_factory=dict, description="<input_context>Đáp án có cấu trúc của câu hỏi</input_context>")
+    solution: str = Field(default="", max_length=10000, description="<input_context>Lời giải của câu hỏi nếu có</input_context>")
+    education_level: str = Field(default="", max_length=100, description="<input_context>Cấp học của câu hỏi</input_context>")
+    subject: str = Field(default="", max_length=100, description="<input_context>Môn học của câu hỏi</input_context>")
+    target_program: str = Field(default="", max_length=100, description="<input_context>Chương trình đích của câu hỏi</input_context>")
+
+class DirectDifficultyJudgment(StructuredInferenceResult):
+    predicted_difficulty: float = Field(ge=1, le=5, description="<output_format>Độ khó dự đoán trực tiếp từ một đến năm</output_format>")
+    confidence: float = Field(ge=0, le=1, description="<output_format>Độ tin cậy của dự đoán trực tiếp</output_format>")
+    reason_summary: list[str] = Field(min_length=1, max_length=8, description="<output_format>Các lý do ngắn giải thích mức độ khó</output_format>")
 
 class QuickRepliesOutput(StructuredInferenceResult):
     replies: list[str] = Field(min_length=3, max_length=3, description="<output_format>Exactly three concise reply suggestions.</output_format>")

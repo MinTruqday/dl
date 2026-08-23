@@ -224,8 +224,10 @@ async def shutdown_event():
         logger.exception("Memory manager shutdown failed")
     try:
         from src.workflow.orchestration import supervisor
-        supervisor.checkpointer.close()
-        supervisor.sync_client.close()
+        if supervisor.checkpointer is not None:
+            supervisor.checkpointer.close()
+        if supervisor.sync_client is not None:
+            supervisor.sync_client.close()
     except Exception:
         logger.exception("Workflow checkpointer shutdown failed")
 

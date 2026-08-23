@@ -265,242 +265,59 @@ def test_hf_tool_binding_accepts_native_tool_shape():
     assert result.tool_calls[0]["args"] == {"query": "Native"}
 
 
-def test_create_editorjs_document_tool():
-    import json
-    from unittest.mock import patch
-    from src.tools.document import create_document
-
-    requests = []
-
-    class FakeResponse:
-        status_code = 201
-
-        def json(self):
-            return {"data": {"_id": "editorjs-1"}}
-
-    async def fake_request(method, url, **kwargs):
-        requests.append((method, url, kwargs))
-        return FakeResponse()
-
-    content = json.dumps(
-        {
-            "time": 1,
-            "blocks": [{"id": "a", "type": "paragraph", "data": {"text": "Ready"}}],
-            "version": "2.30.8",
-        }
-    )
-    with patch("src.tools.document.make_api_request", side_effect=fake_request):
-        result = json.loads(
-            asyncio.run(
-                create_document.ainvoke(
-                    {
-                        "title": "EditorJS",
-                        "content_format": "doclib",
-                        "content": content,
-                    },
-                    config={"configurable": {"token": "Bearer test"}},
-                )
-            )
-        )
-    assert result == {
-        "status": "success",
-        "document_id": "editorjs-1",
-        "title": "EditorJS",
-        "url": "/tai-lieu/xem-truoc/editorjs-1",
-        "content_format": "doclib",
-    }
-    assert requests[0][0] == "POST"
-    assert requests[0][2]["json"]["content_format"] == "doclib"
-    assert json.loads(requests[0][2]["json"]["content"])["blocks"][0]["id"] == "a"
-
-
-def test_create_latex_document_tool():
-    import json
-    from unittest.mock import patch
-    from src.tools.document import create_document
-
-    requests = []
-
-    class FakeResponse:
-        status_code = 201
-
-        def json(self):
-            return {"data": {"_id": "latex-1"}}
-
-    async def fake_request(method, url, **kwargs):
-        requests.append((method, url, kwargs))
-        return FakeResponse()
-
-    content = "\\documentclass{article}\n\\begin{document}\nReady\n\\end{document}\n"
-    with patch("src.tools.document.make_api_request", side_effect=fake_request):
-        result = json.loads(
-            asyncio.run(
-                create_document.ainvoke(
-                    {
-                        "title": "LaTeX",
-                        "content_format": "doclibx",
-                        "content": content,
-                    },
-                    config={"configurable": {"token": "Bearer test"}},
-                )
-            )
-        )
-    assert result["status"] == "success"
-    assert result["content_format"] == "doclibx"
-    assert requests[0][2]["json"]["content"] == content
-
-
-def test_action_agent_executes_editorjs_and_latex_creation():
-    import json
-    from unittest.mock import patch
-    from src.agents.react.acting import ActingAgent
-
-    class FakeResponse:
-        status_code = 201
-
-        def __init__(self, document_id):
-            self.document_id = document_id
-
-        def json(self):
-            return {"data": {"_id": self.document_id}}
-
-    async def fake_request(method, url, **kwargs):
-        content_format = kwargs["json"]["content_format"]
-        return FakeResponse(f"{content_format}-1")
-
-    editorjs_call = json.dumps(
-        {
-            "name": "create_document",
-            "arguments": {
-                "title": "EditorJS",
-                "content_format": "doclib",
-                "content": '{"time":1,"blocks":[],"version":"2.30.8"}',
-            },
-        }
-    )
-    latex_call = json.dumps(
-        {
-            "name": "create_document",
-            "arguments": {
-                "title": "LaTeX",
-                "content_format": "doclibx",
-                "content": "\\documentclass{article}\n\\begin{document}\nReady\n\\end{document}",
-            },
-        }
-    )
-    results = []
-    with patch("src.tools.document.make_api_request", side_effect=fake_request):
-        for call in (editorjs_call, latex_call):
-            model = HFInferenceChat(
-                client=FakeActionToolClient(call),
-                model="tiny-test",
-            )
-            with patch("src.agents.react.acting.llm", model):
-                results.append(
-                    json.loads(
-                        asyncio.run(
-                            ActingAgent().execute(
-                                "Create the requested document",
-                                {},
-                                "user-1",
-                                "Bearer test",
-                                auto_approve=True,
-                            )
-                        )
-                    )
-                )
-    assert results[0]["document_id"] == "doclib-1"
-    assert results[1]["document_id"] == "doclibx-1"
-
-
 def test_mutating_tools_require_approval():
-    from src.agents.react.acting import _REQUIRES_APPROVAL_TOOLS
+    from src.agents.react.acting import _HUMAN_ONLY_APPROVAL_TOOLS, _REQUIRES_APPROVAL_TOOLS, _can_approve_automatically
 
     expected = {
-        "apply_editorjs_command",
-        "create_document",
+        "create_question_draft",
+        "create_revision_draft",
         "delete_document",
-        "edit_document_block",
-        "edit_document_text",
+        "import_assessment",
         "manage_user_instructions",
-        "propose_document_edits",
-        "replace_document_content",
+        "map_question_to_curriculum",
         "restore_document",
         "update_document_metadata",
+        "record_teacher_difficulty_estimate",
+        "propose_question_revision",
+        "publish_assessment_version",
+        "run_calibration",
     }
     assert expected <= _REQUIRES_APPROVAL_TOOLS
+    assert _HUMAN_ONLY_APPROVAL_TOOLS == {"publish_assessment_version"}
+    assert _can_approve_automatically("publish_assessment_version", True, "auto_safe") is False
+    assert _can_approve_automatically("update_document_metadata", False, "auto_safe") is True
 
 
-def test_apply_editorjs_command_persists_verified_contract():
-    import json
-    from unittest.mock import AsyncMock, patch
-    from src.tools.document import apply_editorjs_command
+def test_assessment_domain_tools_replace_legacy_editor_runtime():
+    from src.tools import tools
 
-    requests = []
-
-    class FakeResponse:
-        def __init__(self, status_code, payload):
-            self.status_code = status_code
-            self.payload = payload
-
-        def json(self):
-            return self.payload
-
-    async def fake_request(method, url, **kwargs):
-        requests.append((method, url, kwargs))
-        if "/capabilities/" in url:
-            return FakeResponse(
-                200,
-                {
-                    "id": "DocLibColumnsTwo",
-                    "mode": "ColumnsTwo",
-                    "toolKey": "columnsTwo",
-                    "executionStatus": "verified",
-                    "executionKind": "persistent_document_command",
-                    "effect": "columns",
-                    "defaultParameters": {"count": 2},
-                },
-            )
-        if method == "GET":
-            return FakeResponse(
-                200,
-                {
-                    "data": {
-                        "content_format": "doclib",
-                        "content": '{"time":1,"blocks":[],"version":"2.30.8"}',
-                    }
-                },
-            )
-        return FakeResponse(200, {"data": {"_id": "doc-1"}})
-
-    with (
-        patch("src.tools.document.make_api_request", side_effect=fake_request),
-        patch("src.tools.editing._broadcast_update", new=AsyncMock()) as broadcast,
-    ):
-        result = json.loads(
-            asyncio.run(
-                apply_editorjs_command.ainvoke(
-                    {
-                        "document_id": "doc-1",
-                        "feature_id": "DocLibColumnsTwo",
-                    },
-                    config={"configurable": {"token": "Bearer test"}},
-                )
-            )
-        )
-
-    assert result["status"] == "success"
-    saved = json.loads(requests[-1][2]["json"]["content"])
-    command = saved["documentCommandState"]["commands"]["DocLibColumnsTwo"]
-    assert command["mode"] == "ColumnsTwo"
-    assert command["parameters"] == {"count": 2}
-    broadcast.assert_awaited_once_with("doc-1", requests[-1][2]["json"]["content"])
+    names = {registered.name for registered in tools}
+    assert "create_document" not in names
+    assert "replace_document_content" not in names
+    assert "edit_document_block" not in names
+    assert {
+        "get_curriculum_context",
+        "get_teacher_material_context",
+        "evaluate_learner_fit",
+        "analyze_blueprint_impact",
+        "get_question_research_metrics",
+        "get_research_evaluation",
+        "import_assessment",
+        "inspect_question_versions",
+        "map_question_to_curriculum",
+        "analyze_question",
+        "compare_difficulty_signals",
+        "propose_question_revision",
+        "create_revision_draft",
+        "publish_assessment_version",
+        "predict_item_difficulty",
+    } <= names
 
 
-def test_apply_editorjs_command_rejects_unverified_catalog_entry():
+def test_assessment_tool_calls_domain_operation_with_identity():
     import json
     from unittest.mock import patch
-    from src.tools.document import apply_editorjs_command
+    from src.tools.assessment import compare_difficulty_signals
 
     requests = []
 
@@ -508,118 +325,136 @@ def test_apply_editorjs_command_rejects_unverified_catalog_entry():
         status_code = 200
 
         def json(self):
-            return {
-                "id": "DocLibActivateOffice",
-                "mode": "ActivateOffice",
-                "toolKey": "activateOffice",
-                "executionStatus": "unavailable",
-            }
+            return {"target": 3, "teacher_estimate": 3.2, "ai_prediction": 3.5, "empirical": 4.1}
 
     async def fake_request(method, url, **kwargs):
         requests.append((method, url, kwargs))
         return FakeResponse()
 
-    with patch("src.tools.document.make_api_request", side_effect=fake_request):
+    with patch("src.tools.assessment.make_api_request", side_effect=fake_request):
         result = json.loads(
             asyncio.run(
-                apply_editorjs_command.ainvoke(
-                    {
-                        "document_id": "doc-1",
-                        "feature_id": "DocLibActivateOffice",
-                    },
+                compare_difficulty_signals.ainvoke(
+                    {"question_version_id": "Q-1-v1"},
                     config={"configurable": {"token": "Bearer test"}},
                 )
             )
         )
-    assert result == {"status": "document_command_not_verified"}
-    assert len(requests) == 1
+    assert result["empirical"] == 4.1
+    assert requests[0][0] == "GET"
+    assert requests[0][1].endswith("/questions/Q-1-v1/difficulty-signals")
+    assert requests[0][2]["headers"]["Authorization"] == "Bearer test"
 
 
-def test_apply_editorjs_structure_command_converts_text_to_table():
+def test_teacher_material_tool_honors_disabled_profile():
     import json
-    from unittest.mock import AsyncMock, patch
-    from src.tools.document import apply_editorjs_command
+    from unittest.mock import patch
+    from src.tools.assessment import get_teacher_material_context
 
     requests = []
 
     class FakeResponse:
-        def __init__(self, status_code, payload):
-            self.status_code = status_code
-            self.payload = payload
+        status_code = 200
 
         def json(self):
-            return self.payload
+            return {"use_own_materials": False}
 
     async def fake_request(method, url, **kwargs):
         requests.append((method, url, kwargs))
-        if "/capabilities/" in url:
-            return FakeResponse(
-                200,
-                {
-                    "id": "DocLibConvertTextToTable",
-                    "mode": "ConvertTextToTable",
-                    "toolKey": "convertTextToTable",
-                    "executionStatus": "verified",
-                    "executionKind": "document_structure_command",
-                    "effect": "text_to_table",
-                    "defaultParameters": {
-                        "block_index": -1,
-                        "column_separator": "\t",
-                    },
-                },
-            )
-        if method == "GET":
-            return FakeResponse(
-                200,
-                {
-                    "data": {
-                        "content_format": "doclib",
-                        "content": json.dumps(
-                            {
-                                "blocks": [
-                                    {
-                                        "id": "text-1",
-                                        "type": "paragraph",
-                                        "data": {"text": "A\tB<br>C\tD"},
-                                    }
-                                ]
-                            }
-                        ),
-                    }
-                },
-            )
-        return FakeResponse(200, {"data": {"_id": "doc-1"}})
+        return FakeResponse()
 
-    with (
-        patch("src.tools.document.make_api_request", side_effect=fake_request),
-        patch("src.tools.editing._broadcast_update", new=AsyncMock()),
-    ):
+    with patch("src.tools.assessment.make_api_request", side_effect=fake_request):
         result = json.loads(
             asyncio.run(
-                apply_editorjs_command.ainvoke(
+                get_teacher_material_context.ainvoke(
+                    {"query": "đạo hàm"},
+                    config={"configurable": {"token": "Bearer test"}},
+                )
+            )
+        )
+    assert result == {"status": "teacher_material_use_disabled"}
+    assert len(requests) == 1
+    assert requests[0][0] == "GET"
+    assert requests[0][1].endswith("/education/teacher-profile/me")
+
+
+def test_agentic_rag_filters_teacher_material_when_profile_disables_it():
+    from unittest.mock import AsyncMock, patch
+    from src.clients.rag import RagClient
+
+    documents = [
+        {"text": "Chương trình", "metadata": {"source_type": "curriculum"}},
+        {"text": "Tài liệu riêng", "metadata": {"source_type": "teacher_material"}},
+    ]
+    with patch.object(RagClient, "teacher_materials_allowed", new=AsyncMock(return_value=False)):
+        filtered = asyncio.run(RagClient.filter_teacher_materials(documents, "teacher-1"))
+    assert filtered == [documents[0]]
+
+
+def test_difficulty_prediction_tool_preserves_predictor_kind_and_model_version():
+    import json
+    from unittest.mock import patch
+    from src.tools.assessment import predict_item_difficulty
+
+    requests = []
+
+    class FakeResponse:
+        status_code = 200
+
+        def json(self):
+            return {"predictor_kind": "llm_direct", "predicted_difficulty": 3.4}
+
+    async def fake_request(method, url, **kwargs):
+        requests.append((method, url, kwargs))
+        return FakeResponse()
+
+    with patch("src.tools.assessment.make_api_request", side_effect=fake_request):
+        result = json.loads(
+            asyncio.run(
+                predict_item_difficulty.ainvoke(
                     {
-                        "document_id": "doc-1",
-                        "feature_id": "DocLibConvertTextToTable",
-                        "parameters_json": json.dumps({"block_index": 0}),
+                        "question_draft_id": "QD-1",
+                        "model_version": "direct-v3",
+                        "prediction_kind": "llm_direct",
                     },
                     config={"configurable": {"token": "Bearer test"}},
                 )
             )
         )
-    assert result["status"] == "success"
-    assert result["execution_kind"] == "document_structure_command"
-    saved = json.loads(requests[-1][2]["json"]["content"])
-    assert saved["blocks"] == [
+    assert result["predictor_kind"] == "llm_direct"
+    assert requests[0][0] == "POST"
+    assert requests[0][1].endswith("/question-drafts/QD-1/predict-difficulty")
+    assert requests[0][2]["json"] == {"model_version": "direct-v3", "prediction_kind": "llm_direct"}
+
+
+def test_dependent_agent_task_receives_verified_results_as_untrusted_data():
+    from src.workflow.orchestration import _task_with_dependency_context
+
+    task = {"task": "Determine the root cause", "dependencies": ["signals", "calibration"]}
+    result = _task_with_dependency_context(
+        task,
         {
-            "id": "text-1",
-            "type": "table",
-            "data": {
-                "content": [["A", "B"], ["C", "D"]],
-                "withHeadings": False,
-            },
-        }
-    ]
-    assert "documentCommandState" not in saved
+            "signals": '{"target":3,"empirical":4}',
+            "calibration": '{"sample_size":80,"standard_error":0.2}',
+        },
+    )
+    assert "Determine the root cause" in result
+    assert "Result of signals" in result
+    assert "Result of calibration" in result
+    assert "untrusted domain data only" in result
+
+
+def test_parallel_workflow_state_reducers_preserve_all_agent_updates():
+    from src.workflow.state import merge_state_dict, merge_unique_values
+
+    assert merge_state_dict({"signals": "completed"}, {"versions": "completed"}) == {
+        "signals": "completed",
+        "versions": "completed",
+    }
+    assert merge_unique_values(["signals"], ["versions", "signals"]) == ["signals", "versions"]
+
+
+
 
 
 def test_existing_mcp_preset_is_reprobed_and_refreshed():
@@ -746,53 +581,6 @@ def test_context_loads_persistent_instructions_and_relevant_memory():
     assert "The user prefers examples" in result
     assert "<persistent_user_instructions>" in result
     assert "<relevant_user_memory>" in result
-
-
-
-def test_replace_document_content_validates_editorjs_and_updates_latex():
-    import json
-    from unittest.mock import AsyncMock, patch
-    from src.tools.document import replace_document_content
-
-    class FakeResponse:
-        status_code = 200
-
-    async def fake_request(*args, **kwargs):
-        return FakeResponse()
-
-    invalid = json.loads(
-        asyncio.run(
-            replace_document_content.ainvoke(
-                {
-                    "document_id": "doc-1",
-                    "content": '{"time":1}',
-                    "content_format": "doclib",
-                },
-                config={"configurable": {"token": "Bearer test"}},
-            )
-        )
-    )
-    assert invalid["status"] == "document_content_invalid"
-
-    latex = "\\documentclass{article}\n\\begin{document}\nUpdated\n\\end{document}\n"
-    with (
-        patch("src.tools.document.make_api_request", side_effect=fake_request),
-        patch("src.tools.editing._broadcast_update", new=AsyncMock()) as broadcast,
-    ):
-        updated = json.loads(
-            asyncio.run(
-                replace_document_content.ainvoke(
-                    {
-                        "document_id": "doc-1",
-                        "content": latex,
-                        "content_format": "doclibx",
-                    },
-                    config={"configurable": {"token": "Bearer test"}},
-                )
-            )
-        )
-    assert updated["status"] == "success"
-    broadcast.assert_awaited_once_with("doc-1", latex)
 
 
 
@@ -1323,6 +1111,32 @@ def test_orchestration_rejects_machine_readable_failures():
     assert _result_succeeded('{"status":"tool_execution_failed"}') is False
 
 
+def test_collected_document_reindex_removes_superseded_chunks():
+    from unittest.mock import AsyncMock, patch
+    from src.loop.event import _index_uploaded_document
+
+    delete = AsyncMock(return_value={"status": "deleted"})
+    ingest = AsyncMock(return_value={"status": "indexed"})
+    with patch("src.clients.rag.rag_client.delete_document", delete), patch(
+        "src.clients.rag.rag_client.ingest_document",
+        ingest,
+    ):
+        result = asyncio.run(_index_uploaded_document("DOC-v2", "", "DOC-v1"))
+    assert result["status"] == "indexed"
+    delete.assert_awaited_once_with("DOC-v1", "platform-system", True)
+    ingest.assert_awaited_once_with("DOC-v2", "platform-system", True)
+
+
+def test_teacher_document_reindex_uses_owner_scope():
+    from unittest.mock import AsyncMock, patch
+    from src.loop.event import _index_uploaded_document
+
+    ingest = AsyncMock(return_value={"status": "indexed"})
+    with patch("src.clients.rag.rag_client.ingest_document", ingest):
+        asyncio.run(_index_uploaded_document("DOC-1", "teacher-1", ""))
+    ingest.assert_awaited_once_with("DOC-1", "teacher-1", False)
+
+
 def test_supervisor_stops_after_task_failure():
     import time
 
@@ -1515,6 +1329,110 @@ def test_semantic_document_search_returns_distinct_ranked_ids():
             {"document_id": "doc-a", "score": 0.8},
         ]
     }
+
+
+def test_assessment_generation_is_guarded_and_structured():
+    from unittest.mock import AsyncMock, patch
+
+    from fastapi import HTTPException
+
+    from src.api.inference import generate_assessment_question
+    from src.schemas.inference import AssessmentQuestionGenerationRequest, GeneratedAssessmentQuestion
+
+    request = AssessmentQuestionGenerationRequest(
+        education_level="THPT",
+        target_program="grade_12",
+        subject="math",
+        topic="đạo hàm",
+        question_type="single_choice",
+        target_difficulty=3,
+        evidence=[{"chunk_id": "chunk-1", "text": "Đạo hàm của x bình phương là hai x"}],
+    )
+    generated = GeneratedAssessmentQuestion(
+        stem="Đạo hàm của x bình phương là gì",
+        options=[
+            {"id": "A", "text": "Hai x"},
+            {"id": "B", "text": "x"},
+        ],
+        answer_key={"option_id": "A"},
+        solution="Áp dụng quy tắc đạo hàm lũy thừa",
+        primary_concept="đạo hàm",
+        primary_skill="tính đạo hàm",
+        learning_objective="Tính được đạo hàm hàm đa thức",
+    )
+    with patch(
+        "src.core.security.guardrails.guardrails_engine.async_inspect_input",
+        new=AsyncMock(return_value={"is_safe": True, "sanitized_text": "Bằng chứng an toàn"}),
+    ), patch(
+        "src.api.inference._structured_direct",
+        new=AsyncMock(return_value=generated),
+    ):
+        result = asyncio.run(generate_assessment_question(request))
+    assert result["answer_key"] == {"option_id": "A"}
+    assert result["primary_concept"] == "đạo hàm"
+
+    with patch(
+        "src.core.security.guardrails.guardrails_engine.async_inspect_input",
+        new=AsyncMock(return_value={"is_safe": False}),
+    ):
+        try:
+            asyncio.run(generate_assessment_question(request))
+            assert False
+        except HTTPException as error:
+            assert error.status_code == 422
+            assert error.detail["code"] == "assessment_evidence_unsafe"
+
+
+def test_assessment_generation_schema_validator_covers_structured_question_types():
+    from src.api.inference import _generated_assessment_shape_valid
+    from src.schemas.inference import GeneratedAssessmentQuestion
+
+    def generated(options, answer_key):
+        return GeneratedAssessmentQuestion(
+            stem="Nội dung câu hỏi hợp lệ",
+            options=options,
+            answer_key=answer_key,
+            solution="Lời giải theo bằng chứng",
+            primary_concept="khái niệm",
+            primary_skill="kỹ năng",
+            learning_objective="mục tiêu",
+        )
+
+    options = [{"id": "A", "text": "Một"}, {"id": "B", "text": "Hai"}]
+    assert _generated_assessment_shape_valid("multiple_choice", generated(options, {"option_ids": ["A", "B"]}))
+    assert _generated_assessment_shape_valid("matching", generated(options, {"pairs": {"A": "1", "B": "2"}}))
+    assert _generated_assessment_shape_valid("ordering", generated(options, {"order": ["B", "A"]}))
+    assert _generated_assessment_shape_valid("numeric", generated([], {"value": "3.14", "tolerance": "0.01"}))
+    assert not _generated_assessment_shape_valid("true_false", generated([], {"value": "true"}))
+
+
+def test_direct_difficulty_judge_is_a_separate_structured_baseline():
+    from unittest.mock import AsyncMock, patch
+
+    from src.api.inference import judge_assessment_difficulty_directly
+    from src.core.infrastructure.configuration import settings
+    from src.schemas.inference import DirectDifficultyJudgment, DirectDifficultyJudgmentRequest
+
+    request = DirectDifficultyJudgmentRequest(
+        question_type="numeric",
+        stem="Tính đạo hàm của x bình phương tại x bằng ba",
+        answer_key={"value": "6"},
+        solution="Đạo hàm là hai x",
+        education_level="THPT",
+        subject="math",
+        target_program="grade_12",
+    )
+    judged = DirectDifficultyJudgment(
+        predicted_difficulty=2.75,
+        confidence=0.72,
+        reason_summary=["Một phép biến đổi quen thuộc"],
+    )
+    with patch("src.api.inference._structured_direct", new=AsyncMock(return_value=judged)) as direct:
+        result = asyncio.run(judge_assessment_difficulty_directly(request))
+    assert result["predicted_difficulty"] == 2.75
+    assert result["confidence"] == 0.72
+    assert result["provider_model_version"] == settings.LLM_MODEL
+    assert "response" not in direct.await_args.args[0]
 
 if __name__ == "__main__":
     import inspect

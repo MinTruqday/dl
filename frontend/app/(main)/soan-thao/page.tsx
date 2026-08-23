@@ -1,3 +1,5 @@
-import ComposerPage from "@/features/compilation/pages/ComposerPage";
+import { redirect } from "next/navigation";
 
-export default ComposerPage;
+export default function Page() {
+  redirect("/giao-vien/de/soan-thao");
+}

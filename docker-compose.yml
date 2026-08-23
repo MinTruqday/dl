@@ -27,6 +27,7 @@ x-app-healthcheck: &app-healthcheck
 
 services:
   flaresolverr:
+    profiles: ["legacy"]
     image: ghcr.io/flaresolverr/flaresolverr:v3.5.0@sha256:139dfee1c6f89249c8d665d1333a42e8ec74ec0a86bc6bb1c8461e10d3a66a47
     container_name: doclib_flaresolverr
     environment:
@@ -45,10 +46,17 @@ services:
     command:
       - --replSet
       - rs0
+      - --bind_ip_all
     ports:
       - 27017:27017
     volumes:
       - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'try { quit(rs.status().ok == 1 ? 0 : 1) } catch (error) { quit(rs.initiate({_id:\"rs0\",members:[{_id:0,host:\"mongodb:27017\"}]}).ok == 1 ? 0 : 1) }'"]
+      interval: 3s
+      timeout: 10s
+      start_period: 3s
+      retries: 20
     networks:
       - doclib_network
 
@@ -179,6 +187,7 @@ services:
       - doclib_network
 
   notification:
+    profiles: ["optional"]
     healthcheck: *app-healthcheck
     build:
       context: ./backend
@@ -273,8 +282,6 @@ services:
         condition: service_started
       rag:
         condition: service_started
-      ollama:
-        condition: service_healthy
     volumes:
       - ./backend/agentic_ai/src:/app/src
       - ./backend/agentic_ai/tests:/app/tests
@@ -282,7 +289,44 @@ services:
     networks:
       - doclib_network
 
+  assessment:
+    healthcheck: *app-healthcheck
+    build:
+      context: ./backend
+      dockerfile: ./assessment/Dockerfile
+    container_name: doclib_assessment
+    restart: always
+    ports:
+      - 8016:8000
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.assessment.rule=PathPrefix(`/education`) || PathPrefix(`/assessment-drafts`) || PathPrefix(`/assessment-versions`) || PathPrefix(`/question-drafts`) || PathPrefix(`/question-versions`) || PathPrefix(`/question-bank`) || PathPrefix(`/questions`) || PathPrefix(`/blueprints`) || PathPrefix(`/assessments`) || PathPrefix(`/attempts`) || PathPrefix(`/calibration`) || PathPrefix(`/revisions`) || PathPrefix(`/imports`) || PathPrefix(`/draft-revisions`) || PathPrefix(`/students`) || PathPrefix(`/dashboard`) || PathPrefix(`/review-queue`) || PathPrefix(`/research`) || PathPrefix(`/audit`) || PathPrefix(`/entities`) || PathPrefix(`/operations`) || PathPrefix(`/teacher-materials`)
+      - traefik.http.routers.assessment.priority=100
+      - traefik.http.services.assessment.loadbalancer.server.port=8000
+    environment:
+      <<: *service-environment
+      ASSESSMENT_DB_NAME: ${ASSESSMENT_DB_NAME:-assessment}
+      ASSESSMENT_ALLOW_TEST_IDENTITY: ${ASSESSMENT_ALLOW_TEST_IDENTITY:-false}
+      CALIBRATION_MIN_SAMPLE_SIZE: ${CALIBRATION_MIN_SAMPLE_SIZE:-20}
+      ASSESSMENT_PII_RETENTION_DAYS: ${ASSESSMENT_PII_RETENTION_DAYS:-730}
+      WORKER_URL: http://worker:8000
+      RAG_URL: http://rag:8000
+      AGENTIC_AI_URL: http://agentic_ai:8000
+      CONTENT_URL: http://content:8000
+    depends_on:
+      - mongodb
+      - redis
+      - rag
+      - agentic_ai
+      - content
+    volumes:
+      - ./backend/assessment/src:/app/src
+      - ./backend/assessment/tests:/app/tests
+    networks:
+      - doclib_network
+
   finetune:
+    profiles: ["legacy"]
     healthcheck: *app-healthcheck
     build:
       context: ./backend
@@ -324,6 +368,7 @@ services:
       - doclib_network
 
   ollama:
+    profiles: ["optional", "legacy"]
     image: ollama/ollama@sha256:b88c73ace3e115f8ec53dc8761ae1c0aabfa675406e3681786b98757ce050f42
     container_name: doclib_ollama
     restart: unless-stopped
@@ -347,6 +392,7 @@ services:
       - doclib_network
 
   ollama_models:
+    profiles: ["optional"]
     image: ollama/ollama@sha256:b88c73ace3e115f8ec53dc8761ae1c0aabfa675406e3681786b98757ce050f42
     restart: "no"
     environment:
@@ -434,7 +480,6 @@ services:
       <<: [*service-environment, *minio-environment]
       COLLECTION_DB_NAME: ${COLLECTION_DB_NAME:?COLLECTION_DB_NAME is required}
       RABBITMQ_URI: ${RABBITMQ_URI:?RABBITMQ_URI is required}
-      FLARESOLVERR_URL: ${FLARESOLVERR_URL:?FLARESOLVERR_URL is required}
       MAX_DOWNLOAD_SIZE_BYTES: ${MAX_DOWNLOAD_SIZE_BYTES:?MAX_DOWNLOAD_SIZE_BYTES is required}
       MIN_FILE_SIZE_BYTES: ${MIN_FILE_SIZE_BYTES:?MIN_FILE_SIZE_BYTES is required}
     depends_on:
@@ -459,23 +504,16 @@ services:
       - 8011:8000
     labels:
       - traefik.enable=true
-      - traefik.http.routers.editor.rule=PathPrefix(`/soan-thao`)
+      - traefik.http.routers.editor.rule=PathPrefix(`/exports`)
       - traefik.http.services.editor.loadbalancer.server.port=8000
     environment:
       <<: *service-environment
-      COMPILATION_DB_NAME: ${COMPILATION_DB_NAME:?COMPILATION_DB_NAME is required}
-      MINIO_ENDPOINT: ${MINIO_ENDPOINT:?MINIO_ENDPOINT is required}
-      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:?MINIO_PUBLIC_URL is required}
-      MAX_COMPILE_INPUT_BYTES: ${MAX_COMPILE_INPUT_BYTES:?MAX_COMPILE_INPUT_BYTES is required}
-      MAX_COMPILE_OUTPUT_BYTES: ${MAX_COMPILE_OUTPUT_BYTES:?MAX_COMPILE_OUTPUT_BYTES is required}
-      MAX_CONCURRENT_COMPILATIONS: ${MAX_CONCURRENT_COMPILATIONS:?MAX_CONCURRENT_COMPILATIONS is required}
+      ASSESSMENT_URL: http://assessment:8000
     depends_on:
-      - mongodb
       - redis
-      - minio
+      - assessment
     volumes:
       - ./backend/compilation/src:/app/src
-      - tectonic_cache_v2:/home/doclibuser/.cache/Tectonic
     networks:
       - doclib_network
 
@@ -517,10 +555,12 @@ services:
       - redis
     volumes:
       - ./backend/authentication/src:/app/src
+      - ./backend/authentication/tests:/app/tests
       - ./backend/logs/authentication:/app/logs
     networks:
       - doclib_network
   humanity:
+    profiles: ["legacy"]
     healthcheck: *app-healthcheck
     build:
       context: ./backend
@@ -546,6 +586,7 @@ services:
       - doclib_network
 
   websocket:
+    profiles: ["optional"]
     healthcheck: *app-healthcheck
     build:
       context: ./backend
@@ -597,6 +638,7 @@ services:
       MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:?MINIO_PUBLIC_URL is required}
       RABBITMQ_URI: ${RABBITMQ_URI:?RABBITMQ_URI is required}
     depends_on:
+      - authentication
       - mongodb
       - redis
       - minio
@@ -608,6 +650,7 @@ services:
       - doclib_network
 
   collaboration:
+    profiles: ["legacy"]
     healthcheck: *app-healthcheck
     build:
       context: ./backend
@@ -634,6 +677,7 @@ services:
       - doclib_network
 
   engagement:
+    profiles: ["legacy"]
     healthcheck: *app-healthcheck
     build:
       context: ./backend
@@ -662,6 +706,7 @@ services:
       - doclib_network
 
   search:
+    profiles: ["legacy"]
     healthcheck: *app-healthcheck
     build:
       context: ./backend
@@ -710,6 +755,7 @@ services:
       MIN_FILE_SIZE_BYTES: ${MIN_FILE_SIZE_BYTES:?MIN_FILE_SIZE_BYTES is required}
       MAX_UPLOAD_SIZE_BYTES: ${MAX_UPLOAD_SIZE_BYTES:?MAX_UPLOAD_SIZE_BYTES is required}
     depends_on:
+      - authentication
       - mongodb
       - redis
       - minio
@@ -740,22 +786,13 @@ services:
       RABBITMQ_URI: ${RABBITMQ_URI:?RABBITMQ_URI is required}
       WORKER_DB_NAME: ${WORKER_DB_NAME:?WORKER_DB_NAME is required}
       WORKER_MAX_RETRIES: ${WORKER_MAX_RETRIES:?WORKER_MAX_RETRIES is required}
-      MINIO_ENDPOINT: ${MINIO_ENDPOINT:?MINIO_ENDPOINT is required}
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:?MINIO_ACCESS_KEY is required}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:?MINIO_SECRET_KEY is required}
-      MINIO_PRIVATE_BUCKET: ${MINIO_PRIVATE_BUCKET:?MINIO_PRIVATE_BUCKET is required}
-      MAX_COMPILE_INPUT_BYTES: ${MAX_COMPILE_INPUT_BYTES:?MAX_COMPILE_INPUT_BYTES is required}
-      MAX_COMPILE_OUTPUT_BYTES: ${MAX_COMPILE_OUTPUT_BYTES:?MAX_COMPILE_OUTPUT_BYTES is required}
     depends_on:
       mongodb:
         condition: service_started
       rabbitmq:
         condition: service_healthy
-      minio:
-        condition: service_started
     volumes:
       - ./backend/worker/src:/app/src
-      - tectonic_cache_v2:/home/appuser/.cache/Tectonic
     networks:
       - doclib_network
 
@@ -806,7 +843,6 @@ volumes:
   grafana_data: null
   hf_cache: null
   finetune_data: null
-  tectonic_cache_v2: null
   frontend_node_modules: null
   frontend_next_cache: null
   ollama_data: null

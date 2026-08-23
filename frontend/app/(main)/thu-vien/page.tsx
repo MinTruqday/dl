@@ -1,3 +1,5 @@
-import LibraryPage from "@/features/content/pages/LibraryPage";
+import { redirect } from "next/navigation";
 
-export default LibraryPage;
+export default function Page() {
+  redirect("/giao-vien/cau-hoi");
+}

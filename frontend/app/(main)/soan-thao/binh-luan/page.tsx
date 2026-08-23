@@ -1,3 +1,5 @@
-import DocumentCommentsPage from "@/features/compilation/pages/DocumentCommentsPage";
+import { redirect } from "next/navigation";
 
-export default DocumentCommentsPage;
+export default function Page() {
+  redirect("/giao-vien/cau-hoi/ra-soat");
+}

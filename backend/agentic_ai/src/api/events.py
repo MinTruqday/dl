@@ -69,12 +69,17 @@ async def receive_webhook(body: WebhookPayload):
 async def document_uploaded_webhook(
     document_id: str,
     user_id: str = "",
+    superseded_document_id: str = "",
 ):
     """Enqueue a document upload event for indexing and verification"""
     event = AgentEvent(
         event_id=str(uuid.uuid4()),
         event_type=EventType.DOCUMENT_UPLOADED,
-        payload={"document_id": document_id, "user_id": user_id},
+        payload={
+            "document_id": document_id,
+            "user_id": user_id,
+            "superseded_document_id": superseded_document_id,
+        },
         source="content_service",
     )
     try:

@@ -1,3 +1,5 @@
-import ExplorePage from "@/features/search/pages/ExplorePage";
+import { redirect } from "next/navigation";
 
-export default ExplorePage;
+export default function Page() {
+  redirect("/giao-vien");
+}

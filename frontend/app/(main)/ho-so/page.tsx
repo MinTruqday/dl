@@ -1,3 +1,5 @@
-import ProfilePage from "@/features/humanity/pages/ProfilePage";
+import { redirect } from "next/navigation";
 
-export default ProfilePage;
+export default function Page() {
+  redirect("/cai-dat/vai-tro");
+}

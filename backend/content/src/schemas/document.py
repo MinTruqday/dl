@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, List, Optional
+from typing import Any, List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -21,6 +21,33 @@ class DocumentContentFormat(str, Enum):
     ZIP = "zip"
     HTML = "html"
     DOCLIB = "doclib"
+    DOCX = "docx"
+    XLSX = "xlsx"
+    PPTX = "pptx"
+    TXT = "txt"
+    LATEX = "latex"
+    EPUB = "epub"
+    CSV = "csv"
+
+
+class EducationMetadata(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    source_type: Literal["teacher_material"] = "teacher_material"
+    authority: Literal["supplementary"] = "supplementary"
+    education_level: str = Field(min_length=1, max_length=100)
+    subject: str = Field(min_length=1, max_length=100)
+    target_program: str = Field(min_length=1, max_length=100)
+    chapter_id: Optional[str] = Field(default=None, max_length=200)
+    lesson_id: Optional[str] = Field(default=None, max_length=200)
+    section_id: Optional[str] = Field(default=None, max_length=200)
+    concept_ids: List[str] = Field(default_factory=list, max_length=200)
+    skill_ids: List[str] = Field(default_factory=list, max_length=200)
+    learning_objective_ids: List[str] = Field(default_factory=list, max_length=200)
+    content_type: str = Field(default="teacher_material", min_length=1, max_length=100)
+    source_version: str = Field(min_length=1, max_length=200)
+    mapping_confidence: float = Field(default=0.5, ge=0, le=1)
+    mapping_status: Literal["needs_review"] = "needs_review"
 
 class DocumentBase(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -47,6 +74,7 @@ class DocumentBase(BaseModel):
     draft_content: Optional[Any] = None
     toc: List[dict] = Field(default_factory=list)
     reading_time_minutes: int = 0
+    education_metadata: Optional[EducationMetadata] = None
 
 class DocumentContentUpdate(BaseModel):
     content: Any
@@ -66,6 +94,9 @@ class DocumentUpdate(BaseModel):
     publish_at: Optional[datetime] = None
     scheduled_publish_at: Optional[datetime] = None
     expected_version: Optional[datetime] = None
+    file_url: Optional[str] = None
+    content_format: Optional[DocumentContentFormat] = None
+    education_metadata: Optional[EducationMetadata] = None
 
 class DocumentCreate(DocumentBase):
     password: Optional[str] = Field(default=None, min_length=8, max_length=200)

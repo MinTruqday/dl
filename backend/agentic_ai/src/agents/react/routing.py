@@ -9,9 +9,9 @@ from src.core.infrastructure.configuration import settings
 VALID_AGENTS = {
     "InterpreterAgent": "Executes Python code, runs scripts, performs mathematical calculations and data analysis",
     "EngineAgent": "Searches the internet for real-time information, news, current events and external data",
-    "Action": "Performs file operations, editing, writing, and complex multi-tool tasks within the DocLib system",
-    "Knowledge": "Retrieves information from the local document library using semantic vector search",
-    "Reasoning": "Performs deep logical analysis, reasoning, evaluation, and multi-step problem solving",
+    "Action": "Calls assessment domain operations for drafts validation calibration revision approval and publication",
+    "Knowledge": "Retrieves curriculum documents and teacher evidence with metadata authority provenance and owner isolation",
+    "Reasoning": "Analyzes difficulty discrepancy construct preservation evidence and revision hypotheses",
 }
 
 

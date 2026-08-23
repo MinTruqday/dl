@@ -7,10 +7,7 @@ from pymongo import ReturnDocument
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 from src.core.infrastructure.mq import mq
-from src.sources.anna import AnnaSource
-from src.sources.ctan import CtanSource
 from src.sources.nxbgd import NxbgdSource
-from src.sources.nxbst import NxbstSource
 
 
 WORKER_TASKS = []
@@ -46,16 +43,24 @@ async def register_batch(job_id: str | None, result: dict | None):
     queued = max(0, int(result.get("documents_queued", 0)))
     completed = max(0, int(result.get("documents_completed", 0)))
     failed = max(0, int(result.get("failed_items", 0)))
+    skipped = max(0, int(result.get("duplicate_items", 0)))
     values = {
         "pages_scanned": max(0, int(result.get("pages_scanned", 0))),
         "documents_detected": detected,
         "expected_items": queued,
         "completed_items": completed,
         "failed_items": failed,
+        "skipped_items": skipped,
+        "duplicate_pages": max(0, int(result.get("duplicate_pages", 0))),
+        "suspicious_pages": max(0, int(result.get("suspicious_pages", 0))),
         "discovery_complete": True,
         "updated_at": datetime.now(timezone.utc),
     }
-    if detected == 0:
+    if result.get("cancelled"):
+        values.update(
+            {"status": "stopped", "progress": 100, "finished_at": datetime.now(timezone.utc)}
+        )
+    elif detected == 0:
         values.update(
             {
                 "status": "failed",
@@ -78,10 +83,13 @@ async def register_batch(job_id: str | None, result: dict | None):
 
 
 async def finalize_batch(collection, row: dict):
+    if row.get("status") == "stopped":
+        return
     expected = max(0, int(row.get("expected_items", 0)))
     completed = max(0, int(row.get("completed_items", 0)))
     failed = max(0, int(row.get("failed_items", 0)))
-    finished = completed + failed
+    skipped = max(0, int(row.get("skipped_items", 0)))
+    finished = completed + failed + skipped
     if not row.get("discovery_complete") or expected == 0:
         return
     progress = min(99, 25 + int(75 * min(finished, expected) / expected))
@@ -89,7 +97,7 @@ async def finalize_batch(collection, row: dict):
     if finished >= expected:
         values.update(
             {
-                "status": "completed" if completed > 0 else "failed",
+                "status": "completed" if completed + skipped > 0 else "failed",
                 "progress": 100,
                 "finished_at": datetime.now(timezone.utc),
             }
@@ -118,85 +126,12 @@ async def complete_batch_item(job_id: str | None, success: bool, error: str | No
 async def run_worker():
     logger.info("Starting background message consumers")
 
-    async def route_anna_collector(payload):
-        return await AnnaSource.run_list_collector(
-            search_query="",
-            pages=parse_pages(payload.get("pages")),
-            job_id=payload.get("job_id"),
-            max_documents=int(payload.get("max_documents", 1)),
-        )
-
-    async def route_ctan_collector(payload):
-        letter = str(payload.get("pages", "a")).lower()
-        return await CtanSource.run_list_collector(
-            letter,
-            payload.get("job_id"),
-            int(payload.get("max_documents", 1)),
-        )
-
-    async def route_list_collector(payload):
-        source = payload.get("source", "AnnaArchive")
-        pages = parse_pages(payload.get("pages"))
-        if source == "NXBST":
-            return await NxbstSource.run_list_collector(
-                pages,
-                payload.get("job_id"),
-                int(payload.get("max_documents", 1)),
-            )
-        elif source == "CTAN":
-            return await CtanSource.run_list_collector(
-                str(payload.get("pages", "a")).lower(),
-                payload.get("job_id"),
-                int(payload.get("max_documents", 1)),
-            )
-        else:
-            return await AnnaSource.run_list_collector(
-                search_query="",
-                pages=pages,
-                job_id=payload.get("job_id"),
-                max_documents=int(payload.get("max_documents", 1)),
-            )
-
-    async def route_detail_collector(payload):
-        url = payload.get("url")
-        if not isinstance(url, str) or not url.startswith(("http://", "https://")):
-            raise ValueError("Invalid detail collection URL")
-        source = payload.get("source", "AnnaArchive")
-        collection_scope = payload.get("collection_scope")
-        if source == "NXBST":
-            await NxbstSource.run_detail_collector(url, payload.get("job_id"), collection_scope)
-            return {"terminal": True}
-        elif source == "CTAN":
-            await CtanSource.run_detail_collector(url, payload.get("job_id"), collection_scope)
-            return {"terminal": False}
-        else:
-            await AnnaSource.run_detail_collector(url, payload.get("job_id"), collection_scope)
-            return {"terminal": False}
-
-    async def route_download_processor(payload):
-        source = payload.get("source", "AnnaArchive")
-        if source == "CTAN":
-            await CtanSource.run_download_processor(payload)
-        else:
-            await AnnaSource.run_download_processor(payload)
-
-    async def route_nxbst_collector(payload):
-        url = payload.get("url")
-        if url:
-            await NxbstSource.run_detail_collector(url, payload.get("job_id"))
-            return {"documents_detected": 1, "documents_queued": 1, "documents_completed": 1}
-        else:
-            return await NxbstSource.run_list_collector(
-                parse_pages(payload.get("pages")),
-                payload.get("job_id"),
-                int(payload.get("max_documents", 1)),
-            )
-
     async def route_nxbgd_collector(payload):
         target_class = str(payload.get("target_class", payload.get("pages", "-1")))
         return await NxbgdSource(target_class).execute(
             payload.get("job_id"),
             int(payload.get("max_documents", 1)),
+            bool(payload.get("force_recrawl", False)),
         )
 
     async def poll_queue(queue_name, handler_func):
@@ -213,26 +148,17 @@ async def run_worker():
                 else:
                     payload = result
                 job_id = payload.get("job_id") if isinstance(payload, dict) else None
-                source_queue_names = {
-                    "anna_archive_queue",
-                    "nxbst_queue",
-                    "nxbgd_queue",
-                    "ctan_queue",
-                }
+                source_queue_names = {"nxbgd_queue"}
                 if queue_name in source_queue_names:
                     await update_job(job_id, "discovering", 10)
-                elif queue_name not in {"collect_detail_queue", "download_processor_queue"}:
+                else:
                     await update_job(job_id, "running", 10)
                 result = await handler_func(payload)
                 if delivery_tag:
                     await mq.ack(delivery_tag)
                 if queue_name in source_queue_names:
                     await register_batch(job_id, result)
-                elif queue_name == "download_processor_queue":
-                    await complete_batch_item(job_id, True)
-                elif queue_name == "collect_detail_queue" and result and result.get("terminal"):
-                    await complete_batch_item(job_id, True)
-                elif queue_name not in {"collect_detail_queue"}:
+                else:
                     await update_job(job_id, "completed", 100)
             except asyncio.CancelledError:
                 if delivery_tag:
@@ -242,22 +168,11 @@ async def run_worker():
                 job_id = payload.get("job_id") if isinstance(payload, dict) else None
                 if delivery_tag:
                     await mq.nack(delivery_tag, requeue=False)
-                if queue_name in {"collect_detail_queue", "download_processor_queue"}:
-                    await complete_batch_item(job_id, False, str(error))
-                else:
-                    await update_job(job_id, "failed", 100, str(error))
+                await update_job(job_id, "failed", 100, str(error))
                 logger.exception(f"Failed to process queue {queue_name}")
                 await asyncio.sleep(1)
 
-    queues = {
-        "anna_archive_queue": route_anna_collector,
-        "ctan_queue": route_ctan_collector,
-        "collect_list_queue": route_list_collector,
-        "collect_detail_queue": route_detail_collector,
-        "download_processor_queue": route_download_processor,
-        "nxbgd_queue": route_nxbgd_collector,
-        "nxbst_queue": route_nxbst_collector,
-    }
+    queues = {"nxbgd_queue": route_nxbgd_collector}
 
     global WORKER_TASKS
     WORKER_TASKS = [

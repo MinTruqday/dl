@@ -9,6 +9,8 @@ class MetricsCollector:
         self._request_count = defaultdict(int)
         self._request_duration = defaultdict(float)
         self._error_count = defaultdict(int)
+        self._curriculum_retrievals = 0
+        self._curriculum_hits = 0
 
     def record(self, method: str, path: str, status: int, duration: float):
         key = f"{method}_{path}"
@@ -16,6 +18,13 @@ class MetricsCollector:
         self._request_duration[key] += duration
         if status >= 500:
             self._error_count[key] += 1
+
+    def record_curriculum_retrieval(self, docs: list, source_type: str | None):
+        if source_type not in {None, "curriculum"}:
+            return
+        self._curriculum_retrievals += 1
+        if any(document.get("metadata", {}).get("source_type") == "curriculum" for document in docs):
+            self._curriculum_hits += 1
 
     def render(self, service_name: str) -> str:
         lines = []
@@ -28,6 +37,8 @@ class MetricsCollector:
         for key, count in self._error_count.items():
             method, path = key.split("_", 1)
             lines.append(f'http_errors_total{{service="{service_name}",method="{method}",path="{path}"}} {count}')
+        hit_rate = self._curriculum_hits / self._curriculum_retrievals if self._curriculum_retrievals else 0
+        lines.append(f"rag_curriculum_retrieval_hit_rate {hit_rate}")
         return "\n".join(lines) + "\n"
 
 metrics_collector = MetricsCollector()

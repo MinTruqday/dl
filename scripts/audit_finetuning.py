@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Static and behavioral audit for the shared project/Colab fine-tune pipeline."""
 
 from __future__ import annotations

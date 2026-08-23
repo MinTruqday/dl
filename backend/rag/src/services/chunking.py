@@ -1,9 +1,10 @@
 import math
 import re
+from hashlib import sha256
 from typing import Dict, List, Optional, Sequence
 
 from loguru import logger
-from uuid6 import uuid7
+from uuid import NAMESPACE_URL, uuid5
 
 from src.services.embedding import embedder
 
@@ -224,7 +225,15 @@ class ChunkingService:
             text = "\n\n".join(unit["text"] for unit in group).strip()
             if not text:
                 continue
-            chunk_id = str(uuid7())
+            identity = ":".join(
+                [
+                    str(metadata.get("document_id") or ""),
+                    str(metadata.get("source_version") or ""),
+                    str(chunk_index),
+                    sha256(text.encode()).hexdigest(),
+                ]
+            )
+            chunk_id = str(uuid5(NAMESPACE_URL, identity))
             chunks.append(
                 {
                     "id": chunk_id,

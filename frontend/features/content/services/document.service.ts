@@ -1,5 +1,6 @@
 import {
   API_URL,
+  authenticatedFetch,
   getToken,
   getAuthHeaders,
 } from "@/shared/services/api-client";
@@ -31,15 +32,8 @@ export async function saveDocumentDraftAPI(
 }
 
 export async function getDocumentDraftAPI(documentId: string) {
-  const token = getToken();
-  if (!token)
-    throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
-
-  const res = await fetch(`${API_URL}/tai-lieu/${documentId}`, {
+  const res = await authenticatedFetch(`${API_URL}/tai-lieu/${documentId}`, {
     method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
   });
 
   const data = await res.json();
@@ -130,16 +124,12 @@ export async function getMyDocumentsAPI(
   cursor: string = "",
   limit: number = 50,
 ) {
-  const token = getToken();
   const params = new URLSearchParams({ limit: limit.toString() });
   if (search) params.append("q", search);
   if (cursor) params.append("cursor", cursor);
 
-  const res = await fetch(`${API_URL}/tai-lieu/ca-nhan?${params.toString()}`, {
+  const res = await authenticatedFetch(`${API_URL}/tai-lieu/ca-nhan?${params.toString()}`, {
     method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
   });
 
   const json = await res.json();
@@ -149,14 +139,10 @@ export async function getMyDocumentsAPI(
 }
 
 export async function createDocumentAPI(data: any) {
-  const token = getToken();
-  if (!token)
-    throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
-  const res = await fetch(`${API_URL}/tai-lieu`, {
+  const res = await authenticatedFetch(`${API_URL}/tai-lieu`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: "Bearer " + token,
     },
     body: JSON.stringify(data),
   });
@@ -183,14 +169,10 @@ export async function importDocumentAPI(file: File) {
 }
 
 export async function updateDocumentAPI(id: string, data: any) {
-  const token = getToken();
-  if (!token)
-    throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
-  const res = await fetch(`${API_URL}/tai-lieu/${id}`, {
+  const res = await authenticatedFetch(`${API_URL}/tai-lieu/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
-      Authorization: "Bearer " + token,
     },
     body: JSON.stringify(data),
   });
@@ -202,13 +184,18 @@ export async function updateDocumentAPI(id: string, data: any) {
   return result;
 }
 
+export async function retryDocumentIndexingAPI(id: string) {
+  const res = await authenticatedFetch(`${API_URL}/tai-lieu/${id}/lap-chi-muc-lai`, {
+    method: "POST",
+  });
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.detail || result.message || "Không thể lập chỉ mục lại tài liệu");
+  return result;
+}
+
 export async function deleteAuthorDocumentAPI(docId: string) {
-  const token = getToken();
-  if (!token)
-    throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
-  const res = await fetch(`${API_URL}/tai-lieu/${docId}`, {
+  const res = await authenticatedFetch(`${API_URL}/tai-lieu/${docId}`, {
     method: "DELETE",
-    headers: { Authorization: `Bearer ${token}` },
   });
   const result = await res.json();
   if (!res.ok)

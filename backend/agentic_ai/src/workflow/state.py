@@ -52,6 +52,18 @@ def reduce_consolidated_results(left: list, right: list) -> list:
         combined = [combined[0]] + combined[-14:]
     return combined
 
+
+def merge_state_dict(left: dict, right: dict) -> dict:
+    return {**(left or {}), **(right or {})}
+
+
+def merge_unique_values(left: list, right: list) -> list:
+    values = []
+    for value in [*(left or []), *(right or [])]:
+        if value not in values:
+            values.append(value)
+    return values
+
 class AgentState(TypedDict):
     """
     <module_purpose>
@@ -100,8 +112,9 @@ class ActingState(TypedDict):
     req_data: Dict[str, Any]
     steps: List[Any]
     current_step_index: int
-    completed_tasks: list
-    task_status: Dict[str, str]
+    completed_tasks: Annotated[list, merge_unique_values]
+    task_status: Annotated[Dict[str, str], merge_state_dict]
+    task_results: Annotated[Dict[str, Any], merge_state_dict]
     consolidated_results: Annotated[list, reduce_consolidated_results]
     final_answer: str
     next_nodes: List[str]

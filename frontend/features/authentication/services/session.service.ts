@@ -1,6 +1,7 @@
 import {
   API_URL,
   WS_URL,
+  authenticatedFetch,
   getAuthHeaders,
   getToken,
 } from "@/shared/services/api-client";
@@ -59,9 +60,8 @@ export async function logoutAPI(allDevices: boolean = false) {
   const token = getToken();
   if (!token) return;
   const endpoint = allDevices ? "dang-xuat-tat-ca" : "dang-xuat";
-  await fetch(`${API_URL}/xac-thuc/${endpoint}`, {
+  await authenticatedFetch(`${API_URL}/xac-thuc/${endpoint}`, {
     method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
   });
 }
 
@@ -78,6 +78,7 @@ export async function login(email: string, password: string) {
       "Content-Type": "application/x-www-form-urlencoded",
     },
     body: formData.toString(),
+    credentials: "include",
   });
 
   const json = await res.json();
@@ -119,11 +120,8 @@ export async function getUserMe() {
 
   userMePromise = (async () => {
     try {
-      const res = await fetch(`${API_URL}/xac-thuc/ca-nhan`, {
+      const res = await authenticatedFetch(`${API_URL}/xac-thuc/ca-nhan`, {
         method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
       });
 
       if (res.status === 401 || res.status === 403) {
@@ -210,6 +208,7 @@ export const passkeyLoginFinishAPI = async (
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, credential }),
+      credentials: "include",
     },
   );
   const data = await res.json();
@@ -260,9 +259,10 @@ export const getGoogleLoginUrlAPI = async (): Promise<string> => {
   return data.data.url;
 };
 
-export const completeGoogleLoginAPI = async (code: string): Promise<any> => {
+export const completeGoogleLoginAPI = async (code: string, state: string): Promise<any> => {
   const res = await fetch(
-    `${API_URL}/google/callback?code=${encodeURIComponent(code)}`,
+    `${API_URL}/google/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`,
+    { credentials: "include" },
   );
   const data = await res.json();
   if (!res.ok)

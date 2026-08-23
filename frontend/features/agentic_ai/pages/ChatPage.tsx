@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   Archive,
   FileText,
@@ -45,6 +46,14 @@ const toolLabels: Record<string, string> = {
   restore_document: "Khôi phục tài liệu",
   execute_mcp_tool: "Chạy công cụ MCP",
   manage_user_instructions: "Cập nhật chỉ dẫn cá nhân",
+  create_question_draft: "Tạo câu hỏi nháp",
+  create_revision_draft: "Tạo đề xuất sửa bản nháp",
+  import_assessment: "Nhập đề đánh giá",
+  map_question_to_curriculum: "Gắn câu hỏi vào chương trình",
+  propose_question_revision: "Tạo đề xuất phiên bản câu hỏi",
+  publish_assessment_version: "Xuất bản phiên bản bài đánh giá",
+  record_teacher_difficulty_estimate: "Lưu ước lượng độ khó giáo viên",
+  run_calibration: "Chạy hiệu chỉnh tâm trắc học",
 };
 
 const toolDescriptions: Record<string, string> = {
@@ -58,6 +67,14 @@ const toolDescriptions: Record<string, string> = {
   restore_document: "Khôi phục tài liệu đã xóa.",
   execute_mcp_tool: "Gọi công cụ từ máy chủ MCP đã kết nối.",
   manage_user_instructions: "Thay đổi chỉ dẫn phản hồi của trợ lý.",
+  create_question_draft: "Tạo QuestionDraft để giáo viên rà soát.",
+  create_revision_draft: "Tạo proposal sửa bản nháp và chờ giáo viên duyệt.",
+  import_assessment: "Phân tích đề có sẵn thành candidate và giữ bước xác nhận.",
+  map_question_to_curriculum: "Cập nhật curriculum links bằng optimistic concurrency.",
+  propose_question_revision: "Tạo RevisionProposal mới mà không sửa phiên bản production.",
+  publish_assessment_version: "Đóng băng AssessmentVersion sau phê duyệt trực tiếp của giáo viên.",
+  record_teacher_difficulty_estimate: "Lưu judgment độc lập của giáo viên vào lịch sử.",
+  run_calibration: "Tạo snapshot hiệu chỉnh deterministic từ response đủ điều kiện.",
 };
 
 function normalizeDoclibHref(href?: string) {
@@ -113,6 +130,7 @@ function MessageBody({ content, collapsible = false }: { content: string; collap
 }
 
 export default function ChatPage() {
+  const searchParams = useSearchParams();
   const chat = useChat();
   useNoticeToast(chat.notice);
   useNoticeToast(chat.error, "error");
@@ -139,6 +157,17 @@ export default function ChatPage() {
   const [showArchived, setShowArchived] = useState(false);
   const [composerExpanded, setComposerExpanded] = useState(false);
   const [thinkingEnabled, setThinkingEnabled] = useState(false);
+  const prefillLoaded = useRef(false);
+  useEffect(() => {
+    if (prefillLoaded.current) return;
+    prefillLoaded.current = true;
+    const prompt = searchParams.get("prompt");
+    const requestedMode = searchParams.get("mode");
+    if (prompt) setInput(prompt);
+    if (requestedMode && modes.some((item) => item.value === requestedMode)) {
+      setMode(requestedMode as ChatMode);
+    }
+  }, [searchParams]);
   useEffect(
     () => () => {
       mediaRecorder.current?.stop();

@@ -1,3 +1,5 @@
-import CollaborationPage from "@/features/collaboration/pages/CollaborationPage";
+import { redirect } from "next/navigation";
 
-export default CollaborationPage;
+export default function Page() {
+  redirect("/giao-vien/cau-hoi/ra-soat");
+}

@@ -7,6 +7,11 @@ from src.store.bm25 import bm25_store
 from src.services.embedding import embedder
 from src.clients.agentic import agentic_client
 
+
+class RetrievalUnavailableError(RuntimeError):
+    pass
+
+
 class RetrievalService:
     def __init__(self):
         self._reranker = None
@@ -49,6 +54,29 @@ class RetrievalService:
                     "label": label,
                 })
         return citations
+
+    @staticmethod
+    def detect_source_conflicts(results: List[Dict]) -> List[Dict]:
+        grouped: Dict[str, Dict[str, List[Dict]]] = {}
+        for document in results:
+            metadata = document.get("metadata", {})
+            conflict_key = str(metadata.get("conflict_key") or "").strip()
+            claim_value = str(metadata.get("claim_value") or "").strip()
+            if not conflict_key or not claim_value:
+                continue
+            grouped.setdefault(conflict_key, {}).setdefault(claim_value, []).append(
+                {
+                    "document_id": metadata.get("document_id"),
+                    "chunk_id": metadata.get("chunk_id"),
+                    "authority": metadata.get("authority"),
+                    "source_version": metadata.get("source_version"),
+                }
+            )
+        return [
+            {"conflict_key": key, "claims": [{"value": value, "sources": sources} for value, sources in claims.items()]}
+            for key, claims in grouped.items()
+            if len(claims) > 1
+        ]
 
     @staticmethod
     def _result_key(document: Dict) -> str:
@@ -108,6 +136,7 @@ class RetrievalService:
         query_vector_override: Optional[List[float]] = None,
         requester_id: Optional[str] = None,
         is_admin: bool = False,
+        metadata_filters: Optional[Dict] = None,
     ) -> List[Dict]:
         current_reranker = self.reranker
         fetch_limit = min(max(k * 3, k), 100)
@@ -122,6 +151,7 @@ class RetrievalService:
                 limit=fetch_limit,
                 requester_id=requester_id,
                 is_admin=is_admin,
+                metadata_filters=metadata_filters,
             )
 
         dense_result, sparse_result = await asyncio.gather(
@@ -132,6 +162,7 @@ class RetrievalService:
                 limit=fetch_limit,
                 requester_id=requester_id,
                 is_admin=is_admin,
+                metadata_filters=metadata_filters,
             ),
             return_exceptions=True,
         )
@@ -145,6 +176,8 @@ class RetrievalService:
             sparse_documents = []
         else:
             sparse_documents = sparse_result
+        if isinstance(dense_result, Exception) and isinstance(sparse_result, Exception):
+            raise RetrievalUnavailableError("dense_and_sparse_retrieval_unavailable")
         documents = self._rrf_fuse(dense_documents, sparse_documents)
         if not documents:
             return []
@@ -168,6 +201,7 @@ class RetrievalService:
         k: int = 5,
         requester_id: Optional[str] = None,
         is_admin: bool = False,
+        metadata_filters: Optional[Dict] = None,
     ) -> List[Dict]:
         try:
             expansion = await agentic_client.expand_retrieval_query(question)
@@ -187,6 +221,7 @@ class RetrievalService:
                     k=3,
                     requester_id=requester_id,
                     is_admin=is_admin,
+                    metadata_filters=metadata_filters,
                 )
                 for query in queries
             ],
@@ -197,18 +232,22 @@ class RetrievalService:
             if isinstance(group, list):
                 all_documents.extend(group)
 
-        hypothetical_document = str(
-            expansion.get("hypothetical_document") or question
-        )
-        hypothetical_vector = await embedder.embed_query(hypothetical_document)
-        hypothetical_documents = await vector_store.query(
-            query_vector=hypothetical_vector,
-            document_ids=document_ids,
-            limit=3,
-            requester_id=requester_id,
-            is_admin=is_admin,
-        )
-        all_documents.extend(hypothetical_documents)
+        hypothetical_document = str(expansion.get("hypothetical_document") or question)
+        try:
+            hypothetical_vector = await embedder.embed_query(hypothetical_document)
+            hypothetical_documents = await vector_store.query(
+                query_vector=hypothetical_vector,
+                document_ids=document_ids,
+                limit=3,
+                requester_id=requester_id,
+                is_admin=is_admin,
+                metadata_filters=metadata_filters,
+            )
+            all_documents.extend(hypothetical_documents)
+        except Exception as error:
+            if not all_documents:
+                raise RetrievalUnavailableError("multi_query_retrieval_unavailable") from error
+            logger.error("Hypothetical retrieval failed: {}", type(error).__name__)
 
         unique_documents = []
         seen_texts = set()
@@ -227,6 +266,7 @@ class RetrievalService:
         k: int = 5,
         requester_id: Optional[str] = None,
         is_admin: bool = False,
+        metadata_filters: Optional[Dict] = None,
     ) -> List[Dict]:
         if not document_ids or len(document_ids) < 2:
             return await self.multi_query_retrieve(
@@ -235,6 +275,7 @@ class RetrievalService:
                 k,
                 requester_id,
                 is_admin,
+                metadata_filters,
             )
 
         sub_queries = [question] * len(document_ids)
@@ -255,10 +296,13 @@ class RetrievalService:
                 k=k,
                 requester_id=requester_id,
                 is_admin=is_admin,
+                metadata_filters=metadata_filters,
             )
             for index, doc_id in enumerate(document_ids)
         ]
         results_per_doc = await asyncio.gather(*tasks, return_exceptions=True)
+        if results_per_doc and all(isinstance(result, Exception) for result in results_per_doc):
+            raise RetrievalUnavailableError("cross_document_retrieval_unavailable")
 
         merged: List[Dict] = []
         for r in results_per_doc:

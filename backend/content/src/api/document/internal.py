@@ -8,6 +8,7 @@ from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
 from loguru import logger
 from pymongo import ReturnDocument
+from pymongo.errors import DuplicateKeyError
 
 from src.core.dependency import verify_internal_token
 from src.core.infrastructure.configuration import settings
@@ -349,6 +350,19 @@ async def exchange_internal_document(req: dict):
             },
         )
         return {"data": {"updated": result.matched_count == 1}}
+    if action == "mark_source_obsolete":
+        result = await documents.update_one(
+            {"_id": document_id, "is_deleted": {"$ne": True}},
+            {
+                "$set": {
+                    "source_is_current": False,
+                    "collection_status": "obsolete",
+                    "obsolete_reason": str(req.get("reason") or ""),
+                    "updated_at": datetime.now(timezone.utc),
+                }
+            },
+        )
+        return {"data": {"updated": result.matched_count == 1}}
     if action == "upsert_collected":
         payload = dict(req.get("document") or {})
         identity = payload.get("source_url") or payload.get("file_url")
@@ -358,11 +372,47 @@ async def exchange_internal_document(req: dict):
         payload.setdefault("_id", str(uuid.uuid4()))
         payload.setdefault("created_at", now)
         payload["updated_at"] = now
-        query = {"source_url": identity} if payload.get("source_url") else {"file_url": identity}
-        row = await documents.find_one_and_update(
-            query, {"$setOnInsert": payload}, upsert=True, return_document=ReturnDocument.AFTER
-        )
+        identity_field = "source_url" if payload.get("source_url") else "file_url"
+        identity_query = {identity_field: identity}
+        content_hash = str(payload.get("content_hash") or "")
+        if content_hash:
+            exact_query = {**identity_query, "content_hash": content_hash}
+            row = await documents.find_one(exact_query)
+            if not row:
+                previous = await documents.find_one(identity_query, sort=[("source_revision", -1), ("created_at", -1)])
+                payload["source_revision"] = int(previous.get("source_revision", 1)) + 1 if previous else 1
+                payload["previous_version_id"] = str(previous["_id"]) if previous else None
+                payload["source_is_current"] = True
+                if previous:
+                    payload["slug"] = f"{str(payload.get('slug') or 'tai-lieu')[:130]}-{content_hash[:10]}"
+                try:
+                    await documents.insert_one(payload)
+                    row = payload
+                except DuplicateKeyError:
+                    row = await documents.find_one(exact_query)
+                    if not row:
+                        raise
+                if previous and str(row["_id"]) == str(payload["_id"]):
+                    await documents.update_one(
+                        {"_id": previous["_id"]},
+                        {
+                            "$set": {
+                                "source_is_current": False,
+                                "superseded_by_document_id": str(row["_id"]),
+                                "collection_status": "superseded",
+                                "updated_at": now,
+                            }
+                        },
+                    )
+        else:
+            row = await documents.find_one_and_update(
+                identity_query,
+                {"$setOnInsert": payload},
+                upsert=True,
+                return_document=ReturnDocument.AFTER,
+            )
         collected_doc_id = str(row["_id"])
+        superseded_document_id = str(row.get("previous_version_id") or "")
         if payload.get("file_url"):
             import asyncio
             async def _fire_collected_ingest():
@@ -370,7 +420,11 @@ async def exchange_internal_document(req: dict):
                     async with httpx.AsyncClient(timeout=5.0) as client:
                         await client.post(
                             f"{settings.AGENTIC_AI_URL}/su-kien/webhook/tai-lieu-dang-tai",
-                            params={"document_id": collected_doc_id, "user_id": ""},
+                            params={
+                                "document_id": collected_doc_id,
+                                "user_id": "",
+                                "superseded_document_id": superseded_document_id,
+                            },
                             headers={"X-Internal-Token": settings.SECRET_KEY},
                         )
                 except Exception:

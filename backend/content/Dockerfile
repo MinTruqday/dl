@@ -11,6 +11,7 @@ COPY content/requirements.txt .
 RUN pip install -q --no-cache-dir -r requirements.txt
 
 COPY content/src/ ./src/
+COPY content/tests/ ./tests/
 
 RUN groupadd --gid 10001 app && useradd --uid 10001 --gid app --create-home --home-dir /home/app --shell /usr/sbin/nologin app && chown -R app:app /app
 

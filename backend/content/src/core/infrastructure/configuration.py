@@ -20,8 +20,9 @@ class Settings(BaseModel):
     REDIS_URI: str = os.environ["REDIS_URI"]
     RABBITMQ_URI: str = os.environ["RABBITMQ_URI"]
     PLATFORM_SYSTEM_ID: str = os.environ["PLATFORM_SYSTEM_ID"]
-    HUMANITY_URL: str = get_service_url("HUMANITY")
+    AUTHENTICATION_URL: str = get_service_url("AUTHENTICATION")
     AGENTIC_AI_URL: str = get_service_url("AGENTIC_AI")
+    RAG_URL: str = get_service_url("RAG")
     NOTIFICATION_URL: str = get_service_url("NOTIFICATION")
     COLLABORATION_URL: str = get_service_url("COLLABORATION")
     ENGAGEMENT_URL: str = get_service_url("ENGAGEMENT")

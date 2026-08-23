@@ -1,3 +1,5 @@
-import CreateDocumentPage from "@/features/compilation/pages/CreateDocumentPage";
+import { redirect } from "next/navigation";
 
-export default CreateDocumentPage;
+export default function Page() {
+  redirect("/giao-vien/de/soan-thao");
+}

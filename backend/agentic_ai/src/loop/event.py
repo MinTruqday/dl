@@ -312,20 +312,37 @@ async def _handle_system_heartbeat(event: AgentEvent) -> Optional[str]:
     return "Heartbeat processed"
 
 
+async def _index_uploaded_document(doc_id: str, user_id: str, superseded_document_id: str):
+    from src.clients.rag import rag_client
+    system_ingest = not bool(user_id)
+    requester_id = user_id or "platform-system"
+    if superseded_document_id:
+        await rag_client.delete_document(
+            superseded_document_id,
+            requester_id,
+            system_ingest,
+        )
+    return await rag_client.ingest_document(
+        doc_id,
+        requester_id,
+        system_ingest,
+    )
+
+
 async def _handle_document_uploaded(event: AgentEvent) -> Optional[str]:
     doc_id = event.payload.get("document_id")
     user_id = event.payload.get("user_id", "")
+    superseded_document_id = event.payload.get("superseded_document_id", "")
     if not doc_id:
         return None
     logger.info(f"EventDrivenLoop document uploaded event for doc_id={doc_id}")
 
     async def _run_ingest():
         try:
-            from src.clients.rag import rag_client
-            result = await rag_client.ingest_document(
+            result = await _index_uploaded_document(
                 doc_id,
                 user_id,
-                True,
+                superseded_document_id,
             )
             logger.info(
                 f"Auto-ingest completed doc_id={doc_id} chunks={result.get('chunks', 0)} method={result.get('extraction_method')}"

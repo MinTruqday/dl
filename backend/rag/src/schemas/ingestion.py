@@ -12,6 +12,8 @@ class IngestResponse(BaseModel):
     chunks_count: int
     summary_generated: bool = False
     extraction_method: str = "local"
+    quarantined_chunks: list[dict[str, Any]] = Field(default_factory=list)
+    failed_chunks: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class AttachmentConversionRequest(BaseModel):

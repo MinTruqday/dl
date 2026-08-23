@@ -1,5 +1,5 @@
-import ComposerDocumentList from "@/features/compilation/components/ComposerDocumentList";
+import { redirect } from "next/navigation";
 
 export default function TrashPage() {
-  return <ComposerDocumentList source="trash" />;
+  redirect("/giao-vien/de");
 }

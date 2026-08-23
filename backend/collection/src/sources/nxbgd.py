@@ -3,22 +3,32 @@ import hashlib
 import os
 import re
 import shutil
-import urllib.parse
+import uuid
+from io import BytesIO
 
 import aiohttp
 import img2pdf
 from loguru import logger
 from PIL import Image
-from playwright.async_api import Response, async_playwright
+from playwright.async_api import Response
 from src.infrastructure.browser import get_stealth_context, managed_browser
 from src.core.database import database
 from src.core.cache import dedup
 from src.core.storage import storage
+from src.core.infrastructure.redis import redis
 from src.services.metadata import collected_metadata
 
 from src.core.infrastructure.configuration import settings
 
 MIN_FILE_SIZE_BYTES = settings.MIN_FILE_SIZE_BYTES
+
+
+def page_number_from_url(url: str) -> int | None:
+    for pattern in [r"(?:page|trang|pageno)[=_/-]?(\d{1,5})", r"/(\d{1,5})\.(?:jpg|jpeg|png)(?:\?|$)"]:
+        match = re.search(pattern, url, re.I)
+        if match:
+            return int(match.group(1))
+    return None
 
 
 class NxbgdSource:
@@ -31,6 +41,9 @@ class NxbgdSource:
         self.is_capturing = False
         self.captured_hashes = set()
         self.page_counter = 0
+        self.duplicate_pages = 0
+        self.suspicious_pages = 0
+        self.capture_lock = asyncio.Lock()
         self.source_url = None
 
     async def _handle_response(self, response: Response):
@@ -52,24 +65,31 @@ class NxbgdSource:
                 try:
                     body = await response.body()
                     if len(body) > MIN_FILE_SIZE_BYTES:
-                        content_hash = hashlib.md5(body).hexdigest()
-
-                        if content_hash in self.captured_hashes:
+                        with Image.open(BytesIO(body)) as candidate:
+                            width, height = candidate.size
+                            extrema = candidate.convert("L").resize((64, 64)).getextrema()
+                        if width < 400 or height < 400 or extrema[1] - extrema[0] < 3:
+                            self.suspicious_pages += 1
                             return
+                        content_hash = hashlib.sha256(body).hexdigest()
 
                         ext = ".jpg"
                         if "png" in url.lower() or "png" in content_type:
                             ext = ".png"
 
-                        filename = f"nxbgd_page_{self.page_counter:03d}{ext}"
-                        save_path = os.path.join(self.temp_dir, filename)
-
-                        with open(save_path, "wb") as f:
-                            f.write(body)
-
-                        logger.info("[NXBGD] Document page captured and saved")
-                        self.captured_hashes.add(content_hash)
-                        self.page_counter += 1
+                        async with self.capture_lock:
+                            if content_hash in self.captured_hashes:
+                                self.duplicate_pages += 1
+                                return
+                            source_page = page_number_from_url(url)
+                            ordering = source_page if source_page is not None else self.page_counter
+                            filename = f"nxbgd_page_{ordering:05d}_{self.page_counter:05d}{ext}"
+                            save_path = os.path.join(self.temp_dir, filename)
+                            with open(save_path, "wb") as f:
+                                f.write(body)
+                            logger.info("[NXBGD] Document page captured and saved")
+                            self.captured_hashes.add(content_hash)
+                            self.page_counter += 1
                 except Exception as e:
                     logger.exception("[NXBGD] Page image download failed")
         except Exception as e:
@@ -88,7 +108,6 @@ class NxbgdSource:
             await self._browser_cm.__aexit__(None, None, None)
 
     async def compile_and_upload(self, title: str, author: str = ""):
-        slug = urllib.parse.quote(title.lower().replace(" ", "-"), safe="")[:50]
         safe_title = re.sub(r'[\\/*?:"<>|]', "", title).strip()
         final_pdf_name = f"{safe_title}_{uuid.uuid4().hex[:12]}.pdf"
 
@@ -104,6 +123,7 @@ class NxbgdSource:
 
         if not image_files:
             logger.warning("[NXBGD] Skipping PDF compilation due to lack of valid captured images")
+            shutil.rmtree(self.temp_dir, ignore_errors=True)
             return
 
         try:
@@ -118,6 +138,11 @@ class NxbgdSource:
                 f.write(img2pdf.convert(normalized_images))
             logger.info("[NXBGD] PDF compilation and temporary storage successful")
 
+            with open(pdf_path, "rb") as stream:
+                content_hash = hashlib.sha256(stream.read()).hexdigest()
+            if await dedup.is_collected("nxbgd_content", content_hash):
+                return "existing"
+
             logger.info("[NXBGD] Uploading compiled document to permanent storage")
             minio_url = await storage.upload_local_file(
                 f"system/collection/nxbgd/{final_pdf_name}", pdf_path
@@ -129,6 +154,7 @@ class NxbgdSource:
                         "title": title,
                         "author": author,
                         "source_url": self.source_url,
+                        "content_hash": content_hash,
                         "collection_scope": {
                             "type": "grade",
                             "value": self.target_class,
@@ -140,7 +166,10 @@ class NxbgdSource:
                     "Nhà Xuất bản Giáo dục Việt Nam",
                     "nxbgd",
                 )
-                return await database.insert_document(metadata)
+                document_id = await database.insert_document(metadata)
+                await dedup.mark_collected("nxbgd_content", content_hash)
+                await dedup.mark_collected("nxbgd_url", self.source_url)
+                return document_id
 
         except Exception as e:
             logger.exception("[NXBGD] Document compilation or upload failed")
@@ -180,14 +209,18 @@ class NxbgdSource:
                 "reason": str(error)[:200],
             }
 
-    async def execute(self, job_id: str | None = None, max_documents: int = 1):
+    async def execute(self, job_id: str | None = None, max_documents: int = 1, force_recrawl: bool = False):
         await self.init_browser()
 
         url = f"https://taphuan.nxbgd.vn/tap-huan?grade={self.target_class}"
         documents_detected = 0
         documents_saved = 0
         failed_items = 0
+        duplicate_items = 0
+        duplicate_pages_total = 0
+        suspicious_pages_total = 0
         pages_scanned = 0
+        cancelled = False
         try:
             logger.info("[NXBGD] Accessing root domain for category scraping")
             await self.page.goto(url, timeout=60000)
@@ -195,7 +228,10 @@ class NxbgdSource:
 
             has_next = True
 
-            while has_next:
+            while has_next and documents_saved + failed_items + duplicate_items < max_documents:
+                if await redis.get("stop_collection") == "1" or job_id and await redis.get(f"collection:cancel:{job_id}") == "1":
+                    cancelled = True
+                    break
                 pages_scanned += 1
                 document_elements = await self.page.query_selector_all("a[href*='/chi-tiet-sach/']")
                 document_urls = []
@@ -207,37 +243,49 @@ class NxbgdSource:
                 logger.info("[NXBGD] Found document elements on category page")
                 documents_detected += len(document_urls)
 
-                for doc_url in document_urls[:max_documents]:
+                for doc_url in document_urls:
+                    if cancelled:
+                        break
+                    if documents_saved + failed_items + duplicate_items >= max_documents:
+                        break
                     full_doc_url = (
                         f"https://taphuan.nxbgd.vn{doc_url}" if doc_url.startswith("/") else doc_url
                     )
                     self.source_url = full_doc_url
                     logger.info("[NXBGD] Retrieving detailed document information")
 
+                    detail_page = None
+                    viewer_page = None
                     try:
-                        await self.page.goto(full_doc_url, timeout=60000)
+                        detail_page = await self.context.new_page()
+                        await detail_page.goto(full_doc_url, timeout=60000)
                         await asyncio.sleep(4)
 
-                        doc_links = await self.page.query_selector_all("a[href*='/doc-sach/']")
+                        doc_links = await detail_page.query_selector_all("a[href*='/doc-sach/']")
                         if not doc_links:
                             continue
 
                         for doc_link in doc_links:
-                            if documents_saved + failed_items >= max_documents:
+                            if documents_saved + failed_items + duplicate_items >= max_documents:
                                 break
-                            res_name = await doc_link.text_content()
-                            res_name = res_name.strip()
+                            res_name = str(await doc_link.text_content() or "").strip()
+                            if not res_name:
+                                failed_items += 1
+                                continue
                             full_title = res_name
 
-                            if await dedup.is_collected("taphuan_book", full_title):
-                                logger.info("[NXBGD] Skipping already processed document")
-                                continue
-
-                            await dedup.mark_collected("taphuan_book", full_title)
-
                             viewer_url = await doc_link.get_attribute("href")
+                            if not viewer_url:
+                                failed_items += 1
+                                continue
                             if viewer_url.startswith("/"):
                                 viewer_url = f"https://taphuan.nxbgd.vn{viewer_url}"
+                            self.source_url = viewer_url
+
+                            if not force_recrawl and await dedup.is_collected("nxbgd_url", viewer_url):
+                                logger.info("[NXBGD] Skipping already processed document")
+                                duplicate_items += 1
+                                continue
 
                             logger.info("[NXBGD] Preparing to process detailed document content")
 
@@ -249,6 +297,8 @@ class NxbgdSource:
 
                             self.captured_hashes = set()
                             self.page_counter = 0
+                            self.duplicate_pages = 0
+                            self.suspicious_pages = 0
                             self.is_capturing = True
 
                             viewer_page = await self.context.new_page()
@@ -259,6 +309,9 @@ class NxbgdSource:
                             last_page_count = 0
                             stable_count = 0
                             for _ in range(150):
+                                if await redis.get("stop_collection") == "1" or job_id and await redis.get(f"collection:cancel:{job_id}") == "1":
+                                    cancelled = True
+                                    break
                                 try:
                                     next_btn = await viewer_page.query_selector(
                                         "button i.fa-angle-right"
@@ -283,21 +336,38 @@ class NxbgdSource:
                                 last_page_count = current_pages
 
                             self.is_capturing = False
+                            duplicate_pages_total += self.duplicate_pages
+                            suspicious_pages_total += self.suspicious_pages
+                            if cancelled:
+                                await viewer_page.close()
+                                viewer_page = None
+                                shutil.rmtree(self.temp_dir, ignore_errors=True)
+                                break
                             document_id = await self.compile_and_upload(full_title)
-                            if document_id:
+                            if document_id == "existing":
+                                duplicate_items += 1
+                            elif document_id:
                                 documents_saved += 1
                             else:
                                 failed_items += 1
                             await viewer_page.close()
-                            if documents_saved + failed_items >= max_documents:
+                            viewer_page = None
+                            if cancelled or documents_saved + failed_items + duplicate_items >= max_documents:
                                 break
                     except Exception:
                         failed_items += 1
                         logger.exception("[NXBGD] Document information extraction failed")
+                    finally:
+                        self.is_capturing = False
+                        if self.temp_dir and os.path.isdir(self.temp_dir):
+                            shutil.rmtree(self.temp_dir, ignore_errors=True)
+                        pages_to_close = [page for page in [viewer_page, detail_page] if page]
+                        if pages_to_close:
+                            await asyncio.gather(*(page.close() for page in pages_to_close), return_exceptions=True)
 
+                if cancelled:
+                    break
                 try:
-                    await self.page.goto(url, timeout=60000)
-                    await asyncio.sleep(5)
                     next_btn = await self.page.query_selector("button.p-paginator-next")
                     if (
                         next_btn
@@ -314,14 +384,16 @@ class NxbgdSource:
                     logger.exception("[NXBGD] Automatic pagination failed")
                     has_next = False
 
-                break
-
             return {
                 "pages_scanned": pages_scanned,
                 "documents_detected": documents_detected,
-                "documents_queued": documents_saved + failed_items,
+                "documents_queued": documents_saved + failed_items + duplicate_items,
                 "documents_completed": documents_saved,
                 "failed_items": failed_items,
+                "duplicate_items": duplicate_items,
+                "duplicate_pages": duplicate_pages_total,
+                "suspicious_pages": suspicious_pages_total,
+                "cancelled": cancelled,
             }
 
         except Exception as e:
@@ -335,4 +407,3 @@ async def run_nxbgd_collector(target_class: str, job_id: str | None = None):
     logger.info("[NXBGD] Initializing data collection pipeline")
     collector = NxbgdSource(target_class=target_class)
     return await collector.execute(job_id)
-import uuid

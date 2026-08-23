@@ -11,6 +11,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends git ca-certific
     && npm install --prefix /opt/doclib-mcp/chrome --omit=dev chrome-devtools-mcp@1.6.0 \
     && rm -rf /var/lib/apt/lists/* /root/.npm
 
+RUN npm install --prefix /opt/doclib-mcp/reqwise --omit=dev --save-exact @hono/node-server@1.19.15 hono@4.12.34 fast-uri@3.1.5 ip-address@10.3.1 \
+    && npm audit --prefix /opt/doclib-mcp/reqwise --omit=dev --audit-level=low \
+    && npm audit --prefix /opt/doclib-mcp/chrome --omit=dev --audit-level=low
+
 FROM ghcr.io/astral-sh/uv:latest AS uv-build
 
 FROM python:3.11-slim
@@ -47,6 +51,8 @@ COPY --from=mcp-build /opt/doclib-mcp/ /opt/doclib-mcp/
 
 RUN apt-get update && apt-get install -y --no-install-recommends chromium \
     && rm -rf /var/lib/apt/lists/*
+
+RUN uv pip install --system --no-cache pytest==8.3.5
 
 RUN groupadd --gid 10001 appuser && useradd --uid 10001 --gid appuser -m -s /bin/bash appuser
 RUN mkdir -p /home/appuser/.cache/huggingface /home/appuser/.cache/torchinductor /home/appuser/.cache/torch /home/appuser/.cache/tmp && chown -R appuser:appuser /home/appuser/.cache

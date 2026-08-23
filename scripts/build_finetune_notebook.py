@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Build and verify the self-contained DocLib Metis Colab notebook."""
 
 from __future__ import annotations

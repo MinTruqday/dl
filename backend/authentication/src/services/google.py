@@ -1,4 +1,6 @@
 import secrets
+import uuid
+from datetime import datetime, timezone
 from urllib.parse import urlencode
 
 import httpx
@@ -83,72 +85,34 @@ class GoogleService:
         if not email or google_user.get("email_verified") is not True:
             raise HTTPException(status_code=400, detail="Địa chỉ thư điện tử liên kết chưa được xác minh")
 
-        headers = {"X-Internal-Token": settings.SECRET_KEY}
-        try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                profile_response = await client.get(
-                    f"{settings.HUMANITY_URL}/nguoi-dung/email/{email}",
-                    headers=headers,
-                )
-        except httpx.HTTPError:
-            raise HTTPException(status_code=503, detail="Dịch vụ hồ sơ người dùng tạm thời không khả dụng")
-
-        user_doc = profile_response.json().get("data") if profile_response.status_code == 200 else None
+        user_doc = await IdentityRepository.get_auth_credential_by_email(email)
         if not user_doc:
             config = await IdentityRepository.get_system_config()
             if config and not config.get("registration_enabled", True):
                 raise HTTPException(status_code=403, detail="Tính năng đăng ký tài khoản mới tạm thời bị vô hiệu hóa")
             slug = f"{email.split('@')[0]}_{secrets.token_hex(4)}"
+            created_at = datetime.now(timezone.utc)
+            user_id = str(uuid.uuid4())
+            user_doc = {
+                "_id": user_id,
+                "email": email,
+                "full_name": google_user.get("name") or email.split("@")[0],
+                "slug": slug,
+                "role": "reader",
+                "permissions": [],
+                "is_active": True,
+                "password_hash": None,
+                "passkeys": [],
+                "provider": "google",
+                "created_at": created_at,
+                "updated_at": created_at,
+            }
             try:
-                async with httpx.AsyncClient(timeout=10.0) as client:
-                    create_response = await client.post(
-                        f"{settings.HUMANITY_URL}/nguoi-dung/",
-                        json={
-                            "email": email,
-                            "full_name": google_user.get("name") or email.split("@")[0],
-                            "slug": slug,
-                            "role": "reader",
-                        },
-                        headers=headers,
-                    )
-                if create_response.status_code not in (200, 201):
-                    raise HTTPException(status_code=502, detail="Không thể khởi tạo hồ sơ tài khoản liên kết")
-                user_id = create_response.json().get("data", {}).get("user_id")
-                if not user_id:
-                    raise HTTPException(status_code=502, detail="Dữ liệu hồ sơ tài khoản liên kết không hợp lệ")
-                await IdentityRepository.create_auth_credential(
-                    {
-                        "_id": user_id,
-                        "email": email,
-                        "slug": slug,
-                        "password_hash": None,
-                        "passkeys": [],
-                        "provider": "google",
-                    }
-                )
-                user_doc = {
-                    "_id": user_id,
-                    "email": email,
-                    "full_name": google_user.get("name") or email.split("@")[0],
-                    "slug": slug,
-                    "role": "reader",
-                    "is_active": True,
-                }
+                await IdentityRepository.create_auth_credential(user_doc)
             except HTTPException:
                 raise
             except Exception:
                 logger.exception("Federated user provisioning failed")
                 raise HTTPException(status_code=503, detail="Không thể thiết lập tài khoản liên kết")
-        elif not await IdentityRepository.get_auth_credential_by_email(email):
-            await IdentityRepository.create_auth_credential(
-                {
-                    "_id": str(user_doc["_id"]),
-                    "email": email,
-                    "slug": user_doc.get("slug"),
-                    "password_hash": None,
-                    "passkeys": [],
-                    "provider": "google",
-                }
-            )
 
         return await SessionService.issue_token_for_user(user_doc, client_ip)

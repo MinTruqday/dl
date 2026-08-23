@@ -3,11 +3,6 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-def get_service_url(service_name_underscore: str) -> str:
-    override = os.getenv(f"{service_name_underscore.upper()}_URL")
-    if override: return override
-    return f"http://{service_name_underscore.lower()}:8000"
-
 class Settings(BaseModel):
     PROJECT_NAME: str = os.environ["PROJECT_NAME"]
     VERSION: str = os.environ["VERSION"]
@@ -33,7 +28,6 @@ class Settings(BaseModel):
     SENDER_EMAIL: Optional[str] = os.environ["SENDER_EMAIL"]
     SENDER_NAME: Optional[str] = os.environ["SENDER_NAME"]
     PLATFORM_SYSTEM_ID: str = os.environ["PLATFORM_SYSTEM_ID"]
-    HUMANITY_URL: str = get_service_url("HUMANITY")
     AUTHENTICATION_DB_NAME: str = os.environ["AUTHENTICATION_DB_NAME"]
 
 settings = Settings()

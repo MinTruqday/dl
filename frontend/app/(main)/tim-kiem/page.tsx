@@ -1,3 +1,5 @@
-import SearchPage from "@/features/search/pages/SearchPage";
+import { redirect } from "next/navigation";
 
-export default SearchPage;
+export default function Page() {
+  redirect("/giao-vien/cau-hoi");
+}

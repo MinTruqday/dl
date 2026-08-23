@@ -7,20 +7,26 @@ import { Bell, Menu, Search, X } from "lucide-react";
 import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import { useAnnouncements } from "@/shared/contexts/AnnouncementContext";
 import { availableNavigation, navigationGroups } from "./navigation";
+import { assessmentRequest } from "@/features/assessment/services/assessment.service";
 
 type AppShellProps = {
   children: React.ReactNode;
   requireAuth: boolean;
 };
 
-const fullWidthRoutes = ["/tai-lieu/xem-truoc", "/tro-chuyen"];
+const fullWidthRoutes = ["/giao-vien/de/soan-thao", "/hoc-sinh/lam-bai"];
 
 function NavigationList({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const { user } = useAuth() as any;
+  const [personas, setPersonas] = useState<string[]>([]);
+  useEffect(() => {
+    if (!user) return;
+    assessmentRequest<{ personas?: string[] }>("/education/profiles/me").then((profile) => setPersonas(profile.personas || [])).catch(() => setPersonas([]));
+  }, [user]);
   const groups = useMemo(
-    () => availableNavigation(navigationGroups, user),
-    [user],
+    () => availableNavigation(navigationGroups, user, personas),
+    [personas, user],
   );
 
   return (
@@ -65,6 +71,7 @@ export default function AppShell({ children, requireAuth }: AppShellProps) {
   const routeQuery = searchParams.get("q") || "";
   const { user, isLoading, logoutState } = useAuth() as any;
   const { unreadCount } = useAnnouncements();
+  const notificationEnabled = process.env.NEXT_PUBLIC_NOTIFICATION_ENABLED === "true";
   const [mobileOpen, setMobileOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState(routeQuery);
@@ -75,8 +82,12 @@ export default function AppShell({ children, requireAuth }: AppShellProps) {
   }, [routeQuery]);
 
   useEffect(() => {
-    if (requireAuth && !isLoading && !user) router.replace("/dang-nhap");
-  }, [isLoading, requireAuth, router, user]);
+    if (requireAuth && !isLoading && !user) {
+      const query = searchParams.toString();
+      const returnPath = `${pathname}${query ? `?${query}` : ""}`;
+      router.replace(`/dang-nhap?next=${encodeURIComponent(returnPath)}`);
+    }
+  }, [isLoading, pathname, requireAuth, router, searchParams, user]);
 
   useEffect(() => {
     const close = (event: MouseEvent) => {
@@ -144,7 +155,7 @@ export default function AppShell({ children, requireAuth }: AppShellProps) {
           >
             <Menu size={20} strokeWidth={1.75} />
           </button>
-          <form action="/tim-kiem" className="relative hidden w-full max-w-[520px] md:block">
+          <form action="/giao-vien/cau-hoi" className="relative hidden w-full max-w-[520px] md:block">
             <button
               type="submit"
               aria-label="Thực hiện tìm kiếm"
@@ -153,7 +164,7 @@ export default function AppShell({ children, requireAuth }: AppShellProps) {
               <Search aria-hidden="true" size={18} strokeWidth={1.75} />
             </button>
             <label htmlFor="workspace-search" className="sr-only">
-              Tìm kiếm toàn DocLib
+              Tìm câu hỏi bài đánh giá và tài liệu
             </label>
             <input
               id="workspace-search"
@@ -162,20 +173,20 @@ export default function AppShell({ children, requireAuth }: AppShellProps) {
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               className="h-10 w-full rounded-control border border-transparent bg-surface-quiet pl-10 pr-3 text-[14px] text-ink outline-none transition focus:border-brand focus:bg-surface focus:ring-2 focus:ring-brand-soft"
-              placeholder="Tìm kiếm toàn DocLib"
+              placeholder="Tìm câu hỏi bài đánh giá và tài liệu"
             />
           </form>
           <div className="ml-auto flex items-center gap-2">
             {user ? (
               <>
                 <Link
-                  href="/tim-kiem"
+                  href="/giao-vien/cau-hoi"
                   className="flex h-11 w-11 items-center justify-center rounded-control text-ink-muted hover:bg-surface-quiet hover:text-ink md:hidden"
                   aria-label="Tìm kiếm"
                 >
                   <Search size={19} strokeWidth={1.75} />
                 </Link>
-                <Link
+                {notificationEnabled && <Link
                   href="/thong-bao"
                   className="relative flex h-11 w-11 items-center justify-center rounded-control text-ink-muted hover:bg-surface-quiet hover:text-ink"
                   aria-label={
@@ -188,7 +199,7 @@ export default function AppShell({ children, requireAuth }: AppShellProps) {
                   {unreadCount > 0 && (
                     <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-danger" />
                   )}
-                </Link>
+                </Link>}
                 <div className="relative" ref={accountRef}>
                   <button
                     type="button"
@@ -270,7 +281,7 @@ export default function AppShell({ children, requireAuth }: AppShellProps) {
             href="/"
             className="text-[19px] font-semibold tracking-[-0.035em] text-ink"
           >
-            DocLib
+            Hiệu chỉnh AI
           </Link>
         </div>
         <nav
@@ -296,7 +307,7 @@ export default function AppShell({ children, requireAuth }: AppShellProps) {
                 onClick={() => setMobileOpen(false)}
                 className="text-[19px] font-semibold tracking-[-0.035em]"
               >
-                DocLib
+                Hiệu chỉnh AI
               </Link>
               <button
                 type="button"

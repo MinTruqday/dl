@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Manrope } from "next/font/google";
+import "katex/dist/katex.min.css";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -9,9 +10,9 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "DocLib",
+  title: "Nền tảng kiểm định bài đánh giá",
   description:
-    "Đọc, quản lý và cộng tác trên tài liệu trong một không gian làm việc",
+    "Soạn thảo kiểm định và hiệu chỉnh bài đánh giá bằng bằng chứng thực nghiệm",
 };
 
 import { AuthProvider } from "@/features/authentication/contexts/AuthContext";

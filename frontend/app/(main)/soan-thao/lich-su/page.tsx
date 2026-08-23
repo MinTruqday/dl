@@ -1,3 +1,5 @@
-import VersionHistoryPage from "@/features/compilation/pages/VersionHistoryPage";
+import { redirect } from "next/navigation";
 
-export default VersionHistoryPage;
+export default function Page() {
+  redirect("/giao-vien/cau-hoi");
+}

@@ -72,6 +72,26 @@ class BM25Store:
             }
             self._rebuild()
 
+    async def ids_by_document(self, document_id: str) -> List[str]:
+        async with self._lock:
+            return [
+                point_id
+                for point_id, document in self._documents.items()
+                if str(document.get("metadata", {}).get("document_id")) == str(document_id)
+            ]
+
+    async def delete_ids(self, point_ids: List[str]) -> None:
+        if not point_ids:
+            return
+        remove = set(map(str, point_ids))
+        async with self._lock:
+            self._documents = {
+                point_id: document
+                for point_id, document in self._documents.items()
+                if point_id not in remove
+            }
+            self._rebuild()
+
     @staticmethod
     def _can_access(
         metadata: Dict,
@@ -80,9 +100,32 @@ class BM25Store:
     ) -> bool:
         if is_admin:
             return True
+        if metadata.get("source_type") == "teacher_material":
+            owner_id = metadata.get("owner_id") or metadata.get("creator_id")
+            return bool(requester_id) and str(owner_id or "") == str(requester_id)
         if metadata.get("visibility") == "public":
             return True
-        return bool(requester_id) and str(metadata.get("creator_id", "")) == str(requester_id)
+        if metadata.get("source_type") == "curriculum":
+            return True
+        owner_id = metadata.get("owner_id") or metadata.get("creator_id")
+        return bool(requester_id) and str(owner_id or "") == str(requester_id)
+
+    @staticmethod
+    def _matches_filters(metadata: Dict, metadata_filters: Optional[Dict]) -> bool:
+        for key, expected in (metadata_filters or {}).items():
+            if expected is None:
+                continue
+            actual = metadata.get(key)
+            if isinstance(expected, list):
+                actual_values = actual if isinstance(actual, list) else [actual]
+                if not set(map(str, expected)).intersection(map(str, actual_values)):
+                    return False
+            elif isinstance(actual, list):
+                if str(expected) not in set(map(str, actual)):
+                    return False
+            elif str(actual) != str(expected):
+                return False
+        return True
 
     async def search(
         self,
@@ -91,6 +134,7 @@ class BM25Store:
         limit: int = 20,
         requester_id: Optional[str] = None,
         is_admin: bool = False,
+        metadata_filters: Optional[Dict] = None,
     ) -> List[Dict]:
         query_tokens = self._tokenize(query)
         if not query_tokens or limit < 1:
@@ -114,6 +158,8 @@ class BM25Store:
             if allowed_document_ids and str(metadata.get("document_id")) not in allowed_document_ids:
                 continue
             if not self._can_access(metadata, requester_id, is_admin):
+                continue
+            if not self._matches_filters(metadata, metadata_filters):
                 continue
             candidates.append(
                 {

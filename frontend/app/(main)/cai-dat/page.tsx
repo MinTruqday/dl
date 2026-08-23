@@ -1,3 +1,3 @@
-import SettingsPage from "@/features/humanity/pages/SettingsPage";
+import UserSettingsPage from "@/features/assessment/pages/UserSettingsPage";
 
-export default SettingsPage;
+export default UserSettingsPage;

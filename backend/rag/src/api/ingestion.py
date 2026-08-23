@@ -21,6 +21,8 @@ router = APIRouter(
 
 def resolve_requester(req: IngestRequest, user: CurrentUser):
     requester_id = str(user.id) if user else str(req.requester_id or "")
+    if not requester_id and not user and req.is_admin:
+        requester_id = "platform-system"
     if not requester_id:
         raise HTTPException(status_code=403, detail="Missing document requester")
     return requester_id, user.is_admin() if user else req.is_admin
@@ -43,13 +45,22 @@ async def ingest_document(
     user: CurrentUser = Depends(get_current_user_optional),
 ):
     requester_id, is_admin = resolve_requester(req, user)
+    authorized = False
     try:
+        await content_client.authorize_document(req.document_id, requester_id, is_admin)
+        authorized = True
+        await content_client.mark_indexing(req.document_id)
         result = await ingestion_pipeline.ingest_document(
             req.document_id,
             requester_id,
             is_admin,
         )
     except Exception as error:
+        if authorized:
+            try:
+                await content_client.mark_index_failed(req.document_id, type(error).__name__)
+            except Exception:
+                pass
         raise document_error(error)
     return APIResponse(
         data=IngestResponse(
@@ -57,6 +68,8 @@ async def ingest_document(
             status=result.get("status", "indexed"),
             chunks_count=result.get("chunks_count", 0),
             extraction_method=result.get("extraction_method", "local"),
+            quarantined_chunks=result.get("quarantined_chunks", []),
+            failed_chunks=result.get("failed_chunks", []),
         ),
         message="Nạp và chỉ mục hóa tài liệu thành công",
     )

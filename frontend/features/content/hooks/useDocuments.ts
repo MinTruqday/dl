@@ -141,12 +141,9 @@ export function useDocuments() {
         pages_count: 0,
         publisher_name: user?.full_name || "DocLib",
         visibility: input.visibility,
-        status: "draft",
         file_url: "",
         content_format: extension,
         folder_id: folderId ?? null,
-        is_featured: false,
-        is_protected: false,
       });
       createdId =
         created.data?._id ?? created.data?.id ?? created._id ?? created.id;

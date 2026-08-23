@@ -11,6 +11,7 @@ COPY collection/requirements.txt .
 RUN pip install -q --no-cache-dir -r requirements.txt
 
 COPY collection/src/ ./src/
+COPY collection/tests/ ./tests/
 
 RUN mkdir -p /app/logs && chown -R pwuser:pwuser /app
 

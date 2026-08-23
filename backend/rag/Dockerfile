@@ -27,6 +27,9 @@ RUN groupadd --gid 10001 appuser && useradd --uid 10001 --gid appuser -m -s /bin
 RUN mkdir -p /home/appuser/.cache/huggingface /home/appuser/.cache/torchinductor /home/appuser/.cache/torch /home/appuser/.cache/tmp && chown -R appuser:appuser /home/appuser/.cache
 
 COPY --chown=appuser:appuser rag/src/ ./src/
+COPY --chown=appuser:appuser rag/tests/ ./tests/
+
+ENV PYTHONPATH=/app
 
 USER 10001:10001
 
