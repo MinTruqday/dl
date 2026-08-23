@@ -66,7 +66,7 @@ class DocumentCrudService:
             try:
                 async with httpx.AsyncClient(timeout=5.0) as client:
                     await client.post(
-                        f"{settings.AGENTIC_AI_URL}/su-kien/webhook/tai-lieu-dang-tai",
+                        f"{settings.AI_URL}/su-kien/webhook/tai-lieu-dang-tai",
                         params={
                             "document_id": doc_data["_id"],
                             "user_id": str(current_user.id),
@@ -296,7 +296,7 @@ class DocumentCrudService:
             try:
                 async with httpx.AsyncClient(timeout=5.0) as client:
                     response = await client.post(
-                        f"{settings.AGENTIC_AI_URL}/su-kien/webhook/tai-lieu-dang-tai",
+                        f"{settings.AI_URL}/su-kien/webhook/tai-lieu-dang-tai",
                         params={"document_id": document_id, "user_id": document.get("creator_id", "")},
                         headers={"X-Internal-Token": settings.SECRET_KEY},
                     )
@@ -327,7 +327,7 @@ class DocumentCrudService:
         try:
             async with httpx.AsyncClient(timeout=5.0) as client:
                 response = await client.post(
-                    f"{settings.AGENTIC_AI_URL}/su-kien/webhook/tai-lieu-dang-tai",
+                    f"{settings.AI_URL}/su-kien/webhook/tai-lieu-dang-tai",
                     params={"document_id": document_id, "user_id": document.get("creator_id", "")},
                     headers={"X-Internal-Token": settings.SECRET_KEY},
                 )

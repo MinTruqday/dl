@@ -21,7 +21,7 @@ class Settings(BaseModel):
     RABBITMQ_URI: str = os.environ["RABBITMQ_URI"]
     PLATFORM_SYSTEM_ID: str = os.environ["PLATFORM_SYSTEM_ID"]
     AUTHENTICATION_URL: str = get_service_url("AUTHENTICATION")
-    AGENTIC_AI_URL: str = get_service_url("AGENTIC_AI")
+    AI_URL: str = get_service_url("AI")
     RAG_URL: str = get_service_url("RAG")
     NOTIFICATION_URL: str = get_service_url("NOTIFICATION")
     CONTENT_DB_NAME: str = os.environ["CONTENT_DB_NAME"]

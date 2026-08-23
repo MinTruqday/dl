@@ -5,7 +5,7 @@ from src.core.infrastructure.configuration import settings
 from src.store.vector import vector_store
 from src.store.bm25 import bm25_store
 from src.services.embedding import embedder
-from src.clients.agentic import agentic_client
+from src.clients.ai import ai_client
 
 
 class RetrievalUnavailableError(RuntimeError):
@@ -204,7 +204,7 @@ class RetrievalService:
         metadata_filters: Optional[Dict] = None,
     ) -> List[Dict]:
         try:
-            expansion = await agentic_client.expand_retrieval_query(question)
+            expansion = await ai_client.expand_retrieval_query(question)
         except Exception:
             logger.exception("Retrieval query expansion failed")
             expansion = {
@@ -280,7 +280,7 @@ class RetrievalService:
 
         sub_queries = [question] * len(document_ids)
         try:
-            decomposed = await agentic_client.decompose_cross_document_query(
+            decomposed = await ai_client.decompose_cross_document_query(
                 question,
                 document_ids,
             )

@@ -199,7 +199,7 @@ services:
     networks:
       - doclib_network
 
-  agentic_ai:
+  ai:
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=15)"]
       interval: 30s
@@ -208,8 +208,8 @@ services:
       retries: 3
     build:
       context: ./backend
-      dockerfile: ./agentic_ai/Dockerfile
-    container_name: doclib_agentic_ai
+      dockerfile: ./ai/Dockerfile
+    container_name: doclib_ai
     restart: always
     ports:
       - 8015:8000
@@ -220,7 +220,7 @@ services:
       - traefik.http.services.ai.loadbalancer.server.port=8000
     environment:
       <<: [*service-environment, *minio-environment]
-      AGENTIC_AI_DB_NAME: ${AGENTIC_AI_DB_NAME:?AGENTIC_AI_DB_NAME is required}
+      AI_DB_NAME: ${AI_DB_NAME:?AI_DB_NAME is required}
       RABBITMQ_URI: ${RABBITMQ_URI:?RABBITMQ_URI is required}
       QDRANT_URL: ${QDRANT_URL:?QDRANT_URL is required}
       DOCKER_HOST: ${DOCKER_HOST:?DOCKER_HOST is required}
@@ -265,8 +265,8 @@ services:
       rag:
         condition: service_started
     volumes:
-      - ./backend/agentic_ai/src:/app/src
-      - ./backend/agentic_ai/tests:/app/tests
+      - ./backend/ai/src:/app/src
+      - ./backend/ai/tests:/app/tests
       - hf_cache:/home/appuser/.cache/huggingface
     networks:
       - doclib_network
@@ -293,13 +293,13 @@ services:
       ASSESSMENT_PII_RETENTION_DAYS: ${ASSESSMENT_PII_RETENTION_DAYS:-730}
       WORKER_URL: http://worker:8000
       RAG_URL: http://rag:8000
-      AGENTIC_AI_URL: http://agentic_ai:8000
+      AI_URL: http://ai:8000
       CONTENT_URL: http://content:8000
     depends_on:
       - mongodb
       - redis
       - rag
-      - agentic_ai
+      - ai
       - content
     volumes:
       - ./backend/assessment/src:/app/src

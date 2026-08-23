@@ -1,4 +1,5 @@
 from decimal import Decimal, InvalidOperation
+import re
 from statistics import median
 from typing import Any
 from urllib.parse import urlparse
@@ -12,11 +13,17 @@ ALLOWED_NODES = {
     "bulletList",
     "orderedList",
     "listItem",
+    "taskList",
+    "taskItem",
     "blockquote",
     "codeBlock",
     "hardBreak",
     "horizontalRule",
     "image",
+    "youtube",
+    "details",
+    "detailsSummary",
+    "detailsContent",
     "table",
     "tableRow",
     "tableHeader",
@@ -28,7 +35,7 @@ ALLOWED_NODES = {
     "questionRef",
     "pageBreak",
 }
-ALLOWED_MARKS = {"bold", "italic", "strike", "code", "link", "underline", "subscript", "superscript"}
+ALLOWED_MARKS = {"bold", "italic", "strike", "code", "link", "underline", "subscript", "superscript", "highlight", "textStyle"}
 ALLOWED_NODE_ATTRIBUTES = {
     "textAlign",
     "level",
@@ -45,8 +52,14 @@ ALLOWED_NODE_ATTRIBUTES = {
     "sectionId",
     "questionId",
     "label",
+    "language",
+    "checked",
+    "open",
+    "start",
 }
-ALLOWED_MARK_ATTRIBUTES = {"href", "target", "rel", "class"}
+ALLOWED_MARK_ATTRIBUTES = {"href", "target", "rel", "class", "color", "fontFamily"}
+ALLOWED_FONT_FAMILIES = {"Arial", "Georgia", "Times New Roman", "Courier New"}
+SAFE_COLOR = re.compile(r"^(#[0-9a-fA-F]{3,8}|rgba?\([0-9.,% ]+\)|hsla?\([0-9.,% ]+\))$")
 QUESTION_TYPES = {
     "single_choice",
     "multiple_choice",
@@ -106,6 +119,12 @@ def validate_tiptap_content(node: Any):
                 parsed_link = urlparse(str(mark_attrs.get("href", "")))
                 if parsed_link.scheme not in {"https", "http", "mailto"}:
                     issues.append({"code": "link_url_not_allowed", "severity": "BLOCKER", "path": path})
+            color = mark_attrs.get("color")
+            if color is not None and not SAFE_COLOR.fullmatch(str(color)):
+                issues.append({"code": "text_color_not_allowed", "severity": "BLOCKER", "path": path})
+            font_family = mark_attrs.get("fontFamily")
+            if font_family is not None and font_family not in ALLOWED_FONT_FAMILIES:
+                issues.append({"code": "font_family_not_allowed", "severity": "BLOCKER", "path": path})
         attrs = value.get("attrs", {})
         if not isinstance(attrs, dict):
             issues.append({"code": "invalid_tiptap_attributes", "severity": "BLOCKER", "path": path})
@@ -119,6 +138,13 @@ def validate_tiptap_content(node: Any):
                 issues.append({"code": "image_url_not_allowed", "severity": "BLOCKER", "path": path})
             if not attrs.get("alt"):
                 issues.append({"code": "image_alt_missing", "severity": "BLOCKER", "path": path})
+        if node_type == "youtube":
+            parsed_video = urlparse(str(attrs.get("src", "")))
+            video_host = (parsed_video.hostname or "").casefold()
+            if parsed_video.scheme != "https" or video_host not in {"youtube.com", "www.youtube.com", "youtu.be", "www.youtube-nocookie.com"}:
+                issues.append({"code": "youtube_url_not_allowed", "severity": "BLOCKER", "path": path})
+        if "textAlign" in attrs and attrs["textAlign"] not in {"left", "center", "right", "justify", None}:
+            issues.append({"code": "text_alignment_not_allowed", "severity": "BLOCKER", "path": path})
         if node_type in {"inlineMath", "blockMath", "mathematics"}:
             latex = str(attrs.get("latex") or attrs.get("content") or "")
             if len(latex) > 10000 or any(token in latex for token in ["\\write", "\\input", "\\include", "\\openout"]):

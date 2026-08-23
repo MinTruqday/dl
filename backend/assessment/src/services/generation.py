@@ -82,7 +82,7 @@ def generated_question(payload: dict[str, Any], position: int, difficulty: float
         "source_evidence": payload.get("source_evidence", []),
         "locked": False,
         "generation_provenance": {
-            "generator": "agentic_rag_structured_v1" if model_output else "constrained_generation_v1",
+            "generator": "ai_rag_structured_v1" if model_output else "constrained_generation_v1",
             "request_position": position,
             "source_scope": "curriculum_and_owned_material"
             if payload.get("use_teacher_materials") or payload.get("source_scope") == "curriculum_and_owned_material"

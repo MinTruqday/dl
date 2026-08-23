@@ -1,11 +1,11 @@
 services:
   model_stub:
-    image: doclib-agentic_ai
+    image: doclib-ai
     container_name: doclib_model_stub
     command: ["python", "/test-support/model_provider_stub.py"]
     restart: "no"
     volumes:
-      - ./backend/agentic_ai/tests/model_provider_stub.py:/test-support/model_provider_stub.py:ro
+      - ./backend/ai/tests/model_provider_stub.py:/test-support/model_provider_stub.py:ro
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/tags', timeout=5)"]
       interval: 2s
@@ -14,7 +14,7 @@ services:
     networks:
       - doclib_network
 
-  agentic_ai:
+  ai:
     environment:
       LLM_MODEL: integration-model
       PRIMARY_MODEL_STYLE: ollama

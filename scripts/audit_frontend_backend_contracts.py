@@ -63,7 +63,7 @@ def load_frontend_calls(frontend_dir: pathlib.Path):
     external = []
     total_fetches = 0
     for source in frontend_dir.rglob("*"):
-        if source.suffix not in {".ts", ".tsx"}:
+        if source.suffix not in {".js", ".jsx"}:
             continue
         if any(part in IGNORED_DIRECTORY_NAMES for part in source.parts):
             continue
@@ -137,7 +137,7 @@ def main() -> int:
         and not (
             entry[2] == "input"
             and entry[0].as_posix().endswith(
-                "frontend/shared/services/api-client.ts"
+                "frontend/shared/services/api-client.js"
             )
         )
     ]

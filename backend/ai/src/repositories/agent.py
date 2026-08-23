@@ -1,0 +1,78 @@
+from src.core.infrastructure.mongo import mongo
+from src.core.infrastructure.database import database
+from src.core.infrastructure.configuration import settings
+
+class AgentRepository:
+    """
+    <module_purpose>
+    <purpose>Persists agent execution traces for evaluation and auditing.</purpose>
+    <metis_behavior>Ensures high-throughput async inserts to prevent blocking the main orchestration loop.</metis_behavior>
+    </module_purpose>
+    """
+    @staticmethod
+    def _get_db():
+        db_name = settings.AI_DB_NAME
+        return database.mongodb.get_database(db_name)
+
+    @classmethod
+    async def insert_trace(cls, *args, **kwargs):
+        return await mongo.insert_one("agent_traces", *args, **kwargs)
+
+    @classmethod
+    async def insert_one(cls, *args, **kwargs):
+        return await mongo.insert_one("agent_traces", *args, **kwargs)
+
+    @classmethod
+    async def insert_many(cls, *args, **kwargs):
+        return await mongo.insert_many("agent_traces", *args, **kwargs)
+
+    @classmethod
+    async def find_one(cls, *args, **kwargs):
+        return await mongo.find_one("agent_traces", *args, **kwargs)
+
+    @classmethod
+    async def update_one(cls, *args, **kwargs):
+        return await mongo.update_one("agent_traces", *args, **kwargs)
+
+    @classmethod
+    async def update_many(cls, *args, **kwargs):
+        return await mongo.update_many("agent_traces", *args, **kwargs)
+
+    @classmethod
+    async def delete_one(cls, *args, **kwargs):
+        return await mongo.delete_one("agent_traces", *args, **kwargs)
+
+    @classmethod
+    async def delete_many(cls, *args, **kwargs):
+        return await mongo.delete_many("agent_traces", *args, **kwargs)
+
+    @classmethod
+    async def count_documents(cls, *args, **kwargs):
+        return await mongo.count_documents("agent_traces", *args, **kwargs)
+
+    @classmethod
+    def find(cls, *args, **kwargs):
+        return mongo.find("agent_traces", *args, **kwargs)
+
+    @classmethod
+    def aggregate(cls, *args, **kwargs):
+        return mongo.aggregate("agent_traces", *args, **kwargs)
+
+    @classmethod
+    def query(cls, *args, **kwargs):
+        return mongo.query("agent_traces", *args, **kwargs)
+
+    @classmethod
+    async def get_traces_since(cls, since_datetime, limit: int = 500) -> list:
+        try:
+            cutoff = since_datetime
+            results = []
+            cursor = mongo.find("agent_traces", {"started_at": {"$gte": cutoff}})
+            async for doc in cursor:
+                doc.pop("_id", None)
+                results.append(doc)
+                if len(results) >= limit:
+                    break
+            return results
+        except Exception:
+            return []

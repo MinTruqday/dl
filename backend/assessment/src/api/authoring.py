@@ -162,7 +162,7 @@ async def retrieve_generation_evidence(payload: GenerateRequest, user: CurrentUs
 async def generate_with_agent(payload: dict[str, Any], difficulty: float, evidence: list[dict[str, Any]]):
     async with httpx.AsyncClient(timeout=120) as client:
         response = await client.post(
-            f"{settings.AGENTIC_AI_URL}/suy-luan/noi-bo/tao-cau-hoi-danh-gia",
+            f"{settings.AI_URL}/suy-luan/noi-bo/tao-cau-hoi-danh-gia",
             headers={"X-Internal-Token": settings.SECRET_KEY},
             json={
                 "education_level": payload["education_level"],
@@ -176,7 +176,7 @@ async def generate_with_agent(payload: dict[str, Any], difficulty: float, eviden
             },
         )
     if response.status_code >= 400:
-        raise HTTPException(status_code=502, detail={"code": "agentic_question_generation_failed"})
+        raise HTTPException(status_code=502, detail={"code": "ai_question_generation_failed"})
     return response.json()
 
 
@@ -184,7 +184,7 @@ async def judge_difficulty_with_agent(question: dict[str, Any]):
     curriculum = (question.get("curriculum_links") or [{}])[0]
     async with httpx.AsyncClient(timeout=120) as client:
         response = await client.post(
-            f"{settings.AGENTIC_AI_URL}/suy-luan/noi-bo/danh-gia-do-kho-truc-tiep",
+            f"{settings.AI_URL}/suy-luan/noi-bo/danh-gia-do-kho-truc-tiep",
             headers={"X-Internal-Token": settings.SECRET_KEY},
             json={
                 "question_type": question.get("question_type", "unknown"),
@@ -638,7 +638,7 @@ async def generate_assessment_questions(
             if generation_validation["blockers"]:
                 raise HTTPException(
                     status_code=502,
-                    detail={"code": "agentic_question_generation_invalid", "validation": generation_validation},
+                    detail={"code": "ai_question_generation_invalid", "validation": generation_validation},
                 )
             question = await persist_question_draft(draft_id, question_data, user)
             await database.value.generation_runs.update_one(
@@ -1958,7 +1958,7 @@ async def propose_draft_revision(
         proposed["construct"] = deepcopy(question.get("construct", {}))
         proposal_validation = validate_question(proposed)
         if proposal_validation["blockers"]:
-            raise HTTPException(status_code=502, detail={"code": "agentic_revision_invalid", "validation": proposal_validation})
+            raise HTTPException(status_code=502, detail={"code": "ai_revision_invalid", "validation": proposal_validation})
     if payload.action == "increase_difficulty":
         proposed.setdefault("construct", {})["reasoning_steps"] = int(proposed.get("construct", {}).get("reasoning_steps", 1)) + 1
     if payload.action == "decrease_difficulty":

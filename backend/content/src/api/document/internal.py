@@ -306,7 +306,7 @@ async def exchange_internal_document(req: dict):
                 try:
                     async with httpx.AsyncClient(timeout=5.0) as client:
                         await client.post(
-                            f"{settings.AGENTIC_AI_URL}/su-kien/webhook/tai-lieu-dang-tai",
+                            f"{settings.AI_URL}/su-kien/webhook/tai-lieu-dang-tai",
                             params={
                                 "document_id": collected_doc_id,
                                 "user_id": "",

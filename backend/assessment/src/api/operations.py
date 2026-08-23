@@ -25,7 +25,7 @@ async def platform_health(user: CurrentUser = Depends(require_admin)):
         "cloud": settings.CLOUD_URL,
         "content": settings.CONTENT_URL,
         "rag": settings.RAG_URL,
-        "agentic_ai": settings.AGENTIC_AI_URL,
+        "ai": settings.AI_URL,
         "worker": settings.WORKER_URL,
         "compilation": settings.COMPILATION_URL,
         "collection": settings.COLLECTION_URL,

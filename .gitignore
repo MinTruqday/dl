@@ -15,12 +15,12 @@ frontend/public/images/*
 backend/logs/
 backend/.venv/
 *.md
-!agentic_ai_workflow_and_architecture_guide_3.md
+!docs/TIPTAP_EDITOR.md
 !drm_full_workflow_guide.md
 !compilation_workflow_and_architecture_guide.md
 .gitignore
 test_*.py
-!backend/agentic_ai/tests/test_regressions.py
+!backend/ai/tests/test_regressions.py
 !backend/rag/tests/test_chunking.py
 !backend/rag/tests/test_conversion.py
 !backend/rag/tests/test_bm25.py

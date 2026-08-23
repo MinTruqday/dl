@@ -9,7 +9,7 @@ from src.services.embedding import embedder
 from src.services.chunking import chunker
 from src.services.conversion import document_parser
 from src.clients.content import content_client
-from src.clients.agentic import agentic_client
+from src.clients.ai import ai_client
 from src.services.security import prompt_injection_flags
 
 
@@ -138,12 +138,12 @@ class IngestionPipelineService:
             chunks = locally_safe
 
         if chunks:
-            safe_indices = await agentic_client.inspect_rag_chunks(
+            safe_indices = await ai_client.inspect_rag_chunks(
                 [chunk["text"] for chunk in chunks]
             )
             rejected = [chunk for index, chunk in enumerate(chunks) if index not in safe_indices]
             quarantined_chunks.extend(
-                {"chunk_id": chunk["metadata"].get("chunk_id"), "flags": ["agentic_safety_rejection"]}
+                {"chunk_id": chunk["metadata"].get("chunk_id"), "flags": ["ai_safety_rejection"]}
                 for chunk in rejected
             )
             chunks = [
@@ -156,7 +156,7 @@ class IngestionPipelineService:
             summary = first_pages.strip()
         else:
             try:
-                summary = await agentic_client.summarize_rag_document(first_pages)
+                summary = await ai_client.summarize_rag_document(first_pages)
             except Exception:
                 logger.exception("Document summary generation error")
                 summary = ""

@@ -7,7 +7,7 @@ scrape_configs:
     metrics_path: /metrics
     static_configs:
       - targets:
-          - agentic_ai:8000
+          - ai:8000
           - authentication:8000
           - cloud:8000
           - collection:8000
@@ -17,8 +17,8 @@ scrape_configs:
           - assessment:8000
           - worker:8000
 
-  - job_name: agentic-ai-harness
+  - job_name: ai-harness
     metrics_path: /evaluate/metrics
     static_configs:
       - targets:
-          - agentic_ai:8000
+          - ai:8000

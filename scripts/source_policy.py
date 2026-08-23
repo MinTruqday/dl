@@ -15,10 +15,10 @@ CONFIG_SUFFIXES = {".yaml", ".yml", ".sh"}
 TEXTUAL_ELLIPSIS = "." * 3
 UNICODE_ELLIPSIS = chr(0x2026)
 INTERNAL_UUID7_COUNTS = {
-    "backend/agentic_ai/src/core/infrastructure/mq.py": 1,
-    "backend/agentic_ai/src/loop/event.py": 3,
-    "backend/agentic_ai/src/memory/long_term.py": 1,
-    "backend/agentic_ai/src/workflow/orchestration.py": 1,
+    "backend/ai/src/core/infrastructure/mq.py": 1,
+    "backend/ai/src/loop/event.py": 3,
+    "backend/ai/src/memory/long_term.py": 1,
+    "backend/ai/src/workflow/orchestration.py": 1,
 }
 
 
@@ -591,7 +591,7 @@ def scan_fail_open_contracts(issues):
         '"replies": ["Đã rõ thông tin"': "fabricated_ai_result",
     }
     roots = [
-        ROOT / "backend" / "agentic_ai" / "src",
+        ROOT / "backend" / "ai" / "src",
         ROOT / "backend" / "messaging" / "src",
     ]
     for root in roots:

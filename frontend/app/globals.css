@@ -153,6 +153,22 @@
     @apply flex h-9 w-9 items-center justify-center rounded-control text-ink-muted transition hover:bg-surface hover:text-ink aria-pressed:bg-brand-soft aria-pressed:text-brand;
   }
 
+  .editor-tool:disabled {
+    @apply cursor-not-allowed opacity-35;
+  }
+
+  .assessment-editor-toolbar {
+    @apply flex flex-wrap items-center gap-1 border-b border-border bg-surface-quiet px-2 py-2;
+  }
+
+  .editor-tool-group {
+    @apply flex items-center gap-0.5 border-r border-border pr-1 last:border-r-0;
+  }
+
+  .editor-select {
+    @apply h-9 max-w-32 rounded-control border border-border bg-surface px-2 text-[12px] text-ink outline-none focus:border-brand;
+  }
+
   .assessment-tiptap {
     @apply px-5 py-4 text-[15px] leading-7 text-ink outline-none;
   }
@@ -161,12 +177,81 @@
     margin-top: 0.7rem;
   }
 
+  .assessment-tiptap h1 {
+    @apply text-[26px] font-semibold tracking-[-0.025em];
+  }
+
   .assessment-tiptap h2 {
     @apply text-[21px] font-semibold tracking-[-0.02em];
   }
 
+  .assessment-tiptap h3 {
+    @apply text-[18px] font-semibold tracking-[-0.01em];
+  }
+
   .assessment-tiptap ul {
     @apply list-disc pl-6;
+  }
+
+  .assessment-tiptap ol {
+    @apply list-decimal pl-6;
+  }
+
+  .assessment-tiptap blockquote {
+    @apply border-l-4 border-brand pl-4 italic text-ink-muted;
+  }
+
+  .assessment-tiptap code {
+    @apply rounded bg-surface-quiet px-1.5 py-0.5 font-mono text-[0.9em];
+  }
+
+  .assessment-tiptap pre {
+    @apply overflow-x-auto rounded-control bg-[#1d1d1f] p-4 text-[#f5f5f7];
+  }
+
+  .assessment-tiptap pre code {
+    @apply bg-transparent p-0 text-inherit;
+  }
+
+  .assessment-tiptap a {
+    @apply text-brand underline decoration-brand/40 underline-offset-2 hover:decoration-brand;
+  }
+
+  .assessment-tiptap mark {
+    @apply rounded px-0.5;
+  }
+
+  .assessment-tiptap ul[data-type="taskList"] {
+    @apply list-none pl-0;
+  }
+
+  .assessment-tiptap ul[data-type="taskList"] li {
+    @apply flex items-start gap-2;
+  }
+
+  .assessment-tiptap ul[data-type="taskList"] li > div {
+    @apply min-w-0 flex-1;
+  }
+
+  .assessment-tiptap details {
+    @apply rounded-control border border-border bg-surface-quiet px-4 py-3;
+  }
+
+  .assessment-tiptap summary {
+    @apply cursor-pointer font-semibold text-ink;
+  }
+
+  .assessment-tiptap div[data-youtube-video] {
+    @apply overflow-hidden rounded-control;
+  }
+
+  .assessment-tiptap div[data-youtube-video] iframe {
+    @apply aspect-video h-auto max-w-full;
+  }
+
+  .assessment-tiptap p.is-editor-empty:first-child::before {
+    @apply pointer-events-none float-left h-0 text-ink-faint;
+    content: attr(data-placeholder);
   }
 
   .assessment-tiptap table {

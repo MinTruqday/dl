@@ -26,9 +26,9 @@ class Settings(BaseModel):
     RERANKER_MODEL: str = os.environ["RERANKER_MODEL"]
     PLATFORM_SYSTEM_ID: str = os.environ["PLATFORM_SYSTEM_ID"]
     CONTENT_URL: str = get_service_url("CONTENT")
-    AGENTIC_AI_URL: str = get_service_url("AGENTIC_AI")
-    AGENTIC_REQUEST_TIMEOUT_SECONDS: float = float(
-        os.getenv("AGENTIC_REQUEST_TIMEOUT_SECONDS", "900")
+    AI_URL: str = get_service_url("AI")
+    AI_REQUEST_TIMEOUT_SECONDS: float = float(
+        os.getenv("AI_REQUEST_TIMEOUT_SECONDS", "900")
     )
     RAG_DB_NAME: str = os.environ["RAG_DB_NAME"]
 

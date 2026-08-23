@@ -591,7 +591,7 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         "cloud",
         "content",
         "rag",
-        "agentic_ai",
+        "ai",
         "worker",
         "compilation",
         "collection",

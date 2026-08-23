@@ -16,7 +16,7 @@ class Settings(BaseModel):
     ASSESSMENT_PII_RETENTION_DAYS: int = int(os.getenv("ASSESSMENT_PII_RETENTION_DAYS", "730"))
     WORKER_URL: str = os.getenv("WORKER_URL", "http://worker:8000")
     RAG_URL: str = os.getenv("RAG_URL", "http://rag:8000")
-    AGENTIC_AI_URL: str = os.getenv("AGENTIC_AI_URL", "http://agentic_ai:8000")
+    AI_URL: str = os.getenv("AI_URL", "http://ai:8000")
     CONTENT_URL: str = os.getenv("CONTENT_URL", "http://content:8000")
     AUTHENTICATION_URL: str = os.getenv("AUTHENTICATION_URL", "http://authentication:8000")
     CLOUD_URL: str = os.getenv("CLOUD_URL", "http://cloud:8000")
