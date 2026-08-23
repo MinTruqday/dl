@@ -31,11 +31,15 @@ async def require_owned(collection: str, entity_id: str, user: CurrentUser):
             entity_id,
             {"requested_operation": "read_or_write"},
         )
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Không có quyền truy cập dữ liệu")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Không có quyền truy cập dữ liệu"
+        )
     return entity
 
 
-async def audit(user_id: str, action: str, entity_type: str, entity_id: str, details: dict | None = None):
+async def audit(
+    user_id: str, action: str, entity_type: str, entity_id: str, details: dict | None = None
+):
     event = {
         "_id": new_id("AUD"),
         "actor_id": user_id,
@@ -49,8 +53,14 @@ async def audit(user_id: str, action: str, entity_type: str, entity_id: str, det
     return event
 
 
-async def optimistic_patch(collection: str, entity_id: str, owner_id: str, expected_revision: int, changes: dict):
-    changes = {key: value for key, value in changes.items() if value is not None and key != "expected_revision"}
+async def optimistic_patch(
+    collection: str, entity_id: str, owner_id: str, expected_revision: int, changes: dict
+):
+    changes = {
+        key: value
+        for key, value in changes.items()
+        if value is not None and key != "expected_revision"
+    }
     changes["updated_at"] = now()
     entity = await database.value[collection].find_one_and_update(
         {"_id": entity_id, "owner_id": owner_id, "revision": expected_revision},

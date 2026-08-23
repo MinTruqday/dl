@@ -7,6 +7,7 @@ from src.services.download import DownloadService
 
 router = APIRouter(prefix="/tai-ve")
 
+
 @router.get("/{file_id}/duong-dan", response_model=APIResponse[Any])
 async def get_download_url(
     file_id: str,
@@ -14,5 +15,7 @@ async def get_download_url(
     current_user: CurrentUser = Depends(require_role([Role.READER, Role.AUTHOR, Role.ADMIN])),
     db=Depends(get_db),
 ):
-    res = await DownloadService.generate_download_url(file_id, current_user.id, expires_in=expires_in)
+    res = await DownloadService.generate_download_url(
+        file_id, current_user.id, expires_in=expires_in
+    )
     return APIResponse(data=res, message="Tạo đường dẫn tải về thành công")

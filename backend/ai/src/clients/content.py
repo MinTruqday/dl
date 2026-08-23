@@ -19,7 +19,13 @@ class ContentClient:
 
     @classmethod
     async def accessible(cls, document_id: str, user_id: str, is_admin: bool):
-        return await cls.exchange("get_accessible_document", document_id=document_id, user_id=user_id, is_admin=is_admin, edit=True)
+        return await cls.exchange(
+            "get_accessible_document",
+            document_id=document_id,
+            user_id=user_id,
+            is_admin=is_admin,
+            edit=True,
+        )
 
     @classmethod
     async def get(cls, document_id: str):
@@ -27,7 +33,12 @@ class ContentClient:
 
     @classmethod
     async def update_index(cls, document_id: str, indexed_chunks: int, extraction_method: str):
-        return await cls.exchange("update_index", document_id=document_id, indexed_chunks=indexed_chunks, extraction_method=extraction_method)
+        return await cls.exchange(
+            "update_index",
+            document_id=document_id,
+            indexed_chunks=indexed_chunks,
+            extraction_method=extraction_method,
+        )
 
     @classmethod
     async def search(cls, query: str):

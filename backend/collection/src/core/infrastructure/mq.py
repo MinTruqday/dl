@@ -6,6 +6,7 @@ from loguru import logger
 from typing import Any, Dict, Optional
 from src.core.infrastructure.configuration import settings
 
+
 class RabbitMQClient:
     def __init__(self):
         self.url = settings.RABBITMQ_URI
@@ -39,14 +40,11 @@ class RabbitMQClient:
     async def get_queue(self, queue_name: str):
         if not self.channel or self.channel.is_closed:
             await self.connect()
-        
+
         dlx = await self.channel.declare_exchange("dlx", aio_pika.ExchangeType.DIRECT)
         dlq = await self.channel.declare_queue("dlq", durable=True)
         await dlq.bind(dlx, "dlq")
-        queue_args = {
-            "x-dead-letter-exchange": "dlx",
-            "x-dead-letter-routing-key": "dlq",
-        }
+        queue_args = {"x-dead-letter-exchange": "dlx", "x-dead-letter-routing-key": "dlq"}
         return await self.channel.declare_queue(queue_name, durable=True, arguments=queue_args)
 
     async def publish(self, queue_name: str, payload: dict) -> bool:
@@ -54,8 +52,7 @@ class RabbitMQClient:
             await self.connect()
         try:
             message = aio_pika.Message(
-                body=json.dumps(payload).encode(),
-                delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
+                body=json.dumps(payload).encode(), delivery_mode=aio_pika.DeliveryMode.PERSISTENT
             )
             await self.channel.default_exchange.publish(message, routing_key=queue_name)
             return True
@@ -87,10 +84,7 @@ class RabbitMQClient:
         queue = await channel.declare_queue(
             queue_name,
             durable=True,
-            arguments={
-                "x-dead-letter-exchange": "dlx",
-                "x-dead-letter-routing-key": "dlq",
-            },
+            arguments={"x-dead-letter-exchange": "dlx", "x-dead-letter-routing-key": "dlq"},
         )
         try:
             message = await queue.get(timeout=timeout)
@@ -102,15 +96,12 @@ class RabbitMQClient:
                     logger.warning("RabbitMQ discarded a malformed message")
                     return None
                 ack_id = str(uuid.uuid4())
-                
+
                 self.pending_acks[ack_id] = message
-                
+
                 asyncio.create_task(self._auto_nack_if_timeout(ack_id, delay=300))
-                
-                return {
-                    "payload": payload,
-                    "delivery_tag": ack_id
-                }
+
+                return {"payload": payload, "delivery_tag": ack_id}
             return None
         except aio_pika.exceptions.QueueEmpty:
             return None
@@ -172,5 +163,6 @@ class RabbitMQClient:
             await self.connection.close()
         self.channel = None
         self.connection = None
+
 
 mq = RabbitMQClient()

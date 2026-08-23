@@ -30,8 +30,7 @@ class BM25Store:
             self._index = None
             return
         corpus = [
-            self._tokenize(self._documents[point_id]["text"])
-            for point_id in self._ordered_ids
+            self._tokenize(self._documents[point_id]["text"]) for point_id in self._ordered_ids
         ]
         self._index = BM25Okapi(corpus)
 
@@ -93,11 +92,7 @@ class BM25Store:
             self._rebuild()
 
     @staticmethod
-    def _can_access(
-        metadata: Dict,
-        requester_id: Optional[str],
-        is_admin: bool,
-    ) -> bool:
+    def _can_access(metadata: Dict, requester_id: Optional[str], is_admin: bool) -> bool:
         if is_admin:
             return True
         if metadata.get("source_type") == "teacher_material":
@@ -155,19 +150,16 @@ class BM25Store:
             metadata = document.get("metadata", {})
             if not set(query_tokens).intersection(self._tokenize(document["text"])):
                 continue
-            if allowed_document_ids and str(metadata.get("document_id")) not in allowed_document_ids:
+            if (
+                allowed_document_ids
+                and str(metadata.get("document_id")) not in allowed_document_ids
+            ):
                 continue
             if not self._can_access(metadata, requester_id, is_admin):
                 continue
             if not self._matches_filters(metadata, metadata_filters):
                 continue
-            candidates.append(
-                {
-                    **document,
-                    "score": float(score),
-                    "bm25_score": float(score),
-                }
-            )
+            candidates.append({**document, "score": float(score), "bm25_score": float(score)})
 
         candidates.sort(key=lambda item: item["bm25_score"], reverse=True)
         return candidates[:limit]

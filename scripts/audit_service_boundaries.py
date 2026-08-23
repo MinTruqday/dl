@@ -38,13 +38,13 @@ for path in sorted(backend.glob("*/src/**/*.py")):
         violations.append(f"{path.relative_to(root)} {service}->DYNAMIC_DATABASE")
     relative = path.relative_to(backend).as_posix()
     if service == "AI" and (
-        "src.store.vector" in source
-        or "src.store.graph" in source
-        or "src.rag.pipeline" in source
+        "src.store.vector" in source or "src.store.graph" in source or "src.rag.pipeline" in source
     ):
         violations.append(f"{path.relative_to(root)} AI->RAG_IMPLEMENTATION")
-    if service == "AI" and "qdrant_client" in source and not relative.endswith(
-        "ai/src/memory/long_term.py"
+    if (
+        service == "AI"
+        and "qdrant_client" in source
+        and not relative.endswith("ai/src/memory/long_term.py")
     ):
         violations.append(f"{path.relative_to(root)} AI->RAG_VECTOR")
 for violation in violations:

@@ -42,7 +42,9 @@ def split_page(page: dict[str, Any]):
             for option in option_matches
         ]
         source_number = match["number"]
-        digest = hashlib.sha256(f"{page['page_number']}:{source_number}:{stem}".encode()).hexdigest()
+        digest = hashlib.sha256(
+            f"{page['page_number']}:{source_number}:{stem}".encode()
+        ).hexdigest()
         candidates.append(
             {
                 "candidate_id": f"IMPQ-{digest[:24]}",
@@ -110,9 +112,16 @@ def structure_pages(document_id: str, markdown: str, structure: list[dict[str, A
         if any(value in element_type for value in ["formula", "equation"]):
             page["formula_refs"].append({"latex": text or None, "source_page": page_number})
         if any(value in element_type for value in ["picture", "image", "figure"]):
-            page["image_refs"].append({"url": None, "source_page": page_number, "label": text or None})
+            page["image_refs"].append(
+                {"url": None, "source_page": page_number, "label": text or None}
+            )
     if not grouped:
-        grouped[1] = {"page_number": 1, "text_parts": [markdown], "image_refs": [], "formula_refs": []}
+        grouped[1] = {
+            "page_number": 1,
+            "text_parts": [markdown],
+            "image_refs": [],
+            "formula_refs": [],
+        }
     return [
         {
             "document_id": document_id,

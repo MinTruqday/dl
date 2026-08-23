@@ -2,6 +2,7 @@ from src.core.infrastructure.mongo import mongo
 from src.core.infrastructure.database import database
 from src.core.infrastructure.configuration import settings
 
+
 class ChatRepository:
     """
     <module_purpose>
@@ -9,6 +10,7 @@ class ChatRepository:
     <metis_behavior>Isolates database logic from business rules. Fails safely on disconnected databases.</metis_behavior>
     </module_purpose>
     """
+
     @staticmethod
     def _get_db():
         db_name = settings.AI_DB_NAME

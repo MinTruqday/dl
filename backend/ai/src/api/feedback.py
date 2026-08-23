@@ -10,10 +10,10 @@ from src.core.dependency import CurrentUser, get_current_user
 
 router = APIRouter(prefix="/phan-hoi")
 
+
 @router.post("/phan-hoi")
 async def submit_feedback(
-    req: FeedbackRequest,
-    current_user: CurrentUser = Depends(get_current_user),
+    req: FeedbackRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
     """Persist authenticated feedback for evaluation and future training"""
     try:
@@ -28,10 +28,7 @@ async def submit_feedback(
 
         await mongo.insert_one(collection="rag_feedback", document=feedback_doc)
         logger.info("User feedback persisted")
-        return {
-            "status": "success",
-            "message_code": "feedback_recorded",
-        }
+        return {"status": "success", "message_code": "feedback_recorded"}
     except Exception:
         logger.exception("User feedback persistence error")
         return {"status": "error", "error_code": "feedback_persistence_failed"}

@@ -10,6 +10,7 @@ from src.core.storage import upload_file
 from src.services.upload import UploadService
 from src.services.file import FileService
 
+
 class ChunkService:
     @staticmethod
     async def save_chunk(
@@ -26,7 +27,12 @@ class ChunkService:
         except ValueError:
             raise HTTPException(status_code=400, detail="Mã phiên tải lên không hợp lệ")
 
-        if total_chunks < 1 or total_chunks > 1000 or chunk_index < 0 or chunk_index >= total_chunks:
+        if (
+            total_chunks < 1
+            or total_chunks > 1000
+            or chunk_index < 0
+            or chunk_index >= total_chunks
+        ):
             raise HTTPException(status_code=400, detail="Thông tin phân đoạn không hợp lệ")
 
         chunk_dir = Path("storage/chunks") / user_id / normalized_id

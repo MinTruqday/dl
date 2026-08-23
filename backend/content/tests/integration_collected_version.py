@@ -26,13 +26,14 @@ async def main():
         "source_type": "curriculum",
         "authority": "official",
     }
-    first = await request({"action": "upsert_collected", "document": {**base, "content_hash": "a" * 64}})
-    duplicate = await request({"action": "upsert_collected", "document": {**base, "content_hash": "a" * 64}})
+    first = await request(
+        {"action": "upsert_collected", "document": {**base, "content_hash": "a" * 64}}
+    )
+    duplicate = await request(
+        {"action": "upsert_collected", "document": {**base, "content_hash": "a" * 64}}
+    )
     second = await request(
-        {
-            "action": "upsert_collected",
-            "document": {**base, "content_hash": "b" * 64},
-        }
+        {"action": "upsert_collected", "document": {**base, "content_hash": "b" * 64}}
     )
     if first["document_id"] != duplicate["document_id"]:
         raise AssertionError("Exact content retry created a duplicate version")

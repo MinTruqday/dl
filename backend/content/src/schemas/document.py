@@ -5,6 +5,7 @@ from typing import Any, List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+
 class DocumentStatus(str, Enum):
     DRAFT = "draft"
     COMPILING = "compiling"
@@ -12,6 +13,7 @@ class DocumentStatus(str, Enum):
     PROCESSING_PUBLISH = "processing_publish"
     PUBLISHED = "published"
     ARCHIVED = "archived"
+
 
 class DocumentContentFormat(str, Enum):
     DOCLIBX = "doclibx"
@@ -49,11 +51,14 @@ class EducationMetadata(BaseModel):
     mapping_confidence: float = Field(default=0.5, ge=0, le=1)
     mapping_status: Literal["needs_review"] = "needs_review"
 
+
 class DocumentBase(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     title: str = Field(min_length=1, max_length=300)
-    slug: Optional[str] = Field(default=None, min_length=1, max_length=200, pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+    slug: Optional[str] = Field(
+        default=None, min_length=1, max_length=200, pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    )
     description: Optional[str] = Field(default=None, max_length=5000)
     cover_url: Optional[str] = None
     file_url: Optional[str] = None
@@ -73,10 +78,12 @@ class DocumentBase(BaseModel):
     reading_time_minutes: int = 0
     education_metadata: Optional[EducationMetadata] = None
 
+
 class DocumentContentUpdate(BaseModel):
     content: Any
     content_format: str
     expected_version: Optional[datetime] = None
+
 
 class DocumentUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -93,8 +100,10 @@ class DocumentUpdate(BaseModel):
     content_format: Optional[DocumentContentFormat] = None
     education_metadata: Optional[EducationMetadata] = None
 
+
 class DocumentCreate(DocumentBase):
     password: Optional[str] = Field(default=None, min_length=8, max_length=200)
+
 
 class DocumentInDB(DocumentBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
@@ -103,6 +112,7 @@ class DocumentInDB(DocumentBase):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     views: int = 0
+
 
 class DocumentResponse(DocumentBase):
     model_config = ConfigDict(populate_by_name=True, extra="ignore")
@@ -113,12 +123,15 @@ class DocumentResponse(DocumentBase):
     created_at: datetime
     views: int = 0
 
+
 class DocumentPasswordRequest(BaseModel):
     password: str = Field(min_length=8, max_length=200)
+
 
 class FolderCreate(BaseModel):
     name: str
     parent_id: Optional[str] = None
+
 
 class TagsUpdate(BaseModel):
     tags: List[str]

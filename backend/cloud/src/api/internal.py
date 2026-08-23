@@ -51,9 +51,5 @@ async def internal_storage_data(req: dict):
         )
         if not item or not item.get("url"):
             raise HTTPException(status_code=404, detail="Không tìm thấy tệp tin")
-        return {
-            "data": {
-                "preview_url": await generate_presigned_url(item["url"], 900),
-            }
-        }
+        return {"data": {"preview_url": await generate_presigned_url(item["url"], 900)}}
     raise HTTPException(status_code=422, detail="Thao tác dữ liệu nội bộ không hợp lệ")

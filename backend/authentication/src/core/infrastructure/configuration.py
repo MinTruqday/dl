@@ -3,6 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
+
 class Settings(BaseModel):
     PROJECT_NAME: str = os.environ["PROJECT_NAME"]
     VERSION: str = os.environ["VERSION"]
@@ -29,5 +30,6 @@ class Settings(BaseModel):
     SENDER_NAME: Optional[str] = os.environ["SENDER_NAME"]
     PLATFORM_SYSTEM_ID: str = os.environ["PLATFORM_SYSTEM_ID"]
     AUTHENTICATION_DB_NAME: str = os.environ["AUTHENTICATION_DB_NAME"]
+
 
 settings = Settings()

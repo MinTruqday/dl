@@ -46,20 +46,12 @@ def _ollama_messages(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def _response(
-    content: str,
-    prompt_tokens: int = 0,
-    completion_tokens: int = 0,
-    model_used: str = "",
+    content: str, prompt_tokens: int = 0, completion_tokens: int = 0, model_used: str = ""
 ):
-    usage = SimpleNamespace(
-        prompt_tokens=prompt_tokens,
-        completion_tokens=completion_tokens,
-    )
+    usage = SimpleNamespace(prompt_tokens=prompt_tokens, completion_tokens=completion_tokens)
     message = SimpleNamespace(content=content)
     return SimpleNamespace(
-        choices=[SimpleNamespace(message=message)],
-        usage=usage,
-        model=model_used,
+        choices=[SimpleNamespace(message=message)], usage=usage, model=model_used
     )
 
 
@@ -71,17 +63,14 @@ class LocalModelClient:
         """Return true only when Ollama already has the primary model in memory."""
         health_url = settings.PRIMARY_MODEL_HEALTH_URL.rstrip("/")
         ps_url = (
-            health_url.rsplit("/", 1)[0] + "/ps"
-            if health_url.endswith("/tags")
-            else health_url
+            health_url.rsplit("/", 1)[0] + "/ps" if health_url.endswith("/tags") else health_url
         )
         try:
             async with httpx.AsyncClient(timeout=15.0) as client:
                 response = await client.get(ps_url)
             response.raise_for_status()
             names = {
-                item.get("name") or item.get("model")
-                for item in response.json().get("models", [])
+                item.get("name") or item.get("model") for item in response.json().get("models", [])
             }
             return any(
                 settings.LLM_MODEL == name
@@ -99,16 +88,10 @@ class LocalModelClient:
             "stream": False,
             "think": False,
             "keep_alive": settings.MODEL_KEEP_ALIVE,
-            "options": {
-                "num_predict": max_tokens,
-                "temperature": temperature,
-            },
+            "options": {"num_predict": max_tokens, "temperature": temperature},
         }
         async with httpx.AsyncClient(timeout=settings.MODEL_TIMEOUT_SECONDS) as client:
-            response = await client.post(
-                settings.PRIMARY_MODEL_URL,
-                json=payload,
-            )
+            response = await client.post(settings.PRIMARY_MODEL_URL, json=payload)
         response.raise_for_status()
         body = response.json()
         content = str(body.get("message", {}).get("content", "")).strip()
@@ -134,19 +117,11 @@ class LocalModelClient:
             "temperature": temperature,
         }
         async with httpx.AsyncClient(timeout=settings.MODEL_TIMEOUT_SECONDS) as client:
-            response = await client.post(
-                settings.PRIMARY_MODEL_URL,
-                headers=headers,
-                json=payload,
-            )
+            response = await client.post(settings.PRIMARY_MODEL_URL, headers=headers, json=payload)
         response.raise_for_status()
         body = response.json()
         choices = body.get("choices") or []
-        content = (
-            str(choices[0].get("message", {}).get("content", "")).strip()
-            if choices
-            else ""
-        )
+        content = str(choices[0].get("message", {}).get("content", "")).strip() if choices else ""
         if not content:
             self._primary_runtime_status = "unavailable"
             raise LocalModelUnavailable("primary_model_empty_response")
@@ -162,17 +137,11 @@ class LocalModelClient:
     async def _primary_completion(self, messages, max_tokens, temperature):
         if settings.PRIMARY_MODEL_STYLE == "ollama":
             return await self._ollama_completion(
-                settings.LLM_MODEL,
-                messages,
-                max_tokens,
-                temperature,
+                settings.LLM_MODEL, messages, max_tokens, temperature
             )
         if settings.PRIMARY_MODEL_STYLE == "openai":
             return await self._openai_primary_completion(
-                settings.LLM_MODEL,
-                messages,
-                max_tokens,
-                temperature,
+                settings.LLM_MODEL, messages, max_tokens, temperature
             )
         raise LocalModelUnavailable("primary_model_style_unsupported")
 
@@ -191,11 +160,7 @@ class LocalModelClient:
         if stream:
             return self._stream(messages, max_tokens, temperature, model)
         try:
-            return await self._primary_completion(
-                messages,
-                max_tokens,
-                temperature,
-            )
+            return await self._primary_completion(messages, max_tokens, temperature)
         except Exception as primary_error:
             self._primary_runtime_status = "unavailable"
             logger.warning(
@@ -207,11 +172,7 @@ class LocalModelClient:
 
     async def warm_primary(self) -> None:
         try:
-            await self._primary_completion(
-                [{"role": "user", "content": "Reply OK"}],
-                4,
-                0,
-            )
+            await self._primary_completion([{"role": "user", "content": "Reply OK"}], 4, 0)
         except Exception:
             self._primary_runtime_status = "unavailable"
 
@@ -229,22 +190,15 @@ class LocalModelClient:
                 "stream": True,
                 "think": False,
                 "keep_alive": settings.MODEL_KEEP_ALIVE,
-                "options": {
-                    "num_predict": max_tokens,
-                    "temperature": temperature,
-                },
+                "options": {"num_predict": max_tokens, "temperature": temperature},
             }
             emitted = False
             prompt_tokens = 0
             completion_tokens = 0
             try:
-                async with httpx.AsyncClient(
-                    timeout=settings.MODEL_TIMEOUT_SECONDS
-                ) as client:
+                async with httpx.AsyncClient(timeout=settings.MODEL_TIMEOUT_SECONDS) as client:
                     async with client.stream(
-                        "POST",
-                        settings.PRIMARY_MODEL_URL,
-                        json=payload,
+                        "POST", settings.PRIMARY_MODEL_URL, json=payload
                     ) as response:
                         response.raise_for_status()
                         async for line in response.aiter_lines():
@@ -255,27 +209,19 @@ class LocalModelClient:
                                 body.get("prompt_eval_count", prompt_tokens) or prompt_tokens
                             )
                             completion_tokens = int(
-                                body.get("eval_count", completion_tokens)
-                                or completion_tokens
+                                body.get("eval_count", completion_tokens) or completion_tokens
                             )
                             token = str(body.get("message", {}).get("content", ""))
                             if token:
                                 emitted = True
                                 delta = SimpleNamespace(content=token)
-                                yield SimpleNamespace(
-                                    choices=[SimpleNamespace(delta=delta)]
-                                )
+                                yield SimpleNamespace(choices=[SimpleNamespace(delta=delta)])
                 if not emitted:
                     raise LocalModelUnavailable("configured_model_empty_response")
                 from src.services.token_accounting import record_usage
 
                 record_usage(
-                    _response(
-                        "",
-                        prompt_tokens,
-                        completion_tokens,
-                        settings.LLM_MODEL,
-                    ),
+                    _response("", prompt_tokens, completion_tokens, settings.LLM_MODEL),
                     sum(len(str(message.get("content", ""))) for message in messages),
                     0,
                 )
@@ -304,16 +250,11 @@ class LocalModelClient:
                 headers = {}
                 if settings.PRIMARY_MODEL_API_TOKEN:
                     headers["Authorization"] = f"Bearer {settings.PRIMARY_MODEL_API_TOKEN}"
-                response = await client.get(
-                    settings.PRIMARY_MODEL_HEALTH_URL,
-                    headers=headers,
-                )
+                response = await client.get(settings.PRIMARY_MODEL_HEALTH_URL, headers=headers)
                 if response.status_code == 200:
                     if settings.PRIMARY_MODEL_STYLE == "ollama":
                         available = await self._ollama_model_is_loaded()
-                        self._primary_runtime_status = (
-                            "ready" if available else "unavailable"
-                        )
+                        self._primary_runtime_status = "ready" if available else "unavailable"
                     else:
                         available = True
                     if available:

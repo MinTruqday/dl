@@ -81,9 +81,7 @@ async def main():
         if ingest.json()["data"]["status"] != "indexed":
             raise AssertionError("Teacher material was not indexed")
         stored = await content_request(
-            client,
-            secret,
-            {"operation": "find_one", "query": {"_id": document_id}},
+            client, secret, {"operation": "find_one", "query": {"_id": document_id}}
         )
         if stored.get("indexing_status") != "indexed" or stored.get("is_indexed") is not True:
             raise AssertionError("Content indexing status was not synchronized")
@@ -139,7 +137,9 @@ async def main():
             row["metadata"].get("document_id")
             for row in proxy_owner_response.json().get("documents", [])
         }:
-            raise AssertionError("Assessment teacher material search did not return the owner document")
+            raise AssertionError(
+                "Assessment teacher material search did not return the owner document"
+            )
         proxy_other_response = await client.get(
             "http://assessment:8000/teacher-materials/search",
             headers={"X-Test-User-Id": other_owner_id, "X-Test-User-Role": "author"},

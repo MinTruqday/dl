@@ -10,6 +10,7 @@ from src.memory.management import memory_manager
 
 llm = create_chat_model()
 
+
 class PlanAgent:
     """
     <module_purpose>
@@ -29,6 +30,7 @@ class PlanAgent:
         self._redis = None
         try:
             import redis.asyncio as redis_lib
+
             self._redis = redis_lib.from_url(settings.REDIS_URI, decode_responses=True)
         except Exception:
             self._redis = None
@@ -43,22 +45,18 @@ class PlanAgent:
 
         history = req_data.get("conversation_history", [])
         history_str = "\n".join(
-            [
-                f"{msg.get('role', 'user')} said {msg.get('content', '')}"
-                for msg in history
-            ]
+            [f"{msg.get('role', 'user')} said {msg.get('content', '')}" for msg in history]
         )
-        
+
         user_id = req_data.get("user_id", "guest")
         try:
             long_term_memory = await memory_manager.get_memories(
-                user_id=user_id,
-                query=req_data.get("query", ""),
+                user_id=user_id, query=req_data.get("query", "")
             )
         except Exception:
             logger.exception("Planner memory retrieval failed")
             long_term_memory = ""
-        
+
         query = req_data.get("query", "")
         context_parts = [
             str(req_data.get("context", "")).strip(),
@@ -72,9 +70,7 @@ class PlanAgent:
         )
         user_preferences = str(req_data.get("user_preferences", "")).strip()
         memory_context = "\n\n".join(
-            part
-            for part in [user_preferences, str(long_term_memory or "").strip()]
-            if part
+            part for part in [user_preferences, str(long_term_memory or "").strip()] if part
         )
         if memory_context:
             prompt += registry.get(PromptType.PLAN_MEMORY_CONTEXT).format(
@@ -86,11 +82,7 @@ class PlanAgent:
         if mode_directive:
             system_prompt = f"{system_prompt}\n\n{mode_directive}"
         messages = [
-            SystemMessage(
-                content=system_prompt.format(
-                    format_instructions=format_instructions
-                )
-            ),
+            SystemMessage(content=system_prompt.format(format_instructions=format_instructions)),
             HumanMessage(content=prompt),
         ]
 
@@ -138,8 +130,7 @@ class PlanAgent:
                 if cached:
                     cached_nodes = _json.loads(cached)
                     validated = ExecutionPlan(
-                        reasoning="Validated cached execution plan",
-                        nodes=cached_nodes,
+                        reasoning="Validated cached execution plan", nodes=cached_nodes
                     )
                     logger.info("Planner cache hit for query")
                     return [node.model_dump() for node in validated.nodes]
@@ -152,7 +143,7 @@ class PlanAgent:
                 nodes = chunk["nodes"]
             elif chunk["type"] == "error":
                 raise RuntimeError(chunk["code"])
-                
+
         if nodes and self._redis:
             try:
                 await self._redis.setex(cache_key, 3600, _json.dumps(nodes))
@@ -161,25 +152,27 @@ class PlanAgent:
 
         return nodes
 
-    async def replan(self, current_plan: Dict[str, Any], failed_step: Dict[str, Any], error_message: str) -> Dict[str, Any]:
+    async def replan(
+        self, current_plan: Dict[str, Any], failed_step: Dict[str, Any], error_message: str
+    ) -> Dict[str, Any]:
         logger.info(f"Generating revised plan due to failure in step: {failed_step.get('action')}")
         from src.core.registry import PromptType, registry
         import json
-        
+
         system_prompt = registry.get(PromptType.BRAIN_SYSTEM)
         format_instructions = self.parser.get_format_instructions()
-        
+
         replan_prompt = registry.get(PromptType.PLAN_REPLAN).format(
             current_plan=json.dumps(current_plan, ensure_ascii=False),
             failed_step=json.dumps(failed_step, ensure_ascii=False),
-            error_message=error_message
+            error_message=error_message,
         )
-        
+
         messages = [
             SystemMessage(content=system_prompt.format(format_instructions=format_instructions)),
-            HumanMessage(content=replan_prompt)
+            HumanMessage(content=replan_prompt),
         ]
-        
+
         try:
             parsed_model = await self.structured_llm.ainvoke(messages)
             return (
@@ -191,6 +184,7 @@ class PlanAgent:
             logger.exception("Replanning failed")
             raise RuntimeError("replanning_model_failed")
 
+
 class CriticAgent:
     """
     <module_purpose>
@@ -201,13 +195,14 @@ class CriticAgent:
     - Postcondition: Returns an optimized execution plan or raises alerts for flaws.
     </contract>
     """
+
     def __init__(self):
         self.llm = llm
-        
+
     async def review_plan(self, nodes: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         if not nodes:
             return nodes
-            
+
         logger.info("Critic Agent is reviewing the generated plan")
         try:
             import json
@@ -215,7 +210,7 @@ class CriticAgent:
 
             messages = [
                 SystemMessage(content=registry.get(PromptType.PLAN_CRITIC)),
-                HumanMessage(content=json.dumps(nodes, ensure_ascii=False))
+                HumanMessage(content=json.dumps(nodes, ensure_ascii=False)),
             ]
             structured_llm = self.llm.with_structured_output(ExecutionPlan)
             response = await structured_llm.ainvoke(messages)
@@ -224,6 +219,7 @@ class CriticAgent:
         except Exception:
             logger.exception("Critic Agent review failed, using original plan")
             return nodes
+
 
 critic = CriticAgent()
 planner = PlanAgent()

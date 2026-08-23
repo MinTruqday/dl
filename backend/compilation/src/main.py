@@ -40,9 +40,7 @@ app.middleware("http")(add_trace_id_header)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        origin.strip()
-        for origin in settings.CORS_ALLOWED_ORIGINS.split(",")
-        if origin.strip()
+        origin.strip() for origin in settings.CORS_ALLOWED_ORIGINS.split(",") if origin.strip()
     ],
     allow_credentials=False,
     allow_methods=["*"],

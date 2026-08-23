@@ -1,10 +1,12 @@
 from typing import Any, Dict, Optional
 from pydantic import BaseModel, Field
 
+
 class IngestRequest(BaseModel):
     document_id: str = Field(description="Mã định danh duy nhất của tài liệu cần nạp")
     requester_id: Optional[str] = None
     is_admin: bool = False
+
 
 class IngestResponse(BaseModel):
     document_id: str

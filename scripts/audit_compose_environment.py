@@ -30,13 +30,7 @@ else:
 violations = []
 for service, definition in compose.get("services", {}).items():
     config_path = (
-        root
-        / "backend"
-        / service
-        / "src"
-        / "core"
-        / "infrastructure"
-        / "configuration.py"
+        root / "backend" / service / "src" / "core" / "infrastructure" / "configuration.py"
     )
     if not config_path.is_file():
         continue
@@ -47,9 +41,7 @@ for service, definition in compose.get("services", {}).items():
         violations.append(f"{service}:missing:{name}")
     for name in sorted((provided & sensitive) - required):
         violations.append(f"{service}:excess_secret:{name}")
-    for name in sorted(
-        name for name in provided - required if name.endswith("_DB_NAME")
-    ):
+    for name in sorted(name for name in provided - required if name.endswith("_DB_NAME")):
         violations.append(f"{service}:excess_database:{name}")
 for violation in violations:
     print(violation)

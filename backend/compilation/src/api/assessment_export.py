@@ -41,7 +41,10 @@ def text_projection(node):
 
 def item_text(question):
     stem = " ".join(text_projection(question.get("stem_doc", {})))
-    options = [f"{option['id']} {' '.join(text_projection(option.get('content_doc', {})))}" for option in question.get("options", [])]
+    options = [
+        f"{option['id']} {' '.join(text_projection(option.get('content_doc', {})))}"
+        for option in question.get("options", [])
+    ]
     return stem, options
 
 
@@ -73,15 +76,33 @@ async def export_assessment_pdf(version_id: str, current_user=Depends(get_curren
     styles = getSampleStyleSheet()
     title_style = ParagraphStyle("AssessmentTitle", parent=styles["Title"], fontName="DejaVu")
     heading_style = ParagraphStyle("QuestionHeading", parent=styles["Heading2"], fontName="DejaVu")
-    body_style = ParagraphStyle("QuestionBody", parent=styles["BodyText"], fontName="DejaVu", leading=16)
+    body_style = ParagraphStyle(
+        "QuestionBody", parent=styles["BodyText"], fontName="DejaVu", leading=16
+    )
     story = [Paragraph(escape(version["title"]), title_style), Spacer(1, 6 * mm)]
     for item in version["items"]:
         stem, options = item_text(questions[item["question_version_id"]])
-        story.extend([Paragraph(f"Câu {item['position']}", heading_style), Paragraph(escape(stem), body_style)])
+        story.extend(
+            [
+                Paragraph(f"Câu {item['position']}", heading_style),
+                Paragraph(escape(stem), body_style),
+            ]
+        )
         story.extend(Paragraph(escape(option), body_style) for option in options)
         story.append(Spacer(1, 4 * mm))
-    SimpleDocTemplate(output, pagesize=A4, rightMargin=18 * mm, leftMargin=18 * mm, topMargin=18 * mm, bottomMargin=18 * mm).build(story)
-    return Response(output.getvalue(), media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="{version_id}.pdf"'})
+    SimpleDocTemplate(
+        output,
+        pagesize=A4,
+        rightMargin=18 * mm,
+        leftMargin=18 * mm,
+        topMargin=18 * mm,
+        bottomMargin=18 * mm,
+    ).build(story)
+    return Response(
+        output.getvalue(),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{version_id}.pdf"'},
+    )
 
 
 @router.post("/{version_id}/docx")
@@ -97,4 +118,8 @@ async def export_assessment_docx(version_id: str, current_user=Depends(get_curre
             document.add_paragraph(option)
     output = BytesIO()
     document.save(output)
-    return Response(output.getvalue(), media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document", headers={"Content-Disposition": f'attachment; filename="{version_id}.docx"'})
+    return Response(
+        output.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f'attachment; filename="{version_id}.docx"'},
+    )

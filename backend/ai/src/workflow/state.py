@@ -2,6 +2,7 @@ from typing import Annotated, Any, Dict, List, TypedDict
 
 from langchain_core.messages import RemoveMessage, SystemMessage
 
+
 def reduce_chat_history(left: list, right: list) -> list:
     if left is None:
         left = []
@@ -29,13 +30,18 @@ def reduce_chat_history(left: list, right: list) -> list:
             if len(content) > 1500:
                 m.content = f"{content[:500]}\n[REDACTED COMPRESSED CONTENT]\n{content[-500:]}"
             recent_msgs.append(m)
-            
+
     if len(recent_msgs) > 15:
         system_msgs = [m for m in recent_msgs if isinstance(m, SystemMessage)]
         other_msgs = [m for m in recent_msgs if not isinstance(m, SystemMessage)]
-        recent_msgs = system_msgs + other_msgs[-(15 - len(system_msgs)):] if len(system_msgs) < 15 else system_msgs
+        recent_msgs = (
+            system_msgs + other_msgs[-(15 - len(system_msgs)) :]
+            if len(system_msgs) < 15
+            else system_msgs
+        )
 
     return recent_msgs
+
 
 def reduce_consolidated_results(left: list, right: list) -> list:
     if left is None:
@@ -64,6 +70,7 @@ def merge_unique_values(left: list, right: list) -> list:
             values.append(value)
     return values
 
+
 class AgentState(TypedDict):
     """
     <module_purpose>
@@ -75,6 +82,7 @@ class AgentState(TypedDict):
     - Error Handling: Uses custom reducers to prevent memory bloat and context limit exhaustion.
     </contract>
     """
+
     chat_history: Annotated[list, reduce_chat_history]
     question: str
     generation: str
@@ -98,6 +106,7 @@ class AgentState(TypedDict):
     dynamic_injections: List[Any]
     mode_directive: str
 
+
 class ActingState(TypedDict):
     """
     <module_purpose>
@@ -109,6 +118,7 @@ class ActingState(TypedDict):
     - Error Handling: Relies on external validators before state instantiation.
     </contract>
     """
+
     req_data: Dict[str, Any]
     steps: List[Any]
     current_step_index: int

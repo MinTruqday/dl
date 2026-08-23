@@ -42,13 +42,16 @@ def original_content_length(metadata: dict) -> int:
             return -1
     return int(metadata.get("ContentLength", -1))
 
+
 def get_bucket(path: str) -> str:
     if path.startswith(("system/", "users/", "client/", "temp/")):
         return MINIO_PRIVATE_BUCKET
     return MINIO_PUBLIC_BUCKET
 
+
 session = aioboto3.Session()
 _storage_client = None
+
 
 async def get_storage_client():
     global _storage_client
@@ -61,11 +64,13 @@ async def get_storage_client():
         ).__aenter__()
     return _storage_client
 
+
 async def close_storage_client():
     global _storage_client
     if _storage_client is not None:
         await _storage_client.__aexit__(None, None, None)
         _storage_client = None
+
 
 async def initialize_bucket():
     storage_client = await get_storage_client()
@@ -81,14 +86,17 @@ async def initialize_bucket():
     await storage_client.put_bucket_lifecycle_configuration(
         Bucket=MINIO_PRIVATE_BUCKET,
         LifecycleConfiguration={
-            "Rules": [{
-                "ID": "expire-temporary-chat-files",
-                "Status": "Enabled",
-                "Filter": {"Prefix": "temp/"},
-                "Expiration": {"Days": 14},
-            }]
+            "Rules": [
+                {
+                    "ID": "expire-temporary-chat-files",
+                    "Status": "Enabled",
+                    "Filter": {"Prefix": "temp/"},
+                    "Expiration": {"Days": 14},
+                }
+            ]
         },
     )
+
 
 async def upload_file(
     file_content: bytes,
@@ -97,11 +105,7 @@ async def upload_file(
     compress: bool = False,
 ) -> str:
     original_size = len(file_content)
-    kwargs = {
-        "Bucket": get_bucket(object_name),
-        "Key": object_name,
-        "ContentType": content_type,
-    }
+    kwargs = {"Bucket": get_bucket(object_name), "Key": object_name, "ContentType": content_type}
 
     if should_brotli_compress(object_name, content_type, len(file_content), compress):
         compressed = await asyncio.to_thread(brotli.compress, file_content, quality=5)
@@ -116,24 +120,22 @@ async def upload_file(
     await storage_client.put_object(**kwargs)
     return object_name
 
+
 async def download_file(object_name: str) -> tuple[bytes, str]:
     storage_client = await get_storage_client()
     try:
-        response = await storage_client.get_object(
-            Bucket=get_bucket(object_name), Key=object_name
-        )
+        response = await storage_client.get_object(Bucket=get_bucket(object_name), Key=object_name)
     except ClientError as error:
         if error.response.get("Error", {}).get("Code") not in {"NoSuchKey", "404"}:
             raise
-        response = await storage_client.get_object(
-            Bucket=MINIO_LEGACY_BUCKET, Key=object_name
-        )
+        response = await storage_client.get_object(Bucket=MINIO_LEGACY_BUCKET, Key=object_name)
     content = await response["Body"].read()
 
     if response.get("ContentEncoding") == "br":
         content = await asyncio.to_thread(brotli.decompress, content)
 
     return content, response.get("ContentType", "application/octet-stream")
+
 
 async def generate_presigned_url(object_name: str, expiration: int = 3600) -> str:
     storage_client = await get_storage_client()
@@ -146,13 +148,12 @@ async def generate_presigned_url(object_name: str, expiration: int = 3600) -> st
         response = response.replace(MINIO_ENDPOINT, MINIO_PUBLIC_URL)
     return response
 
-async def generate_presigned_put_url(object_name: str, content_type: str, expiration: int = 3600) -> str:
+
+async def generate_presigned_put_url(
+    object_name: str, content_type: str, expiration: int = 3600
+) -> str:
     storage_client = await get_storage_client()
-    params = {
-        "Bucket": get_bucket(object_name),
-        "Key": object_name,
-        "ContentType": content_type
-    }
+    params = {"Bucket": get_bucket(object_name), "Key": object_name, "ContentType": content_type}
 
     response = await storage_client.generate_presigned_url(
         "put_object", Params=params, ExpiresIn=expiration

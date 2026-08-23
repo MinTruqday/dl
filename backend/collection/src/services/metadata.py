@@ -89,9 +89,14 @@ async def collected_metadata(
     grade_number = int(target_grade) if target_grade.isdigit() else None
     education_level = None
     if grade_number is not None:
-        education_level = "TIỂU HỌC" if grade_number <= 5 else "THCS" if grade_number <= 9 else "THPT"
+        education_level = (
+            "TIỂU HỌC" if grade_number <= 5 else "THCS" if grade_number <= 9 else "THPT"
+        )
     subject = payload.get("subject") or infer_subject(title)
-    source_version = str(payload.get("content_hash") or hashlib.sha256(f"{source_url}:{file_url}".encode()).hexdigest())
+    source_version = str(
+        payload.get("content_hash")
+        or hashlib.sha256(f"{source_url}:{file_url}".encode()).hexdigest()
+    )
     return {
         "title": title,
         "slug": slug,

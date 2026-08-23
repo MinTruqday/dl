@@ -33,15 +33,11 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     account_id = account.get("id") or account["_id"]
 
     wrong_password = client.post(
-        "/xac-thuc/dang-nhap",
-        data={"username": email, "password": "WrongPassword-123"},
+        "/xac-thuc/dang-nhap", data={"username": email, "password": "WrongPassword-123"}
     )
     assert wrong_password.status_code == 401
 
-    login = client.post(
-        "/xac-thuc/dang-nhap",
-        data={"username": email, "password": password},
-    )
+    login = client.post("/xac-thuc/dang-nhap", data={"username": email, "password": password})
     assert login.status_code == 200, login.text
     token = login.json()["data"]["access_token"]
     original_refresh = client.cookies.get("doclib_refresh_token")
@@ -51,7 +47,9 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     refreshed_token = refreshed.json()["data"]["access_token"]
     assert refreshed_token != token
     assert client.cookies.get("doclib_refresh_token") != original_refresh
-    with httpx.Client(base_url=base_url, timeout=30, cookies={"doclib_refresh_token": original_refresh}) as replay_client:
+    with httpx.Client(
+        base_url=base_url, timeout=30, cookies={"doclib_refresh_token": original_refresh}
+    ) as replay_client:
         replay = replay_client.post("/xac-thuc/lam-moi-phien")
         assert replay.status_code == 401
     token = refreshed_token
@@ -85,8 +83,7 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     managed_id = managed.json()["data"].get("id") or managed.json()["data"]["_id"]
     mongo_client = MongoClient(os.environ["MONGODB_URI"])
     mongo_client[os.environ["AUTHENTICATION_DB_NAME"]].auth_credentials.update_one(
-        {"_id": account_id},
-        {"$set": {"role": "admin"}},
+        {"_id": account_id}, {"$set": {"role": "admin"}}
     )
     mongo_client.close()
 
@@ -95,10 +92,7 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     assert client.cookies.get("doclib_refresh_token") is None
     assert client.get("/xac-thuc/ca-nhan", headers=bearer).status_code == 401
 
-    admin_login = client.post(
-        "/xac-thuc/dang-nhap",
-        data={"username": email, "password": password},
-    )
+    admin_login = client.post("/xac-thuc/dang-nhap", data={"username": email, "password": password})
     assert admin_login.status_code == 200, admin_login.text
     admin_headers = {"Authorization": f"Bearer {admin_login.json()['data']['access_token']}"}
     accounts = client.get("/xac-thuc/quan-tri/tai-khoan", headers=admin_headers)
@@ -112,13 +106,16 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     assert disabled.status_code == 200, disabled.text
     assert disabled.json()["data"]["is_active"] is False
     managed_login = client.post(
-        "/xac-thuc/dang-nhap",
-        data={"username": managed_email, "password": managed_password},
+        "/xac-thuc/dang-nhap", data={"username": managed_email, "password": managed_password}
     )
     assert managed_login.status_code == 403
     audit = client.get("/xac-thuc/quan-tri/nhat-ky", headers=admin_headers)
     assert audit.status_code == 200, audit.text
-    account_updates = [event for event in audit.json()["data"] if event["action"] == "ADMIN_ACCOUNT_UPDATED" and event.get("target_user_id") == managed_id]
+    account_updates = [
+        event
+        for event in audit.json()["data"]
+        if event["action"] == "ADMIN_ACCOUNT_UPDATED" and event.get("target_user_id") == managed_id
+    ]
     assert account_updates
     assert account_updates[0]["reason"] == "Kiểm thử khóa tài khoản có kiểm toán"
 
@@ -126,9 +123,7 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     assert forgot.status_code == 200, forgot.text
     reset_token = f"reset-{run_id}"
     reset_hash = hmac.new(
-        os.environ["SECRET_KEY"].encode("utf-8"),
-        reset_token.encode("utf-8"),
-        hashlib.sha256,
+        os.environ["SECRET_KEY"].encode("utf-8"), reset_token.encode("utf-8"), hashlib.sha256
     ).hexdigest()
     mongo_client = MongoClient(os.environ["MONGODB_URI"])
     mongo_client[os.environ["AUTHENTICATION_DB_NAME"]].password_reset_tokens.insert_one(
@@ -146,11 +141,20 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     assert verified.status_code == 200, verified.text
     new_password = f"NewStrongPassword-{run_id}"
     reset = client.post(
-        "/xac-thuc/dat-lai-mat-khau",
-        json={"token": reset_token, "new_password": new_password},
+        "/xac-thuc/dat-lai-mat-khau", json={"token": reset_token, "new_password": new_password}
     )
     assert reset.status_code == 200, reset.text
-    assert client.post("/xac-thuc/dat-lai-mat-khau", json={"token": reset_token, "new_password": password}).status_code == 400
-    assert client.post("/xac-thuc/dang-nhap", data={"username": email, "password": new_password}).status_code == 200
+    assert (
+        client.post(
+            "/xac-thuc/dat-lai-mat-khau", json={"token": reset_token, "new_password": password}
+        ).status_code
+        == 400
+    )
+    assert (
+        client.post(
+            "/xac-thuc/dang-nhap", data={"username": email, "password": new_password}
+        ).status_code
+        == 200
+    )
 
 print("authentication core identity integration passed")

@@ -123,25 +123,28 @@ def evaluation_metrics(rows: list[dict[str, Any]], estimate_key: str):
     paired = [
         row
         for row in rows
-        if isinstance(row.get(estimate_key), (int, float)) and isinstance(row.get("empirical"), (int, float))
+        if isinstance(row.get(estimate_key), (int, float))
+        and isinstance(row.get("empirical"), (int, float))
     ]
     estimates = [float(row[estimate_key]) for row in paired]
     empirical = [float(row["empirical"]) for row in paired]
     errors = [estimate - target for estimate, target in zip(estimates, empirical)]
     absolute_errors = [abs(error) for error in errors]
     confidence_rows = [
-        row
-        for row in paired
-        if isinstance(row.get(f"{estimate_key}_confidence"), (int, float))
+        row for row in paired if isinstance(row.get(f"{estimate_key}_confidence"), (int, float))
     ]
     confidence = [float(row[f"{estimate_key}_confidence"]) for row in confidence_rows]
-    confidence_errors = [abs(float(row[estimate_key]) - float(row["empirical"])) for row in confidence_rows]
+    confidence_errors = [
+        abs(float(row[estimate_key]) - float(row["empirical"])) for row in confidence_rows
+    ]
     return {
         "count": len(paired),
         "mae": mean(absolute_errors) if absolute_errors else None,
-        "rmse": sqrt(mean([error ** 2 for error in errors])) if errors else None,
+        "rmse": sqrt(mean([error**2 for error in errors])) if errors else None,
         "pearson": correlation(estimates, empirical),
-        "spearman": correlation(ranks(estimates), ranks(empirical)) if len(estimates) >= 2 else None,
+        "spearman": correlation(ranks(estimates), ranks(empirical))
+        if len(estimates) >= 2
+        else None,
         "rank_consistency": rank_consistency(estimates, empirical),
         "mean_signed_error": mean(errors) if errors else None,
         "mean_confidence": mean(confidence) if confidence else None,
@@ -189,13 +192,18 @@ def leakage_checks(rows: list[dict[str, Any]]):
 
 def calibration_stability(snapshots: list[dict[str, Any]]):
     ordered = sorted(snapshots, key=lambda row: row.get("created_at") or "")
-    calibrated = [row for row in ordered if row.get("status") == "calibrated" and isinstance(row.get("difficulty"), (int, float))]
+    calibrated = [
+        row
+        for row in ordered
+        if row.get("status") == "calibrated" and isinstance(row.get("difficulty"), (int, float))
+    ]
     changes = [
         abs(float(current["difficulty"]) - float(previous["difficulty"]))
         for previous, current in zip(calibrated, calibrated[1:])
     ]
     sample_sensitivity = [
-        change / max(1, abs(int(current.get("sample_size", 0)) - int(previous.get("sample_size", 0))))
+        change
+        / max(1, abs(int(current.get("sample_size", 0)) - int(previous.get("sample_size", 0))))
         for previous, current, change in zip(calibrated, calibrated[1:], changes)
     ]
     latest = calibrated[-1] if calibrated else None
@@ -210,7 +218,11 @@ def calibration_stability(snapshots: list[dict[str, Any]]):
         "latest_standard_error": latest.get("standard_error") if latest else None,
         "latest_sample_size": latest.get("sample_size", 0) if latest else 0,
         "latest_status": ordered[-1].get("status") if ordered else None,
-        "latest_contamination_filter_difficulty_delta": latest.get("contamination_filter_difficulty_delta") if latest else None,
+        "latest_contamination_filter_difficulty_delta": latest.get(
+            "contamination_filter_difficulty_delta"
+        )
+        if latest
+        else None,
         "sample_size_monotonic": all(
             int(current.get("sample_size", 0)) >= int(previous.get("sample_size", 0))
             for previous, current in zip(ordered, ordered[1:])

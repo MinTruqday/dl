@@ -10,6 +10,7 @@ from src.schemas.identity import PasskeyFinishRequest, PasskeyRequest
 
 router = APIRouter(prefix="/xac-thuc/khoa-bao-mat")
 
+
 @router.post(
     "/dang-nhap/bat-dau",
     response_model=APIResponse[Any],
@@ -21,6 +22,7 @@ async def passkey_login_begin(payload: PasskeyRequest):
         message="Khởi tạo quy trình xác thực bằng mã bảo mật hoàn tất",
         status=200,
     )
+
 
 @router.post(
     "/dang-nhap/hoan-tat",
@@ -35,30 +37,32 @@ async def passkey_login_finish(payload: PasskeyFinishRequest, request: Request, 
         status=200,
     )
 
+
 @router.post("/dang-ky/bat-dau", response_model=APIResponse[Any])
 async def passkey_register_begin(
-    payload: PasskeyRequest,
-    current_user: CurrentUser = Depends(get_current_user),
+    payload: PasskeyRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
     if payload.email.lower() != current_user.email.lower():
-        raise HTTPException(status_code=403, detail="Không thể đăng ký mã bảo mật cho tài khoản khác")
+        raise HTTPException(
+            status_code=403, detail="Không thể đăng ký mã bảo mật cho tài khoản khác"
+        )
     return APIResponse(
         data=await PasskeyService.register_begin(payload.email),
         message="Khởi tạo quy trình đăng ký mã bảo mật hoàn tất",
         status=200,
     )
 
+
 @router.post("/dang-ky/hoan-tat", response_model=APIResponse[Any])
 async def passkey_register_finish(
-    payload: PasskeyFinishRequest,
-    current_user: CurrentUser = Depends(get_current_user),
+    payload: PasskeyFinishRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
     if payload.email.lower() != current_user.email.lower():
-        raise HTTPException(status_code=403, detail="Không thể đăng ký mã bảo mật cho tài khoản khác")
+        raise HTTPException(
+            status_code=403, detail="Không thể đăng ký mã bảo mật cho tài khoản khác"
+        )
     return APIResponse(
-        data=await PasskeyService.register_finish(
-            payload.email, payload.credential
-        ),
+        data=await PasskeyService.register_finish(payload.email, payload.credential),
         message="Thực hiện đăng ký mã bảo mật hoàn tất",
         status=200,
     )

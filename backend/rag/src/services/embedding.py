@@ -6,6 +6,7 @@ import redis
 from sentence_transformers import SentenceTransformer
 from src.core.infrastructure.configuration import settings
 
+
 class EmbeddingService:
     def __init__(self):
         self._model_name = settings.EMBEDDING_MODEL
@@ -27,11 +28,7 @@ class EmbeddingService:
 
     async def initialize(self):
         model = await asyncio.to_thread(self._get_model)
-        embedding = await asyncio.to_thread(
-            model.encode,
-            "readiness",
-            convert_to_numpy=True,
-        )
+        embedding = await asyncio.to_thread(model.encode, "readiness", convert_to_numpy=True)
         return embedding.tolist()
 
     def _cache_key(self, text: str) -> str:
@@ -85,5 +82,6 @@ class EmbeddingService:
 
     async def embed_batch(self, texts: List[str]) -> List[List[float]]:
         return await asyncio.to_thread(self._embed_batch, texts)
+
 
 embedder = EmbeddingService()

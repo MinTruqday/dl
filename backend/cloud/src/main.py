@@ -23,12 +23,11 @@ from src.core.metrics import PrometheusMiddleware, metrics_endpoint
 from src.core.infrastructure.database import database
 from src.core.infrastructure.redis import redis
 from src.core.storage import close_storage_client, get_storage_client, initialize_bucket
+
 logger.remove()
-logger.add(
-    sys.stdout,
-    format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}",
-    level="INFO",
-)
+logger.add(sys.stdout, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}", level="INFO")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
@@ -38,6 +37,7 @@ async def lifespan(app: FastAPI):
     await close_storage_client()
     await close_db()
 
+
 app = FastAPI(title="DocLib Cloud", version=settings.VERSION, lifespan=lifespan)
 app.add_middleware(PrometheusMiddleware, service_name="cloud")
 app.add_route("/metrics", metrics_endpoint("cloud"))
@@ -46,7 +46,9 @@ from fastapi.responses import JSONResponse
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[origin.strip() for origin in settings.CORS_ALLOWED_ORIGINS.split(",") if origin.strip()],
+    allow_origins=[
+        origin.strip() for origin in settings.CORS_ALLOWED_ORIGINS.split(",") if origin.strip()
+    ],
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -65,9 +67,11 @@ app.include_router(search)
 app.include_router(file_request)
 app.include_router(internal)
 
+
 @app.get("/health", include_in_schema=False)
 async def health_check():
     return {"status": "healthy", "service": "cloud"}
+
 
 @app.get("/ready", include_in_schema=False)
 async def readiness_check():

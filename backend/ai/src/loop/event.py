@@ -10,8 +10,6 @@ from loguru import logger
 from src.utils.background import create_background_task
 
 
-
-
 class EventType(str, Enum):
     CRON = "cron"
     WEBHOOK = "webhook"
@@ -44,7 +42,6 @@ class SystemUpdate:
     success: bool = True
 
 
-
 EventHandlerCallable = Callable[[AgentEvent], Coroutine[Any, Any, Optional[str]]]
 
 
@@ -54,7 +51,6 @@ class EventHandler:
     handler: EventHandlerCallable
     description: str = ""
     enabled: bool = True
-
 
 
 @dataclass
@@ -79,7 +75,9 @@ class CronScheduler:
 
     def register(self, schedule: CronSchedule):
         self._schedules[schedule.schedule_id] = schedule
-        logger.info(f"CronScheduler registered schedule '{schedule.name}' (every {schedule.interval_seconds}s)")
+        logger.info(
+            f"CronScheduler registered schedule '{schedule.name}' (every {schedule.interval_seconds}s)"
+        )
 
     def unregister(self, schedule_id: str):
         schedule = self._schedules.pop(schedule_id, None)
@@ -96,8 +94,7 @@ class CronScheduler:
             schedule._task = None
         elif self._running and (not schedule._task or schedule._task.done()):
             schedule._task = asyncio.create_task(
-                self._run_schedule(schedule),
-                name=f"cron:{schedule.name}",
+                self._run_schedule(schedule), name=f"cron:{schedule.name}"
             )
 
     def set_event_loop(self, event_driven_loop: "EventDrivenLoop"):
@@ -122,8 +119,7 @@ class CronScheduler:
         for schedule in self._schedules.values():
             if schedule.enabled:
                 schedule._task = asyncio.create_task(
-                    self._run_schedule(schedule),
-                    name=f"cron:{schedule.name}",
+                    self._run_schedule(schedule), name=f"cron:{schedule.name}"
                 )
         logger.info(f"CronScheduler started {len(self._schedules)} schedules")
 
@@ -147,20 +143,27 @@ class CronScheduler:
                 event = AgentEvent(
                     event_id=str(uuid7()),
                     event_type=schedule.event_type,
-                    payload={**schedule.payload_template, "schedule_id": schedule.schedule_id,
-                             "schedule_name": schedule.name, "run_count": schedule.run_count},
+                    payload={
+                        **schedule.payload_template,
+                        "schedule_id": schedule.schedule_id,
+                        "schedule_name": schedule.name,
+                        "run_count": schedule.run_count,
+                    },
                     source=f"cron:{schedule.name}",
                 )
 
-                logger.info(f"CronScheduler firing event for schedule '{schedule.name}' (run #{schedule.run_count})")
+                logger.info(
+                    f"CronScheduler firing event for schedule '{schedule.name}' (run #{schedule.run_count})"
+                )
 
                 if self._event_loop_ref:
                     create_background_task(
-                        self._event_loop_ref.handle_event(event),
-                        f"cron-event-{event.event_id}",
+                        self._event_loop_ref.handle_event(event), f"cron-event-{event.event_id}"
                     )
                 else:
-                    logger.warning(f"CronScheduler no EventDrivenLoop attached for schedule '{schedule.name}'")
+                    logger.warning(
+                        f"CronScheduler no EventDrivenLoop attached for schedule '{schedule.name}'"
+                    )
 
             except asyncio.CancelledError:
                 break
@@ -169,14 +172,15 @@ class CronScheduler:
                 await asyncio.sleep(5)
 
 
-
 class SystemUpdateRegistry:
     def __init__(self):
         self._updates = deque(maxlen=1000)
 
     def record(self, update: SystemUpdate):
         self._updates.append(update)
-        logger.info(f"SystemUpdateRegistry recorded update '{update.update_type}' for event {update.event_id}")
+        logger.info(
+            f"SystemUpdateRegistry recorded update '{update.update_type}' for event {update.event_id}"
+        )
 
     def get_recent(self, limit: int = 50) -> List[SystemUpdate]:
         return list(reversed(list(self._updates)[-limit:]))
@@ -195,7 +199,6 @@ class SystemUpdateRegistry:
         }
 
 
-
 class EventDrivenLoop:
     def __init__(self):
         self._handlers: Dict[EventType, List[EventHandler]] = {}
@@ -209,7 +212,9 @@ class EventDrivenLoop:
         if handler.event_type not in self._handlers:
             self._handlers[handler.event_type] = []
         self._handlers[handler.event_type].append(handler)
-        logger.info(f"EventDrivenLoop registered handler for {handler.event_type.value} {handler.description}")
+        logger.info(
+            f"EventDrivenLoop registered handler for {handler.event_type.value} {handler.description}"
+        )
 
     async def emit_event(self, event: AgentEvent):
         self._event_queue.put_nowait(event)
@@ -306,7 +311,6 @@ class EventDrivenLoop:
         return self._update_registry
 
 
-
 async def _handle_system_heartbeat(event: AgentEvent) -> Optional[str]:
     logger.info(f"EventDrivenLoop heartbeat ping from {event.source}")
     return "Heartbeat processed"
@@ -314,19 +318,12 @@ async def _handle_system_heartbeat(event: AgentEvent) -> Optional[str]:
 
 async def _index_uploaded_document(doc_id: str, user_id: str, superseded_document_id: str):
     from src.clients.rag import rag_client
+
     system_ingest = not bool(user_id)
     requester_id = user_id or "platform-system"
     if superseded_document_id:
-        await rag_client.delete_document(
-            superseded_document_id,
-            requester_id,
-            system_ingest,
-        )
-    return await rag_client.ingest_document(
-        doc_id,
-        requester_id,
-        system_ingest,
-    )
+        await rag_client.delete_document(superseded_document_id, requester_id, system_ingest)
+    return await rag_client.ingest_document(doc_id, requester_id, system_ingest)
 
 
 async def _handle_document_uploaded(event: AgentEvent) -> Optional[str]:
@@ -339,11 +336,7 @@ async def _handle_document_uploaded(event: AgentEvent) -> Optional[str]:
 
     async def _run_ingest():
         try:
-            result = await _index_uploaded_document(
-                doc_id,
-                user_id,
-                superseded_document_id,
-            )
+            result = await _index_uploaded_document(doc_id, user_id, superseded_document_id)
             logger.info(
                 f"Auto-ingest completed doc_id={doc_id} chunks={result.get('chunks', 0)} method={result.get('extraction_method')}"
             )
@@ -357,32 +350,35 @@ async def _handle_document_uploaded(event: AgentEvent) -> Optional[str]:
 async def _handle_user_query_event(event: AgentEvent) -> Optional[str]:
     query = event.payload.get("query", "")
     user_id = event.payload.get("user_id", "")
-    logger.debug(
-        f"EventDrivenLoop user query event from user={user_id} query_chars={len(query)}"
-    )
+    logger.debug(f"EventDrivenLoop user query event from user={user_id} query_chars={len(query)}")
     return f"User query event recorded for user {user_id}"
-
 
 
 event_driven_loop = EventDrivenLoop()
 cron_scheduler = CronScheduler()
 cron_scheduler.set_event_loop(event_driven_loop)
 
-event_driven_loop.register_handler(EventHandler(
-    event_type=EventType.SYSTEM_HEARTBEAT,
-    handler=_handle_system_heartbeat,
-    description="System heartbeat health check",
-))
-event_driven_loop.register_handler(EventHandler(
-    event_type=EventType.DOCUMENT_UPLOADED,
-    handler=_handle_document_uploaded,
-    description="Document upload indexing verification",
-))
-event_driven_loop.register_handler(EventHandler(
-    event_type=EventType.USER_QUERY,
-    handler=_handle_user_query_event,
-    description="User query event logging for trace analysis",
-))
+event_driven_loop.register_handler(
+    EventHandler(
+        event_type=EventType.SYSTEM_HEARTBEAT,
+        handler=_handle_system_heartbeat,
+        description="System heartbeat health check",
+    )
+)
+event_driven_loop.register_handler(
+    EventHandler(
+        event_type=EventType.DOCUMENT_UPLOADED,
+        handler=_handle_document_uploaded,
+        description="Document upload indexing verification",
+    )
+)
+event_driven_loop.register_handler(
+    EventHandler(
+        event_type=EventType.USER_QUERY,
+        handler=_handle_user_query_event,
+        description="User query event logging for trace analysis",
+    )
+)
 
 _heartbeat_schedule = CronSchedule(
     schedule_id="heartbeat_5min",

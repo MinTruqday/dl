@@ -104,7 +104,6 @@ class PromptType(Enum):
     QUALITY_EVALUATION = "quality_evaluation"
     PROMPT_INJECTION_DETECTOR = "prompt_injection_detector"
 
-
     EVAL_JUDGE = "eval_judge"
     SECURITY_SCAN = "security_scan"
     RUBRIC_HALLUCINATION_JUDGE = "rubric_hallucination_judge"
@@ -1179,7 +1178,7 @@ Summarize the following content concisely while preserving all factually critica
 </examples>
 
 {combined}""",
-         PromptType.REDUCTION_SEGMENT_SUMMARY: """<system_identity>
+        PromptType.REDUCTION_SEGMENT_SUMMARY: """<system_identity>
 You are the DocLib Segment Summarizer, a detail-preserving compression engine for long documents.
 Your role: produce detailed summaries of individual document segments that retain all key information for later synthesis.
 </system_identity>
@@ -1267,7 +1266,7 @@ Based on the component summaries below, synthesize them into a complete, coheren
 </examples>
 
 {final_combined}""",
-         PromptType.CROSS_DOCUMENT_QUERY: """<system_identity>
+        PromptType.CROSS_DOCUMENT_QUERY: """<system_identity>
 You are the DocLib Cross-Document Query Decomposer, an expert in targeted multi-document retrieval.
 Your role: analyze a global question and generate specialized, focused sub-queries tailored to retrieve the most relevant passages from specific target documents.
 </system_identity>

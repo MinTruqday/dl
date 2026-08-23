@@ -10,6 +10,7 @@ def get_service_url(service_name_underscore: str) -> str:
         return override
     return f"http://{service_name_underscore.lower()}:8000"
 
+
 class Settings(BaseModel):
     PROJECT_NAME: str = os.environ["PROJECT_NAME"]
     VERSION: str = os.environ["VERSION"]
@@ -27,5 +28,6 @@ class Settings(BaseModel):
     CONTENT_DB_NAME: str = os.environ["CONTENT_DB_NAME"]
     MINIO_ENDPOINT: str = os.environ["MINIO_ENDPOINT"]
     MINIO_PUBLIC_URL: str = os.environ["MINIO_PUBLIC_URL"]
+
 
 settings = Settings()

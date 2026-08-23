@@ -55,9 +55,7 @@ async def managed_browser(headless=True):
 
 async def get_stealth_context(browser):
     return await browser.new_context(
-        user_agent=ua.random,
-        viewport={"width": 1920, "height": 1080},
-        ignore_https_errors=True,
+        user_agent=ua.random, viewport={"width": 1920, "height": 1080}, ignore_https_errors=True
     )
 
 
@@ -67,17 +65,16 @@ async def validate_remote_url(url: str):
         raise ValueError("Invalid remote download URL")
     loop = asyncio.get_running_loop()
     port = parsed.port or (443 if parsed.scheme == "https" else 80)
-    addresses = await loop.run_in_executor(
-        None,
-        lambda: socket.getaddrinfo(parsed.hostname, port),
-    )
+    addresses = await loop.run_in_executor(None, lambda: socket.getaddrinfo(parsed.hostname, port))
     for address in addresses:
         ip = ipaddress.ip_address(address[4][0])
         if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved or ip.is_multicast:
             raise ValueError("Remote download URL resolves to a restricted network")
 
 
-async def download_file_with_retry(url: str, dest_path: str, timeout: int = 300, max_retries: int = 3):
+async def download_file_with_retry(
+    url: str, dest_path: str, timeout: int = 300, max_retries: int = 3
+):
     await validate_remote_url(url)
     for attempt in range(max_retries):
         try:

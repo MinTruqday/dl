@@ -19,9 +19,7 @@ from src.clients.content import collector_document_stats
 from src.sources.nxbgd import NxbgdSource
 
 
-SOURCE_QUEUES = {
-    "NXBGD": "nxbgd_queue",
-}
+SOURCE_QUEUES = {"NXBGD": "nxbgd_queue"}
 
 
 async def trigger_collection(req: Collection, retry_of: str | None = None):
@@ -40,7 +38,11 @@ async def trigger_collection(req: Collection, retry_of: str | None = None):
     job = {
         "_id": job_id,
         "source": req.source,
-        "parameters": {"pages": req.pages, "max_documents": req.max_documents, "force_recrawl": req.force_recrawl},
+        "parameters": {
+            "pages": req.pages,
+            "max_documents": req.max_documents,
+            "force_recrawl": req.force_recrawl,
+        },
         "retry_of": retry_of,
         "status": "pending",
         "progress": 0,
@@ -151,14 +153,26 @@ async def retry_collection_job(job_id: str):
         raise
     await collection.update_one(
         {"_id": job_id, "status": "retrying"},
-        {"$set": {"status": "retried", "retry_job_id": result["job_id"], "updated_at": datetime.now(timezone.utc)}},
+        {
+            "$set": {
+                "status": "retried",
+                "retry_job_id": result["job_id"],
+                "updated_at": datetime.now(timezone.utc),
+            }
+        },
     )
     return result
 
 
 async def get_collection_jobs(status: str | None = None):
     query = {"status": status} if status else {}
-    return await database.mongodb[settings.COLLECTION_DB_NAME].collection_jobs.find(query).sort("created_at", -1).limit(500).to_list(500)
+    return (
+        await database.mongodb[settings.COLLECTION_DB_NAME]
+        .collection_jobs.find(query)
+        .sort("created_at", -1)
+        .limit(500)
+        .to_list(500)
+    )
 
 
 async def get_active_jobs():

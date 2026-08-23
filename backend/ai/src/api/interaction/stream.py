@@ -39,21 +39,14 @@ def _sanitize_stream_piece(piece: str) -> str:
 
 
 @router.get("/kha-nang")
-async def chat_capabilities(
-    current_user: CurrentUser = Depends(get_current_user),
-):
+async def chat_capabilities(current_user: CurrentUser = Depends(get_current_user)):
     """Return model and interaction capabilities for the authenticated user."""
-    return {
-        "model": settings.LLM_MODEL,
-        "audio_input": True,
-        "code_execution": True,
-    }
+    return {"model": settings.LLM_MODEL, "audio_input": True, "code_execution": True}
+
 
 @router.post("/phat-truc-tiep")
 async def chat_stream_endpoint(
-    req: ChatRequest,
-    request: Request,
-    current_user: CurrentUser = Depends(get_current_user),
+    req: ChatRequest, request: Request, current_user: CurrentUser = Depends(get_current_user)
 ):
     """Stream one authenticated assistant interaction as server-sent events."""
     session_id = req.session_id or ""
@@ -75,17 +68,10 @@ async def chat_stream_endpoint(
             yield "event: done\ndata: [DONE]\n\n"
             return
 
-        scan = await security.ascan_input(
-            req.query,
-            session_id=session_id,
-            user_id=user_id,
-        )
+        scan = await security.ascan_input(req.query, session_id=session_id, user_id=user_id)
         if not scan.passed:
             agentops.record_security_event(
-                session_id,
-                "prompt_injection_blocked",
-                scan.risk_score,
-                scan.violations,
+                session_id, "prompt_injection_blocked", scan.risk_score, scan.violations
             )
             yield f"event: error\ndata: {json.dumps({'code': 'input_security_blocked'})}\n\n"
             yield "event: done\ndata: [DONE]\n\n"
@@ -93,23 +79,14 @@ async def chat_stream_endpoint(
 
         if scan.violations:
             agentops.record_security_event(
-                session_id,
-                "pii_redacted",
-                scan.risk_score,
-                scan.violations,
+                session_id, "pii_redacted", scan.risk_score, scan.violations
             )
 
         original_query = scan.sanitized_text
         req.query = original_query
         agentops.record_session_start(session_id, user_id, original_query)
         await workspace.start(session_id, user_id, req.mode, original_query, req.approval_policy)
-        await _persist_conversation_turns(
-            session_id,
-            user_id,
-            original_query,
-            "",
-            req.attachments,
-        )
+        await _persist_conversation_turns(session_id, user_id, original_query, "", req.attachments)
         mode_directive = await workspace.mode_context(session_id, user_id, req.mode)
 
         try:
@@ -206,18 +183,15 @@ async def chat_stream_endpoint(
                     if req.audio_data:
                         if isinstance(content, str):
                             content = [{"type": "text", "text": content}]
-                        content.append(
-                            {"type": "audio_url", "audio_url": {"url": req.audio_data}}
-                        )
+                        content.append({"type": "audio_url", "audio_url": {"url": req.audio_data}})
 
                     try:
                         active_model = settings.LLM_MODEL
-                        yield "event: model\ndata: " + json.dumps(
-                            {
-                                "model": active_model,
-                                "audio_input": True,
-                            }
-                        ) + "\n\n"
+                        yield (
+                            "event: model\ndata: "
+                            + json.dumps({"model": active_model, "audio_input": True})
+                            + "\n\n"
+                        )
                         raw_answer = ""
                         async for chunk in chat_llm.astream(
                             [HumanMessage(content=content)], max_tokens=128

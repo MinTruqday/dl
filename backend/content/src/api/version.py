@@ -9,11 +9,8 @@ from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/phien-ban")
 
-@router.post(
-    "/luu/{document_id}",
-    response_model=APIResponse[Any],
-    status_code=201,
-)
+
+@router.post("/luu/{document_id}", response_model=APIResponse[Any], status_code=201)
 async def save_version(
     document_id: str,
     version_note: str,
@@ -21,29 +18,25 @@ async def save_version(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await VersionService.save_version(
-            document_id, version_note, current_user
-        ),
+        data=await VersionService.save_version(document_id, version_note, current_user),
         message="Lưu phiên bản lịch sử tài liệu hoàn tất",
         status=201,
     )
 
+
 @router.get("/tai-lieu/{document_id}", response_model=APIResponse[Any])
 async def get_document_versions(
-    document_id: str,
-    current_user: CurrentUser = Depends(get_current_user),
-    db=Depends(get_db),
+    document_id: str, current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
         data=await VersionService.get_versions(document_id, current_user),
         message="Trích xuất lịch sử phiên bản hoàn tất",
     )
 
+
 @router.post("/{version_id}/khoi-phuc", response_model=APIResponse[Any])
 async def restore_version(
-    version_id: str,
-    current_user: CurrentUser = Depends(get_current_user),
-    db=Depends(get_db),
+    version_id: str, current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
         data=await VersionService.restore_version(version_id, current_user),

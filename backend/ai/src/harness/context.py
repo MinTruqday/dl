@@ -10,6 +10,7 @@ CHARS_PER_TOKEN_APPROX = 4
 DEFAULT_MAX_CONTEXT_TOKENS = settings.AGENT_MAX_CONTEXT_TOKENS
 HISTORY_MAX_TURNS = settings.AGENT_HISTORY_MAX_TURNS
 
+
 @dataclass
 class AgentContext:
     session_id: str
@@ -20,8 +21,10 @@ class AgentContext:
     active_document_ids: list = field(default_factory=list)
     estimated_tokens: int = 0
 
+
 def _estimate_tokens(text: str) -> int:
     return max(0, len(text) // CHARS_PER_TOKEN_APPROX)
+
 
 def _truncate_history(history: list, budget_tokens: int) -> list:
     if not history:
@@ -36,6 +39,7 @@ def _truncate_history(history: list, budget_tokens: int) -> list:
         total += turn_tokens
     return trimmed
 
+
 class ContextHarness:
     """
     <module_purpose>
@@ -43,6 +47,7 @@ class ContextHarness:
     <metis_behavior>Strictly isolates context boundaries between different user sessions.</metis_behavior>
     </module_purpose>
     """
+
     async def _load_short_term_history(self, session_id: str) -> list:
         from src.memory.short_term import short_term_memory
 
@@ -60,11 +65,7 @@ class ContextHarness:
                 db.user_instructions.find_one({"_id": user_id}),
                 memory_manager.get_memories(user_id),
             )
-            instructions = (
-                str(instruction_doc.get("instructions", ""))
-                if instruction_doc
-                else ""
-            )
+            instructions = str(instruction_doc.get("instructions", "")) if instruction_doc else ""
             memory_text = memories or ""
             sections = []
             if instructions.strip():
@@ -75,9 +76,7 @@ class ContextHarness:
                 )
             if memory_text.strip():
                 sections.append(
-                    "<relevant_user_memory>\n"
-                    f"{memory_text.strip()}\n"
-                    "</relevant_user_memory>"
+                    f"<relevant_user_memory>\n{memory_text.strip()}\n</relevant_user_memory>"
                 )
             return "\n\n".join(sections)
         except Exception:
@@ -96,13 +95,10 @@ class ContextHarness:
         remaining_budget = max(0, max_tokens - query_tokens - 500)
 
         history, preferences = await asyncio.gather(
-            self._load_short_term_history(session_id),
-            self._load_user_preferences(user_id),
+            self._load_short_term_history(session_id), self._load_user_preferences(user_id)
         )
 
-        preferences = preferences[
-            : remaining_budget * CHARS_PER_TOKEN_APPROX
-        ]
+        preferences = preferences[: remaining_budget * CHARS_PER_TOKEN_APPROX]
         pref_tokens = _estimate_tokens(preferences)
         history_budget = max(0, remaining_budget - pref_tokens)
         truncated_history = _truncate_history(history, history_budget)
@@ -126,14 +122,10 @@ class ContextHarness:
         logger.info("Context data compiled")
         return ctx
 
-    async def save_turn(
-        self, session_id: str, role: str, content: str
-    ):
+    async def save_turn(self, session_id: str, role: str, content: str):
         from src.memory.short_term import short_term_memory
 
-        await short_term_memory.save_short_term(
-            session_id, {"role": role, "content": content}
-        )
+        await short_term_memory.save_short_term(session_id, {"role": role, "content": content})
 
     async def clear_session(self, session_id: str):
         from src.memory.short_term import short_term_memory
@@ -150,5 +142,6 @@ class ContextHarness:
         if hasattr(req, "conversation_history"):
             req.conversation_history = ctx.chat_history
         return req
+
 
 context = ContextHarness()

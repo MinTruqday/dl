@@ -7,6 +7,7 @@ from src.services.star import StarService
 
 router = APIRouter(prefix="/luu-tru")
 
+
 @router.post("/danh-dau-sao/{item_id}", response_model=APIResponse[Any])
 async def toggle_star_item(
     item_id: str,
@@ -14,6 +15,7 @@ async def toggle_star_item(
 ):
     result = await StarService.toggle_star_item(item_id, current_user.id)
     return APIResponse(data=result, message="Cập nhật trạng thái gắn sao hoàn tất")
+
 
 @router.get("/danh-dau-sao/danh-sach", response_model=APIResponse[Any])
 async def get_starred_items(

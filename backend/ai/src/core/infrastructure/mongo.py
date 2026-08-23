@@ -3,12 +3,15 @@ from src.core.infrastructure.database import database
 
 try:
     from motor.motor_asyncio import AsyncIOMotorCursor, AsyncIOMotorCommandCursor
+
     def _cursor_await(self):
         return self.to_list(length=None).__await__()
+
     AsyncIOMotorCursor.__await__ = _cursor_await
     AsyncIOMotorCommandCursor.__await__ = _cursor_await
 except ImportError:
     pass
+
 
 class MongoClient:
     def __init__(self):
@@ -22,7 +25,15 @@ class MongoClient:
     async def find_one(self, collection: str, query: dict, projection: dict = None, **kwargs):
         return await self.get_db()[collection].find_one(query, projection, **kwargs)
 
-    def find(self, collection: str, query: dict, projection: dict = None, sort=None, skip: int = 0, limit: int = 0):
+    def find(
+        self,
+        collection: str,
+        query: dict,
+        projection: dict = None,
+        sort=None,
+        skip: int = 0,
+        limit: int = 0,
+    ):
         cursor = self.get_db()[collection].find(query, projection)
         if sort:
             cursor = cursor.sort(sort)
@@ -60,6 +71,7 @@ class MongoClient:
     def query(self, collection: str):
         return QueryBuilder(self, collection)
 
+
 class QueryBuilder:
     def __init__(self, client, collection: str):
         self.client = client
@@ -89,10 +101,13 @@ class QueryBuilder:
         return self
 
     async def execute(self):
-        cursor = self.client.find(self.collection, self._query, sort=self._sort, skip=self._skip, limit=self._limit)
+        cursor = self.client.find(
+            self.collection, self._query, sort=self._sort, skip=self._skip, limit=self._limit
+        )
         return await cursor.to_list(length=None)
 
     def __await__(self):
         return self.execute().__await__()
+
 
 mongo = MongoClient()

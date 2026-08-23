@@ -6,6 +6,7 @@ from src.services.document import DocumentService
 
 router = APIRouter()
 
+
 @router.post("/thao-tac-hang-loat/xoa", response_model=APIResponse[Any])
 async def bulk_delete_documents(req: dict, current_user=Depends(get_current_user)):
     document_ids = req.get("document_ids", [])
@@ -13,6 +14,7 @@ async def bulk_delete_documents(req: dict, current_user=Depends(get_current_user
         data=await DocumentService.bulk_delete_documents(document_ids, current_user),
         message="Xóa hàng loạt tài liệu hoàn tất",
     )
+
 
 @router.post("/thao-tac-hang-loat/khoi-phuc", response_model=APIResponse[Any])
 async def bulk_restore_documents(req: dict, current_user=Depends(get_current_user)):
@@ -22,6 +24,7 @@ async def bulk_restore_documents(req: dict, current_user=Depends(get_current_use
         message="Khôi phục hàng loạt tài liệu hoàn tất",
     )
 
+
 @router.post("/thao-tac-hang-loat/di-chuyen", response_model=APIResponse[Any])
 async def bulk_move_documents(req: dict, current_user=Depends(get_current_user)):
     document_ids = req.get("document_ids", [])
@@ -30,6 +33,7 @@ async def bulk_move_documents(req: dict, current_user=Depends(get_current_user))
         data=await DocumentService.bulk_move_documents(document_ids, folder_id, current_user),
         message="Di chuyển hàng loạt tài liệu hoàn tất",
     )
+
 
 @router.post("/thao-tac-hang-loat/xuat")
 async def bulk_export_documents(req: dict, current_user=Depends(get_current_user)):

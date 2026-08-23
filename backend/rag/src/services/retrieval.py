@@ -26,10 +26,7 @@ class RetrievalService:
         try:
             from sentence_transformers import CrossEncoder
 
-            self._reranker = await asyncio.to_thread(
-                CrossEncoder,
-                settings.RERANKER_MODEL,
-            )
+            self._reranker = await asyncio.to_thread(CrossEncoder, settings.RERANKER_MODEL)
         except Exception:
             logger.exception("AI ranking model loading error")
             self._reranker = False
@@ -45,14 +42,20 @@ class RetrievalService:
             chunk_id = meta.get("chunk_id", "")
             if doc_id and doc_id not in seen:
                 seen.add(doc_id)
-                label = f"{title} (ID: {doc_id}, chunk {chunk_idx})" if title else f"ID: {doc_id}, chunk {chunk_idx}"
-                citations.append({
-                    "chunk_id": chunk_id,
-                    "document_id": doc_id,
-                    "title": title,
-                    "chunk_index": chunk_idx,
-                    "label": label,
-                })
+                label = (
+                    f"{title} (ID: {doc_id}, chunk {chunk_idx})"
+                    if title
+                    else f"ID: {doc_id}, chunk {chunk_idx}"
+                )
+                citations.append(
+                    {
+                        "chunk_id": chunk_id,
+                        "document_id": doc_id,
+                        "title": title,
+                        "chunk_index": chunk_idx,
+                        "label": label,
+                    }
+                )
         return citations
 
     @staticmethod
@@ -73,7 +76,12 @@ class RetrievalService:
                 }
             )
         return [
-            {"conflict_key": key, "claims": [{"value": value, "sources": sources} for value, sources in claims.items()]}
+            {
+                "conflict_key": key,
+                "claims": [
+                    {"value": value, "sources": sources} for value, sources in claims.items()
+                ],
+            }
             for key, claims in grouped.items()
             if len(claims) > 1
         ]
@@ -92,25 +100,14 @@ class RetrievalService:
         )
 
     def _rrf_fuse(
-        self,
-        dense_documents: List[Dict],
-        sparse_documents: List[Dict],
-        rank_constant: int = 60,
+        self, dense_documents: List[Dict], sparse_documents: List[Dict], rank_constant: int = 60
     ) -> List[Dict]:
         fused: Dict[str, Dict] = {}
-        for source, documents in (
-            ("dense", dense_documents),
-            ("bm25", sparse_documents),
-        ):
+        for source, documents in (("dense", dense_documents), ("bm25", sparse_documents)):
             for rank, document in enumerate(documents, start=1):
                 key = self._result_key(document)
                 entry = fused.setdefault(
-                    key,
-                    {
-                        **document,
-                        "rrf_score": 0.0,
-                        "retrieval_sources": [],
-                    },
+                    key, {**document, "rrf_score": 0.0, "retrieval_sources": []}
                 )
                 entry["rrf_score"] += 1.0 / (rank_constant + rank)
                 if source not in entry["retrieval_sources"]:
@@ -121,9 +118,7 @@ class RetrievalService:
                     entry["bm25_score"] = float(
                         document.get("bm25_score", document.get("score", 0.0))
                     )
-        results = sorted(
-            fused.values(), key=lambda item: item["rrf_score"], reverse=True
-        )
+        results = sorted(fused.values(), key=lambda item: item["rrf_score"], reverse=True)
         for result in results:
             result["score"] = result["rrf_score"]
         return results
@@ -207,10 +202,7 @@ class RetrievalService:
             expansion = await ai_client.expand_retrieval_query(question)
         except Exception:
             logger.exception("Retrieval query expansion failed")
-            expansion = {
-                "hypothetical_document": question,
-                "queries": [],
-            }
+            expansion = {"hypothetical_document": question, "queries": []}
 
         queries = list(dict.fromkeys([*expansion.get("queries", []), question]))
         result_groups = await asyncio.gather(
@@ -270,20 +262,12 @@ class RetrievalService:
     ) -> List[Dict]:
         if not document_ids or len(document_ids) < 2:
             return await self.multi_query_retrieve(
-                question,
-                document_ids,
-                k,
-                requester_id,
-                is_admin,
-                metadata_filters,
+                question, document_ids, k, requester_id, is_admin, metadata_filters
             )
 
         sub_queries = [question] * len(document_ids)
         try:
-            decomposed = await ai_client.decompose_cross_document_query(
-                question,
-                document_ids,
-            )
+            decomposed = await ai_client.decompose_cross_document_query(question, document_ids)
             if len(decomposed) == len(document_ids):
                 sub_queries = decomposed
         except Exception:
@@ -332,5 +316,6 @@ class RetrievalService:
                 result[right] = doc
                 right -= 1
         return [d for d in result if d is not None]
+
 
 retriever = RetrievalService()

@@ -30,35 +30,20 @@ class ConversionService:
     def _get_docling(self):
         if self._docling is None:
             from docling.datamodel.base_models import InputFormat
-            from docling.datamodel.pipeline_options import (
-                PdfPipelineOptions,
-                RapidOcrOptions,
-            )
+            from docling.datamodel.pipeline_options import PdfPipelineOptions, RapidOcrOptions
             from docling.document_converter import DocumentConverter, PdfFormatOption
 
             pdf_options = PdfPipelineOptions()
             pdf_options.do_ocr = True
             pdf_options.do_table_structure = True
-            hf_home = Path(
-                os.environ.get(
-                    "HF_HOME",
-                    str(Path.home() / ".cache" / "huggingface"),
-                )
-            )
+            hf_home = Path(os.environ.get("HF_HOME", str(Path.home() / ".cache" / "huggingface")))
             rapidocr_cache = hf_home / "rapidocr"
             rapidocr_cache.mkdir(parents=True, exist_ok=True)
             pdf_options.ocr_options = RapidOcrOptions(
-                backend="onnxruntime",
-                rapidocr_params={
-                    "Global.model_root_dir": rapidocr_cache,
-                }
+                backend="onnxruntime", rapidocr_params={"Global.model_root_dir": rapidocr_cache}
             )
             self._docling = DocumentConverter(
-                format_options={
-                    InputFormat.PDF: PdfFormatOption(
-                        pipeline_options=pdf_options,
-                    )
-                }
+                format_options={InputFormat.PDF: PdfFormatOption(pipeline_options=pdf_options)}
             )
             logger.info("Docling document converter loaded")
         return self._docling
@@ -77,14 +62,7 @@ class ConversionService:
                 continue
             provenance = getattr(item, "prov", None) or []
             page_no = getattr(provenance[0], "page_no", None) if provenance else None
-            structure.append(
-                {
-                    "text": text,
-                    "type": label,
-                    "level": int(level),
-                    "page_no": page_no,
-                }
-            )
+            structure.append({"text": text, "type": label, "level": int(level), "page_no": page_no})
         return structure
 
     def _parse_file(self, file_path: Path) -> Dict:
@@ -101,21 +79,10 @@ class ConversionService:
             )
             structure = []
 
-        return {
-            "markdown": markdown,
-            "structure": structure,
-            "page_count": page_count,
-        }
+        return {"markdown": markdown, "structure": structure, "page_count": page_count}
 
-    async def parse_document(
-        self,
-        file_url: str,
-        visibility: str = "public",
-    ) -> Dict:
-        file_bytes, file_ext = await self._download_from_minio(
-            file_url,
-            visibility=visibility,
-        )
+    async def parse_document(self, file_url: str, visibility: str = "public") -> Dict:
+        file_bytes, file_ext = await self._download_from_minio(file_url, visibility=visibility)
         if not file_bytes:
             return {"error": "File load failed"}
 
@@ -139,18 +106,12 @@ class ConversionService:
         finally:
             await asyncio.to_thread(temporary_path.unlink, missing_ok=True)
 
-    async def get_markdown(
-        self,
-        file_url: str,
-        visibility: str = "private",
-    ) -> str:
+    async def get_markdown(self, file_url: str, visibility: str = "private") -> str:
         parse_result = await self.parse_document(file_url, visibility=visibility)
         return parse_result.get("markdown", "")
 
     async def _download_from_minio(
-        self,
-        file_url: str,
-        visibility: str = "public",
+        self, file_url: str, visibility: str = "public"
     ) -> tuple[Optional[bytes], str]:
         try:
             from urllib.parse import urlparse
@@ -158,11 +119,7 @@ class ConversionService:
             if file_url.startswith("http"):
                 parsed = urlparse(file_url)
                 path_parts = parsed.path.lstrip("/").split("/", 1)
-                object_key = (
-                    path_parts[1]
-                    if len(path_parts) == 2
-                    else parsed.path.lstrip("/")
-                )
+                object_key = path_parts[1] if len(path_parts) == 2 else parsed.path.lstrip("/")
             else:
                 object_key = file_url
 
@@ -178,17 +135,9 @@ class ConversionService:
                 aws_secret_access_key=self._minio_secret,
                 region_name="us-east-1",
             )
-            obj = await asyncio.to_thread(
-                s3.get_object,
-                Bucket=bucket,
-                Key=object_key,
-            )
+            obj = await asyncio.to_thread(s3.get_object, Bucket=bucket, Key=object_key)
             data = await asyncio.to_thread(obj["Body"].read)
-            extension = (
-                f".{object_key.rsplit('.', 1)[-1].lower()}"
-                if "." in object_key
-                else ".pdf"
-            )
+            extension = f".{object_key.rsplit('.', 1)[-1].lower()}" if "." in object_key else ".pdf"
             logger.info("Retrieved file content from storage")
             return data, extension
         except Exception:

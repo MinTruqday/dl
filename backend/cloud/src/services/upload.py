@@ -10,10 +10,35 @@ from src.core.storage import generate_presigned_url, upload_file
 
 class UploadService:
     allowed_extensions = {
-        "pdf", "docx", "doc", "xlsx", "xls", "pptx", "ppt", "txt", "zip",
-        "csv", "json", "md", "png", "jpg", "jpeg", "webp", "webm", "doclib",
-        "doclibx", "mp4", "mov", "m4v", "mp3", "wav", "ogg", "oga", "m4a",
-        "aac", "flac",
+        "pdf",
+        "docx",
+        "doc",
+        "xlsx",
+        "xls",
+        "pptx",
+        "ppt",
+        "txt",
+        "zip",
+        "csv",
+        "json",
+        "md",
+        "png",
+        "jpg",
+        "jpeg",
+        "webp",
+        "webm",
+        "doclib",
+        "doclibx",
+        "mp4",
+        "mov",
+        "m4v",
+        "mp3",
+        "wav",
+        "ogg",
+        "oga",
+        "m4a",
+        "aac",
+        "flac",
     }
     image_extensions = {"png", "jpg", "jpeg", "webp"}
     video_extensions = {"webm", "mp4", "mov", "m4v"}
@@ -47,7 +72,14 @@ class UploadService:
         return content
 
     @staticmethod
-    def object_path(ext: str, content_type: str, owner_id: str | None, is_system: bool, is_message_attachment: bool, is_temporary: bool = False) -> str:
+    def object_path(
+        ext: str,
+        content_type: str,
+        owner_id: str | None,
+        is_system: bool,
+        is_message_attachment: bool,
+        is_temporary: bool = False,
+    ) -> str:
         normalized_type = content_type.lower()
         if normalized_type.startswith("image/"):
             kind = "images"
@@ -79,14 +111,27 @@ class UploadService:
         except Exception:
             logger.exception("Image storage operation failed")
             raise HTTPException(status_code=500, detail="Không thể lưu trữ tệp hình ảnh")
-        return {"url": path, "filename": file.filename, "size": len(content), "content_type": content_type}
+        return {
+            "url": path,
+            "filename": file.filename,
+            "size": len(content),
+            "content_type": content_type,
+        }
 
     @staticmethod
-    async def upload_document(file, owner_id: str | None = None, is_system: bool = False, is_message_attachment: bool = False, is_temporary: bool = False):
+    async def upload_document(
+        file,
+        owner_id: str | None = None,
+        is_system: bool = False,
+        is_message_attachment: bool = False,
+        is_temporary: bool = False,
+    ):
         content_type = file.content_type or "application/octet-stream"
         ext = UploadService.validate_filename(file.filename, content_type)
         content = await UploadService.read_limited(file)
-        path = UploadService.object_path(ext, content_type, owner_id, is_system, is_message_attachment, is_temporary)
+        path = UploadService.object_path(
+            ext, content_type, owner_id, is_system, is_message_attachment, is_temporary
+        )
         try:
             await upload_file(content, path, content_type)
         except HTTPException:
@@ -94,7 +139,13 @@ class UploadService:
         except Exception:
             logger.exception("Document storage operation failed")
             raise HTTPException(status_code=500, detail="Không thể lưu trữ tài liệu")
-        return {"url": path, "filename": file.filename, "extension": ext, "size": len(content), "content_type": content_type}
+        return {
+            "url": path,
+            "filename": file.filename,
+            "extension": ext,
+            "size": len(content),
+            "content_type": content_type,
+        }
 
     @staticmethod
     async def get_presigned_url(file_path: str):
@@ -107,11 +158,20 @@ class UploadService:
             raise HTTPException(status_code=500, detail="Không thể khởi tạo liên kết tải xuống")
 
     @staticmethod
-    async def get_presigned_upload_url(filename: str, content_type: str, owner_id: str, is_system: bool = False, is_message_attachment: bool = False, is_temporary: bool = False):
+    async def get_presigned_upload_url(
+        filename: str,
+        content_type: str,
+        owner_id: str,
+        is_system: bool = False,
+        is_message_attachment: bool = False,
+        is_temporary: bool = False,
+    ):
         from src.core.storage import generate_presigned_put_url
 
         ext = UploadService.validate_filename(filename, content_type)
-        path = UploadService.object_path(ext, content_type, owner_id, is_system, is_message_attachment, is_temporary)
+        path = UploadService.object_path(
+            ext, content_type, owner_id, is_system, is_message_attachment, is_temporary
+        )
         try:
             url = await generate_presigned_put_url(path, content_type, 3600)
             return {"upload_url": url, "file_path": path}

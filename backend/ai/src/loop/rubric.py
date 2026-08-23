@@ -7,6 +7,7 @@ from src.schemas.evaluation import HallucinationJudgment, RelevanceJudgment
 
 from loguru import logger
 
+
 @dataclass
 class GraderResult:
     grader_name: str
@@ -14,6 +15,7 @@ class GraderResult:
     score: float = 1.0
     feedback: str = ""
     evaluated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
 
 @dataclass
 class RubricResult:
@@ -32,6 +34,7 @@ class RubricResult:
             return 0.0
         return sum(g.score for g in self.grader_results) / len(self.grader_results)
 
+
 class BaseGrader(ABC):
     @property
     @abstractmethod
@@ -41,6 +44,7 @@ class BaseGrader(ABC):
     @abstractmethod
     async def grade(self, response: str, context: dict) -> GraderResult:
         raise NotImplementedError
+
 
 class ResponseLengthGrader(BaseGrader):
     def __init__(self, min_length: int = 10, max_length: int = 50_000):
@@ -54,16 +58,28 @@ class ResponseLengthGrader(BaseGrader):
     async def grade(self, response: str, context: dict) -> GraderResult:
         text = response.strip()
         if not text:
-            return GraderResult(grader_name=self.name, passed=False, score=0.0,
-                feedback="Empty response content. Please provide meaningful information")
+            return GraderResult(
+                grader_name=self.name,
+                passed=False,
+                score=0.0,
+                feedback="Empty response content. Please provide meaningful information",
+            )
         if len(text) < self.min_length:
-            return GraderResult(grader_name=self.name, passed=False,
+            return GraderResult(
+                grader_name=self.name,
+                passed=False,
                 score=len(text) / self.min_length,
-                feedback=f"Response does not meet minimum length requirement ({len(text)}/{self.min_length} characters)")
+                feedback=f"Response does not meet minimum length requirement ({len(text)}/{self.min_length} characters)",
+            )
         if len(text) > self.max_length:
-            return GraderResult(grader_name=self.name, passed=False, score=0.5,
-                feedback=f"Response exceeds maximum length limit ({len(text)}/{self.max_length} characters)")
+            return GraderResult(
+                grader_name=self.name,
+                passed=False,
+                score=0.5,
+                feedback=f"Response exceeds maximum length limit ({len(text)}/{self.max_length} characters)",
+            )
         return GraderResult(grader_name=self.name, passed=True, score=1.0)
+
 
 class ErrorPrefixGrader(BaseGrader):
     @property
@@ -92,8 +108,7 @@ class ErrorPrefixGrader(BaseGrader):
         except (TypeError, json.JSONDecodeError):
             payload = None
         if (
-            isinstance(payload, dict)
-            and payload.get("status") in failed_statuses
+            isinstance(payload, dict) and payload.get("status") in failed_statuses
         ) or lowered.startswith(("error:", "execution error:", "failed:")):
             return GraderResult(
                 grader_name=self.name,
@@ -103,6 +118,7 @@ class ErrorPrefixGrader(BaseGrader):
             )
         return GraderResult(grader_name=self.name, passed=True, score=1.0)
 
+
 class ToolResultGrader(BaseGrader):
     @property
     def name(self) -> str:
@@ -111,9 +127,14 @@ class ToolResultGrader(BaseGrader):
     async def grade(self, response: str, context: dict) -> GraderResult:
         tool_error = context.get("tool_error")
         if tool_error:
-            return GraderResult(grader_name=self.name, passed=False, score=0.0,
-                feedback=f"Tool execution failed: {str(tool_error)[:200]}. Please adjust input parameters or switch tools.")
+            return GraderResult(
+                grader_name=self.name,
+                passed=False,
+                score=0.0,
+                feedback=f"Tool execution failed: {str(tool_error)[:200]}. Please adjust input parameters or switch tools.",
+            )
         return GraderResult(grader_name=self.name, passed=True, score=1.0)
+
 
 class KeywordPresenceGrader(BaseGrader):
     def __init__(self, required_keywords: List[str], case_sensitive: bool = False):
@@ -132,10 +153,14 @@ class KeywordPresenceGrader(BaseGrader):
             if needle not in text:
                 missing.append(kw)
         if missing:
-            return GraderResult(grader_name=self.name, passed=False,
+            return GraderResult(
+                grader_name=self.name,
+                passed=False,
                 score=1.0 - len(missing) / len(self.required_keywords),
-                feedback=f"Response is missing required keywords: {', '.join(missing)}")
+                feedback=f"Response is missing required keywords: {', '.join(missing)}",
+            )
         return GraderResult(grader_name=self.name, passed=True, score=1.0)
+
 
 class HallucinationGrader(BaseGrader):
     @property
@@ -149,14 +174,18 @@ class HallucinationGrader(BaseGrader):
             evaluator = llm.with_structured_output(HallucinationJudgment)
             query = context.get("query", "user query")
             from src.core.registry import registry, PromptType
+
             prompt = registry.get(PromptType.RUBRIC_HALLUCINATION_JUDGE).format(
                 query=query[:200], response=response[:500]
             )
             result: HallucinationJudgment = await evaluator.ainvoke(prompt)
             if result.is_hallucination_or_refusal and result.confidence > 0.7:
-                return GraderResult(grader_name=self.name, passed=False,
+                return GraderResult(
+                    grader_name=self.name,
+                    passed=False,
                     score=1.0 - result.confidence,
-                    feedback=f"System detected signs of data hallucination with confidence {result.confidence:.2f}: {result.explanation}")
+                    feedback=f"System detected signs of data hallucination with confidence {result.confidence:.2f}: {result.explanation}",
+                )
         except Exception:
             logger.exception("Hallucination grader unavailable")
             return GraderResult(
@@ -182,14 +211,18 @@ class RelevanceGrader(BaseGrader):
 
             evaluator = llm.with_structured_output(RelevanceJudgment)
             from src.core.registry import registry, PromptType
+
             prompt = registry.get(PromptType.RUBRIC_RELEVANCE_JUDGE).format(
                 query=query[:300], response=response[:500]
             )
             result: RelevanceJudgment = await evaluator.ainvoke(prompt)
             if not result.is_relevant or result.relevance_score < 0.5:
-                return GraderResult(grader_name=self.name, passed=False,
+                return GraderResult(
+                    grader_name=self.name,
+                    passed=False,
                     score=result.relevance_score,
-                    feedback=f"Response relevance is insufficient with score {result.relevance_score:.2f}: {result.feedback}")
+                    feedback=f"Response relevance is insufficient with score {result.relevance_score:.2f}: {result.feedback}",
+                )
             return GraderResult(grader_name=self.name, passed=True, score=result.relevance_score)
         except Exception:
             logger.exception("Relevance grader unavailable")
@@ -226,8 +259,12 @@ class Rubric:
         failed = [r for r in resolved if not r.passed]
         passed = len(failed) == 0
         combined_feedback = "\n".join([f"[{r.grader_name}] {r.feedback}" for r in failed])
-        return RubricResult(passed=passed, grader_results=resolved,
-            combined_feedback=combined_feedback, attempt=attempt)
+        return RubricResult(
+            passed=passed,
+            grader_results=resolved,
+            combined_feedback=combined_feedback,
+            attempt=attempt,
+        )
 
 
 def create_standard_rubric(use_llm_judge: bool = False) -> Rubric:
@@ -238,13 +275,18 @@ def create_standard_rubric(use_llm_judge: bool = False) -> Rubric:
 
 
 def create_document_rubric(use_llm_judge: bool = False) -> Rubric:
-    graders: List[BaseGrader] = [ResponseLengthGrader(min_length=20), ErrorPrefixGrader(), ToolResultGrader()]
+    graders: List[BaseGrader] = [
+        ResponseLengthGrader(min_length=20),
+        ErrorPrefixGrader(),
+        ToolResultGrader(),
+    ]
     if use_llm_judge:
         graders.extend([HallucinationGrader(), RelevanceGrader()])
     return Rubric(graders=graders, name="document")
 
 
 AgentCallable = Callable[[str, dict], Coroutine[Any, Any, str]]
+
 
 class RubricMiddleware:
     """
@@ -253,6 +295,7 @@ class RubricMiddleware:
     <metis_behavior>Rejects outputs strictly based on configured policies without leniency.</metis_behavior>
     </module_purpose>
     """
+
     def __init__(self, rubric: Rubric, max_retries: int = 3, retry_delay_seconds: float = 0.5):
         self.rubric = rubric
         self.max_retries = max_retries
@@ -278,7 +321,9 @@ class RubricMiddleware:
         last_rubric_result = None
 
         for attempt in range(1, self.max_retries + 1):
-            logger.info(f"RubricMiddleware attempt {attempt}/{self.max_retries} (rubric={self.rubric.name})")
+            logger.info(
+                f"RubricMiddleware attempt {attempt}/{self.max_retries} (rubric={self.rubric.name})"
+            )
             try:
                 last_response = await agent_callable(*current_args, **current_kwargs)
             except Exception as e:
@@ -286,20 +331,26 @@ class RubricMiddleware:
                 last_response = f"Execution error: {e}"
 
             rubric_result = await self.rubric.evaluate(
-                response=last_response, context=context, attempt=attempt)
+                response=last_response, context=context, attempt=attempt
+            )
             last_rubric_result = rubric_result
             self._history.append(rubric_result)
 
             if rubric_result.passed:
-                logger.info(f"RubricMiddleware PASSED on attempt {attempt} (score={rubric_result.average_score:.2f})")
+                logger.info(
+                    f"RubricMiddleware PASSED on attempt {attempt} (score={rubric_result.average_score:.2f})"
+                )
                 return last_response, rubric_result
 
             logger.warning(
                 f"RubricMiddleware: FAILED on attempt {attempt}. "
-                f"Failed: {[g.grader_name for g in rubric_result.failed_graders]}. Retrying")
+                f"Failed: {[g.grader_name for g in rubric_result.failed_graders]}. Retrying"
+            )
             if attempt < self.max_retries:
                 if feedback_injector:
-                    new_args, new_kwargs = feedback_injector(last_response, rubric_result.combined_feedback)
+                    new_args, new_kwargs = feedback_injector(
+                        last_response, rubric_result.combined_feedback
+                    )
                     current_args = new_args
                     current_kwargs = new_kwargs
                 await asyncio.sleep(self.retry_delay_seconds)
@@ -313,8 +364,11 @@ class RubricMiddleware:
     def clear_history(self):
         self._history.clear()
 
+
 standard_rubric_middleware = RubricMiddleware(
-    rubric=create_standard_rubric(use_llm_judge=False), max_retries=3)
+    rubric=create_standard_rubric(use_llm_judge=False), max_retries=3
+)
 
 document_rubric_middleware = RubricMiddleware(
-    rubric=create_document_rubric(use_llm_judge=False), max_retries=2)
+    rubric=create_document_rubric(use_llm_judge=False), max_retries=2
+)

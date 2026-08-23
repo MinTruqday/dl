@@ -50,4 +50,6 @@ async def ready():
         await database.client.admin.command("ping")
         return {"status": "ready", "service": "assessment"}
     except Exception:
-        return JSONResponse(status_code=503, content={"status": "not_ready", "service": "assessment"})
+        return JSONResponse(
+            status_code=503, content={"status": "not_ready", "service": "assessment"}
+        )

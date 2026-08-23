@@ -9,17 +9,16 @@ from src.schemas.embedding import (
 )
 from src.services.embedding import embedder
 
-router = APIRouter(
-    dependencies=[Depends(verify_internal_token)],
-)
+router = APIRouter(dependencies=[Depends(verify_internal_token)])
+
 
 @router.post("/query", response_model=APIResponse[EmbeddingResponse])
 async def embed_single_query(req: EmbedQueryRequest):
     emb = await embedder.embed_query(req.text)
     return APIResponse(
-        data=EmbeddingResponse(embedding=emb),
-        message="Trích xuất vector embedding thành công",
+        data=EmbeddingResponse(embedding=emb), message="Trích xuất vector embedding thành công"
     )
+
 
 @router.post("/batch", response_model=APIResponse[BatchEmbeddingResponse])
 async def embed_batch_texts(req: EmbedBatchRequest):

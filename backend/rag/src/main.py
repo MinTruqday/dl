@@ -19,6 +19,7 @@ from src.store.bm25 import bm25_store
 from src.services.embedding import embedder
 from src.services.retrieval import retriever
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
@@ -35,6 +36,7 @@ async def lifespan(app: FastAPI):
     finally:
         await redis_client.close_redis()
         await close_db()
+
 
 app = FastAPI(title="DocLib RAG", version=settings.VERSION, lifespan=lifespan)
 app.add_middleware(PrometheusMiddleware, service_name="rag")
@@ -56,9 +58,11 @@ app.include_router(embedding_router, prefix="/rag/embedding")
 app.include_router(ingestion_router, prefix="/rag")
 app.include_router(cache_router, prefix="/rag/cache")
 
+
 @app.get("/health", include_in_schema=False)
 async def health_check():
     return {"status": "healthy", "service": "rag"}
+
 
 @app.get("/ready", include_in_schema=False)
 async def readiness_check():
@@ -72,7 +76,9 @@ async def readiness_check():
     except Exception:
         checks["mongodb"] = "unavailable"
     try:
-        checks["redis"] = "ready" if redis_client.client and await redis_client.client.ping() else "unavailable"
+        checks["redis"] = (
+            "ready" if redis_client.client and await redis_client.client.ping() else "unavailable"
+        )
     except Exception:
         checks["redis"] = "unavailable"
     try:

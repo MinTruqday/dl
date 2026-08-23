@@ -60,7 +60,11 @@
     min-height: 100dvh;
     background: hsl(var(--canvas));
     color: hsl(var(--ink));
-    font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family:
+      var(--font-sans),
+      -apple-system,
+      BlinkMacSystemFont,
+      sans-serif;
     font-size: 15px;
     line-height: 1.55;
   }

@@ -4,6 +4,7 @@ from fastapi import Request
 from fastapi.responses import PlainTextResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
+
 class MetricsCollector:
     def __init__(self):
         self._request_count = defaultdict(int)
@@ -23,25 +24,39 @@ class MetricsCollector:
         if source_type not in {None, "curriculum"}:
             return
         self._curriculum_retrievals += 1
-        if any(document.get("metadata", {}).get("source_type") == "curriculum" for document in docs):
+        if any(
+            document.get("metadata", {}).get("source_type") == "curriculum" for document in docs
+        ):
             self._curriculum_hits += 1
 
     def render(self, service_name: str) -> str:
         lines = []
         for key, count in self._request_count.items():
             method, path = key.split("_", 1)
-            lines.append(f'http_requests_total{{service="{service_name}",method="{method}",path="{path}"}} {count}')
+            lines.append(
+                f'http_requests_total{{service="{service_name}",method="{method}",path="{path}"}} {count}'
+            )
         for key, duration in self._request_duration.items():
             method, path = key.split("_", 1)
-            lines.append(f'http_request_duration_seconds_total{{service="{service_name}",method="{method}",path="{path}"}} {duration:.4f}')
+            lines.append(
+                f'http_request_duration_seconds_total{{service="{service_name}",method="{method}",path="{path}"}} {duration:.4f}'
+            )
         for key, count in self._error_count.items():
             method, path = key.split("_", 1)
-            lines.append(f'http_errors_total{{service="{service_name}",method="{method}",path="{path}"}} {count}')
-        hit_rate = self._curriculum_hits / self._curriculum_retrievals if self._curriculum_retrievals else 0
+            lines.append(
+                f'http_errors_total{{service="{service_name}",method="{method}",path="{path}"}} {count}'
+            )
+        hit_rate = (
+            self._curriculum_hits / self._curriculum_retrievals
+            if self._curriculum_retrievals
+            else 0
+        )
         lines.append(f"rag_curriculum_retrieval_hit_rate {hit_rate}")
         return "\n".join(lines) + "\n"
 
+
 metrics_collector = MetricsCollector()
+
 
 class PrometheusMiddleware(BaseHTTPMiddleware):
     def __init__(self, app, service_name: str):
@@ -66,10 +81,11 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
         metrics_collector.record(request.method, path, response.status_code, duration)
         return response
 
+
 def metrics_endpoint(service_name: str):
     async def handler(request: Request):
         return PlainTextResponse(
-            content=metrics_collector.render(service_name),
-            media_type="text/plain; version=0.0.4",
+            content=metrics_collector.render(service_name), media_type="text/plain; version=0.0.4"
         )
+
     return handler

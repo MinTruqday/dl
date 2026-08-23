@@ -5,6 +5,7 @@ from src.schemas.document import DocumentStatus
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+
 def serialize_document(document):
     if not document:
         return None
@@ -19,19 +20,19 @@ def serialize_document(document):
     document.pop("access_password_hash", None)
     return document
 
+
 def is_admin(current_user) -> bool:
     role = getattr(current_user, "role", "") if current_user else ""
     from src.core.dependency import Role
+
     return str(getattr(role, "value", role)).lower() == Role.ADMIN.value
+
 
 async def can_read_full(document: dict, current_user) -> bool:
     if not document:
         return False
     user_id = str(current_user.id) if current_user else None
-    if (
-        user_id == document.get("creator_id")
-        or is_admin(current_user)
-    ):
+    if user_id == document.get("creator_id") or is_admin(current_user):
         return True
     if document.get("status") != DocumentStatus.PUBLISHED or document.get("is_deleted") is True:
         return False

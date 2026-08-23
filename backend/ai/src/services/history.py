@@ -5,6 +5,7 @@ import uuid
 from fastapi import HTTPException
 from src.repositories.chat import ChatRepository
 
+
 class HistoryService:
     """
     <module_purpose>
@@ -12,15 +13,14 @@ class HistoryService:
     <metis_behavior>Enforces absolute data integrity. Logs logic execution transparently via decorators.</metis_behavior>
     </module_purpose>
     """
+
     @staticmethod
     async def create_session(data: dict) -> Dict[str, Any]:
         user_id = data.get("user_id")
         document_id = data.get("document_id")
         first_query = data.get("first_query", "")
         if not user_id:
-            raise HTTPException(
-                status_code=400, detail={"code": "user_id_required"}
-            )
+            raise HTTPException(status_code=400, detail={"code": "user_id_required"})
 
         title = first_query[:40]
         session = {
@@ -41,17 +41,13 @@ class HistoryService:
 
     @staticmethod
     async def get_user_sessions(
-        user_id: str,
-        document_id: Optional[str] = None,
-        skip: int = 0,
-        limit: int = 100,
+        user_id: str, document_id: Optional[str] = None, skip: int = 0, limit: int = 100
     ) -> List[dict]:
         query = {"user_id": user_id}
         if document_id:
             query["document_id"] = document_id
         cursor = (
-            ChatRepository
-            .find_ai_sessions(query, {"messages": 0})
+            ChatRepository.find_ai_sessions(query, {"messages": 0})
             .sort([("is_pinned", -1), ("updated_at", -1)])
             .skip(skip)
             .limit(limit)
@@ -60,14 +56,11 @@ class HistoryService:
 
     @staticmethod
     async def get_session_detail(session_id: str, user_id: str) -> Dict[str, Any]:
-        session = await ChatRepository.find_ai_session(
-            {"_id": session_id, "user_id": user_id}
-        )
+        session = await ChatRepository.find_ai_session({"_id": session_id, "user_id": user_id})
         if not session:
             raise HTTPException(status_code=404, detail={"code": "chat_session_not_found"})
         messages = await (
-            ChatRepository
-            .find_ai_messages({"session_id": session_id})
+            ChatRepository.find_ai_messages({"session_id": session_id})
             .sort("created_at", 1)
             .limit(500)
             .to_list(length=500)
@@ -102,8 +95,7 @@ class HistoryService:
             raise HTTPException(status_code=400, detail={"code": "session_state_required"})
         values["updated_at"] = datetime.now(timezone.utc)
         result = await ChatRepository.update_ai_session(
-            {"_id": session_id, "user_id": user_id},
-            {"$set": values},
+            {"_id": session_id, "user_id": user_id}, {"$set": values}
         )
         if result.matched_count == 0:
             raise HTTPException(status_code=404, detail={"code": "chat_session_not_found"})
@@ -111,14 +103,9 @@ class HistoryService:
 
     @staticmethod
     async def generate_title(
-        session_id: str,
-        user_id: str,
-        user_content: str,
-        assistant_content: str,
+        session_id: str, user_id: str, user_content: str, assistant_content: str
     ) -> str:
-        session = await ChatRepository.find_ai_session(
-            {"_id": session_id, "user_id": user_id}
-        )
+        session = await ChatRepository.find_ai_session({"_id": session_id, "user_id": user_id})
         if not session or session.get("title_generated"):
             return str((session or {}).get("title", ""))
 
@@ -159,9 +146,7 @@ class HistoryService:
 
     @staticmethod
     async def delete_session(session_id: str, user_id: str) -> Dict[str, Any]:
-        result = await ChatRepository.delete_ai_session(
-            {"_id": session_id, "user_id": user_id}
-        )
+        result = await ChatRepository.delete_ai_session({"_id": session_id, "user_id": user_id})
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail={"code": "chat_session_not_found"})
         await ChatRepository.delete_many({"session_id": session_id})
@@ -190,34 +175,24 @@ class HistoryService:
             {"$set": {"updated_at": datetime.now(timezone.utc)}},
         )
         return {"status": "success"}
+
     @staticmethod
     async def search_by_keyword(user_id: str, keyword: str) -> List[Dict[str, Any]]:
         regex = {"$regex": keyword, "$options": "i"}
-        matching_msgs = await (
-            ChatRepository.find_ai_messages(
-                {"user_id": user_id, "content": regex},
-                {"session_id": 1}
-            ).to_list(length=None)
-        )
+        matching_msgs = await ChatRepository.find_ai_messages(
+            {"user_id": user_id, "content": regex}, {"session_id": 1}
+        ).to_list(length=None)
         session_ids = list(set([m["session_id"] for m in matching_msgs]))
-        
-        query = {
-            "user_id": user_id,
-            "$or": [
-                {"title": regex},
-                {"_id": {"$in": session_ids}}
-            ]
-        }
+
+        query = {"user_id": user_id, "$or": [{"title": regex}, {"_id": {"$in": session_ids}}]}
         cursor = ChatRepository.find_ai_sessions(query).sort("updated_at", -1).limit(10)
         return await cursor.to_list(length=None)
 
     @staticmethod
     async def get_recent_chats(user_id: str, days: int = 7) -> List[Dict[str, Any]]:
         from datetime import timedelta
+
         cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
-        query = {
-            "user_id": user_id,
-            "updated_at": {"$gte": cutoff_date}
-        }
+        query = {"user_id": user_id, "updated_at": {"$gte": cutoff_date}}
         cursor = ChatRepository.find_ai_sessions(query).sort("updated_at", -1).limit(20)
         return await cursor.to_list(length=None)

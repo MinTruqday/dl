@@ -43,15 +43,15 @@ class GoogleService:
         state_key = f"google_oauth_state:{state}"
         stored_state = await redis.get_client().getdel(state_key)
         if not stored_state:
-            raise HTTPException(status_code=400, detail="Phiên xác thực liên kết không hợp lệ hoặc đã hết hạn")
+            raise HTTPException(
+                status_code=400, detail="Phiên xác thực liên kết không hợp lệ hoặc đã hết hạn"
+            )
         if not all(
-            [
-                settings.GOOGLE_CLIENT_ID,
-                settings.GOOGLE_CLIENT_SECRET,
-                settings.GOOGLE_REDIRECT_URI,
-            ]
+            [settings.GOOGLE_CLIENT_ID, settings.GOOGLE_CLIENT_SECRET, settings.GOOGLE_REDIRECT_URI]
         ):
-            raise HTTPException(status_code=503, detail="Dịch vụ xác thực liên kết chưa được cấu hình")
+            raise HTTPException(
+                status_code=503, detail="Dịch vụ xác thực liên kết chưa được cấu hình"
+            )
 
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
@@ -68,7 +68,9 @@ class GoogleService:
                 token_resp.raise_for_status()
                 access_token = token_resp.json().get("access_token")
                 if not access_token:
-                    raise HTTPException(status_code=400, detail="Nhà cung cấp đã từ chối yêu cầu xác thực")
+                    raise HTTPException(
+                        status_code=400, detail="Nhà cung cấp đã từ chối yêu cầu xác thực"
+                    )
                 user_resp = await client.get(
                     settings.GOOGLE_USERINFO_URL,
                     headers={"Authorization": f"Bearer {access_token}"},
@@ -79,17 +81,24 @@ class GoogleService:
             raise
         except httpx.HTTPError:
             logger.exception("Federated identity provider request failed")
-            raise HTTPException(status_code=502, detail="Không thể xác minh tài khoản với nhà cung cấp")
+            raise HTTPException(
+                status_code=502, detail="Không thể xác minh tài khoản với nhà cung cấp"
+            )
 
         email = str(google_user.get("email", "")).strip().lower()
         if not email or google_user.get("email_verified") is not True:
-            raise HTTPException(status_code=400, detail="Địa chỉ thư điện tử liên kết chưa được xác minh")
+            raise HTTPException(
+                status_code=400, detail="Địa chỉ thư điện tử liên kết chưa được xác minh"
+            )
 
         user_doc = await IdentityRepository.get_auth_credential_by_email(email)
         if not user_doc:
             config = await IdentityRepository.get_system_config()
             if config and not config.get("registration_enabled", True):
-                raise HTTPException(status_code=403, detail="Tính năng đăng ký tài khoản mới tạm thời bị vô hiệu hóa")
+                raise HTTPException(
+                    status_code=403,
+                    detail="Tính năng đăng ký tài khoản mới tạm thời bị vô hiệu hóa",
+                )
             slug = f"{email.split('@')[0]}_{secrets.token_hex(4)}"
             created_at = datetime.now(timezone.utc)
             user_id = str(uuid.uuid4())
@@ -113,6 +122,8 @@ class GoogleService:
                 raise
             except Exception:
                 logger.exception("Federated user provisioning failed")
-                raise HTTPException(status_code=503, detail="Không thể thiết lập tài khoản liên kết")
+                raise HTTPException(
+                    status_code=503, detail="Không thể thiết lập tài khoản liên kết"
+                )
 
         return await SessionService.issue_token_for_user(user_doc, client_ip)

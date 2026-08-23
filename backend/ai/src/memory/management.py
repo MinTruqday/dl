@@ -36,9 +36,7 @@ class MemoryManager:
     async def search(self, query: str, user_id: str, limit: int = 5) -> List[Dict]:
         return await self.long_term.search(query, user_id, limit)
 
-    async def get_memories(
-        self, user_id: str, query: Optional[str] = None
-    ) -> str:
+    async def get_memories(self, user_id: str, query: Optional[str] = None) -> str:
         return await self.long_term.get_memories(user_id, query)
 
     async def update(self, memory_id: str, new_content: str) -> None:

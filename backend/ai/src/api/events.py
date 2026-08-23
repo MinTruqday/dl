@@ -4,18 +4,13 @@ from typing import Literal
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from loguru import logger
 
-from src.loop.event import (
-    AgentEvent,
-    CronSchedule,
-    EventType,
-    cron_scheduler,
-    event_driven_loop,
-)
+from src.loop.event import AgentEvent, CronSchedule, EventType, cron_scheduler, event_driven_loop
 
 from src.schemas.events import CreateScheduleRequest, ManualTriggerRequest, WebhookPayload
 from src.core.dependency import Role, require_role, verify_internal_token
 
 router = APIRouter(prefix="/su-kien")
+
 
 @router.post("/webhook", dependencies=[Depends(verify_internal_token)])
 async def receive_webhook(body: WebhookPayload):
@@ -42,34 +37,20 @@ async def receive_webhook(body: WebhookPayload):
         try:
             await event_driven_loop.emit_event(event)
         except asyncio.QueueFull:
-            raise HTTPException(
-                status_code=503,
-                detail={"code": "event_queue_full"},
-            )
+            raise HTTPException(status_code=503, detail={"code": "event_queue_full"})
         logger.info(f"Webhook received event_id={event.event_id}, type={event_type.value}")
 
-        return {
-            "status": "accepted",
-            "event_id": event.event_id,
-            "event_type": event_type.value,
-        }
+        return {"status": "accepted", "event_id": event.event_id, "event_type": event_type.value}
     except HTTPException:
         raise
     except Exception:
         logger.exception("Webhook processing error")
-        raise HTTPException(
-            status_code=500,
-            detail={"code": "webhook_processing_failed"},
-        )
+        raise HTTPException(status_code=500, detail={"code": "webhook_processing_failed"})
 
-@router.post(
-    "/webhook/tai-lieu-dang-tai",
-    dependencies=[Depends(verify_internal_token)],
-)
+
+@router.post("/webhook/tai-lieu-dang-tai", dependencies=[Depends(verify_internal_token)])
 async def document_uploaded_webhook(
-    document_id: str,
-    user_id: str = "",
-    superseded_document_id: str = "",
+    document_id: str, user_id: str = "", superseded_document_id: str = ""
 ):
     """Enqueue a document upload event for indexing and verification"""
     event = AgentEvent(
@@ -85,27 +66,17 @@ async def document_uploaded_webhook(
     try:
         await event_driven_loop.emit_event(event)
     except asyncio.QueueFull:
-        raise HTTPException(
-            status_code=503,
-            detail={"code": "event_queue_full"},
-        )
+        raise HTTPException(status_code=503, detail={"code": "event_queue_full"})
     return {"status": "accepted", "event_id": event.event_id}
 
-@router.get(
-    "/lich-trinh",
-    dependencies=[Depends(require_role([Role.ADMIN]))],
-)
+
+@router.get("/lich-trinh", dependencies=[Depends(require_role([Role.ADMIN]))])
 async def list_schedules():
     """List every registered recurring agent schedule"""
-    return {
-        "schedules": cron_scheduler.list_schedules(),
-        "total": len(cron_scheduler._schedules),
-    }
+    return {"schedules": cron_scheduler.list_schedules(), "total": len(cron_scheduler._schedules)}
 
-@router.post(
-    "/lich-trinh",
-    dependencies=[Depends(require_role([Role.ADMIN]))],
-)
+
+@router.post("/lich-trinh", dependencies=[Depends(require_role([Role.ADMIN]))])
 async def create_schedule(req: CreateScheduleRequest):
     """Create and activate an administrator managed recurring event"""
     event_type_map = {
@@ -129,8 +100,7 @@ async def create_schedule(req: CreateScheduleRequest):
 
     if cron_scheduler._running and schedule.enabled:
         schedule._task = asyncio.create_task(
-            cron_scheduler._run_schedule(schedule),
-            name=f"cron:{schedule.name}",
+            cron_scheduler._run_schedule(schedule), name=f"cron:{schedule.name}"
         )
 
     return {
@@ -141,10 +111,7 @@ async def create_schedule(req: CreateScheduleRequest):
     }
 
 
-@router.delete(
-    "/lich-trinh/{schedule_id}",
-    dependencies=[Depends(require_role([Role.ADMIN]))],
-)
+@router.delete("/lich-trinh/{schedule_id}", dependencies=[Depends(require_role([Role.ADMIN]))])
 async def delete_schedule(schedule_id: str):
     """Delete one recurring agent schedule"""
     if schedule_id not in cron_scheduler._schedules:
@@ -154,8 +121,7 @@ async def delete_schedule(schedule_id: str):
 
 
 @router.patch(
-    "/lich-trinh/{schedule_id}/trang-thai",
-    dependencies=[Depends(require_role([Role.ADMIN]))],
+    "/lich-trinh/{schedule_id}/trang-thai", dependencies=[Depends(require_role([Role.ADMIN]))]
 )
 async def toggle_schedule(schedule_id: str):
     """Enable or disable one recurring agent schedule"""
@@ -163,34 +129,22 @@ async def toggle_schedule(schedule_id: str):
     if not schedule:
         raise HTTPException(status_code=404, detail={"code": "schedule_not_found"})
     cron_scheduler.set_enabled(schedule_id, not schedule.enabled)
-    return {
-        "schedule_id": schedule_id,
-        "name": schedule.name,
-        "enabled": schedule.enabled,
-    }
+    return {"schedule_id": schedule_id, "name": schedule.name, "enabled": schedule.enabled}
 
-@router.get(
-    "/trang-thai",
-    dependencies=[Depends(require_role([Role.ADMIN]))],
-)
+
+@router.get("/trang-thai", dependencies=[Depends(require_role([Role.ADMIN]))])
 async def event_loop_status():
     """Return event queue and worker runtime statistics"""
     return event_driven_loop.get_stats()
 
-@router.get(
-    "/lich-su",
-    dependencies=[Depends(require_role([Role.ADMIN]))],
-)
+
+@router.get("/lich-su", dependencies=[Depends(require_role([Role.ADMIN]))])
 async def event_history(limit: int = Query(default=20, ge=1, le=200)):
     """Return recently processed agent events"""
-    return {
-        "events": event_driven_loop.get_recent_events(limit=limit),
-    }
+    return {"events": event_driven_loop.get_recent_events(limit=limit)}
 
-@router.get(
-    "/cap-nhat",
-    dependencies=[Depends(require_role([Role.ADMIN]))],
-)
+
+@router.get("/cap-nhat", dependencies=[Depends(require_role([Role.ADMIN]))])
 async def system_updates(limit: int = Query(default=20, ge=1, le=200)):
     """Return recent state updates emitted by agent events"""
     updates = event_driven_loop.update_registry.get_recent(limit=limit)
@@ -209,10 +163,8 @@ async def system_updates(limit: int = Query(default=20, ge=1, le=200)):
         "stats": event_driven_loop.update_registry.get_stats(),
     }
 
-@router.post(
-    "/kich-hoat/{event_type}",
-    dependencies=[Depends(require_role([Role.ADMIN]))],
-)
+
+@router.post("/kich-hoat/{event_type}", dependencies=[Depends(require_role([Role.ADMIN]))])
 async def manual_trigger(
     event_type: Literal["heartbeat", "document_uploaded", "user_query"],
     req: ManualTriggerRequest = Body(default_factory=ManualTriggerRequest),
@@ -225,15 +177,10 @@ async def manual_trigger(
     }
     et = event_type_map[event_type]
     event = AgentEvent(
-        event_id=str(uuid.uuid4()),
-        event_type=et,
-        payload=req.payload,
-        source="manual_trigger",
+        event_id=str(uuid.uuid4()), event_type=et, payload=req.payload, source="manual_trigger"
     )
     result = await event_driven_loop.handle_event(event)
-    return {
-        "status": "triggered",
-        "event_id": event.event_id,
-        "result": result,
-    }
+    return {"status": "triggered", "event_id": event.event_id, "result": result}
+
+
 import uuid

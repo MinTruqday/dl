@@ -38,8 +38,5 @@ class AnnouncementRepository:
     @staticmethod
     async def update_settings(user_id: str, settings: dict):
         return await mongo.update_one(
-            "notification_settings",
-            {"_id": user_id},
-            {"$set": {"settings": settings}},
-            upsert=True,
+            "notification_settings", {"_id": user_id}, {"$set": {"settings": settings}}, upsert=True
         )

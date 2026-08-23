@@ -11,6 +11,7 @@ INTERNAL_API_URL = settings.INTERNAL_API_URL
 
 _http_client: Optional[httpx.AsyncClient] = None
 
+
 def get_client() -> httpx.AsyncClient:
     global _http_client
     if _http_client is None or _http_client.is_closed:
@@ -19,6 +20,7 @@ def get_client() -> httpx.AsyncClient:
             timeout=httpx.Timeout(30.0),
         )
     return _http_client
+
 
 async def make_api_request(method: str, url: str, **kwargs) -> httpx.Response:
     if method.upper() in ["POST", "PUT", "PATCH", "DELETE"]:
@@ -87,11 +89,13 @@ async def make_api_request(method: str, url: str, **kwargs) -> httpx.Response:
         await asyncio.sleep(2**attempt)
     raise RuntimeError("Internal API request ended without a response")
 
+
 def check_system_access(token: str) -> bool:
     try:
         raw_token = token.removeprefix("Bearer ").strip()
         payload = jwt.decode(raw_token, settings.SECRET_KEY, algorithms=["HS256"])
         from src.schemas.auth import Role
+
         role = str(payload.get("role", "")).lower()
         return role == Role.ADMIN.value
     except Exception:

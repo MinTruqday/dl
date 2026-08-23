@@ -9,6 +9,7 @@ from src.core.infrastructure.mongo import mongo
 from src.repositories.document import DocumentRepository
 from src.services.document.base import is_admin
 
+
 class DocumentHierarchyService:
     @staticmethod
     async def get_folders(parent_id: Optional[str], current_user) -> list:
@@ -48,18 +49,30 @@ class DocumentHierarchyService:
         return {"deleted": True}
 
     @staticmethod
-    async def move_document_to_folder(document_id: str, folder_id: Optional[str], current_user) -> dict:
+    async def move_document_to_folder(
+        document_id: str, folder_id: Optional[str], current_user
+    ) -> dict:
         user_id = str(current_user.id)
         doc = await DocumentRepository.find_one({"_id": document_id, "creator_id": user_id})
         if not doc:
-            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu hoặc bạn không có quyền di chuyển")
+            raise HTTPException(
+                status_code=404, detail="Không tìm thấy tài liệu hoặc bạn không có quyền di chuyển"
+            )
         if folder_id:
-            folder = await mongo.find_one("workspace_folders", {"_id": folder_id, "creator_id": user_id})
+            folder = await mongo.find_one(
+                "workspace_folders", {"_id": folder_id, "creator_id": user_id}
+            )
             if not folder:
                 raise HTTPException(status_code=404, detail="Thư mục đích không tồn tại")
-            await DocumentRepository.update_one({"_id": document_id}, {"$set": {"folder_id": folder_id, "updated_at": datetime.now(timezone.utc)}})
+            await DocumentRepository.update_one(
+                {"_id": document_id},
+                {"$set": {"folder_id": folder_id, "updated_at": datetime.now(timezone.utc)}},
+            )
         else:
-            await DocumentRepository.update_one({"_id": document_id}, {"$unset": {"folder_id": ""}, "$set": {"updated_at": datetime.now(timezone.utc)}})
+            await DocumentRepository.update_one(
+                {"_id": document_id},
+                {"$unset": {"folder_id": ""}, "$set": {"updated_at": datetime.now(timezone.utc)}},
+            )
         return {"status": "moved", "document_id": document_id, "folder_id": folder_id}
 
     @staticmethod

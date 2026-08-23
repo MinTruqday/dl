@@ -26,10 +26,7 @@ class AdminAccountUpdate(BaseModel):
         return self
 
 
-router = APIRouter(
-    prefix="/xac-thuc/quan-tri",
-    dependencies=[Depends(require_role([Role.ADMIN]))],
-)
+router = APIRouter(prefix="/xac-thuc/quan-tri", dependencies=[Depends(require_role([Role.ADMIN]))])
 
 
 @router.get("/tai-khoan", response_model=APIResponse[Any])
@@ -52,24 +49,39 @@ async def list_accounts(
         query["role"] = role.value
     if is_active is not None:
         query["is_active"] = is_active
-    accounts = await database.mongodb[settings.AUTHENTICATION_DB_NAME].auth_credentials.find(query).sort("created_at", -1).limit(limit).to_list(limit)
-    return APIResponse(data=[account_view(account) for account in accounts], message="Tải danh sách tài khoản hoàn tất")
+    accounts = (
+        await database.mongodb[settings.AUTHENTICATION_DB_NAME]
+        .auth_credentials.find(query)
+        .sort("created_at", -1)
+        .limit(limit)
+        .to_list(limit)
+    )
+    return APIResponse(
+        data=[account_view(account) for account in accounts],
+        message="Tải danh sách tài khoản hoàn tất",
+    )
 
 
 @router.patch("/tai-khoan/{user_id}", response_model=APIResponse[Any])
 async def update_account(
-    user_id: str,
-    payload: AdminAccountUpdate,
-    current_user: CurrentUser = Depends(get_current_user),
+    user_id: str, payload: AdminAccountUpdate, current_user: CurrentUser = Depends(get_current_user)
 ):
-    if user_id == current_user.id and (payload.is_active is False or payload.role not in {None, Role.ADMIN}):
-        raise HTTPException(status_code=422, detail="Không thể tự khóa hoặc hạ quyền tài khoản quản trị hiện tại")
-    changes = {key: value.value if isinstance(value, Role) else value for key, value in payload.model_dump(exclude={"reason"}).items() if value is not None}
+    if user_id == current_user.id and (
+        payload.is_active is False or payload.role not in {None, Role.ADMIN}
+    ):
+        raise HTTPException(
+            status_code=422, detail="Không thể tự khóa hoặc hạ quyền tài khoản quản trị hiện tại"
+        )
+    changes = {
+        key: value.value if isinstance(value, Role) else value
+        for key, value in payload.model_dump(exclude={"reason"}).items()
+        if value is not None
+    }
     changes["updated_at"] = datetime.now(timezone.utc)
-    account = await database.mongodb[settings.AUTHENTICATION_DB_NAME].auth_credentials.find_one_and_update(
-        {"_id": user_id},
-        {"$set": changes},
-        return_document=ReturnDocument.AFTER,
+    account = await database.mongodb[
+        settings.AUTHENTICATION_DB_NAME
+    ].auth_credentials.find_one_and_update(
+        {"_id": user_id}, {"$set": changes}, return_document=ReturnDocument.AFTER
     )
     if not account:
         raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản")
@@ -84,7 +96,9 @@ async def update_account(
             "timestamp": changes["updated_at"],
         }
     )
-    return APIResponse(data=account_view(account), message="Cập nhật tài khoản và thu hồi phiên hoàn tất")
+    return APIResponse(
+        data=account_view(account), message="Cập nhật tài khoản và thu hồi phiên hoàn tất"
+    )
 
 
 @router.get("/nhat-ky", response_model=APIResponse[Any])
@@ -94,7 +108,13 @@ async def list_auth_audit(
     current_user: CurrentUser = Depends(get_current_user),
 ):
     query = {"action": action} if action else {}
-    events = await database.mongodb[settings.AUTHENTICATION_DB_NAME].audit_logs.find(query).sort("timestamp", -1).limit(limit).to_list(limit)
+    events = (
+        await database.mongodb[settings.AUTHENTICATION_DB_NAME]
+        .audit_logs.find(query)
+        .sort("timestamp", -1)
+        .limit(limit)
+        .to_list(limit)
+    )
     return APIResponse(
         data=[{**event, "_id": str(event["_id"])} for event in events],
         message="Tải nhật ký xác thực hoàn tất",

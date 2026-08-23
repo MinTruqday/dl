@@ -28,18 +28,10 @@ async def lifespan(app: FastAPI):
         await close_db()
 
 
-app = FastAPI(
-    title="DocLib Authentication",
-    version=settings.VERSION,
-    lifespan=lifespan,
-)
+app = FastAPI(title="DocLib Authentication", version=settings.VERSION, lifespan=lifespan)
 app.add_middleware(PrometheusMiddleware, service_name="authentication")
 app.add_route("/metrics", metrics_endpoint("authentication"))
-origins = [
-    origin.strip()
-    for origin in settings.CORS_ALLOWED_ORIGINS.split(",")
-    if origin.strip()
-]
+origins = [origin.strip() for origin in settings.CORS_ALLOWED_ORIGINS.split(",") if origin.strip()]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins or ["*"],

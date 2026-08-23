@@ -6,21 +6,12 @@ import sys
 
 HTTP_METHODS = {"delete", "get", "patch", "post", "put"}
 EXTERNAL_FETCH_ARGUMENTS = {"previewUrl", "upload_url"}
-IGNORED_DIRECTORY_NAMES = {
-    ".git",
-    ".next",
-    ".turbo",
-    "coverage",
-    "dist",
-    "node_modules",
-}
+IGNORED_DIRECTORY_NAMES = {".git", ".next", ".turbo", "coverage", "dist", "node_modules"}
 FETCH_PATTERN = re.compile(r"fetch\s*\(\s*(`[^`]*`|[A-Za-z_$][\w$]*)", re.DOTALL)
 ASSIGNMENT_PATTERN = re.compile(
     r"(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*`\$\{API_URL\}([^`]*)`"
 )
-FUNCTION_PATTERN = re.compile(
-    r"(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\([^)]*\)\s*\{"
-)
+FUNCTION_PATTERN = re.compile(r"(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\([^)]*\)\s*\{")
 METHOD_PATTERN = re.compile(r"method\s*:\s*[\"']([A-Z]+)[\"']")
 PARAMETER_PATTERN = re.compile(r"\$\{[^}]+\}")
 
@@ -40,9 +31,7 @@ def matches(frontend_path: str, backend_path: str) -> bool:
     if len(frontend_parts) != len(backend_parts):
         return False
     return all(
-        frontend == "{}"
-        or backend.startswith("{")
-        or frontend == backend
+        frontend == "{}" or backend.startswith("{") or frontend == backend
         for frontend, backend in zip(frontend_parts, backend_parts)
     )
 
@@ -105,8 +94,7 @@ def load_frontend_calls(frontend_dir: pathlib.Path):
                 ]
                 function_name = functions[-1].group(1) if functions else ""
                 literal_calls = re.findall(
-                    rf"\b{re.escape(function_name)}\s*\(\s*[\"']([^\"']+)[\"']",
-                    text,
+                    rf"\b{re.escape(function_name)}\s*\(\s*[\"']([^\"']+)[\"']", text
                 )
                 if not literal_calls:
                     calls.append((method, "<unresolved>", source, line))
@@ -136,9 +124,7 @@ def main() -> int:
         if entry[2] not in EXTERNAL_FETCH_ARGUMENTS
         and not (
             entry[2] == "input"
-            and entry[0].as_posix().endswith(
-                "frontend/shared/services/api-client.js"
-            )
+            and entry[0].as_posix().endswith("frontend/shared/services/api-client.js")
         )
     ]
     if unexpected_external:

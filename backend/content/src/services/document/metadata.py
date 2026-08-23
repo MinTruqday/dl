@@ -9,6 +9,7 @@ from src.repositories.document import DocumentRepository
 from src.schemas.document import DocumentStatus
 from src.services.document.base import can_read_full, is_admin, serialize_document
 
+
 class DocumentMetadataService:
     @staticmethod
     async def get_document_analytics(document_id: str, current_user):
@@ -22,9 +23,7 @@ class DocumentMetadataService:
         views = doc.get("views", 0)
         content = doc.get("content", "")
         text_content = (
-            content
-            if isinstance(content, str)
-            else json.dumps(content, ensure_ascii=False)
+            content if isinstance(content, str) else json.dumps(content, ensure_ascii=False)
         )
         total_words = len(text_content.split()) if text_content else 0
         avg_read_time_min = max(1, total_words // 200)
@@ -46,15 +45,11 @@ class DocumentMetadataService:
             )
         content = doc.get("content", "")
         text_content = (
-            content
-            if isinstance(content, str)
-            else json.dumps(content, ensure_ascii=False)
+            content if isinstance(content, str) else json.dumps(content, ensure_ascii=False)
         )
         word_count = len(text_content.split()) if text_content else 0
         sentences = (
-            text_content.count(".")
-            + text_content.count("!")
-            + text_content.count("?")
+            text_content.count(".") + text_content.count("!") + text_content.count("?")
             if text_content
             else 0
         )
@@ -70,17 +65,15 @@ class DocumentMetadataService:
 
     @staticmethod
     async def get_approval_queue(cursor: str = None, limit: int = 50) -> list:
-        query = {
-            "status": DocumentStatus.PROCESSING_PUBLISH,
-            "is_deleted": {"$ne": True},
-        }
+        query = {"status": DocumentStatus.PROCESSING_PUBLISH, "is_deleted": {"$ne": True}}
         if cursor:
-            query["updated_at"] = {
-                "$gt": datetime.fromisoformat(cursor.replace("Z", "+00:00"))
-            }
-        documents = await DocumentRepository.find(query).sort("updated_at", 1).limit(
-            limit
-        ).to_list(length=limit)
+            query["updated_at"] = {"$gt": datetime.fromisoformat(cursor.replace("Z", "+00:00"))}
+        documents = (
+            await DocumentRepository.find(query)
+            .sort("updated_at", 1)
+            .limit(limit)
+            .to_list(length=limit)
+        )
 
         def format_date(value):
             if isinstance(value, datetime):
@@ -96,9 +89,7 @@ class DocumentMetadataService:
                 "description": document.get("description", ""),
                 "creator_id": document.get("creator_id"),
                 "author_name": document.get("publisher_name") or "Anonymous",
-                "created_at": format_date(
-                    document.get("created_at") or document.get("updated_at")
-                ),
+                "created_at": format_date(document.get("created_at") or document.get("updated_at")),
                 "updated_at": format_date(document.get("updated_at")),
                 "submitted_at": format_date(document.get("updated_at")),
             }

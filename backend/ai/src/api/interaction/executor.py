@@ -19,17 +19,22 @@ from src.services.token_accounting import start_accounting
 
 router = APIRouter()
 
+
 def _validate_audio(req: ChatRequest) -> None:
     if not req.audio_data:
         return
     from src.utils.multimodal import validate_audio
+
     validate_audio(req.audio_data)
+
 
 def _validate_image(req: ChatRequest) -> None:
     if not req.image_data:
         return
     from src.utils.multimodal import validate_image
+
     validate_image(req.image_data)
+
 
 async def _persist_conversation_turns(
     session_id: str,
@@ -59,8 +64,7 @@ async def _persist_conversation_turns(
 
         await context.save_turn(session_id, "assistant", assistant_content)
         await HistoryService.add_message(
-            session_id,
-            {"user_id": user_id, "role": "assistant", "content": assistant_content},
+            session_id, {"user_id": user_id, "role": "assistant", "content": assistant_content}
         )
         create_background_task(
             memory_manager.add_memory(
@@ -73,22 +77,16 @@ async def _persist_conversation_turns(
             f"chat-memory-{session_id}",
         )
         create_background_task(
-            HistoryService.generate_title(
-                session_id,
-                user_id,
-                user_content,
-                assistant_content,
-            ),
+            HistoryService.generate_title(session_id, user_id, user_content, assistant_content),
             f"chat-title-{session_id}",
         )
     except Exception:
         logger.exception("Chat history persistence to database error")
 
+
 @router.post("")
 async def chat_endpoint(
-    req: ChatRequest,
-    request: Request,
-    current_user: CurrentUser = Depends(get_current_user),
+    req: ChatRequest, request: Request, current_user: CurrentUser = Depends(get_current_user)
 ):
     """Execute one authenticated assistant interaction and return its final result."""
     req.user_id = str(current_user.id)
@@ -193,9 +191,7 @@ async def chat_endpoint(
 
                 chat_llm = create_chat_model()
 
-                text_prompt = registry.get_base(PromptType.CHAT_ASSISTANT).format(
-                    query=req.query
-                )
+                text_prompt = registry.get_base(PromptType.CHAT_ASSISTANT).format(query=req.query)
                 if req.image_data:
                     content = [
                         {"type": "text", "text": text_prompt},
@@ -207,9 +203,7 @@ async def chat_endpoint(
                 if req.audio_data:
                     if isinstance(content, str):
                         content = [{"type": "text", "text": content}]
-                    content.append(
-                        {"type": "audio_url", "audio_url": {"url": req.audio_data}}
-                    )
+                    content.append({"type": "audio_url", "audio_url": {"url": req.audio_data}})
 
                 res = await chat_llm.ainvoke([HumanMessage(content=content)], max_tokens=128)
                 final_answer = res.content
@@ -232,11 +226,7 @@ async def chat_endpoint(
 
         final_answer = await security.ascan_output(final_answer)
         await _persist_conversation_turns(
-            req.session_id or "",
-            req.user_id,
-            original_query,
-            final_answer,
-            req.attachments,
+            req.session_id or "", req.user_id, original_query, final_answer, req.attachments
         )
         await workspace.finish(req.session_id or "", req.user_id, req.mode, bool(final_answer))
         return {

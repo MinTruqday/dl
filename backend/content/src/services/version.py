@@ -12,8 +12,8 @@ from src.core.infrastructure.database import database
 from src.repositories.document import DocumentRepository
 from src.repositories.document import DocumentRepository
 
-class VersionService:
 
+class VersionService:
     @staticmethod
     async def save_version(document_id, version_note, current_user):
         doc = await DocumentRepository.find_one(
@@ -42,11 +42,9 @@ class VersionService:
 
     @staticmethod
     async def get_versions(document_id, current_user):
-        cursor = (
-            mongo
-            .find("document_versions", {"document_id": document_id, "creator_id": str(current_user.id)})
-            .sort("created_at", -1)
-        )
+        cursor = mongo.find(
+            "document_versions", {"document_id": document_id, "creator_id": str(current_user.id)}
+        ).sort("created_at", -1)
         versions = await cursor.to_list(length=None)
         for v in versions:
             v["_id"] = str(v["_id"])
@@ -70,8 +68,6 @@ class VersionService:
             }
         else:
             update_data = {**snapshot, "updated_at": datetime.now(timezone.utc)}
-        await DocumentRepository.update_one(
-            {"_id": version["document_id"]}, {"$set": update_data}
-        )
+        await DocumentRepository.update_one({"_id": version["document_id"]}, {"$set": update_data})
         logger.info("Document version restored")
         return {"message": "Khôi phục tài liệu về phiên bản lịch sử hoàn tất"}

@@ -2,6 +2,7 @@ import redis.asyncio as aioredis
 from loguru import logger
 from src.core.infrastructure.configuration import settings
 
+
 class RedisAPIClient:
     def __init__(self):
         self.url = settings.REDIS_URI
@@ -77,11 +78,14 @@ class RedisAPIClient:
                 res = await pipe.execute()
                 return res
         except Exception:
-            logger.exception(f"Failed to execute atomic INCR/EXPIRE pipeline on Redis Cache for key {key}")
+            logger.exception(
+                f"Failed to execute atomic INCR/EXPIRE pipeline on Redis Cache for key {key}"
+            )
             raise Exception("Cache service unavailable")
 
     async def aclose(self):
         if self._client:
             await self._client.aclose()
+
 
 redis = RedisAPIClient()

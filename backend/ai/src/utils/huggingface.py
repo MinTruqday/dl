@@ -21,6 +21,7 @@ from src.utils.structured_output import (
     validate_structured_output,
 )
 
+
 def resolve_model_revision(model_id: str, token: Optional[str] = None) -> str:
     from huggingface_hub import HfApi
 
@@ -33,27 +34,18 @@ def resolve_model_revision(model_id: str, token: Optional[str] = None) -> str:
 def create_chat_model(model: Optional[str] = None):
     from src.utils.local_models import local_model_client
 
-    return HFInferenceChat(
-        client=local_model_client,
-        model=model or settings.LLM_MODEL,
-    )
+    return HFInferenceChat(client=local_model_client, model=model or settings.LLM_MODEL)
 
 
 def _merge_system_messages(messages: List[dict]) -> List[dict]:
     system_content = [
-        str(message.get("content", ""))
-        for message in messages
-        if message.get("role") == "system"
+        str(message.get("content", "")) for message in messages if message.get("role") == "system"
     ]
-    remaining = [
-        message for message in messages if message.get("role") != "system"
-    ]
+    remaining = [message for message in messages if message.get("role") != "system"]
     if not system_content:
         return remaining
-    return [
-        {"role": "system", "content": "\n\n".join(system_content)},
-        *remaining,
-    ]
+    return [{"role": "system", "content": "\n\n".join(system_content)}, *remaining]
+
 
 class HFInferenceChat(BaseChatModel):
     """
@@ -62,6 +54,7 @@ class HFInferenceChat(BaseChatModel):
     <metis_behavior>Manages token streaming and retry logic robustly. Never leaks the HF_TOKEN to logs.</metis_behavior>
     </module_purpose>
     """
+
     client: Any = Field(default=None)
     model: str = Field(default="")
 
@@ -70,7 +63,7 @@ class HFInferenceChat(BaseChatModel):
         messages: List[BaseMessage],
         stop: Optional[List[str]] = None,
         run_manager: Optional[Any] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> ChatResult:
         import asyncio
 
@@ -84,14 +77,16 @@ class HFInferenceChat(BaseChatModel):
         wait=wait_exponential(multiplier=1, min=2, max=10),
         retry=retry_if_exception_type(Exception),
         reraise=True,
-        before_sleep=lambda retry_state: logger.warning(f"Retrying _agenerate due to error: {retry_state.outcome.exception()} (Attempt {retry_state.attempt_number})")
+        before_sleep=lambda retry_state: logger.warning(
+            f"Retrying _agenerate due to error: {retry_state.outcome.exception()} (Attempt {retry_state.attempt_number})"
+        ),
     )
     async def _agenerate(
         self,
         messages: List[BaseMessage],
         stop: Optional[List[str]] = None,
         run_manager: Optional[Any] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> ChatResult:
         hf_messages = []
         for msg in messages:
@@ -108,10 +103,7 @@ class HFInferenceChat(BaseChatModel):
         chat_kwargs = {
             "model": effective_model,
             "messages": hf_messages,
-            "max_tokens": kwargs.get(
-                "max_tokens",
-                settings.AGENT_DEFAULT_MAX_OUTPUT_TOKENS,
-            ),
+            "max_tokens": kwargs.get("max_tokens", settings.AGENT_DEFAULT_MAX_OUTPUT_TOKENS),
             "temperature": kwargs.get("temperature", 0.1),
         }
         from src.utils.local_models import local_model_client
@@ -131,7 +123,9 @@ class HFInferenceChat(BaseChatModel):
                 ChatGeneration(
                     message=AIMessage(
                         content=content,
-                        response_metadata={"model": str(getattr(response, "model", effective_model))},
+                        response_metadata={
+                            "model": str(getattr(response, "model", effective_model))
+                        },
                     )
                 )
             ]
@@ -142,14 +136,16 @@ class HFInferenceChat(BaseChatModel):
         wait=wait_exponential(multiplier=1, min=2, max=10),
         retry=retry_if_exception_type(Exception),
         reraise=True,
-        before_sleep=lambda retry_state: logger.warning(f"Retrying _astream due to error: {retry_state.outcome.exception()} (Attempt {retry_state.attempt_number})")
+        before_sleep=lambda retry_state: logger.warning(
+            f"Retrying _astream due to error: {retry_state.outcome.exception()} (Attempt {retry_state.attempt_number})"
+        ),
     )
     async def _astream(
         self,
         messages: List[BaseMessage],
         stop: Optional[List[str]] = None,
         run_manager: Optional[Any] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ):
         hf_messages = []
         for msg in messages:
@@ -169,10 +165,7 @@ class HFInferenceChat(BaseChatModel):
         stream = await client.chat_completion(
             model=effective_model,
             messages=hf_messages,
-            max_tokens=kwargs.get(
-                "max_tokens",
-                settings.AGENT_DEFAULT_MAX_OUTPUT_TOKENS,
-            ),
+            max_tokens=kwargs.get("max_tokens", settings.AGENT_DEFAULT_MAX_OUTPUT_TOKENS),
             temperature=kwargs.get("temperature", 0.1),
             stream=True,
         )
@@ -208,9 +201,7 @@ class HFInferenceChat(BaseChatModel):
                     f"Schema: {schema_json}"
                 )
             )
-            msgs = [sys_msg] + (
-                messages if isinstance(messages, list) else [messages]
-            )
+            msgs = [sys_msg] + (messages if isinstance(messages, list) else [messages])
             for attempt in range(3):
                 res = await self.ainvoke(msgs, **kwargs_inner)
                 try:
@@ -250,9 +241,7 @@ class HFInferenceChat(BaseChatModel):
                     f"Schema: {schema_json}"
                 )
             )
-            msgs = [sys_msg] + (
-                messages if isinstance(messages, list) else [messages]
-            )
+            msgs = [sys_msg] + (messages if isinstance(messages, list) else [messages])
             for attempt in range(3):
                 res = self.invoke(msgs, **kwargs_inner)
                 try:
@@ -285,12 +274,7 @@ class HFInferenceChat(BaseChatModel):
         tool_definitions = [convert_to_openai_tool(tool) for tool in tools]
         tool_map = {tool.name: tool for tool in tools}
         allowed_names = set(tool_map)
-        if isinstance(tool_choice, str) and tool_choice not in {
-            "auto",
-            "any",
-            "required",
-            "none",
-        }:
+        if isinstance(tool_choice, str) and tool_choice not in {"auto", "any", "required", "none"}:
             allowed_names &= {tool_choice}
         forced_name = (
             tool_choice
@@ -323,8 +307,7 @@ class HFInferenceChat(BaseChatModel):
                         raise ValueError("Tool selection must be a JSON object")
                     name = payload.get("name") or payload.get("tool")
                     arguments = payload.get(
-                        "arguments",
-                        payload.get("args", payload.get("parameters", {})),
+                        "arguments", payload.get("args", payload.get("parameters", {}))
                     )
                     if isinstance(arguments, str):
                         arguments = extract_json_value(arguments)
@@ -366,10 +349,7 @@ class HFInferenceChat(BaseChatModel):
             source_messages = messages if isinstance(messages, list) else [messages]
             corrective_messages = [selection_prompt, *source_messages]
             for attempt in range(3):
-                result = await self.ainvoke(
-                    corrective_messages,
-                    **kwargs_inner,
-                )
+                result = await self.ainvoke(corrective_messages, **kwargs_inner)
                 try:
                     return parse_tool_call(result.content)
                 except Exception as error:
@@ -398,10 +378,7 @@ class HFInferenceChat(BaseChatModel):
             source_messages = messages if isinstance(messages, list) else [messages]
             corrective_messages = [selection_prompt, *source_messages]
             for attempt in range(3):
-                result = self.invoke(
-                    corrective_messages,
-                    **kwargs_inner,
-                )
+                result = self.invoke(corrective_messages, **kwargs_inner)
                 try:
                     return parse_tool_call(result.content)
                 except Exception as error:

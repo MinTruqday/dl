@@ -8,6 +8,7 @@ DocLib Orchestration Graph configuring the state machine nodes, edges, and condi
 - Error Handling: Implements safety nets, fallback loops, and hallucination checks within the graph topology.
 </contract>
 """
+
 import asyncio
 
 import langchain
@@ -57,13 +58,12 @@ async def _get_cross_encoder(kind: str):
             _reranker_initialized = True
         return model
 
+
 try:
     redis_url = settings.REDIS_URI
     from langchain_community.cache import RedisSemanticCache
 
-    langchain.llm_cache = RedisSemanticCache(
-        redis_url=redis_url, embedding=rag_client
-    )
+    langchain.llm_cache = RedisSemanticCache(redis_url=redis_url, embedding=rag_client)
     logger.info("Redis semantic cache initialized")
 except Exception:
     logger.exception("Redis semantic cache initialization error")
@@ -77,6 +77,7 @@ llm_generate = llm.with_config({"tags": ["final_generator"]})
 from src.schemas.routing import ContextQuery, GraphRoute, RetrievalStrategy, QueryOptimization
 from src.schemas.evaluation import DocumentGrade
 
+
 async def contextualize_question(state: AgentState):
     question = state["question"]
     history = state.get("chat_history", [])
@@ -87,8 +88,7 @@ async def contextualize_question(state: AgentState):
     from src.core.registry import PromptType, registry
 
     prompt = PromptTemplate(
-        template=registry.get(PromptType.CONTEXTUALIZE),
-        input_variables=["history", "question"],
+        template=registry.get(PromptType.CONTEXTUALIZE), input_variables=["history", "question"]
     )
     try:
         structured_llm = llm.with_structured_output(ContextQuery)
@@ -100,13 +100,12 @@ async def contextualize_question(state: AgentState):
         logger.exception("Contextualization processing error")
         return {"question": question}
 
+
 async def route_question(state: AgentState):
     question = state["question"]
     from src.core.registry import PromptType, registry
 
-    prompt = PromptTemplate(
-        template=registry.get(PromptType.ROUTE), input_variables=["question"]
-    )
+    prompt = PromptTemplate(template=registry.get(PromptType.ROUTE), input_variables=["question"])
     try:
         structured_llm = llm.with_structured_output(GraphRoute)
         response = await structured_llm.ainvoke(prompt.format(question=question))
@@ -115,8 +114,10 @@ async def route_question(state: AgentState):
         logger.exception("Graph routing execution error")
         return {"current_source": "db", "route": "rag"}
 
+
 def decide_initial_route(state: AgentState):
     return "generate_direct" if state.get("route") == "direct" else "preprocess_file"
+
 
 async def preprocess_file(state: AgentState):
     updates = {}
@@ -133,6 +134,7 @@ async def preprocess_file(state: AgentState):
             updates["folder_data"] = text
 
     return updates
+
 
 def _mask_pii(text: str) -> str:
     from src.core.security.guardrails import guardrails_engine
@@ -156,6 +158,7 @@ def _lost_in_the_middle_reorder(documents):
             right -= 1
     return [document for document in ordered if document is not None]
 
+
 async def retrieve_db(state: AgentState):
     question = state["question"]
     document_ids = state.get("document_ids", [])
@@ -165,10 +168,7 @@ async def retrieve_db(state: AgentState):
         logger.info("Processing cross-document retrieval")
         try:
             raw_documents = await rag_client.cross_document_retrieve(
-                question,
-                document_ids,
-                k=6,
-                requester_id=requester_id,
+                question, document_ids, k=6, requester_id=requester_id
             )
             extracted_documents = []
             for doc in raw_documents:
@@ -184,8 +184,7 @@ async def retrieve_db(state: AgentState):
     from src.core.registry import PromptType, registry
 
     prompt = PromptTemplate(
-        template=registry.get(PromptType.RETRIEVAL_STRATEGY),
-        input_variables=["question"],
+        template=registry.get(PromptType.RETRIEVAL_STRATEGY), input_variables=["question"]
     )
     queries = [question]
     try:
@@ -202,10 +201,7 @@ async def retrieve_db(state: AgentState):
     for q in list(dict.fromkeys(queries))[:3]:
         try:
             results = await rag_client.retrieve(
-                q,
-                document_ids=document_ids,
-                k=10,
-                requester_id=requester_id,
+                q, document_ids=document_ids, k=10, requester_id=requester_id
             )
             for doc in results:
                 doc["_query"] = q
@@ -217,9 +213,7 @@ async def retrieve_db(state: AgentState):
         reranker_model = await _get_cross_encoder("reranker")
         if reranker_model:
             try:
-                pairs = [
-                    [doc["_query"], doc.get("text", "")] for doc in all_raw_documents
-                ]
+                pairs = [[doc["_query"], doc.get("text", "")] for doc in all_raw_documents]
                 scores = await asyncio.to_thread(reranker_model.predict, pairs)
                 scored_documents = list(zip(all_raw_documents, scores))
                 scored_documents.sort(key=lambda x: x[1], reverse=True)
@@ -235,11 +229,10 @@ async def retrieve_db(state: AgentState):
         for doc in top_documents:
             meta = doc.get("metadata", {})
             title = meta.get("title", "Document")
-            extracted_documents.append(
-                f"Source document {title}\n{_mask_pii(doc.get('text', ''))}"
-            )
+            extracted_documents.append(f"Source document {title}\n{_mask_pii(doc.get('text', ''))}")
 
     return {"documents": list(set(extracted_documents)), "current_source": "db"}
+
 
 async def retrieve_internet(state: AgentState):
     from src.agents.specialists.web_search import search_engine
@@ -247,13 +240,11 @@ async def retrieve_internet(state: AgentState):
     question = state["question"]
     try:
         results = await search_engine.execute(question)
-        return {
-            "documents": [f"[Internet Source]\n{results}"],
-            "current_source": "internet",
-        }
+        return {"documents": [f"[Internet Source]\n{results}"], "current_source": "internet"}
     except Exception:
         logger.exception("Internet search engine execution error")
         return {"documents": [], "current_source": "internet"}
+
 
 async def grade_documents(state: AgentState):
     question = state["question"]
@@ -261,8 +252,7 @@ async def grade_documents(state: AgentState):
     from src.core.registry import PromptType, registry
 
     prompt = PromptTemplate(
-        template=registry.get(PromptType.GRADE_DOCUMENT),
-        input_variables=["context", "question"],
+        template=registry.get(PromptType.GRADE_DOCUMENT), input_variables=["context", "question"]
     )
     filtered_documents = []
 
@@ -270,15 +260,14 @@ async def grade_documents(state: AgentState):
 
     for d in documents:
         try:
-            response = await structured_llm.ainvoke(
-                prompt.format(context=d, question=question)
-            )
+            response = await structured_llm.ainvoke(prompt.format(context=d, question=question))
             if response.is_relevant:
                 filtered_documents.append(d)
         except Exception:
             logger.exception("Document relevance grading error")
             filtered_documents.append(d)
     return {"documents": filtered_documents}
+
 
 def decide_after_grade(state: AgentState):
     if len(state.get("documents", [])) > 0:
@@ -287,13 +276,13 @@ def decide_after_grade(state: AgentState):
         return "retrieve_internet"
     return "generate"
 
+
 async def transform_query(state: AgentState):
     question = state["question"]
     from src.core.registry import PromptType, registry
 
     prompt = PromptTemplate(
-        template=registry.get(PromptType.OPTIMIZE_QUERY),
-        input_variables=["question"],
+        template=registry.get(PromptType.OPTIMIZE_QUERY), input_variables=["question"]
     )
     try:
         structured_llm = llm.with_structured_output(QueryOptimization)
@@ -307,12 +296,11 @@ async def transform_query(state: AgentState):
         logger.exception("Search query optimization error")
         return {"retry_count": state.get("retry_count", 0) + 1}
 
+
 async def generate_direct(state: AgentState):
     from src.core.registry import PromptType, registry
 
-    prompt = registry.get(PromptType.GENERATE_DIRECT).format(
-        question=state["question"]
-    )
+    prompt = registry.get(PromptType.GENERATE_DIRECT).format(question=state["question"])
     user_preferences = str(state.get("user_preferences", "")).strip()
     if user_preferences:
         prompt += (
@@ -331,6 +319,7 @@ async def generate_direct(state: AgentState):
     except Exception:
         logger.exception("AI response synthesis and generation encountered an error")
         raise RuntimeError("direct_generation_failed")
+
 
 async def generate(state: AgentState):
     question = state["question"]
@@ -377,9 +366,7 @@ async def generate(state: AgentState):
     if state.get("audio_data"):
         if isinstance(content, str):
             content = [{"type": "text", "text": content}]
-        content.append(
-            {"type": "audio_url", "audio_url": {"url": state["audio_data"]}}
-        )
+        content.append({"type": "audio_url", "audio_url": {"url": state["audio_data"]}})
 
     try:
         messages = []
@@ -394,6 +381,7 @@ async def generate(state: AgentState):
         logger.exception("Document content generation error")
         raise RuntimeError("document_generation_failed")
 
+
 async def grade_generation(state: AgentState):
     documents = state.get("documents", [])
     generation = state["generation"]
@@ -406,12 +394,8 @@ async def grade_generation(state: AgentState):
 
         from src.agents.react.reasoning import reasoner
 
-        documents_list = [
-            {"text": d, "metadata": {"title": "Source"}} for d in documents
-        ]
-        eval_res = await reasoner.evaluate_quality(
-            state["question"], generation, documents_list
-        )
+        documents_list = [{"text": d, "metadata": {"title": "Source"}} for d in documents]
+        eval_res = await reasoner.evaluate_quality(state["question"], generation, documents_list)
 
         is_hallucination = eval_res.get("should_retry", False)
 
@@ -429,21 +413,20 @@ async def grade_generation(state: AgentState):
         logger.exception("Generated content hallucination grading error")
         return {"hallucination_pass": "yes"}
 
+
 def check_hallucination(state: AgentState):
     if state.get("hallucination_pass") == "no" and state.get("retry_count", 0) < 2:
         return "transform_query"
     return END
 
+
 def decide_after_retrieve(state: AgentState):
     if state.get("use_smart"):
         return "grade_documents"
-    if (
-        not state.get("documents")
-        and state.get("use_web")
-        and state.get("current_source") == "db"
-    ):
+    if not state.get("documents") and state.get("use_web") and state.get("current_source") == "db":
         return "retrieve_internet"
     return "generate"
+
 
 workflow = StateGraph(AgentState)
 workflow.add_node("preprocess_file", preprocess_file)
@@ -489,9 +472,7 @@ workflow.add_conditional_edges(
     {"grade_generation": "grade_generation", END: END},
 )
 workflow.add_conditional_edges(
-    "grade_generation",
-    check_hallucination,
-    {"transform_query": "transform_query", END: END},
+    "grade_generation", check_hallucination, {"transform_query": "transform_query", END: END}
 )
 
 knowledge_app = workflow.compile()

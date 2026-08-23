@@ -34,10 +34,7 @@ async def init_storage():
 async def upload_pdf(path: str, content: bytes):
     client = await get_storage_client()
     await client.put_object(
-        Bucket=settings.MINIO_PRIVATE_BUCKET,
-        Key=path,
-        Body=content,
-        ContentType="application/pdf",
+        Bucket=settings.MINIO_PRIVATE_BUCKET, Key=path, Body=content, ContentType="application/pdf"
     )
 
 

@@ -37,19 +37,13 @@ class RabbitMQClient:
             raise ValueError("Invalid queue name")
         async with self._topology_lock:
             await self.connect()
-            dlx = await self.channel.declare_exchange(
-                "dlx",
-                aio_pika.ExchangeType.DIRECT,
-            )
+            dlx = await self.channel.declare_exchange("dlx", aio_pika.ExchangeType.DIRECT)
             dlq = await self.channel.declare_queue("dlq", durable=True)
             await dlq.bind(dlx, "dlq")
             return await self.channel.declare_queue(
                 queue_name,
                 durable=True,
-                arguments={
-                    "x-dead-letter-exchange": "dlx",
-                    "x-dead-letter-routing-key": "dlq",
-                },
+                arguments={"x-dead-letter-exchange": "dlx", "x-dead-letter-routing-key": "dlq"},
             )
 
     async def publish(self, queue_name: str, payload: dict) -> bool:
@@ -61,9 +55,7 @@ class RabbitMQClient:
             message_id=str(payload.get("job_id", "")) or None,
         )
         confirmation = await self.channel.default_exchange.publish(
-            message,
-            routing_key=queue_name,
-            mandatory=True,
+            message, routing_key=queue_name, mandatory=True
         )
         return confirmation is not False
 
@@ -79,10 +71,7 @@ class RabbitMQClient:
         queue = await channel.declare_queue(
             queue_name,
             durable=True,
-            arguments={
-                "x-dead-letter-exchange": "dlx",
-                "x-dead-letter-routing-key": "dlq",
-            },
+            arguments={"x-dead-letter-exchange": "dlx", "x-dead-letter-routing-key": "dlq"},
         )
         return channel, queue
 

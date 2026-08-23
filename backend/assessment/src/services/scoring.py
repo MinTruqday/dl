@@ -44,14 +44,23 @@ def score_response(question: dict[str, Any], answer: dict[str, Any]):
             actual = Decimal(str(answer.get("value")))
             expected = Decimal(str(answer_key.get("value")))
             tolerance = Decimal(str(answer_key.get("tolerance", 0)))
-            if not actual.is_finite() or not expected.is_finite() or not tolerance.is_finite() or tolerance < 0:
+            if (
+                not actual.is_finite()
+                or not expected.is_finite()
+                or not tolerance.is_finite()
+                or tolerance < 0
+            ):
                 return False, 0.0, "final"
-            unit_matches = not answer_key.get("unit") or answer.get("unit") == answer_key.get("unit")
+            unit_matches = not answer_key.get("unit") or answer.get("unit") == answer_key.get(
+                "unit"
+            )
             correct = abs(actual - expected) <= tolerance and unit_matches
             return correct, points if correct else 0.0, "final"
         except (InvalidOperation, TypeError):
             return False, 0.0, "final"
-    accepted_values = [str(value).strip() for value in answer_key.get("accepted", []) if str(value).strip()]
+    accepted_values = [
+        str(value).strip() for value in answer_key.get("accepted", []) if str(value).strip()
+    ]
     if question_type == "symbolic_math" and accepted_values:
         actual = str(answer.get("text", ""))
         correct = any(symbolic_equivalent(actual, expected) for expected in accepted_values)

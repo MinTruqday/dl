@@ -37,7 +37,9 @@ def predict_difficulty(
 ):
     historical_items = historical_items or []
     stem_text = text_projection(question.get("stem_doc", {}))
-    option_text = " ".join(text_projection(option.get("content_doc", {})) for option in question.get("options", []))
+    option_text = " ".join(
+        text_projection(option.get("content_doc", {})) for option in question.get("options", [])
+    )
     solution_text = text_projection(question.get("solution_doc", {}))
     combined_text = " ".join((stem_text, option_text, solution_text))
     word_count = len(stem_text.split())
@@ -63,9 +65,15 @@ def predict_difficulty(
         "essay": 0.75,
     }.get(question.get("question_type"), 0.25)
     node_counts = document_node_counts(
-        [question.get("stem_doc", {}), question.get("solution_doc", {}), *[option.get("content_doc", {}) for option in question.get("options", [])]]
+        [
+            question.get("stem_doc", {}),
+            question.get("solution_doc", {}),
+            *[option.get("content_doc", {}) for option in question.get("options", [])],
+        ]
     )
-    math_node_count = sum(node_counts.get(name, 0) for name in ("mathInline", "mathBlock", "inlineMath", "blockMath"))
+    math_node_count = sum(
+        node_counts.get(name, 0) for name in ("mathInline", "mathBlock", "inlineMath", "blockMath")
+    )
     image_count = node_counts.get("image", 0)
     table_count = node_counts.get("table", 0)
     numeric_token_count = len(re.findall(r"(?<!\w)-?\d+(?:[.,]\d+)?", combined_text))
@@ -74,13 +82,14 @@ def predict_difficulty(
     skill_count = len(set(question.get("skill_ids", [])))
     prerequisite_count = len(set(question.get("construct", {}).get("expected_prerequisites", [])))
     expected_exposure = question.get("construct", {}).get("expected_exposure")
-    exposure_weight = {
-        "new": 0.4,
-        "limited": 0.25,
-        "familiar": 0.0,
-        "mastered": -0.2,
-    }.get(expected_exposure, 0.0)
-    teacher_material_evidence_count = sum(1 for item in question.get("source_evidence", []) if item.get("source_type") == "teacher_material")
+    exposure_weight = {"new": 0.4, "limited": 0.25, "familiar": 0.0, "mastered": -0.2}.get(
+        expected_exposure, 0.0
+    )
+    teacher_material_evidence_count = sum(
+        1
+        for item in question.get("source_evidence", [])
+        if item.get("source_type") == "teacher_material"
+    )
     representation_complexity = min((math_node_count + image_count + table_count * 2) / 6, 0.6)
     numeric_complexity = min((numeric_token_count + operator_count) / 20, 0.5)
     construct_complexity = min((concept_count + skill_count) / 8, 0.5)
@@ -109,9 +118,19 @@ def predict_difficulty(
         for item in historical_items
         if item.get("same_logical_question") and isinstance(item.get("difficulty"), (int, float))
     ]
-    predicted = bounded(heuristic * 0.75 + historical_mean * 0.25) if historical_mean is not None else heuristic
+    predicted = (
+        bounded(heuristic * 0.75 + historical_mean * 0.25)
+        if historical_mean is not None
+        else heuristic
+    )
     evidence_count = len(question.get("source_evidence", []))
-    source_types = sorted({str(item.get("source_type")) for item in question.get("source_evidence", []) if item.get("source_type")})
+    source_types = sorted(
+        {
+            str(item.get("source_type"))
+            for item in question.get("source_evidence", [])
+            if item.get("source_type")
+        }
+    )
     confidence = round(
         min(
             0.9,
@@ -130,7 +149,9 @@ def predict_difficulty(
         "predicted_difficulty": predicted,
         "heuristic_difficulty": heuristic,
         "nearest_historical_difficulty": historical_values[0] if historical_values else None,
-        "historical_mean_difficulty": round(historical_mean, 3) if historical_mean is not None else None,
+        "historical_mean_difficulty": round(historical_mean, 3)
+        if historical_mean is not None
+        else None,
         "ui_difficulty_level": difficulty_level(predicted),
         "confidence": confidence,
         "uncertainty": round(1 - confidence, 3),
@@ -153,13 +174,18 @@ def predict_difficulty(
             "source_types": source_types,
             "teacher_material_evidence_count": teacher_material_evidence_count,
             "historical_neighbor_count": len(historical_values),
-            "historical_neighbor_mean": round(historical_mean, 3) if historical_mean is not None else None,
-            "previous_revision_calibrated_difficulty": previous_revision_values[0] if previous_revision_values else None,
+            "historical_neighbor_mean": round(historical_mean, 3)
+            if historical_mean is not None
+            else None,
+            "previous_revision_calibrated_difficulty": previous_revision_values[0]
+            if previous_revision_values
+            else None,
         },
         "model_version": model_version,
         "feature_schema_version": "assessment_item_features_v2",
         "training_data_window": "cold_start_with_prior_calibrated_neighbors",
-        "curriculum_version": curriculum_link.get("curriculum_version") or curriculum_link.get("target_program"),
+        "curriculum_version": curriculum_link.get("curriculum_version")
+        or curriculum_link.get("target_program"),
         "normalization_version": "difficulty_scale_1_5_v1",
         "reason_summary": [
             f"question_type {question.get('question_type')}",

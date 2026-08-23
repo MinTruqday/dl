@@ -11,9 +11,15 @@ content_url = os.getenv("CONTENT_TEST_URL", "http://content:8000")
 internal_headers = {"X-Internal-Token": os.environ["SECRET_KEY"]}
 run_id = uuid4().hex
 teacher_headers = {"x-test-user-id": f"teacher-lifecycle-{run_id}", "x-test-user-role": "author"}
-other_teacher_headers = {"x-test-user-id": f"teacher-other-lifecycle-{run_id}", "x-test-user-role": "author"}
+other_teacher_headers = {
+    "x-test-user-id": f"teacher-other-lifecycle-{run_id}",
+    "x-test-user-role": "author",
+}
 student_headers = {"x-test-user-id": f"student-lifecycle-{run_id}", "x-test-user-role": "reader"}
-upcoming_student_headers = {"x-test-user-id": f"student-upcoming-{run_id}", "x-test-user-role": "reader"}
+upcoming_student_headers = {
+    "x-test-user-id": f"student-upcoming-{run_id}",
+    "x-test-user-role": "reader",
+}
 admin_headers = {"x-test-user-id": f"admin-lifecycle-{run_id}", "x-test-user-role": "admin"}
 
 
@@ -25,7 +31,10 @@ def request(client, method, path, headers, expected, **kwargs):
 
 
 def doc(text):
-    return {"type": "doc", "content": [{"type": "paragraph", "content": [{"type": "text", "text": text}]}]}
+    return {
+        "type": "doc",
+        "content": [{"type": "paragraph", "content": [{"type": "text", "text": text}]}],
+    }
 
 
 def question_payload():
@@ -33,10 +42,7 @@ def question_payload():
         "question_type": "single_choice",
         "authoring_source": "manual_tiptap",
         "stem_doc": doc("Một cộng một bằng bao nhiêu"),
-        "options": [
-            {"id": "A", "content_doc": doc("Một")},
-            {"id": "B", "content_doc": doc("Hai")},
-        ],
+        "options": [{"id": "A", "content_doc": doc("Một")}, {"id": "B", "content_doc": doc("Hai")}],
         "answer_key": {"option_id": "B"},
         "solution_doc": doc("Một cộng một bằng hai"),
         "scoring_rule": {"points": 1},
@@ -126,7 +132,9 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         },
     )
     assert merged_node["revision"] == 3
-    obsolete_merge_source = request(client, "GET", f"/education/curriculum/{merge_source['_id']}", admin_headers, 200)
+    obsolete_merge_source = request(
+        client, "GET", f"/education/curriculum/{merge_source['_id']}", admin_headers, 200
+    )
     assert obsolete_merge_source["status"] == "obsolete"
     curriculum_mapping_payload = {
         "document_id": f"curriculum-{run_id}",
@@ -178,7 +186,10 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         json={
             "expected_revision": 3,
             "parts": [
-                {"title": "Phép cộng số tự nhiên", "canonical_code": f"math.addition.natural.{run_id}"},
+                {
+                    "title": "Phép cộng số tự nhiên",
+                    "canonical_code": f"math.addition.natural.{run_id}",
+                },
                 {"title": "Phép cộng số thực", "canonical_code": f"math.addition.real.{run_id}"},
             ],
         },
@@ -186,11 +197,7 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     assert split_node["allocation_policy"] == "existing_relations_to_first_part"
     active_curriculum_node_id = split_node["parts"][0]["_id"]
     updated_curriculum_mapping = request(
-        client,
-        "GET",
-        f"/education/sources/curriculum-{run_id}/mapping",
-        admin_headers,
-        200,
+        client, "GET", f"/education/sources/curriculum-{run_id}/mapping", admin_headers, 200
     )[0]
     assert active_curriculum_node_id in updated_curriculum_mapping["curriculum_node_ids"]
     assert node["_id"] not in updated_curriculum_mapping["curriculum_node_ids"]
@@ -309,7 +316,12 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         201,
         json={
             "title": f"Đề quyết định quan trọng {run_id}",
-            "context": {"education_level": "THPT", "subject": "math", "target_program": "grade_12", "high_stakes": True},
+            "context": {
+                "education_level": "THPT",
+                "subject": "math",
+                "target_program": "grade_12",
+                "high_stakes": True,
+            },
             "layout_doc": doc("Hướng dẫn"),
         },
     )
@@ -321,7 +333,13 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         201,
         json=question_payload(),
     )
-    request(client, "POST", f"/question-drafts/{high_stakes_question['_id']}/freeze", teacher_headers, 201)
+    request(
+        client,
+        "POST",
+        f"/question-drafts/{high_stakes_question['_id']}/freeze",
+        teacher_headers,
+        201,
+    )
     high_stakes_blocked = request(
         client,
         "POST",
@@ -329,16 +347,28 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         teacher_headers,
         200,
     )
-    assert "high_stakes_validity_review_required" in {issue["code"] for issue in high_stakes_blocked["issues"]}
+    assert "high_stakes_validity_review_required" in {
+        issue["code"] for issue in high_stakes_blocked["issues"]
+    }
     request(
         client,
         "POST",
         f"/question-drafts/{high_stakes_question['_id']}/validity-review",
         teacher_headers,
         200,
-        json={"status": "approved", "risk_flags": [], "reviewer_note": "Đã rà soát construct và cơ hội tiếp cận"},
+        json={
+            "status": "approved",
+            "risk_flags": [],
+            "reviewer_note": "Đã rà soát construct và cơ hội tiếp cận",
+        },
     )
-    request(client, "POST", f"/question-drafts/{high_stakes_question['_id']}/freeze", teacher_headers, 201)
+    request(
+        client,
+        "POST",
+        f"/question-drafts/{high_stakes_question['_id']}/freeze",
+        teacher_headers,
+        201,
+    )
     high_stakes_valid = request(
         client,
         "POST",
@@ -392,22 +422,25 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     )
     assert draft_revision["after"]["stem_doc"] == doc("Làm rõ")
     rejected_draft_revision = request(
-        client,
-        "POST",
-        f"/draft-revisions/{draft_revision['_id']}/reject",
-        teacher_headers,
-        200,
+        client, "POST", f"/draft-revisions/{draft_revision['_id']}/reject", teacher_headers, 200
     )
     assert rejected_draft_revision["status"] == "rejected"
-    frozen = request(client, "POST", f"/question-drafts/{question['_id']}/freeze", teacher_headers, 201)
-    refreshed_draft = request(client, "GET", f"/assessment-drafts/{draft['_id']}", teacher_headers, 200)
+    frozen = request(
+        client, "POST", f"/question-drafts/{question['_id']}/freeze", teacher_headers, 201
+    )
+    refreshed_draft = request(
+        client, "GET", f"/assessment-drafts/{draft['_id']}", teacher_headers, 200
+    )
     assessment = request(
         client,
         "POST",
         "/assessments",
         teacher_headers,
         201,
-        json={"assessment_draft_id": draft["_id"], "delivery_policy": {"attempt_limit": 1, "duration_minutes": 30}},
+        json={
+            "assessment_draft_id": draft["_id"],
+            "delivery_policy": {"attempt_limit": 1, "duration_minutes": 30},
+        },
     )
     same_assessment = request(
         client,
@@ -415,7 +448,16 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         "/assessments",
         teacher_headers,
         201,
-        json={"assessment_draft_id": draft["_id"], "delivery_policy": {"attempt_limit": 1, "duration_minutes": 30, "review_answers": True, "shuffle_options": True, "shuffle_questions": True}},
+        json={
+            "assessment_draft_id": draft["_id"],
+            "delivery_policy": {
+                "attempt_limit": 1,
+                "duration_minutes": 30,
+                "review_answers": True,
+                "shuffle_options": True,
+                "shuffle_questions": True,
+            },
+        },
     )
     assert same_assessment["_id"] == assessment["_id"]
     scheduled = request(
@@ -433,7 +475,9 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     )
     assert scheduled["published_at"] is None
     listed = request(client, "GET", "/assessments", teacher_headers, 200)
-    assert next(item for item in listed if item["_id"] == assessment["_id"])["status"] == "scheduled"
+    assert (
+        next(item for item in listed if item["_id"] == assessment["_id"])["status"] == "scheduled"
+    )
     request(
         client,
         "POST",
@@ -456,14 +500,24 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     )
     assert published["version"] == 2
     assert published["items"][0]["question_version_id"] == frozen["_id"]
-    version_forbidden = client.get(f"/assessment-versions/{published['_id']}", headers=student_headers)
+    version_forbidden = client.get(
+        f"/assessment-versions/{published['_id']}", headers=student_headers
+    )
     assert version_forbidden.status_code == 403
-    snapshot = request(client, "GET", f"/assessment-versions/{published['_id']}", teacher_headers, 200)
+    snapshot = request(
+        client, "GET", f"/assessment-versions/{published['_id']}", teacher_headers, 200
+    )
     assert snapshot["_id"] == published["_id"]
-    immutable = client.patch(f"/assessment-versions/{published['_id']}", headers=teacher_headers, json={"title": "Sai"})
+    immutable = client.patch(
+        f"/assessment-versions/{published['_id']}", headers=teacher_headers, json={"title": "Sai"}
+    )
     assert immutable.status_code == 409
     assert immutable.json()["detail"]["code"] == "immutable_assessment_version"
-    immutable_question = client.patch(f"/question-versions/{frozen['_id']}", headers=teacher_headers, json={"stem_doc": doc("Sai")})
+    immutable_question = client.patch(
+        f"/question-versions/{frozen['_id']}",
+        headers=teacher_headers,
+        json={"stem_doc": doc("Sai")},
+    )
     assert immutable_question.status_code == 409
     assert immutable_question.json()["detail"]["code"] == "immutable_question_version"
 
@@ -517,7 +571,9 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         201,
         json={"assignment_id": assigned["_id"], "idempotency_key": f"attempt-timeout-{run_id}"},
     )
-    assert attempt["option_order"][frozen["_id"]] == [option["id"] for option in player["items"][0]["question"]["options"]]
+    assert attempt["option_order"][frozen["_id"]] == [
+        option["id"] for option in player["items"][0]["question"]["options"]
+    ]
     time.sleep(2.2)
     expired_save = client.post(
         f"/attempts/{attempt['_id']}/responses",
@@ -582,7 +638,14 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     assert retention["responses_pseudonymized"] == 0
     assert client.get("/operations/models", headers=teacher_headers).status_code == 403
     model_monitoring = request(client, "GET", "/operations/models", admin_headers, 200)
-    assert {"prediction_versions", "prediction_error_metrics", "calibration_jobs", "failed_jobs", "drift_alerts", "bank_coverage"}.issubset(model_monitoring)
+    assert {
+        "prediction_versions",
+        "prediction_error_metrics",
+        "calibration_jobs",
+        "failed_jobs",
+        "drift_alerts",
+        "bank_coverage",
+    }.issubset(model_monitoring)
     assert client.get("/operations/health", headers=teacher_headers).status_code == 403
     platform_health = request(client, "GET", "/operations/health", admin_headers, 200)
     assert platform_health["services"]["assessment"]["status"] == "ready"
@@ -596,7 +659,9 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         "compilation",
         "collection",
     }.issubset(platform_health["services"])
-    cross_tenant_draft = client.get(f"/assessment-drafts/{draft['_id']}", headers=other_teacher_headers)
+    cross_tenant_draft = client.get(
+        f"/assessment-drafts/{draft['_id']}", headers=other_teacher_headers
+    )
     assert cross_tenant_draft.status_code == 403
     access_events = request(
         client,
@@ -613,7 +678,9 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         admin_headers,
         200,
     )
-    assert any(event["action"] == "published_assessment_mutation_denied" for event in immutable_events)
+    assert any(
+        event["action"] == "published_assessment_mutation_denied" for event in immutable_events
+    )
     obsolete_source = request(
         client,
         "POST",
@@ -622,6 +689,10 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         200,
         json={"reason": "Nguồn kiểm thử đã thay thế"},
     )
-    assert obsolete_source == {"document_id": f"curriculum-{run_id}", "status": "obsolete", "deindexed": True}
+    assert obsolete_source == {
+        "document_id": f"curriculum-{run_id}",
+        "status": "obsolete",
+        "deindexed": True,
+    }
 
 print("assessment security lifecycle integration passed")

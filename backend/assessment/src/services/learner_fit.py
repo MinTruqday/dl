@@ -64,7 +64,9 @@ def evaluate_learner_fit(
         difficulty = float(item["difficulty"])
         topic = str(item.get("topic") or _topic(item))
         topic_estimate = topic_ability.get(topic)
-        ability = float(topic_estimate) if isinstance(topic_estimate, (int, float)) else midpoint_ability
+        ability = (
+            float(topic_estimate) if isinstance(topic_estimate, (int, float)) else midpoint_ability
+        )
         item_confidence = _bounded(float(item.get("confidence", 0.25)))
         local_learner_confidence = _bounded(float(topic_confidence.get(topic, learner_confidence)))
         confidence = round(min(item_confidence, local_learner_confidence), 3)
@@ -93,7 +95,10 @@ def evaluate_learner_fit(
             "difficulty": round(difficulty, 3),
             "difficulty_source": item.get("difficulty_source", "unknown"),
             "expected_probability_correct": round(probability, 3),
-            "expected_success_range": [round(min(probability_low, probability_high), 3), round(max(probability_low, probability_high), 3)],
+            "expected_success_range": [
+                round(min(probability_low, probability_high), 3),
+                round(max(probability_low, probability_high), 3),
+            ],
             "fit_score": round(_fit_score(probability, target_range), 3),
             "fit_category": category,
             "confidence": confidence,
@@ -113,13 +118,19 @@ def evaluate_learner_fit(
             {
                 "topic": topic,
                 "item_count": len(topic_rows),
-                "expected_probability_correct": round(mean(row["expected_probability_correct"] for row in topic_rows), 3),
+                "expected_probability_correct": round(
+                    mean(row["expected_probability_correct"] for row in topic_rows), 3
+                ),
                 "fit_score": round(mean(row["fit_score"] for row in topic_rows), 3),
                 "confidence": round(mean(row["confidence"] for row in topic_rows), 3),
                 "categories": topic_categories,
             }
         )
-    low_evidence_ids = [row.get("question_draft_id") or row.get("question_version_id") for row in rows if row["confidence"] < 0.5]
+    low_evidence_ids = [
+        row.get("question_draft_id") or row.get("question_version_id")
+        for row in rows
+        if row["confidence"] < 0.5
+    ]
     mismatch_rows = [row for row in rows if row["fit_category"] != "suitable"]
     question_count = len(rows)
     expected_score = mean(row["expected_probability_correct"] for row in rows) if rows else 0
@@ -145,16 +156,24 @@ def evaluate_learner_fit(
         "distribution_mismatch": {
             "mismatch_count": len(mismatch_rows),
             "mismatch_ratio": round(1 - suitable_ratio, 3) if question_count else 0,
-            "floor_risk": round(categories["too_easy"] / question_count, 3) if question_count else 0,
-            "ceiling_risk": round(categories["too_hard"] / question_count, 3) if question_count else 0,
-            "over_concentration": max(categories.values()) / question_count > 0.7 if question_count else False,
+            "floor_risk": round(categories["too_easy"] / question_count, 3)
+            if question_count
+            else 0,
+            "ceiling_risk": round(categories["too_hard"] / question_count, 3)
+            if question_count
+            else 0,
+            "over_concentration": max(categories.values()) / question_count > 0.7
+            if question_count
+            else False,
         },
         "low_evidence_warning": bool(low_evidence_ids),
         "low_evidence_item_ids": low_evidence_ids,
         "reason_summary": {
             "suitable_item_ratio": round(suitable_ratio, 3),
             "cold_start": learner_confidence < 0.5,
-            "difficulty_sources": sorted({str(item.get("difficulty_source", "unknown")) for item in items}),
+            "difficulty_sources": sorted(
+                {str(item.get("difficulty_source", "unknown")) for item in items}
+            ),
         },
         "items": rows,
     }

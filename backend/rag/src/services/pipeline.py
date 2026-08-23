@@ -17,7 +17,9 @@ async def embed_available_chunks(chunks):
     texts = [chunk["text"] for chunk in chunks]
     try:
         vectors = await embedder.embed_batch(texts)
-        if len(vectors) != len(chunks) or any(not isinstance(vector, list) or not vector for vector in vectors):
+        if len(vectors) != len(chunks) or any(
+            not isinstance(vector, list) or not vector for vector in vectors
+        ):
             raise ValueError("embedding_batch_shape_invalid")
         return chunks, vectors, []
     except Exception:
@@ -46,29 +48,31 @@ async def embed_available_chunks(chunks):
 
 class IngestionPipelineService:
     async def ingest_document(
-        self,
-        document_id: str,
-        requester_id: str,
-        is_admin: bool = False,
+        self, document_id: str, requester_id: str, is_admin: bool = False
     ) -> Dict:
         logger.info(f"Starting ingestion for document {document_id}")
-        doc = await content_client.authorize_document(
-            document_id,
-            requester_id,
-            is_admin,
-        )
-        
+        doc = await content_client.authorize_document(document_id, requester_id, is_admin)
+
         file_url = doc.get("file_url", "") if doc else ""
         title = doc.get("title") or ""
         author = doc.get("author") or doc.get("author_name") or ""
         visibility = doc.get("visibility") or "private"
         content_format = doc.get("content_format") or ""
-        content_source = doc.get("source") or doc.get("content_source") or doc.get("source_name") or "user_upload"
+        content_source = (
+            doc.get("source")
+            or doc.get("content_source")
+            or doc.get("source_name")
+            or "user_upload"
+        )
         education_metadata = doc.get("education_metadata") or {}
+
         def education_value(key: str, default=None):
             value = education_metadata.get(key)
             return doc.get(key, default) if value is None else value
-        source_type = doc.get("source_type") or education_metadata.get("source_type") or "teacher_material"
+
+        source_type = (
+            doc.get("source_type") or education_metadata.get("source_type") or "teacher_material"
+        )
         authority = doc.get("authority") or education_metadata.get("authority") or "supplementary"
         owner_id = str(doc.get("owner_id") or doc.get("creator_id") or "")
 
@@ -109,10 +113,7 @@ class IngestionPipelineService:
             "claim_value": education_value("claim_value"),
         }
 
-        parse_result = await document_parser.parse_document(
-            file_url,
-            visibility=visibility,
-        )
+        parse_result = await document_parser.parse_document(file_url, visibility=visibility)
         if parse_result.get("error"):
             raise ValueError("Failed to convert document with Docling")
         raw_markdown = parse_result.get("markdown", "")
@@ -132,23 +133,21 @@ class IngestionPipelineService:
             for chunk in chunks:
                 flags = prompt_injection_flags(chunk["text"])
                 if flags:
-                    quarantined_chunks.append({"chunk_id": chunk["metadata"].get("chunk_id"), "flags": flags})
+                    quarantined_chunks.append(
+                        {"chunk_id": chunk["metadata"].get("chunk_id"), "flags": flags}
+                    )
                 else:
                     locally_safe.append(chunk)
             chunks = locally_safe
 
         if chunks:
-            safe_indices = await ai_client.inspect_rag_chunks(
-                [chunk["text"] for chunk in chunks]
-            )
+            safe_indices = await ai_client.inspect_rag_chunks([chunk["text"] for chunk in chunks])
             rejected = [chunk for index, chunk in enumerate(chunks) if index not in safe_indices]
             quarantined_chunks.extend(
                 {"chunk_id": chunk["metadata"].get("chunk_id"), "flags": ["ai_safety_rejection"]}
                 for chunk in rejected
             )
-            chunks = [
-                chunk for index, chunk in enumerate(chunks) if index in safe_indices
-            ]
+            chunks = [chunk for index, chunk in enumerate(chunks) if index in safe_indices]
 
         first_pages = "\n".join(chunk["text"] for chunk in chunks)[:15000]
 
@@ -202,8 +201,7 @@ class IngestionPipelineService:
         ids = [c["id"] for c in chunks]
         metadatas = [c["metadata"] for c in chunks]
         previous_vector_ids, previous_bm25_ids = await asyncio.gather(
-            vector_store.ids_by_document(document_id),
-            bm25_store.ids_by_document(document_id),
+            vector_store.ids_by_document(document_id), bm25_store.ids_by_document(document_id)
         )
 
         await vector_store.upsert(
@@ -213,20 +211,17 @@ class IngestionPipelineService:
         await bm25_store.upsert(chunks)
         current_ids = set(ids)
         await asyncio.gather(
-            vector_store.delete_ids([point_id for point_id in previous_vector_ids if point_id not in current_ids]),
-            bm25_store.delete_ids([point_id for point_id in previous_bm25_ids if point_id not in current_ids]),
+            vector_store.delete_ids(
+                [point_id for point_id in previous_vector_ids if point_id not in current_ids]
+            ),
+            bm25_store.delete_ids(
+                [point_id for point_id in previous_bm25_ids if point_id not in current_ids]
+            ),
         )
 
-        index_report = {
-            "failed_chunks": failed_chunks,
-            "quarantined_chunks": quarantined_chunks,
-        }
+        index_report = {"failed_chunks": failed_chunks, "quarantined_chunks": quarantined_chunks}
         await content_client.mark_indexed(
-            document_id,
-            len(chunks),
-            index_report,
-            raw_markdown,
-            extraction_method,
+            document_id, len(chunks), index_report, raw_markdown, extraction_method
         )
 
         return {
@@ -238,5 +233,6 @@ class IngestionPipelineService:
             "quarantined_chunks": quarantined_chunks,
             "failed_chunks": failed_chunks,
         }
+
 
 ingestion_pipeline = IngestionPipelineService()

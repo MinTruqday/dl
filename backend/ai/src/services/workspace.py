@@ -33,7 +33,9 @@ class WorkspaceService:
             parts.append(f"Persistent objective\n{objective}")
         if pending_steps:
             parts.append("Incomplete verified steps\n" + "\n".join(pending_steps[:20]))
-        parts.append("Respond in the language used by the user unless the user requests another language")
+        parts.append(
+            "Respond in the language used by the user unless the user requests another language"
+        )
         return "\n\n".join(parts)
 
     @staticmethod

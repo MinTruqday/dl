@@ -15,21 +15,13 @@ class ContentClient:
         return response.json().get("data")
 
     async def get_document(self, document_id: str):
-        document = await self.request(
-            {"operation": "find_one", "query": {"_id": document_id}}
-        )
+        document = await self.request({"operation": "find_one", "query": {"_id": document_id}})
         if document:
             return document
-        return await self.request(
-            {"operation": "find_one", "query": {"id": document_id}}
-        )
+        return await self.request({"operation": "find_one", "query": {"id": document_id}})
 
     async def authorize_document(
-        self,
-        document_id: str,
-        requester_id: str,
-        is_admin: bool,
-        allow_deleted: bool = False,
+        self, document_id: str, requester_id: str, is_admin: bool, allow_deleted: bool = False
     ):
         document = await self.get_document(document_id)
         if not document or (document.get("is_deleted") is True and not allow_deleted):
@@ -38,12 +30,7 @@ class ContentClient:
             raise PermissionError("Document access denied")
         return document
 
-    async def authorize_read(
-        self,
-        document_id: str,
-        requester_id: str,
-        is_admin: bool,
-    ):
+    async def authorize_read(self, document_id: str, requester_id: str, is_admin: bool):
         document = await self.get_document(document_id)
         if not document or document.get("is_deleted") is True:
             raise ValueError("Document not found")
@@ -72,7 +59,8 @@ class ContentClient:
                         "chunks_count": chunks_count,
                         "is_indexed": True,
                         "indexing_status": "indexed",
-                        "index_report": index_report or {"failed_chunks": [], "quarantined_chunks": []},
+                        "index_report": index_report
+                        or {"failed_chunks": [], "quarantined_chunks": []},
                         "extracted_text": extracted_text[:200000],
                         "extracted_text_truncated": len(extracted_text) > 200000,
                         "extraction_method": extraction_method,
@@ -87,7 +75,10 @@ class ContentClient:
             {
                 "operation": "update_one",
                 "query": {"_id": document_id},
-                "update": {"$set": {"indexing_status": "indexing"}, "$unset": {"indexing_error": ""}},
+                "update": {
+                    "$set": {"indexing_status": "indexing"},
+                    "$unset": {"indexing_error": ""},
+                },
             }
         )
 
@@ -105,7 +96,13 @@ class ContentClient:
             {
                 "operation": "update_one",
                 "query": {"_id": document_id},
-                "update": {"$set": {"chunks_count": 0, "is_indexed": False, "indexing_status": "not_started"}},
+                "update": {
+                    "$set": {
+                        "chunks_count": 0,
+                        "is_indexed": False,
+                        "indexing_status": "not_started",
+                    }
+                },
             }
         )
 

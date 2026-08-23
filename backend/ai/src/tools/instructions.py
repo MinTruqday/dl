@@ -4,15 +4,15 @@ from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from loguru import logger
 from pydantic import Field
-from src.tools.http_client import (
-    INTERNAL_API_URL,
-    make_api_request,
-)
+from src.tools.http_client import INTERNAL_API_URL, make_api_request
+
 
 @tool
 async def manage_user_instructions(
     action: Annotated[str, Field(description="Instruction operation: get, set, or clear")],
-    instruction: Annotated[str, Field(description="Preference text required for set and ignored for get or clear")] = "",
+    instruction: Annotated[
+        str, Field(description="Preference text required for set and ignored for get or clear")
+    ] = "",
     config: RunnableConfig = None,
 ) -> str:
     """
@@ -44,10 +44,9 @@ async def manage_user_instructions(
             if res.status_code == 200:
                 data = res.json().get("data", {})
                 instructions = data.get("instructions", "")
-                return json.dumps({
-                    "status": "success",
-                    "instructions": instructions,
-                }, ensure_ascii=False)
+                return json.dumps(
+                    {"status": "success", "instructions": instructions}, ensure_ascii=False
+                )
             return json.dumps({"status": "instruction_retrieval_failed"})
 
         elif action_type == "set":
@@ -61,10 +60,9 @@ async def manage_user_instructions(
                 timeout=30.0,
             )
             if res.status_code == 200:
-                return json.dumps({
-                    "status": "success",
-                    "instructions": instruction.strip(),
-                }, ensure_ascii=False)
+                return json.dumps(
+                    {"status": "success", "instructions": instruction.strip()}, ensure_ascii=False
+                )
             return json.dumps({"status": "instruction_update_failed"})
 
         elif action_type == "clear":

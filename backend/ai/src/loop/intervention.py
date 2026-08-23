@@ -7,15 +7,10 @@ from typing import Dict, List, Literal, Optional
 from loguru import logger
 from src.utils.background import create_background_task
 
-InterventionStatus = Literal[
-    "PENDING_APPROVAL",
-    "APPROVED",
-    "REJECTED",
-    "CORRECTED",
-    "EXPIRED",
-]
+InterventionStatus = Literal["PENDING_APPROVAL", "APPROVED", "REJECTED", "CORRECTED", "EXPIRED"]
 
 RiskLevel = Literal["low", "medium", "high", "critical"]
+
 
 @dataclass
 class InterventionRequest:
@@ -32,6 +27,7 @@ class InterventionRequest:
     requested_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     resolved_at: Optional[datetime] = None
 
+
 @dataclass
 class InterventionAuditEntry:
     intervention_id: str
@@ -45,6 +41,7 @@ class InterventionAuditEntry:
     requested_at: datetime
     resolved_at: Optional[datetime]
     duration_seconds: Optional[float]
+
 
 class InterventionHarness:
     def __init__(self):
@@ -60,9 +57,8 @@ class InterventionHarness:
             try:
                 import redis.asyncio as aioredis
                 from src.core.infrastructure.configuration import settings
-                self._redis_client = aioredis.from_url(
-                    settings.REDIS_URI, decode_responses=True
-                )
+
+                self._redis_client = aioredis.from_url(settings.REDIS_URI, decode_responses=True)
             except Exception:
                 logger.exception("Intervention tracking system Redis connection error")
         return self._redis_client
@@ -108,8 +104,7 @@ class InterventionHarness:
             except Exception:
                 logger.exception("Error persisting intervention request to Redis layer")
         create_background_task(
-            self._auto_expire(intervention_id, ttl),
-            f"intervention-expire-{intervention_id}",
+            self._auto_expire(intervention_id, ttl), f"intervention-expire-{intervention_id}"
         )
 
         logger.warning(
@@ -125,9 +120,7 @@ class InterventionHarness:
             request.resolved_at = datetime.now(timezone.utc)
             self._pending.pop(intervention_id, None)
             self._record_audit(request)
-            logger.warning(
-                f"Intervention request {intervention_id} expired due to timeout"
-            )
+            logger.warning(f"Intervention request {intervention_id} expired due to timeout")
 
     async def record_feedback(
         self,
@@ -151,9 +144,7 @@ class InterventionHarness:
         if status == "APPROVED":
             self._approved[intervention_id] = request
             if scope == "session":
-                self._session_grants.add(
-                    (request.session_id, request.user_id, request.action_type)
-                )
+                self._session_grants.add((request.session_id, request.user_id, request.action_type))
             elif scope == "safe_session" and request.risk_level in {"low", "medium"}:
                 self._session_grants.add((request.session_id, request.user_id, "*"))
         self._record_audit(request)
@@ -180,31 +171,20 @@ class InterventionHarness:
             except Exception:
                 logger.exception("Error deleting intervention request from Redis cache")
 
-        logger.info(
-            f"Intervention feedback recorded: id={intervention_id}, status={status}"
-        )
+        logger.info(f"Intervention feedback recorded: id={intervention_id}, status={status}")
         return request
 
     def has_session_grant(
-        self,
-        session_id: str,
-        user_id: str,
-        action_type: str,
-        risk_level: RiskLevel,
+        self, session_id: str, user_id: str, action_type: str, risk_level: RiskLevel
     ) -> bool:
         exact = (session_id, user_id, action_type) in self._session_grants
         safe_all = (
-            risk_level in {"low", "medium"}
-            and (session_id, user_id, "*") in self._session_grants
+            risk_level in {"low", "medium"} and (session_id, user_id, "*") in self._session_grants
         )
         return exact or safe_all
 
     async def consume_approval(
-        self,
-        intervention_id: str,
-        session_id: str,
-        user_id: str,
-        action_type: str,
+        self, intervention_id: str, session_id: str, user_id: str, action_type: str
     ) -> bool:
         request = self._approved.get(intervention_id)
         if request:
@@ -257,12 +237,7 @@ class InterventionHarness:
         loop = asyncio.get_running_loop()
         deadline = loop.time() + timeout_seconds
         while loop.time() < deadline:
-            if await self.consume_approval(
-                intervention_id,
-                session_id,
-                user_id,
-                action_type,
-            ):
+            if await self.consume_approval(intervention_id, session_id, user_id, action_type):
                 return True
             if not await self.check_pending(intervention_id):
                 return False
@@ -272,9 +247,7 @@ class InterventionHarness:
     def _record_audit(self, request: InterventionRequest):
         duration = None
         if request.resolved_at:
-            duration = round(
-                (request.resolved_at - request.requested_at).total_seconds(), 2
-            )
+            duration = round((request.resolved_at - request.requested_at).total_seconds(), 2)
         entry = InterventionAuditEntry(
             intervention_id=request.intervention_id,
             session_id=request.session_id,
@@ -290,10 +263,7 @@ class InterventionHarness:
         )
         self._audit_log.append(entry)
 
-    async def check_pending(
-        self,
-        intervention_id: str,
-    ) -> Optional[InterventionRequest]:
+    async def check_pending(self, intervention_id: str) -> Optional[InterventionRequest]:
         request = self._pending.get(intervention_id)
         if request:
             return request
@@ -327,16 +297,14 @@ class InterventionHarness:
 
     async def get_pending_by_session(self, session_id: str) -> List[InterventionRequest]:
         requests = [
-            r for r in self._pending.values()
+            r
+            for r in self._pending.values()
             if r.session_id == session_id and r.status == "PENDING_APPROVAL"
         ]
         redis = self._get_redis()
         if redis:
             try:
-                async for key in redis.scan_iter(
-                    match=f"intervention:{session_id}:*",
-                    count=100,
-                ):
+                async for key in redis.scan_iter(match=f"intervention:{session_id}:*", count=100):
                     raw = await redis.get(key)
                     if not raw:
                         continue
@@ -382,6 +350,7 @@ class InterventionHarness:
             "breakdown": breakdown,
             "avg_resolution_seconds": avg_duration,
         }
+
 
 intervention = InterventionHarness()
 import uuid

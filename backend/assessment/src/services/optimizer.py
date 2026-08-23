@@ -24,45 +24,106 @@ def selection_gaps(selected: list[dict[str, Any]], blueprint: dict[str, Any]):
     cognitive = Counter(str(item.get("cognitive_level", "")) for item in selected)
     gaps = []
     if len(selected) != blueprint["total_questions"]:
-        gaps.append({"code": "total_questions_unmet", "expected": blueprint["total_questions"], "actual": len(selected)})
+        gaps.append(
+            {
+                "code": "total_questions_unmet",
+                "expected": blueprint["total_questions"],
+                "actual": len(selected),
+            }
+        )
     for level, expected in blueprint.get("difficulty_distribution", {}).items():
         if difficulty[level] != expected:
-            gaps.append({"code": "difficulty_distribution_unmet", "value": level, "expected": expected, "actual": difficulty[level]})
+            gaps.append(
+                {
+                    "code": "difficulty_distribution_unmet",
+                    "value": level,
+                    "expected": expected,
+                    "actual": difficulty[level],
+                }
+            )
     for question_type, expected in blueprint.get("question_type_constraints", {}).items():
         if question_types[question_type] != expected:
-            gaps.append({"code": "question_type_distribution_unmet", "value": question_type, "expected": expected, "actual": question_types[question_type]})
+            gaps.append(
+                {
+                    "code": "question_type_distribution_unmet",
+                    "value": question_type,
+                    "expected": expected,
+                    "actual": question_types[question_type],
+                }
+            )
     for level, expected in blueprint.get("cognitive_level_constraints", {}).items():
         if cognitive[level] != expected:
-            gaps.append({"code": "cognitive_distribution_unmet", "value": level, "expected": expected, "actual": cognitive[level]})
+            gaps.append(
+                {
+                    "code": "cognitive_distribution_unmet",
+                    "value": level,
+                    "expected": expected,
+                    "actual": cognitive[level],
+                }
+            )
     for constraint in blueprint.get("coverage_constraints", []):
         actual = sum(item_matches_coverage(item, constraint) for item in selected)
         if constraint.get("required", True) and actual < constraint.get("minimum_count", 0):
-            gaps.append({"code": "coverage_constraint_unmet", "constraint": constraint, "actual": actual})
+            gaps.append(
+                {"code": "coverage_constraint_unmet", "constraint": constraint, "actual": actual}
+            )
     maximum_exposure = blueprint.get("maximum_exposure_count")
     if maximum_exposure is not None:
-        overexposed = [item["id"] for item in selected if int(item.get("exposure_count", 0)) > maximum_exposure]
+        overexposed = [
+            item["id"] for item in selected if int(item.get("exposure_count", 0)) > maximum_exposure
+        ]
         if overexposed:
-            gaps.append({"code": "exposure_constraint_unmet", "maximum": maximum_exposure, "item_ids": overexposed})
+            gaps.append(
+                {
+                    "code": "exposure_constraint_unmet",
+                    "maximum": maximum_exposure,
+                    "item_ids": overexposed,
+                }
+            )
     return gaps
 
 
 def optimize_blueprint(items: list[dict[str, Any]], blueprint: dict[str, Any]):
-    locked_all = sorted([item for item in items if item.get("locked")], key=lambda item: str(item["id"]))
-    ineligible_locked = [item for item in locked_all if not item.get("valid", True) or item.get("status") in {"rejected", "archived"}]
+    locked_all = sorted(
+        [item for item in items if item.get("locked")], key=lambda item: str(item["id"])
+    )
+    ineligible_locked = [
+        item
+        for item in locked_all
+        if not item.get("valid", True) or item.get("status") in {"rejected", "archived"}
+    ]
     if ineligible_locked:
         return {
             "feasible": False,
             "selected": locked_all,
-            "gaps": [{"code": "locked_item_ineligible", "item_ids": [item["id"] for item in ineligible_locked]}],
+            "gaps": [
+                {
+                    "code": "locked_item_ineligible",
+                    "item_ids": [item["id"] for item in ineligible_locked],
+                }
+            ],
             "audit": [],
         }
-    eligible = [item for item in items if item.get("valid", True) and item.get("status") not in {"rejected", "archived"}]
-    locked = sorted([item for item in eligible if item.get("locked")], key=lambda item: str(item["id"]))
+    eligible = [
+        item
+        for item in items
+        if item.get("valid", True) and item.get("status") not in {"rejected", "archived"}
+    ]
+    locked = sorted(
+        [item for item in eligible if item.get("locked")], key=lambda item: str(item["id"])
+    )
     if len(locked) > blueprint["total_questions"]:
-        return {"feasible": False, "selected": locked, "gaps": [{"code": "locked_items_exceed_total"}], "audit": []}
+        return {
+            "feasible": False,
+            "selected": locked,
+            "gaps": [{"code": "locked_items_exceed_total"}],
+            "audit": [],
+        }
     selected = list(locked)
     selected_ids = {item["id"] for item in selected}
-    duplicate_groups = set().union(*(item_duplicate_groups(item) for item in selected)) if selected else set()
+    duplicate_groups = (
+        set().union(*(item_duplicate_groups(item) for item in selected)) if selected else set()
+    )
     pool = sorted(
         [
             item
@@ -103,11 +164,18 @@ def optimize_blueprint(items: list[dict[str, Any]], blueprint: dict[str, Any]):
             level = str(item.get("difficulty_level", 3))
             question_type = str(item.get("question_type", ""))
             cognitive_level = str(item.get("cognitive_level", ""))
-            if level in blueprint.get("difficulty_distribution", {}) and selected_difficulty[level] >= blueprint["difficulty_distribution"][level]:
+            if (
+                level in blueprint.get("difficulty_distribution", {})
+                and selected_difficulty[level] >= blueprint["difficulty_distribution"][level]
+            ):
                 continue
-            if blueprint.get("question_type_constraints") and selected_types[question_type] >= blueprint["question_type_constraints"].get(question_type, 0):
+            if blueprint.get("question_type_constraints") and selected_types[
+                question_type
+            ] >= blueprint["question_type_constraints"].get(question_type, 0):
                 continue
-            if blueprint.get("cognitive_level_constraints") and selected_cognitive[cognitive_level] >= blueprint["cognitive_level_constraints"].get(cognitive_level, 0):
+            if blueprint.get("cognitive_level_constraints") and selected_cognitive[
+                cognitive_level
+            ] >= blueprint["cognitive_level_constraints"].get(cognitive_level, 0):
                 continue
             score = 0.0
             reasons = []
@@ -120,7 +188,9 @@ def optimize_blueprint(items: list[dict[str, Any]], blueprint: dict[str, Any]):
             if cognitive_needs[str(item.get("cognitive_level", ""))] > 0:
                 score += 20
                 reasons.append("cognitive_level")
-            coverage_matches = sum(item_matches_coverage(item, constraint) for constraint in coverage_needs)
+            coverage_matches = sum(
+                item_matches_coverage(item, constraint) for constraint in coverage_needs
+            )
             if coverage_matches:
                 score += 100 * coverage_matches
                 reasons.append("required_coverage")

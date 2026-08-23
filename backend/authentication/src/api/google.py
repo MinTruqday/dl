@@ -6,14 +6,14 @@ from src.services.google import GoogleService
 
 router = APIRouter(prefix="/google")
 
+
 @router.get("/dang-nhap", response_model=APIResponse[Any])
 async def google_login():
     auth_url = await GoogleService.get_google_auth_url()
     return APIResponse(
-        data={"url": auth_url},
-        message="Khởi tạo liên kết cổng xác thực hoàn tất",
-        status=200,
+        data={"url": auth_url}, message="Khởi tạo liên kết cổng xác thực hoàn tất", status=200
     )
+
 
 @router.get("/callback", response_model=APIResponse[Any])
 async def google_callback(code: str, state: str, request: Request, response: Response):

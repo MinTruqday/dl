@@ -2,6 +2,7 @@ import httpx
 from typing import Dict, List, Optional
 from src.core.infrastructure.configuration import settings
 
+
 class RagClient:
     """Thin HTTP boundary to the standalone RAG service."""
 
@@ -24,8 +25,13 @@ class RagClient:
             return False
 
     @staticmethod
-    async def filter_teacher_materials(documents: List[Dict], requester_id: Optional[str]) -> List[Dict]:
-        if not any((document.get("metadata") or {}).get("source_type") == "teacher_material" for document in documents):
+    async def filter_teacher_materials(
+        documents: List[Dict], requester_id: Optional[str]
+    ) -> List[Dict]:
+        if not any(
+            (document.get("metadata") or {}).get("source_type") == "teacher_material"
+            for document in documents
+        ):
             return documents
         if await RagClient.teacher_materials_allowed(requester_id):
             return documents
@@ -62,8 +68,7 @@ class RagClient:
             data = response.json().get("data", {})
             embeddings = data.get("embeddings", [])
             if len(embeddings) != len(texts) or any(
-                len(embedding) != RagClient.embedding_dimensions
-                for embedding in embeddings
+                len(embedding) != RagClient.embedding_dimensions for embedding in embeddings
             ):
                 raise RuntimeError("RAG batch embedding dimension mismatch")
             return embeddings
@@ -155,16 +160,12 @@ class RagClient:
 
     @staticmethod
     async def get_cache(
-        query_text: str,
-        query_vector: Optional[List[float]] = None,
+        query_text: str, query_vector: Optional[List[float]] = None
     ) -> Optional[str]:
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.post(
                 f"{settings.RAG_URL}/rag/cache/get",
-                json={
-                    "query_text": query_text,
-                    "query_vector": query_vector,
-                },
+                json={"query_text": query_text, "query_vector": query_vector},
                 headers={"X-Internal-Token": settings.SECRET_KEY},
             )
             response.raise_for_status()
@@ -175,9 +176,7 @@ class RagClient:
 
     @staticmethod
     async def set_cache(
-        query_text: str,
-        response_text: str,
-        query_vector: Optional[List[float]] = None,
+        query_text: str, response_text: str, query_vector: Optional[List[float]] = None
     ) -> None:
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.post(
@@ -255,5 +254,6 @@ class RagClient:
             )
             response.raise_for_status()
             return response.json().get("data", {})
+
 
 rag_client = RagClient()

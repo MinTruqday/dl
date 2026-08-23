@@ -4,25 +4,30 @@ from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 
+
 class DatabaseInfrastructure:
     def __init__(self):
         self.mongodb = None
 
+
 database = DatabaseInfrastructure()
+
 
 async def init_db():
     mongo_uri = settings.MONGODB_URI
 
-    if not mongo_uri :
+    if not mongo_uri:
         logger.error("Failed to initialize database connection due to missing MongoDB URI")
         import sys
 
         sys.exit(1)
 
     from motor.motor_asyncio import AsyncIOMotorClient
+
     database.mongodb = AsyncIOMotorClient(mongo_uri)
 
     from src.core.infrastructure.mq import mq
+
     max_retries = 5
     for i in range(max_retries):
         try:
@@ -39,6 +44,7 @@ async def init_db():
             await asyncio.sleep(5)
 
     await setup_indexes()
+
 
 async def setup_indexes():
     try:
@@ -73,6 +79,7 @@ async def setup_indexes():
     except Exception:
         logger.exception("MongoDB index creation failed")
         raise
+
 
 async def close_db():
     if database.mongodb:

@@ -73,9 +73,7 @@ async def internal_document_data(req: dict):
         return {"data": serialize_internal(rows)}
     if operation == "update_one":
         result = await documents.update_one(
-            query,
-            req.get("update") or {},
-            upsert=bool(req.get("upsert", False)),
+            query, req.get("update") or {}, upsert=bool(req.get("upsert", False))
         )
         return {
             "data": {
@@ -109,12 +107,7 @@ async def internal_document_data(req: dict):
                             "$reduce": {
                                 "input": "$tags",
                                 "initialValue": [],
-                                "in": {
-                                    "$setUnion": [
-                                        "$$value",
-                                        {"$ifNull": ["$$this", []]},
-                                    ]
-                                },
+                                "in": {"$setUnion": ["$$value", {"$ifNull": ["$$this", []]}]},
                             }
                         },
                     }
@@ -122,9 +115,7 @@ async def internal_document_data(req: dict):
             ]
         ).to_list(length=1)
         data = rows[0] if rows else {"categories": [], "tags": []}
-        data["categories"] = sorted(
-            value for value in data.get("categories", []) if value
-        )
+        data["categories"] = sorted(value for value in data.get("categories", []) if value)
         data["tags"] = sorted(value for value in data.get("tags", []) if value)
         return {"data": data}
     raise HTTPException(status_code=422, detail="Thao tác dữ liệu nội bộ không hợp lệ")
@@ -148,10 +139,7 @@ async def get_internal_document(req: dict):
     elif document and not edit:
         from types import SimpleNamespace
 
-        current_user = SimpleNamespace(
-            id=user_id,
-            role="admin" if is_admin else "reader",
-        )
+        current_user = SimpleNamespace(id=user_id, role="admin" if is_admin else "reader")
         if not await can_read_full(document, current_user):
             document = None
     if not document:
@@ -266,12 +254,18 @@ async def exchange_internal_document(req: dict):
             exact_query = {**identity_query, "content_hash": content_hash}
             row = await documents.find_one(exact_query)
             if not row:
-                previous = await documents.find_one(identity_query, sort=[("source_revision", -1), ("created_at", -1)])
-                payload["source_revision"] = int(previous.get("source_revision", 1)) + 1 if previous else 1
+                previous = await documents.find_one(
+                    identity_query, sort=[("source_revision", -1), ("created_at", -1)]
+                )
+                payload["source_revision"] = (
+                    int(previous.get("source_revision", 1)) + 1 if previous else 1
+                )
                 payload["previous_version_id"] = str(previous["_id"]) if previous else None
                 payload["source_is_current"] = True
                 if previous:
-                    payload["slug"] = f"{str(payload.get('slug') or 'tai-lieu')[:130]}-{content_hash[:10]}"
+                    payload["slug"] = (
+                        f"{str(payload.get('slug') or 'tai-lieu')[:130]}-{content_hash[:10]}"
+                    )
                 try:
                     await documents.insert_one(payload)
                     row = payload
@@ -302,6 +296,7 @@ async def exchange_internal_document(req: dict):
         superseded_document_id = str(row.get("previous_version_id") or "")
         if payload.get("file_url"):
             import asyncio
+
             async def _fire_collected_ingest():
                 try:
                     async with httpx.AsyncClient(timeout=5.0) as client:
@@ -315,7 +310,10 @@ async def exchange_internal_document(req: dict):
                             headers={"X-Internal-Token": settings.SECRET_KEY},
                         )
                 except Exception:
-                    logger.warning(f"Collected document ingest webhook failed for document_id={collected_doc_id}")
+                    logger.warning(
+                        f"Collected document ingest webhook failed for document_id={collected_doc_id}"
+                    )
+
             asyncio.create_task(_fire_collected_ingest())
         return {"data": {"document_id": collected_doc_id}}
     if action == "update_collected":
@@ -384,10 +382,7 @@ async def exchange_internal_document(req: dict):
         return {"data": rows}
     if action == "search_documents":
         text = str(req.get("query", "")).strip()
-        search_filter = {
-            "status": "published",
-            "is_deleted": {"$ne": True},
-        }
+        search_filter = {"status": "published", "is_deleted": {"$ne": True}}
         if text:
             search_filter["$or"] = [
                 {"title": {"$regex": text, "$options": "i"}},
@@ -397,12 +392,7 @@ async def exchange_internal_document(req: dict):
         rows = await documents.find(search_filter).limit(3).to_list(length=3)
         if not rows and text:
             rows = (
-                await documents.find(
-                    {
-                        "status": "published",
-                        "is_deleted": {"$ne": True},
-                    }
-                )
+                await documents.find({"status": "published", "is_deleted": {"$ne": True}})
                 .limit(3)
                 .to_list(length=3)
             )

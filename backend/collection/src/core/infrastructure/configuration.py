@@ -10,6 +10,7 @@ def get_service_url(service_name_underscore: str) -> str:
         return override
     return f"http://{service_name_underscore.lower()}:8000"
 
+
 class Settings(BaseModel):
     PROJECT_NAME: str = os.environ["PROJECT_NAME"]
     VERSION: str = os.environ["VERSION"]
@@ -31,5 +32,6 @@ class Settings(BaseModel):
     PLATFORM_SYSTEM_ID: str = os.environ["PLATFORM_SYSTEM_ID"]
     COLLECTION_DB_NAME: str = os.environ["COLLECTION_DB_NAME"]
     CONTENT_URL: str = get_service_url("CONTENT")
+
 
 settings = Settings()

@@ -9,7 +9,10 @@ run_id = uuid4().hex
 teacher_headers = {"x-test-user-id": f"teacher-extended-{run_id}", "x-test-user-role": "author"}
 other_teacher_headers = {"x-test-user-id": f"teacher-other-{run_id}", "x-test-user-role": "author"}
 student_headers = {"x-test-user-id": f"student-assigned-{run_id}", "x-test-user-role": "reader"}
-unassigned_headers = {"x-test-user-id": f"student-unassigned-{run_id}", "x-test-user-role": "reader"}
+unassigned_headers = {
+    "x-test-user-id": f"student-unassigned-{run_id}",
+    "x-test-user-role": "reader",
+}
 admin_headers = {"x-test-user-id": f"admin-{run_id}", "x-test-user-role": "admin"}
 internal_headers = {"x-internal-token": os.environ["SECRET_KEY"]}
 
@@ -22,7 +25,10 @@ def request(client, method, path, headers, expected, **kwargs):
 
 
 def doc(text):
-    return {"type": "doc", "content": [{"type": "paragraph", "content": [{"type": "text", "text": text}]}]}
+    return {
+        "type": "doc",
+        "content": [{"type": "paragraph", "content": [{"type": "text", "text": text}]}],
+    }
 
 
 def question_payload(source):
@@ -30,10 +36,7 @@ def question_payload(source):
         "question_type": "single_choice",
         "authoring_source": source,
         "stem_doc": doc("Hai cộng ba bằng bao nhiêu"),
-        "options": [
-            {"id": "A", "content_doc": doc("Bốn")},
-            {"id": "B", "content_doc": doc("Năm")},
-        ],
+        "options": [{"id": "A", "content_doc": doc("Bốn")}, {"id": "B", "content_doc": doc("Năm")}],
         "answer_key": {"option_id": "B"},
         "solution_doc": doc("Hai cộng ba bằng năm"),
         "scoring_rule": {"points": 1},
@@ -92,7 +95,9 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         201,
         json={
             "selected_candidate_ids": [imported["candidates"][0]["candidate_id"]],
-            "corrected_questions": {imported["candidates"][0]["candidate_id"]: question_payload("import")},
+            "corrected_questions": {
+                imported["candidates"][0]["candidate_id"]: question_payload("import")
+            },
         },
     )
     imported_question = confirmed["questions"][0]
@@ -104,21 +109,27 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         201,
         json={
             "selected_candidate_ids": [imported["candidates"][0]["candidate_id"]],
-            "corrected_questions": {imported["candidates"][0]["candidate_id"]: question_payload("import")},
+            "corrected_questions": {
+                imported["candidates"][0]["candidate_id"]: question_payload("import")
+            },
         },
     )
     assert confirmed_again["questions"][0]["_id"] == imported_question["_id"]
     assert imported_question["authoring_source"] == "import"
     assert imported_question["source_page"] == 3
-    frozen = request(client, "POST", f"/question-drafts/{imported_question['_id']}/freeze", teacher_headers, 201)
-    bank = request(client, "GET", "/questions?search=Hai%20cộng%20ba&question_type=single_choice", teacher_headers, 200)
+    frozen = request(
+        client, "POST", f"/question-drafts/{imported_question['_id']}/freeze", teacher_headers, 201
+    )
+    bank = request(
+        client,
+        "GET",
+        "/questions?search=Hai%20cộng%20ba&question_type=single_choice",
+        teacher_headers,
+        200,
+    )
     assert any(item["_id"] == frozen["question_id"] for item in bank)
     duplicated_bank_item = request(
-        client,
-        "POST",
-        f"/questions/{frozen['question_id']}/duplicate",
-        teacher_headers,
-        201,
+        client, "POST", f"/questions/{frozen['question_id']}/duplicate", teacher_headers, 201
     )
     assert duplicated_bank_item["_id"] != frozen["question_id"]
     request(
@@ -149,13 +160,19 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         "/question-bank/add-to-draft",
         teacher_headers,
         201,
-        json={"assessment_draft_id": bank_target_draft["_id"], "question_ids": [frozen["question_id"]]},
+        json={
+            "assessment_draft_id": bank_target_draft["_id"],
+            "question_ids": [frozen["question_id"]],
+        },
     )
     assert added_from_bank["questions"][0]["authoring_source"] == "hybrid"
     duplicate_add = client.post(
         "/question-bank/add-to-draft",
         headers=teacher_headers,
-        json={"assessment_draft_id": bank_target_draft["_id"], "question_ids": [frozen["question_id"]]},
+        json={
+            "assessment_draft_id": bank_target_draft["_id"],
+            "question_ids": [frozen["question_id"]],
+        },
     )
     assert duplicate_add.status_code == 409
 
@@ -182,7 +199,11 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
             "idempotency_key": f"publish-extended-{run_id}",
         },
     )
-    immutable = client.patch(f"/assessment-versions/{published['_id']}", headers=teacher_headers, json={"title": "changed"})
+    immutable = client.patch(
+        f"/assessment-versions/{published['_id']}",
+        headers=teacher_headers,
+        json={"title": "changed"},
+    )
     assert immutable.status_code == 409
     assert immutable.json()["detail"]["code"] == "immutable_assessment_version"
     request(
@@ -191,9 +212,17 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         f"/assessments/{assessment['_id']}/assignments",
         teacher_headers,
         201,
-        json={"student_ids": [student_headers["x-test-user-id"]], "idempotency_key": f"assign-{run_id}"},
+        json={
+            "student_ids": [student_headers["x-test-user-id"]],
+            "idempotency_key": f"assign-{run_id}",
+        },
     )
-    assert client.get(f"/assessments/{assessment['_id']}/player", headers=unassigned_headers).status_code == 403
+    assert (
+        client.get(
+            f"/assessments/{assessment['_id']}/player", headers=unassigned_headers
+        ).status_code
+        == 403
+    )
     assigned = request(client, "GET", "/students/me/assessments", student_headers, 200)
     assert assigned[0]["assessment_id"] == assessment["_id"]
     attempt = request(
@@ -248,7 +277,9 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
             "topic": "đạo hàm",
             "count": 1,
             "use_teacher_materials": True,
-            "source_evidence": [{"source_type": "teacher_material", "creator_id": "another-teacher"}],
+            "source_evidence": [
+                {"source_type": "teacher_material", "creator_id": "another-teacher"}
+            ],
         },
     )
     assert foreign_material.status_code == 403
@@ -279,7 +310,9 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
             "topic": "đạo hàm",
             "count": 1,
             "use_teacher_materials": True,
-            "source_evidence": [{"source_type": "teacher_material", "creator_id": teacher_headers["x-test-user-id"]}],
+            "source_evidence": [
+                {"source_type": "teacher_material", "creator_id": teacher_headers["x-test-user-id"]}
+            ],
         },
     )
     assert disabled_material.status_code == 409
@@ -306,7 +339,9 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
             "topic": "đạo hàm",
             "count": 1,
             "target_difficulty": 3,
-            "source_evidence": [{"source_type": "curriculum", "authority": "official", "chunk_id": "chunk-1"}],
+            "source_evidence": [
+                {"source_type": "curriculum", "authority": "official", "chunk_id": "chunk-1"}
+            ],
         },
     )
     generated_question = generated["questions"][0]
@@ -356,7 +391,11 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         teacher_headers,
         200,
         json={
-            "target_learner": {"ability_band": [2.5, 3.5], "confidence": 0.6, "source": "generic_learner_band"},
+            "target_learner": {
+                "ability_band": [2.5, 3.5],
+                "confidence": 0.6,
+                "source": "generic_learner_band",
+            },
             "target_success_range": [0.45, 0.8],
         },
     )
@@ -366,7 +405,9 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     assert learner_fit["mutated"] is False
     assert learner_fit["requires_teacher_acceptance"] is True
     optimizer_level = str(revealed["ui_difficulty_level"])
-    optimizer_distribution = {str(level): int(str(level) == optimizer_level) for level in range(1, 6)}
+    optimizer_distribution = {
+        str(level): int(str(level) == optimizer_level) for level in range(1, 6)
+    }
     optimizer_blueprint = request(
         client,
         "POST",
@@ -385,14 +426,19 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
             "total_points": 1,
         },
     )
-    current_blind_draft = request(client, "GET", f"/assessment-drafts/{blind_draft['_id']}", teacher_headers, 200)
+    current_blind_draft = request(
+        client, "GET", f"/assessment-drafts/{blind_draft['_id']}", teacher_headers, 200
+    )
     blueprint_draft = request(
         client,
         "PATCH",
         f"/assessment-drafts/{blind_draft['_id']}",
         teacher_headers,
         200,
-        json={"expected_revision": current_blind_draft["revision"], "blueprint_id": optimizer_blueprint["_id"]},
+        json={
+            "expected_revision": current_blind_draft["revision"],
+            "blueprint_id": optimizer_blueprint["_id"],
+        },
     )
     rebalance = request(
         client,
@@ -400,7 +446,10 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         f"/assessment-drafts/{blind_draft['_id']}/rebalance",
         teacher_headers,
         201,
-        json={"expected_revision": blueprint_draft["revision"], "idempotency_key": f"rebalance-{run_id}"},
+        json={
+            "expected_revision": blueprint_draft["revision"],
+            "idempotency_key": f"rebalance-{run_id}",
+        },
     )
     assert rebalance["status"] == "proposed"
     assert rebalance["construct_check"]["passed"] is True
@@ -420,7 +469,10 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         teacher_headers,
         200,
     )
-    assert applied_again["assessment_draft_revision"] == applied_rebalance["assessment_draft"]["revision"]
+    assert (
+        applied_again["assessment_draft_revision"]
+        == applied_rebalance["assessment_draft"]["revision"]
+    )
     undone_rebalance = request(
         client,
         "POST",
@@ -428,13 +480,22 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         teacher_headers,
         200,
     )
-    assert undone_rebalance["assessment_draft"]["revision"] == applied_rebalance["assessment_draft"]["revision"] + 1
+    assert (
+        undone_rebalance["assessment_draft"]["revision"]
+        == applied_rebalance["assessment_draft"]["revision"] + 1
+    )
     assert undone_rebalance["question_order"] == [generated_question["_id"]]
     review_queue = request(client, "GET", "/review-queue", teacher_headers, 200)
-    queued_generated = next(question for question in review_queue["questions"] if question["_id"] == generated_question["_id"])
+    queued_generated = next(
+        question
+        for question in review_queue["questions"]
+        if question["_id"] == generated_question["_id"]
+    )
     assert "difficulty_mismatch" in queued_generated["review_reason_codes"]
 
-    audits = request(client, "GET", f"/audit?actor_id={teacher_headers['x-test-user-id']}", admin_headers, 200)
+    audits = request(
+        client, "GET", f"/audit?actor_id={teacher_headers['x-test-user-id']}", admin_headers, 200
+    )
     assert any(event["action"] == "assessment_import_confirmed" for event in audits)
     assert any(event["action"] == "assessment_learner_fit_analyzed" for event in audits)
 

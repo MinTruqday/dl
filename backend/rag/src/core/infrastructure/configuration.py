@@ -1,11 +1,13 @@
 import os
 from pydantic import BaseModel
 
+
 def get_service_url(service_name_underscore: str) -> str:
     override = os.getenv(f"{service_name_underscore.upper()}_URL")
     if override:
         return override
     return f"http://{service_name_underscore.lower()}:8000"
+
 
 class Settings(BaseModel):
     PROJECT_NAME: str = os.environ["PROJECT_NAME"]
@@ -27,9 +29,8 @@ class Settings(BaseModel):
     PLATFORM_SYSTEM_ID: str = os.environ["PLATFORM_SYSTEM_ID"]
     CONTENT_URL: str = get_service_url("CONTENT")
     AI_URL: str = get_service_url("AI")
-    AI_REQUEST_TIMEOUT_SECONDS: float = float(
-        os.getenv("AI_REQUEST_TIMEOUT_SECONDS", "900")
-    )
+    AI_REQUEST_TIMEOUT_SECONDS: float = float(os.getenv("AI_REQUEST_TIMEOUT_SECONDS", "900"))
     RAG_DB_NAME: str = os.environ["RAG_DB_NAME"]
+
 
 settings = Settings()

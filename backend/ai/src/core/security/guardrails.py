@@ -10,6 +10,7 @@ from src.core.registry import PromptType, registry
 from src.schemas.guardrails import SecurityAssessment
 from src.utils.huggingface import create_chat_model
 
+
 class GuardrailsEngine:
     def __init__(self):
         self.llm = create_chat_model(settings.LLM_MODEL)
@@ -38,16 +39,14 @@ class GuardrailsEngine:
                 re.search(r"[A-Za-z]", candidate) and re.search(r"\d", candidate)
             )
             compact_ratio = sum(character.isalnum() for character in candidate) / len(candidate)
-            credential_shape = (
-                len(candidate) >= 32 and compact_ratio >= 0.85
-            ) or (
-                len(candidate) == 20
-                and candidate.upper() == candidate
-                and compact_ratio == 1.0
+            credential_shape = (len(candidate) >= 32 and compact_ratio >= 0.85) or (
+                len(candidate) == 20 and candidate.upper() == candidate and compact_ratio == 1.0
             )
             credential_uri = "://" in candidate and "@" in candidate
-            if has_character_mix and self._entropy(candidate) >= 3.5 and (
-                credential_shape or credential_uri
+            if (
+                has_character_mix
+                and self._entropy(candidate) >= 3.5
+                and (credential_shape or credential_uri)
             ):
                 found = True
                 return "[REDACTED]"
@@ -96,6 +95,7 @@ class GuardrailsEngine:
         if self._redis is None:
             try:
                 import redis.asyncio as redis_lib
+
                 self._redis = redis_lib.from_url(settings.REDIS_URI, decode_responses=True)
             except Exception:
                 logger.exception("Guardrails Redis client initialization failed")
@@ -114,7 +114,12 @@ class GuardrailsEngine:
 
     async def async_inspect_input(self, prompt: str) -> Dict[str, Any]:
         if not prompt or not prompt.strip():
-            return {"is_safe": True, "risk_score": 0.0, "reason": "Empty input", "sanitized_text": ""}
+            return {
+                "is_safe": True,
+                "risk_score": 0.0,
+                "reason": "Empty input",
+                "sanitized_text": "",
+            }
 
         baseline = self._deterministic_assessment(prompt)
         if not baseline["is_safe"]:
@@ -124,11 +129,7 @@ class GuardrailsEngine:
             system_prompt = registry.get(PromptType.PROMPT_INJECTION_DETECTOR)
             structured_llm = self.llm.with_structured_output(SecurityAssessment)
             messages = [SystemMessage(content=system_prompt), HumanMessage(content=prompt)]
-            assessment = await structured_llm.ainvoke(
-                messages,
-                max_tokens=256,
-                temperature=0,
-            )
+            assessment = await structured_llm.ainvoke(messages, max_tokens=256, temperature=0)
             return {
                 "is_safe": assessment.is_safe,
                 "risk_score": assessment.risk_score,
@@ -148,17 +149,28 @@ class GuardrailsEngine:
 
     def inspect_input(self, prompt: str) -> Dict[str, Any]:
         if not prompt or not prompt.strip():
-            return {"is_safe": True, "risk_score": 0.0, "reason": "Empty input", "sanitized_text": ""}
+            return {
+                "is_safe": True,
+                "risk_score": 0.0,
+                "reason": "Empty input",
+                "sanitized_text": "",
+            }
 
         return self._deterministic_assessment(prompt)
 
     def inspect_output(self, response_text: str) -> Dict[str, Any]:
         if not response_text or not response_text.strip():
-            return {"is_safe": True, "risk_score": 0.0, "reason": "Empty output", "sanitized_text": ""}
+            return {
+                "is_safe": True,
+                "risk_score": 0.0,
+                "reason": "Empty output",
+                "sanitized_text": "",
+            }
 
         return self._deterministic_assessment(response_text)
 
     validate_input = inspect_input
     validate_output = inspect_output
+
 
 guardrails_engine = GuardrailsEngine()

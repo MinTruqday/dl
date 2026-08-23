@@ -15,6 +15,7 @@ from qdrant_client.http.models import (
 )
 from src.core.infrastructure.configuration import settings
 
+
 class VectorStore:
     def __init__(self):
         self.client = AsyncQdrantClient(
@@ -27,9 +28,7 @@ class VectorStore:
     async def ensure_collection(self):
         try:
             collections = await self.client.get_collections()
-            exists = any(
-                c.name == self.collection_name for c in collections.collections
-            )
+            exists = any(c.name == self.collection_name for c in collections.collections)
             if not exists:
                 from src.services.embedding import embedder
 
@@ -80,17 +79,11 @@ class VectorStore:
     ):
         points = [
             PointStruct(
-                id=ids[i],
-                vector=embeddings[i],
-                payload={"text": documents[i], **metadatas[i]},
+                id=ids[i], vector=embeddings[i], payload={"text": documents[i], **metadatas[i]}
             )
             for i in range(len(ids))
         ]
-        await self.client.upsert(
-            collection_name=self.collection_name,
-            points=points,
-            wait=True,
-        )
+        await self.client.upsert(collection_name=self.collection_name, points=points, wait=True)
 
     async def wait_upsert(self):
         return None
@@ -106,9 +99,7 @@ class VectorStore:
     ) -> List[Dict]:
         must = []
         if document_ids:
-            must.append(
-                FieldCondition(key="document_id", match=MatchAny(any=document_ids))
-            )
+            must.append(FieldCondition(key="document_id", match=MatchAny(any=document_ids)))
         for key, value in (metadata_filters or {}).items():
             if value is None:
                 continue
@@ -118,7 +109,11 @@ class VectorStore:
             access_conditions = [
                 Filter(
                     must=[FieldCondition(key="visibility", match=MatchValue(value="public"))],
-                    must_not=[FieldCondition(key="source_type", match=MatchValue(value="teacher_material"))],
+                    must_not=[
+                        FieldCondition(
+                            key="source_type", match=MatchValue(value="teacher_material")
+                        )
+                    ],
                 ),
                 FieldCondition(key="source_type", match=MatchValue(value="curriculum")),
             ]
@@ -173,9 +168,7 @@ class VectorStore:
                     {
                         "id": str(point.id),
                         "text": payload.get("text", ""),
-                        "metadata": {
-                            key: value for key, value in payload.items() if key != "text"
-                        },
+                        "metadata": {key: value for key, value in payload.items() if key != "text"},
                     }
                 )
             if next_offset is None:
@@ -188,11 +181,7 @@ class VectorStore:
             await self.client.delete(
                 collection_name=self.collection_name,
                 points_selector=Filter(
-                    must=[
-                        FieldCondition(
-                            key="document_id", match=MatchValue(value=document_id)
-                        )
-                    ]
+                    must=[FieldCondition(key="document_id", match=MatchValue(value=document_id))]
                 ),
             )
         except Exception:
@@ -226,5 +215,6 @@ class VectorStore:
             points_selector=PointIdsList(points=point_ids),
             wait=True,
         )
+
 
 vector_store = VectorStore()

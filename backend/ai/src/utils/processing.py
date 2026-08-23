@@ -3,10 +3,8 @@ import base64
 from loguru import logger
 from src.clients.rag import rag_client
 
-async def extract_text_from_base64(
-    base64_data: str,
-    filename: str = "attachment.pdf",
-) -> str:
+
+async def extract_text_from_base64(base64_data: str, filename: str = "attachment.pdf") -> str:
     """Decode plain text locally and delegate document conversion to RAG."""
     try:
         media_type = ""

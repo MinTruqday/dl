@@ -17,7 +17,11 @@ def normalize_response_value(value):
     if isinstance(value, str):
         return value.strip()
     if isinstance(value, list):
-        return [normalized for item in value if (normalized := normalize_response_value(item)) not in (None, "", [], {})]
+        return [
+            normalized
+            for item in value
+            if (normalized := normalize_response_value(item)) not in (None, "", [], {})
+        ]
     if isinstance(value, dict):
         return {
             key: normalized
@@ -71,14 +75,32 @@ class TeacherProfileInput(BaseModel):
 
 
 class TeacherProfileEventInput(BaseModel):
-    event_type: Literal["generation_accepted", "generation_rejected", "manual_edit", "question_type_selected", "difficulty_targeted", "material_used"]
+    event_type: Literal[
+        "generation_accepted",
+        "generation_rejected",
+        "manual_edit",
+        "question_type_selected",
+        "difficulty_targeted",
+        "material_used",
+        "pedagogy_context_observed",
+    ]
     payload: dict[str, Any] = Field(default_factory=dict)
     idempotency_key: str = Field(min_length=8, max_length=200)
 
 
 class CurriculumNodeInput(BaseModel):
     id: str | None = None
-    node_type: Literal["education_level", "subject", "program", "chapter", "lesson", "section", "concept", "skill", "learning_objective"]
+    node_type: Literal[
+        "education_level",
+        "subject",
+        "program",
+        "chapter",
+        "lesson",
+        "section",
+        "concept",
+        "skill",
+        "learning_objective",
+    ]
     parent_id: str | None = None
     education_level: str
     subject: str
@@ -114,7 +136,20 @@ class CurriculumMergeInput(BaseModel):
 class CurriculumSplitPart(BaseModel):
     title: str = Field(min_length=1, max_length=300)
     canonical_code: str = Field(min_length=1, max_length=300)
-    node_type: Literal["education_level", "subject", "program", "chapter", "lesson", "section", "concept", "skill", "learning_objective"] | None = None
+    node_type: (
+        Literal[
+            "education_level",
+            "subject",
+            "program",
+            "chapter",
+            "lesson",
+            "section",
+            "concept",
+            "skill",
+            "learning_objective",
+        ]
+        | None
+    ) = None
 
 
 class CurriculumSplitInput(BaseModel):
@@ -306,7 +341,9 @@ class AssessmentRebalanceInput(BaseModel):
 
 class LearnerFitInput(BaseModel):
     target_learner: dict[str, Any] = Field(default_factory=dict)
-    target_success_range: list[float] = Field(default_factory=lambda: [0.45, 0.8], min_length=2, max_length=2)
+    target_success_range: list[float] = Field(
+        default_factory=lambda: [0.45, 0.8], min_length=2, max_length=2
+    )
 
     @model_validator(mode="after")
     def validate_fit_target(self):
@@ -321,7 +358,9 @@ class LearnerFitInput(BaseModel):
         if not 0 < self.target_success_range[0] < self.target_success_range[1] < 1:
             raise ValueError("Dải xác suất thành công mục tiêu không hợp lệ")
         confidence = self.target_learner.get("confidence")
-        if confidence is not None and (not isinstance(confidence, (int, float)) or not 0 <= float(confidence) <= 1):
+        if confidence is not None and (
+            not isinstance(confidence, (int, float)) or not 0 <= float(confidence) <= 1
+        ):
             raise ValueError("Độ tin cậy người học không hợp lệ")
         return self
 
@@ -389,7 +428,14 @@ class GenerateRequest(BaseModel):
 
 
 class DraftAiActionInput(BaseModel):
-    action: Literal["clarify_wording", "increase_difficulty", "decrease_difficulty", "regenerate_distractors", "regenerate_item", "change_question_type"]
+    action: Literal[
+        "clarify_wording",
+        "increase_difficulty",
+        "decrease_difficulty",
+        "regenerate_distractors",
+        "regenerate_item",
+        "change_question_type",
+    ]
     instruction: str = ""
 
 
@@ -403,7 +449,15 @@ class ReviewDecisionInput(BaseModel):
 
 class ValidityReviewInput(BaseModel):
     status: Literal["approved", "rejected"]
-    risk_flags: list[Literal["language_bias", "cultural_context", "accessibility", "construct_irrelevant_context", "differential_opportunity"]] = Field(default_factory=list)
+    risk_flags: list[
+        Literal[
+            "language_bias",
+            "cultural_context",
+            "accessibility",
+            "construct_irrelevant_context",
+            "differential_opportunity",
+        ]
+    ] = Field(default_factory=list)
     reviewer_note: str = Field(min_length=1, max_length=2000)
 
 
@@ -459,7 +513,9 @@ class TeacherEstimateInput(BaseModel):
 
 
 class DifficultyPredictionInput(BaseModel):
-    model_version: str = Field(default="cold_start_v1", min_length=1, max_length=200, pattern=r"^[A-Za-z0-9._:-]+$")
+    model_version: str = Field(
+        default="cold_start_v1", min_length=1, max_length=200, pattern=r"^[A-Za-z0-9._:-]+$"
+    )
     prediction_kind: Literal["structured", "llm_direct"] = "structured"
 
 

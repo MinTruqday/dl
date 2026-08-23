@@ -24,7 +24,10 @@ MIN_FILE_SIZE_BYTES = settings.MIN_FILE_SIZE_BYTES
 
 
 def page_number_from_url(url: str) -> int | None:
-    for pattern in [r"(?:page|trang|pageno)[=_/-]?(\d{1,5})", r"/(\d{1,5})\.(?:jpg|jpeg|png)(?:\?|$)"]:
+    for pattern in [
+        r"(?:page|trang|pageno)[=_/-]?(\d{1,5})",
+        r"/(\d{1,5})\.(?:jpg|jpeg|png)(?:\?|$)",
+    ]:
         match = re.search(pattern, url, re.I)
         if match:
             return int(match.group(1))
@@ -155,10 +158,7 @@ class NxbgdSource:
                         "author": author,
                         "source_url": self.source_url,
                         "content_hash": content_hash,
-                        "collection_scope": {
-                            "type": "grade",
-                            "value": self.target_class,
-                        },
+                        "collection_scope": {"type": "grade", "value": self.target_class},
                     },
                     pdf_path,
                     minio_url,
@@ -209,7 +209,9 @@ class NxbgdSource:
                 "reason": str(error)[:200],
             }
 
-    async def execute(self, job_id: str | None = None, max_documents: int = 1, force_recrawl: bool = False):
+    async def execute(
+        self, job_id: str | None = None, max_documents: int = 1, force_recrawl: bool = False
+    ):
         await self.init_browser()
 
         url = f"https://taphuan.nxbgd.vn/tap-huan?grade={self.target_class}"
@@ -229,7 +231,11 @@ class NxbgdSource:
             has_next = True
 
             while has_next and documents_saved + failed_items + duplicate_items < max_documents:
-                if await redis.get("stop_collection") == "1" or job_id and await redis.get(f"collection:cancel:{job_id}") == "1":
+                if (
+                    await redis.get("stop_collection") == "1"
+                    or job_id
+                    and await redis.get(f"collection:cancel:{job_id}") == "1"
+                ):
                     cancelled = True
                     break
                 pages_scanned += 1
@@ -282,7 +288,9 @@ class NxbgdSource:
                                 viewer_url = f"https://taphuan.nxbgd.vn{viewer_url}"
                             self.source_url = viewer_url
 
-                            if not force_recrawl and await dedup.is_collected("nxbgd_url", viewer_url):
+                            if not force_recrawl and await dedup.is_collected(
+                                "nxbgd_url", viewer_url
+                            ):
                                 logger.info("[NXBGD] Skipping already processed document")
                                 duplicate_items += 1
                                 continue
@@ -309,7 +317,11 @@ class NxbgdSource:
                             last_page_count = 0
                             stable_count = 0
                             for _ in range(150):
-                                if await redis.get("stop_collection") == "1" or job_id and await redis.get(f"collection:cancel:{job_id}") == "1":
+                                if (
+                                    await redis.get("stop_collection") == "1"
+                                    or job_id
+                                    and await redis.get(f"collection:cancel:{job_id}") == "1"
+                                ):
                                     cancelled = True
                                     break
                                 try:
@@ -352,7 +364,10 @@ class NxbgdSource:
                                 failed_items += 1
                             await viewer_page.close()
                             viewer_page = None
-                            if cancelled or documents_saved + failed_items + duplicate_items >= max_documents:
+                            if (
+                                cancelled
+                                or documents_saved + failed_items + duplicate_items >= max_documents
+                            ):
                                 break
                     except Exception:
                         failed_items += 1
@@ -363,7 +378,9 @@ class NxbgdSource:
                             shutil.rmtree(self.temp_dir, ignore_errors=True)
                         pages_to_close = [page for page in [viewer_page, detail_page] if page]
                         if pages_to_close:
-                            await asyncio.gather(*(page.close() for page in pages_to_close), return_exceptions=True)
+                            await asyncio.gather(
+                                *(page.close() for page in pages_to_close), return_exceptions=True
+                            )
 
                 if cancelled:
                     break

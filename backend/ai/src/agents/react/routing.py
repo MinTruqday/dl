@@ -37,6 +37,7 @@ class SemanticRouterValidator:
 
     def _get_embedder(self):
         from src.clients.rag import rag_client
+
         return rag_client
 
     async def _compute_agent_embeddings(self) -> Dict[str, List[float]]:
@@ -91,8 +92,9 @@ class SemanticRouterValidator:
 INTENTS = {
     "chat": "Conversational chat, greetings, casual talk and social exchanges",
     "action": "Authenticated system mutations and registered tool operations",
-    "knowledge": "Document retrieval, factual questions, analysis and content generation"
+    "knowledge": "Document retrieval, factual questions, analysis and content generation",
 }
+
 
 class RouteAgent:
     """
@@ -101,11 +103,13 @@ class RouteAgent:
     <metis_behavior>Uses Vector Embeddings for fast, deterministic intent classification with a confidence threshold, falling back to LLM or Knowledge route if uncertain.</metis_behavior>
     </module_purpose>
     """
+
     def __init__(self):
         self._intent_vecs = None
 
     def _get_embedder(self):
         from src.clients.rag import rag_client
+
         return rag_client
 
     async def _get_intent_vecs(self):
@@ -122,7 +126,7 @@ class RouteAgent:
             query_vec = await embedder.embed_query(query)
             best_route = "knowledge"
             best_score = -1.0
-            
+
             for intent, vec in (await self._get_intent_vecs()).items():
                 score = _cosine_similarity(query_vec, vec)
                 if score > best_score:
@@ -135,10 +139,11 @@ class RouteAgent:
             else:
                 logger.warning(f"Low confidence intent ({best_score:.3f}). Defaulting to knowledge")
                 return {"route": "knowledge", "answer": ""}
-                
+
         except Exception:
             logger.exception("Semantic routing error")
             return {"route": "knowledge", "answer": ""}
+
 
 semantic_router = RouteAgent()
 plan_validator = SemanticRouterValidator()

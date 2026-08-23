@@ -8,21 +8,18 @@ from src.schemas.announcement import AnnouncementCreate
 from src.repositories.announcement import AnnouncementRepository
 from src.clients.authentication import AuthenticationClient
 
-class AnnouncementService:
 
+class AnnouncementService:
     @staticmethod
     async def get_announcements(user_id: str, skip: int, limit: int, db):
         cursor = (
-            AnnouncementRepository
-            .find({"target_user_id": user_id})
+            AnnouncementRepository.find({"target_user_id": user_id})
             .sort("created_at", -1)
             .skip(skip)
             .limit(limit)
         )
         docs = await cursor.to_list(length=limit)
-        total = await AnnouncementRepository.count_documents(
-            {"target_user_id": user_id}
-        )
+        total = await AnnouncementRepository.count_documents({"target_user_id": user_id})
         unread = await AnnouncementRepository.count_documents(
             {"target_user_id": user_id, "is_read": False}
         )
@@ -56,8 +53,7 @@ class AnnouncementService:
         )
         if result.deleted_count == 0:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Lỗi xóa thông báo do không tìm thấy",
+                status_code=status.HTTP_404_NOT_FOUND, detail="Lỗi xóa thông báo do không tìm thấy"
             )
         return {"id": notif_id}
 
@@ -92,6 +88,7 @@ class AnnouncementService:
             return {"id": str(existing["_id"]), "duplicate": True}
         try:
             import json
+
             await redis.publish(
                 f"user_announcements:{data.target_user_id}",
                 json.dumps({"title": data.title, "body": data.body}),
@@ -99,4 +96,6 @@ class AnnouncementService:
         except Exception:
             logger.exception("Failed to distribute real-time notification")
         return {"id": notif_id}
+
+
 import uuid

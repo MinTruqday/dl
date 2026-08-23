@@ -5,6 +5,7 @@ from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from loguru import logger
 from pydantic import Field
+from src.core.infrastructure.configuration import settings
 from src.tools.http_client import INTERNAL_API_URL, check_system_access, make_api_request
 
 
@@ -26,10 +27,19 @@ async def _get_doc_text(document_id: str, token: str) -> str:
 @tool
 async def update_document_metadata(
     document_id: Annotated[str, Field(description="Exact identifier of the document to update")],
-    title: Annotated[Optional[str], Field(description="Replacement title; omit to preserve the current title")] = None,
-    description: Annotated[Optional[str], Field(description="Replacement description; omit to preserve it")] = None,
-    category: Annotated[Optional[str], Field(description="Replacement category; omit to preserve it")] = None,
-    tags: Annotated[Optional[list[str]], Field(description="Complete replacement tag list; omit to preserve current tags")] = None,
+    title: Annotated[
+        Optional[str], Field(description="Replacement title; omit to preserve the current title")
+    ] = None,
+    description: Annotated[
+        Optional[str], Field(description="Replacement description; omit to preserve it")
+    ] = None,
+    category: Annotated[
+        Optional[str], Field(description="Replacement category; omit to preserve it")
+    ] = None,
+    tags: Annotated[
+        Optional[list[str]],
+        Field(description="Complete replacement tag list; omit to preserve current tags"),
+    ] = None,
     config: RunnableConfig = None,
 ) -> str:
     """
@@ -44,12 +54,7 @@ async def update_document_metadata(
     token = (config or {}).get("configurable", {}).get("token")
     if not token:
         return json.dumps({"status": "authentication_required"})
-    values = {
-        "title": title,
-        "description": description,
-        "category": category,
-        "tags": tags,
-    }
+    values = {"title": title, "description": description, "category": category, "tags": tags}
     payload = {key: value for key, value in values.items() if value is not None}
     if not payload:
         return json.dumps({"status": "document_update_empty"})
@@ -63,10 +68,7 @@ async def update_document_metadata(
         )
         if response.status_code != 200:
             return json.dumps(
-                {
-                    "status": "document_update_failed",
-                    "upstream_status": response.status_code,
-                }
+                {"status": "document_update_failed", "upstream_status": response.status_code}
             )
         return json.dumps({"status": "success", "document_id": document_id})
     except Exception:
@@ -92,21 +94,16 @@ async def get_my_documents(config: RunnableConfig) -> str:
     headers = {"Authorization": token}
     try:
         response = await make_api_request(
-            "GET",
-            f"{INTERNAL_API_URL}/tai-lieu/ca-nhan",
-            headers=headers,
-            timeout=30.0,
+            "GET", f"{INTERNAL_API_URL}/tai-lieu/ca-nhan", headers=headers, timeout=30.0
         )
         if response.status_code == 200:
             data = response.json().get("data", [])
-            return json.dumps(
-                {"status": "success", "documents": data},
-                ensure_ascii=False,
-            )
+            return json.dumps({"status": "success", "documents": data}, ensure_ascii=False)
         return json.dumps({"status": "document_list_retrieval_failed"})
     except Exception:
         logger.exception("Failed to load document list from MongoDB")
         return json.dumps({"status": "document_service_unavailable"})
+
 
 @tool
 async def get_trash_documents(config: RunnableConfig) -> str:
@@ -129,25 +126,23 @@ async def get_trash_documents(config: RunnableConfig) -> str:
     headers = {"Authorization": token}
     try:
         response = await make_api_request(
-            "GET",
-            f"{INTERNAL_API_URL}/tai-lieu/thung-rac",
-            headers=headers,
-            timeout=30.0,
+            "GET", f"{INTERNAL_API_URL}/tai-lieu/thung-rac", headers=headers, timeout=30.0
         )
         if response.status_code == 200:
             data = response.json().get("data", [])
-            return json.dumps(
-                {"status": "success", "documents": data},
-                ensure_ascii=False,
-            )
+            return json.dumps({"status": "success", "documents": data}, ensure_ascii=False)
         return json.dumps({"status": "trash_document_list_retrieval_failed"})
     except Exception:
         logger.exception("Failed to load deleted items list")
         return json.dumps({"status": "document_service_unavailable"})
 
+
 @tool
 async def delete_document(
-    document_id: Annotated[str, Field(description="Exact identifier of the document to move to trash")], config: RunnableConfig
+    document_id: Annotated[
+        str, Field(description="Exact identifier of the document to move to trash")
+    ],
+    config: RunnableConfig,
 ) -> str:
     """
     <module_purpose>
@@ -166,19 +161,13 @@ async def delete_document(
     headers = {"Authorization": token}
     try:
         response = await make_api_request(
-            "DELETE",
-            f"{INTERNAL_API_URL}/tai-lieu/{document_id}",
-            headers=headers,
-            timeout=30.0,
+            "DELETE", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers, timeout=30.0
         )
         if response.status_code == 200:
             try:
                 from src.clients.rag import rag_client
-                await rag_client.delete_document(
-                    document_id,
-                    settings.PLATFORM_SYSTEM_ID,
-                    True,
-                )
+
+                await rag_client.delete_document(document_id, settings.PLATFORM_SYSTEM_ID, True)
                 logger.info("Document index cleanup completed")
             except Exception:
                 logger.exception("Failed to clean up document index")
@@ -188,9 +177,13 @@ async def delete_document(
         logger.exception("Document deletion failed due to system error")
         return json.dumps({"status": "document_service_unavailable"})
 
+
 @tool
 async def restore_document(
-    document_id: Annotated[str, Field(description="Exact identifier of the deleted document to restore")], config: RunnableConfig
+    document_id: Annotated[
+        str, Field(description="Exact identifier of the deleted document to restore")
+    ],
+    config: RunnableConfig,
 ) -> str:
     """
     <module_purpose>
@@ -221,9 +214,13 @@ async def restore_document(
         logger.exception("Document restoration from trash failed")
         return json.dumps({"status": "document_service_unavailable"})
 
+
 @tool
 async def get_document_analytics(
-    document_id: Annotated[str, Field(description="Exact identifier of the document whose analytics are requested")], config: RunnableConfig
+    document_id: Annotated[
+        str, Field(description="Exact identifier of the document whose analytics are requested")
+    ],
+    config: RunnableConfig,
 ) -> str:
     """
     <module_purpose>
@@ -254,20 +251,18 @@ async def get_document_analytics(
             readers = data.get("readers_started", 0)
             rate = data.get("dropoff_rate", 0)
             return json.dumps(
-                {
-                    "status": "success",
-                    "readers_started": readers,
-                    "dropoff_rate": rate,
-                }
+                {"status": "success", "readers_started": readers, "dropoff_rate": rate}
             )
         return json.dumps({"status": "document_analytics_retrieval_failed"})
     except Exception:
         logger.exception("Failed to retrieve analytics data")
         return json.dumps({"status": "document_service_unavailable"})
 
+
 @tool
 async def read_document(
-    document_id: Annotated[str, Field(description="Exact identifier of the document to read")], config: RunnableConfig
+    document_id: Annotated[str, Field(description="Exact identifier of the document to read")],
+    config: RunnableConfig,
 ) -> str:
     """
     <module_purpose>
@@ -287,9 +282,17 @@ async def read_document(
         return json.dumps({"status": "document_content_unavailable"})
     return text
 
+
 @tool
 async def recommend_documents(
-    query: Annotated[str, Field(min_length=1, description="Topic, project need, or search phrase used to rank document recommendations")], config: RunnableConfig
+    query: Annotated[
+        str,
+        Field(
+            min_length=1,
+            description="Topic, project need, or search phrase used to rank document recommendations",
+        ),
+    ],
+    config: RunnableConfig,
 ) -> str:
     """
     <module_purpose>
@@ -306,28 +309,24 @@ async def recommend_documents(
     try:
         docs = await ContentClient.search(query)
         if not docs:
-            return json.dumps({
-                "status": "success",
-                "query": query,
-                "recommendations": [],
-            }, ensure_ascii=False)
+            return json.dumps(
+                {"status": "success", "query": query, "recommendations": []}, ensure_ascii=False
+            )
 
         recommendations = []
         for doc in docs:
             doc_id = str(doc.get("id"))
-            recommendations.append({
-                "id": doc_id,
-                "title": doc.get("title") or "",
-                "slug": doc.get("slug", ""),
-                "summary": doc.get("summary") or doc.get("description") or "",
-                "url": f"/tai-lieu/xem-truoc/{doc_id}",
-            })
+            recommendations.append(
+                {
+                    "id": doc_id,
+                    "title": doc.get("title") or "",
+                    "slug": doc.get("slug", ""),
+                    "summary": doc.get("summary") or doc.get("description") or "",
+                    "url": f"/tai-lieu/xem-truoc/{doc_id}",
+                }
+            )
 
-        result_payload = {
-            "status": "success",
-            "query": query,
-            "recommendations": recommendations,
-        }
+        result_payload = {"status": "success", "query": query, "recommendations": recommendations}
         return (
             '<ai-payload kind="RECOMMENDED_DOCS_PAYLOAD">'
             f"{json.dumps(result_payload, ensure_ascii=False)}"

@@ -7,11 +7,13 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from src.core.infrastructure.configuration import settings
 
+
 class KYC(str, Enum):
     NONE = "NONE"
     PENDING = "PENDING"
     VERIFIED = "VERIFIED"
     REJECTED = "REJECTED"
+
 
 class Creator(str, Enum):
     NONE = "NONE"
@@ -20,11 +22,13 @@ class Creator(str, Enum):
     REJECTED = "REJECTED"
     SUSPENDED = "SUSPENDED"
 
+
 class Role(str, Enum):
     GUEST = "guest"
     READER = "reader"
     AUTHOR = "author"
     ADMIN = "admin"
+
 
 class UserBase(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
@@ -44,10 +48,7 @@ class UserBase(BaseModel):
     kyc_status: KYC = KYC.NONE
     creator_status: Creator = Creator.NONE
     is_verified: bool = False
-    storage_limit: int = Field(
-        default=20 * 1024 * 1024 * 1024,
-        le=100 * 1024 * 1024 * 1024,
-    )
+    storage_limit: int = Field(default=20 * 1024 * 1024 * 1024, le=100 * 1024 * 1024 * 1024)
 
     @field_validator("kyc_status", "creator_status", mode="before")
     @classmethod
@@ -68,6 +69,7 @@ class UserBase(BaseModel):
         }
     )
 
+
 class UserCreate(UserBase):
     password: str = Field(min_length=12, max_length=128)
     agreed_to_terms: bool
@@ -78,6 +80,7 @@ class UserCreate(UserBase):
         if not value:
             raise ValueError("Điều khoản sử dụng phải được chấp thuận")
         return value
+
 
 class UserInDB(UserBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
@@ -91,10 +94,12 @@ class UserInDB(UserBase):
     last_password_change: Optional[datetime] = None
     last_bank_update: Optional[datetime] = None
 
+
 class UserResponse(UserBase):
     id: str = Field(alias="_id")
     created_at: datetime
     has_passkey: bool = False
+
 
 class ProfileUpdate(BaseModel):
     full_name: Optional[str] = None
@@ -104,20 +109,25 @@ class ProfileUpdate(BaseModel):
     location: Optional[str] = None
     website: Optional[str] = None
 
+
 class SettingsUpdate(BaseModel):
     theme: Optional[str] = None
     notifications_enabled: Optional[bool] = None
     privacy_mode: Optional[bool] = None
 
+
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
+
 
 class ResetPasswordRequest(BaseModel):
     token: str = Field(min_length=6, max_length=128)
     new_password: str = Field(min_length=12, max_length=128)
 
+
 class VerifyCodeRequest(BaseModel):
     token: str = Field(min_length=6, max_length=128)
+
 
 class NotificationSettingsUpdate(BaseModel):
     enable_comment_notifications: bool = True
@@ -125,21 +135,27 @@ class NotificationSettingsUpdate(BaseModel):
     enable_system_notifications: bool = True
     enable_email_digest: bool = False
 
+
 class UpdateRoleRequest(BaseModel):
     role: Role
 
+
 class UpdateStatusRequest(BaseModel):
     is_active: bool
+
 
 class ModerationActionRequest(BaseModel):
     reason: str
     duration_hours: Optional[int] = None
 
+
 class NoteRequest(BaseModel):
     note: str
 
+
 class PasskeyRequest(BaseModel):
     email: EmailStr
+
 
 class PasskeyFinishRequest(BaseModel):
     email: EmailStr

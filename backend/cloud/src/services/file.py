@@ -7,12 +7,18 @@ from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 from src.schemas.storage import StorageItemCreate, StorageItemInDB, StorageItemUpdate
 
+
 class FileService:
     @staticmethod
     async def create_file_record(item: StorageItemCreate, owner_id: str) -> StorageItemInDB:
         if item.parent_id:
             parent = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one(
-                {"_id": item.parent_id, "owner_id": owner_id, "is_folder": True, "is_trashed": {"$ne": True}}
+                {
+                    "_id": item.parent_id,
+                    "owner_id": owner_id,
+                    "is_folder": True,
+                    "is_trashed": {"$ne": True},
+                }
             )
             if not parent:
                 raise HTTPException(status_code=400, detail="Thư mục cha không hợp lệ")
@@ -43,13 +49,13 @@ class FileService:
         return StorageItemInDB(**doc)
 
     @staticmethod
-    async def update_file_metadata(file_id: str, update_data: StorageItemUpdate, owner_id: str) -> StorageItemInDB:
+    async def update_file_metadata(
+        file_id: str, update_data: StorageItemUpdate, owner_id: str
+    ) -> StorageItemInDB:
         payload = update_data.model_dump(exclude_unset=True)
         payload["updated_at"] = datetime.now(timezone.utc)
         res = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one_and_update(
-            {"_id": file_id, "owner_id": owner_id},
-            {"$set": payload},
-            return_document=True,
+            {"_id": file_id, "owner_id": owner_id}, {"$set": payload}, return_document=True
         )
         if not res:
             raise HTTPException(status_code=404, detail="Không tìm thấy tệp tin cần cập nhật")
@@ -69,7 +75,12 @@ class FileService:
     async def move_file(file_id: str, new_parent_id: Optional[str], owner_id: str) -> dict:
         if new_parent_id:
             parent = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one(
-                {"_id": new_parent_id, "owner_id": owner_id, "is_folder": True, "is_trashed": {"$ne": True}}
+                {
+                    "_id": new_parent_id,
+                    "owner_id": owner_id,
+                    "is_folder": True,
+                    "is_trashed": {"$ne": True},
+                }
             )
             if not parent:
                 raise HTTPException(status_code=400, detail="Thư mục đích không tồn tại")
@@ -88,7 +99,11 @@ class FileService:
             {"$match": {"owner_id": owner_id, "is_folder": False, "is_shortcut": False}},
             {"$group": {"_id": None, "total_size": {"$sum": "$size"}}},
         ]
-        res = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.aggregate(pipeline).to_list(length=1)
+        res = (
+            await database.mongodb[settings.CLOUD_DB_NAME]
+            .storage_items.aggregate(pipeline)
+            .to_list(length=1)
+        )
         used = res[0]["total_size"] if res else 0
         return {
             "storage_limit": limit,

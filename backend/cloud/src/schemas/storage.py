@@ -5,14 +5,17 @@ from typing import List, Optional
 from pydantic import BaseModel, ConfigDict, Field
 import uuid
 
+
 class ShareAccess(BaseModel):
     user_id: str = Field(min_length=1, max_length=100)
     role: str = Field(default="viewer", pattern=r"^(viewer|editor)$")
+
 
 class ProtectedShareCreate(BaseModel):
     item_id: str = Field(min_length=1, max_length=128)
     password: Optional[str] = Field(default=None, min_length=8, max_length=128)
     expires_in_hours: int = Field(default=24, ge=1, le=720)
+
 
 class StorageItemBase(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -34,11 +37,13 @@ class StorageItemBase(BaseModel):
     locked_by: Optional[str] = None
     locked_at: Optional[datetime] = None
 
+
 class StorageItemCreate(StorageItemBase):
     is_folder: bool = False
     size: int = Field(default=0, ge=0, le=10 * 1024 * 1024 * 1024)
     mime_type: Optional[str] = None
     url: Optional[str] = None
+
 
 class StorageItemUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -64,16 +69,19 @@ class StorageItemUpdate(BaseModel):
     locked_by: Optional[str] = None
     locked_at: Optional[datetime] = None
 
+
 class BulkActionRequest(BaseModel):
     action: str = Field(pattern=r"^(delete|move|copy)$")
     item_ids: List[str] = Field(min_length=1, max_length=100)
     target_parent_id: Optional[str] = None
+
 
 class FileRequestCreate(BaseModel):
     target_folder_id: str = Field(min_length=1, max_length=128)
     password: Optional[str] = Field(default=None, max_length=128)
     expires_in_hours: int = Field(default=168, ge=1, le=720)
     description: Optional[str] = None
+
 
 class FileRequestResponse(BaseModel):
     token: str
@@ -82,6 +90,7 @@ class FileRequestResponse(BaseModel):
     description: Optional[str]
     expires_at: datetime
     is_protected: bool
+
 
 class ItemActivityResponse(BaseModel):
     id: str
@@ -92,11 +101,13 @@ class ItemActivityResponse(BaseModel):
     user_agent: Optional[str] = None
     timestamp: datetime
 
+
 class FileVersion(BaseModel):
     version_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     url: str
     size: int = Field(ge=0, le=10 * 1024 * 1024 * 1024)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 
 class StorageItemInDB(StorageItemBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
@@ -112,6 +123,7 @@ class StorageItemInDB(StorageItemBase):
     versions: List[FileVersion] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 
 class StorageItemResponse(StorageItemBase):
     model_config = ConfigDict(populate_by_name=True, extra="ignore")
@@ -133,21 +145,26 @@ class StorageItemResponse(StorageItemBase):
     thumbnail_url: Optional[str] = None
     preview_url: Optional[str] = None
 
+
 class StarredUpdateRequest(BaseModel):
     is_starred: bool
+
 
 class TagColorUpdateRequest(BaseModel):
     tags: Optional[List[str]] = None
     color: Optional[str] = None
 
+
 class InternalShareRequest(BaseModel):
     email: str
     role: str = Field(default="viewer", pattern=r"^(viewer|editor)$")
+
 
 class CategoryBreakdown(BaseModel):
     count: int = 0
     size: int = 0
     percentage: float = 0.0
+
 
 class QuotaAnalyticsResponse(BaseModel):
     total_quota_bytes: int
@@ -159,6 +176,7 @@ class QuotaAnalyticsResponse(BaseModel):
     trashed_files_count: int
     trashed_bytes: int
     breakdown: dict
+
 
 class FileVersionResponse(BaseModel):
     version_id: str

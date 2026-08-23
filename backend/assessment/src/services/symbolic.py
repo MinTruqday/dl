@@ -1,7 +1,12 @@
 import re
 
 from sympy import Abs, Float, Integer, Rational, Symbol, cos, exp, log, simplify, sin, sqrt, tan
-from sympy.parsing.sympy_parser import convert_xor, implicit_multiplication_application, parse_expr, standard_transformations
+from sympy.parsing.sympy_parser import (
+    convert_xor,
+    implicit_multiplication_application,
+    parse_expr,
+    standard_transformations,
+)
 
 
 ALLOWED_FUNCTIONS = {
@@ -18,13 +23,14 @@ TRANSFORMATIONS = standard_transformations + (convert_xor, implicit_multiplicati
 
 def parse_symbolic(value: str):
     text = value.strip()
-    if not text or len(text) > 500 or not re.fullmatch(r"[\w\s+\-*/^().,]+", text, flags=re.UNICODE):
+    if (
+        not text
+        or len(text) > 500
+        or not re.fullmatch(r"[\w\s+\-*/^().,]+", text, flags=re.UNICODE)
+    ):
         raise ValueError("symbolic_expression_invalid")
     names = set(re.findall(r"[^\W\d]\w*", text, flags=re.UNICODE))
-    local_dict = {
-        name: ALLOWED_FUNCTIONS.get(name.casefold(), Symbol(name))
-        for name in names
-    }
+    local_dict = {name: ALLOWED_FUNCTIONS.get(name.casefold(), Symbol(name)) for name in names}
     return parse_expr(
         text,
         local_dict=local_dict,

@@ -1,6 +1,7 @@
 import os
 from pydantic import BaseModel
 
+
 class Settings(BaseModel):
     PROJECT_NAME: str = os.environ["PROJECT_NAME"]
     VERSION: str = os.environ["VERSION"]
@@ -11,5 +12,6 @@ class Settings(BaseModel):
     REDIS_URI: str = os.environ["REDIS_URI"]
     PLATFORM_SYSTEM_ID: str = os.environ["PLATFORM_SYSTEM_ID"]
     ASSESSMENT_URL: str = os.getenv("ASSESSMENT_URL", "http://assessment:8000")
+
 
 settings = Settings()

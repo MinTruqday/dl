@@ -4,20 +4,15 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException
 from src.core.response import APIResponse
 from src.core.dependency import CurrentUser, get_current_user_optional, verify_internal_token
-from src.schemas.ingestion import (
-    AttachmentConversionRequest,
-    IngestRequest,
-    IngestResponse,
-)
+from src.schemas.ingestion import AttachmentConversionRequest, IngestRequest, IngestResponse
 from src.services.pipeline import ingestion_pipeline
 from src.clients.content import content_client
 from src.services.conversion import document_parser
 from src.store.vector import vector_store
 from src.store.bm25 import bm25_store
 
-router = APIRouter(
-    dependencies=[Depends(verify_internal_token)],
-)
+router = APIRouter(dependencies=[Depends(verify_internal_token)])
+
 
 def resolve_requester(req: IngestRequest, user: CurrentUser):
     requester_id = str(user.id) if user else str(req.requester_id or "")
@@ -27,6 +22,7 @@ def resolve_requester(req: IngestRequest, user: CurrentUser):
         raise HTTPException(status_code=403, detail="Missing document requester")
     return requester_id, user.is_admin() if user else req.is_admin
 
+
 def document_error(error: Exception):
     if isinstance(error, HTTPException):
         return error
@@ -34,15 +30,12 @@ def document_error(error: Exception):
         return HTTPException(status_code=403, detail="Document access denied")
     if isinstance(error, ValueError):
         return HTTPException(status_code=404, detail=str(error))
-    return HTTPException(
-        status_code=502,
-        detail={"code": "rag_dependency_failed"},
-    )
+    return HTTPException(status_code=502, detail={"code": "rag_dependency_failed"})
+
 
 @router.post("/ingest", response_model=APIResponse[IngestResponse])
 async def ingest_document(
-    req: IngestRequest,
-    user: CurrentUser = Depends(get_current_user_optional),
+    req: IngestRequest, user: CurrentUser = Depends(get_current_user_optional)
 ):
     requester_id, is_admin = resolve_requester(req, user)
     authorized = False
@@ -50,11 +43,7 @@ async def ingest_document(
         await content_client.authorize_document(req.document_id, requester_id, is_admin)
         authorized = True
         await content_client.mark_indexing(req.document_id)
-        result = await ingestion_pipeline.ingest_document(
-            req.document_id,
-            requester_id,
-            is_admin,
-        )
+        result = await ingestion_pipeline.ingest_document(req.document_id, requester_id, is_admin)
     except Exception as error:
         if authorized:
             try:
@@ -74,26 +63,21 @@ async def ingest_document(
         message="Nạp và chỉ mục hóa tài liệu thành công",
     )
 
+
 @router.post("/extract", response_model=APIResponse[dict])
 async def extract_document(
-    req: IngestRequest,
-    user: CurrentUser = Depends(get_current_user_optional),
+    req: IngestRequest, user: CurrentUser = Depends(get_current_user_optional)
 ):
     requester_id, is_admin = resolve_requester(req, user)
     try:
-        document = await content_client.authorize_document(
-            req.document_id,
-            requester_id,
-            is_admin,
-        )
+        document = await content_client.authorize_document(req.document_id, requester_id, is_admin)
     except Exception as error:
         raise document_error(error)
     file_url = str(document.get("file_url") or "")
     if not file_url:
         raise HTTPException(status_code=404, detail="Document file not found")
     markdown = await document_parser.get_markdown(
-        file_url,
-        visibility=document.get("visibility") or "private",
+        file_url, visibility=document.get("visibility") or "private"
     )
     if not markdown:
         raise HTTPException(status_code=422, detail="Document text unavailable")
@@ -116,10 +100,7 @@ async def convert_attachment(req: AttachmentConversionRequest):
     if len(file_bytes) > 25 * 1024 * 1024:
         raise HTTPException(status_code=413, detail="Attachment exceeds 25 MB")
 
-    result = await document_parser.parse_bytes(
-        file_bytes,
-        Path(req.filename).suffix or ".pdf",
-    )
+    result = await document_parser.parse_bytes(file_bytes, Path(req.filename).suffix or ".pdf")
     markdown = str(result.get("markdown") or "")
     if not markdown:
         raise HTTPException(status_code=422, detail="Document text unavailable")
@@ -131,6 +112,7 @@ async def convert_attachment(req: AttachmentConversionRequest):
         },
         message="Chuyển đổi tài liệu thành công",
     )
+
 
 @router.delete("/document/{document_id}", response_model=APIResponse[dict])
 async def delete_document(
@@ -144,12 +126,7 @@ async def delete_document(
     if not resolved_id:
         raise HTTPException(status_code=403, detail="Missing document requester")
     try:
-        await content_client.authorize_document(
-            document_id,
-            resolved_id,
-            resolved_admin,
-            True,
-        )
+        await content_client.authorize_document(document_id, resolved_id, resolved_admin, True)
     except Exception as error:
         raise document_error(error)
     await vector_store.delete_by_document(document_id)

@@ -117,7 +117,7 @@ class WorkerRunner:
                                     failure = error
                                     logger.exception("Worker task attempt failed")
                                     if attempt + 1 < settings.WORKER_MAX_RETRIES:
-                                        await asyncio.sleep(2 ** attempt)
+                                        await asyncio.sleep(2**attempt)
                             if failure is None:
                                 await message.ack()
                             else:

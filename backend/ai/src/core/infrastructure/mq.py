@@ -7,6 +7,7 @@ from typing import Any, Dict, Optional
 from src.core.infrastructure.configuration import settings
 from src.utils.background import create_background_task
 
+
 class RabbitMQClient:
     def __init__(self):
         self.url = settings.RABBITMQ_URI
@@ -34,14 +35,11 @@ class RabbitMQClient:
     async def get_queue(self, queue_name: str):
         if not self.channel:
             await self.connect()
-        
+
         dlx = await self.channel.declare_exchange("dlx", aio_pika.ExchangeType.DIRECT)
         dlq = await self.channel.declare_queue("dlq", durable=True)
         await dlq.bind(dlx, "dlq")
-        queue_args = {
-            "x-dead-letter-exchange": "dlx",
-            "x-dead-letter-routing-key": "dlq",
-        }
+        queue_args = {"x-dead-letter-exchange": "dlx", "x-dead-letter-routing-key": "dlq"}
         return await self.channel.declare_queue(queue_name, durable=True, arguments=queue_args)
 
     async def publish(self, queue_name: str, payload: dict) -> bool:
@@ -49,8 +47,7 @@ class RabbitMQClient:
             await self.connect()
         try:
             message = aio_pika.Message(
-                body=json.dumps(payload).encode(),
-                delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
+                body=json.dumps(payload).encode(), delivery_mode=aio_pika.DeliveryMode.PERSISTENT
             )
             await self.channel.default_exchange.publish(message, routing_key=queue_name)
             return True
@@ -67,18 +64,14 @@ class RabbitMQClient:
             if message:
                 payload = json.loads(message.body.decode())
                 ack_id = str(uuid7())
-                
+
                 self.pending_acks[ack_id] = message
-                
+
                 create_background_task(
-                    self._auto_nack_if_timeout(ack_id, delay=300),
-                    f"rabbitmq-auto-nack-{ack_id}",
+                    self._auto_nack_if_timeout(ack_id, delay=300), f"rabbitmq-auto-nack-{ack_id}"
                 )
-                
-                return {
-                    "payload": payload,
-                    "delivery_tag": ack_id
-                }
+
+                return {"payload": payload, "delivery_tag": ack_id}
             return None
         except aio_pika.exceptions.QueueEmpty:
             return None
@@ -90,7 +83,9 @@ class RabbitMQClient:
         await asyncio.sleep(delay)
         message = self.pending_acks.pop(ack_id, None)
         if message:
-            logger.warning(f"Timeout waiting for ACK/NACK for message {ack_id} from RabbitMQ, retrying")
+            logger.warning(
+                f"Timeout waiting for ACK/NACK for message {ack_id} from RabbitMQ, retrying"
+            )
             try:
                 await message.nack(requeue=True)
             except Exception:
@@ -117,5 +112,6 @@ class RabbitMQClient:
     async def aclose(self):
         if self.connection:
             await self.connection.close()
+
 
 mq = RabbitMQClient()

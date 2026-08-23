@@ -14,14 +14,8 @@ _EXPORTS = {
     "tool": ("src.harness.tool", "tool"),
     "verification": ("src.loop.verification", "verification"),
     "RubricMiddleware": ("src.loop.rubric", "RubricMiddleware"),
-    "standard_rubric_middleware": (
-        "src.loop.rubric",
-        "standard_rubric_middleware",
-    ),
-    "document_rubric_middleware": (
-        "src.loop.rubric",
-        "document_rubric_middleware",
-    ),
+    "standard_rubric_middleware": ("src.loop.rubric", "standard_rubric_middleware"),
+    "document_rubric_middleware": ("src.loop.rubric", "document_rubric_middleware"),
     "create_standard_rubric": ("src.loop.rubric", "create_standard_rubric"),
     "create_document_rubric": ("src.loop.rubric", "create_document_rubric"),
     "event_driven_loop": ("src.loop.event", "event_driven_loop"),

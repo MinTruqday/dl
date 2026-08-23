@@ -16,10 +16,7 @@ async def init_db():
         raise RuntimeError("MongoDB URI is required")
     from motor.motor_asyncio import AsyncIOMotorClient
 
-    database.mongodb = AsyncIOMotorClient(
-        settings.MONGODB_URI,
-        serverSelectionTimeoutMS=5000,
-    )
+    database.mongodb = AsyncIOMotorClient(settings.MONGODB_URI, serverSelectionTimeoutMS=5000)
     await database.mongodb.admin.command("ping")
     await setup_indexes()
 
@@ -28,9 +25,7 @@ async def setup_indexes():
     db = database.mongodb[settings.AUTHENTICATION_DB_NAME]
     await db["auth_credentials"].create_index("email", unique=True)
     await db["auth_credentials"].create_index(
-        "slug",
-        unique=True,
-        partialFilterExpression={"slug": {"$type": "string"}},
+        "slug", unique=True, partialFilterExpression={"slug": {"$type": "string"}}
     )
     await db["sessions"].create_index([("user_id", 1), ("revoked_at", 1)])
     await db["sessions"].create_index(
@@ -40,9 +35,7 @@ async def setup_indexes():
     )
     await db["sessions"].create_index("expires_at", expireAfterSeconds=0)
     await db["password_reset_tokens"].create_index(
-        "token_hash",
-        unique=True,
-        partialFilterExpression={"token_hash": {"$type": "string"}},
+        "token_hash", unique=True, partialFilterExpression={"token_hash": {"$type": "string"}}
     )
     await db["password_reset_tokens"].create_index("expires_at", expireAfterSeconds=0)
     await db["passkey_challenges"].create_index("expires_at", expireAfterSeconds=0)

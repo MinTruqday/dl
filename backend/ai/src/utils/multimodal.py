@@ -1,6 +1,7 @@
 import base64
 import binascii
 
+
 def decode_data_url(value: str) -> tuple[bytes, str]:
     if not value.startswith("data:") or "," not in value:
         raise ValueError("invalid_multimodal_data")

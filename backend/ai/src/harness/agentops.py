@@ -9,6 +9,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from src.repositories.agent import AgentRepository
 from src.utils.background import create_background_task
 
+
 @dataclass
 class TraceEvent:
     event_type: str
@@ -16,6 +17,7 @@ class TraceEvent:
     user_id: str
     timestamp: datetime
     data: dict = field(default_factory=dict)
+
 
 @dataclass
 class SessionMetrics:
@@ -33,7 +35,9 @@ class SessionMetrics:
     tool_call_breakdown: dict = field(default_factory=dict)
     llm_latencies_ms: list = field(default_factory=list)
 
+
 PROMETHEUS_PREFIX = "system_agent"
+
 
 class AgentopsHarness:
     """
@@ -42,6 +46,7 @@ class AgentopsHarness:
     <metis_behavior>Traces LLM calls transparently. Strictly avoids logging PII or secure tokens.</metis_behavior>
     </module_purpose>
     """
+
     def __init__(self):
         self._sessions: dict[str, SessionMetrics] = {}
         self._db_client = None
@@ -52,7 +57,6 @@ class AgentopsHarness:
     def _get_db(self):
         if self._db_client is None:
             try:
-                
                 from src.core.infrastructure.configuration import settings
 
                 client = AsyncIOMotorClient(settings.MONGODB_URI)
@@ -61,21 +65,15 @@ class AgentopsHarness:
                 logger.exception("MongoDB connection error")
         return self._db_client
 
-    def record_session_start(
-        self, session_id: str, user_id: str, query_preview: str = ""
-    ):
+    def record_session_start(self, session_id: str, user_id: str, query_preview: str = ""):
         metrics = SessionMetrics(
-            session_id=session_id,
-            user_id=user_id,
-            started_at=datetime.now(timezone.utc),
+            session_id=session_id, user_id=user_id, started_at=datetime.now(timezone.utc)
         )
         self._sessions[session_id] = metrics
         logger.info("Started recording session")
 
     def record_session_end(
-        self,
-        session_id: str,
-        status: Literal["done", "failed", "cancelled"] = "done",
+        self, session_id: str, status: Literal["done", "failed", "cancelled"] = "done"
     ):
         metrics = self._sessions.get(session_id)
         if not metrics:
@@ -86,18 +84,10 @@ class AgentopsHarness:
             (metrics.ended_at - metrics.started_at).total_seconds() * 1000
         )
         logger.info("Finished recording session")
-        create_background_task(
-            self._flush_session(session_id),
-            f"agentops-flush-{session_id}",
-        )
+        create_background_task(self._flush_session(session_id), f"agentops-flush-{session_id}")
 
     def record_tool_call(
-        self,
-        session_id: str,
-        tool_name: str,
-        duration_ms: int,
-        success: bool,
-        error: str = "",
+        self, session_id: str, tool_name: str, duration_ms: int, success: bool, error: str = ""
     ):
         metrics = self._sessions.get(session_id)
         if metrics:
@@ -110,9 +100,7 @@ class AgentopsHarness:
             if not success:
                 breakdown["errors"] += 1
         log_fn = logger.info if success else logger.warning
-        log_fn(
-            "The system successfully recorded the execution event for the invoked utility"
-        )
+        log_fn("The system successfully recorded the execution event for the invoked utility")
 
     def record_llm_call(
         self,
@@ -131,11 +119,7 @@ class AgentopsHarness:
         logger.info("Recorded language model call event")
 
     def record_security_event(
-        self,
-        session_id: str,
-        event_type: str,
-        risk_score: float,
-        violations: list = None,
+        self, session_id: str, event_type: str, risk_score: float, violations: list = None
     ):
         metrics = self._sessions.get(session_id)
         if metrics:
@@ -180,9 +164,7 @@ class AgentopsHarness:
 
         total_tool_calls = sum(m.total_tool_calls for m in running_sessions)
         total_llm_calls = sum(m.total_llm_calls for m in running_sessions)
-        total_tokens = sum(
-            m.total_tokens_in + m.total_tokens_out for m in running_sessions
-        )
+        total_tokens = sum(m.total_tokens_in + m.total_tokens_out for m in running_sessions)
         security_events = sum(m.security_violations for m in running_sessions)
 
         lines = [
@@ -212,5 +194,6 @@ class AgentopsHarness:
                 )
 
         return "\n".join(lines) + "\n"
+
 
 agentops = AgentopsHarness()

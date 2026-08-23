@@ -12,12 +12,7 @@ from src.services.embedding import embedder
 class ChunkingService:
     """Docling structure -> semantic refinement -> deterministic size guard."""
 
-    STRUCTURAL_BOUNDARIES = {
-        "title",
-        "section_header",
-        "chapter",
-        "heading",
-    }
+    STRUCTURAL_BOUNDARIES = {"title", "section_header", "chapter", "heading"}
 
     def __init__(
         self,
@@ -37,10 +32,7 @@ class ChunkingService:
         logger.info("Initializing unified document ChunkingService")
 
     async def chunk_document(
-        self,
-        markdown: str,
-        metadata: Dict,
-        structure: Optional[List[Dict]] = None,
+        self, markdown: str, metadata: Dict, structure: Optional[List[Dict]] = None
     ) -> List[Dict]:
         units = self._structure_units(markdown, structure or [])
         if not units:
@@ -119,23 +111,16 @@ class ChunkingService:
         return dot_product / (left_norm * right_norm)
 
     def _semantic_refinement(
-        self,
-        units: List[Dict],
-        embeddings: List[List[float]],
+        self, units: List[Dict], embeddings: List[List[float]]
     ) -> List[List[Dict]]:
         groups: List[List[Dict]] = []
         current = [units[0]]
         current_length = len(units[0]["text"])
 
         for index, unit in enumerate(units[1:], start=1):
-            similarity = self._cosine_similarity(
-                embeddings[index - 1], embeddings[index]
-            )
+            similarity = self._cosine_similarity(embeddings[index - 1], embeddings[index])
             topic_changed = similarity < self.semantic_threshold
-            soft_boundary = (
-                current_length >= self.target_chars
-                and similarity < self.soft_threshold
-            )
+            soft_boundary = current_length >= self.target_chars and similarity < self.soft_threshold
             structure_boundary = unit["hard_boundary"]
             should_split = current_length >= self.min_chars and (
                 structure_boundary or topic_changed or soft_boundary
@@ -172,9 +157,7 @@ class ChunkingService:
             current_length = 0
             for unit in group:
                 for bounded_unit in self._split_oversized_unit(unit):
-                    projected = current_length + len(bounded_unit["text"]) + (
-                        2 if current else 0
-                    )
+                    projected = current_length + len(bounded_unit["text"]) + (2 if current else 0)
                     if current and projected > self.max_chars:
                         guarded.append(current)
                         current = [bounded_unit]
@@ -217,9 +200,7 @@ class ChunkingService:
         return [{**unit, "text": piece} for piece in pieces]
 
     @staticmethod
-    def _serialize_groups(
-        groups: List[List[Dict]], metadata: Dict, chunk_type: str
-    ) -> List[Dict]:
+    def _serialize_groups(groups: List[List[Dict]], metadata: Dict, chunk_type: str) -> List[Dict]:
         chunks = []
         for chunk_index, group in enumerate(groups):
             text = "\n\n".join(unit["text"] for unit in group).strip()
@@ -245,9 +226,7 @@ class ChunkingService:
                         "char_count": len(text),
                         "word_count": len(text.split()),
                         "chunk_type": chunk_type,
-                        "structure_types": list(
-                            dict.fromkeys(unit["type"] for unit in group)
-                        ),
+                        "structure_types": list(dict.fromkeys(unit["type"] for unit in group)),
                     },
                 }
             )

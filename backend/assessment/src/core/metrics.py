@@ -21,10 +21,7 @@ REQUIRED_GAUGES = {
     "student_ability_confidence": 0,
 }
 
-REQUIRED_COUNTERS = {
-    "question_validation_failures": 0,
-    "cross_tenant_filter_denials": 0,
-}
+REQUIRED_COUNTERS = {"question_validation_failures": 0, "cross_tenant_filter_denials": 0}
 
 
 class MetricsCollector:
@@ -61,7 +58,9 @@ class MetricsCollector:
         for (method, path), count in sorted(self.request_count.items()):
             labels = f'service="{service_name}",method="{method}",path="{path}"'
             lines.append(f"http_requests_total{{{labels}}} {count}")
-            lines.append(f"http_request_duration_seconds_total{{{labels}}} {self.request_duration[(method, path)]:.6f}")
+            lines.append(
+                f"http_request_duration_seconds_total{{{labels}}} {self.request_duration[(method, path)]:.6f}"
+            )
             lines.append(f"http_errors_total{{{labels}}} {self.error_count[(method, path)]}")
         for name, value in sorted(self.counters.items()):
             lines.append(f"{name} {value}")
@@ -100,6 +99,8 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
 
 def metrics_endpoint(service_name: str):
     async def handler(request: Request):
-        return PlainTextResponse(metrics.render(service_name), media_type="text/plain; version=0.0.4")
+        return PlainTextResponse(
+            metrics.render(service_name), media_type="text/plain; version=0.0.4"
+        )
 
     return handler

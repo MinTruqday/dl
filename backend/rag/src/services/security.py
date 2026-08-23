@@ -12,4 +12,8 @@ PATTERNS = [
 
 
 def prompt_injection_flags(text: str):
-    return [f"prompt_injection_pattern_{index + 1}" for index, pattern in enumerate(PATTERNS) if pattern.search(text)]
+    return [
+        f"prompt_injection_pattern_{index + 1}"
+        for index, pattern in enumerate(PATTERNS)
+        if pattern.search(text)
+    ]

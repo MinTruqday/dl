@@ -7,12 +7,18 @@ from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 from src.schemas.storage import StorageItemCreate, StorageItemInDB
 
+
 class FolderService:
     @staticmethod
     async def create_folder(name: str, parent_id: Optional[str], owner_id: str) -> StorageItemInDB:
         if parent_id:
             parent = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one(
-                {"_id": parent_id, "owner_id": owner_id, "is_folder": True, "is_trashed": {"$ne": True}}
+                {
+                    "_id": parent_id,
+                    "owner_id": owner_id,
+                    "is_folder": True,
+                    "is_trashed": {"$ne": True},
+                }
             )
             if not parent:
                 raise HTTPException(status_code=400, detail="Thư mục cha không hợp lệ")
@@ -32,22 +38,14 @@ class FolderService:
 
     @staticmethod
     async def get_folder_contents(folder_id: Optional[str], owner_id: str) -> List[dict]:
-        query = {
-            "owner_id": owner_id,
-            "parent_id": folder_id,
-            "is_trashed": {"$ne": True},
-        }
+        query = {"owner_id": owner_id, "parent_id": folder_id, "is_trashed": {"$ne": True}}
         cursor = database.mongodb[settings.CLOUD_DB_NAME].storage_items.find(query).sort("name", 1)
         items = await cursor.to_list(length=500)
         return items
 
     @staticmethod
     async def get_folder_tree(owner_id: str) -> List[dict]:
-        query = {
-            "owner_id": owner_id,
-            "is_folder": True,
-            "is_trashed": {"$ne": True},
-        }
+        query = {"owner_id": owner_id, "is_folder": True, "is_trashed": {"$ne": True}}
         cursor = database.mongodb[settings.CLOUD_DB_NAME].storage_items.find(query).sort("name", 1)
         folders = await cursor.to_list(length=1000)
         return folders
@@ -68,7 +66,12 @@ class FolderService:
             raise HTTPException(status_code=400, detail="Không thể di chuyển thư mục vào chính nó")
         if new_parent_id:
             parent = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one(
-                {"_id": new_parent_id, "owner_id": owner_id, "is_folder": True, "is_trashed": {"$ne": True}}
+                {
+                    "_id": new_parent_id,
+                    "owner_id": owner_id,
+                    "is_folder": True,
+                    "is_trashed": {"$ne": True},
+                }
             )
             if not parent:
                 raise HTTPException(status_code=400, detail="Thư mục đích không tồn tại")
@@ -76,15 +79,10 @@ class FolderService:
             while ancestor.get("parent_id"):
                 if ancestor["parent_id"] == folder_id:
                     raise HTTPException(
-                        status_code=400,
-                        detail="Không thể di chuyển thư mục vào thư mục con của nó",
+                        status_code=400, detail="Không thể di chuyển thư mục vào thư mục con của nó"
                     )
                 ancestor = await database.mongodb[settings.CLOUD_DB_NAME].storage_items.find_one(
-                    {
-                        "_id": ancestor["parent_id"],
-                        "owner_id": owner_id,
-                        "is_folder": True,
-                    }
+                    {"_id": ancestor["parent_id"], "owner_id": owner_id, "is_folder": True}
                 )
                 if not ancestor:
                     raise HTTPException(status_code=400, detail="Cây thư mục không hợp lệ")

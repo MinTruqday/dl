@@ -19,16 +19,12 @@ from src.core.metrics import metrics_collector
 from src.core.infrastructure.database import database
 from src.core.infrastructure.configuration import settings
 
-router = APIRouter(
-    dependencies=[Depends(verify_internal_token)],
-)
+router = APIRouter(dependencies=[Depends(verify_internal_token)])
 
 
 async def record_material_access(operation, query, requester_id, is_admin, source_type, docs):
     material_docs = [
-        doc
-        for doc in docs
-        if (doc.get("metadata") or {}).get("source_type") == "teacher_material"
+        doc for doc in docs if (doc.get("metadata") or {}).get("source_type") == "teacher_material"
     ]
     if source_type != "teacher_material" and not material_docs:
         return
@@ -49,9 +45,7 @@ async def record_material_access(operation, query, requester_id, is_admin, sourc
             "document_ids": document_ids,
             "chunk_count": len(material_docs),
             "query_sha256": hmac.new(
-                settings.SECRET_KEY.encode("utf-8"),
-                query.encode("utf-8"),
-                hashlib.sha256,
+                settings.SECRET_KEY.encode("utf-8"), query.encode("utf-8"), hashlib.sha256
             ).hexdigest(),
             "created_at": datetime.now(timezone.utc),
         }
@@ -69,12 +63,17 @@ async def list_material_access_audit(
         query["requester_id"] = requester_id
     if document_id:
         query["document_ids"] = document_id
-    return await database.mongodb.retrieval_audit.find(query).sort("created_at", -1).limit(limit).to_list(limit)
+    return (
+        await database.mongodb.retrieval_audit.find(query)
+        .sort("created_at", -1)
+        .limit(limit)
+        .to_list(limit)
+    )
+
 
 @router.post("/retrieve", response_model=APIResponse[RetrieveResponse])
 async def retrieve_documents(
-    req: RetrieveRequest,
-    user: CurrentUser = Depends(get_current_user_optional),
+    req: RetrieveRequest, user: CurrentUser = Depends(get_current_user_optional)
 ):
     requester_id = str(user.id) if user else req.requester_id
     is_admin = user.is_admin() if user else req.is_admin
@@ -91,20 +90,13 @@ async def retrieve_documents(
     except RetrievalUnavailableError as error:
         raise HTTPException(status_code=503, detail={"code": str(error)}) from error
     await record_material_access(
-        "retrieve",
-        req.query,
-        requester_id,
-        is_admin,
-        req.metadata_filters.source_type,
-        docs,
+        "retrieve", req.query, requester_id, is_admin, req.metadata_filters.source_type, docs
     )
     metrics_collector.record_curriculum_retrieval(docs, req.metadata_filters.source_type)
     citations_data = retriever.get_citations(docs)
     retrieved_docs = [
         RetrievedDocument(
-            text=d.get("text", ""),
-            metadata=d.get("metadata", {}),
-            score=float(d.get("score", 0.0)),
+            text=d.get("text", ""), metadata=d.get("metadata", {}), score=float(d.get("score", 0.0))
         )
         for d in docs
     ]
@@ -119,14 +111,18 @@ async def retrieve_documents(
         for c in citations_data
     ]
     return APIResponse(
-        data=RetrieveResponse(documents=retrieved_docs, citations=citations, conflicts=retriever.detect_source_conflicts(docs)),
+        data=RetrieveResponse(
+            documents=retrieved_docs,
+            citations=citations,
+            conflicts=retriever.detect_source_conflicts(docs),
+        ),
         message="Truy xuất tài liệu thành công",
     )
 
+
 @router.post("/multi-query-retrieve", response_model=APIResponse[RetrieveResponse])
 async def multi_query_retrieve(
-    req: MultiQueryRetrieveRequest,
-    user: CurrentUser = Depends(get_current_user_optional),
+    req: MultiQueryRetrieveRequest, user: CurrentUser = Depends(get_current_user_optional)
 ):
     requester_id = str(user.id) if user else req.requester_id
     is_admin = user.is_admin() if user else req.is_admin
@@ -153,9 +149,7 @@ async def multi_query_retrieve(
     citations_data = retriever.get_citations(docs)
     retrieved_docs = [
         RetrievedDocument(
-            text=d.get("text", ""),
-            metadata=d.get("metadata", {}),
-            score=float(d.get("score", 0.0)),
+            text=d.get("text", ""), metadata=d.get("metadata", {}), score=float(d.get("score", 0.0))
         )
         for d in docs
     ]
@@ -170,14 +164,18 @@ async def multi_query_retrieve(
         for c in citations_data
     ]
     return APIResponse(
-        data=RetrieveResponse(documents=retrieved_docs, citations=citations, conflicts=retriever.detect_source_conflicts(docs)),
+        data=RetrieveResponse(
+            documents=retrieved_docs,
+            citations=citations,
+            conflicts=retriever.detect_source_conflicts(docs),
+        ),
         message="Truy xuất đa chiều thành công",
     )
 
+
 @router.post("/cross-document-retrieve", response_model=APIResponse[RetrieveResponse])
 async def cross_document_retrieve(
-    req: CrossDocRetrieveRequest,
-    user: CurrentUser = Depends(get_current_user_optional),
+    req: CrossDocRetrieveRequest, user: CurrentUser = Depends(get_current_user_optional)
 ):
     requester_id = str(user.id) if user else req.requester_id
     is_admin = user.is_admin() if user else req.is_admin
@@ -204,9 +202,7 @@ async def cross_document_retrieve(
     citations_data = retriever.get_citations(docs)
     retrieved_docs = [
         RetrievedDocument(
-            text=d.get("text", ""),
-            metadata=d.get("metadata", {}),
-            score=float(d.get("score", 0.0)),
+            text=d.get("text", ""), metadata=d.get("metadata", {}), score=float(d.get("score", 0.0))
         )
         for d in docs
     ]
@@ -221,6 +217,10 @@ async def cross_document_retrieve(
         for c in citations_data
     ]
     return APIResponse(
-        data=RetrieveResponse(documents=retrieved_docs, citations=citations, conflicts=retriever.detect_source_conflicts(docs)),
+        data=RetrieveResponse(
+            documents=retrieved_docs,
+            citations=citations,
+            conflicts=retriever.detect_source_conflicts(docs),
+        ),
         message="Truy xuất liên tài liệu thành công",
     )

@@ -15,6 +15,7 @@ ENTROPY_RESET_THRESHOLD = float(6000) / 4000
 ENTROPY_MAX_SESSION_AGE_SECONDS = 1800
 ENTROPY_MAX_MESSAGES = 30
 
+
 @dataclass
 class EntropySnapshot:
     session_id: str
@@ -25,6 +26,7 @@ class EntropySnapshot:
     unresolved_tool_calls: int
     should_reset: bool
     captured_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
 
 class EntropyAuditor:
     def __init__(self):
@@ -47,19 +49,14 @@ class EntropyAuditor:
             self._unresolved_tool_calls[session_id] = max(0, current - 1)
 
     def compute_entropy(
-        self,
-        session_id: str,
-        message_count: int,
-        estimated_tokens: int,
+        self, session_id: str, message_count: int, estimated_tokens: int
     ) -> EntropySnapshot:
         start = self._session_start_times.get(session_id, time.monotonic())
         age_seconds = time.monotonic() - start
         unresolved = self._unresolved_tool_calls.get(session_id, 0)
 
         message_score = min(message_count / ENTROPY_MAX_MESSAGES, 1.0)
-        token_score = min(
-            estimated_tokens / 6000, 1.0
-        )
+        token_score = min(estimated_tokens / 6000, 1.0)
         age_score = min(age_seconds / ENTROPY_MAX_SESSION_AGE_SECONDS, 1.0)
         unresolved_score = min(unresolved / 5, 1.0)
 
@@ -92,11 +89,7 @@ class EntropyAuditor:
             )
         return snapshot
 
-    async def reset_session(
-        self,
-        session_id: str,
-        redis_client=None,
-    ):
+    async def reset_session(self, session_id: str, redis_client=None):
         logger.info(f"Started entropy reset for session {session_id}")
         try:
             if redis_client:
@@ -109,12 +102,7 @@ class EntropyAuditor:
         except Exception:
             logger.exception(f"Error resetting entropy for session {session_id}")
 
-    def should_reset(
-        self,
-        session_id: str,
-        message_count: int,
-        estimated_tokens: int,
-    ) -> bool:
+    def should_reset(self, session_id: str, message_count: int, estimated_tokens: int) -> bool:
         snapshot = self.compute_entropy(session_id, message_count, estimated_tokens)
         return snapshot.should_reset
 
@@ -126,5 +114,6 @@ class EntropyAuditor:
         self._session_start_times.pop(session_id, None)
         self._unresolved_tool_calls.pop(session_id, None)
         self._snapshots.pop(session_id, None)
+
 
 entropy = EntropyAuditor()

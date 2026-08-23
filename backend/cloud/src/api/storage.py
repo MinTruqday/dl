@@ -25,12 +25,11 @@ from src.core.dependency import CurrentUser, Role
 
 router = APIRouter(prefix="/luu-tru")
 
+
 @router.post("/thu-muc", response_model=APIResponse[StorageItemResponse], status_code=201)
 async def create_folder(
     data: StorageItemCreate = Body(...),
-    current_user: CurrentUser = Depends(
-        require_role([Role.AUTHOR, Role.ADMIN, Role.READER])
-    ),
+    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
     db=Depends(get_db),
 ):
     data.is_folder = True
@@ -41,13 +40,12 @@ async def create_folder(
         status=201,
     )
 
+
 @router.post("/tap-tin", response_model=APIResponse[StorageItemResponse], status_code=201)
 async def create_file(
     background_tasks: BackgroundTasks,
     data: StorageItemCreate = Body(...),
-    current_user: CurrentUser = Depends(
-        require_role([Role.AUTHOR, Role.ADMIN, Role.READER])
-    ),
+    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
     db=Depends(get_db),
 ):
     data.is_folder = False
@@ -63,15 +61,14 @@ async def create_file(
         status=201,
     )
 
+
 @router.get("/danh-sach", response_model=APIResponse[List[StorageItemResponse]])
 async def list_items(
     parent_id: Optional[str] = None,
     is_trashed: bool = False,
     is_starred: Optional[bool] = None,
     tag: Optional[str] = None,
-    current_user: CurrentUser = Depends(
-        require_role([Role.AUTHOR, Role.ADMIN, Role.READER])
-    ),
+    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
     db=Depends(get_db),
 ):
     items = await StorageService.get_items_by_parent(
@@ -82,13 +79,12 @@ async def list_items(
         data=response_items, message="Trích xuất nội dung thư mục lưu trữ hoàn tất", status=200
     )
 
+
 @router.get("/tim-kiem", response_model=APIResponse[List[StorageItemResponse]])
 async def search_items(
     q: str,
     type: Optional[str] = None,
-    current_user: CurrentUser = Depends(
-        require_role([Role.AUTHOR, Role.ADMIN, Role.READER])
-    ),
+    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
     db=Depends(get_db),
 ):
     items = await StorageService.search_items(q, current_user.id, type)
@@ -98,12 +94,11 @@ async def search_items(
         status=200,
     )
 
+
 @router.get("/gan-day", response_model=APIResponse[List[StorageItemResponse]])
 async def get_recent_items(
     limit: int = Query(default=20, le=100),
-    current_user: CurrentUser = Depends(
-        require_role([Role.AUTHOR, Role.ADMIN, Role.READER])
-    ),
+    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
     db=Depends(get_db),
 ):
     items = await StorageService.get_recent_items(current_user.id, limit)
@@ -113,11 +108,10 @@ async def get_recent_items(
         status=200,
     )
 
+
 @router.get("/han-muc", response_model=APIResponse[Any])
 async def get_storage_quota(
-    current_user: CurrentUser = Depends(
-        require_role([Role.AUTHOR, Role.ADMIN, Role.READER])
-    ),
+    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
     db=Depends(get_db),
 ):
     data = await StorageService.get_storage_quota(current_user.id)
@@ -125,36 +119,30 @@ async def get_storage_quota(
         data=data, message="Trích xuất thông tin hạn mức lưu trữ hoàn tất", status=200
     )
 
+
 @router.post(
     "/tap-tin/{item_id}/loi-tat", response_model=APIResponse[StorageItemResponse], status_code=201
 )
 async def create_shortcut(
     item_id: str,
     target_parent_id: Optional[str] = Body(None, embed=True),
-    current_user: CurrentUser = Depends(
-        require_role([Role.AUTHOR, Role.ADMIN, Role.READER])
-    ),
+    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
     db=Depends(get_db),
 ):
-    item = await StorageService.create_shortcut(
-        item_id, target_parent_id, current_user.id
-    )
+    item = await StorageService.create_shortcut(item_id, target_parent_id, current_user.id)
     if not item:
-        raise HTTPException(
-            status_code=404, detail="Không tìm thấy tệp tin gốc để tạo lối tắt"
-        )
+        raise HTTPException(status_code=404, detail="Không tìm thấy tệp tin gốc để tạo lối tắt")
     return APIResponse(
         data=StorageItemResponse(**item.dict()),
         message="Khởi tạo lối tắt tệp tin lưu trữ hoàn tất",
         status=201,
     )
 
+
 @router.get("/tai-xuong-zip")
 async def download_zip(
     ids: str,
-    current_user: CurrentUser = Depends(
-        require_role([Role.AUTHOR, Role.ADMIN, Role.READER])
-    ),
+    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
     db=Depends(get_db),
 ):
     import io
@@ -166,9 +154,7 @@ async def download_zip(
 
     item_ids = list(dict.fromkeys(i.strip() for i in ids.split(",") if i.strip()))
     if not item_ids or len(item_ids) > 50:
-        raise HTTPException(
-            status_code=400, detail="Số lượng tệp yêu cầu không hợp lệ"
-        )
+        raise HTTPException(status_code=400, detail="Số lượng tệp yêu cầu không hợp lệ")
     zip_buffer = io.BytesIO()
     with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
         total_size = 0
@@ -176,10 +162,14 @@ async def download_zip(
         for i_id in item_ids:
             item = await StorageService.get_accessible_item(i_id, current_user.id)
             if not item or item.is_folder or not item.url:
-                raise HTTPException(status_code=404, detail="Không tìm thấy tệp hoặc thiếu quyền truy cập")
+                raise HTTPException(
+                    status_code=404, detail="Không tìm thấy tệp hoặc thiếu quyền truy cập"
+                )
             total_size += item.size
             if total_size > 500 * 1024 * 1024:
-                raise HTTPException(status_code=413, detail="Tổng dung lượng bản nén vượt quá giới hạn")
+                raise HTTPException(
+                    status_code=413, detail="Tổng dung lượng bản nén vượt quá giới hạn"
+                )
             safe_name = item.name.replace("\\", "_").replace("/", "_")
             if safe_name in used_names:
                 safe_name = f"{item.id}_{safe_name}"
@@ -199,13 +189,12 @@ async def download_zip(
         headers={"Content-Disposition": "attachment; filename=storage_download.zip"},
     )
 
+
 @router.put("/tap-tin/{item_id}", response_model=APIResponse[StorageItemResponse])
 async def update_item(
     item_id: str,
     data: StorageItemUpdate = Body(...),
-    current_user: CurrentUser = Depends(
-        require_role([Role.AUTHOR, Role.ADMIN, Role.READER])
-    ),
+    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
     db=Depends(get_db),
 ):
     if data.is_public and data.is_public is True:
@@ -217,26 +206,25 @@ async def update_item(
                 item_id, current_user.id, StorageItemUpdate(**update_data_dict)
             )
         else:
-            item = await StorageService.update_item(
-                item_id, current_user.id, data
-            )
+            item = await StorageService.update_item(item_id, current_user.id, data)
     else:
         item = await StorageService.update_item(item_id, current_user.id, data)
     if not item:
-        raise HTTPException(status_code=404, detail="Không tìm thấy dữ liệu tệp tin hoặc thư mục yêu cầu")
+        raise HTTPException(
+            status_code=404, detail="Không tìm thấy dữ liệu tệp tin hoặc thư mục yêu cầu"
+        )
     return APIResponse(
         data=StorageItemResponse(**item.dict()),
         message="Cập nhật dữ liệu tệp tin lưu trữ hoàn tất",
         status=200,
     )
 
+
 @router.delete("/tap-tin/{item_id}", response_model=APIResponse[Any])
 async def delete_item(
     item_id: str,
     hard_delete: bool = False,
-    current_user: CurrentUser = Depends(
-        require_role([Role.AUTHOR, Role.ADMIN, Role.READER])
-    ),
+    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
     db=Depends(get_db),
 ):
     if hard_delete:
@@ -256,7 +244,10 @@ async def delete_item(
             raise HTTPException(
                 status_code=404, detail="Không tìm thấy dữ liệu tệp tin hoặc thư mục yêu cầu"
             )
-        return APIResponse(data=None, message="Di chuyển dữ liệu vào khu vực lưu trữ tạm hoàn tất", status=200)
+        return APIResponse(
+            data=None, message="Di chuyển dữ liệu vào khu vực lưu trữ tạm hoàn tất", status=200
+        )
+
 
 @router.post(
     "/tap-tin/{item_id}/sao-chep", response_model=APIResponse[StorageItemResponse], status_code=201
@@ -264,14 +255,10 @@ async def delete_item(
 async def copy_item(
     item_id: str,
     target_parent_id: Optional[str] = Body(None, embed=True),
-    current_user: CurrentUser = Depends(
-        require_role([Role.AUTHOR, Role.ADMIN, Role.READER])
-    ),
+    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
     db=Depends(get_db),
 ):
-    item = await StorageService.copy_item(
-        item_id, current_user.id, target_parent_id
-    )
+    item = await StorageService.copy_item(item_id, current_user.id, target_parent_id)
     if not item:
         raise HTTPException(status_code=404, detail="Không tìm thấy dữ liệu tệp tin yêu cầu")
     return APIResponse(
@@ -280,16 +267,13 @@ async def copy_item(
         status=201,
     )
 
-@router.post(
-    "/tap-tin/{item_id}/phien-ban", response_model=APIResponse[StorageItemResponse]
-)
+
+@router.post("/tap-tin/{item_id}/phien-ban", response_model=APIResponse[StorageItemResponse])
 async def add_version(
     item_id: str,
     url: str = Body(..., embed=True),
     size: int = Body(..., embed=True),
-    current_user: CurrentUser = Depends(
-        require_role([Role.AUTHOR, Role.ADMIN, Role.READER])
-    ),
+    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
     db=Depends(get_db),
 ):
     item = await StorageService.add_version(item_id, current_user.id, url, size)
@@ -301,18 +285,18 @@ async def add_version(
         status=200,
     )
 
+
 @router.post("/tap-tin/{item_id}/chia-se", response_model=APIResponse[Any])
 async def share_archive(
     item_id: str,
     email: str = Body(..., embed=True),
     role: str = Body("viewer", embed=True),
-    current_user: CurrentUser = Depends(
-        require_role([Role.AUTHOR, Role.ADMIN, Role.READER])
-    ),
+    current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
     db=Depends(get_db),
 ):
     res = await StorageService.share_item(item_id, email, role, current_user.id)
     return APIResponse(data=None, message=res["message"], status=200)
+
 
 @router.get("/chia-se/{share_token}", response_model=APIResponse[Any])
 async def get_public_item(share_token: str, db=Depends(get_db)):
@@ -324,12 +308,10 @@ async def get_public_item(share_token: str, db=Depends(get_db)):
     data = StorageItemResponse(**item.model_dump()).model_dump(by_alias=True)
     if not item.is_folder and item.url:
         from src.services.upload import UploadService
+
         data.update(await UploadService.get_presigned_url(item.url))
-    return APIResponse(
-        data=data,
-        message="Trích xuất thông tin chia sẻ hoàn tất",
-        status=200,
-    )
+    return APIResponse(data=data, message="Trích xuất thông tin chia sẻ hoàn tất", status=200)
+
 
 @router.post("/thao-tac-hang-loat", response_model=APIResponse[Any])
 async def bulk_action(
@@ -341,13 +323,10 @@ async def bulk_action(
         action=req.action,
         item_ids=req.item_ids,
         target_parent_id=req.target_parent_id,
-        owner_id=current_user.id
+        owner_id=current_user.id,
     )
-    return APIResponse(
-        data=result,
-        message=f"Thao tác {req.action} hàng loạt hoàn tất",
-        status=200
-    )
+    return APIResponse(data=result, message=f"Thao tác {req.action} hàng loạt hoàn tất", status=200)
+
 
 @router.post("/tap-tin/{item_id}/khoa", response_model=APIResponse[StorageItemResponse])
 async def lock_item(
@@ -359,10 +338,9 @@ async def lock_item(
     if not item:
         raise HTTPException(status_code=404, detail="Không tìm thấy tệp tin")
     return APIResponse(
-        data=StorageItemResponse(**item.dict()),
-        message="Khóa tệp tin hoàn tất",
-        status=200
+        data=StorageItemResponse(**item.dict()), message="Khóa tệp tin hoàn tất", status=200
     )
+
 
 @router.post("/tap-tin/{item_id}/mo-khoa", response_model=APIResponse[StorageItemResponse])
 async def unlock_item(
@@ -374,10 +352,9 @@ async def unlock_item(
     if not item:
         raise HTTPException(status_code=404, detail="Không tìm thấy tệp tin")
     return APIResponse(
-        data=StorageItemResponse(**item.dict()),
-        message="Mở khóa tệp tin hoàn tất",
-        status=200
+        data=StorageItemResponse(**item.dict()), message="Mở khóa tệp tin hoàn tất", status=200
     )
+
 
 @router.get("/tap-tin/{item_id}/xem-truoc", response_model=APIResponse[Any])
 async def get_preview_url(
@@ -387,9 +364,12 @@ async def get_preview_url(
 ):
     item = await StorageService.get_accessible_item(item_id, current_user.id)
     if not item or item.is_folder or not item.url:
-        raise HTTPException(status_code=404, detail="Không tìm thấy tệp tin hoặc không hỗ trợ xem trước")
-    
+        raise HTTPException(
+            status_code=404, detail="Không tìm thấy tệp tin hoặc không hỗ trợ xem trước"
+        )
+
     from src.core.storage import get_bucket, get_storage_client
+
     try:
         client = await get_storage_client()
         url = await client.generate_presigned_url(
@@ -397,18 +377,17 @@ async def get_preview_url(
             Params={
                 "Bucket": get_bucket(item.url),
                 "Key": item.url,
-                "ResponseContentDisposition": "inline"
+                "ResponseContentDisposition": "inline",
             },
-            ExpiresIn=3600
+            ExpiresIn=3600,
         )
         return APIResponse(
-            data={"preview_url": url},
-            message="Tạo liên kết xem trước hoàn tất",
-            status=200
+            data={"preview_url": url}, message="Tạo liên kết xem trước hoàn tất", status=200
         )
     except Exception as e:
         logger.error(f"Error generating preview url: {e}")
         raise HTTPException(status_code=500, detail="Lỗi khi tạo liên kết xem trước")
+
 
 @router.get("/tap-tin/{item_id}/nhat-ky", response_model=APIResponse[List[ItemActivityResponse]])
 async def get_item_activities(
@@ -418,14 +397,15 @@ async def get_item_activities(
 ):
     item = await StorageService.get_accessible_item(item_id, current_user.id)
     if not item:
-        raise HTTPException(status_code=404, detail="Không tìm thấy tệp tin hoặc không có quyền truy cập")
-    
+        raise HTTPException(
+            status_code=404, detail="Không tìm thấy tệp tin hoặc không có quyền truy cập"
+        )
+
     activities = await ActivityService.get_item_activities(item_id)
     return APIResponse(
-        data=activities,
-        message="Trích xuất nhật ký hoạt động của tệp tin hoàn tất",
-        status=200
+        data=activities, message="Trích xuất nhật ký hoạt động của tệp tin hoàn tất", status=200
     )
+
 
 @router.get("/tap-tin/{item_id}/phien-ban", response_model=APIResponse[List[FileVersionResponse]])
 async def get_file_versions(
@@ -437,10 +417,14 @@ async def get_file_versions(
     return APIResponse(
         data=[FileVersionResponse(**v) for v in versions],
         message="Trích xuất lịch sử phiên bản tệp tin hoàn tất",
-        status=200
+        status=200,
     )
 
-@router.post("/tap-tin/{item_id}/phien-ban/{version_id}/khoi-phuc", response_model=APIResponse[StorageItemResponse])
+
+@router.post(
+    "/tap-tin/{item_id}/phien-ban/{version_id}/khoi-phuc",
+    response_model=APIResponse[StorageItemResponse],
+)
 async def rollback_file_version(
     item_id: str,
     version_id: str,
@@ -453,8 +437,9 @@ async def rollback_file_version(
     return APIResponse(
         data=StorageItemResponse(**item.dict()),
         message="Khôi phục phiên bản tệp tin hoàn tất",
-        status=200
+        status=200,
     )
+
 
 @router.patch("/tap-tin/{item_id}/yeu-thich", response_model=APIResponse[StorageItemResponse])
 async def toggle_starred(
@@ -469,8 +454,9 @@ async def toggle_starred(
     return APIResponse(
         data=StorageItemResponse(**item.dict()),
         message="Cập nhật trạng thái yêu thích hoàn tất",
-        status=200
+        status=200,
     )
+
 
 @router.patch("/tap-tin/{item_id}/nhan-dan", response_model=APIResponse[StorageItemResponse])
 async def update_tags_and_color(
@@ -485,8 +471,9 @@ async def update_tags_and_color(
     return APIResponse(
         data=StorageItemResponse(**item.dict()),
         message="Cập nhật thẻ phân loại và nhãn màu hoàn tất",
-        status=200
+        status=200,
     )
+
 
 @router.get("/thung-rac", response_model=APIResponse[List[StorageItemResponse]])
 async def get_trashed_items(
@@ -497,8 +484,9 @@ async def get_trashed_items(
     return APIResponse(
         data=[StorageItemResponse(**item.dict()) for item in items],
         message="Trích xuất danh sách thùng rác hoàn tất",
-        status=200
+        status=200,
     )
+
 
 @router.post("/thung-rac/{item_id}/khoi-phuc", response_model=APIResponse[StorageItemResponse])
 async def restore_trash_item(
@@ -512,8 +500,9 @@ async def restore_trash_item(
     return APIResponse(
         data=StorageItemResponse(**item.dict()),
         message="Khôi phục tệp từ thùng rác hoàn tất",
-        status=200
+        status=200,
     )
+
 
 @router.delete("/thung-rac/don-sach", response_model=APIResponse[Any])
 async def empty_trash(
@@ -521,11 +510,8 @@ async def empty_trash(
     db=Depends(get_db),
 ):
     result = await StorageService.empty_trash(current_user.id)
-    return APIResponse(
-        data=result,
-        message="Dọn sạch thùng rác hoàn tất",
-        status=200
-    )
+    return APIResponse(data=result, message="Dọn sạch thùng rác hoàn tất", status=200)
+
 
 @router.get("/dung-luong/phan-tich", response_model=APIResponse[QuotaAnalyticsResponse])
 async def get_quota_analytics(
@@ -536,8 +522,9 @@ async def get_quota_analytics(
     return APIResponse(
         data=QuotaAnalyticsResponse(**data),
         message="Trích xuất báo cáo phân tích dung lượng hoàn tất",
-        status=200
+        status=200,
     )
+
 
 @router.post("/tap-tin/{item_id}/chia-se-noi-bo", response_model=APIResponse[Any])
 async def share_internal(
@@ -549,7 +536,10 @@ async def share_internal(
     res = await StorageService.share_internal(item_id, req.email, req.role, current_user.id)
     return APIResponse(data=None, message=res["message"], status=200)
 
-@router.delete("/tap-tin/{item_id}/chia-se-noi-bo/{target_user_id}", response_model=APIResponse[Any])
+
+@router.delete(
+    "/tap-tin/{item_id}/chia-se-noi-bo/{target_user_id}", response_model=APIResponse[Any]
+)
 async def revoke_internal_share(
     item_id: str,
     target_user_id: str,
@@ -561,6 +551,7 @@ async def revoke_internal_share(
         raise HTTPException(status_code=404, detail="Không tìm thấy quyền chia sẻ để thu hồi")
     return APIResponse(data=None, message="Thu hồi quyền chia sẻ hoàn tất", status=200)
 
+
 @router.get("/duoc-chia-se-voi-toi", response_model=APIResponse[List[StorageItemResponse]])
 async def get_shared_with_me(
     current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
@@ -570,6 +561,5 @@ async def get_shared_with_me(
     return APIResponse(
         data=[StorageItemResponse(**item.dict()) for item in items],
         message="Trích xuất danh sách tệp được chia sẻ hoàn tất",
-        status=200
+        status=200,
     )
-

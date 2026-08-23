@@ -45,8 +45,14 @@ from src.services.generation import generated_question, requested_difficulties
 from src.services.importing import duplicate_fingerprint, split_page, structure_pages, tiptap_doc
 from src.services.learner_fit import evaluate_learner_fit
 from src.services.optimizer import optimize_blueprint
+from src.services.pedagogy import build_pedagogical_context, variation_directive
 from src.core.configuration import settings
-from src.services.validation import near_duplicate_score, text_projection, validate_question, validate_tiptap_content
+from src.services.validation import (
+    near_duplicate_score,
+    text_projection,
+    validate_question,
+    validate_tiptap_content,
+)
 from src.services.teacher_profile import persist_teacher_profile_event
 
 
@@ -59,15 +65,16 @@ def teacher_material_requested(payload: GenerateRequest):
 
 async def enforce_teacher_material_setting(user: CurrentUser):
     profile = await database.value.teacher_profiles.find_one(
-        {"user_id": user.id},
-        {"use_own_materials": 1},
+        {"user_id": user.id}, {"use_own_materials": 1}
     )
     if profile and profile.get("use_own_materials") is False:
         raise HTTPException(status_code=409, detail={"code": "teacher_material_use_disabled"})
 
 
 async def enforce_teacher_material_policy(payload: GenerateRequest, user: CurrentUser):
-    supplied_material = any(item.get("source_type") == "teacher_material" for item in payload.source_evidence)
+    supplied_material = any(
+        item.get("source_type") == "teacher_material" for item in payload.source_evidence
+    )
     if not teacher_material_requested(payload) and not supplied_material:
         return
     await enforce_teacher_material_setting(user)
@@ -132,11 +139,15 @@ async def retrieve_generation_evidence(payload: GenerateRequest, user: CurrentUs
                     "query": payload.topic,
                     "k": 8,
                     "requester_id": user.id,
-                    "metadata_filters": {key: value for key, value in metadata_filters.items() if value is not None},
+                    "metadata_filters": {
+                        key: value for key, value in metadata_filters.items() if value is not None
+                    },
                 },
             )
             if response.status_code >= 400:
-                raise HTTPException(status_code=502, detail={"code": "generation_evidence_unavailable"})
+                raise HTTPException(
+                    status_code=502, detail={"code": "generation_evidence_unavailable"}
+                )
             result = response.json().get("data", {})
             conflicts.extend(result.get("conflicts", []))
             for document in result.get("documents", []):
@@ -146,7 +157,9 @@ async def retrieve_generation_evidence(payload: GenerateRequest, user: CurrentUs
                 evidence.append({"text": document.get("text", "")[:4000], **metadata})
                 material_evidence_found = material_evidence_found or owned
     if conflicts:
-        raise HTTPException(status_code=409, detail={"code": "generation_source_conflict", "conflicts": conflicts})
+        raise HTTPException(
+            status_code=409, detail={"code": "generation_source_conflict", "conflicts": conflicts}
+        )
     if not evidence:
         raise HTTPException(status_code=422, detail={"code": "generation_evidence_required"})
     if material_evidence_found:
@@ -159,7 +172,13 @@ async def retrieve_generation_evidence(payload: GenerateRequest, user: CurrentUs
     return evidence[:12]
 
 
-async def generate_with_agent(payload: dict[str, Any], difficulty: float, evidence: list[dict[str, Any]]):
+async def generate_with_agent(
+    payload: dict[str, Any],
+    difficulty: float,
+    evidence: list[dict[str, Any]],
+    pedagogical_context: dict[str, Any] | None = None,
+    variation: str | None = None,
+):
     async with httpx.AsyncClient(timeout=120) as client:
         response = await client.post(
             f"{settings.AI_URL}/suy-luan/noi-bo/tao-cau-hoi-danh-gia",
@@ -173,10 +192,18 @@ async def generate_with_agent(payload: dict[str, Any], difficulty: float, eviden
                 "target_difficulty": difficulty,
                 "cognitive_level": payload.get("cognitive_level"),
                 "evidence": evidence,
+                "pedagogical_context": pedagogical_context or {"source_mode": "curriculum_only"},
+                "variation_directive": variation,
             },
         )
     if response.status_code >= 400:
-        raise HTTPException(status_code=502, detail={"code": "ai_question_generation_failed"})
+        raise HTTPException(
+            status_code=502,
+            detail={
+                "code": "ai_question_generation_failed",
+                "upstream_status": response.status_code,
+            },
+        )
     return response.json()
 
 
@@ -189,7 +216,10 @@ async def judge_difficulty_with_agent(question: dict[str, Any]):
             json={
                 "question_type": question.get("question_type", "unknown"),
                 "stem": text_projection(question.get("stem_doc", {})),
-                "options": [text_projection(option.get("content_doc", {})) for option in question.get("options", [])],
+                "options": [
+                    text_projection(option.get("content_doc", {}))
+                    for option in question.get("options", [])
+                ],
                 "answer_key": question.get("answer_key", {}),
                 "solution": text_projection(question.get("solution_doc", {})),
                 "education_level": curriculum.get("education_level", ""),
@@ -203,16 +233,28 @@ async def judge_difficulty_with_agent(question: dict[str, Any]):
 
 
 async def similar_historical_items(question: dict[str, Any], user: CurrentUser):
-    similar_versions = await database.value.question_versions.find(
-        {
-            "owner_id": user.id,
-            "_id": {"$ne": question.get("frozen_version_id")},
-            "concept_ids": {"$in": question.get("concept_ids", [])},
-        }
-    ).sort("created_at", -1).limit(20).to_list(20)
-    similar_calibrations = await database.value.calibrations.find(
-        {"question_version_id": {"$in": [version["_id"] for version in similar_versions]}, "status": "calibrated"}
-    ).sort("created_at", -1).to_list(100)
+    similar_versions = (
+        await database.value.question_versions.find(
+            {
+                "owner_id": user.id,
+                "_id": {"$ne": question.get("frozen_version_id")},
+                "concept_ids": {"$in": question.get("concept_ids", [])},
+            }
+        )
+        .sort("created_at", -1)
+        .limit(20)
+        .to_list(20)
+    )
+    similar_calibrations = (
+        await database.value.calibrations.find(
+            {
+                "question_version_id": {"$in": [version["_id"] for version in similar_versions]},
+                "status": "calibrated",
+            }
+        )
+        .sort("created_at", -1)
+        .to_list(100)
+    )
     latest_similar = {}
     for calibration in similar_calibrations:
         latest_similar.setdefault(calibration["question_version_id"], calibration)
@@ -220,7 +262,10 @@ async def similar_historical_items(question: dict[str, Any], user: CurrentUser):
         {
             "question_version_id": version["_id"],
             "question_id": version.get("question_id"),
-            "same_logical_question": bool(question.get("question_id") and version.get("question_id") == question.get("question_id")),
+            "same_logical_question": bool(
+                question.get("question_id")
+                and version.get("question_id") == question.get("question_id")
+            ),
             "difficulty": latest_similar[version["_id"]].get("difficulty"),
             "sample_size": latest_similar[version["_id"]].get("sample_size", 0),
         }
@@ -235,12 +280,13 @@ async def prediction_with_empirical_context(prediction: dict[str, Any], question
     calibration = None
     if version_id:
         calibration = await database.value.calibrations.find_one(
-            {"question_version_id": version_id, "status": "calibrated"},
-            sort=[("created_at", -1)],
+            {"question_version_id": version_id, "status": "calibrated"}, sort=[("created_at", -1)]
         )
     result["calibrated_difficulty"] = calibration.get("difficulty") if calibration else None
     result["calibration_sample_size"] = calibration.get("sample_size", 0) if calibration else 0
-    result["calibration_population_context"] = calibration.get("population_context", {}) if calibration else {}
+    result["calibration_population_context"] = (
+        calibration.get("population_context", {}) if calibration else {}
+    )
     result["calibration_drift_flag"] = bool(calibration and calibration.get("drift_flag"))
     result["predicted_empirical_gap"] = (
         round(float(prediction["predicted_difficulty"]) - float(calibration["difficulty"]), 3)
@@ -270,24 +316,39 @@ async def persist_question_draft(
             )
             if draft and question["_id"] not in draft.get("question_order", []):
                 await database.value.assessment_drafts.update_one(
-                    {"_id": draft_id, "owner_id": user.id, "question_order": {"$ne": question["_id"]}},
-                    {"$addToSet": {"question_order": question["_id"]}, "$inc": {"revision": 1}, "$set": {"updated_at": now()}},
+                    {
+                        "_id": draft_id,
+                        "owner_id": user.id,
+                        "question_order": {"$ne": question["_id"]},
+                    },
+                    {
+                        "$addToSet": {"question_order": question["_id"]},
+                        "$inc": {"revision": 1},
+                        "$set": {"updated_at": now()},
+                    },
                 )
             return existing
         raise HTTPException(status_code=409, detail={"code": "question_draft_identity_conflict"})
     await database.value.assessment_drafts.update_one(
         {"_id": draft_id, "owner_id": user.id},
-        {"$push": {"question_order": question["_id"]}, "$inc": {"revision": 1}, "$set": {"updated_at": now()}},
+        {
+            "$push": {"question_order": question["_id"]},
+            "$inc": {"revision": 1},
+            "$set": {"updated_at": now()},
+        },
     )
-    await audit(user.id, "question_draft_created", "QuestionDraft", question["_id"], {"source": question["authoring_source"]})
+    await audit(
+        user.id,
+        "question_draft_created",
+        "QuestionDraft",
+        question["_id"],
+        {"source": question["authoring_source"]},
+    )
     return question
 
 
 def question_draft_document(
-    draft_id: str,
-    payload: dict[str, Any],
-    owner_id: str,
-    question_draft_id: str | None = None,
+    draft_id: str, payload: dict[str, Any], owner_id: str, question_draft_id: str | None = None
 ):
     question = deepcopy(payload)
     created_at = now()
@@ -307,7 +368,9 @@ def question_draft_document(
 
 
 @router.post("/assessment-drafts", status_code=201)
-async def create_assessment_draft(payload: AssessmentDraftCreate, user: CurrentUser = Depends(require_author)):
+async def create_assessment_draft(
+    payload: AssessmentDraftCreate, user: CurrentUser = Depends(require_author)
+):
     draft = payload.model_dump()
     draft.update(
         {
@@ -328,20 +391,25 @@ async def create_assessment_draft(payload: AssessmentDraftCreate, user: CurrentU
 
 @router.get("/assessment-drafts")
 async def list_assessment_drafts(user: CurrentUser = Depends(require_author)):
-    return await database.value.assessment_drafts.find({"owner_id": user.id}).sort("updated_at", -1).to_list(500)
+    return (
+        await database.value.assessment_drafts.find({"owner_id": user.id})
+        .sort("updated_at", -1)
+        .to_list(500)
+    )
 
 
 @router.get("/teacher-materials/search")
 async def search_teacher_materials(
-    q: str,
-    subject: str | None = None,
-    limit: int = 10,
-    user: CurrentUser = Depends(require_author),
+    q: str, subject: str | None = None, limit: int = 10, user: CurrentUser = Depends(require_author)
 ):
     if not q.strip():
-        raise HTTPException(status_code=422, detail={"code": "teacher_material_search_query_required"})
+        raise HTTPException(
+            status_code=422, detail={"code": "teacher_material_search_query_required"}
+        )
     if limit < 1 or limit > 50:
-        raise HTTPException(status_code=422, detail={"code": "teacher_material_search_limit_invalid"})
+        raise HTTPException(
+            status_code=422, detail={"code": "teacher_material_search_limit_invalid"}
+        )
     filters = {"source_type": "teacher_material"}
     if subject:
         filters["subject"] = subject
@@ -365,42 +433,54 @@ async def search_teacher_materials(
 @router.get("/assessment-drafts/{draft_id}")
 async def get_assessment_draft(draft_id: str, user: CurrentUser = Depends(require_author)):
     draft = await require_owned("assessment_drafts", draft_id, user)
-    questions = await database.value.question_drafts.find({"assessment_draft_id": draft_id}).to_list(500)
+    questions = await database.value.question_drafts.find(
+        {"assessment_draft_id": draft_id}
+    ).to_list(500)
     by_id = {question["_id"]: question for question in questions}
-    draft["questions"] = [by_id[question_id] for question_id in draft.get("question_order", []) if question_id in by_id]
+    draft["questions"] = [
+        by_id[question_id]
+        for question_id in draft.get("question_order", [])
+        if question_id in by_id
+    ]
     return draft
 
 
 @router.patch("/assessment-drafts/{draft_id}")
 async def patch_assessment_draft(
-    draft_id: str,
-    payload: AssessmentDraftPatch,
-    user: CurrentUser = Depends(require_author),
+    draft_id: str, payload: AssessmentDraftPatch, user: CurrentUser = Depends(require_author)
 ):
-    draft = await optimistic_patch("assessment_drafts", draft_id, user.id, payload.expected_revision, payload.model_dump())
-    await audit(user.id, "assessment_draft_updated", "AssessmentDraft", draft_id, {"revision": draft["revision"]})
+    draft = await optimistic_patch(
+        "assessment_drafts", draft_id, user.id, payload.expected_revision, payload.model_dump()
+    )
+    await audit(
+        user.id,
+        "assessment_draft_updated",
+        "AssessmentDraft",
+        draft_id,
+        {"revision": draft["revision"]},
+    )
     return draft
 
 
 @router.post("/assessment-drafts/{draft_id}/questions", status_code=201)
 async def create_question_draft(
-    draft_id: str,
-    payload: QuestionDraftCreate,
-    user: CurrentUser = Depends(require_author),
+    draft_id: str, payload: QuestionDraftCreate, user: CurrentUser = Depends(require_author)
 ):
     await require_owned("assessment_drafts", draft_id, user)
-    return await persist_question_draft(draft_id, payload.model_dump(mode="json", by_alias=True), user)
+    return await persist_question_draft(
+        draft_id, payload.model_dump(mode="json", by_alias=True), user
+    )
 
 
 @router.post("/assessment-drafts/{draft_id}/import", status_code=202)
 async def import_assessment_draft(
-    draft_id: str,
-    payload: ImportRequest,
-    user: CurrentUser = Depends(require_author),
+    draft_id: str, payload: ImportRequest, user: CurrentUser = Depends(require_author)
 ):
     started = time.perf_counter()
     await require_owned("assessment_drafts", draft_id, user)
-    existing = await database.value.import_jobs.find_one({"owner_id": user.id, "idempotency_key": payload.idempotency_key})
+    existing = await database.value.import_jobs.find_one(
+        {"owner_id": user.id, "idempotency_key": payload.idempotency_key}
+    )
     if existing:
         metrics.set("assessment_import_duration", time.perf_counter() - started)
         return existing
@@ -410,8 +490,12 @@ async def import_assessment_draft(
         page_data["document_id"] = payload.document_id
         candidates.extend(split_page(page_data))
     existing_drafts = await database.value.question_drafts.find({"owner_id": user.id}).to_list(5000)
-    existing_versions = await database.value.question_versions.find({"owner_id": user.id}).to_list(5000)
-    fingerprints = {duplicate_fingerprint(question) for question in [*existing_drafts, *existing_versions]}
+    existing_versions = await database.value.question_versions.find({"owner_id": user.id}).to_list(
+        5000
+    )
+    fingerprints = {
+        duplicate_fingerprint(question) for question in [*existing_drafts, *existing_versions]
+    }
     for candidate in candidates:
         answer = payload.answer_key.get(str(candidate["source_number"]))
         if answer is not None:
@@ -426,7 +510,9 @@ async def import_assessment_draft(
         if not candidate["answer_key"]:
             candidate["exception_flags"].append("missing_answer_key")
         evidence = candidate.get("source_evidence", [{}])[0]
-        if evidence.get("formula_refs") and not any(ref.get("latex") for ref in evidence["formula_refs"]):
+        if evidence.get("formula_refs") and not any(
+            ref.get("latex") for ref in evidence["formula_refs"]
+        ):
             candidate["exception_flags"].append("formula_needs_review")
         if evidence.get("image_refs") and not all(ref.get("url") for ref in evidence["image_refs"]):
             candidate["exception_flags"].append("image_reference_missing")
@@ -453,16 +539,20 @@ async def import_assessment_draft(
         if duplicate:
             return duplicate
         raise HTTPException(status_code=409, detail={"code": "assessment_import_conflict"})
-    await audit(user.id, "assessment_import_parsed", "ImportJob", job["_id"], {"candidate_count": len(candidates)})
+    await audit(
+        user.id,
+        "assessment_import_parsed",
+        "ImportJob",
+        job["_id"],
+        {"candidate_count": len(candidates)},
+    )
     metrics.set("assessment_import_duration", time.perf_counter() - started)
     return job
 
 
 @router.post("/assessment-drafts/{draft_id}/import-file", status_code=202)
 async def import_assessment_file(
-    draft_id: str,
-    payload: ImportFileRequest,
-    user: CurrentUser = Depends(require_author),
+    draft_id: str, payload: ImportFileRequest, user: CurrentUser = Depends(require_author)
 ):
     await require_owned("assessment_drafts", draft_id, user)
     async with httpx.AsyncClient(timeout=180) as client:
@@ -477,7 +567,9 @@ async def import_assessment_file(
         raise HTTPException(status_code=422, detail={"code": "document_parsing_failed"})
     parsed = response.json().get("data", {})
     document_id = f"IMPDOC-{hashlib.sha256(payload.data.encode()).hexdigest()[:32]}"
-    pages = structure_pages(document_id, str(parsed.get("markdown") or ""), parsed.get("structure") or [])
+    pages = structure_pages(
+        document_id, str(parsed.get("markdown") or ""), parsed.get("structure") or []
+    )
     if not any(page["text"].strip() for page in pages):
         raise HTTPException(status_code=422, detail={"code": "document_text_unavailable"})
     request = ImportRequest(
@@ -498,9 +590,7 @@ async def get_import_job(job_id: str, user: CurrentUser = Depends(require_author
 
 @router.post("/imports/{job_id}/confirm", status_code=201)
 async def confirm_import(
-    job_id: str,
-    payload: ImportConfirmInput,
-    user: CurrentUser = Depends(require_author),
+    job_id: str, payload: ImportConfirmInput, user: CurrentUser = Depends(require_author)
 ):
     job = await require_owned("import_jobs", job_id, user)
     if job["status"] == "confirmed":
@@ -512,25 +602,44 @@ async def confirm_import(
             "job_id": job_id,
             "status": "confirmed",
             "question_draft_ids": job.get("question_draft_ids", []),
-            "questions": [by_id[question_id] for question_id in job.get("question_draft_ids", []) if question_id in by_id],
+            "questions": [
+                by_id[question_id]
+                for question_id in job.get("question_draft_ids", [])
+                if question_id in by_id
+            ],
         }
     candidates = {candidate["candidate_id"]: candidate for candidate in job["candidates"]}
     selected = payload.selected_candidate_ids or list(candidates)
     if len(selected) != len(set(selected)):
-        raise HTTPException(status_code=422, detail={"code": "import_candidate_selection_duplicate"})
+        raise HTTPException(
+            status_code=422, detail={"code": "import_candidate_selection_duplicate"}
+        )
     for candidate_id in selected:
         source_candidate = candidates.get(candidate_id)
         derived = any(candidate_id.startswith(f"{known_id}-split-") for known_id in candidates)
         if not source_candidate and not derived:
-            raise HTTPException(status_code=422, detail={"code": "import_candidate_missing", "candidate_id": candidate_id})
+            raise HTTPException(
+                status_code=422,
+                detail={"code": "import_candidate_missing", "candidate_id": candidate_id},
+            )
         if derived and candidate_id not in payload.corrected_questions:
-            raise HTTPException(status_code=422, detail={"code": "derived_import_candidate_requires_correction", "candidate_id": candidate_id})
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "derived_import_candidate_requires_correction",
+                    "candidate_id": candidate_id,
+                },
+            )
     confirmation_payload = payload.model_dump(mode="json", by_alias=True)
     confirmation_hash = hashlib.sha256(
-        json.dumps(confirmation_payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
+        json.dumps(
+            confirmation_payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        ).encode()
     ).hexdigest()
     if job.get("confirmation_hash") and job["confirmation_hash"] != confirmation_hash:
-        raise HTTPException(status_code=409, detail={"code": "import_confirmation_payload_conflict"})
+        raise HTTPException(
+            status_code=409, detail={"code": "import_confirmation_payload_conflict"}
+        )
     claimed = await database.value.import_jobs.find_one_and_update(
         {
             "_id": job_id,
@@ -541,7 +650,13 @@ async def confirm_import(
                 {"confirmation_hash": confirmation_hash},
             ],
         },
-        {"$set": {"status": "confirming", "confirmation_hash": confirmation_hash, "updated_at": now()}},
+        {
+            "$set": {
+                "status": "confirming",
+                "confirmation_hash": confirmation_hash,
+                "updated_at": now(),
+            }
+        },
         return_document=ReturnDocument.AFTER,
     )
     if not claimed:
@@ -557,53 +672,93 @@ async def confirm_import(
             derived = any(candidate_id.startswith(f"{known_id}-split-") for known_id in candidates)
             candidate = deepcopy(source_candidate) if source_candidate else {}
             if candidate_id in payload.corrected_questions:
-                candidate = payload.corrected_questions[candidate_id].model_dump(mode="json", by_alias=True)
+                candidate = payload.corrected_questions[candidate_id].model_dump(
+                    mode="json", by_alias=True
+                )
                 if source_candidate:
                     candidate["source_page"] = source_candidate.get("source_page")
                     candidate["parse_confidence"] = source_candidate.get("parse_confidence")
-            for key in ["candidate_id", "source_number", "duplicate_flag", "exception_flags", "recognized", "needs_teacher_review"]:
+            for key in [
+                "candidate_id",
+                "source_number",
+                "duplicate_flag",
+                "exception_flags",
+                "recognized",
+                "needs_teacher_review",
+            ]:
                 candidate.pop(key, None)
             candidate["import_job_id"] = job_id
             candidate["import_candidate_id"] = candidate_id
-            deterministic_id = f"QD-{hashlib.sha256(f'{job_id}:{candidate_id}'.encode()).hexdigest()[:32]}"
+            deterministic_id = (
+                f"QD-{hashlib.sha256(f'{job_id}:{candidate_id}'.encode()).hexdigest()[:32]}"
+            )
             question = await persist_question_draft(
                 job["assessment_draft_id"], candidate, user, deterministic_id, allow_existing=True
             )
             created.append(question)
             await database.value.import_jobs.update_one(
                 {"_id": job_id, "owner_id": user.id, "status": "confirming"},
-                {"$addToSet": {"question_draft_ids": question["_id"]}, "$set": {"updated_at": now()}},
+                {
+                    "$addToSet": {"question_draft_ids": question["_id"]},
+                    "$set": {"updated_at": now()},
+                },
             )
     except Exception as error:
         await database.value.import_jobs.update_one(
             {"_id": job_id, "owner_id": user.id, "status": "confirming"},
-            {"$set": {"status": "confirmation_failed", "error_code": type(error).__name__, "updated_at": now()}},
+            {
+                "$set": {
+                    "status": "confirmation_failed",
+                    "error_code": type(error).__name__,
+                    "updated_at": now(),
+                }
+            },
         )
         raise
     question_ids = [question["_id"] for question in created]
     await database.value.import_jobs.update_one(
         {"_id": job_id, "owner_id": user.id, "status": "confirming"},
-        {"$set": {"status": "confirmed", "question_draft_ids": question_ids, "updated_at": now()}, "$unset": {"error_code": ""}},
+        {
+            "$set": {
+                "status": "confirmed",
+                "question_draft_ids": question_ids,
+                "updated_at": now(),
+            },
+            "$unset": {"error_code": ""},
+        },
     )
-    await audit(user.id, "assessment_import_confirmed", "ImportJob", job_id, {"question_count": len(created)})
+    await audit(
+        user.id,
+        "assessment_import_confirmed",
+        "ImportJob",
+        job_id,
+        {"question_count": len(created)},
+    )
     return {"job_id": job_id, "status": "confirmed", "questions": created}
 
 
 @router.post("/assessment-drafts/{draft_id}/generate", status_code=201)
 async def generate_assessment_questions(
-    draft_id: str,
-    payload: GenerateRequest,
-    user: CurrentUser = Depends(require_author),
+    draft_id: str, payload: GenerateRequest, user: CurrentUser = Depends(require_author)
 ):
     assessment_draft = await require_owned("assessment_drafts", draft_id, user)
     await enforce_teacher_material_policy(payload, user)
-    existing = await database.value.generation_runs.find_one({"owner_id": user.id, "idempotency_key": payload.idempotency_key})
+    existing = await database.value.generation_runs.find_one(
+        {"owner_id": user.id, "idempotency_key": payload.idempotency_key}
+    )
     if existing:
-        questions = await database.value.question_drafts.find({"_id": {"$in": existing.get("question_draft_ids", [])}}).to_list(100)
+        questions = await database.value.question_drafts.find(
+            {"_id": {"$in": existing.get("question_draft_ids", [])}}
+        ).to_list(100)
         return {**existing, "questions": questions}
     for evidence in payload.source_evidence:
-        if evidence.get("source_type") == "teacher_material" and str(evidence.get("owner_id") or evidence.get("creator_id")) != user.id:
-            raise HTTPException(status_code=403, detail={"code": "teacher_material_scope_violation"})
+        if (
+            evidence.get("source_type") == "teacher_material"
+            and str(evidence.get("owner_id") or evidence.get("creator_id")) != user.id
+        ):
+            raise HTTPException(
+                status_code=403, detail={"code": "teacher_material_scope_violation"}
+            )
     run = {
         "_id": new_id("GEN"),
         "owner_id": user.id,
@@ -627,18 +782,41 @@ async def generate_assessment_questions(
         return {**reserved, "questions": questions}
     generation = payload.model_dump(mode="json")
     try:
-        evidence = payload.source_evidence if settings.ASSESSMENT_ALLOW_TEST_IDENTITY and payload.source_evidence else await retrieve_generation_evidence(payload, user)
+        evidence = (
+            payload.source_evidence
+            if settings.ASSESSMENT_ALLOW_TEST_IDENTITY and payload.source_evidence
+            else await retrieve_generation_evidence(payload, user)
+        )
         generation["source_evidence"] = evidence
+        generation["pedagogical_context"] = build_pedagogical_context(evidence)
+        if generation["pedagogical_context"].get("teacher_material_present"):
+            await persist_teacher_profile_event(
+                user.id,
+                "pedagogy_context_observed",
+                {
+                    "pedagogical_context": generation["pedagogical_context"],
+                    "topic": payload.topic,
+                    "subject": payload.subject,
+                },
+                f"pedagogy-{payload.idempotency_key}",
+            )
         difficulties = requested_difficulties(generation)
         questions = []
         for position, difficulty in enumerate(difficulties, start=1):
-            model_output = await generate_with_agent(generation, difficulty, evidence)
+            variation = variation_directive(position, generation["pedagogical_context"])
+            model_output = await generate_with_agent(
+                generation, difficulty, evidence, generation["pedagogical_context"], variation
+            )
+            generation["variation_directive"] = variation
             question_data = generated_question(generation, position, difficulty, model_output)
             generation_validation = validate_question(question_data)
             if generation_validation["blockers"]:
                 raise HTTPException(
                     status_code=502,
-                    detail={"code": "ai_question_generation_invalid", "validation": generation_validation},
+                    detail={
+                        "code": "ai_question_generation_invalid",
+                        "validation": generation_validation,
+                    },
                 )
             question = await persist_question_draft(draft_id, question_data, user)
             await database.value.generation_runs.update_one(
@@ -662,7 +840,9 @@ async def generate_assessment_questions(
                 }
             )
             await database.value.difficulty_estimates.insert_one(estimate)
-            question["difficulty_prediction"] = None if assessment_draft.get("research_blind_mode") else estimate
+            question["difficulty_prediction"] = (
+                None if assessment_draft.get("research_blind_mode") else estimate
+            )
             question["quality_checks"] = generation_validation
             questions.append(question)
     except Exception as error:
@@ -672,18 +852,31 @@ async def generate_assessment_questions(
         )
         raise
     await database.value.generation_runs.update_one(
-        {"_id": run["_id"]},
-        {"$set": {"status": "needs_teacher_review", "updated_at": now()}},
+        {"_id": run["_id"]}, {"$set": {"status": "needs_teacher_review", "updated_at": now()}}
     )
-    run.update({"question_draft_ids": [question["_id"] for question in questions], "status": "needs_teacher_review", "updated_at": now()})
-    await audit(user.id, "assessment_questions_generated", "GenerationRun", run["_id"], {"question_count": len(questions)})
+    run.update(
+        {
+            "question_draft_ids": [question["_id"] for question in questions],
+            "status": "needs_teacher_review",
+            "updated_at": now(),
+        }
+    )
+    await audit(
+        user.id,
+        "assessment_questions_generated",
+        "GenerationRun",
+        run["_id"],
+        {"question_count": len(questions)},
+    )
     return {**run, "questions": questions}
 
 
 @router.post("/assessment-drafts/{draft_id}/preview")
 async def preview_assessment_draft(draft_id: str, user: CurrentUser = Depends(require_author)):
     draft = await require_owned("assessment_drafts", draft_id, user)
-    questions = await database.value.question_drafts.find({"assessment_draft_id": draft_id}).to_list(500)
+    questions = await database.value.question_drafts.find(
+        {"assessment_draft_id": draft_id}
+    ).to_list(500)
     by_id = {question["_id"]: question for question in questions}
     items = []
     for position, question_id in enumerate(draft.get("question_order", []), start=1):
@@ -699,7 +892,12 @@ async def preview_assessment_draft(draft_id: str, user: CurrentUser = Depends(re
                     "points": float(question.get("scoring_rule", {}).get("points", 1)),
                 }
             )
-    return {"assessment_draft_id": draft_id, "title": draft["title"], "layout_doc": draft["layout_doc"], "items": items}
+    return {
+        "assessment_draft_id": draft_id,
+        "title": draft["title"],
+        "layout_doc": draft["layout_doc"],
+        "items": items,
+    }
 
 
 @router.get("/assessment-drafts/{draft_id}/difficulty-analysis")
@@ -709,24 +907,42 @@ async def analyze_assessment_difficulty(draft_id: str, user: CurrentUser = Depen
         {"assessment_draft_id": draft_id, "owner_id": user.id}
     ).to_list(500)
     question_ids = [question["_id"] for question in questions]
-    predictions = await database.value.difficulty_estimates.find(
-        {
-            "question_draft_id": {"$in": question_ids},
-            "owner_id": user.id,
-            "revealed_at": {"$ne": None},
-            "$or": [{"predictor_kind": "structured"}, {"predictor_kind": {"$exists": False}}],
-        }
-    ).sort("created_at", -1).to_list(5000)
-    targets = await database.value.difficulty_targets.find(
-        {"question_draft_id": {"$in": question_ids}, "owner_id": user.id}
-    ).sort("created_at", -1).to_list(5000)
-    judgments = await database.value.teacher_judgments.find(
-        {"question_draft_id": {"$in": question_ids}, "teacher_id": user.id}
-    ).sort("created_at", -1).to_list(5000)
-    version_ids = [question["frozen_version_id"] for question in questions if question.get("frozen_version_id")]
-    calibrations = await database.value.calibrations.find(
-        {"question_version_id": {"$in": version_ids}, "status": "calibrated"}
-    ).sort("created_at", -1).to_list(5000)
+    predictions = (
+        await database.value.difficulty_estimates.find(
+            {
+                "question_draft_id": {"$in": question_ids},
+                "owner_id": user.id,
+                "revealed_at": {"$ne": None},
+                "$or": [{"predictor_kind": "structured"}, {"predictor_kind": {"$exists": False}}],
+            }
+        )
+        .sort("created_at", -1)
+        .to_list(5000)
+    )
+    targets = (
+        await database.value.difficulty_targets.find(
+            {"question_draft_id": {"$in": question_ids}, "owner_id": user.id}
+        )
+        .sort("created_at", -1)
+        .to_list(5000)
+    )
+    judgments = (
+        await database.value.teacher_judgments.find(
+            {"question_draft_id": {"$in": question_ids}, "teacher_id": user.id}
+        )
+        .sort("created_at", -1)
+        .to_list(5000)
+    )
+    version_ids = [
+        question["frozen_version_id"] for question in questions if question.get("frozen_version_id")
+    ]
+    calibrations = (
+        await database.value.calibrations.find(
+            {"question_version_id": {"$in": version_ids}, "status": "calibrated"}
+        )
+        .sort("created_at", -1)
+        .to_list(5000)
+    )
     current_revision = {question["_id"]: question["revision"] for question in questions}
     latest_predictions = {}
     latest_targets = {}
@@ -751,7 +967,9 @@ async def analyze_assessment_difficulty(draft_id: str, user: CurrentUser = Depen
     teacher_distribution = {str(level): 0 for level in range(1, 6)}
     calibrated_distribution = {str(level): 0 for level in range(1, 6)}
     for prediction in latest_predictions.values():
-        predicted_distribution[str(difficulty_level(float(prediction["predicted_difficulty"])))] += 1
+        predicted_distribution[
+            str(difficulty_level(float(prediction["predicted_difficulty"])))
+        ] += 1
     for target in latest_targets.values():
         target_distribution[str(difficulty_level(float(target["target_difficulty"])))] += 1
     for judgment in latest_judgments.values():
@@ -775,7 +993,9 @@ async def analyze_assessment_difficulty(draft_id: str, user: CurrentUser = Depen
                         "action": "add_or_raise" if delta > 0 else "reduce_or_lower",
                     }
                 )
-    unresolved = [question_id for question_id in question_ids if question_id not in latest_predictions]
+    unresolved = [
+        question_id for question_id in question_ids if question_id not in latest_predictions
+    ]
     return {
         "assessment_draft_id": draft_id,
         "question_count": len(questions),
@@ -794,18 +1014,22 @@ async def analyze_assessment_difficulty(draft_id: str, user: CurrentUser = Depen
 
 @router.post("/assessment-drafts/{draft_id}/learner-fit")
 async def analyze_assessment_learner_fit(
-    draft_id: str,
-    payload: LearnerFitInput,
-    user: CurrentUser = Depends(require_author),
+    draft_id: str, payload: LearnerFitInput, user: CurrentUser = Depends(require_author)
 ):
     draft = await require_owned("assessment_drafts", draft_id, user)
     questions = await database.value.question_drafts.find(
         {"assessment_draft_id": draft_id, "owner_id": user.id}
     ).to_list(500)
     by_id = {question["_id"]: question for question in questions}
-    ordered = [by_id[question_id] for question_id in draft.get("question_order", []) if question_id in by_id]
+    ordered = [
+        by_id[question_id]
+        for question_id in draft.get("question_order", [])
+        if question_id in by_id
+    ]
     question_ids = [question["_id"] for question in ordered]
-    version_ids = [question["frozen_version_id"] for question in ordered if question.get("frozen_version_id")]
+    version_ids = [
+        question["frozen_version_id"] for question in ordered if question.get("frozen_version_id")
+    ]
     predictions, targets, calibrations = await asyncio.gather(
         database.value.difficulty_estimates.find(
             {
@@ -814,13 +1038,19 @@ async def analyze_assessment_learner_fit(
                 "revealed_at": {"$ne": None},
                 "$or": [{"predictor_kind": "structured"}, {"predictor_kind": {"$exists": False}}],
             }
-        ).sort("created_at", -1).to_list(5000),
+        )
+        .sort("created_at", -1)
+        .to_list(5000),
         database.value.difficulty_targets.find(
             {"question_draft_id": {"$in": question_ids}, "owner_id": user.id}
-        ).sort("created_at", -1).to_list(5000),
+        )
+        .sort("created_at", -1)
+        .to_list(5000),
         database.value.calibrations.find(
             {"question_version_id": {"$in": version_ids}, "status": "calibrated"}
-        ).sort("created_at", -1).to_list(5000),
+        )
+        .sort("created_at", -1)
+        .to_list(5000),
     )
     current_revision = {question["_id"]: question["revision"] for question in ordered}
     latest_predictions = {}
@@ -877,19 +1107,24 @@ async def analyze_assessment_learner_fit(
             {"_id": draft["blueprint_id"], "owner_id": user.id}
         )
     if not target_learner:
-        target_learner = deepcopy((blueprint or {}).get("target_learner") or draft.get("context", {}).get("target_learner") or {})
+        target_learner = deepcopy(
+            (blueprint or {}).get("target_learner")
+            or draft.get("context", {}).get("target_learner")
+            or {}
+        )
     if not target_learner.get("ability_band"):
         target_learner["ability_band"] = [2.0, 4.0]
         target_learner["source"] = "target_program_baseline"
     target_learner.setdefault("confidence", 0.4)
     try:
         validated_target = LearnerFitInput(
-            target_learner=target_learner,
-            target_success_range=payload.target_success_range,
+            target_learner=target_learner, target_success_range=payload.target_success_range
         )
     except ValueError:
         raise HTTPException(status_code=422, detail={"code": "learner_fit_target_invalid"})
-    result = evaluate_learner_fit(items, validated_target.target_learner, validated_target.target_success_range)
+    result = evaluate_learner_fit(
+        items, validated_target.target_learner, validated_target.target_success_range
+    )
     result["assessment_draft_id"] = draft_id
     result["mutated"] = False
     result["requires_teacher_acceptance"] = True
@@ -923,7 +1158,11 @@ def optimizer_item(
             if (value := link.get(key))
         )
     predicted = predict_difficulty(entity, "blueprint_optimizer_v1")
-    item_difficulty = calibrated_difficulty if calibrated_difficulty is not None else float(predicted["predicted_difficulty"])
+    item_difficulty = (
+        calibrated_difficulty
+        if calibrated_difficulty is not None
+        else float(predicted["predicted_difficulty"])
+    )
     validity_review = entity.get("validity_review") or {}
     content_fingerprint = hashlib.sha256(projection.casefold().strip().encode()).hexdigest()
     return {
@@ -934,7 +1173,9 @@ def optimizer_item(
         "question_type": entity.get("question_type"),
         "cognitive_level": entity.get("cognitive_level") or "",
         "difficulty_level": difficulty_level(item_difficulty),
-        "difficulty_source": "calibrated" if calibrated_difficulty is not None else "structured_cold_start",
+        "difficulty_source": "calibrated"
+        if calibrated_difficulty is not None
+        else "structured_cold_start",
         "concept_ids": entity.get("concept_ids", []),
         "skill_ids": entity.get("skill_ids", []),
         "curriculum_node_ids": curriculum_nodes,
@@ -944,32 +1185,40 @@ def optimizer_item(
         "duplicate_group": source_question_id or content_fingerprint,
         "duplicate_groups": [value for value in [source_question_id, content_fingerprint] if value],
         "exposure_count": exposure_count,
-        "construct_risk": len(validity_review.get("risk_flags", [])) + int(validity_review.get("status") == "rejected"),
+        "construct_risk": len(validity_review.get("risk_flags", []))
+        + int(validity_review.get("status") == "rejected"),
     }
 
 
 @router.post("/assessment-drafts/{draft_id}/rebalance", status_code=201)
 async def propose_assessment_rebalance(
-    draft_id: str,
-    payload: AssessmentRebalanceInput,
-    user: CurrentUser = Depends(require_author),
+    draft_id: str, payload: AssessmentRebalanceInput, user: CurrentUser = Depends(require_author)
 ):
     draft = await require_owned("assessment_drafts", draft_id, user)
     existing = await database.value.assessment_rebalance_proposals.find_one(
         {"owner_id": user.id, "idempotency_key": payload.idempotency_key}
     )
     if existing:
-        if existing.get("assessment_draft_id") != draft_id or existing.get("base_revision") != payload.expected_revision:
+        if (
+            existing.get("assessment_draft_id") != draft_id
+            or existing.get("base_revision") != payload.expected_revision
+        ):
             raise HTTPException(status_code=409, detail={"code": "rebalance_idempotency_conflict"})
         return existing
     if draft["revision"] != payload.expected_revision:
-        raise HTTPException(status_code=409, detail={"code": "revision_conflict", "current_revision": draft["revision"]})
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "revision_conflict", "current_revision": draft["revision"]},
+        )
     if not draft.get("blueprint_id"):
         raise HTTPException(status_code=422, detail={"code": "assessment_blueprint_required"})
     blueprint = await require_owned("blueprints", draft["blueprint_id"], user)
     blueprint_validation = validate_blueprint(blueprint)
     if not blueprint_validation["valid"]:
-        raise HTTPException(status_code=422, detail={"code": "blueprint_invalid", "validation": blueprint_validation})
+        raise HTTPException(
+            status_code=422,
+            detail={"code": "blueprint_invalid", "validation": blueprint_validation},
+        )
     current = await database.value.question_drafts.find(
         {"assessment_draft_id": draft_id, "owner_id": user.id}
     ).to_list(1000)
@@ -987,13 +1236,21 @@ async def propose_assessment_rebalance(
         for item in current_source_questions
         if item.get("current_version_id")
     }
-    bank_questions = await database.value.questions.find(
-        {"owner_id": user.id, "status": "active", "_id": {"$nin": list(current_question_ids)}}
-    ).limit(1000).to_list(1000)
-    bank_version_ids = [item["current_version_id"] for item in bank_questions if item.get("current_version_id")]
+    bank_questions = (
+        await database.value.questions.find(
+            {"owner_id": user.id, "status": "active", "_id": {"$nin": list(current_question_ids)}}
+        )
+        .limit(1000)
+        .to_list(1000)
+    )
+    bank_version_ids = [
+        item["current_version_id"] for item in bank_questions if item.get("current_version_id")
+    ]
     current_version_by_draft = {
         item["_id"]: item.get("frozen_version_id")
-        or source_version_by_question.get(item.get("question_id") or item.get("bank_source_question_id"))
+        or source_version_by_question.get(
+            item.get("question_id") or item.get("bank_source_question_id")
+        )
         for item in current
     }
     candidate_version_ids = list(
@@ -1007,24 +1264,39 @@ async def propose_assessment_rebalance(
     ).to_list(1000)
     exposure_rows = await database.value.responses.aggregate(
         [
-            {"$match": {"question_version_id": {"$in": candidate_version_ids}, "is_first_exposure": True}},
+            {
+                "$match": {
+                    "question_version_id": {"$in": candidate_version_ids},
+                    "is_first_exposure": True,
+                }
+            },
             {"$group": {"_id": "$question_version_id", "count": {"$sum": 1}}},
         ]
     ).to_list(1000)
-    calibration_rows = await database.value.calibrations.find(
-        {"question_version_id": {"$in": candidate_version_ids}, "status": "calibrated"}
-    ).sort("created_at", -1).to_list(5000)
+    calibration_rows = (
+        await database.value.calibrations.find(
+            {"question_version_id": {"$in": candidate_version_ids}, "status": "calibrated"}
+        )
+        .sort("created_at", -1)
+        .to_list(5000)
+    )
     exposure_by_version = {row["_id"]: int(row["count"]) for row in exposure_rows}
     calibration_by_version = {}
     for row in calibration_rows:
         calibration_by_version.setdefault(row["question_version_id"], row)
-    question_by_version = {item["current_version_id"]: item["_id"] for item in bank_questions if item.get("current_version_id")}
+    question_by_version = {
+        item["current_version_id"]: item["_id"]
+        for item in bank_questions
+        if item.get("current_version_id")
+    }
     candidates = [
         optimizer_item(
             item,
             "draft",
             item.get("question_id") or item.get("bank_source_question_id"),
-            calibration_by_version.get(current_version_by_draft.get(item["_id"]), {}).get("difficulty"),
+            calibration_by_version.get(current_version_by_draft.get(item["_id"]), {}).get(
+                "difficulty"
+            ),
             exposure_by_version.get(current_version_by_draft.get(item["_id"]), 0),
         )
         for item in current
@@ -1043,7 +1315,9 @@ async def propose_assessment_rebalance(
     if isinstance(ability_band, list) and len(ability_band) == 2:
         target_center = (float(ability_band[0]) + float(ability_band[1])) / 2
         for candidate in candidates:
-            candidate["learner_fit_penalty"] = abs(float(candidate["difficulty_level"]) - target_center)
+            candidate["learner_fit_penalty"] = abs(
+                float(candidate["difficulty_level"]) - target_center
+            )
     result = optimize_blueprint(candidates, blueprint)
     selected = result["selected"]
     current_by_id = {item["_id"]: item for item in current}
@@ -1055,7 +1329,10 @@ async def propose_assessment_rebalance(
         "idempotency_key": payload.idempotency_key,
         "base_revision": draft["revision"],
         "before": [
-            {"question_draft_id": question_id, "locked": bool(current_by_id.get(question_id, {}).get("locked"))}
+            {
+                "question_draft_id": question_id,
+                "locked": bool(current_by_id.get(question_id, {}).get("locked")),
+            }
             for question_id in draft.get("question_order", [])
         ],
         "before_question_snapshots": deepcopy(current),
@@ -1067,7 +1344,9 @@ async def propose_assessment_rebalance(
             "coverage_constraints": blueprint.get("coverage_constraints", []),
             "maximum_exposure_count": blueprint.get("maximum_exposure_count"),
         },
-        "construct_check": {"passed": result["feasible"] and all(item.get("valid") for item in selected)},
+        "construct_check": {
+            "passed": result["feasible"] and all(item.get("valid") for item in selected)
+        },
         "infeasibility": result["gaps"],
         "status": "proposed" if result["feasible"] else "infeasible",
         "created_at": now(),
@@ -1079,7 +1358,11 @@ async def propose_assessment_rebalance(
         existing = await database.value.assessment_rebalance_proposals.find_one(
             {"owner_id": user.id, "idempotency_key": payload.idempotency_key}
         )
-        if existing and existing.get("assessment_draft_id") == draft_id and existing.get("base_revision") == payload.expected_revision:
+        if (
+            existing
+            and existing.get("assessment_draft_id") == draft_id
+            and existing.get("base_revision") == payload.expected_revision
+        ):
             return existing
         raise HTTPException(status_code=409, detail={"code": "rebalance_idempotency_conflict"})
     await audit(
@@ -1094,9 +1377,7 @@ async def propose_assessment_rebalance(
 
 @router.post("/assessment-drafts/{draft_id}/rebalance-proposals/{proposal_id}/approve")
 async def approve_assessment_rebalance(
-    draft_id: str,
-    proposal_id: str,
-    user: CurrentUser = Depends(require_author),
+    draft_id: str, proposal_id: str, user: CurrentUser = Depends(require_author)
 ):
     proposal = await require_owned("assessment_rebalance_proposals", proposal_id, user)
     if proposal.get("assessment_draft_id") != draft_id:
@@ -1142,17 +1423,21 @@ async def approve_assessment_rebalance(
         question_data["bank_source_question_id"] = entry.get("source_question_id")
         question_data["locked"] = False
         version_id = version["_id"]
-        deterministic_id = f"QD-{hashlib.sha256(f'rebalance:{draft_id}:{version_id}'.encode()).hexdigest()[:32]}"
-        created_documents.append(question_draft_document(draft_id, question_data, user.id, deterministic_id))
+        deterministic_id = (
+            f"QD-{hashlib.sha256(f'rebalance:{draft_id}:{version_id}'.encode()).hexdigest()[:32]}"
+        )
+        created_documents.append(
+            question_draft_document(draft_id, question_data, user.id, deterministic_id)
+        )
         created_by_version[version_id] = deterministic_id
     question_order = [
-        entry["entity_id"] if entry["source_kind"] == "draft" else created_by_version[entry["entity_id"]]
+        entry["entity_id"]
+        if entry["source_kind"] == "draft"
+        else created_by_version[entry["entity_id"]]
         for entry in proposal["after"]
     ]
     selected_current_ids = {
-        entry["entity_id"]
-        for entry in proposal["after"]
-        if entry["source_kind"] == "draft"
+        entry["entity_id"] for entry in proposal["after"] if entry["source_kind"] == "draft"
     }
     removed_documents = [
         snapshot
@@ -1164,19 +1449,20 @@ async def approve_assessment_rebalance(
 
     async def approve_transaction(session):
         current_proposal = await database.value.assessment_rebalance_proposals.find_one(
-            {"_id": proposal_id, "owner_id": user.id},
-            session=session,
+            {"_id": proposal_id, "owner_id": user.id}, session=session
         )
         if not current_proposal or current_proposal.get("status") != "proposed":
             raise HTTPException(status_code=409, detail={"code": "rebalance_proposal_not_pending"})
         current_draft = await database.value.assessment_drafts.find_one(
-            {"_id": draft_id, "owner_id": user.id},
-            session=session,
+            {"_id": draft_id, "owner_id": user.id}, session=session
         )
         if not current_draft or current_draft.get("revision") != proposal["base_revision"]:
             raise HTTPException(
                 status_code=409,
-                detail={"code": "revision_conflict", "current_revision": current_draft.get("revision") if current_draft else None},
+                detail={
+                    "code": "revision_conflict",
+                    "current_revision": current_draft.get("revision") if current_draft else None,
+                },
             )
         if created_documents:
             await database.value.question_drafts.insert_many(created_documents, session=session)
@@ -1187,7 +1473,10 @@ async def approve_assessment_rebalance(
             )
         updated = await database.value.assessment_drafts.find_one_and_update(
             {"_id": draft_id, "owner_id": user.id, "revision": proposal["base_revision"]},
-            {"$set": {"question_order": question_order, "updated_at": approved_at}, "$inc": {"revision": 1}},
+            {
+                "$set": {"question_order": question_order, "updated_at": approved_at},
+                "$inc": {"revision": 1},
+            },
             return_document=ReturnDocument.AFTER,
             session=session,
         )
@@ -1195,7 +1484,17 @@ async def approve_assessment_rebalance(
             raise HTTPException(status_code=409, detail={"code": "revision_conflict"})
         proposal_update = await database.value.assessment_rebalance_proposals.update_one(
             {"_id": proposal_id, "owner_id": user.id, "status": "proposed"},
-            {"$set": {"status": "approved", "approved_at": approved_at, "applied_revision": updated["revision"], "applied_question_order": question_order, "applied_created_question_ids": [item["_id"] for item in created_documents], "applied_removed_question_ids": removed_ids, "updated_at": approved_at}},
+            {
+                "$set": {
+                    "status": "approved",
+                    "approved_at": approved_at,
+                    "applied_revision": updated["revision"],
+                    "applied_question_order": question_order,
+                    "applied_created_question_ids": [item["_id"] for item in created_documents],
+                    "applied_removed_question_ids": removed_ids,
+                    "updated_at": approved_at,
+                }
+            },
             session=session,
         )
         if proposal_update.modified_count != 1:
@@ -1206,16 +1505,22 @@ async def approve_assessment_rebalance(
         async with await database.client.start_session() as session:
             updated = await session.with_transaction(approve_transaction)
     except DuplicateKeyError as error:
-        raise HTTPException(status_code=409, detail={"code": "rebalance_candidate_already_added"}) from error
-    await audit(user.id, "assessment_rebalance_approved", "AssessmentRebalanceProposal", proposal_id)
-    return {"proposal_id": proposal_id, "assessment_draft": updated, "question_order": question_order}
+        raise HTTPException(
+            status_code=409, detail={"code": "rebalance_candidate_already_added"}
+        ) from error
+    await audit(
+        user.id, "assessment_rebalance_approved", "AssessmentRebalanceProposal", proposal_id
+    )
+    return {
+        "proposal_id": proposal_id,
+        "assessment_draft": updated,
+        "question_order": question_order,
+    }
 
 
 @router.post("/assessment-drafts/{draft_id}/rebalance-proposals/{proposal_id}/undo")
 async def undo_assessment_rebalance(
-    draft_id: str,
-    proposal_id: str,
-    user: CurrentUser = Depends(require_author),
+    draft_id: str, proposal_id: str, user: CurrentUser = Depends(require_author)
 ):
     proposal = await require_owned("assessment_rebalance_proposals", proposal_id, user)
     if proposal.get("assessment_draft_id") != draft_id:
@@ -1226,7 +1531,9 @@ async def undo_assessment_rebalance(
         {"assessment_draft_id": draft_id, "owner_id": user.id, "current_version_id": {"$ne": None}}
     )
     if published:
-        raise HTTPException(status_code=409, detail={"code": "rebalance_undo_after_publish_forbidden"})
+        raise HTTPException(
+            status_code=409, detail={"code": "rebalance_undo_after_publish_forbidden"}
+        )
     restored_order = [item["question_draft_id"] for item in proposal.get("before", [])]
     snapshots_by_id = {item["_id"]: item for item in proposal.get("before_question_snapshots", [])}
     restored_documents = [
@@ -1238,25 +1545,32 @@ async def undo_assessment_rebalance(
 
     async def undo_transaction(session):
         current_proposal = await database.value.assessment_rebalance_proposals.find_one(
-            {"_id": proposal_id, "owner_id": user.id},
-            session=session,
+            {"_id": proposal_id, "owner_id": user.id}, session=session
         )
         if not current_proposal or current_proposal.get("status") != "approved":
             raise HTTPException(status_code=409, detail={"code": "rebalance_proposal_not_approved"})
         published_in_transaction = await database.value.assessments.find_one(
-            {"assessment_draft_id": draft_id, "owner_id": user.id, "current_version_id": {"$ne": None}},
+            {
+                "assessment_draft_id": draft_id,
+                "owner_id": user.id,
+                "current_version_id": {"$ne": None},
+            },
             session=session,
         )
         if published_in_transaction:
-            raise HTTPException(status_code=409, detail={"code": "rebalance_undo_after_publish_forbidden"})
+            raise HTTPException(
+                status_code=409, detail={"code": "rebalance_undo_after_publish_forbidden"}
+            )
         current_draft = await database.value.assessment_drafts.find_one(
-            {"_id": draft_id, "owner_id": user.id},
-            session=session,
+            {"_id": draft_id, "owner_id": user.id}, session=session
         )
         if not current_draft or current_draft.get("revision") != proposal.get("applied_revision"):
             raise HTTPException(
                 status_code=409,
-                detail={"code": "revision_conflict", "current_revision": current_draft.get("revision") if current_draft else None},
+                detail={
+                    "code": "revision_conflict",
+                    "current_revision": current_draft.get("revision") if current_draft else None,
+                },
             )
         created_ids = proposal.get("applied_created_question_ids", [])
         if created_ids:
@@ -1268,7 +1582,10 @@ async def undo_assessment_rebalance(
             await database.value.question_drafts.insert_many(restored_documents, session=session)
         updated = await database.value.assessment_drafts.find_one_and_update(
             {"_id": draft_id, "owner_id": user.id, "revision": proposal["applied_revision"]},
-            {"$set": {"question_order": restored_order, "updated_at": undone_at}, "$inc": {"revision": 1}},
+            {
+                "$set": {"question_order": restored_order, "updated_at": undone_at},
+                "$inc": {"revision": 1},
+            },
             return_document=ReturnDocument.AFTER,
             session=session,
         )
@@ -1276,7 +1593,14 @@ async def undo_assessment_rebalance(
             raise HTTPException(status_code=409, detail={"code": "revision_conflict"})
         proposal_update = await database.value.assessment_rebalance_proposals.update_one(
             {"_id": proposal_id, "owner_id": user.id, "status": "approved"},
-            {"$set": {"status": "undone", "undone_at": undone_at, "undo_revision": updated["revision"], "updated_at": undone_at}},
+            {
+                "$set": {
+                    "status": "undone",
+                    "undone_at": undone_at,
+                    "undo_revision": updated["revision"],
+                    "updated_at": undone_at,
+                }
+            },
             session=session,
         )
         if proposal_update.modified_count != 1:
@@ -1287,16 +1611,20 @@ async def undo_assessment_rebalance(
         async with await database.client.start_session() as session:
             updated = await session.with_transaction(undo_transaction)
     except DuplicateKeyError as error:
-        raise HTTPException(status_code=409, detail={"code": "rebalance_undo_identity_conflict"}) from error
+        raise HTTPException(
+            status_code=409, detail={"code": "rebalance_undo_identity_conflict"}
+        ) from error
     await audit(user.id, "assessment_rebalance_undone", "AssessmentRebalanceProposal", proposal_id)
-    return {"proposal_id": proposal_id, "assessment_draft": updated, "question_order": restored_order}
+    return {
+        "proposal_id": proposal_id,
+        "assessment_draft": updated,
+        "question_order": restored_order,
+    }
 
 
 @router.post("/assessment-drafts/{draft_id}/rebalance-proposals/{proposal_id}/reject")
 async def reject_assessment_rebalance(
-    draft_id: str,
-    proposal_id: str,
-    user: CurrentUser = Depends(require_author),
+    draft_id: str, proposal_id: str, user: CurrentUser = Depends(require_author)
 ):
     proposal = await require_owned("assessment_rebalance_proposals", proposal_id, user)
     if proposal.get("assessment_draft_id") != draft_id:
@@ -1308,7 +1636,9 @@ async def reject_assessment_rebalance(
     )
     if not rejected:
         raise HTTPException(status_code=409, detail={"code": "rebalance_proposal_not_pending"})
-    await audit(user.id, "assessment_rebalance_rejected", "AssessmentRebalanceProposal", proposal_id)
+    await audit(
+        user.id, "assessment_rebalance_rejected", "AssessmentRebalanceProposal", proposal_id
+    )
     return rejected
 
 
@@ -1317,7 +1647,10 @@ async def freeze_assessment_draft(draft_id: str, user: CurrentUser = Depends(req
     draft = await require_owned("assessment_drafts", draft_id, user)
     validation = await validate_assessment_draft(draft_id, user)
     if not validation["valid"]:
-        raise HTTPException(status_code=422, detail={"code": "assessment_validation_failed", "validation": validation})
+        raise HTTPException(
+            status_code=422,
+            detail={"code": "assessment_validation_failed", "validation": validation},
+        )
     frozen = {
         "_id": new_id("ADF"),
         "assessment_draft_id": draft_id,
@@ -1342,9 +1675,7 @@ async def get_question_draft(question_draft_id: str, user: CurrentUser = Depends
 
 @router.patch("/question-drafts/{question_draft_id}")
 async def patch_question_draft(
-    question_draft_id: str,
-    payload: QuestionDraftPatch,
-    user: CurrentUser = Depends(require_author),
+    question_draft_id: str, payload: QuestionDraftPatch, user: CurrentUser = Depends(require_author)
 ):
     current = await require_owned("question_drafts", question_draft_id, user)
     changes = payload.model_dump(by_alias=True)
@@ -1370,7 +1701,9 @@ async def patch_question_draft(
         for field in content_fields.union({"locked"})
         if changes.get(field) is not None and changes.get(field) != current.get(field)
     )
-    updated = await optimistic_patch("question_drafts", question_draft_id, user.id, payload.expected_revision, changes)
+    updated = await optimistic_patch(
+        "question_drafts", question_draft_id, user.id, payload.expected_revision, changes
+    )
     if changed_fields:
         await persist_teacher_profile_event(
             user.id,
@@ -1385,26 +1718,36 @@ async def patch_question_draft(
             {"question_type": updated["question_type"], "question_draft_id": question_draft_id},
             f"question-type-{question_draft_id}-{updated['revision']}",
         )
-    await audit(user.id, "question_draft_updated", "QuestionDraft", question_draft_id, {"revision": updated["revision"]})
+    await audit(
+        user.id,
+        "question_draft_updated",
+        "QuestionDraft",
+        question_draft_id,
+        {"revision": updated["revision"]},
+    )
     return updated
 
 
 @router.delete("/question-drafts/{question_draft_id}", status_code=204)
-async def delete_question_draft(question_draft_id: str, user: CurrentUser = Depends(require_author)):
+async def delete_question_draft(
+    question_draft_id: str, user: CurrentUser = Depends(require_author)
+):
     question = await require_owned("question_drafts", question_draft_id, user)
     await database.value.question_drafts.delete_one({"_id": question_draft_id, "owner_id": user.id})
     await database.value.assessment_drafts.update_one(
         {"_id": question["assessment_draft_id"], "owner_id": user.id},
-        {"$pull": {"question_order": question_draft_id}, "$inc": {"revision": 1}, "$set": {"updated_at": now()}},
+        {
+            "$pull": {"question_order": question_draft_id},
+            "$inc": {"revision": 1},
+            "$set": {"updated_at": now()},
+        },
     )
     await audit(user.id, "question_draft_deleted", "QuestionDraft", question_draft_id)
 
 
 @router.post("/question-drafts/{question_draft_id}/restore-version/{version_id}")
 async def restore_question_draft_version(
-    question_draft_id: str,
-    version_id: str,
-    user: CurrentUser = Depends(require_author),
+    question_draft_id: str, version_id: str, user: CurrentUser = Depends(require_author)
 ):
     draft = await require_owned("question_drafts", question_draft_id, user)
     version = await require_owned("question_versions", version_id, user)
@@ -1431,7 +1774,9 @@ async def restore_question_draft_version(
         {
             "$set": {
                 **{
-                    field: deepcopy(version.get(field) or []) if field == "tags" else deepcopy(version.get(field))
+                    field: deepcopy(version.get(field) or [])
+                    if field == "tags"
+                    else deepcopy(version.get(field))
                     for field in restore_fields
                 },
                 "status": "draft",
@@ -1447,12 +1792,20 @@ async def restore_question_draft_version(
     )
     if not restored:
         raise HTTPException(status_code=409, detail={"code": "revision_conflict"})
-    await audit(user.id, "question_draft_version_restored", "QuestionDraft", question_draft_id, {"source_version_id": version_id, "revision": restored["revision"]})
+    await audit(
+        user.id,
+        "question_draft_version_restored",
+        "QuestionDraft",
+        question_draft_id,
+        {"source_version_id": version_id, "revision": restored["revision"]},
+    )
     return restored
 
 
 @router.post("/question-drafts/{question_draft_id}/duplicate", status_code=201)
-async def duplicate_question_draft(question_draft_id: str, user: CurrentUser = Depends(require_author)):
+async def duplicate_question_draft(
+    question_draft_id: str, user: CurrentUser = Depends(require_author)
+):
     source = await require_owned("question_drafts", question_draft_id, user)
     duplicate = deepcopy(source)
     duplicate["_id"] = new_id("QD")
@@ -1464,26 +1817,50 @@ async def duplicate_question_draft(question_draft_id: str, user: CurrentUser = D
     duplicate["frozen_revision"] = None
     duplicate["validity_review"] = {"status": "pending", "risk_flags": []}
     duplicate["cloned_from_question_draft_id"] = question_draft_id
-    for key in ["validation", "reviewed_at", "reviewer_note", "import_job_id", "import_candidate_id"]:
+    for key in [
+        "validation",
+        "reviewed_at",
+        "reviewer_note",
+        "import_job_id",
+        "import_candidate_id",
+    ]:
         duplicate.pop(key, None)
     duplicate["created_at"] = now()
     duplicate["updated_at"] = now()
     await database.value.question_drafts.insert_one(duplicate)
     await database.value.assessment_drafts.update_one(
         {"_id": duplicate["assessment_draft_id"], "owner_id": user.id},
-        {"$push": {"question_order": duplicate["_id"]}, "$inc": {"revision": 1}, "$set": {"updated_at": now()}},
+        {
+            "$push": {"question_order": duplicate["_id"]},
+            "$inc": {"revision": 1},
+            "$set": {"updated_at": now()},
+        },
     )
-    await audit(user.id, "question_draft_duplicated", "QuestionDraft", duplicate["_id"], {"source_id": question_draft_id})
+    await audit(
+        user.id,
+        "question_draft_duplicated",
+        "QuestionDraft",
+        duplicate["_id"],
+        {"source_id": question_draft_id},
+    )
     return duplicate
 
 
 @router.post("/question-drafts/{question_draft_id}/validate")
-async def validate_question_draft(question_draft_id: str, user: CurrentUser = Depends(require_author)):
+async def validate_question_draft(
+    question_draft_id: str, user: CurrentUser = Depends(require_author)
+):
     question = await require_owned("question_drafts", question_draft_id, user)
     result = await validate_owned_question(question, user)
     await database.value.question_drafts.update_one(
         {"_id": question_draft_id},
-        {"$set": {"validation": result, "status": "prevalidated" if not result["blockers"] else "needs_revision", "updated_at": now()}},
+        {
+            "$set": {
+                "validation": result,
+                "status": "prevalidated" if not result["blockers"] else "needs_revision",
+                "updated_at": now(),
+            }
+        },
     )
     metrics.increment("question_validation_failures", len(result["blockers"]))
     return result
@@ -1548,7 +1925,9 @@ async def record_teacher_estimate(
         }
     )
     if question.get("assessment_draft_id"):
-        assessment_draft = await database.value.assessment_drafts.find_one({"_id": question["assessment_draft_id"]})
+        assessment_draft = await database.value.assessment_drafts.find_one(
+            {"_id": question["assessment_draft_id"]}
+        )
         if assessment_draft and assessment_draft.get("research_blind_mode") and prediction_visible:
             judgment["research_eligible"] = False
         else:
@@ -1565,7 +1944,9 @@ async def predict_question_difficulty(
     user: CurrentUser = Depends(require_author),
 ):
     question = await require_owned("question_drafts", question_draft_id, user)
-    assessment_draft = await database.value.assessment_drafts.find_one({"_id": question["assessment_draft_id"]})
+    assessment_draft = await database.value.assessment_drafts.find_one(
+        {"_id": question["assessment_draft_id"]}
+    )
     if assessment_draft and assessment_draft.get("research_blind_mode"):
         judgment = await database.value.teacher_judgments.find_one(
             {
@@ -1576,7 +1957,9 @@ async def predict_question_difficulty(
             sort=[("created_at", -1)],
         )
         if not judgment:
-            raise HTTPException(status_code=409, detail={"code": "teacher_estimate_required_before_ai_reveal"})
+            raise HTTPException(
+                status_code=409, detail={"code": "teacher_estimate_required_before_ai_reveal"}
+            )
     existing = await database.value.difficulty_estimates.find_one(
         {
             "question_draft_id": question_draft_id,
@@ -1589,8 +1972,7 @@ async def predict_question_difficulty(
     if existing:
         if existing.get("revealed_at") is None:
             await database.value.difficulty_estimates.update_one(
-                {"_id": existing["_id"]},
-                {"$set": {"revealed_at": now()}},
+                {"_id": existing["_id"]}, {"$set": {"revealed_at": now()}}
             )
             existing["revealed_at"] = now()
         metrics.set("difficulty_prediction_confidence", float(existing.get("confidence", 0)))
@@ -1635,7 +2017,9 @@ async def predict_question_difficulty(
     try:
         await database.value.difficulty_estimates.insert_one(estimate)
     except DuplicateKeyError:
-        duplicate = await database.value.difficulty_estimates.find_one({"_id": estimate["_id"], "owner_id": user.id})
+        duplicate = await database.value.difficulty_estimates.find_one(
+            {"_id": estimate["_id"], "owner_id": user.id}
+        )
         if duplicate:
             return await prediction_with_empirical_context(duplicate, question)
         raise HTTPException(status_code=409, detail={"code": "difficulty_prediction_conflict"})
@@ -1663,7 +2047,9 @@ async def record_difficulty_target(
             "_id": new_id("TGT"),
             "scope": "question",
             "question_draft_id": question_draft_id,
-            "question_version_id": question.get("frozen_version_id") if question.get("frozen_revision") == question.get("revision") else None,
+            "question_version_id": question.get("frozen_version_id")
+            if question.get("frozen_revision") == question.get("revision")
+            else None,
             "question_revision": question["revision"],
             "owner_id": user.id,
             "created_by": user.id,
@@ -1682,7 +2068,9 @@ async def record_difficulty_target(
 
 
 @router.post("/question-drafts/{question_draft_id}/freeze", status_code=201)
-async def freeze_question_draft(question_draft_id: str, user: CurrentUser = Depends(require_author)):
+async def freeze_question_draft(
+    question_draft_id: str, user: CurrentUser = Depends(require_author)
+):
     draft = await require_owned("question_drafts", question_draft_id, user)
     if draft.get("frozen_version_id") and draft.get("frozen_revision") == draft.get("revision"):
         existing_frozen = await database.value.question_versions.find_one(
@@ -1692,7 +2080,9 @@ async def freeze_question_draft(question_draft_id: str, user: CurrentUser = Depe
             return existing_frozen
     validation = await validate_owned_question(draft, user)
     if validation["blockers"]:
-        raise HTTPException(status_code=422, detail={"code": "question_validation_failed", "validation": validation})
+        raise HTTPException(
+            status_code=422, detail={"code": "question_validation_failed", "validation": validation}
+        )
     question_id = draft.get("question_id")
     if not question_id:
         candidate_question_id = new_id("Q")
@@ -1712,7 +2102,9 @@ async def freeze_question_draft(question_draft_id: str, user: CurrentUser = Depe
             question_id = refreshed.get("question_id")
         if not question_id:
             raise HTTPException(status_code=409, detail={"code": "question_identity_conflict"})
-    latest = await database.value.question_versions.find_one({"question_id": question_id}, sort=[("version", -1)])
+    latest = await database.value.question_versions.find_one(
+        {"question_id": question_id}, sort=[("version", -1)]
+    )
     version = 1 if not latest else latest["version"] + 1
     version_id = f"{question_id}-v{version}"
     snapshot_fields = {
@@ -1763,28 +2155,59 @@ async def freeze_question_draft(question_draft_id: str, user: CurrentUser = Depe
     await database.value.questions.update_one(
         {"_id": question_id},
         {
-            "$set": {"owner_id": user.id, "status": "active", "current_version_id": version_id, "updated_at": now()},
+            "$set": {
+                "owner_id": user.id,
+                "status": "active",
+                "current_version_id": version_id,
+                "updated_at": now(),
+            },
             "$setOnInsert": {"created_at": now()},
         },
         upsert=True,
     )
     await database.value.question_drafts.update_one(
         {"_id": question_draft_id},
-        {"$set": {"question_id": question_id, "frozen_version_id": version_id, "frozen_revision": draft["revision"], "status": "approved", "updated_at": now()}},
+        {
+            "$set": {
+                "question_id": question_id,
+                "frozen_version_id": version_id,
+                "frozen_revision": draft["revision"],
+                "status": "approved",
+                "updated_at": now(),
+            }
+        },
     )
     await database.value.teacher_judgments.update_many(
-        {"question_draft_id": question_draft_id, "question_revision": draft["revision"], "question_version_id": None},
+        {
+            "question_draft_id": question_draft_id,
+            "question_revision": draft["revision"],
+            "question_version_id": None,
+        },
         {"$set": {"question_version_id": version_id}},
     )
     await database.value.difficulty_estimates.update_many(
-        {"question_draft_id": question_draft_id, "question_revision": draft["revision"], "question_version_id": None},
+        {
+            "question_draft_id": question_draft_id,
+            "question_revision": draft["revision"],
+            "question_version_id": None,
+        },
         {"$set": {"question_version_id": version_id}},
     )
     await database.value.difficulty_targets.update_many(
-        {"question_draft_id": question_draft_id, "question_revision": draft["revision"], "question_version_id": None},
+        {
+            "question_draft_id": question_draft_id,
+            "question_revision": draft["revision"],
+            "question_version_id": None,
+        },
         {"$set": {"question_version_id": version_id}},
     )
-    await audit(user.id, "question_version_frozen", "QuestionVersion", version_id, {"question_draft_id": question_draft_id})
+    await audit(
+        user.id,
+        "question_version_frozen",
+        "QuestionVersion",
+        version_id,
+        {"question_draft_id": question_draft_id},
+    )
     return snapshot
 
 
@@ -1792,7 +2215,15 @@ async def freeze_question_draft(question_draft_id: str, user: CurrentUser = Depe
 async def create_blueprint(payload: BlueprintInput, user: CurrentUser = Depends(require_author)):
     blueprint = payload.model_dump()
     blueprint["name"] = blueprint.get("name") or f"Blueprint {blueprint['total_questions']} câu"
-    blueprint.update({"_id": new_id("BP"), "owner_id": user.id, "revision": 1, "created_at": now(), "updated_at": now()})
+    blueprint.update(
+        {
+            "_id": new_id("BP"),
+            "owner_id": user.id,
+            "revision": 1,
+            "created_at": now(),
+            "updated_at": now(),
+        }
+    )
     blueprint["validation"] = validate_blueprint(blueprint)
     await database.value.blueprints.insert_one(blueprint)
     await audit(user.id, "blueprint_created", "TestBlueprint", blueprint["_id"])
@@ -1801,8 +2232,7 @@ async def create_blueprint(payload: BlueprintInput, user: CurrentUser = Depends(
 
 @router.get("/blueprints")
 async def list_blueprints(
-    templates_only: bool = False,
-    user: CurrentUser = Depends(require_author),
+    templates_only: bool = False, user: CurrentUser = Depends(require_author)
 ):
     query: dict[str, Any] = {"owner_id": user.id}
     if templates_only:
@@ -1812,10 +2242,11 @@ async def list_blueprints(
 
 @router.post("/blueprints/suggest-distribution")
 async def suggest_blueprint_distribution(
-    payload: BlueprintSuggestionInput,
-    user: CurrentUser = Depends(require_author),
+    payload: BlueprintSuggestionInput, user: CurrentUser = Depends(require_author)
 ):
-    distribution = {str(level): int(payload.current_distribution.get(str(level), 0)) for level in range(1, 6)}
+    distribution = {
+        str(level): int(payload.current_distribution.get(str(level), 0)) for level in range(1, 6)
+    }
     allocated = sum(distribution.values())
     if allocated > payload.total_questions:
         return {
@@ -1839,14 +2270,22 @@ async def suggest_blueprint_distribution(
 
 @router.patch("/blueprints/{blueprint_id}")
 async def patch_blueprint(
-    blueprint_id: str,
-    payload: BlueprintPatch,
-    user: CurrentUser = Depends(require_author),
+    blueprint_id: str, payload: BlueprintPatch, user: CurrentUser = Depends(require_author)
 ):
-    updated = await optimistic_patch("blueprints", blueprint_id, user.id, payload.expected_revision, payload.model_dump())
+    updated = await optimistic_patch(
+        "blueprints", blueprint_id, user.id, payload.expected_revision, payload.model_dump()
+    )
     updated["validation"] = validate_blueprint(updated)
-    await database.value.blueprints.update_one({"_id": blueprint_id}, {"$set": {"validation": updated["validation"]}})
-    await audit(user.id, "blueprint_updated", "TestBlueprint", blueprint_id, {"revision": updated["revision"]})
+    await database.value.blueprints.update_one(
+        {"_id": blueprint_id}, {"$set": {"validation": updated["validation"]}}
+    )
+    await audit(
+        user.id,
+        "blueprint_updated",
+        "TestBlueprint",
+        blueprint_id,
+        {"revision": updated["revision"]},
+    )
     return updated
 
 
@@ -1868,15 +2307,19 @@ async def clone_blueprint(blueprint_id: str, user: CurrentUser = Depends(require
     )
     clone["validation"] = validate_blueprint(clone)
     await database.value.blueprints.insert_one(clone)
-    await audit(user.id, "blueprint_cloned", "TestBlueprint", clone["_id"], {"source_blueprint_id": source["_id"]})
+    await audit(
+        user.id,
+        "blueprint_cloned",
+        "TestBlueprint",
+        clone["_id"],
+        {"source_blueprint_id": source["_id"]},
+    )
     return clone
 
 
 @router.post("/question-drafts/{question_draft_id}/ai/revise", status_code=201)
 async def propose_draft_revision(
-    question_draft_id: str,
-    payload: DraftAiActionInput,
-    user: CurrentUser = Depends(require_author),
+    question_draft_id: str, payload: DraftAiActionInput, user: CurrentUser = Depends(require_author)
 ):
     question = await require_owned("question_drafts", question_draft_id, user)
     if question.get("locked"):
@@ -1886,7 +2329,12 @@ async def propose_draft_revision(
         proposed.pop(key, None)
     proposed["authoring_source"] = "hybrid"
     proposed["validity_review"] = {"status": "pending", "risk_flags": []}
-    if payload.action in {"regenerate_item", "change_question_type", "increase_difficulty", "decrease_difficulty"}:
+    if payload.action in {
+        "regenerate_item",
+        "change_question_type",
+        "increase_difficulty",
+        "decrease_difficulty",
+    }:
         supported_types = {
             "single_choice",
             "multiple_choice",
@@ -1902,11 +2350,17 @@ async def propose_draft_revision(
         if payload.action == "change_question_type":
             target_type = payload.instruction.strip()
             if target_type not in supported_types:
-                raise HTTPException(status_code=422, detail={"code": "target_question_type_invalid"})
+                raise HTTPException(
+                    status_code=422, detail={"code": "target_question_type_invalid"}
+                )
             if target_type == question["question_type"]:
-                raise HTTPException(status_code=422, detail={"code": "target_question_type_unchanged"})
+                raise HTTPException(
+                    status_code=422, detail={"code": "target_question_type_unchanged"}
+                )
         curriculum = (question.get("curriculum_links") or [{}])[0]
-        difficulty = float(predict_difficulty(question, "revision_generation_v1")["predicted_difficulty"])
+        difficulty = float(
+            predict_difficulty(question, "revision_generation_v1")["predicted_difficulty"]
+        )
         if payload.action == "increase_difficulty":
             difficulty = min(5.0, difficulty + 1.0)
         if payload.action == "decrease_difficulty":
@@ -1919,14 +2373,18 @@ async def propose_draft_revision(
                 "text": text_projection(question.get("stem_doc", {})),
             },
         ]
-        uses_teacher_material = any(item.get("source_type") == "teacher_material" for item in evidence)
+        uses_teacher_material = any(
+            item.get("source_type") == "teacher_material" for item in evidence
+        )
         if uses_teacher_material:
             await enforce_teacher_material_setting(user)
         generation = {
             "education_level": curriculum.get("education_level") or "unspecified",
             "target_program": curriculum.get("target_program") or "unspecified",
             "subject": curriculum.get("subject") or "unspecified",
-            "topic": curriculum.get("topic") or question.get("construct", {}).get("primary_concept") or text_projection(question.get("stem_doc", {})),
+            "topic": curriculum.get("topic")
+            or question.get("construct", {}).get("primary_concept")
+            or text_projection(question.get("stem_doc", {})),
             "chapter_id": curriculum.get("chapter_id"),
             "lesson_id": curriculum.get("lesson_id"),
             "concept_ids": question.get("concept_ids", []),
@@ -1936,7 +2394,9 @@ async def propose_draft_revision(
             "cognitive_level": question.get("cognitive_level"),
             "source_evidence": evidence,
             "source_scope": "curriculum_only",
-            "use_teacher_materials": any(item.get("source_type") == "teacher_material" for item in evidence),
+            "use_teacher_materials": any(
+                item.get("source_type") == "teacher_material" for item in evidence
+            ),
         }
         model_output = await generate_with_agent(generation, difficulty, evidence)
         if uses_teacher_material:
@@ -1947,9 +2407,20 @@ async def propose_draft_revision(
                 f"material-revision-{question_draft_id}-{question['revision']}-{payload.action}",
             )
         regenerated = generated_question(generation, 1, difficulty, model_output)
-        for field in ["question_type", "stem_doc", "options", "answer_key", "solution_doc", "cognitive_level", "generation_provenance"]:
+        for field in [
+            "question_type",
+            "stem_doc",
+            "options",
+            "answer_key",
+            "solution_doc",
+            "cognitive_level",
+            "generation_provenance",
+        ]:
             proposed[field] = regenerated[field]
-        proposed["scoring_rule"] = {**question.get("scoring_rule", {}), "points": float(question.get("scoring_rule", {}).get("points", 1))}
+        proposed["scoring_rule"] = {
+            **question.get("scoring_rule", {}),
+            "points": float(question.get("scoring_rule", {}).get("points", 1)),
+        }
         proposed["curriculum_links"] = deepcopy(question.get("curriculum_links", []))
         proposed["concept_ids"] = deepcopy(question.get("concept_ids", []))
         proposed["skill_ids"] = deepcopy(question.get("skill_ids", []))
@@ -1958,11 +2429,18 @@ async def propose_draft_revision(
         proposed["construct"] = deepcopy(question.get("construct", {}))
         proposal_validation = validate_question(proposed)
         if proposal_validation["blockers"]:
-            raise HTTPException(status_code=502, detail={"code": "ai_revision_invalid", "validation": proposal_validation})
+            raise HTTPException(
+                status_code=502,
+                detail={"code": "ai_revision_invalid", "validation": proposal_validation},
+            )
     if payload.action == "increase_difficulty":
-        proposed.setdefault("construct", {})["reasoning_steps"] = int(proposed.get("construct", {}).get("reasoning_steps", 1)) + 1
+        proposed.setdefault("construct", {})["reasoning_steps"] = (
+            int(proposed.get("construct", {}).get("reasoning_steps", 1)) + 1
+        )
     if payload.action == "decrease_difficulty":
-        proposed.setdefault("construct", {})["reasoning_steps"] = max(1, int(proposed.get("construct", {}).get("reasoning_steps", 1)) - 1)
+        proposed.setdefault("construct", {})["reasoning_steps"] = max(
+            1, int(proposed.get("construct", {}).get("reasoning_steps", 1)) - 1
+        )
     if payload.action == "clarify_wording":
         if not payload.instruction.strip():
             raise HTTPException(status_code=422, detail={"code": "revised_wording_required"})
@@ -1977,9 +2455,13 @@ async def propose_draft_revision(
             *question.get("answer_key", {}).get("option_ids", []),
         }
         editable_ids = {option.get("id") for option in question.get("options", [])} - correct_ids
-        if not isinstance(replacements, dict) or not replacements or any(
-            option_id not in editable_ids or not isinstance(text, str) or not text.strip()
-            for option_id, text in replacements.items()
+        if (
+            not isinstance(replacements, dict)
+            or not replacements
+            or any(
+                option_id not in editable_ids or not isinstance(text, str) or not text.strip()
+                for option_id, text in replacements.items()
+            )
         ):
             raise HTTPException(status_code=422, detail={"code": "distractor_replacements_invalid"})
         proposed["options"] = [
@@ -1999,7 +2481,11 @@ async def propose_draft_revision(
             for key in construct_keys
         },
     }
-    metrics.record_outcome("construct_preservation", "construct_preservation_failure_rate", not construct_check["passed"])
+    metrics.record_outcome(
+        "construct_preservation",
+        "construct_preservation_failure_rate",
+        not construct_check["passed"],
+    )
     proposal = {
         "_id": new_id("DRP"),
         "question_draft_id": question_draft_id,
@@ -2009,7 +2495,9 @@ async def propose_draft_revision(
         "before": {key: deepcopy(question.get(key)) for key in proposed},
         "after": proposed,
         "why": [payload.action],
-        "target_effect": payload.action if payload.action in {"increase_difficulty", "decrease_difficulty"} else "quality",
+        "target_effect": payload.action
+        if payload.action in {"increase_difficulty", "decrease_difficulty"}
+        else "quality",
         "construct_check": construct_check,
         "status": "proposed",
         "created_at": now(),
@@ -2027,39 +2515,55 @@ async def propose_distractors(
 ):
     return await propose_draft_revision(
         question_draft_id,
-        DraftAiActionInput(action="regenerate_distractors", instruction=json.dumps(payload.replacements)),
+        DraftAiActionInput(
+            action="regenerate_distractors", instruction=json.dumps(payload.replacements)
+        ),
         user,
     )
 
 
 @router.get("/review-queue")
 async def list_review_queue(user: CurrentUser = Depends(require_author)):
-    questions = await database.value.question_drafts.find(
-        {
-            "owner_id": user.id,
-            "$or": [
-                {"needs_teacher_review": True},
-                {"status": {"$in": ["needs_revision", "prevalidated"]}},
-                {"parse_confidence": {"$lt": 0.7}},
-            ],
-        }
-    ).sort("updated_at", -1).to_list(1000)
+    questions = (
+        await database.value.question_drafts.find(
+            {
+                "owner_id": user.id,
+                "$or": [
+                    {"needs_teacher_review": True},
+                    {"status": {"$in": ["needs_revision", "prevalidated"]}},
+                    {"parse_confidence": {"$lt": 0.7}},
+                ],
+            }
+        )
+        .sort("updated_at", -1)
+        .to_list(1000)
+    )
     all_questions = await database.value.question_drafts.find({"owner_id": user.id}).to_list(5000)
     question_ids = [question["_id"] for question in all_questions]
-    version_ids = [question["frozen_version_id"] for question in all_questions if question.get("frozen_version_id")]
+    version_ids = [
+        question["frozen_version_id"]
+        for question in all_questions
+        if question.get("frozen_version_id")
+    ]
     predictions, targets, calibrations = await asyncio.gather(
         database.value.difficulty_estimates.find(
             {"question_draft_id": {"$in": question_ids}, "owner_id": user.id}
-        ).sort("created_at", -1).to_list(10000),
+        )
+        .sort("created_at", -1)
+        .to_list(10000),
         database.value.difficulty_targets.find(
             {"question_draft_id": {"$in": question_ids}, "owner_id": user.id}
-        ).sort("created_at", -1).to_list(10000),
+        )
+        .sort("created_at", -1)
+        .to_list(10000),
         database.value.calibrations.find(
             {
                 "question_version_id": {"$in": version_ids},
                 "$or": [{"drift_flag": True}, {"item_fit_status": "review"}],
             }
-        ).sort("created_at", -1).to_list(10000),
+        )
+        .sort("created_at", -1)
+        .to_list(10000),
     )
     current_revision = {question["_id"]: question.get("revision") for question in all_questions}
     latest_prediction = {}
@@ -2086,7 +2590,8 @@ async def list_review_queue(user: CurrentUser = Depends(require_author)):
             and target
             and isinstance(prediction.get("predicted_difficulty"), (int, float))
             and isinstance(target.get("target_difficulty"), (int, float))
-            and abs(float(prediction["predicted_difficulty"]) - float(target["target_difficulty"])) >= 0.75
+            and abs(float(prediction["predicted_difficulty"]) - float(target["target_difficulty"]))
+            >= 0.75
         ):
             reasons.append("difficulty_mismatch")
         if calibration and calibration.get("drift_flag"):
@@ -2102,9 +2607,17 @@ async def list_review_queue(user: CurrentUser = Depends(require_author)):
             )
             if calibration:
                 queued["flagged_calibration"] = calibration
-    questions = sorted(queued_by_id.values(), key=lambda question: str(question.get("updated_at", "")), reverse=True)
-    revisions = await database.value.revision_proposals.find({"owner_id": user.id, "status": "proposed"}).to_list(1000)
-    draft_revisions = await database.value.draft_revision_proposals.find({"owner_id": user.id, "status": "proposed"}).to_list(1000)
+    questions = sorted(
+        queued_by_id.values(),
+        key=lambda question: str(question.get("updated_at", "")),
+        reverse=True,
+    )
+    revisions = await database.value.revision_proposals.find(
+        {"owner_id": user.id, "status": "proposed"}
+    ).to_list(1000)
+    draft_revisions = await database.value.draft_revision_proposals.find(
+        {"owner_id": user.id, "status": "proposed"}
+    ).to_list(1000)
     revision_version_ids = [revision["question_version_id"] for revision in revisions]
     original_versions = await database.value.question_versions.find(
         {"_id": {"$in": revision_version_ids}, "owner_id": user.id}
@@ -2129,18 +2642,37 @@ async def approve_question_draft(
     question = await require_owned("question_drafts", question_draft_id, user)
     validation = validate_question(question)
     if validation["blockers"]:
-        raise HTTPException(status_code=422, detail={"code": "question_validation_failed", "validation": validation})
+        raise HTTPException(
+            status_code=422, detail={"code": "question_validation_failed", "validation": validation}
+        )
     updated = await database.value.question_drafts.find_one_and_update(
         {"_id": question_draft_id, "owner_id": user.id},
-        {"$set": {"status": "approved", "needs_teacher_review": False, "reviewer_note": payload.reviewer_note, "reviewed_at": now(), "updated_at": now()}},
+        {
+            "$set": {
+                "status": "approved",
+                "needs_teacher_review": False,
+                "reviewer_note": payload.reviewer_note,
+                "reviewed_at": now(),
+                "updated_at": now(),
+            }
+        },
         return_document=ReturnDocument.AFTER,
     )
-    await audit(user.id, "question_draft_approved", "QuestionDraft", question_draft_id, {"reviewer_note": payload.reviewer_note})
+    await audit(
+        user.id,
+        "question_draft_approved",
+        "QuestionDraft",
+        question_draft_id,
+        {"reviewer_note": payload.reviewer_note},
+    )
     if question.get("authoring_source") == "ai_generated":
         await persist_teacher_profile_event(
             user.id,
             "generation_accepted",
-            {"question_draft_id": question_draft_id, "question_type": question.get("question_type")},
+            {
+                "question_draft_id": question_draft_id,
+                "question_type": question.get("question_type"),
+            },
             f"generation-accepted-{question_draft_id}-{question['revision']}",
         )
     return updated
@@ -2155,15 +2687,31 @@ async def reject_question_draft(
     question = await require_owned("question_drafts", question_draft_id, user)
     updated = await database.value.question_drafts.find_one_and_update(
         {"_id": question_draft_id, "owner_id": user.id},
-        {"$set": {"status": "rejected", "reviewer_note": payload.reviewer_note, "reviewed_at": now(), "updated_at": now()}},
+        {
+            "$set": {
+                "status": "rejected",
+                "reviewer_note": payload.reviewer_note,
+                "reviewed_at": now(),
+                "updated_at": now(),
+            }
+        },
         return_document=ReturnDocument.AFTER,
     )
-    await audit(user.id, "question_draft_rejected", "QuestionDraft", question_draft_id, {"reviewer_note": payload.reviewer_note})
+    await audit(
+        user.id,
+        "question_draft_rejected",
+        "QuestionDraft",
+        question_draft_id,
+        {"reviewer_note": payload.reviewer_note},
+    )
     if question.get("authoring_source") == "ai_generated":
         await persist_teacher_profile_event(
             user.id,
             "generation_rejected",
-            {"question_draft_id": question_draft_id, "question_type": question.get("question_type")},
+            {
+                "question_draft_id": question_draft_id,
+                "question_type": question.get("question_type"),
+            },
             f"generation-rejected-{question_draft_id}-{question['revision']}",
         )
     return updated
@@ -2195,7 +2743,11 @@ async def list_question_bank(
 ):
     query: dict[str, Any] = {"owner_id": user.id, "status": status or "active"}
     questions = await database.value.questions.find(query).sort("updated_at", -1).to_list(1000)
-    version_ids = [question["current_version_id"] for question in questions if question.get("current_version_id")]
+    version_ids = [
+        question["current_version_id"]
+        for question in questions
+        if question.get("current_version_id")
+    ]
     version_query: dict[str, Any] = {"_id": {"$in": version_ids}}
     if question_type:
         version_query["question_type"] = question_type
@@ -2220,12 +2772,20 @@ async def list_question_bank(
     versions = await database.value.question_versions.find(version_query).to_list(1000)
     versions_by_id = {version["_id"]: version for version in versions}
     included_version_ids = list(versions_by_id)
-    predictions = await database.value.difficulty_estimates.find(
-        {"question_version_id": {"$in": included_version_ids}}
-    ).sort("created_at", -1).to_list(5000)
-    calibrations = await database.value.calibrations.find(
-        {"question_version_id": {"$in": included_version_ids}, "status": "calibrated"}
-    ).sort("created_at", -1).to_list(5000)
+    predictions = (
+        await database.value.difficulty_estimates.find(
+            {"question_version_id": {"$in": included_version_ids}}
+        )
+        .sort("created_at", -1)
+        .to_list(5000)
+    )
+    calibrations = (
+        await database.value.calibrations.find(
+            {"question_version_id": {"$in": included_version_ids}, "status": "calibrated"}
+        )
+        .sort("created_at", -1)
+        .to_list(5000)
+    )
     latest_prediction = {}
     latest_calibration = {}
     for prediction in predictions:
@@ -2262,15 +2822,25 @@ async def list_question_bank(
         confidence = prediction.get("confidence") if prediction else None
         if search_value and search_value not in version.get("plain_text_projection", "").casefold():
             continue
-        if minimum_prediction_confidence is not None and (confidence is None or confidence < minimum_prediction_confidence):
+        if minimum_prediction_confidence is not None and (
+            confidence is None or confidence < minimum_prediction_confidence
+        ):
             continue
-        if minimum_predicted_difficulty is not None and (predicted is None or predicted < minimum_predicted_difficulty):
+        if minimum_predicted_difficulty is not None and (
+            predicted is None or predicted < minimum_predicted_difficulty
+        ):
             continue
-        if maximum_predicted_difficulty is not None and (predicted is None or predicted > maximum_predicted_difficulty):
+        if maximum_predicted_difficulty is not None and (
+            predicted is None or predicted > maximum_predicted_difficulty
+        ):
             continue
-        if minimum_calibrated_difficulty is not None and (calibrated is None or calibrated < minimum_calibrated_difficulty):
+        if minimum_calibrated_difficulty is not None and (
+            calibrated is None or calibrated < minimum_calibrated_difficulty
+        ):
             continue
-        if maximum_calibrated_difficulty is not None and (calibrated is None or calibrated > maximum_calibrated_difficulty):
+        if maximum_calibrated_difficulty is not None and (
+            calibrated is None or calibrated > maximum_calibrated_difficulty
+        ):
             continue
         used = usage_count.get(version_id, 0)
         if publication_status == "published" and not used:
@@ -2290,7 +2860,10 @@ async def list_question_bank(
     sort_fields = {
         "created": lambda row: str(row.get("created_at") or ""),
         "updated": lambda row: str(row.get("updated_at") or ""),
-        "predicted_difficulty": lambda row: (row.get("difficulty_prediction") or {}).get("predicted_difficulty") or -1,
+        "predicted_difficulty": lambda row: (row.get("difficulty_prediction") or {}).get(
+            "predicted_difficulty"
+        )
+        or -1,
         "calibrated_difficulty": lambda row: (row.get("calibration") or {}).get("difficulty") or -1,
         "usage": lambda row: row.get("usage_count", 0),
         "exposure": lambda row: row.get("exposure_count", 0),
@@ -2302,8 +2875,7 @@ async def list_question_bank(
 
 @router.post("/question-bank/add-to-draft", status_code=201)
 async def add_question_bank_items_to_draft(
-    payload: QuestionBankAddInput,
-    user: CurrentUser = Depends(require_author),
+    payload: QuestionBankAddInput, user: CurrentUser = Depends(require_author)
 ):
     await require_owned("assessment_drafts", payload.assessment_draft_id, user)
     existing_sources = await database.value.question_drafts.distinct(
@@ -2311,7 +2883,9 @@ async def add_question_bank_items_to_draft(
         {"assessment_draft_id": payload.assessment_draft_id, "owner_id": user.id},
     )
     if any(question_id in existing_sources for question_id in payload.question_ids):
-        raise HTTPException(status_code=409, detail={"code": "question_already_in_assessment_draft"})
+        raise HTTPException(
+            status_code=409, detail={"code": "question_already_in_assessment_draft"}
+        )
     questions = await database.value.questions.find(
         {"_id": {"$in": payload.question_ids}, "owner_id": user.id, "status": "active"}
     ).to_list(500)
@@ -2319,7 +2893,13 @@ async def add_question_bank_items_to_draft(
     if any(question_id not in by_id for question_id in payload.question_ids):
         raise HTTPException(status_code=404, detail={"code": "question_bank_item_missing"})
     versions = await database.value.question_versions.find(
-        {"_id": {"$in": [by_id[question_id]["current_version_id"] for question_id in payload.question_ids]}}
+        {
+            "_id": {
+                "$in": [
+                    by_id[question_id]["current_version_id"] for question_id in payload.question_ids
+                ]
+            }
+        }
     ).to_list(500)
     versions_by_id = {version["_id"]: version for version in versions}
     created = []
@@ -2346,10 +2926,7 @@ async def add_question_bank_items_to_draft(
         question_data["bank_source_question_id"] = question_id
         deterministic_id = f"QD-{hashlib.sha256(f'bank:{payload.assessment_draft_id}:{question_id}'.encode()).hexdigest()[:32]}"
         created_question = await persist_question_draft(
-            payload.assessment_draft_id,
-            question_data,
-            user,
-            deterministic_id,
+            payload.assessment_draft_id, question_data, user, deterministic_id
         )
         created.append(created_question)
     await audit(
@@ -2363,9 +2940,13 @@ async def add_question_bank_items_to_draft(
 
 
 @router.post("/questions/{question_id}/duplicate", status_code=201)
-async def duplicate_question_bank_item(question_id: str, user: CurrentUser = Depends(require_author)):
+async def duplicate_question_bank_item(
+    question_id: str, user: CurrentUser = Depends(require_author)
+):
     question = await require_owned("questions", question_id, user)
-    current = await database.value.question_versions.find_one({"_id": question["current_version_id"]})
+    current = await database.value.question_versions.find_one(
+        {"_id": question["current_version_id"]}
+    )
     if not current:
         raise HTTPException(status_code=404, detail="Không tìm thấy phiên bản câu hỏi")
     duplicated_question_id = new_id("Q")
@@ -2392,15 +2973,19 @@ async def duplicate_question_bank_item(question_id: str, user: CurrentUser = Dep
     }
     await database.value.question_versions.insert_one(duplicated_version)
     await database.value.questions.insert_one(duplicated_question)
-    await audit(user.id, "question_bank_item_duplicated", "Question", duplicated_question_id, {"source_question_id": question_id})
+    await audit(
+        user.id,
+        "question_bank_item_duplicated",
+        "Question",
+        duplicated_question_id,
+        {"source_question_id": question_id},
+    )
     return {**duplicated_question, "current_version": duplicated_version}
 
 
 @router.post("/questions/{question_id}/archive")
 async def archive_question_bank_item(
-    question_id: str,
-    payload: QuestionArchiveInput,
-    user: CurrentUser = Depends(require_author),
+    question_id: str, payload: QuestionArchiveInput, user: CurrentUser = Depends(require_author)
 ):
     await require_owned("questions", question_id, user)
     archived = await database.value.questions.find_one_and_update(
@@ -2408,36 +2993,55 @@ async def archive_question_bank_item(
         {"$set": {"status": "archived", "archived_at": now(), "updated_at": now()}},
         return_document=ReturnDocument.AFTER,
     )
-    await audit(user.id, "question_bank_item_archived", "Question", question_id, {"reason": payload.reason})
+    await audit(
+        user.id, "question_bank_item_archived", "Question", question_id, {"reason": payload.reason}
+    )
     return archived
 
 
 @router.get("/questions/{question_id}/usage")
 async def get_question_usage(question_id: str, user: CurrentUser = Depends(require_author)):
     question = await require_owned("questions", question_id, user)
-    version_ids = await database.value.question_versions.distinct("_id", {"question_id": question["_id"]})
+    version_ids = await database.value.question_versions.distinct(
+        "_id", {"question_id": question["_id"]}
+    )
     assessment_versions = await database.value.assessment_versions.find(
         {"owner_id": user.id, "items.question_version_id": {"$in": version_ids}},
         {"assessment_id": 1, "version": 1, "items": 1, "published_at": 1},
     ).to_list(1000)
-    responses = await database.value.responses.count_documents({"question_version_id": {"$in": version_ids}})
-    return {"question_id": question_id, "versions": version_ids, "assessment_versions": assessment_versions, "exposure_count": responses}
+    responses = await database.value.responses.count_documents(
+        {"question_version_id": {"$in": version_ids}}
+    )
+    return {
+        "question_id": question_id,
+        "versions": version_ids,
+        "assessment_versions": assessment_versions,
+        "exposure_count": responses,
+    }
 
 
 @router.get("/questions/{question_id}/versions")
 async def list_question_versions(question_id: str, user: CurrentUser = Depends(require_author)):
     await require_owned("questions", question_id, user)
-    return await database.value.question_versions.find({"question_id": question_id}).sort("version", -1).to_list(100)
+    return (
+        await database.value.question_versions.find({"question_id": question_id})
+        .sort("version", -1)
+        .to_list(100)
+    )
 
 
 @router.patch("/question-versions/{version_id}")
 async def reject_question_version_mutation(
-    version_id: str,
-    payload: dict,
-    user: CurrentUser = Depends(require_author),
+    version_id: str, payload: dict, user: CurrentUser = Depends(require_author)
 ):
     await require_owned("question_versions", version_id, user)
-    await audit(user.id, "published_question_mutation_denied", "QuestionVersion", version_id, {"fields": sorted(payload)})
+    await audit(
+        user.id,
+        "published_question_mutation_denied",
+        "QuestionVersion",
+        version_id,
+        {"fields": sorted(payload)},
+    )
     raise HTTPException(status_code=409, detail={"code": "immutable_question_version"})
 
 
@@ -2450,7 +3054,9 @@ async def validate_blueprint_route(blueprint_id: str, user: CurrentUser = Depend
 @router.post("/assessment-drafts/{draft_id}/validate")
 async def validate_assessment_draft(draft_id: str, user: CurrentUser = Depends(require_author)):
     draft = await require_owned("assessment_drafts", draft_id, user)
-    questions = await database.value.question_drafts.find({"assessment_draft_id": draft_id, "owner_id": user.id}).to_list(500)
+    questions = await database.value.question_drafts.find(
+        {"assessment_draft_id": draft_id, "owner_id": user.id}
+    ).to_list(500)
     question_results = {question["_id"]: validate_question(question) for question in questions}
     issues = []
     coverage_results = []
@@ -2458,7 +3064,9 @@ async def validate_assessment_draft(draft_id: str, user: CurrentUser = Depends(r
     if not questions:
         issues.append({"code": "assessment_has_no_questions", "severity": "BLOCKER"})
     question_order = draft.get("question_order", [])
-    if len(question_order) != len(set(question_order)) or set(question_order) != set(question_results):
+    if len(question_order) != len(set(question_order)) or set(question_order) != set(
+        question_results
+    ):
         issues.append({"code": "question_order_invalid", "severity": "BLOCKER"})
     if any(result["blockers"] for result in question_results.values()):
         issues.append({"code": "question_blockers_exist", "severity": "BLOCKER"})
@@ -2502,18 +3110,47 @@ async def validate_assessment_draft(draft_id: str, user: CurrentUser = Depends(r
         if not blueprint_result["valid"]:
             issues.extend(blueprint_result["issues"])
         if blueprint["total_questions"] != len(questions):
-            issues.append({"code": "blueprint_question_count_mismatch", "severity": "BLOCKER", "expected": blueprint["total_questions"], "actual": len(questions)})
+            issues.append(
+                {
+                    "code": "blueprint_question_count_mismatch",
+                    "severity": "BLOCKER",
+                    "expected": blueprint["total_questions"],
+                    "actual": len(questions),
+                }
+            )
         actual_types = {}
         for question in questions:
-            actual_types[question["question_type"]] = actual_types.get(question["question_type"], 0) + 1
-        if blueprint.get("question_type_constraints") and actual_types != blueprint["question_type_constraints"]:
-            issues.append({"code": "blueprint_question_type_mismatch", "severity": "BLOCKER", "expected": blueprint["question_type_constraints"], "actual": actual_types})
+            actual_types[question["question_type"]] = (
+                actual_types.get(question["question_type"], 0) + 1
+            )
+        if (
+            blueprint.get("question_type_constraints")
+            and actual_types != blueprint["question_type_constraints"]
+        ):
+            issues.append(
+                {
+                    "code": "blueprint_question_type_mismatch",
+                    "severity": "BLOCKER",
+                    "expected": blueprint["question_type_constraints"],
+                    "actual": actual_types,
+                }
+            )
         actual_cognitive = {}
         for question in questions:
             cognitive = question.get("cognitive_level") or "unspecified"
             actual_cognitive[cognitive] = actual_cognitive.get(cognitive, 0) + 1
-        if blueprint.get("cognitive_level_constraints") and actual_cognitive != blueprint["cognitive_level_constraints"]:
-            issues.append({"code": "blueprint_cognitive_level_mismatch", "severity": "BLOCKER", "expected": blueprint["cognitive_level_constraints"], "actual": actual_cognitive})
+        if (
+            blueprint.get("cognitive_level_constraints")
+            and actual_cognitive != blueprint["cognitive_level_constraints"]
+        ):
+            issues.append(
+                {
+                    "code": "blueprint_cognitive_level_mismatch",
+                    "severity": "BLOCKER",
+                    "expected": blueprint["cognitive_level_constraints"],
+                    "actual": actual_cognitive,
+                }
+            )
         for constraint in blueprint.get("coverage_constraints", []):
             dimension = constraint["dimension"]
             requested_ids = set(constraint["ids"])
@@ -2531,44 +3168,87 @@ async def validate_assessment_draft(draft_id: str, user: CurrentUser = Depends(r
                     }
                 if requested_ids.intersection(actual_ids):
                     matched += 1
-            coverage_result = {**constraint, "actual_count": matched, "satisfied": matched >= constraint["minimum_count"]}
+            coverage_result = {
+                **constraint,
+                "actual_count": matched,
+                "satisfied": matched >= constraint["minimum_count"],
+            }
             coverage_results.append(coverage_result)
             if constraint.get("required", True) and not coverage_result["satisfied"]:
-                issues.append({"code": "blueprint_coverage_missing", "severity": "BLOCKER", **coverage_result})
+                issues.append(
+                    {"code": "blueprint_coverage_missing", "severity": "BLOCKER", **coverage_result}
+                )
         if blueprint.get("total_points") is not None:
-            actual_points = round(sum(float(question.get("scoring_rule", {}).get("points", 1)) for question in questions), 6)
+            actual_points = round(
+                sum(
+                    float(question.get("scoring_rule", {}).get("points", 1))
+                    for question in questions
+                ),
+                6,
+            )
             if abs(actual_points - float(blueprint["total_points"])) > 0.000001:
-                issues.append({"code": "blueprint_total_points_mismatch", "severity": "BLOCKER", "expected": blueprint["total_points"], "actual": actual_points})
-        target_rows = await database.value.difficulty_targets.find(
-            {"question_draft_id": {"$in": list(question_results)}, "owner_id": user.id}
-        ).sort("created_at", -1).to_list(5000)
+                issues.append(
+                    {
+                        "code": "blueprint_total_points_mismatch",
+                        "severity": "BLOCKER",
+                        "expected": blueprint["total_points"],
+                        "actual": actual_points,
+                    }
+                )
+        target_rows = (
+            await database.value.difficulty_targets.find(
+                {"question_draft_id": {"$in": list(question_results)}, "owner_id": user.id}
+            )
+            .sort("created_at", -1)
+            .to_list(5000)
+        )
         latest_targets = {}
         for target in target_rows:
             latest_targets.setdefault(target["question_draft_id"], target)
         if len(latest_targets) != len(questions):
-            issues.append({"code": "blueprint_question_targets_missing", "severity": "BLOCKER", "expected": len(questions), "actual": len(latest_targets)})
+            issues.append(
+                {
+                    "code": "blueprint_question_targets_missing",
+                    "severity": "BLOCKER",
+                    "expected": len(questions),
+                    "actual": len(latest_targets),
+                }
+            )
         else:
             actual_difficulty = {str(level): 0 for level in range(1, 6)}
             for target in latest_targets.values():
                 actual_difficulty[str(difficulty_level(float(target["target_difficulty"])))] += 1
             if actual_difficulty != blueprint["difficulty_distribution"]:
-                issues.append({"code": "blueprint_difficulty_mismatch", "severity": "BLOCKER", "expected": blueprint["difficulty_distribution"], "actual": actual_difficulty})
-    return {"valid": not issues, "issues": issues, "questions": question_results, "coverage": coverage_results}
+                issues.append(
+                    {
+                        "code": "blueprint_difficulty_mismatch",
+                        "severity": "BLOCKER",
+                        "expected": blueprint["difficulty_distribution"],
+                        "actual": actual_difficulty,
+                    }
+                )
+    return {
+        "valid": not issues,
+        "issues": issues,
+        "questions": question_results,
+        "coverage": coverage_results,
+    }
 
 
 @router.post("/questions/{question_id}/revisions", status_code=201)
 async def create_revision_proposal(
-    question_id: str,
-    payload: RevisionProposalInput,
-    user: CurrentUser = Depends(require_author),
+    question_id: str, payload: RevisionProposalInput, user: CurrentUser = Depends(require_author)
 ):
     question = await require_owned("questions", question_id, user)
-    current = await database.value.question_versions.find_one({"_id": question["current_version_id"]})
+    current = await database.value.question_versions.find_one(
+        {"_id": question["current_version_id"]}
+    )
     if not current:
         raise HTTPException(status_code=404, detail="Không tìm thấy phiên bản nguồn")
     keys = ["primary_concept", "primary_skill", "learning_objective"]
     construct_checks = {
-        key: current.get("construct", {}).get(key) == payload.proposed_version.get("construct", {}).get(key)
+        key: current.get("construct", {}).get(key)
+        == payload.proposed_version.get("construct", {}).get(key)
         for key in keys
     }
     proposal = payload.model_dump()
@@ -2603,14 +3283,18 @@ async def create_revision_proposal(
 async def approve_revision(proposal_id: str, user: CurrentUser = Depends(require_author)):
     proposal = await require_owned("revision_proposals", proposal_id, user)
     if proposal["status"] == "approved" and proposal.get("approved_version_id"):
-        approved = await database.value.question_versions.find_one({"_id": proposal["approved_version_id"], "owner_id": user.id})
+        approved = await database.value.question_versions.find_one(
+            {"_id": proposal["approved_version_id"], "owner_id": user.id}
+        )
         if approved:
             return approved
     if proposal["status"] != "proposed":
         raise HTTPException(status_code=409, detail="Đề xuất không còn ở trạng thái chờ duyệt")
     if not proposal.get("construct_check", {}).get("passed"):
         raise HTTPException(status_code=422, detail="Kiểm tra bảo toàn construct chưa đạt")
-    current = await database.value.question_versions.find_one({"_id": proposal["question_version_id"]})
+    current = await database.value.question_versions.find_one(
+        {"_id": proposal["question_version_id"]}
+    )
     if not current:
         raise HTTPException(status_code=404, detail="Không tìm thấy phiên bản nguồn")
     canonical = await require_owned("questions", current["question_id"], user)
@@ -2619,10 +3303,9 @@ async def approve_revision(proposal_id: str, user: CurrentUser = Depends(require
     linked_drafts = await database.value.question_drafts.find(
         {"question_id": current["question_id"], "owner_id": user.id}
     ).to_list(500)
-    source_draft_revision = max(
-        [int(draft.get("revision", 1)) for draft in linked_drafts],
-        default=0,
-    ) + 1
+    source_draft_revision = (
+        max([int(draft.get("revision", 1)) for draft in linked_drafts], default=0) + 1
+    )
     version = current["version"] + 1
     version_id = f"{current['question_id']}-v{version}"
     snapshot = deepcopy(proposal["proposed_version"])
@@ -2641,7 +3324,9 @@ async def approve_revision(proposal_id: str, user: CurrentUser = Depends(require
     )
     validation = validate_question(snapshot)
     if validation["blockers"]:
-        raise HTTPException(status_code=422, detail={"code": "revision_validation_failed", "validation": validation})
+        raise HTTPException(
+            status_code=422, detail={"code": "revision_validation_failed", "validation": validation}
+        )
     snapshot["plain_text_projection"] = validation["plain_text_projection"]
     snapshot["quality_status"] = validation["status"]
     snapshot["quality_validation"] = deepcopy(validation)
@@ -2717,10 +3402,24 @@ async def approve_revision(proposal_id: str, user: CurrentUser = Depends(require
         }
     )
     await database.value.revision_proposals.update_one(
-        {"_id": proposal_id}, {"$set": {"status": "approved", "approved_by": user.id, "approved_version_id": version_id, "updated_at": now()}}
+        {"_id": proposal_id},
+        {
+            "$set": {
+                "status": "approved",
+                "approved_by": user.id,
+                "approved_version_id": version_id,
+                "updated_at": now(),
+            }
+        },
     )
     metrics.record_outcome("teacher_revision_decision", "teacher_revision_acceptance_rate", True)
-    await audit(user.id, "revision_approved", "RevisionProposal", proposal_id, {"question_version_id": version_id})
+    await audit(
+        user.id,
+        "revision_approved",
+        "RevisionProposal",
+        proposal_id,
+        {"question_version_id": version_id},
+    )
     return snapshot
 
 
@@ -2732,7 +3431,11 @@ async def get_revision_proposal(proposal_id: str, user: CurrentUser = Depends(re
 @router.get("/questions/{question_id}/revisions")
 async def list_revision_proposals(question_id: str, user: CurrentUser = Depends(require_author)):
     await require_owned("questions", question_id, user)
-    return await database.value.revision_proposals.find({"question_id": question_id}).sort("created_at", -1).to_list(100)
+    return (
+        await database.value.revision_proposals.find({"question_id": question_id})
+        .sort("created_at", -1)
+        .to_list(100)
+    )
 
 
 @router.post("/draft-revisions/{proposal_id}/approve")
@@ -2744,17 +3447,16 @@ async def approve_draft_revision(proposal_id: str, user: CurrentUser = Depends(r
         raise HTTPException(status_code=422, detail="Kiểm tra bảo toàn construct chưa đạt")
     proposal_validation = validate_question(proposal["after"])
     if proposal_validation["blockers"]:
-        raise HTTPException(status_code=422, detail={"code": "draft_revision_validation_failed", "validation": proposal_validation})
+        raise HTTPException(
+            status_code=422,
+            detail={"code": "draft_revision_validation_failed", "validation": proposal_validation},
+        )
     question = await require_owned("question_drafts", proposal["question_draft_id"], user)
     changes = deepcopy(proposal["after"])
     for key in ["owner_id", "assessment_draft_id", "question_id", "status"]:
         changes.pop(key, None)
     updated = await optimistic_patch(
-        "question_drafts",
-        question["_id"],
-        user.id,
-        question["revision"],
-        changes,
+        "question_drafts", question["_id"], user.id, question["revision"], changes
     )
     await database.value.draft_revision_proposals.update_one(
         {"_id": proposal_id},

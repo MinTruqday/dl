@@ -14,9 +14,7 @@ class IdentityRepository:
     @staticmethod
     def _token_hash(token: str) -> str:
         return hmac.new(
-            settings.SECRET_KEY.encode("utf-8"),
-            token.encode("utf-8"),
-            hashlib.sha256,
+            settings.SECRET_KEY.encode("utf-8"), token.encode("utf-8"), hashlib.sha256
         ).hexdigest()
 
     @staticmethod
@@ -134,10 +132,7 @@ class IdentityRepository:
         return await mongo.find_one(
             "password_reset_tokens",
             {
-                "$or": [
-                    {"token_hash": IdentityRepository._token_hash(token)},
-                    {"token": token},
-                ],
+                "$or": [{"token_hash": IdentityRepository._token_hash(token)}, {"token": token}],
                 "used": False,
                 "expires_at": {"$gt": datetime.now(timezone.utc)},
             },
@@ -147,10 +142,7 @@ class IdentityRepository:
     async def consume_password_reset_token(token: str):
         return await mongo.get_db()["password_reset_tokens"].find_one_and_update(
             {
-                "$or": [
-                    {"token_hash": IdentityRepository._token_hash(token)},
-                    {"token": token},
-                ],
+                "$or": [{"token_hash": IdentityRepository._token_hash(token)}, {"token": token}],
                 "used": False,
                 "expires_at": {"$gt": datetime.now(timezone.utc)},
             },
@@ -169,9 +161,7 @@ class IdentityRepository:
     @staticmethod
     async def set_redis_passkey_challenge(email: str, challenge: bytes):
         await redis.setex(
-            f"passkey_challenge:{email.lower()}",
-            300,
-            base64.b64encode(challenge).decode("ascii"),
+            f"passkey_challenge:{email.lower()}", 300, base64.b64encode(challenge).decode("ascii")
         )
 
     @staticmethod
@@ -189,7 +179,13 @@ class IdentityRepository:
         return await mongo.update_one(
             "passkey_challenges",
             {"_id": email.lower()},
-            {"$set": {"challenge": challenge, "created_at": now, "expires_at": now + timedelta(minutes=5)}},
+            {
+                "$set": {
+                    "challenge": challenge,
+                    "created_at": now,
+                    "expires_at": now + timedelta(minutes=5),
+                }
+            },
             upsert=True,
         )
 

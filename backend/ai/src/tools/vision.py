@@ -4,6 +4,7 @@ from loguru import logger
 
 from src.utils.local_models import local_model_client
 
+
 class VisionTool:
     """
     <module_purpose>Analyzes images using a HuggingFace Vision-Language Model.</module_purpose>
@@ -28,7 +29,10 @@ class VisionTool:
                     {
                         "role": "user",
                         "content": [
-                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}},
+                            {
+                                "type": "image_url",
+                                "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"},
+                            },
                             {"type": "text", "text": question},
                         ],
                     }
@@ -61,11 +65,11 @@ async def tool_analyze_image(image_base64: str, question: str) -> str:
     <contract>
     WHEN TO USE THIS TOOL:
     - Understanding and analyzing images based on a user question.
-    
+
     Parameters:
     - image_base64: Base64-encoded image string.
     - question: The question to answer about the image.
-    
+
     Returns:
     - Textual description or answer based on the image content.
     </contract>

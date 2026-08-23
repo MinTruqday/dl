@@ -1,6 +1,7 @@
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 
+
 class MongoClient:
     def __init__(self):
         self.db_name = settings.NOTIFICATION_DB_NAME
@@ -13,7 +14,15 @@ class MongoClient:
     async def find_one(self, collection: str, query: dict, projection: dict = None, **kwargs):
         return await self.get_db()[collection].find_one(query, projection, **kwargs)
 
-    def find(self, collection: str, query: dict, projection: dict = None, sort=None, skip: int = 0, limit: int = 0):
+    def find(
+        self,
+        collection: str,
+        query: dict,
+        projection: dict = None,
+        sort=None,
+        skip: int = 0,
+        limit: int = 0,
+    ):
         cursor = self.get_db()[collection].find(query, projection)
         if sort:
             cursor = cursor.sort(sort)
@@ -51,6 +60,7 @@ class MongoClient:
     def query(self, collection: str):
         return QueryBuilder(self, collection)
 
+
 class QueryBuilder:
     def __init__(self, client, collection: str):
         self.client = client
@@ -81,12 +91,9 @@ class QueryBuilder:
 
     async def execute(self):
         cursor = self.client.find(
-            self.collection,
-            self._query,
-            sort=self._sort,
-            skip=self._skip,
-            limit=self._limit,
+            self.collection, self._query, sort=self._sort, skip=self._skip, limit=self._limit
         )
         return await cursor.to_list(length=None)
+
 
 mongo = MongoClient()

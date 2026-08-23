@@ -35,11 +35,7 @@ async def lifespan(app: FastAPI):
         await close_db()
 
 
-app = FastAPI(
-    title="DocLib Worker",
-    version=settings.VERSION,
-    lifespan=lifespan,
-)
+app = FastAPI(title="DocLib Worker", version=settings.VERSION, lifespan=lifespan)
 app.add_middleware(PrometheusMiddleware, service_name="worker")
 app.add_route("/metrics", metrics_endpoint("worker"))
 
@@ -89,12 +85,20 @@ async def ready():
 )
 async def enqueue_assessment_calibration(payload: AssessmentCalibrationRequest):
     idempotency_key = str(payload.payload.get("idempotency_key") or "")
-    job_id = f"calibration-{hashlib.sha256(idempotency_key.encode()).hexdigest()[:40]}" if idempotency_key else f"calibration-{uuid.uuid4()}"
+    job_id = (
+        f"calibration-{hashlib.sha256(idempotency_key.encode()).hexdigest()[:40]}"
+        if idempotency_key
+        else f"calibration-{uuid.uuid4()}"
+    )
     existing = await database.mongodb[settings.WORKER_DB_NAME].worker_jobs.find_one({"_id": job_id})
     if existing:
         return {"job_id": job_id, "status": existing["status"]}
     task_payload = {"job_id": job_id, **payload.model_dump()}
-    await record_job(job_id, {"status": "queued"}, {"kind": "assessment_calibration", "owner_id": payload.owner_id})
+    await record_job(
+        job_id,
+        {"status": "queued"},
+        {"kind": "assessment_calibration", "owner_id": payload.owner_id},
+    )
     try:
         await mq.publish("assessment_calibration_queue", task_payload)
     except Exception:
@@ -103,16 +107,11 @@ async def enqueue_assessment_calibration(payload: AssessmentCalibrationRequest):
     return {"job_id": job_id, "status": "queued"}
 
 
-@app.get(
-    "/worker/internal/jobs/{job_id}",
-    dependencies=[Depends(require_internal_token)],
-)
+@app.get("/worker/internal/jobs/{job_id}", dependencies=[Depends(require_internal_token)])
 async def get_job(job_id: str):
     if len(job_id) > 128:
         raise HTTPException(status_code=422, detail="Invalid job identifier")
-    job = await database.mongodb[settings.WORKER_DB_NAME].worker_jobs.find_one(
-        {"_id": job_id}
-    )
+    job = await database.mongodb[settings.WORKER_DB_NAME].worker_jobs.find_one({"_id": job_id})
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     for field in ["created_at", "updated_at", "attempt_started_at", "expire_at"]:

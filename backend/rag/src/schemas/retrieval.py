@@ -19,14 +19,20 @@ class CurriculumFilters(BaseModel):
     authority: Optional[List[str]] = None
     source_version: Optional[str] = None
 
+
 class RetrieveRequest(BaseModel):
     query: str = Field(description="Nội dung truy vấn")
-    document_ids: Optional[List[str]] = Field(default=None, description="Danh sách ID tài liệu giới hạn phạm vi tìm kiếm")
+    document_ids: Optional[List[str]] = Field(
+        default=None, description="Danh sách ID tài liệu giới hạn phạm vi tìm kiếm"
+    )
     k: int = Field(default=5, ge=1, le=100, description="Số lượng kết quả tối đa cần lấy")
-    query_vector_override: Optional[List[float]] = Field(default=None, description="Vector truy vấn ghi đè nếu có")
+    query_vector_override: Optional[List[float]] = Field(
+        default=None, description="Vector truy vấn ghi đè nếu có"
+    )
     requester_id: Optional[str] = None
     is_admin: bool = False
     metadata_filters: CurriculumFilters = Field(default_factory=CurriculumFilters)
+
 
 class MultiQueryRetrieveRequest(BaseModel):
     question: str = Field(description="Câu hỏi truy vấn đa chiều")
@@ -36,6 +42,7 @@ class MultiQueryRetrieveRequest(BaseModel):
     is_admin: bool = False
     metadata_filters: CurriculumFilters = Field(default_factory=CurriculumFilters)
 
+
 class CrossDocRetrieveRequest(BaseModel):
     question: str = Field(description="Câu hỏi truy vấn liên tài liệu")
     document_ids: List[str] = Field(description="Danh sách ID các tài liệu cần phân tích so sánh")
@@ -44,10 +51,12 @@ class CrossDocRetrieveRequest(BaseModel):
     is_admin: bool = False
     metadata_filters: CurriculumFilters = Field(default_factory=CurriculumFilters)
 
+
 class RetrievedDocument(BaseModel):
     text: str
     metadata: Dict[str, Any] = Field(default_factory=dict)
     score: float = 0.0
+
 
 class CitationItem(BaseModel):
     chunk_id: str = ""
@@ -55,6 +64,7 @@ class CitationItem(BaseModel):
     title: str = ""
     chunk_index: Any = ""
     label: str = ""
+
 
 class RetrieveResponse(BaseModel):
     documents: List[RetrievedDocument]

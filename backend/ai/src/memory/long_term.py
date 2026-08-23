@@ -44,25 +44,19 @@ class LongTermMemory:
                 return
             collections = await self.client.get_collections()
             if not any(
-                collection.name == self.collection_name
-                for collection in collections.collections
+                collection.name == self.collection_name for collection in collections.collections
             ):
                 await self.client.create_collection(
                     collection_name=self.collection_name,
                     vectors_config=VectorParams(
-                        size=self.embedder.embedding_dimensions,
-                        distance=Distance.COSINE,
+                        size=self.embedder.embedding_dimensions, distance=Distance.COSINE
                     ),
                 )
             self._initialized = True
 
     @staticmethod
     def _user_filter(user_id: str) -> Filter:
-        return Filter(
-            must=[
-                FieldCondition(key="user_id", match=MatchValue(value=user_id))
-            ]
-        )
+        return Filter(must=[FieldCondition(key="user_id", match=MatchValue(value=user_id))])
 
     async def _extract_memories(self, messages: List[Dict]) -> MemoryOperation:
         conversation = "\n".join(
@@ -130,18 +124,14 @@ class LongTermMemory:
                 )
                 existing_hashes.add(content_hash)
             if points:
-                await self.client.upsert(
-                    collection_name=self.collection_name, points=points
-                )
+                await self.client.upsert(collection_name=self.collection_name, points=points)
                 logger.info("Long-term memories stored count={}", len(points))
         except Exception:
             logger.exception("Long-term memory storage failed")
 
     add_memory = add
 
-    async def search(
-        self, query: str, user_id: str, limit: int = 5
-    ) -> List[Dict]:
+    async def search(self, query: str, user_id: str, limit: int = 5) -> List[Dict]:
         if not user_id or not query.strip():
             return []
         try:
@@ -175,14 +165,8 @@ class LongTermMemory:
             logger.exception("Long-term memory listing failed")
             return []
 
-    async def get_memories(
-        self, user_id: str, query: Optional[str] = None
-    ) -> str:
-        memories = (
-            await self.search(query, user_id)
-            if query
-            else await self.get_all(user_id)
-        )
+    async def get_memories(self, user_id: str, query: Optional[str] = None) -> str:
+        memories = await self.search(query, user_id) if query else await self.get_all(user_id)
         texts = [memory.get("text", "") for memory in memories]
         texts = [text for text in texts if text]
         return "\n".join(f"- {text}" for text in texts)
@@ -201,9 +185,7 @@ class LongTermMemory:
             payload.update(
                 {
                     "text": new_content.strip(),
-                    "hash": hashlib.sha256(
-                        new_content.strip().encode("utf-8")
-                    ).hexdigest(),
+                    "hash": hashlib.sha256(new_content.strip().encode("utf-8")).hexdigest(),
                     "updated_at": datetime.now(timezone.utc).isoformat(),
                 }
             )
@@ -228,8 +210,7 @@ class LongTermMemory:
         try:
             await self._ensure_collection()
             await self.client.delete(
-                collection_name=self.collection_name,
-                points_selector=[memory_id],
+                collection_name=self.collection_name, points_selector=[memory_id]
             )
         except Exception:
             logger.exception("Long-term memory deletion failed")

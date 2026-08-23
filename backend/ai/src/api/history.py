@@ -49,14 +49,10 @@ async def update_title(
 
 @router.patch("/{session_id}/trang-thai", response_model=Dict[str, Any])
 async def update_state(
-    session_id: str,
-    data: SessionStateUpdate,
-    current_user: CurrentUser = Depends(get_current_user),
+    session_id: str, data: SessionStateUpdate, current_user: CurrentUser = Depends(get_current_user)
 ):
     """Update the pinned or archived state of an owned conversation session."""
-    return await HistoryService.update_state(
-        session_id, data.model_dump(), str(current_user.id)
-    )
+    return await HistoryService.update_state(session_id, data.model_dump(), str(current_user.id))
 
 
 @router.delete("/{session_id}", response_model=Dict[str, Any])

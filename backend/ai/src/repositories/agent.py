@@ -2,6 +2,7 @@ from src.core.infrastructure.mongo import mongo
 from src.core.infrastructure.database import database
 from src.core.infrastructure.configuration import settings
 
+
 class AgentRepository:
     """
     <module_purpose>
@@ -9,6 +10,7 @@ class AgentRepository:
     <metis_behavior>Ensures high-throughput async inserts to prevent blocking the main orchestration loop.</metis_behavior>
     </module_purpose>
     """
+
     @staticmethod
     def _get_db():
         db_name = settings.AI_DB_NAME

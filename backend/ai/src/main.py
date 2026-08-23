@@ -9,13 +9,16 @@ from src.core.infrastructure.database import database
 from src.core.middleware import add_trace_id_header, trace_id_filter
 from src.core.metrics import PrometheusMiddleware, metrics_endpoint
 from src.core.dependency import Role, require_role
+
 logger.remove()
+
 
 def _safe_log_sink(message):
     from src.core.security.guardrails import guardrails_engine
 
     result = guardrails_engine.inspect_output(str(message))
     sys.stdout.write(result.get("sanitized_text", str(message)))
+
 
 logger.add(
     _safe_log_sink,
@@ -42,19 +45,26 @@ app.add_middleware(PrometheusMiddleware, service_name="ai")
 app.add_route("/metrics", metrics_endpoint("ai"))
 
 from fastapi.responses import JSONResponse
+
+
 @app.middleware("http")
 async def internal_token_middleware(request: Request, call_next):
     if "/internal/" in request.url.path:
         token = request.headers.get("X-Internal-Token")
-        if not token or not settings.SECRET_KEY or not hmac.compare_digest(token, settings.SECRET_KEY):
-            return JSONResponse(status_code=403, content={"detail": {"code": "invalid_internal_token"}})
+        if (
+            not token
+            or not settings.SECRET_KEY
+            or not hmac.compare_digest(token, settings.SECRET_KEY)
+        ):
+            return JSONResponse(
+                status_code=403, content={"detail": {"code": "invalid_internal_token"}}
+            )
     return await call_next(request)
+
 
 app.middleware("http")(add_trace_id_header)
 allowed_origins = (
-    settings.CORS_ALLOWED_ORIGINS.split(",")
-    if settings.CORS_ALLOWED_ORIGINS
-    else ["*"]
+    settings.CORS_ALLOWED_ORIGINS.split(",") if settings.CORS_ALLOWED_ORIGINS else ["*"]
 )
 app.add_middleware(
     CORSMiddleware,
@@ -70,10 +80,13 @@ app.include_router(feedback)
 app.include_router(history)
 app.include_router(events)
 app.include_router(interrupt_router)
+
+
 @app.get("/health")
 async def health_check():
     """Report process liveness for container health monitoring"""
     return {"status": "healthy"}
+
 
 @app.get("/ready")
 async def readiness_check():
@@ -86,11 +99,13 @@ async def readiness_check():
         checks["mongodb"] = "unavailable"
     try:
         from src.core.infrastructure.redis import redis
+
         checks["redis"] = "ready" if await redis.get_client().ping() else "unavailable"
     except Exception:
         checks["redis"] = "unavailable"
     try:
         from src.core.infrastructure.mq import mq
+
         checks["rabbitmq"] = "ready" if await mq.health_check() else "unavailable"
     except Exception:
         checks["rabbitmq"] = "unavailable"
@@ -114,12 +129,8 @@ async def readiness_check():
         import httpx
 
         async with httpx.AsyncClient(timeout=3) as client:
-            response = await client.get(
-                f"{settings.MINIO_ENDPOINT.rstrip('/')}/minio/health/ready"
-            )
-            checks["object_storage"] = (
-                "ready" if response.status_code == 200 else "unavailable"
-            )
+            response = await client.get(f"{settings.MINIO_ENDPOINT.rstrip('/')}/minio/health/ready")
+            checks["object_storage"] = "ready" if response.status_code == 200 else "unavailable"
     except Exception:
         checks["object_storage"] = "unavailable"
     try:
@@ -128,32 +139,27 @@ async def readiness_check():
         checks.update(await local_model_client.readiness())
     except Exception:
         checks["model"] = "unavailable"
-    required_checks = {
-        key: value
-        for key, value in checks.items()
-        if key != "model"
-    }
-    infrastructure_ready = all(
-        value == "ready" for value in required_checks.values()
-    )
+    required_checks = {key: value for key, value in checks.items() if key != "model"}
+    infrastructure_ready = all(value == "ready" for value in required_checks.values())
     model_ready = checks.get("model") == "ready"
     ready = infrastructure_ready and model_ready
     return JSONResponse(
         status_code=200 if ready else 503,
         content={"status": "ready" if ready else "degraded", "checks": checks},
     )
+
+
 @app.get("/evaluate/metrics")
 async def harness_metrics():
     """Expose agent harness telemetry in Prometheus text format"""
     from fastapi.responses import PlainTextResponse
+
     return PlainTextResponse(
-        content=agentops.get_prometheus_metrics(),
-        media_type="text/plain; version=0.0.4",
+        content=agentops.get_prometheus_metrics(), media_type="text/plain; version=0.0.4"
     )
-@app.get(
-    "/evaluate/status",
-    dependencies=[Depends(require_role([Role.ADMIN]))],
-)
+
+
+@app.get("/evaluate/status", dependencies=[Depends(require_role([Role.ADMIN]))])
 async def harness_status():
     """Return orchestration circuit and evaluation status for administrators"""
     return {
@@ -163,15 +169,19 @@ async def harness_status():
         },
         "evaluation": evaluation.get_dashboard_metrics(),
     }
+
+
 async def startup_event():
     logger.info("AI system initialized")
     try:
         from src.core.infrastructure.database import init_db
+
         await init_db()
     except Exception:
         logger.exception("MongoDB indexing error")
     try:
         from src.loop.event import cron_scheduler, event_driven_loop
+
         await event_driven_loop.start_worker()
         await cron_scheduler.start()
         logger.info("Event-driven loop started")
@@ -181,12 +191,11 @@ async def startup_event():
         from src.utils.background import create_background_task
         from src.utils.local_models import local_model_client
 
-        create_background_task(
-            local_model_client.warm_primary(),
-            "primary-model-warmup",
-        )
+        create_background_task(local_model_client.warm_primary(), "primary-model-warmup")
     except Exception:
         logger.exception("Primary model warmup startup error")
+
+
 async def shutdown_event():
     try:
         from src.utils.background import drain_background_tasks
@@ -196,38 +205,45 @@ async def shutdown_event():
         logger.exception("Background task shutdown failed")
     try:
         from src.loop.event import cron_scheduler, event_driven_loop
+
         await cron_scheduler.stop()
         await event_driven_loop.stop_worker()
     except Exception:
         logger.exception("Event loop shutdown failed")
     try:
         from src.core.infrastructure.redis import redis
+
         await redis.aclose()
     except Exception:
         logger.exception("Redis shutdown failed")
     try:
         from src.core.infrastructure.mq import mq
+
         await mq.aclose()
     except Exception:
         logger.exception("Message queue shutdown failed")
     try:
         from src.core.infrastructure.database import close_db
+
         await close_db()
     except Exception:
         logger.exception("Database shutdown failed")
     try:
         from src.memory.management import memory_manager
+
         await memory_manager.close()
     except Exception:
         logger.exception("Memory manager shutdown failed")
     try:
         from src.workflow.orchestration import supervisor
+
         if supervisor.checkpointer is not None:
             supervisor.checkpointer.close()
         if supervisor.sync_client is not None:
             supervisor.sync_client.close()
     except Exception:
         logger.exception("Workflow checkpointer shutdown failed")
+
 
 @asynccontextmanager
 async def lifespan(application: FastAPI):
@@ -236,5 +252,6 @@ async def lifespan(application: FastAPI):
         yield
     finally:
         await shutdown_event()
+
 
 app.router.lifespan_context = lifespan

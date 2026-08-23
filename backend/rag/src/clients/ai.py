@@ -43,20 +43,14 @@ class AIClient:
         response.raise_for_status()
         payload = response.json()
         return {
-            "hypothetical_document": str(
-                payload.get("hypothetical_document") or question
-            ),
+            "hypothetical_document": str(payload.get("hypothetical_document") or question),
             "queries": [
-                str(query).strip()
-                for query in payload.get("queries", [])
-                if str(query).strip()
+                str(query).strip() for query in payload.get("queries", []) if str(query).strip()
             ],
         }
 
     async def decompose_cross_document_query(
-        self,
-        question: str,
-        document_ids: list[str],
+        self, question: str, document_ids: list[str]
     ) -> list[str]:
         async with httpx.AsyncClient(timeout=25.0) as client:
             response = await client.post(
@@ -66,11 +60,7 @@ class AIClient:
             )
         response.raise_for_status()
         payload = response.json()
-        return [
-            str(query).strip()
-            for query in payload.get("queries", [])
-            if str(query).strip()
-        ]
+        return [str(query).strip() for query in payload.get("queries", []) if str(query).strip()]
 
 
 ai_client = AIClient()

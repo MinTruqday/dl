@@ -2,6 +2,7 @@ from typing import List
 from fastapi import HTTPException, Query
 from src.repositories.document import DocumentRepository
 
+
 class DocumentTagService:
     @staticmethod
     async def get_tags_categories():

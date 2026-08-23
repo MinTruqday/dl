@@ -31,18 +31,17 @@ class ShortTermMemory:
         if not self._redis or not session_id:
             return []
         try:
-            items, summary = await self._redis.lrange(
-                self._history_key(session_id), 0, self.max_turns * 2 - 1
-            ), await self._redis.get(self._summary_key(session_id))
+            items, summary = (
+                await self._redis.lrange(self._history_key(session_id), 0, self.max_turns * 2 - 1),
+                await self._redis.get(self._summary_key(session_id)),
+            )
             history: List[Dict] = []
             if summary:
                 history.append(
                     {
                         "role": "context",
                         "content": (
-                            "<compacted_conversation>\n"
-                            f"{summary}\n"
-                            "</compacted_conversation>"
+                            f"<compacted_conversation>\n{summary}\n</compacted_conversation>"
                         ),
                     }
                 )
@@ -82,8 +81,7 @@ class ShortTermMemory:
                 except (TypeError, json.JSONDecodeError):
                     continue
                 compacted_lines.append(
-                    f"{turn.get('role', 'unknown')}: "
-                    f"{str(turn.get('content', ''))[:2000]}"
+                    f"{turn.get('role', 'unknown')}: {str(turn.get('content', ''))[:2000]}"
                 )
             compacted = "\n".join(compacted_lines)[-12000:]
             async with self._redis.pipeline() as pipe:
@@ -97,9 +95,7 @@ class ShortTermMemory:
         if not self._redis or not session_id:
             return
         try:
-            await self._redis.delete(
-                self._history_key(session_id), self._summary_key(session_id)
-            )
+            await self._redis.delete(self._history_key(session_id), self._summary_key(session_id))
         except Exception:
             logger.exception("Short-term memory deletion failed")
 

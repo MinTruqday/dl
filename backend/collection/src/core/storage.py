@@ -6,6 +6,7 @@ from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 
+
 class StorageService:
     def __init__(self):
         endpoint = settings.MINIO_ENDPOINT
@@ -17,7 +18,9 @@ class StorageService:
         self.secret_key = settings.MINIO_SECRET_KEY
 
         if not self.access_key or not self.secret_key:
-            raise ValueError("Missing MinIO authentication keys (MINIO_ACCESS_KEY or MINIO_SECRET_KEY)")
+            raise ValueError(
+                "Missing MinIO authentication keys (MINIO_ACCESS_KEY or MINIO_SECRET_KEY)"
+            )
 
         self.private_bucket = settings.MINIO_PRIVATE_BUCKET
         self.public_bucket = settings.MINIO_PUBLIC_BUCKET
@@ -55,10 +58,7 @@ class StorageService:
             raise
 
     async def upload_local_file(
-        self,
-        object_name: str,
-        local_file_path: str,
-        content_type: str = "application/pdf",
+        self, object_name: str, local_file_path: str, content_type: str = "application/pdf"
     ) -> str:
         try:
             await self._ensure_bucket()
@@ -85,5 +85,6 @@ class StorageService:
         if self._storage_client is not None:
             await self._storage_client.__aexit__(None, None, None)
             self._storage_client = None
+
 
 storage = StorageService()

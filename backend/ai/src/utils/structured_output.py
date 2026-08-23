@@ -48,30 +48,18 @@ def extract_json_values(text: Any) -> list[Any]:
     candidates = [cleaned]
     candidates.extend(
         match.group(1).strip()
-        for match in re.finditer(
-            r"```(?:json)?\s*([\s\S]*?)```",
-            cleaned,
-            flags=re.IGNORECASE,
-        )
+        for match in re.finditer(r"```(?:json)?\s*([\s\S]*?)```", cleaned, flags=re.IGNORECASE)
     )
     candidates.extend(_balanced_candidates(cleaned))
     failures = []
     values = []
     fingerprints = set()
     for candidate in candidates:
-        variants = [
-            candidate,
-            re.sub(r",\s*([}\]])", r"\1", candidate),
-        ]
+        variants = [candidate, re.sub(r",\s*([}\]])", r"\1", candidate)]
         for variant in variants:
             try:
                 value = json.loads(variant)
-                fingerprint = json.dumps(
-                    value,
-                    ensure_ascii=False,
-                    sort_keys=True,
-                    default=str,
-                )
+                fingerprint = json.dumps(value, ensure_ascii=False, sort_keys=True, default=str)
                 if fingerprint not in fingerprints:
                     fingerprints.add(fingerprint)
                     values.append(value)

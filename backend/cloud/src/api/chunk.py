@@ -10,6 +10,7 @@ from src.schemas.storage import StorageItemCreate
 
 router = APIRouter(prefix="/phan-doan")
 
+
 @router.post("", response_model=APIResponse[Any], status_code=201)
 async def upload_chunk(
     file: UploadFile = File(...),
@@ -44,5 +45,7 @@ async def upload_chunk(
             current_user.id,
         )
         res["item_id"] = item.id
-        return APIResponse(data=res, message="Truyền tải phân đoạn và hợp nhất tệp hoàn tất", status=201)
+        return APIResponse(
+            data=res, message="Truyền tải phân đoạn và hợp nhất tệp hoàn tất", status=201
+        )
     return APIResponse(data=res, message="Truyền tải phân đoạn hoàn tất", status=200)

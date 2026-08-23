@@ -10,6 +10,7 @@ from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 
+
 def _is_ssrf_attempt(query: str) -> bool:
     import ipaddress
     import socket
@@ -49,6 +50,7 @@ def _is_ssrf_attempt(query: str) -> bool:
             return True
     return False
 
+
 class WebSearchAgent:
     """
     <module_purpose>
@@ -67,6 +69,7 @@ class WebSearchAgent:
         )
         if self.api_key_valid:
             from tavily import TavilyClient
+
             self.client = TavilyClient(api_key=settings.TAVILY_API_KEY)
         else:
             self.client = None
@@ -86,6 +89,7 @@ class WebSearchAgent:
         if self._reranker is None:
             try:
                 from sentence_transformers import CrossEncoder
+
                 self._reranker = CrossEncoder(settings.RERANKER_MODEL)
             except Exception:
                 logger.exception("Search engine reranker loading failed")
@@ -158,6 +162,7 @@ class WebSearchAgent:
             return ""
         try:
             from playwright.async_api import async_playwright
+
             async with async_playwright() as p:
                 browser = await p.chromium.launch(headless=True)
                 page = await browser.new_page()
@@ -174,7 +179,11 @@ class WebSearchAgent:
 
     async def _tavily_image_search(self, query: str) -> list:
         response = await asyncio.to_thread(
-            self.client.search, query=query, search_depth="advanced", max_results=4, include_images=True
+            self.client.search,
+            query=query,
+            search_depth="advanced",
+            max_results=4,
+            include_images=True,
         )
         images = response.get("images", [])
         formatted_images = [{"url": img_url, "width": 800, "height": 600} for img_url in images[:4]]
@@ -195,83 +204,69 @@ class WebSearchAgent:
             from src.utils.huggingface import create_chat_model
             from src.schemas.engine import SearchEvaluation, SubQueries
             from src.core.registry import registry, PromptType
-            
+
             llm = create_chat_model()
             structured_llm = llm.with_structured_output(SubQueries)
             evaluation_llm = llm.with_structured_output(SearchEvaluation)
-            
+
             max_iterations = 3
             accumulated_results = []
             current_query = query
-            
+
             for i in range(max_iterations):
                 prompt = registry.get(PromptType.ENGINE_SUBQUERIES).format(query=current_query)
                 response = await structured_llm.ainvoke([HumanMessage(content=prompt)])
-                
+
                 search_queries = response.queries if response.queries else [current_query]
                 if current_query not in search_queries:
                     search_queries.append(current_query)
-                    
+
                 search_queries = search_queries[:3]
-                logger.info(f"AI RAG Iteration {i+1} - Sub-queries: {search_queries}")
-                
+                logger.info(f"AI RAG Iteration {i + 1} - Sub-queries: {search_queries}")
+
                 tasks = [self._tavily_search(q) for q in search_queries]
                 results = await asyncio.gather(*tasks, return_exceptions=True)
-                
+
                 for result in results:
                     if isinstance(result, list):
                         accumulated_results.extend(result)
-                
+
                 if not accumulated_results:
                     break
 
                 eval_prompt_template = registry.get(PromptType.AI_SEARCH_EVALUATION)
                 eval_prompt = eval_prompt_template.format(
                     query=query,
-                    information=json.dumps(
-                        accumulated_results,
-                        ensure_ascii=False,
-                    )[:5000],
+                    information=json.dumps(accumulated_results, ensure_ascii=False)[:5000],
                 )
-                eval_response = await evaluation_llm.ainvoke(
-                    [HumanMessage(content=eval_prompt)]
-                )
-                
+                eval_response = await evaluation_llm.ainvoke([HumanMessage(content=eval_prompt)])
+
                 if eval_response.sufficient:
                     logger.info("Self-evaluation: Sufficient information gathered")
                     break
                 else:
                     logger.info("Self-evaluation: Insufficient information. Re-formulating query")
-                    
+
                     urls = [
-                        result.get("url")
-                        for result in accumulated_results
-                        if result.get("url")
+                        result.get("url") for result in accumulated_results if result.get("url")
                     ]
                     if urls:
                         logger.info(f"Triggering Playwright fallback on {urls[0]}")
                         scraped = await self._playwright_scrape(urls[0])
                         if scraped:
                             accumulated_results.append(
-                                {
-                                    "title": "",
-                                    "content": scraped,
-                                    "url": urls[0],
-                                }
+                                {"title": "", "content": scraped, "url": urls[0]}
                             )
                     candidates = [
-                        candidate
-                        for candidate in search_queries
-                        if candidate != current_query
+                        candidate for candidate in search_queries if candidate != current_query
                     ]
                     current_query = candidates[-1] if candidates else query
-                    
+
             if accumulated_results:
                 return json.dumps(
-                    {"status": "success", "results": accumulated_results},
-                    ensure_ascii=False,
+                    {"status": "success", "results": accumulated_results}, ensure_ascii=False
                 )
-                
+
         except Exception:
             logger.exception("AI RAG search system encountered an issue")
 

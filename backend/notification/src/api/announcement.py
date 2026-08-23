@@ -11,6 +11,7 @@ from src.repositories.announcement import AnnouncementRepository
 
 router = APIRouter(prefix="/thong-bao")
 
+
 @router.get("", response_model=APIResponse[Any])
 async def get_announcements(
     skip: int = Query(0, ge=0),
@@ -19,22 +20,20 @@ async def get_announcements(
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await AnnouncementService.get_announcements(
-            str(current_user.id), skip, limit, db
-        ),
+        data=await AnnouncementService.get_announcements(str(current_user.id), skip, limit, db),
         message="Trích xuất thông báo hoàn tất",
     )
 
+
 @router.patch("/{notif_id}/doc-hieu", response_model=APIResponse[Any])
 async def mark_as_read(
-    notif_id: str,
-    current_user: CurrentUser = Depends(get_current_user),
-    db=Depends(get_db),
+    notif_id: str, current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
         data=await AnnouncementService.mark_as_read(notif_id, str(current_user.id), db),
         message="Đã đánh dấu thông báo là đã đọc",
     )
+
 
 @router.patch("/doc-tat-ca", response_model=APIResponse[Any])
 async def mark_all_as_read(
@@ -45,18 +44,16 @@ async def mark_all_as_read(
         message="Đã đánh dấu tất cả thông báo là đã đọc",
     )
 
+
 @router.delete("/{notif_id}", response_model=APIResponse[Any])
 async def delete_announcement(
-    notif_id: str,
-    current_user: CurrentUser = Depends(get_current_user),
-    db=Depends(get_db),
+    notif_id: str, current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
-        data=await AnnouncementService.delete_announcement(
-            notif_id, str(current_user.id), db
-        ),
+        data=await AnnouncementService.delete_announcement(notif_id, str(current_user.id), db),
         message="Xóa thông báo vĩnh viễn hoàn tất",
     )
+
 
 @router.post(
     "/gui-di",
@@ -72,17 +69,13 @@ async def create_announcement(data: AnnouncementCreate, db=Depends(get_db)):
         status=201,
     )
 
+
 @router.get("/cai-dat", response_model=APIResponse[Any])
-async def get_settings(
-    current_user: CurrentUser = Depends(get_current_user),
-    db=Depends(get_db),
-):
+async def get_settings(current_user: CurrentUser = Depends(get_current_user), db=Depends(get_db)):
     settings = await AnnouncementRepository.get_settings(str(current_user.id))
     settings = settings or AnnouncementSettings().model_dump()
-    return APIResponse(
-        data=settings,
-        message="Trích xuất cài đặt thông báo hoàn tất",
-    )
+    return APIResponse(data=settings, message="Trích xuất cài đặt thông báo hoàn tất")
+
 
 @router.post("/cai-dat", response_model=APIResponse[Any])
 async def update_settings(
@@ -91,10 +84,9 @@ async def update_settings(
     db=Depends(get_db),
 ):
     from src.repositories.announcement import AnnouncementRepository
+
     settings_data = settings.model_dump()
     await AnnouncementRepository.update_settings(str(current_user.id), settings_data)
     return APIResponse(
-        data=settings_data,
-        message="Cập nhật cài đặt thông báo hoàn tất",
-        status=200,
+        data=settings_data, message="Cập nhật cài đặt thông báo hoàn tất", status=200
     )

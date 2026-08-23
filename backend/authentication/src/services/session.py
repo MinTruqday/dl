@@ -11,8 +11,8 @@ from src.core.infrastructure.configuration import settings
 from src.schemas.identity import UserCreate, UserInDB
 from src.core.security.access import create_access_token, get_password_hash, verify_password
 
-class SessionService:
 
+class SessionService:
     @staticmethod
     def refresh_cookie_seconds():
         return settings.REFRESH_TOKEN_EXPIRE_DAYS * 86400
@@ -35,10 +35,15 @@ class SessionService:
     async def register_user(user_in: UserCreate, client_ip: str):
         config = await IdentityRepository.get_system_config()
         if config and (not config.get("registration_enabled", True)):
-            raise HTTPException(status_code=403, detail="Tính năng đăng ký tài khoản mới tạm thời bị vô hiệu hóa trên hệ thống")
+            raise HTTPException(
+                status_code=403,
+                detail="Tính năng đăng ký tài khoản mới tạm thời bị vô hiệu hóa trên hệ thống",
+            )
 
         if await IdentityRepository.get_auth_credential_by_email(user_in.email):
-            raise HTTPException(status_code=400, detail="Địa chỉ thư điện tử đã được sử dụng cho một tài khoản khác")
+            raise HTTPException(
+                status_code=400, detail="Địa chỉ thư điện tử đã được sử dụng cho một tài khoản khác"
+            )
         if await IdentityRepository.get_auth_credential_by_slug(user_in.slug):
             raise HTTPException(status_code=400, detail="Tên đăng nhập đã tồn tại trên hệ thống")
 
@@ -59,12 +64,14 @@ class SessionService:
             "updated_at": created_at,
         }
         await IdentityRepository.create_auth_credential(auth_cred)
-        await IdentityRepository.insert_audit_log({
-            "action": "REGISTER_USER",
-            "actor_email": user_in.email,
-            "ip": client_ip,
-            "timestamp": datetime.now(timezone.utc),
-        })
+        await IdentityRepository.insert_audit_log(
+            {
+                "action": "REGISTER_USER",
+                "actor_email": user_in.email,
+                "ip": client_ip,
+                "timestamp": datetime.now(timezone.utc),
+            }
+        )
         logger.info("User account registration process completed")
         return {
             "email": user_in.email.lower(),
@@ -87,49 +94,58 @@ class SessionService:
             auth_cred = None
 
         if not auth_cred:
-            await IdentityRepository.insert_audit_log({
-                "action": "LOGIN_FAILED_UNKNOWN_ACCOUNT",
-                "actor_email": username.lower() if is_email else "",
-                "actor_slug": username.lower() if not is_email else "",
-                "ip": client_ip,
-                "timestamp": datetime.now(timezone.utc),
-            })
+            await IdentityRepository.insert_audit_log(
+                {
+                    "action": "LOGIN_FAILED_UNKNOWN_ACCOUNT",
+                    "actor_email": username.lower() if is_email else "",
+                    "actor_slug": username.lower() if not is_email else "",
+                    "ip": client_ip,
+                    "timestamp": datetime.now(timezone.utc),
+                }
+            )
             raise HTTPException(status_code=401, detail="Thông tin đăng nhập không chính xác")
 
         password_hash = auth_cred.get("password_hash") if auth_cred else "invalid"
 
         if not verify_password(password, password_hash):
-            await IdentityRepository.insert_audit_log({
-                "action": "LOGIN_FAILED_WRONG_PASSWORD",
-                "actor_email": auth_cred.get("email", ""),
-                "ip": client_ip,
-                "timestamp": datetime.now(timezone.utc),
-            })
+            await IdentityRepository.insert_audit_log(
+                {
+                    "action": "LOGIN_FAILED_WRONG_PASSWORD",
+                    "actor_email": auth_cred.get("email", ""),
+                    "ip": client_ip,
+                    "timestamp": datetime.now(timezone.utc),
+                }
+            )
             logger.warning("User authentication failed due to invalid credentials provided")
             raise HTTPException(status_code=401, detail="Thông tin đăng nhập không chính xác")
-            
+
         user_id_str = str(auth_cred["_id"])
-        
+
         is_active = auth_cred.get("is_active", True)
         if not is_active:
-            raise HTTPException(status_code=403, detail="Tài khoản hiện đang bị khóa hoặc ở trạng thái không hoạt động")
+            raise HTTPException(
+                status_code=403,
+                detail="Tài khoản hiện đang bị khóa hoặc ở trạng thái không hoạt động",
+            )
 
         session_id = str(uuid.uuid4())
         refresh_token = secrets.token_urlsafe(48)
         from src.core.infrastructure.redis import redis
+
         await redis.sadd(f"user_sessions:{user_id_str}", session_id)
         await redis.get_client().expire(
-            f"user_sessions:{user_id_str}",
-            settings.REFRESH_TOKEN_EXPIRE_DAYS * 86400,
+            f"user_sessions:{user_id_str}", settings.REFRESH_TOKEN_EXPIRE_DAYS * 86400
         )
         await IdentityRepository.register_session(user_id_str, session_id, client_ip, refresh_token)
         access_token = SessionService.access_token_for_user(auth_cred, session_id)
-        await IdentityRepository.insert_audit_log({
-            "action": "LOGIN_SUCCESS",
-            "actor_email": auth_cred["email"],
-            "ip": client_ip,
-            "timestamp": datetime.now(timezone.utc),
-        })
+        await IdentityRepository.insert_audit_log(
+            {
+                "action": "LOGIN_SUCCESS",
+                "actor_email": auth_cred["email"],
+                "ip": client_ip,
+                "timestamp": datetime.now(timezone.utc),
+            }
+        )
         logger.info("User authentication process completed")
         return {
             "access_token": access_token,
@@ -150,9 +166,7 @@ class SessionService:
 
     @staticmethod
     async def revoke_session(current_user):
-        await IdentityRepository.revoke_session(
-            str(current_user.id), current_user.session_id
-        )
+        await IdentityRepository.revoke_session(str(current_user.id), current_user.session_id)
         return {"message": "Đăng xuất hoàn tất"}
 
     @staticmethod
@@ -171,7 +185,7 @@ class SessionService:
                     "expires_at": datetime.now(timezone.utc) + timedelta(minutes=1),
                     "used": False,
                     "created_at": datetime.now(timezone.utc),
-                },
+                }
             )
             await IdentityRepository.insert_audit_log(
                 {
@@ -179,13 +193,16 @@ class SessionService:
                     "actor_email": email,
                     "ip": client_ip,
                     "timestamp": datetime.now(timezone.utc),
-                },
+                }
             )
             try:
                 await EmailService.send_reset_password_email(email, otp_code)
             except Exception:
                 logger.exception("Failed to dispatch password recovery email notification")
-        return {"status": "ok", "message": "Hệ thống đang tiến hành xử lý yêu cầu khôi phục mật khẩu"}
+        return {
+            "status": "ok",
+            "message": "Hệ thống đang tiến hành xử lý yêu cầu khôi phục mật khẩu",
+        }
 
     @staticmethod
     async def reset_password(token: str, new_password: str, client_ip: str):
@@ -194,9 +211,7 @@ class SessionService:
             raise HTTPException(
                 status_code=400, detail="Mã xác minh bảo mật không hợp lệ hoặc đã quá hạn sử dụng"
             )
-        auth_cred = await IdentityRepository.get_auth_credential_by_email(
-            token_doc["email"]
-        )
+        auth_cred = await IdentityRepository.get_auth_credential_by_email(token_doc["email"])
         if not auth_cred:
             raise HTTPException(status_code=400, detail="Mã xác minh bảo mật không hợp lệ")
         await IdentityRepository.update_password_hash(
@@ -209,7 +224,7 @@ class SessionService:
                 "actor_email": token_doc["email"],
                 "ip": client_ip,
                 "timestamp": datetime.now(timezone.utc),
-            },
+            }
         )
         logger.info("User account password modification completed")
         return {"status": "ok", "message": "Thực hiện thay đổi mật khẩu tài khoản hoàn tất"}
@@ -227,22 +242,21 @@ class SessionService:
     async def issue_token_for_user(user_doc: dict, client_ip: str):
         if not user_doc.get("is_active", True):
             raise HTTPException(
-                status_code=403, detail="Tài khoản hiện đang bị khóa hoặc ở trạng thái không hoạt động"
+                status_code=403,
+                detail="Tài khoản hiện đang bị khóa hoặc ở trạng thái không hoạt động",
             )
         session_id = str(uuid.uuid4())
         refresh_token = secrets.token_urlsafe(48)
         user_id_str = str(user_doc["_id"])
         await IdentityRepository.register_session(user_id_str, session_id, client_ip, refresh_token)
         from src.core.infrastructure.redis import redis
+
         await redis.sadd(f"user_sessions:{user_id_str}", session_id)
         await redis.get_client().expire(
-            f"user_sessions:{user_id_str}",
-            settings.REFRESH_TOKEN_EXPIRE_DAYS * 86400,
+            f"user_sessions:{user_id_str}", settings.REFRESH_TOKEN_EXPIRE_DAYS * 86400
         )
         access_token = SessionService.access_token_for_user(user_doc, session_id)
-        auth_cred = await IdentityRepository.get_auth_credential_by_id(
-            str(user_doc["_id"])
-        )
+        auth_cred = await IdentityRepository.get_auth_credential_by_id(str(user_doc["_id"]))
         has_passkey = len(auth_cred.get("passkeys", [])) > 0 if auth_cred else False
         return {
             "access_token": access_token,
@@ -254,18 +268,22 @@ class SessionService:
     @staticmethod
     async def refresh_session(refresh_token: str, client_ip: str):
         replacement = secrets.token_urlsafe(48)
-        session = await IdentityRepository.rotate_refresh_token(refresh_token, replacement, client_ip)
+        session = await IdentityRepository.rotate_refresh_token(
+            refresh_token, replacement, client_ip
+        )
         if not session:
-            raise HTTPException(status_code=401, detail="Phiên làm mới không hợp lệ hoặc đã hết hạn")
+            raise HTTPException(
+                status_code=401, detail="Phiên làm mới không hợp lệ hoặc đã hết hạn"
+            )
         user_doc = await IdentityRepository.get_auth_credential_by_id(str(session["user_id"]))
         if not user_doc or not user_doc.get("is_active", True):
             await IdentityRepository.revoke_session(str(session["user_id"]), str(session["_id"]))
             raise HTTPException(status_code=401, detail="Tài khoản không còn khả dụng")
         from src.core.infrastructure.redis import redis
+
         await redis.sadd(f"user_sessions:{session['user_id']}", str(session["_id"]))
         await redis.get_client().expire(
-            f"user_sessions:{session['user_id']}",
-            settings.REFRESH_TOKEN_EXPIRE_DAYS * 86400,
+            f"user_sessions:{session['user_id']}", settings.REFRESH_TOKEN_EXPIRE_DAYS * 86400
         )
         access_token = SessionService.access_token_for_user(user_doc, str(session["_id"]))
         await IdentityRepository.insert_audit_log(
@@ -276,8 +294,4 @@ class SessionService:
                 "timestamp": datetime.now(timezone.utc),
             }
         )
-        return {
-            "access_token": access_token,
-            "token_type": "bearer",
-            "_refresh_token": replacement,
-        }
+        return {"access_token": access_token, "token_type": "bearer", "_refresh_token": replacement}

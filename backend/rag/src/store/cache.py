@@ -2,6 +2,7 @@ import math
 from typing import Dict, List, Optional
 from loguru import logger
 
+
 class SemanticCache:
     def __init__(self, similarity_threshold: float = 0.90, ttl_seconds: int = 86400):
         self.similarity_threshold = similarity_threshold
@@ -18,7 +19,9 @@ class SemanticCache:
             return 0.0
         return dot_product / (norm1 * norm2)
 
-    async def get(self, query_text: str, query_vector: Optional[List[float]] = None) -> Optional[str]:
+    async def get(
+        self, query_text: str, query_vector: Optional[List[float]] = None
+    ) -> Optional[str]:
         if not query_text:
             return None
 
@@ -44,16 +47,15 @@ class SemanticCache:
 
         return None
 
-    async def set(self, query_text: str, response_text: str, query_vector: Optional[List[float]] = None):
+    async def set(
+        self, query_text: str, response_text: str, query_vector: Optional[List[float]] = None
+    ):
         if not query_text or not response_text:
             return
 
-        cache_entry = {
-            "query": query_text,
-            "response": response_text,
-            "vector": query_vector
-        }
+        cache_entry = {"query": query_text, "response": response_text, "vector": query_vector}
         self._memory_cache[query_text] = cache_entry
         logger.info("Saved query and response to semantic cache")
+
 
 semantic_cache = SemanticCache()

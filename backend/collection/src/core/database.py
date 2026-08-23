@@ -9,12 +9,7 @@ from src.clients.content import exchange_collected_document
 class Database:
     async def insert_document(self, document_data: dict):
         now = datetime.now(timezone.utc)
-        document = {
-            "_id": str(uuid.uuid4()),
-            "created_at": now,
-            "updated_at": now,
-            **document_data,
-        }
+        document = {"_id": str(uuid.uuid4()), "created_at": now, "updated_at": now, **document_data}
         identity = document.get("source_url") or document.get("file_url")
         if not identity:
             raise ValueError("Collected document requires a source identity")
@@ -24,9 +19,7 @@ class Database:
 
     async def update_document(self, document_id: str, update_data: dict):
         result = await exchange_collected_document(
-            "update_collected",
-            document_id=document_id,
-            values=update_data,
+            "update_collected", document_id=document_id, values=update_data
         )
         return bool(result["updated"])
 

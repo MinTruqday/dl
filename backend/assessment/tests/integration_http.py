@@ -25,7 +25,10 @@ def request(client, method, path, headers, expected, **kwargs):
 
 
 def doc(text):
-    return {"type": "doc", "content": [{"type": "paragraph", "content": [{"type": "text", "text": text}]}]}
+    return {
+        "type": "doc",
+        "content": [{"type": "paragraph", "content": [{"type": "text", "text": text}]}],
+    }
 
 
 with httpx.Client(base_url=base_url, timeout=30) as client:
@@ -55,7 +58,9 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         },
     )
     assert settings["theme"] == "dark"
-    loaded_settings = request(client, "GET", "/education/profiles/me/settings", teacher_headers, 200)
+    loaded_settings = request(
+        client, "GET", "/education/profiles/me/settings", teacher_headers, 200
+    )
     assert loaded_settings["accessibility_preferences"]["reduced_motion"] is True
 
     draft = request(
@@ -89,7 +94,9 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
             "answer_key": {"option_id": "B"},
             "solution_doc": doc("Hai cộng hai bằng bốn"),
             "scoring_rule": {"points": 1},
-            "curriculum_links": [{"subject": "math", "target_program": "grade_12", "concept_id": "arithmetic"}],
+            "curriculum_links": [
+                {"subject": "math", "target_program": "grade_12", "concept_id": "arithmetic"}
+            ],
             "concept_ids": ["arithmetic"],
             "skill_ids": ["addition"],
             "cognitive_level": "recognition",
@@ -143,13 +150,19 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     assert prediction["calibrated_difficulty"] is None
     assert prediction["calibration_sample_size"] == 0
 
-    validation = request(client, "POST", f"/question-drafts/{question['_id']}/validate", teacher_headers, 200)
+    validation = request(
+        client, "POST", f"/question-drafts/{question['_id']}/validate", teacher_headers, 200
+    )
     assert validation["status"] == "NEEDS_REVIEW"
     assert all(check.get("status") for check in validation["checks"])
     assert all(isinstance(check.get("confidence"), (int, float)) for check in validation["checks"])
-    frozen = request(client, "POST", f"/question-drafts/{question['_id']}/freeze", teacher_headers, 201)
+    frozen = request(
+        client, "POST", f"/question-drafts/{question['_id']}/freeze", teacher_headers, 201
+    )
     assert frozen["version"] == 1
-    frozen_again = request(client, "POST", f"/question-drafts/{question['_id']}/freeze", teacher_headers, 201)
+    frozen_again = request(
+        client, "POST", f"/question-drafts/{question['_id']}/freeze", teacher_headers, 201
+    )
     assert frozen_again["_id"] == frozen["_id"]
 
     suggestion = request(
@@ -158,7 +171,10 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         "/blueprints/suggest-distribution",
         teacher_headers,
         200,
-        json={"total_questions": 1, "current_distribution": {"1": 0, "2": 0, "3": 0, "4": 0, "5": 0}},
+        json={
+            "total_questions": 1,
+            "current_distribution": {"1": 0, "2": 0, "3": 0, "4": 0, "5": 0},
+        },
     )
     assert sum(suggestion["suggested_distribution"].values()) == 1
     assert suggestion["requires_teacher_acceptance"] is True
@@ -182,11 +198,7 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     templates = request(client, "GET", "/blueprints?templates_only=true", teacher_headers, 200)
     assert [item["_id"] for item in templates] == [blueprint["_id"]]
     cloned_blueprint = request(
-        client,
-        "POST",
-        f"/blueprints/{blueprint['_id']}/clone",
-        teacher_headers,
-        201,
+        client, "POST", f"/blueprints/{blueprint['_id']}/clone", teacher_headers, 201
     )
     assert cloned_blueprint["cloned_from_blueprint_id"] == blueprint["_id"]
     assert cloned_blueprint["is_template"] is False
@@ -221,13 +233,21 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         201,
         json={"target_difficulty": 3.0},
     )
-    blueprint_mismatch = request(client, "POST", f"/assessment-drafts/{draft['_id']}/validate", teacher_headers, 200)
+    blueprint_mismatch = request(
+        client, "POST", f"/assessment-drafts/{draft['_id']}/validate", teacher_headers, 200
+    )
     assert blueprint_mismatch["valid"] is False
-    assert "blueprint_difficulty_mismatch" in {issue["code"] for issue in blueprint_mismatch["issues"]}
+    assert "blueprint_difficulty_mismatch" in {
+        issue["code"] for issue in blueprint_mismatch["issues"]
+    }
     blocked_publish = client.post(
         f"/assessments/{assessment['_id']}/publish",
         headers=teacher_headers,
-        json={"assessment_draft_id": draft["_id"], "expected_revision": patched["revision"], "idempotency_key": f"publish-blocked-{run_id}"},
+        json={
+            "assessment_draft_id": draft["_id"],
+            "expected_revision": patched["revision"],
+            "idempotency_key": f"publish-blocked-{run_id}",
+        },
     )
     assert blocked_publish.status_code == 422
     time.sleep(0.01)
@@ -245,7 +265,11 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         f"/assessments/{assessment['_id']}/publish",
         teacher_headers,
         201,
-        json={"assessment_draft_id": draft["_id"], "expected_revision": patched["revision"], "idempotency_key": f"publish-{run_id}"},
+        json={
+            "assessment_draft_id": draft["_id"],
+            "expected_revision": patched["revision"],
+            "idempotency_key": f"publish-{run_id}",
+        },
     )
     published_again = request(
         client,
@@ -253,7 +277,11 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         f"/assessments/{assessment['_id']}/publish",
         teacher_headers,
         201,
-        json={"assessment_draft_id": draft["_id"], "expected_revision": patched["revision"], "idempotency_key": f"publish-{run_id}"},
+        json={
+            "assessment_draft_id": draft["_id"],
+            "expected_revision": patched["revision"],
+            "idempotency_key": f"publish-{run_id}",
+        },
     )
     assert published_again["_id"] == published["_id"]
 
@@ -380,7 +408,9 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         assert stale_response.status_code == 409
         assert stale_response.json()["detail"]["code"] == "stale_response_revision"
         submitted = request(client, "POST", f"/attempts/{attempt['_id']}/submit", headers, 200)
-        submitted_again = request(client, "POST", f"/attempts/{attempt['_id']}/submit", headers, 200)
+        submitted_again = request(
+            client, "POST", f"/attempts/{attempt['_id']}/submit", headers, 200
+        )
         assert submitted_again["_id"] == submitted["_id"]
         result = request(client, "GET", f"/attempts/{attempt['_id']}/result", headers, 200)
         assert result["review_answers"] is True
@@ -403,7 +433,11 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         201,
         json={
             "question_version_ids": [frozen["_id"]],
-            "population_context": {"education_level": "THPT", "subject": "math", "target_program": "grade_12"},
+            "population_context": {
+                "education_level": "THPT",
+                "subject": "math",
+                "target_program": "grade_12",
+            },
             "method": "CTT",
             "evidence_policy_version": "integration-v1",
         },
@@ -431,21 +465,29 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         202,
         json={
             "question_version_ids": [frozen["_id"]],
-            "population_context": {"education_level": "THPT", "subject": "math", "target_program": "grade_12"},
+            "population_context": {
+                "education_level": "THPT",
+                "subject": "math",
+                "target_program": "grade_12",
+            },
             "method": "Rasch",
             "evidence_policy_version": "integration-worker-v1",
             "idempotency_key": f"worker-calibration-{run_id}",
         },
     )
     for _ in range(100):
-        job_state = request(client, "GET", f"/calibration/jobs/{calibration_job['job_id']}", teacher_headers, 200)
+        job_state = request(
+            client, "GET", f"/calibration/jobs/{calibration_job['job_id']}", teacher_headers, 200
+        )
         if job_state["status"] in {"completed", "failed"}:
             break
         time.sleep(0.1)
     assert job_state["status"] == "completed"
     assert job_state["result"]["snapshots"][0]["question_version_id"] == frozen["_id"]
 
-    signals = request(client, "GET", f"/questions/{frozen['_id']}/difficulty-signals", teacher_headers, 200)
+    signals = request(
+        client, "GET", f"/questions/{frozen['_id']}/difficulty-signals", teacher_headers, 200
+    )
     assert signals["target"] == 2.0
     assert signals["teacher_estimate"] == 2.5
     assert signals["ai_prediction"] is not None
@@ -472,11 +514,18 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     revised = request(client, "POST", f"/revisions/{proposal['_id']}/approve", teacher_headers, 201)
     assert revised["version"] == 2
     assert revised["parent_version_id"] == frozen["_id"]
-    revised_again = request(client, "POST", f"/revisions/{proposal['_id']}/approve", teacher_headers, 201)
+    revised_again = request(
+        client, "POST", f"/revisions/{proposal['_id']}/approve", teacher_headers, 201
+    )
     assert revised_again["_id"] == revised["_id"]
-    revised_draft = request(client, "GET", f"/assessment-drafts/{draft['_id']}", teacher_headers, 200)
+    revised_draft = request(
+        client, "GET", f"/assessment-drafts/{draft['_id']}", teacher_headers, 200
+    )
     assert revised_draft["questions"][0]["stem_doc"] == revised["stem_doc"]
-    assert revised_draft["questions"][0]["frozen_revision"] == revised_draft["questions"][0]["revision"]
+    assert (
+        revised_draft["questions"][0]["frozen_revision"]
+        == revised_draft["questions"][0]["revision"]
+    )
 
     republished = request(
         client,
@@ -492,7 +541,9 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     )
     assert republished["version"] == 2
     assert republished["items"][0]["question_version_id"] == revised["_id"]
-    old_assignment_player = request(client, "GET", f"/assessments/{assessment['_id']}/player", student_headers(1), 200)
+    old_assignment_player = request(
+        client, "GET", f"/assessments/{assessment['_id']}/player", student_headers(1), 200
+    )
     assert old_assignment_player["assessment_version_id"] == published["_id"]
     request(
         client,
@@ -540,13 +591,19 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         201,
         json={
             "question_version_ids": [revised["_id"]],
-            "population_context": {"education_level": "THPT", "subject": "math", "target_program": "grade_12"},
+            "population_context": {
+                "education_level": "THPT",
+                "subject": "math",
+                "target_program": "grade_12",
+            },
             "method": "Rasch",
             "evidence_policy_version": "integration-v2",
         },
     )
     assert recalibration["snapshots"][0]["status"] == "calibrated"
-    research_metrics = request(client, "GET", f"/questions/{frozen['question_id']}/research-metrics", teacher_headers, 200)
+    research_metrics = request(
+        client, "GET", f"/questions/{frozen['question_id']}/research-metrics", teacher_headers, 200
+    )
     assert research_metrics["error_v1"] is not None
     assert research_metrics["error_v2"] is not None
     assert research_metrics["error_reduction"] is not None
@@ -555,7 +612,9 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     assert research_evaluation["teacher"]["count"] >= 1
     assert research_evaluation["leakage"]["passed"] is True
 
-    analytics = request(client, "GET", f"/assessments/{assessment['_id']}/analytics", teacher_headers, 200)
+    analytics = request(
+        client, "GET", f"/assessments/{assessment['_id']}/analytics", teacher_headers, 200
+    )
     assert analytics["attempts"] == 4
     assert analytics["completion_rate"] == 1
     assert analytics["difficulty_comparison"][0]["empirical"] == 3.0
@@ -566,7 +625,9 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     assert max(item["average_answer_changes"] for item in analytics["item_analysis"]) == 2
     teacher_profile = request(client, "GET", "/education/teacher-profile/me", teacher_headers, 200)
     assert teacher_profile["inferred_preferences"]["signal_count"] >= 1
-    profile_events = request(client, "GET", "/education/teacher-profile/me/events", teacher_headers, 200)
+    profile_events = request(
+        client, "GET", "/education/teacher-profile/me/events", teacher_headers, 200
+    )
     assert "difficulty_targeted" in {event["event_type"] for event in profile_events}
     explicit_profile = request(
         client,
@@ -574,7 +635,10 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         "/education/teacher-profile/me",
         teacher_headers,
         200,
-        json={"explicit_preferences": {"preferred_question_types": ["single_choice"]}, "use_own_materials": False},
+        json={
+            "explicit_preferences": {"preferred_question_types": ["single_choice"]},
+            "use_own_materials": False,
+        },
     )
     assert explicit_profile["use_own_materials"] is False
     restored_draft = request(
@@ -592,9 +656,13 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         headers={**teacher_headers, "x-test-user-id": "different-teacher"},
     )
     assert forbidden_restore.status_code == 403
-    reset_profile = request(client, "DELETE", "/education/teacher-profile/me/personalization", teacher_headers, 200)
+    reset_profile = request(
+        client, "DELETE", "/education/teacher-profile/me/personalization", teacher_headers, 200
+    )
     assert reset_profile["status"] == "reset"
-    reset_events = request(client, "GET", "/education/teacher-profile/me/events", teacher_headers, 200)
+    reset_events = request(
+        client, "GET", "/education/teacher-profile/me/events", teacher_headers, 200
+    )
     assert reset_events == []
     user_export = request(client, "GET", "/education/profiles/me/export", teacher_headers, 200)
     assert user_export["export_id"].startswith("EXP-")

@@ -7,23 +7,29 @@ import InlineState from "@/shared/components/common/InlineState";
 import { useGoogleCallback } from "../hooks/useGoogleCallback";
 import PasskeySetup from "../components/PasskeySetup";
 function GoogleCallbackContent() {
-    const { emailForPasskey, error, finish, back } = useGoogleCallback();
-    if (emailForPasskey)
-        return (<AuthFrame title="Thiết lập passkey">
-        <PasskeySetup email={emailForPasskey} onClose={finish} onSuccess={finish}/>
-      </AuthFrame>);
-    if (error) {
-        return (<AuthFrame title="Xác thực Google">
-        <InlineState title="Không thể đăng nhập" detail={error} tone="danger"/>
+  const { emailForPasskey, error, finish, back } = useGoogleCallback();
+  if (emailForPasskey)
+    return (
+      <AuthFrame title="Thiết lập passkey">
+        <PasskeySetup email={emailForPasskey} onClose={finish} onSuccess={finish} />
+      </AuthFrame>
+    );
+  if (error) {
+    return (
+      <AuthFrame title="Xác thực Google">
+        <InlineState title="Không thể đăng nhập" detail={error} tone="danger" />
         <Button className="mt-5 w-full" onClick={back}>
           Quay lại đăng nhập
         </Button>
-      </AuthFrame>);
-    }
-    return <AuthLoading />;
+      </AuthFrame>
+    );
+  }
+  return <AuthLoading />;
 }
 export default function GoogleCallbackPage() {
-    return (<Suspense fallback={<AuthLoading />}>
+  return (
+    <Suspense fallback={<AuthLoading />}>
       <GoogleCallbackContent />
-    </Suspense>);
+    </Suspense>
+  );
 }

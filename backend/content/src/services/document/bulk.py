@@ -12,11 +12,18 @@ from src.core.infrastructure.mongo import mongo
 from src.clients.rag import rag_client
 from src.services.document.base import can_read_full
 
+
 class DocumentBulkService:
     @staticmethod
     async def bulk_delete_documents(document_ids: List[str], current_user) -> dict:
         user_id = str(current_user.id)
-        normalized_ids = sorted({document_id.strip() for document_id in document_ids if isinstance(document_id, str) and document_id.strip()})
+        normalized_ids = sorted(
+            {
+                document_id.strip()
+                for document_id in document_ids
+                if isinstance(document_id, str) and document_id.strip()
+            }
+        )
         if not normalized_ids or len(normalized_ids) > 100:
             raise HTTPException(status_code=422, detail="Danh sách tài liệu cần xóa không hợp lệ")
         query = {"_id": {"$in": normalized_ids}, "creator_id": user_id, "is_deleted": {"$ne": True}}
@@ -33,9 +40,17 @@ class DocumentBulkService:
     @staticmethod
     async def bulk_restore_documents(document_ids: List[str], current_user) -> dict:
         user_id = str(current_user.id)
-        normalized_ids = sorted({document_id.strip() for document_id in document_ids if isinstance(document_id, str) and document_id.strip()})
+        normalized_ids = sorted(
+            {
+                document_id.strip()
+                for document_id in document_ids
+                if isinstance(document_id, str) and document_id.strip()
+            }
+        )
         if not normalized_ids or len(normalized_ids) > 100:
-            raise HTTPException(status_code=422, detail="Danh sách tài liệu cần khôi phục không hợp lệ")
+            raise HTTPException(
+                status_code=422, detail="Danh sách tài liệu cần khôi phục không hợp lệ"
+            )
         query = {"_id": {"$in": normalized_ids}, "creator_id": user_id, "is_deleted": True}
         documents = await DocumentRepository.find(query).to_list(length=100)
         matched_ids = [str(document["_id"]) for document in documents]
@@ -44,25 +59,32 @@ class DocumentBulkService:
             {"$set": {"is_deleted": False, "deleted_at": None}},
         )
         from src.services.document.crud import DocumentCrudService
+
         for document in documents:
             if document.get("file_url"):
-                await DocumentCrudService.retry_document_indexing(str(document["_id"]), current_user)
+                await DocumentCrudService.retry_document_indexing(
+                    str(document["_id"]), current_user
+                )
         return {"restored_count": res.modified_count, "document_ids": matched_ids}
 
     @staticmethod
-    async def bulk_move_documents(document_ids: List[str], folder_id: Optional[str], current_user) -> dict:
+    async def bulk_move_documents(
+        document_ids: List[str], folder_id: Optional[str], current_user
+    ) -> dict:
         user_id = str(current_user.id)
         query = {"_id": {"$in": document_ids}, "creator_id": user_id}
         if folder_id:
             folder = await mongo.find_one(
-                "workspace_folders",
-                {"_id": folder_id, "creator_id": user_id},
+                "workspace_folders", {"_id": folder_id, "creator_id": user_id}
             )
             if not folder:
                 raise HTTPException(status_code=404, detail="Thư mục đích không tồn tại")
             update_op = {"$set": {"folder_id": folder_id, "updated_at": datetime.now(timezone.utc)}}
         else:
-            update_op = {"$unset": {"folder_id": ""}, "$set": {"updated_at": datetime.now(timezone.utc)}}
+            update_op = {
+                "$unset": {"folder_id": ""},
+                "$set": {"updated_at": datetime.now(timezone.utc)},
+            }
         res = await DocumentRepository.update_many(query, update_op)
         return {"moved_count": res.modified_count, "folder_id": folder_id}
 

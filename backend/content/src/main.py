@@ -27,9 +27,7 @@ app.add_route("/metrics", metrics_endpoint("content"))
 app.add_middleware(
     CORSMiddleware,
     allow_origins=(
-        settings.CORS_ALLOWED_ORIGINS.split(",")
-        if settings.CORS_ALLOWED_ORIGINS
-        else []
+        settings.CORS_ALLOWED_ORIGINS.split(",") if settings.CORS_ALLOWED_ORIGINS else []
     ),
     allow_credentials=False,
     allow_methods=["*"],

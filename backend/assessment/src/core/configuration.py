@@ -11,7 +11,9 @@ class Settings(BaseModel):
     MONGODB_URI: str = os.getenv("MONGODB_URI", "mongodb://mongodb:27017")
     REDIS_URI: str = os.getenv("REDIS_URI", "redis://redis:6379/0")
     ASSESSMENT_DB_NAME: str = os.getenv("ASSESSMENT_DB_NAME", "assessment")
-    ASSESSMENT_ALLOW_TEST_IDENTITY: bool = os.getenv("ASSESSMENT_ALLOW_TEST_IDENTITY", "false").lower() == "true"
+    ASSESSMENT_ALLOW_TEST_IDENTITY: bool = (
+        os.getenv("ASSESSMENT_ALLOW_TEST_IDENTITY", "false").lower() == "true"
+    )
     CALIBRATION_MIN_SAMPLE_SIZE: int = int(os.getenv("CALIBRATION_MIN_SAMPLE_SIZE", "20"))
     ASSESSMENT_PII_RETENTION_DAYS: int = int(os.getenv("ASSESSMENT_PII_RETENTION_DAYS", "730"))
     WORKER_URL: str = os.getenv("WORKER_URL", "http://worker:8000")

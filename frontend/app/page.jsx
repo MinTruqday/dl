@@ -1,4 +1,4 @@
 import { redirect } from "next/navigation";
 export default function HomePage() {
-    redirect("/cai-dat/vai-tro");
+  redirect("/cai-dat/vai-tro");
 }

@@ -14,12 +14,29 @@ from src.core.auth import CurrentUser, get_current_user, require_author, require
 from src.core.configuration import settings
 from src.core.database import database
 from src.core.metrics import metrics as service_metrics
-from src.domain.models import AssessmentArchiveInput, AssessmentCloneInput, AssessmentCreate, AssessmentUnpublishInput, AssignmentInput, AttemptCreate, CalibrationJobInput, CalibrationRunInput, PublishInput, ResponseInput
+from src.domain.models import (
+    AssessmentArchiveInput,
+    AssessmentCloneInput,
+    AssessmentCreate,
+    AssessmentUnpublishInput,
+    AssignmentInput,
+    AttemptCreate,
+    CalibrationJobInput,
+    CalibrationRunInput,
+    PublishInput,
+    ResponseInput,
+)
 from src.psychometrics.ctt import ctt_snapshot, group_by_question
 from src.psychometrics.evidence_filter import classify_evidence, eligible_responses
 from src.psychometrics.rasch import estimate_item_parameter
 from src.services.blueprint import validate_blueprint
-from src.services.delivery_policy import assignment_access, attempt_deadline, attempt_expired, ensure_aware, normalize_delivery_policy
+from src.services.delivery_policy import (
+    assignment_access,
+    attempt_deadline,
+    attempt_expired,
+    ensure_aware,
+    normalize_delivery_policy,
+)
 from src.services.privacy import participant_id
 from src.services.scoring import score_response
 from src.services.telemetry import derive_assigned_telemetry
@@ -57,12 +74,18 @@ def ordered_assessment_items(version: dict, assignment: dict | None):
 async def activate_scheduled_assessment(assessment: dict):
     if assessment.get("status") != "scheduled":
         return assessment
-    version = await database.value.assessment_versions.find_one({"_id": assessment.get("current_version_id")})
+    version = await database.value.assessment_versions.find_one(
+        {"_id": assessment.get("current_version_id")}
+    )
     scheduled_for = ensure_aware(version.get("scheduled_for")) if version else None
     if not scheduled_for or scheduled_for > now():
         return assessment
     activated = await database.value.assessments.find_one_and_update(
-        {"_id": assessment["_id"], "status": "scheduled", "current_version_id": assessment.get("current_version_id")},
+        {
+            "_id": assessment["_id"],
+            "status": "scheduled",
+            "current_version_id": assessment.get("current_version_id"),
+        },
         {"$set": {"status": "published", "updated_at": now()}},
         return_document=ReturnDocument.AFTER,
     )
@@ -71,7 +94,9 @@ async def activate_scheduled_assessment(assessment: dict):
             {"_id": assessment.get("current_version_id"), "published_at": None},
             {"$set": {"published_at": now()}},
         )
-        await audit(assessment["owner_id"], "assessment_schedule_activated", "Assessment", assessment["_id"])
+        await audit(
+            assessment["owner_id"], "assessment_schedule_activated", "Assessment", assessment["_id"]
+        )
     return activated or assessment
 
 
@@ -97,7 +122,12 @@ async def finalize_attempt_record(attempt: dict, user_id: str, timed_out: bool =
         return await database.value.attempts.find_one({"_id": attempt["_id"]}) or attempt
     await database.value.assignments.update_one(
         {"_id": attempt.get("assignment_id"), "student_id": user_id},
-        {"$set": {"status": "scored" if not pending else "pending_manual_scoring", "updated_at": now()}},
+        {
+            "$set": {
+                "status": "scored" if not pending else "pending_manual_scoring",
+                "updated_at": now(),
+            }
+        },
     )
     await audit(
         user_id,
@@ -122,7 +152,13 @@ async def create_assessment(payload: AssessmentCreate, user: CurrentUser = Depen
     if existing:
         return await database.value.assessments.find_one_and_update(
             {"_id": existing["_id"], "owner_id": user.id},
-            {"$set": {"delivery_policy": delivery_policy, "title": draft["title"], "updated_at": now()}},
+            {
+                "$set": {
+                    "delivery_policy": delivery_policy,
+                    "title": draft["title"],
+                    "updated_at": now(),
+                }
+            },
             return_document=ReturnDocument.AFTER,
         )
     assessment = {
@@ -145,14 +181,22 @@ async def create_assessment(payload: AssessmentCreate, user: CurrentUser = Depen
 
 @router.get("/assessments")
 async def list_assessments(user: CurrentUser = Depends(require_author)):
-    assessments = await database.value.assessments.find({"owner_id": user.id}).sort("updated_at", -1).to_list(500)
+    assessments = (
+        await database.value.assessments.find({"owner_id": user.id})
+        .sort("updated_at", -1)
+        .to_list(500)
+    )
     return [await activate_scheduled_assessment(assessment) for assessment in assessments]
 
 
 @router.get("/assessments/{assessment_id}/versions")
 async def list_assessment_versions(assessment_id: str, user: CurrentUser = Depends(require_author)):
     await require_owned("assessments", assessment_id, user)
-    return await database.value.assessment_versions.find({"assessment_id": assessment_id}).sort("version", -1).to_list(100)
+    return (
+        await database.value.assessment_versions.find({"assessment_id": assessment_id})
+        .sort("version", -1)
+        .to_list(100)
+    )
 
 
 @router.get("/assessment-versions/{version_id}")
@@ -161,7 +205,9 @@ async def get_assessment_version(version_id: str, user: CurrentUser = Depends(re
     if not version:
         raise HTTPException(status_code=404, detail="Không tìm thấy phiên bản bài đánh giá")
     if version.get("owner_id") != user.id and not user.is_admin:
-        raise HTTPException(status_code=403, detail="Không có quyền truy cập phiên bản bài đánh giá")
+        raise HTTPException(
+            status_code=403, detail="Không có quyền truy cập phiên bản bài đánh giá"
+        )
     return version
 
 
@@ -171,9 +217,7 @@ async def get_assessment_version(version_id: str, user: CurrentUser = Depends(re
     include_in_schema=False,
 )
 async def get_internal_export_snapshot(
-    version_id: str,
-    x_actor_id: str = Header(),
-    x_actor_role: str = Header(default="reader"),
+    version_id: str, x_actor_id: str = Header(), x_actor_role: str = Header(default="reader")
 ):
     version = await database.value.assessment_versions.find_one({"_id": version_id})
     if not version:
@@ -181,9 +225,9 @@ async def get_internal_export_snapshot(
     if version.get("owner_id") != x_actor_id and x_actor_role.casefold() != "admin":
         raise HTTPException(status_code=403, detail="Không có quyền xuất bài đánh giá")
     question_ids = [item["question_version_id"] for item in version.get("items", [])]
-    questions = await database.value.question_versions.find(
-        {"_id": {"$in": question_ids}}
-    ).to_list(1000)
+    questions = await database.value.question_versions.find({"_id": {"$in": question_ids}}).to_list(
+        1000
+    )
     if len(questions) != len(set(question_ids)):
         raise HTTPException(status_code=409, detail={"code": "assessment_snapshot_incomplete"})
     return {"version": version, "questions": questions}
@@ -191,24 +235,28 @@ async def get_internal_export_snapshot(
 
 @router.patch("/assessment-versions/{version_id}")
 async def reject_assessment_version_mutation(
-    version_id: str,
-    payload: dict,
-    user: CurrentUser = Depends(require_author),
+    version_id: str, payload: dict, user: CurrentUser = Depends(require_author)
 ):
     await require_owned("assessment_versions", version_id, user)
-    await audit(user.id, "published_assessment_mutation_denied", "AssessmentVersion", version_id, {"fields": sorted(payload)})
+    await audit(
+        user.id,
+        "published_assessment_mutation_denied",
+        "AssessmentVersion",
+        version_id,
+        {"fields": sorted(payload)},
+    )
     raise HTTPException(status_code=409, detail={"code": "immutable_assessment_version"})
 
 
 @router.post("/assessments/{assessment_id}/clone", status_code=201)
 async def clone_assessment(
-    assessment_id: str,
-    payload: AssessmentCloneInput,
-    user: CurrentUser = Depends(require_author),
+    assessment_id: str, payload: AssessmentCloneInput, user: CurrentUser = Depends(require_author)
 ):
     assessment = await require_owned("assessments", assessment_id, user)
     source_draft = await require_owned("assessment_drafts", assessment["assessment_draft_id"], user)
-    source_questions = await database.value.question_drafts.find({"assessment_draft_id": source_draft["_id"], "owner_id": user.id}).to_list(500)
+    source_questions = await database.value.question_drafts.find(
+        {"assessment_draft_id": source_draft["_id"], "owner_id": user.id}
+    ).to_list(500)
     cloned_draft_id = new_id("ASD")
     question_id_map = {question["_id"]: new_id("QDR") for question in source_questions}
     cloned_draft = deepcopy(source_draft)
@@ -218,7 +266,11 @@ async def clone_assessment(
             "title": payload.title or f"Bản sao {source_draft['title']}",
             "status": "draft",
             "revision": 1,
-            "question_order": [question_id_map[item] for item in source_draft.get("question_order", []) if item in question_id_map],
+            "question_order": [
+                question_id_map[item]
+                for item in source_draft.get("question_order", [])
+                if item in question_id_map
+            ],
             "blueprint_id": None,
             "published_version_id": None,
             "created_at": now(),
@@ -243,21 +295,31 @@ async def clone_assessment(
                 "updated_at": now(),
             }
         )
-        for key in ["validation", "reviewed_at", "reviewer_note", "import_job_id", "import_candidate_id"]:
+        for key in [
+            "validation",
+            "reviewed_at",
+            "reviewer_note",
+            "import_job_id",
+            "import_candidate_id",
+        ]:
             cloned_question.pop(key, None)
         cloned_questions.append(cloned_question)
     await database.value.assessment_drafts.insert_one(cloned_draft)
     if cloned_questions:
         await database.value.question_drafts.insert_many(cloned_questions)
-    await audit(user.id, "assessment_cloned", "AssessmentDraft", cloned_draft_id, {"source_assessment_id": assessment_id})
+    await audit(
+        user.id,
+        "assessment_cloned",
+        "AssessmentDraft",
+        cloned_draft_id,
+        {"source_assessment_id": assessment_id},
+    )
     return {**cloned_draft, "questions": cloned_questions}
 
 
 @router.post("/assessments/{assessment_id}/archive")
 async def archive_assessment(
-    assessment_id: str,
-    payload: AssessmentArchiveInput,
-    user: CurrentUser = Depends(require_author),
+    assessment_id: str, payload: AssessmentArchiveInput, user: CurrentUser = Depends(require_author)
 ):
     await require_owned("assessments", assessment_id, user)
     updated = await database.value.assessments.find_one_and_update(
@@ -265,7 +327,9 @@ async def archive_assessment(
         {"$set": {"status": "archived", "archived_at": now(), "updated_at": now()}},
         return_document=ReturnDocument.AFTER,
     )
-    await audit(user.id, "assessment_archived", "Assessment", assessment_id, {"reason": payload.reason})
+    await audit(
+        user.id, "assessment_archived", "Assessment", assessment_id, {"reason": payload.reason}
+    )
     return updated
 
 
@@ -277,31 +341,47 @@ async def unpublish_assessment(
 ):
     assessment = await require_owned("assessments", assessment_id, user)
     if assessment.get("status") not in {"published", "scheduled"}:
-        raise HTTPException(status_code=409, detail="Bài đánh giá không ở trạng thái có thể hủy xuất bản")
-    attempt_ids = await database.value.attempts.distinct("_id", {"assessment_version_id": assessment.get("current_version_id")})
-    response_count = await database.value.responses.count_documents({"attempt_id": {"$in": attempt_ids}}) if attempt_ids else 0
+        raise HTTPException(
+            status_code=409, detail="Bài đánh giá không ở trạng thái có thể hủy xuất bản"
+        )
+    attempt_ids = await database.value.attempts.distinct(
+        "_id", {"assessment_version_id": assessment.get("current_version_id")}
+    )
+    response_count = (
+        await database.value.responses.count_documents({"attempt_id": {"$in": attempt_ids}})
+        if attempt_ids
+        else 0
+    )
     if attempt_ids or response_count:
-        raise HTTPException(status_code=409, detail={"code": "assessment_has_responses_create_new_version"})
+        raise HTTPException(
+            status_code=409, detail={"code": "assessment_has_responses_create_new_version"}
+        )
     updated = await database.value.assessments.find_one_and_update(
-        {"_id": assessment_id, "owner_id": user.id, "current_version_id": assessment.get("current_version_id")},
+        {
+            "_id": assessment_id,
+            "owner_id": user.id,
+            "current_version_id": assessment.get("current_version_id"),
+        },
         {"$set": {"status": "draft", "updated_at": now()}},
         return_document=ReturnDocument.AFTER,
     )
-    await audit(user.id, "assessment_unpublished", "Assessment", assessment_id, {"reason": payload.reason})
+    await audit(
+        user.id, "assessment_unpublished", "Assessment", assessment_id, {"reason": payload.reason}
+    )
     return updated
 
 
 @router.post("/assessments/{assessment_id}/assignments", status_code=201)
 async def assign_assessment(
-    assessment_id: str,
-    payload: AssignmentInput,
-    user: CurrentUser = Depends(require_author),
+    assessment_id: str, payload: AssignmentInput, user: CurrentUser = Depends(require_author)
 ):
     assessment = await require_owned("assessments", assessment_id, user)
     assessment = await activate_scheduled_assessment(assessment)
     if assessment.get("status") not in {"published", "scheduled"}:
         raise HTTPException(status_code=409, detail="Chỉ giao bài đã xuất bản")
-    version = await database.value.assessment_versions.find_one({"_id": assessment["current_version_id"]})
+    version = await database.value.assessment_versions.find_one(
+        {"_id": assessment["current_version_id"]}
+    )
     scheduled_for = ensure_aware(version.get("scheduled_for")) if version else None
     existing = await database.value.assignment_batches.find_one(
         {"owner_id": user.id, "idempotency_key": payload.idempotency_key}
@@ -328,10 +408,7 @@ async def assign_assessment(
             "created_at": now(),
         }
         assignment = await database.value.assignments.find_one_and_update(
-            {
-                "assessment_version_id": assessment["current_version_id"],
-                "student_id": student_id,
-            },
+            {"assessment_version_id": assessment["current_version_id"], "student_id": student_id},
             {"$setOnInsert": assignment},
             upsert=True,
             return_document=ReturnDocument.AFTER,
@@ -356,27 +433,46 @@ async def assign_assessment(
             {"_id": {"$in": persisted_batch.get("assignment_ids", [])}}
         ).to_list(1000)
         return {**persisted_batch, "assignments": persisted_assignments}
-    await audit(user.id, "assessment_assigned", "AssignmentBatch", batch["_id"], {"student_count": len(assignments)})
+    await audit(
+        user.id,
+        "assessment_assigned",
+        "AssignmentBatch",
+        batch["_id"],
+        {"student_count": len(assignments)},
+    )
     return {**batch, "assignments": assignments}
 
 
 @router.get("/students/me/assessments")
 async def list_student_assessments(user: CurrentUser = Depends(get_current_user)):
-    assignments = await database.value.assignments.find({"student_id": user.id}).sort("created_at", -1).to_list(1000)
+    assignments = (
+        await database.value.assignments.find({"student_id": user.id})
+        .sort("created_at", -1)
+        .to_list(1000)
+    )
     assessment_ids = list({assignment["assessment_id"] for assignment in assignments})
-    assessments = await database.value.assessments.find({"_id": {"$in": assessment_ids}}).to_list(1000)
+    assessments = await database.value.assessments.find({"_id": {"$in": assessment_ids}}).to_list(
+        1000
+    )
     by_id = {assessment["_id"]: assessment for assessment in assessments}
-    attempts = await database.value.attempts.find({"student_id": user.id}).sort("updated_at", -1).to_list(1000)
+    attempts = (
+        await database.value.attempts.find({"student_id": user.id})
+        .sort("updated_at", -1)
+        .to_list(1000)
+    )
     latest_attempt = {}
     for attempt in attempts:
-        latest_attempt.setdefault(attempt.get("assignment_id") or attempt["assessment_version_id"], attempt)
+        latest_attempt.setdefault(
+            attempt.get("assignment_id") or attempt["assessment_version_id"], attempt
+        )
     current_time = now()
     return [
         {
             **assignment,
             "availability_status": assignment_access(assignment, current_time),
             "assessment": by_id.get(assignment["assessment_id"]),
-            "attempt": latest_attempt.get(assignment["_id"]) or latest_attempt.get(assignment["assessment_version_id"]),
+            "attempt": latest_attempt.get(assignment["_id"])
+            or latest_attempt.get(assignment["assessment_version_id"]),
         }
         for assignment in assignments
     ]
@@ -384,9 +480,7 @@ async def list_student_assessments(user: CurrentUser = Depends(get_current_user)
 
 @router.post("/assessments/{assessment_id}/publish", status_code=201)
 async def publish_assessment(
-    assessment_id: str,
-    payload: PublishInput,
-    user: CurrentUser = Depends(require_author),
+    assessment_id: str, payload: PublishInput, user: CurrentUser = Depends(require_author)
 ):
     assessment = await require_owned("assessments", assessment_id, user)
     existing = await database.value.assessment_versions.find_one(
@@ -396,18 +490,28 @@ async def publish_assessment(
         return existing
     draft = await require_owned("assessment_drafts", payload.assessment_draft_id, user)
     if draft["revision"] != payload.expected_revision:
-        raise HTTPException(status_code=409, detail={"code": "revision_conflict", "current_revision": draft["revision"]})
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "revision_conflict", "current_revision": draft["revision"]},
+        )
     from src.api.authoring import validate_assessment_draft
 
     draft_validation = await validate_assessment_draft(draft["_id"], user)
     if not draft_validation["valid"]:
-        raise HTTPException(status_code=422, detail={"code": "assessment_validation_failed", "validation": draft_validation})
+        raise HTTPException(
+            status_code=422,
+            detail={"code": "assessment_validation_failed", "validation": draft_validation},
+        )
     if draft.get("blueprint_id"):
         blueprint = await require_owned("blueprints", draft["blueprint_id"], user)
         result = validate_blueprint(blueprint)
         if not result["valid"]:
-            raise HTTPException(status_code=422, detail={"code": "blueprint_invalid", "validation": result})
-    draft_questions = await database.value.question_drafts.find({"assessment_draft_id": draft["_id"]}).to_list(500)
+            raise HTTPException(
+                status_code=422, detail={"code": "blueprint_invalid", "validation": result}
+            )
+    draft_questions = await database.value.question_drafts.find(
+        {"assessment_draft_id": draft["_id"]}
+    ).to_list(500)
     questions_by_id = {question["_id"]: question for question in draft_questions}
     if not draft.get("question_order"):
         raise HTTPException(status_code=422, detail="Bài đánh giá chưa có câu hỏi")
@@ -415,19 +519,45 @@ async def publish_assessment(
     for position, question_draft_id in enumerate(draft["question_order"], start=1):
         question = questions_by_id.get(question_draft_id)
         if not question:
-            raise HTTPException(status_code=422, detail={"code": "question_order_invalid", "question_draft_id": question_draft_id})
+            raise HTTPException(
+                status_code=422,
+                detail={"code": "question_order_invalid", "question_draft_id": question_draft_id},
+            )
         if validate_question(question)["blockers"]:
-            raise HTTPException(status_code=422, detail={"code": "question_has_blockers", "question_draft_id": question_draft_id})
+            raise HTTPException(
+                status_code=422,
+                detail={"code": "question_has_blockers", "question_draft_id": question_draft_id},
+            )
         if question.get("frozen_revision") != question.get("revision"):
-            raise HTTPException(status_code=422, detail={"code": "question_current_revision_not_frozen", "question_draft_id": question_draft_id})
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "question_current_revision_not_frozen",
+                    "question_draft_id": question_draft_id,
+                },
+            )
         version_id = question.get("frozen_version_id")
         if not version_id:
-            raise HTTPException(status_code=422, detail={"code": "question_not_frozen", "question_draft_id": question_draft_id})
-        version = await database.value.question_versions.find_one({"_id": version_id, "owner_id": user.id})
+            raise HTTPException(
+                status_code=422,
+                detail={"code": "question_not_frozen", "question_draft_id": question_draft_id},
+            )
+        version = await database.value.question_versions.find_one(
+            {"_id": version_id, "owner_id": user.id}
+        )
         if not version:
-            raise HTTPException(status_code=422, detail={"code": "question_version_missing", "question_version_id": version_id})
+            raise HTTPException(
+                status_code=422,
+                detail={"code": "question_version_missing", "question_version_id": version_id},
+            )
         if version.get("source_draft_revision") != question.get("revision"):
-            raise HTTPException(status_code=422, detail={"code": "question_frozen_revision_mismatch", "question_draft_id": question_draft_id})
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "question_frozen_revision_mismatch",
+                    "question_draft_id": question_draft_id,
+                },
+            )
         frozen_versions.append(
             {
                 "question_version_id": version_id,
@@ -435,9 +565,13 @@ async def publish_assessment(
                 "points": float(version.get("scoring_rule", {}).get("points", 1)),
             }
         )
-    latest = await database.value.assessment_versions.find_one({"assessment_id": assessment_id}, sort=[("version", -1)])
+    latest = await database.value.assessment_versions.find_one(
+        {"assessment_id": assessment_id}, sort=[("version", -1)]
+    )
     version_number = 1 if not latest else latest["version"] + 1
-    scheduled_for = payload.scheduled_for if payload.scheduled_for and payload.scheduled_for > now() else None
+    scheduled_for = (
+        payload.scheduled_for if payload.scheduled_for and payload.scheduled_for > now() else None
+    )
     version = {
         "_id": f"{assessment_id}-v{version_number}",
         "assessment_id": assessment_id,
@@ -484,9 +618,18 @@ async def publish_assessment(
         raise HTTPException(status_code=409, detail={"code": "assessment_publish_conflict"})
     await database.value.assessments.update_one(
         {"_id": assessment_id, "owner_id": user.id},
-        {"$set": {"current_version_id": version["_id"], "status": "scheduled" if scheduled_for else "published", "updated_at": now()}},
+        {
+            "$set": {
+                "current_version_id": version["_id"],
+                "status": "scheduled" if scheduled_for else "published",
+                "updated_at": now(),
+            }
+        },
     )
-    await database.value.assessment_drafts.update_one({"_id": draft["_id"]}, {"$set": {"status": "ready", "published_version_id": version["_id"], "updated_at": now()}})
+    await database.value.assessment_drafts.update_one(
+        {"_id": draft["_id"]},
+        {"$set": {"status": "ready", "published_version_id": version["_id"], "updated_at": now()}},
+    )
     await audit(user.id, "assessment_published", "AssessmentVersion", version["_id"])
     return version
 
@@ -508,7 +651,9 @@ async def get_assessment_player(
         assignment_query = {"assessment_id": assessment_id, "student_id": user.id}
         if assignment_id:
             assignment_query["_id"] = assignment_id
-        assignment = await database.value.assignments.find_one(assignment_query, sort=[("created_at", -1)])
+        assignment = await database.value.assignments.find_one(
+            assignment_query, sort=[("created_at", -1)]
+        )
         if not assignment:
             raise HTTPException(status_code=403, detail="Bài đánh giá chưa được giao cho người học")
         access = assignment_access(assignment, now())
@@ -520,7 +665,9 @@ async def get_assessment_player(
     version = await database.value.assessment_versions.find_one({"_id": version_id})
     items = ordered_assessment_items(version, assignment)
     version_ids = [item["question_version_id"] for item in items]
-    questions = await database.value.question_versions.find({"_id": {"$in": version_ids}}).to_list(500)
+    questions = await database.value.question_versions.find({"_id": {"$in": version_ids}}).to_list(
+        500
+    )
     by_id = {question["_id"]: question for question in questions}
     return {
         "assessment_id": assessment_id,
@@ -534,7 +681,9 @@ async def get_assessment_player(
                 **item,
                 "question": public_question(
                     by_id[item["question_version_id"]],
-                    assignment["_id"] if assignment and version.get("delivery_policy", {}).get("shuffle_options") else None,
+                    assignment["_id"]
+                    if assignment and version.get("delivery_policy", {}).get("shuffle_options")
+                    else None,
                 ),
             }
             for item in items
@@ -544,9 +693,7 @@ async def get_assessment_player(
 
 @router.post("/assessments/{assessment_id}/attempts", status_code=201)
 async def create_attempt(
-    assessment_id: str,
-    payload: AttemptCreate,
-    user: CurrentUser = Depends(get_current_user),
+    assessment_id: str, payload: AttemptCreate, user: CurrentUser = Depends(get_current_user)
 ):
     assessment = await database.value.assessments.find_one({"_id": assessment_id})
     if assessment:
@@ -556,22 +703,34 @@ async def create_attempt(
     assignment_query = {"assessment_id": assessment_id, "student_id": user.id}
     if payload.assignment_id:
         assignment_query["_id"] = payload.assignment_id
-    assignment = await database.value.assignments.find_one(assignment_query, sort=[("created_at", -1)])
+    assignment = await database.value.assignments.find_one(
+        assignment_query, sort=[("created_at", -1)]
+    )
     if not assignment:
         raise HTTPException(status_code=403, detail="Bài đánh giá chưa được giao cho người học")
     existing = await database.value.attempts.find_one(
-        {"assignment_id": assignment["_id"], "student_id": user.id, "idempotency_key": payload.idempotency_key}
+        {
+            "assignment_id": assignment["_id"],
+            "student_id": user.id,
+            "idempotency_key": payload.idempotency_key,
+        }
     )
     if existing:
         return existing
-    version = await database.value.assessment_versions.find_one({"_id": assignment["assessment_version_id"]})
+    version = await database.value.assessment_versions.find_one(
+        {"_id": assignment["assessment_version_id"]}
+    )
     access = assignment_access(assignment, now())
     if access == "upcoming":
         raise HTTPException(status_code=403, detail={"code": "assessment_not_available_yet"})
     if access == "expired":
         raise HTTPException(status_code=410, detail={"code": "assessment_assignment_expired"})
     active = await database.value.attempts.find_one(
-        {"assessment_version_id": version["_id"], "student_id": user.id, "status": {"$in": ["active", "paused"]}},
+        {
+            "assessment_version_id": version["_id"],
+            "student_id": user.id,
+            "status": {"$in": ["active", "paused"]},
+        },
         sort=[("updated_at", -1)],
     )
     if active and not attempt_expired(active, now()):
@@ -600,9 +759,16 @@ async def create_attempt(
         "policy_snapshot": deepcopy(policy),
         "integrity_flags": [],
         "technical_flags": [],
-        "item_order": [item["question_version_id"] for item in ordered_assessment_items(version, assignment)],
+        "item_order": [
+            item["question_version_id"] for item in ordered_assessment_items(version, assignment)
+        ],
         "option_order": {
-            question["_id"]: [option["id"] for option in stable_order(question.get("options", []), f"{assignment['_id']}:{question['_id']}", "id")]
+            question["_id"]: [
+                option["id"]
+                for option in stable_order(
+                    question.get("options", []), f"{assignment['_id']}:{question['_id']}", "id"
+                )
+            ]
             for question in await database.value.question_versions.find(
                 {"_id": {"$in": [item["question_version_id"] for item in version["items"]]}}
             ).to_list(500)
@@ -628,7 +794,10 @@ async def create_attempt(
         if duplicate:
             return duplicate
         raise HTTPException(status_code=409, detail={"code": "attempt_create_conflict"})
-    await database.value.assignments.update_one({"_id": assignment["_id"]}, {"$set": {"status": "in_progress", "attempt_id": attempt["_id"], "updated_at": now()}})
+    await database.value.assignments.update_one(
+        {"_id": assignment["_id"]},
+        {"$set": {"status": "in_progress", "attempt_id": attempt["_id"], "updated_at": now()}},
+    )
     await audit(user.id, "attempt_started", "Attempt", attempt["_id"])
     return attempt
 
@@ -636,15 +805,17 @@ async def create_attempt(
 @router.get("/attempts/{attempt_id}")
 async def get_attempt(attempt_id: str, user: CurrentUser = Depends(get_current_user)):
     attempt = await require_owned("attempts", attempt_id, user)
-    responses = await database.value.responses.find({"attempt_id": attempt_id}).sort("response_sequence", 1).to_list(500)
+    responses = (
+        await database.value.responses.find({"attempt_id": attempt_id})
+        .sort("response_sequence", 1)
+        .to_list(500)
+    )
     return {**attempt, "responses": responses}
 
 
 @router.post("/attempts/{attempt_id}/responses")
 async def save_response(
-    attempt_id: str,
-    payload: ResponseInput,
-    user: CurrentUser = Depends(get_current_user),
+    attempt_id: str, payload: ResponseInput, user: CurrentUser = Depends(get_current_user)
 ):
     attempt = await require_owned("attempts", attempt_id, user)
     if attempt["status"] not in {"active", "paused"}:
@@ -652,19 +823,28 @@ async def save_response(
     if attempt_expired(attempt, now()):
         await finalize_attempt_record(attempt, user.id, timed_out=True)
         raise HTTPException(status_code=409, detail={"code": "attempt_time_expired"})
-    version = await database.value.assessment_versions.find_one({"_id": attempt["assessment_version_id"]})
+    version = await database.value.assessment_versions.find_one(
+        {"_id": attempt["assessment_version_id"]}
+    )
     eligible_item_ids = {item["question_version_id"] for item in version["items"]}
     if payload.question_version_id not in eligible_item_ids:
         raise HTTPException(status_code=422, detail="Câu hỏi không thuộc phiên bản bài đánh giá")
-    existing = await database.value.responses.find_one({"attempt_id": attempt_id, "question_version_id": payload.question_version_id})
+    existing = await database.value.responses.find_one(
+        {"attempt_id": attempt_id, "question_version_id": payload.question_version_id}
+    )
     if existing and existing.get("idempotency_key") == payload.idempotency_key:
         if existing.get("answer") != payload.answer:
-            raise HTTPException(status_code=409, detail={"code": "response_idempotency_payload_conflict"})
+            raise HTTPException(
+                status_code=409, detail={"code": "response_idempotency_payload_conflict"}
+            )
         return existing
     if existing and int(existing.get("client_revision", 1)) >= payload.client_revision:
         raise HTTPException(
             status_code=409,
-            detail={"code": "stale_response_revision", "current_revision": existing.get("client_revision", 1)},
+            detail={
+                "code": "stale_response_revision",
+                "current_revision": existing.get("client_revision", 1),
+            },
         )
     question = await database.value.question_versions.find_one({"_id": payload.question_version_id})
     is_correct, score, score_status = score_response(question, payload.answer)
@@ -677,8 +857,12 @@ async def save_response(
             "attempt_id": {"$ne": attempt_id},
         },
     )
-    exposure_index = int(existing.get("exposure_index", 1)) if existing else len(prior_attempt_ids) + 1
-    item_order = attempt.get("item_order") or [item["question_version_id"] for item in version["items"]]
+    exposure_index = (
+        int(existing.get("exposure_index", 1)) if existing else len(prior_attempt_ids) + 1
+    )
+    item_order = attempt.get("item_order") or [
+        item["question_version_id"] for item in version["items"]
+    ]
     if payload.question_version_id not in item_order:
         item_order = [item["question_version_id"] for item in version["items"]]
     response_sequence = item_order.index(payload.question_version_id) + 1
@@ -747,11 +931,18 @@ async def save_response(
         current = await database.value.responses.find_one(
             {"attempt_id": attempt_id, "question_version_id": payload.question_version_id}
         )
-        if current and current.get("idempotency_key") == payload.idempotency_key and current.get("answer") == payload.answer:
+        if (
+            current
+            and current.get("idempotency_key") == payload.idempotency_key
+            and current.get("answer") == payload.answer
+        ):
             return current
         raise HTTPException(
             status_code=409,
-            detail={"code": "stale_response_revision", "current_revision": current.get("client_revision", 1) if current else None},
+            detail={
+                "code": "stale_response_revision",
+                "current_revision": current.get("client_revision", 1) if current else None,
+            },
         )
     action = "response_autosaved" if existing else "response_recorded"
     await database.value.attempts.update_one({"_id": attempt_id}, {"$set": {"updated_at": now()}})
@@ -766,7 +957,9 @@ async def submit_attempt(attempt_id: str, user: CurrentUser = Depends(get_curren
         return attempt
     if attempt["status"] not in {"active", "paused"}:
         raise HTTPException(status_code=409, detail="Trạng thái phiên làm bài không hợp lệ")
-    return await finalize_attempt_record(attempt, user.id, timed_out=attempt_expired(attempt, now()))
+    return await finalize_attempt_record(
+        attempt, user.id, timed_out=attempt_expired(attempt, now())
+    )
 
 
 @router.get("/attempts/{attempt_id}/result")
@@ -774,17 +967,29 @@ async def get_attempt_result(attempt_id: str, user: CurrentUser = Depends(get_cu
     attempt = await require_owned("attempts", attempt_id, user)
     if attempt["status"] not in {"submitted", "completed", "timed_out"}:
         raise HTTPException(status_code=409, detail="Phiên làm bài chưa hoàn tất")
-    responses = await database.value.responses.find({"attempt_id": attempt_id}).sort("response_sequence", 1).to_list(500)
-    version = await database.value.assessment_versions.find_one({"_id": attempt["assessment_version_id"]})
+    responses = (
+        await database.value.responses.find({"attempt_id": attempt_id})
+        .sort("response_sequence", 1)
+        .to_list(500)
+    )
+    version = await database.value.assessment_versions.find_one(
+        {"_id": attempt["assessment_version_id"]}
+    )
     review_answers = bool(version.get("delivery_policy", {}).get("review_answers", False))
     question_ids = [response["question_version_id"] for response in responses]
-    questions = await database.value.question_versions.find({"_id": {"$in": question_ids}}).to_list(500) if review_answers else []
+    questions = (
+        await database.value.question_versions.find({"_id": {"$in": question_ids}}).to_list(500)
+        if review_answers
+        else []
+    )
     questions_by_id = {question["_id"]: question for question in questions}
     return {
         "attempt_id": attempt_id,
         "status": attempt["status"],
         "total_score": attempt.get("total_score", 0),
-        "total_possible_score": sum(float(item.get("points", 1)) for item in version.get("items", [])),
+        "total_possible_score": sum(
+            float(item.get("points", 1)) for item in version.get("items", [])
+        ),
         "pending_scores": attempt.get("pending_scores", 0),
         "review_answers": review_answers,
         "responses": [
@@ -795,8 +1000,16 @@ async def get_attempt_result(attempt_id: str, user: CurrentUser = Depends(get_cu
                 "score_status": response.get("score_status"),
                 "evidence_eligibility": response.get("evidence_eligibility"),
                 "submitted_answer": response.get("answer") if review_answers else None,
-                "answer_key": questions_by_id.get(response["question_version_id"], {}).get("answer_key") if review_answers else None,
-                "solution_doc": questions_by_id.get(response["question_version_id"], {}).get("solution_doc") if review_answers else None,
+                "answer_key": questions_by_id.get(response["question_version_id"], {}).get(
+                    "answer_key"
+                )
+                if review_answers
+                else None,
+                "solution_doc": questions_by_id.get(response["question_version_id"], {}).get(
+                    "solution_doc"
+                )
+                if review_answers
+                else None,
             }
             for response in responses
         ],
@@ -804,20 +1017,26 @@ async def get_attempt_result(attempt_id: str, user: CurrentUser = Depends(get_cu
 
 
 @router.post("/calibration/run", status_code=201)
-async def run_calibration(payload: CalibrationRunInput, user: CurrentUser = Depends(require_author)):
+async def run_calibration(
+    payload: CalibrationRunInput, user: CurrentUser = Depends(require_author)
+):
     if payload.idempotency_key:
         existing = await database.value.calibration_runs.find_one(
             {"owner_id": user.id, "idempotency_key": payload.idempotency_key}
         )
         if existing:
-            snapshots = await database.value.calibrations.find({"run_id": existing["_id"]}).to_list(1000)
+            snapshots = await database.value.calibrations.find({"run_id": existing["_id"]}).to_list(
+                1000
+            )
             return {**existing, "snapshots": snapshots}
     version_query = {"owner_id": user.id}
     if payload.question_version_ids:
         version_query["_id"] = {"$in": payload.question_version_ids}
     versions = await database.value.question_versions.find(version_query).to_list(1000)
     version_ids = [version["_id"] for version in versions]
-    responses = await database.value.responses.find({"question_version_id": {"$in": version_ids}}).to_list(100000)
+    responses = await database.value.responses.find(
+        {"question_version_id": {"$in": version_ids}}
+    ).to_list(100000)
     clean = eligible_responses(responses)
     all_grouped = group_by_question(responses)
     totals = defaultdict(float)
@@ -857,7 +1076,9 @@ async def run_calibration(payload: CalibrationRunInput, user: CurrentUser = Depe
         duplicate = await database.value.calibration_runs.find_one(
             {"owner_id": user.id, "idempotency_key": payload.idempotency_key}
         )
-        snapshots = await database.value.calibrations.find({"run_id": duplicate["_id"]}).to_list(1000)
+        snapshots = await database.value.calibrations.find({"run_id": duplicate["_id"]}).to_list(
+            1000
+        )
         return {**duplicate, "snapshots": snapshots}
     snapshots = []
     for version_id in version_ids:
@@ -872,7 +1093,8 @@ async def run_calibration(payload: CalibrationRunInput, user: CurrentUser = Depe
                 "status": "insufficient_evidence",
                 "sample_size": len(item_responses),
                 "total_response_count": len(all_grouped.get(version_id, [])),
-                "excluded_response_count": len(all_grouped.get(version_id, [])) - len(item_responses),
+                "excluded_response_count": len(all_grouped.get(version_id, []))
+                - len(item_responses),
                 "minimum_sample_size": settings.CALIBRATION_MIN_SAMPLE_SIZE,
                 "population_context": payload.population_context,
                 "evidence_policy_version": payload.evidence_policy_version,
@@ -880,14 +1102,19 @@ async def run_calibration(payload: CalibrationRunInput, user: CurrentUser = Depe
             }
             await database.value.calibrations.insert_one(snapshot)
             snapshots.append(snapshot)
-            await audit(user.id, "item_calibration_insufficient", "ItemCalibration", snapshot["_id"], {"question_version_id": version_id})
+            await audit(
+                user.id,
+                "item_calibration_insufficient",
+                "ItemCalibration",
+                snapshot["_id"],
+                {"question_version_id": version_id},
+            )
             continue
         if payload.method == "Rasch":
             partial_responses = [
                 response
                 for response in item_responses
-                if float(response.get("score", 0))
-                not in {0.0, float(response.get("max_score", 1))}
+                if float(response.get("score", 0)) not in {0.0, float(response.get("max_score", 1))}
             ]
             if partial_responses:
                 snapshot = {
@@ -899,16 +1126,25 @@ async def run_calibration(payload: CalibrationRunInput, user: CurrentUser = Depe
                     "status": "unsupported_response_scale",
                     "sample_size": len(item_responses),
                     "total_response_count": len(all_grouped.get(version_id, [])),
-                    "excluded_response_count": len(all_grouped.get(version_id, [])) - len(item_responses),
+                    "excluded_response_count": len(all_grouped.get(version_id, []))
+                    - len(item_responses),
                     "population_context": payload.population_context,
                     "evidence_policy_version": payload.evidence_policy_version,
                     "created_at": now(),
                 }
                 await database.value.calibrations.insert_one(snapshot)
                 snapshots.append(snapshot)
-                await audit(user.id, "item_calibration_unsupported", "ItemCalibration", snapshot["_id"], {"question_version_id": version_id})
+                await audit(
+                    user.id,
+                    "item_calibration_unsupported",
+                    "ItemCalibration",
+                    snapshot["_id"],
+                    {"question_version_id": version_id},
+                )
                 continue
-            ordered_responses = sorted(item_responses, key=lambda response: str(response["attempt_id"]))
+            ordered_responses = sorted(
+                item_responses, key=lambda response: str(response["attempt_id"])
+            )
             metrics = estimate_item_parameter(
                 sum(1 for response in ordered_responses if response.get("is_correct")),
                 len(ordered_responses),
@@ -919,8 +1155,7 @@ async def run_calibration(payload: CalibrationRunInput, user: CurrentUser = Depe
                             - int(bool(response.get("is_correct")))
                             + 0.5
                         )
-                        /
-                        (
+                        / (
                             attempt_total[response["attempt_id"]]
                             - 1
                             - attempt_correct[response["attempt_id"]]
@@ -935,7 +1170,11 @@ async def run_calibration(payload: CalibrationRunInput, user: CurrentUser = Depe
         else:
             version = versions_by_id[version_id]
             answer_key = version.get("answer_key", {})
-            correct_option_ids = [answer_key["option_id"]] if answer_key.get("option_id") else answer_key.get("option_ids", [])
+            correct_option_ids = (
+                [answer_key["option_id"]]
+                if answer_key.get("option_id")
+                else answer_key.get("option_ids", [])
+            )
             metrics = ctt_snapshot(
                 item_responses,
                 totals,
@@ -959,7 +1198,11 @@ async def run_calibration(payload: CalibrationRunInput, user: CurrentUser = Depe
         if payload.method == "CTT" and all_grouped.get(version_id):
             version = versions_by_id[version_id]
             answer_key = version.get("answer_key", {})
-            all_correct_option_ids = [answer_key["option_id"]] if answer_key.get("option_id") else answer_key.get("option_ids", [])
+            all_correct_option_ids = (
+                [answer_key["option_id"]]
+                if answer_key.get("option_id")
+                else answer_key.get("option_ids", [])
+            )
             unfiltered = ctt_snapshot(
                 all_grouped[version_id],
                 all_totals,
@@ -969,21 +1212,40 @@ async def run_calibration(payload: CalibrationRunInput, user: CurrentUser = Depe
             snapshot["unfiltered_difficulty"] = unfiltered.get("difficulty")
             snapshot["contamination_filter_difficulty_delta"] = (
                 abs(float(unfiltered["difficulty"]) - float(snapshot["difficulty"]))
-                if unfiltered.get("difficulty") is not None and snapshot.get("difficulty") is not None
+                if unfiltered.get("difficulty") is not None
+                and snapshot.get("difficulty") is not None
                 else None
             )
         previous = await database.value.calibrations.find_one(
-            {"question_version_id": version_id, "status": "calibrated"},
-            sort=[("created_at", -1)],
+            {"question_version_id": version_id, "status": "calibrated"}, sort=[("created_at", -1)]
         )
         snapshot["drift_from_snapshot_id"] = previous.get("_id") if previous else None
-        snapshot["drift_delta"] = abs(float(previous["difficulty"]) - float(snapshot["difficulty"])) if previous and previous.get("difficulty") is not None and snapshot.get("difficulty") is not None else None
-        snapshot["drift_flag"] = bool(snapshot["drift_delta"] is not None and snapshot["drift_delta"] >= 0.75)
+        snapshot["drift_delta"] = (
+            abs(float(previous["difficulty"]) - float(snapshot["difficulty"]))
+            if previous
+            and previous.get("difficulty") is not None
+            and snapshot.get("difficulty") is not None
+            else None
+        )
+        snapshot["drift_flag"] = bool(
+            snapshot["drift_delta"] is not None and snapshot["drift_delta"] >= 0.75
+        )
         await database.value.calibrations.insert_one(snapshot)
         snapshots.append(snapshot)
-        await audit(user.id, "item_calibrated", "ItemCalibration", snapshot["_id"], {"question_version_id": version_id})
-    calibrated_snapshots = [snapshot for snapshot in snapshots if snapshot.get("status") == "calibrated"]
-    service_metrics.set("calibration_valid_n", sum(int(snapshot.get("sample_size", 0)) for snapshot in calibrated_snapshots))
+        await audit(
+            user.id,
+            "item_calibrated",
+            "ItemCalibration",
+            snapshot["_id"],
+            {"question_version_id": version_id},
+        )
+    calibrated_snapshots = [
+        snapshot for snapshot in snapshots if snapshot.get("status") == "calibrated"
+    ]
+    service_metrics.set(
+        "calibration_valid_n",
+        sum(int(snapshot.get("sample_size", 0)) for snapshot in calibrated_snapshots),
+    )
     service_metrics.set(
         "calibration_failure_rate",
         (len(snapshots) - len(calibrated_snapshots)) / len(snapshots) if snapshots else 0,
@@ -991,30 +1253,44 @@ async def run_calibration(payload: CalibrationRunInput, user: CurrentUser = Depe
     rasch_snapshots = [snapshot for snapshot in snapshots if snapshot.get("method") == "Rasch"]
     service_metrics.set(
         "irt_fit_failure_rate",
-        sum(1 for snapshot in rasch_snapshots if snapshot.get("status") != "calibrated") / len(rasch_snapshots)
+        sum(1 for snapshot in rasch_snapshots if snapshot.get("status") != "calibrated")
+        / len(rasch_snapshots)
         if rasch_snapshots
         else 0,
     )
     prediction_errors = []
     for snapshot in calibrated_snapshots:
         estimate = await database.value.difficulty_estimates.find_one(
-            {"question_version_id": snapshot["question_version_id"]},
-            sort=[("created_at", -1)],
+            {"question_version_id": snapshot["question_version_id"]}, sort=[("created_at", -1)]
         )
-        if estimate and estimate.get("predicted_difficulty") is not None and snapshot.get("difficulty") is not None:
-            prediction_errors.append(abs(float(estimate["predicted_difficulty"]) - float(snapshot["difficulty"])))
+        if (
+            estimate
+            and estimate.get("predicted_difficulty") is not None
+            and snapshot.get("difficulty") is not None
+        ):
+            prediction_errors.append(
+                abs(float(estimate["predicted_difficulty"]) - float(snapshot["difficulty"]))
+            )
     if prediction_errors:
-        service_metrics.set("difficulty_prediction_mae", sum(prediction_errors) / len(prediction_errors))
+        service_metrics.set(
+            "difficulty_prediction_mae", sum(prediction_errors) / len(prediction_errors)
+        )
     return {**run, "snapshots": snapshots}
 
 
 @router.post("/calibration/jobs", status_code=202)
-async def enqueue_calibration(payload: CalibrationJobInput, user: CurrentUser = Depends(require_author)):
+async def enqueue_calibration(
+    payload: CalibrationJobInput, user: CurrentUser = Depends(require_author)
+):
     async with httpx.AsyncClient(timeout=15) as client:
         response = await client.post(
             f"{settings.WORKER_URL}/worker/internal/assessment/calibration",
             headers={"X-Internal-Token": settings.SECRET_KEY},
-            json={"owner_id": user.id, "owner_email": user.email, "payload": payload.model_dump(mode="json")},
+            json={
+                "owner_id": user.id,
+                "owner_email": user.email,
+                "payload": payload.model_dump(mode="json"),
+            },
         )
     if response.status_code >= 400:
         raise HTTPException(status_code=503, detail="Không thể đưa hiệu chỉnh vào hàng đợi")
@@ -1038,26 +1314,38 @@ async def get_calibration_job(job_id: str, user: CurrentUser = Depends(require_a
     return job
 
 
-@router.post("/internal/calibration/run", dependencies=[Depends(require_internal_token)], include_in_schema=False)
+@router.post(
+    "/internal/calibration/run",
+    dependencies=[Depends(require_internal_token)],
+    include_in_schema=False,
+)
 async def run_internal_calibration(
-    payload: CalibrationRunInput,
-    x_owner_id: str = Header(),
-    x_owner_email: str = Header(),
+    payload: CalibrationRunInput, x_owner_id: str = Header(), x_owner_email: str = Header()
 ):
-    return await run_calibration(payload, CurrentUser(_id=x_owner_id, email=x_owner_email, role="author"))
+    return await run_calibration(
+        payload, CurrentUser(_id=x_owner_id, email=x_owner_email, role="author")
+    )
 
 
 @router.get("/questions/{version_id}/calibration")
 async def get_calibration(version_id: str, user: CurrentUser = Depends(require_author)):
     version = await require_owned("question_versions", version_id, user)
-    return await database.value.calibrations.find({"question_version_id": version["_id"]}).sort("created_at", -1).to_list(100)
+    return (
+        await database.value.calibrations.find({"question_version_id": version["_id"]})
+        .sort("created_at", -1)
+        .to_list(100)
+    )
 
 
 @router.get("/questions/{version_id}/difficulty-signals")
 async def get_difficulty_signals(version_id: str, user: CurrentUser = Depends(require_author)):
     version = await require_owned("question_versions", version_id, user)
-    target = await database.value.difficulty_targets.find_one({"question_version_id": version_id}, sort=[("created_at", -1)])
-    judgment = await database.value.teacher_judgments.find_one({"question_version_id": version_id}, sort=[("created_at", -1)])
+    target = await database.value.difficulty_targets.find_one(
+        {"question_version_id": version_id}, sort=[("created_at", -1)]
+    )
+    judgment = await database.value.teacher_judgments.find_one(
+        {"question_version_id": version_id}, sort=[("created_at", -1)]
+    )
     prediction = await database.value.difficulty_estimates.find_one(
         {
             "question_version_id": version_id,
@@ -1069,22 +1357,35 @@ async def get_difficulty_signals(version_id: str, user: CurrentUser = Depends(re
         {"question_version_id": version_id, "predictor_kind": "llm_direct"},
         sort=[("created_at", -1)],
     )
-    calibration = await database.value.calibrations.find_one({"question_version_id": version_id}, sort=[("created_at", -1)])
+    calibration = await database.value.calibrations.find_one(
+        {"question_version_id": version_id}, sort=[("created_at", -1)]
+    )
     return {
         "question_id": version.get("question_id"),
         "version": version.get("version"),
         "target": target.get("target_difficulty") if target else None,
         "teacher_estimate": judgment.get("estimated_difficulty") if judgment else None,
-        "teacher_estimate_research_eligible": judgment.get("research_eligible") if judgment else None,
+        "teacher_estimate_research_eligible": judgment.get("research_eligible")
+        if judgment
+        else None,
         "ai_prediction": prediction.get("predicted_difficulty") if prediction else None,
         "ai_confidence": prediction.get("confidence") if prediction else None,
-        "llm_direct_prediction": direct_prediction.get("predicted_difficulty") if direct_prediction else None,
+        "llm_direct_prediction": direct_prediction.get("predicted_difficulty")
+        if direct_prediction
+        else None,
         "llm_direct_confidence": direct_prediction.get("confidence") if direct_prediction else None,
         "empirical": calibration.get("difficulty") if calibration else None,
         "sample_size": calibration.get("sample_size") if calibration else 0,
         "calibration_context": calibration.get("population_context") if calibration else None,
         "calibration_standard_error": calibration.get("standard_error") if calibration else None,
-        "prediction_empirical_gap": abs(prediction["predicted_difficulty"] - calibration["difficulty"]) if prediction and calibration and prediction.get("predicted_difficulty") is not None and calibration.get("difficulty") is not None else None,
+        "prediction_empirical_gap": abs(
+            prediction["predicted_difficulty"] - calibration["difficulty"]
+        )
+        if prediction
+        and calibration
+        and prediction.get("predicted_difficulty") is not None
+        and calibration.get("difficulty") is not None
+        else None,
         "drift_flag": calibration.get("drift_flag") if calibration else None,
         "drift_delta": calibration.get("drift_delta") if calibration else None,
         "item_fit_status": calibration.get("item_fit_status") if calibration else None,
@@ -1092,20 +1393,38 @@ async def get_difficulty_signals(version_id: str, user: CurrentUser = Depends(re
 
 
 @router.get("/assessments/{assessment_id}/difficulty-comparison")
-async def get_difficulty_comparison(assessment_id: str, user: CurrentUser = Depends(require_author)):
+async def get_difficulty_comparison(
+    assessment_id: str, user: CurrentUser = Depends(require_author)
+):
     assessment = await require_owned("assessments", assessment_id, user)
-    versions = await database.value.assessment_versions.find({"assessment_id": assessment["_id"]}).sort("version", 1).to_list(100)
-    question_version_ids = [item["question_version_id"] for version in versions for item in version["items"]]
+    versions = (
+        await database.value.assessment_versions.find({"assessment_id": assessment["_id"]})
+        .sort("version", 1)
+        .to_list(100)
+    )
+    question_version_ids = [
+        item["question_version_id"] for version in versions for item in version["items"]
+    ]
     rows = []
     for version_id in question_version_ids:
-        rows.append({"question_version_id": version_id, **await get_difficulty_signals(version_id, user)})
-    return {"assessment_id": assessment_id, "assessment_versions": [version["_id"] for version in versions], "items": rows}
+        rows.append(
+            {"question_version_id": version_id, **await get_difficulty_signals(version_id, user)}
+        )
+    return {
+        "assessment_id": assessment_id,
+        "assessment_versions": [version["_id"] for version in versions],
+        "items": rows,
+    }
 
 
 @router.get("/questions/{question_id}/research-metrics")
 async def get_research_metrics(question_id: str, user: CurrentUser = Depends(require_author)):
     question = await require_owned("questions", question_id, user)
-    versions = await database.value.question_versions.find({"question_id": question["_id"]}).sort("version", 1).to_list(100)
+    versions = (
+        await database.value.question_versions.find({"question_id": question["_id"]})
+        .sort("version", 1)
+        .to_list(100)
+    )
     rows = []
     for version in versions:
         prediction = await database.value.difficulty_estimates.find_one(
@@ -1115,8 +1434,13 @@ async def get_research_metrics(question_id: str, user: CurrentUser = Depends(req
             },
             sort=[("created_at", -1)],
         )
-        teacher = await database.value.teacher_judgments.find_one({"question_version_id": version["_id"]}, sort=[("created_at", -1)])
-        empirical = await database.value.calibrations.find_one({"question_version_id": version["_id"], "status": "calibrated"}, sort=[("created_at", -1)])
+        teacher = await database.value.teacher_judgments.find_one(
+            {"question_version_id": version["_id"]}, sort=[("created_at", -1)]
+        )
+        empirical = await database.value.calibrations.find_one(
+            {"question_version_id": version["_id"], "status": "calibrated"},
+            sort=[("created_at", -1)],
+        )
         empirical_value = empirical.get("difficulty") if empirical else None
         ai_value = prediction.get("predicted_difficulty") if prediction else None
         teacher_value = teacher.get("estimated_difficulty") if teacher else None
@@ -1124,8 +1448,12 @@ async def get_research_metrics(question_id: str, user: CurrentUser = Depends(req
             {
                 "question_version_id": version["_id"],
                 "version": version["version"],
-                "ai_error": abs(ai_value - empirical_value) if ai_value is not None and empirical_value is not None else None,
-                "teacher_error": abs(teacher_value - empirical_value) if teacher_value is not None and empirical_value is not None else None,
+                "ai_error": abs(ai_value - empirical_value)
+                if ai_value is not None and empirical_value is not None
+                else None,
+                "teacher_error": abs(teacher_value - empirical_value)
+                if teacher_value is not None and empirical_value is not None
+                else None,
                 "sample_size": empirical.get("sample_size", 0) if empirical else 0,
                 "population_context": empirical.get("population_context") if empirical else None,
             }
@@ -1137,16 +1465,27 @@ async def get_research_metrics(question_id: str, user: CurrentUser = Depends(req
         "versions": rows,
         "error_v1": first.get("ai_error") if first else None,
         "error_v2": latest.get("ai_error") if latest and latest.get("version", 0) >= 2 else None,
-        "error_reduction": first["ai_error"] - latest["ai_error"] if first and latest and first.get("ai_error") is not None and latest.get("ai_error") is not None else None,
+        "error_reduction": first["ai_error"] - latest["ai_error"]
+        if first
+        and latest
+        and first.get("ai_error") is not None
+        and latest.get("ai_error") is not None
+        else None,
     }
 
 
 @router.get("/assessments/{assessment_id}/analytics")
 async def get_assessment_analytics(assessment_id: str, user: CurrentUser = Depends(require_author)):
     assessment = await require_owned("assessments", assessment_id, user)
-    version_ids = await database.value.assessment_versions.distinct("_id", {"assessment_id": assessment_id})
-    attempts = await database.value.attempts.find({"assessment_version_id": {"$in": version_ids}}).to_list(100000)
-    responses = await database.value.responses.find({"attempt_id": {"$in": [attempt["_id"] for attempt in attempts]}}).to_list(100000)
+    version_ids = await database.value.assessment_versions.distinct(
+        "_id", {"assessment_id": assessment_id}
+    )
+    attempts = await database.value.attempts.find(
+        {"assessment_version_id": {"$in": version_ids}}
+    ).to_list(100000)
+    responses = await database.value.responses.find(
+        {"attempt_id": {"$in": [attempt["_id"] for attempt in attempts]}}
+    ).to_list(100000)
     completed = [attempt for attempt in attempts if attempt["status"] == "completed"]
     score_values = [float(attempt.get("total_score", 0)) for attempt in completed]
     question_ids = list({response["question_version_id"] for response in responses})
@@ -1166,13 +1505,19 @@ async def get_assessment_analytics(assessment_id: str, user: CurrentUser = Depen
     score_distribution = defaultdict(int)
     for value in score_values:
         score_distribution[str(round(value, 3))] += 1
-    topic_totals = defaultdict(lambda: {"responses": 0, "correct": 0, "score": 0.0, "max_score": 0.0})
+    topic_totals = defaultdict(
+        lambda: {"responses": 0, "correct": 0, "score": 0.0, "max_score": 0.0}
+    )
     rows = []
     for question_id in question_ids:
         question_version = versions_by_id.get(question_id, {})
         item_responses = responses_by_question[question_id]
-        target = await database.value.difficulty_targets.find_one({"question_version_id": question_id}, sort=[("created_at", -1)])
-        teacher = await database.value.teacher_judgments.find_one({"question_version_id": question_id}, sort=[("created_at", -1)])
+        target = await database.value.difficulty_targets.find_one(
+            {"question_version_id": question_id}, sort=[("created_at", -1)]
+        )
+        teacher = await database.value.teacher_judgments.find_one(
+            {"question_version_id": question_id}, sort=[("created_at", -1)]
+        )
         prediction = await database.value.difficulty_estimates.find_one(
             {
                 "question_version_id": question_id,
@@ -1184,24 +1529,37 @@ async def get_assessment_analytics(assessment_id: str, user: CurrentUser = Depen
             {"question_version_id": question_id, "predictor_kind": "llm_direct"},
             sort=[("created_at", -1)],
         )
-        empirical = await database.value.calibrations.find_one({"question_version_id": question_id}, sort=[("created_at", -1)])
+        empirical = await database.value.calibrations.find_one(
+            {"question_version_id": question_id}, sort=[("created_at", -1)]
+        )
         answer_distribution = defaultdict(int)
         response_times = []
         answer_changes = []
         for response in item_responses:
-            answer_distribution[json.dumps(response.get("answer"), ensure_ascii=False, sort_keys=True)] += 1
+            answer_distribution[
+                json.dumps(response.get("answer"), ensure_ascii=False, sort_keys=True)
+            ] += 1
             if isinstance(response.get("response_time_ms"), (int, float)):
                 response_times.append(float(response["response_time_ms"]))
             answer_changes.append(int(response.get("answer_change_count", 0)))
             curriculum = (question_version.get("curriculum_links") or [{}])[0]
-            topic = str(curriculum.get("topic") or curriculum.get("lesson") or curriculum.get("chapter") or curriculum.get("subject") or "unmapped")
+            topic = str(
+                curriculum.get("topic")
+                or curriculum.get("lesson")
+                or curriculum.get("chapter")
+                or curriculum.get("subject")
+                or "unmapped"
+            )
             topic_totals[topic]["responses"] += 1
             topic_totals[topic]["correct"] += int(bool(response.get("is_correct")))
             topic_totals[topic]["score"] += float(response.get("score", 0))
             topic_totals[topic]["max_score"] += float(response.get("max_score", 1))
         prediction_error = (
             abs(float(prediction["predicted_difficulty"]) - float(empirical["difficulty"]))
-            if prediction and empirical and prediction.get("predicted_difficulty") is not None and empirical.get("difficulty") is not None
+            if prediction
+            and empirical
+            and prediction.get("predicted_difficulty") is not None
+            and empirical.get("difficulty") is not None
             else None
         )
         anomaly_flags = []
@@ -1209,7 +1567,11 @@ async def get_assessment_analytics(assessment_id: str, user: CurrentUser = Depen
             anomaly_flags.append("difficulty_drift")
         if empirical and empirical.get("status") == "insufficient_evidence":
             anomaly_flags.append("insufficient_evidence")
-        if empirical and isinstance(empirical.get("discrimination"), (int, float)) and empirical["discrimination"] < 0:
+        if (
+            empirical
+            and isinstance(empirical.get("discrimination"), (int, float))
+            and empirical["discrimination"] < 0
+        ):
             anomaly_flags.append("negative_discrimination")
         if prediction_error is not None and prediction_error >= 1:
             anomaly_flags.append("large_prediction_error")
@@ -1221,18 +1583,26 @@ async def get_assessment_analytics(assessment_id: str, user: CurrentUser = Depen
                 "target": target.get("target_difficulty") if target else None,
                 "teacher_estimate": teacher.get("estimated_difficulty") if teacher else None,
                 "ai_prediction": prediction.get("predicted_difficulty") if prediction else None,
-                "llm_direct_prediction": direct_prediction.get("predicted_difficulty") if direct_prediction else None,
+                "llm_direct_prediction": direct_prediction.get("predicted_difficulty")
+                if direct_prediction
+                else None,
                 "empirical": empirical.get("difficulty") if empirical else None,
                 "sample_size": empirical.get("sample_size") if empirical else 0,
                 "discrimination": empirical.get("discrimination") if empirical else None,
                 "distractor_distribution": dict(answer_distribution),
                 "omission_count": max(0, len(completed) - len(item_responses)),
-                "average_response_time_ms": round(sum(response_times) / len(response_times), 3) if response_times else None,
-                "average_answer_changes": round(sum(answer_changes) / len(answer_changes), 3) if answer_changes else 0,
+                "average_response_time_ms": round(sum(response_times) / len(response_times), 3)
+                if response_times
+                else None,
+                "average_answer_changes": round(sum(answer_changes) / len(answer_changes), 3)
+                if answer_changes
+                else 0,
                 "item_fit_status": empirical.get("item_fit_status") if empirical else None,
                 "exposure_count": len(item_responses),
                 "anomaly_flags": anomaly_flags,
-                "prediction_error": round(prediction_error, 3) if prediction_error is not None else None,
+                "prediction_error": round(prediction_error, 3)
+                if prediction_error is not None
+                else None,
             }
         )
     return {
@@ -1241,14 +1611,22 @@ async def get_assessment_analytics(assessment_id: str, user: CurrentUser = Depen
         "completed": len(completed),
         "completion_rate": len(completed) / len(attempts) if attempts else 0,
         "average_score": sum(score_values) / len(score_values) if score_values else None,
-        "score_distribution": dict(sorted(score_distribution.items(), key=lambda item: float(item[0]))),
-        "average_completion_seconds": round(sum(completion_seconds) / len(completion_seconds), 3) if completion_seconds else None,
+        "score_distribution": dict(
+            sorted(score_distribution.items(), key=lambda item: float(item[0]))
+        ),
+        "average_completion_seconds": round(sum(completion_seconds) / len(completion_seconds), 3)
+        if completion_seconds
+        else None,
         "topic_performance": [
             {
                 "topic": topic,
                 **values,
-                "accuracy": round(values["correct"] / values["responses"], 4) if values["responses"] else None,
-                "score_rate": round(values["score"] / values["max_score"], 4) if values["max_score"] else None,
+                "accuracy": round(values["correct"] / values["responses"], 4)
+                if values["responses"]
+                else None,
+                "score_rate": round(values["score"] / values["max_score"], 4)
+                if values["max_score"]
+                else None,
             }
             for topic, values in sorted(topic_totals.items())
         ],

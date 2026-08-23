@@ -114,13 +114,11 @@ async def supervisor_node(state: ActingState):
                     "replan_count": replan_count,
                 }
             failed_step = next(step for step in steps if task_status.get(step["id"]) == "failed")
-            error_message = str(state.get("task_results", {}).get(failed_step["id"], "task_execution_failed"))[:4000]
+            error_message = str(
+                state.get("task_results", {}).get(failed_step["id"], "task_execution_failed")
+            )[:4000]
             try:
-                revised_plan = await planner.replan(
-                    {"nodes": steps},
-                    failed_step,
-                    error_message,
-                )
+                revised_plan = await planner.replan({"nodes": steps}, failed_step, error_message)
                 revised_nodes = revised_plan.get("nodes", [])
                 if not revised_nodes:
                     raise RuntimeError("empty_revised_plan")
@@ -133,7 +131,9 @@ async def supervisor_node(state: ActingState):
                     {
                         **node,
                         "id": id_map[node["id"]],
-                        "dependencies": [id_map[dependency] for dependency in node.get("dependencies", [])],
+                        "dependencies": [
+                            id_map[dependency] for dependency in node.get("dependencies", [])
+                        ],
                     }
                     for node in revised_nodes
                 ]
@@ -224,6 +224,7 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
 
     req_data = state.get("req_data", {})
     session_id = req_data.get("session_id", "")
+
     async def _exec_task(task_obj):
         current_task = _task_with_dependency_context(task_obj, stored_results)
         try:
@@ -531,17 +532,17 @@ class OrchestrationWorkflow:
                                 "steps": steps,
                                 "task_status": state_update.get("task_status", {}),
                             }
-                    elif node_name in [
-                        "search_engine",
-                        "action",
-                        "knowledge",
-                        "reasoning",
-                    ]:
+                    elif node_name in ["search_engine", "action", "knowledge", "reasoning"]:
                         if not state_update.get("error"):
                             yield {
                                 "type": "tool_result",
                                 "agent": node_name,
-                                "status": "failed" if any(value == "failed" for value in state_update.get("task_status", {}).values()) else "completed",
+                                "status": "failed"
+                                if any(
+                                    value == "failed"
+                                    for value in state_update.get("task_status", {}).values()
+                                )
+                                else "completed",
                                 "task_status": state_update.get("task_status", {}),
                             }
                     elif node_name == "aggregator":

@@ -29,17 +29,9 @@ _REQUIRES_APPROVAL_TOOLS = frozenset(
     }
 )
 
-_HUMAN_ONLY_APPROVAL_TOOLS = frozenset(
-    {
-        "publish_assessment_version",
-    }
-)
+_HUMAN_ONLY_APPROVAL_TOOLS = frozenset({"publish_assessment_version"})
 
-_AUTO_SAFE_TOOLS = frozenset(
-    {
-        "update_document_metadata",
-    }
-)
+_AUTO_SAFE_TOOLS = frozenset({"update_document_metadata"})
 
 
 def _is_validation_error(exc: Exception) -> bool:
@@ -48,8 +40,7 @@ def _is_validation_error(exc: Exception) -> bool:
 
 def _can_approve_automatically(tool_name: str, auto_approve: bool, approval_policy: str) -> bool:
     return tool_name not in _HUMAN_ONLY_APPROVAL_TOOLS and (
-        auto_approve
-        or (approval_policy == "auto_safe" and tool_name in _AUTO_SAFE_TOOLS)
+        auto_approve or (approval_policy == "auto_safe" and tool_name in _AUTO_SAFE_TOOLS)
     )
 
 
@@ -73,9 +64,7 @@ class ActingAgent:
             self.tool_harness.register(
                 registered_tool.name,
                 registered_tool.ainvoke,
-                max_retries=(
-                    0 if registered_tool.name in _REQUIRES_APPROVAL_TOOLS else 2
-                ),
+                max_retries=(0 if registered_tool.name in _REQUIRES_APPROVAL_TOOLS else 2),
             )
 
         tool_descriptions = []
@@ -133,10 +122,7 @@ class ActingAgent:
 
             candidate_tools = self._candidate_tools(action)
             forced_tool = candidate_tools[0].name if len(candidate_tools) == 1 else None
-            llm_with_tools = llm.bind_tools(
-                candidate_tools,
-                tool_choice=forced_tool,
-            )
+            llm_with_tools = llm.bind_tools(candidate_tools, tool_choice=forced_tool)
             is_last = lambda attempt: attempt == _MAX_ATTEMPTS - 1
 
             for attempt in range(_MAX_ATTEMPTS):
@@ -199,28 +185,20 @@ class ActingAgent:
 
                 selected_tool = self.tool_map[tool_name]
                 approved_automatically = _can_approve_automatically(
-                    tool_name,
-                    auto_approve,
-                    approval_policy,
+                    tool_name, auto_approve, approval_policy
                 )
                 risk_level = (
-                    "high"
-                    if tool_name
-                    in {
-                        "delete_document",
-                        "restore_document",
-                    }
-                    else "medium"
+                    "high" if tool_name in {"delete_document", "restore_document"} else "medium"
                 )
                 if tool_name in _REQUIRES_APPROVAL_TOOLS:
                     from src.loop.intervention import intervention
 
                     if tool_name not in _HUMAN_ONLY_APPROVAL_TOOLS:
-                        approved_automatically = approved_automatically or intervention.has_session_grant(
-                            session_id,
-                            str(user_id),
-                            tool_name,
-                            risk_level,
+                        approved_automatically = (
+                            approved_automatically
+                            or intervention.has_session_grant(
+                                session_id, str(user_id), tool_name, risk_level
+                            )
                         )
                 if tool_name in _REQUIRES_APPROVAL_TOOLS and not approved_automatically:
                     if approval_id:
@@ -261,9 +239,7 @@ class ActingAgent:
                     config={
                         "configurable": {
                             "token": (
-                                token
-                                if str(token).startswith("Bearer ")
-                                else f"Bearer {token}"
+                                token if str(token).startswith("Bearer ") else f"Bearer {token}"
                             ),
                             "user_id": user_id,
                         }
@@ -283,33 +259,23 @@ class ActingAgent:
                             if not isinstance(parsed_semantic_data, str):
                                 break
                             try:
-                                parsed_semantic_data = json.loads(
-                                    parsed_semantic_data
-                                )
+                                parsed_semantic_data = json.loads(parsed_semantic_data)
                             except json.JSONDecodeError:
                                 if '\\"' not in parsed_semantic_data:
                                     break
                                 try:
-                                    parsed_semantic_data = json.loads(
-                                        f'"{parsed_semantic_data}"'
-                                    )
+                                    parsed_semantic_data = json.loads(f'"{parsed_semantic_data}"')
                                 except json.JSONDecodeError:
                                     break
-                        if (
-                            isinstance(parsed_semantic_data, dict)
-                            and parsed_semantic_data.get("status")
-                            not in {None, "success", "completed"}
-                        ):
+                        if isinstance(parsed_semantic_data, dict) and parsed_semantic_data.get(
+                            "status"
+                        ) not in {None, "success", "completed"}:
                             logger.warning(
                                 "Tool returned business failure tool={} status={}",
                                 tool_name,
                                 parsed_semantic_data.get("status"),
                             )
-                            return json.dumps(
-                                parsed_semantic_data,
-                                ensure_ascii=False,
-                                default=str,
-                            )
+                            return json.dumps(parsed_semantic_data, ensure_ascii=False, default=str)
                         if parsed_semantic_data is not semantic_data:
                             semantic_data = parsed_semantic_data
                     logger.info(
@@ -317,15 +283,9 @@ class ActingAgent:
                         tool_name,
                         len(str(tool_result.data)),
                     )
-                    return json.dumps(
-                        semantic_data,
-                        ensure_ascii=False,
-                        default=str,
-                    )
+                    return json.dumps(semantic_data, ensure_ascii=False, default=str)
                 logger.error(
-                    "Tool execution failed tool={} attempts={}",
-                    tool_name,
-                    tool_result.attempt,
+                    "Tool execution failed tool={} attempts={}", tool_name, tool_result.attempt
                 )
                 return json.dumps(
                     {

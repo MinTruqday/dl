@@ -36,7 +36,9 @@ async def get_current_user(
     x_test_user_role: str = Header(default="author"),
 ):
     if settings.ASSESSMENT_ALLOW_TEST_IDENTITY and x_test_user_id:
-        return CurrentUser(_id=x_test_user_id, email=f"{x_test_user_id}@test.local", role=x_test_user_role)
+        return CurrentUser(
+            _id=x_test_user_id, email=f"{x_test_user_id}@test.local", role=x_test_user_role
+        )
     if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Yêu cầu xác thực")
     try:
@@ -52,7 +54,9 @@ async def get_current_user(
             permissions=payload.get("permissions", []),
         )
     except (jwt.PyJWTError, ValueError):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Phiên đăng nhập không hợp lệ")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Phiên đăng nhập không hợp lệ"
+        )
 
 
 def require_admin(user: CurrentUser = Depends(get_current_user)):
@@ -68,5 +72,11 @@ def require_author(user: CurrentUser = Depends(get_current_user)):
 
 
 def require_internal_token(x_internal_token: str = Header(default="")):
-    if not settings.SECRET_KEY or not x_internal_token or not hmac.compare_digest(x_internal_token, settings.SECRET_KEY):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Internal token không hợp lệ")
+    if (
+        not settings.SECRET_KEY
+        or not x_internal_token
+        or not hmac.compare_digest(x_internal_token, settings.SECRET_KEY)
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Internal token không hợp lệ"
+        )

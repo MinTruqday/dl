@@ -6,6 +6,7 @@ from typing import Optional
 
 from loguru import logger
 
+
 @dataclass
 class EvaluationReport:
     query: str
@@ -19,6 +20,7 @@ class EvaluationReport:
     judge_scores: Optional[dict] = None
     overall_score: float = 0.0
 
+
 def _compute_bleu(reference: str, hypothesis: str, max_n: int = 4) -> float:
     ref_tokens = reference.lower().split()
     hyp_tokens = hypothesis.lower().split()
@@ -27,12 +29,8 @@ def _compute_bleu(reference: str, hypothesis: str, max_n: int = 4) -> float:
     brevity_penalty = min(1.0, math.exp(1 - len(ref_tokens) / max(len(hyp_tokens), 1)))
     precisions = []
     for n in range(1, max_n + 1):
-        ref_ngrams = Counter(
-            tuple(ref_tokens[i : i + n]) for i in range(len(ref_tokens) - n + 1)
-        )
-        hyp_ngrams = Counter(
-            tuple(hyp_tokens[i : i + n]) for i in range(len(hyp_tokens) - n + 1)
-        )
+        ref_ngrams = Counter(tuple(ref_tokens[i : i + n]) for i in range(len(ref_tokens) - n + 1))
+        hyp_ngrams = Counter(tuple(hyp_tokens[i : i + n]) for i in range(len(hyp_tokens) - n + 1))
         clipped = sum(min(hyp_ngrams[ng], ref_ngrams[ng]) for ng in hyp_ngrams)
         total = max(sum(hyp_ngrams.values()), 1)
         precisions.append(clipped / total)
@@ -40,6 +38,7 @@ def _compute_bleu(reference: str, hypothesis: str, max_n: int = 4) -> float:
         return 0.0
     log_avg = sum(math.log(p) for p in precisions) / len(precisions)
     return brevity_penalty * math.exp(log_avg)
+
 
 def _compute_rouge_l(reference: str, hypothesis: str) -> float:
     ref_tokens = reference.lower().split()
@@ -61,6 +60,7 @@ def _compute_rouge_l(reference: str, hypothesis: str) -> float:
         return 0.0
     return 2 * precision * recall / (precision + recall)
 
+
 async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
     from langchain_core.messages import HumanMessage
     from src.core.registry import PromptType, registry
@@ -70,16 +70,12 @@ async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
     from src.core.infrastructure.configuration import settings
 
     prompt = registry.get(PromptType.EVAL_JUDGE).format(
-        instruction=instruction,
-        expected=expected,
-        actual=actual,
+        instruction=instruction, expected=expected, actual=actual
     )
     try:
         evaluator = create_chat_model().with_structured_output(JudgeScores)
         scores = await evaluator.ainvoke(
-            [HumanMessage(content=prompt)],
-            max_tokens=256,
-            temperature=0.1,
+            [HumanMessage(content=prompt)], max_tokens=256, temperature=0.1
         )
         return scores.model_dump()
     except Exception:
@@ -91,6 +87,7 @@ async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
             "explanation": "The evaluation process failed to complete successfully due to an internal system exception",
         }
 
+
 class EvaluationHarness:
     """
     <module_purpose>
@@ -98,6 +95,7 @@ class EvaluationHarness:
     <metis_behavior>Scores deterministically based on defined rubrics. Maintains brutal objectivity.</metis_behavior>
     </module_purpose>
     """
+
     def __init__(self):
         self._reports: list[EvaluationReport] = []
         self._dataset: list[dict] = []
@@ -121,14 +119,10 @@ class EvaluationHarness:
     ) -> EvaluationReport:
         retrieval_precision = 0.0
         if contexts and expected_answer:
-            significant_words = [
-                w for w in expected_answer.lower().split() if len(w) > 4
-            ]
+            significant_words = [w for w in expected_answer.lower().split() if len(w) > 4]
             if significant_words:
                 matched = sum(
-                    1
-                    for ctx in contexts
-                    if any(word in ctx.lower() for word in significant_words)
+                    1 for ctx in contexts if any(word in ctx.lower() for word in significant_words)
                 )
                 retrieval_precision = min(matched / len(contexts), 1.0)
 
@@ -144,13 +138,9 @@ class EvaluationHarness:
 
         if judge_scores:
             judge_avg = (
-                judge_scores["accuracy"]
-                + judge_scores["completeness"]
-                + judge_scores["relevance"]
+                judge_scores["accuracy"] + judge_scores["completeness"] + judge_scores["relevance"]
             ) / 30
-            overall = (
-                retrieval_precision + gen_faithfulness + answer_relevance + judge_avg
-            ) / 4
+            overall = (retrieval_precision + gen_faithfulness + answer_relevance + judge_avg) / 4
         else:
             overall = (retrieval_precision + gen_faithfulness + answer_relevance) / 3
 
@@ -188,12 +178,15 @@ class EvaluationHarness:
             inp = sample.get("input", "")
             expected = sample.get("output", "")
             from src.core.registry import registry, PromptType
-            prompt = registry.get(PromptType.EVALUATION_HARNESS_PROMPT).format(instruction=instruction, inp=inp).strip()
+
+            prompt = (
+                registry.get(PromptType.EVALUATION_HARNESS_PROMPT)
+                .format(instruction=instruction, inp=inp)
+                .strip()
+            )
             try:
                 resp = await client.chat_completion(
-                    messages=[{"role": "user", "content": prompt}],
-                    max_tokens=512,
-                    temperature=0.1,
+                    messages=[{"role": "user", "content": prompt}], max_tokens=512, temperature=0.1
                 )
                 actual = resp.choices[0].message.content.strip()
             except Exception:
@@ -239,8 +232,7 @@ class EvaluationHarness:
                     sum(j["accuracy"] for j in judge_results) / len(judge_results), 2
                 ),
                 "completeness": round(
-                    sum(j["completeness"] for j in judge_results) / len(judge_results),
-                    2,
+                    sum(j["completeness"] for j in judge_results) / len(judge_results), 2
                 ),
                 "relevance": round(
                     sum(j["relevance"] for j in judge_results) / len(judge_results), 2
@@ -279,11 +271,10 @@ class EvaluationHarness:
                 ),
                 "bleu": round(sum(r.bleu for r in self._reports) / count, 4),
                 "rouge_l": round(sum(r.rouge_l for r in self._reports) / count, 4),
-                "overall_score": round(
-                    sum(r.overall_score for r in self._reports) / count, 4
-                ),
+                "overall_score": round(sum(r.overall_score for r in self._reports) / count, 4),
             },
             "status": "The evaluation metrics dashboard is ready and available for viewing",
         }
+
 
 evaluation = EvaluationHarness()

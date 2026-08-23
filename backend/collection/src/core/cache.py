@@ -5,13 +5,13 @@ from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 
+
 class CacheCore:
     def __init__(self):
         url = settings.REDIS_URI
         self.r = redis.from_url(url, decode_responses=True)
 
     async def is_collected(self, key_type: str, value: str) -> bool:
-
         redis_key = f"DataCollection:dedup:{key_type}"
         return await self.r.sismember(redis_key, value)
 
@@ -19,5 +19,6 @@ class CacheCore:
         redis_key = f"DataCollection:dedup:{key_type}"
         await self.r.sadd(redis_key, value)
         logger.debug("Resource collection deduplication marked")
+
 
 dedup = CacheCore()

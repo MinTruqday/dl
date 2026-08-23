@@ -31,10 +31,7 @@ def _build_tree(topic: str, structure: MindmapStructure | None) -> dict:
                     "id": f"branch-{branch_index}",
                     "name": branch.name,
                     "children": [
-                        {
-                            "id": f"node-{branch_index}-{child_index}",
-                            "name": child,
-                        }
+                        {"id": f"node-{branch_index}-{child_index}", "name": child}
                         for child_index, child in enumerate(branch.children, 1)
                     ],
                 }
@@ -48,16 +45,18 @@ def _to_mermaid(tree: dict) -> str:
     lines = ["mindmap", f"  root(({tree['root']['name']}))"]
     for branch in tree["root"]["children"]:
         lines.append(f"    {branch['name']}")
-        lines.extend(
-            f"      {child['name']}"
-            for child in branch.get("children", [])
-        )
+        lines.extend(f"      {child['name']}" for child in branch.get("children", []))
     return "\n".join(lines) + "\n"
 
 
 @tool
 async def generate_mindmap(
-    topic: Annotated[str, Field(min_length=1, description="Topic or concept to organize into a hierarchical mind map")],
+    topic: Annotated[
+        str,
+        Field(
+            min_length=1, description="Topic or concept to organize into a hierarchical mind map"
+        ),
+    ],
     config: RunnableConfig,
 ) -> str:
     """

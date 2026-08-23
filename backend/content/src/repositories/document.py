@@ -3,6 +3,7 @@ from typing import Optional, Dict, Any, List
 from src.core.infrastructure.database import database
 from src.core.infrastructure.configuration import settings
 
+
 class DocumentRepository:
     @staticmethod
     def _get_db():

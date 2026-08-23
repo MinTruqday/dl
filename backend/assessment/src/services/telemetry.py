@@ -2,12 +2,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 
-ALLOWED_TECHNICAL_FLAGS = {
-    "browser_reload",
-    "network_error",
-    "offline_retry",
-    "visibility_hidden",
-}
+ALLOWED_TECHNICAL_FLAGS = {"browser_reload", "network_error", "offline_retry", "visibility_hidden"}
 
 
 def derive_assigned_telemetry(payload: dict[str, Any], started_at: datetime, captured_at: datetime):

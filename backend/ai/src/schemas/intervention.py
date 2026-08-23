@@ -18,6 +18,5 @@ class InterventionFeedbackRequest(BaseModel):
         description="<input_context>Optional corrected action supplied by the authenticated owner</input_context>",
     )
     scope: Literal["once", "session", "safe_session"] = Field(
-        default="once",
-        description="How long this approval applies within the current conversation",
+        default="once", description="How long this approval applies within the current conversation"
     )

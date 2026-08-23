@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field
 
+
 class PresignedUrlRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     filename: str = Field(min_length=1, max_length=255)
@@ -7,6 +8,7 @@ class PresignedUrlRequest(BaseModel):
     content_type: str = Field(min_length=1, max_length=150)
     is_system: bool = False
     is_message_attachment: bool = False
+
 
 class ConfirmUploadRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")

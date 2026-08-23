@@ -10,11 +10,13 @@ from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.redis import redis_client
 from src.core.infrastructure.database import get_db as get_database
 
+
 class Role(str, Enum):
     GUEST = "guest"
     READER = "reader"
     AUTHOR = "author"
     ADMIN = "admin"
+
 
 class CurrentUser(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="ignore")
@@ -26,7 +28,7 @@ class CurrentUser(BaseModel):
     is_active: bool = True
     full_name: str = ""
     slug: str = ""
-    
+
     @field_validator("role", mode="before")
     @classmethod
     def validate_role_case(cls, v: Any):
@@ -38,10 +40,12 @@ class CurrentUser(BaseModel):
         role_val = self.role.value if hasattr(self.role, "value") else str(self.role).lower()
         return role_val == Role.ADMIN.value
 
+
 ALGORITHM = "HS256"
 SECRET_KEY = settings.SECRET_KEY
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+
 
 async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
     credentials_exception = HTTPException(
@@ -66,9 +70,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
         raise credentials_exception
 
     if redis_client.client:
-        is_valid_session = await redis_client.client.sismember(
-            f"user_sessions:{uid}", session_id
-        )
+        is_valid_session = await redis_client.client.sismember(f"user_sessions:{uid}", session_id)
         if not is_valid_session:
             logger.warning("Attempted to use an invalidated or revoked session token")
             raise credentials_exception
@@ -84,10 +86,9 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
     }
     return CurrentUser(**user_doc)
 
+
 async def get_current_user_optional(
-    token: Optional[str] = Depends(
-        OAuth2PasswordBearer(tokenUrl="auth/login", auto_error=False)
-    )
+    token: Optional[str] = Depends(OAuth2PasswordBearer(tokenUrl="auth/login", auto_error=False)),
 ) -> Optional[CurrentUser]:
     if not token:
         return None
@@ -96,13 +97,13 @@ async def get_current_user_optional(
     except HTTPException:
         return None
 
+
 async def get_current_user_token_param(token: str) -> CurrentUser:
     return await get_current_user(token)
 
+
 def require_role(required_roles: List[Role]):
-    async def role_checker(
-        current_user: CurrentUser = Depends(get_current_user),
-    ) -> CurrentUser:
+    async def role_checker(current_user: CurrentUser = Depends(get_current_user)) -> CurrentUser:
         if current_user.role == Role.ADMIN:
             return current_user
         if current_user.role not in required_roles:
@@ -112,14 +113,16 @@ def require_role(required_roles: List[Role]):
                 detail="Tài khoản không có đủ thẩm quyền để thực hiện hành động này",
             )
         return current_user
+
     return role_checker
+
 
 async def verify_internal_token(x_internal_token: str = Header(default="")):
     if not hmac.compare_digest(x_internal_token, settings.SECRET_KEY):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Mã xác thực nội bộ không hợp lệ",
+            status_code=status.HTTP_403_FORBIDDEN, detail="Mã xác thực nội bộ không hợp lệ"
         )
+
 
 async def get_db():
     return get_database()

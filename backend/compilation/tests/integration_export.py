@@ -47,10 +47,24 @@ async def main():
             "version": 1,
             "owner_id": teacher_id,
             "question_type": "single_choice",
-            "stem_doc": {"type": "doc", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Hai cộng hai bằng bao nhiêu"}]}]},
+            "stem_doc": {
+                "type": "doc",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "content": [{"type": "text", "text": "Hai cộng hai bằng bao nhiêu"}],
+                    }
+                ],
+            },
             "options": [
-                {"id": "A", "content_doc": {"type": "doc", "content": [{"type": "text", "text": "Ba"}]}},
-                {"id": "B", "content_doc": {"type": "doc", "content": [{"type": "text", "text": "Bốn"}]}},
+                {
+                    "id": "A",
+                    "content_doc": {"type": "doc", "content": [{"type": "text", "text": "Ba"}]},
+                },
+                {
+                    "id": "B",
+                    "content_doc": {"type": "doc", "content": [{"type": "text", "text": "Bốn"}]},
+                },
             ],
             "answer_key": {"option_id": "B"},
         }
@@ -70,16 +84,24 @@ async def main():
         for user_id, role in [(teacher_id, "author"), (student_id, "reader"), (admin_id, "admin")]
     }
     async with httpx.AsyncClient(base_url="http://127.0.0.1:8000", timeout=30) as client:
-        pdf = await client.post(f"/exports/assessment/{version_id}/pdf", headers=headers[teacher_id])
+        pdf = await client.post(
+            f"/exports/assessment/{version_id}/pdf", headers=headers[teacher_id]
+        )
         assert pdf.status_code == 200, pdf.text
         assert pdf.content.startswith(b"%PDF")
         assert pdf.headers["content-type"].startswith("application/pdf")
-        docx = await client.post(f"/exports/assessment/{version_id}/docx", headers=headers[teacher_id])
+        docx = await client.post(
+            f"/exports/assessment/{version_id}/docx", headers=headers[teacher_id]
+        )
         assert docx.status_code == 200, docx.text
         assert docx.content.startswith(b"PK")
-        forbidden = await client.post(f"/exports/assessment/{version_id}/pdf", headers=headers[student_id])
+        forbidden = await client.post(
+            f"/exports/assessment/{version_id}/pdf", headers=headers[student_id]
+        )
         assert forbidden.status_code == 403
-        admin = await client.post(f"/exports/assessment/{version_id}/pdf", headers=headers[admin_id])
+        admin = await client.post(
+            f"/exports/assessment/{version_id}/pdf", headers=headers[admin_id]
+        )
         assert admin.status_code == 200, admin.text
     await database.assessment_versions.delete_one({"_id": version_id})
     await database.question_versions.delete_one({"_id": question_id})

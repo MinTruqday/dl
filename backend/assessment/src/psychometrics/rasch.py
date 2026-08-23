@@ -19,19 +19,32 @@ def estimate_item_parameter(
         "standard_error": round(standard_error, 4),
         "sample_size": total,
     }
-    if ability_estimates and observed_scores and len(ability_estimates) == total and len(observed_scores) == total:
+    if (
+        ability_estimates
+        and observed_scores
+        and len(ability_estimates) == total
+        and len(observed_scores) == total
+    ):
         expected = [1 / (1 + math.exp(-(theta - item_b))) for theta in ability_estimates]
         variances = [max(probability * (1 - probability), 1e-6) for probability in expected]
-        residuals = [(value - probability) ** 2 for value, probability in zip(observed_scores, expected)]
-        outfit = sum(residual / variance for residual, variance in zip(residuals, variances)) / total
+        residuals = [
+            (value - probability) ** 2 for value, probability in zip(observed_scores, expected)
+        ]
+        outfit = (
+            sum(residual / variance for residual, variance in zip(residuals, variances)) / total
+        )
         infit = sum(residuals) / sum(variances)
         result.update(
             {
                 "infit_mnsq": round(infit, 4),
                 "outfit_mnsq": round(outfit, 4),
-                "item_fit_status": "productive" if 0.7 <= infit <= 1.3 and 0.7 <= outfit <= 1.3 else "review",
+                "item_fit_status": "productive"
+                if 0.7 <= infit <= 1.3 and 0.7 <= outfit <= 1.3
+                else "review",
             }
         )
     else:
-        result.update({"infit_mnsq": None, "outfit_mnsq": None, "item_fit_status": "insufficient_context"})
+        result.update(
+            {"infit_mnsq": None, "outfit_mnsq": None, "item_fit_status": "insufficient_context"}
+        )
     return result

@@ -14,10 +14,7 @@ from webauthn import (
     verify_authentication_response,
     verify_registration_response,
 )
-from webauthn.helpers.exceptions import (
-    InvalidAuthenticationResponse,
-    InvalidRegistrationResponse,
-)
+from webauthn.helpers.exceptions import InvalidAuthenticationResponse, InvalidRegistrationResponse
 from webauthn.helpers.structs import (
     AuthenticationCredential,
     AuthenticatorAttachment,
@@ -35,18 +32,18 @@ RP_NAME = settings.PASSKEY_RP_NAME
 ORIGINS = [item.strip() for item in settings.PASSKEY_ALLOWED_ORIGINS.split(",") if item.strip()]
 EXPECTED_ORIGIN = ORIGINS if len(ORIGINS) > 1 else ORIGINS[0]
 
-class PasskeyService:
 
+class PasskeyService:
     @staticmethod
     async def login_begin(email: str):
         user = await AuthenticationRepository.get_auth_credential_by_email(email)
         if not user:
-            raise HTTPException(status_code=404, detail="Không tìm thấy thông tin tài khoản người dùng")
+            raise HTTPException(
+                status_code=404, detail="Không tìm thấy thông tin tài khoản người dùng"
+            )
         passkeys = user.get("passkeys", [])
         if not passkeys:
-            raise HTTPException(
-                status_code=400, detail="Tài khoản này chưa thiết lập Passkey"
-            )
+            raise HTTPException(status_code=400, detail="Tài khoản này chưa thiết lập Passkey")
         options = generate_authentication_options(
             rp_id=RP_ID,
             allow_credentials=[
@@ -70,7 +67,9 @@ class PasskeyService:
     async def login_finish(email: str, credential_data: dict):
         user = await AuthenticationRepository.get_auth_credential_by_email(email)
         if not user:
-            raise HTTPException(status_code=404, detail="Không tìm thấy thông tin tài khoản người dùng")
+            raise HTTPException(
+                status_code=404, detail="Không tìm thấy thông tin tài khoản người dùng"
+            )
         challenge = await AuthenticationRepository.consume_passkey_challenge(email)
         if not challenge:
             raise HTTPException(
@@ -89,14 +88,14 @@ class PasskeyService:
             (
                 p
                 for p in user.get("passkeys", [])
-                if hmac.compare_digest(
-                    base64.b64decode(p["credential_id"]), credential_id
-                )
+                if hmac.compare_digest(base64.b64decode(p["credential_id"]), credential_id)
             ),
             None,
         )
         if not passkey:
-            raise HTTPException(status_code=400, detail="Thông tin mã bảo mật cung cấp không chính xác")
+            raise HTTPException(
+                status_code=400, detail="Thông tin mã bảo mật cung cấp không chính xác"
+            )
         try:
             verification = verify_authentication_response(
                 credential=credential_data,
@@ -107,7 +106,9 @@ class PasskeyService:
                 credential_current_sign_count=passkey["sign_count"],
             )
         except InvalidAuthenticationResponse:
-            raise HTTPException(status_code=400, detail="Quá trình xác minh dữ liệu mã bảo mật gặp sự cố")
+            raise HTTPException(
+                status_code=400, detail="Quá trình xác minh dữ liệu mã bảo mật gặp sự cố"
+            )
         await AuthenticationRepository.update_passkey_sign_count(
             user["_id"], credential_id_b64, verification.new_sign_count
         )
@@ -119,10 +120,12 @@ class PasskeyService:
     async def register_begin(email: str):
         user = await AuthenticationRepository.get_auth_credential_by_email(email)
         if not user:
-            raise HTTPException(status_code=404, detail="Không tìm thấy thông tin tài khoản người dùng")
+            raise HTTPException(
+                status_code=404, detail="Không tìm thấy thông tin tài khoản người dùng"
+            )
 
         passkeys = user.get("passkeys", [])
-        
+
         options = generate_registration_options(
             rp_id=RP_ID,
             rp_name=RP_NAME,
@@ -131,8 +134,7 @@ class PasskeyService:
             user_display_name=email,
             exclude_credentials=[
                 PublicKeyCredentialDescriptor(
-                    id=base64.b64decode(p["credential_id"]),
-                    type=PublicKeyCredentialType.PUBLIC_KEY,
+                    id=base64.b64decode(p["credential_id"]), type=PublicKeyCredentialType.PUBLIC_KEY
                 )
                 for p in passkeys
             ],
@@ -146,7 +148,7 @@ class PasskeyService:
             await AuthenticationRepository.set_redis_passkey_challenge(email, options.challenge)
         except Exception as e:
             logger.exception("Failed to persist temporary authentication challenge to cache layer")
-            
+
         await AuthenticationRepository.upsert_passkey_challenge(email, options.challenge)
 
         return json.loads(options_to_json(options))
@@ -155,7 +157,9 @@ class PasskeyService:
     async def register_finish(email: str, credential_data: dict):
         user = await AuthenticationRepository.get_auth_credential_by_email(email)
         if not user:
-            raise HTTPException(status_code=404, detail="Không tìm thấy thông tin tài khoản người dùng")
+            raise HTTPException(
+                status_code=404, detail="Không tìm thấy thông tin tài khoản người dùng"
+            )
 
         challenge = await AuthenticationRepository.consume_passkey_challenge(email)
 
@@ -172,13 +176,15 @@ class PasskeyService:
                 expected_rp_id=RP_ID,
             )
         except InvalidRegistrationResponse:
-            raise HTTPException(status_code=400, detail="Quá trình xác minh dữ liệu mã bảo mật gặp sự cố")
+            raise HTTPException(
+                status_code=400, detail="Quá trình xác minh dữ liệu mã bảo mật gặp sự cố"
+            )
 
         new_passkey = {
             "credential_id": base64.b64encode(verification.credential_id).decode("utf-8"),
             "public_key": base64.b64encode(verification.credential_public_key).decode("utf-8"),
             "sign_count": verification.sign_count,
-            "created_at": datetime.now(timezone.utc)
+            "created_at": datetime.now(timezone.utc),
         }
 
         result = await AuthenticationRepository.add_passkey(user["_id"], new_passkey)

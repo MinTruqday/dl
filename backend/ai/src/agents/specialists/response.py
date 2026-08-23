@@ -5,6 +5,7 @@ from src.core.registry import PromptType, registry
 
 from src.harness.security import security
 
+
 class GenerationAgent:
     """
     <module_purpose>
@@ -16,6 +17,7 @@ class GenerationAgent:
     - Error Handling: Aborts immediately with a safety message if security scans fail.
     </contract>
     """
+
     async def aggregate_stream(self, query: str, consolidated_results: List[str]):
         logger.info("Aggregating search results")
 
@@ -45,5 +47,6 @@ class GenerationAgent:
         except Exception:
             logger.exception("Error generating response content")
             raise RuntimeError("response_generation_failed")
+
 
 response_generator = GenerationAgent()

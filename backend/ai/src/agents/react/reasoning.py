@@ -7,19 +7,21 @@ from src.core.infrastructure.configuration import settings
 
 from src.schemas.evaluation import QualityEvaluation
 
+
 class ReasoningAgent:
     """
     <module_purpose>
         <purpose>Provide deep analytical reasoning and critical assessment for complex logical queries.</purpose>
         <context>Invoked by the orchestration layer when a user query requires multi-step deduction (Zero-Shot CoT), quality evaluation, or deep thought.</context>
     </module_purpose>
-    
+
     <contract>
         <input>Takes natural language tasks or context-augmented queries.</input>
         <output>Returns reasoned conclusions (str) or structured quality evaluations (Dict).</output>
         <exceptions>Returns an error string starting with MODULE REASONING_AGENT if LLM invocation fails.</exceptions>
     </contract>
     """
+
     def __init__(self):
         self._model = settings.LLM_MODEL
         self._hf_token = settings.HF_TOKEN
@@ -33,7 +35,7 @@ class ReasoningAgent:
             llm = create_chat_model(self._model)
             result = await llm.ainvoke([HumanMessage(content=prompt)])
             content = result.content.strip()
-            
+
             if "</thought>" in content:
                 final_answer = content.split("</thought>")[-1].strip()
                 if final_answer:
@@ -56,9 +58,7 @@ class ReasoningAgent:
 
             llm = create_chat_model(self._model).with_structured_output(QualityEvaluation)
 
-            eval_res: QualityEvaluation = await llm.ainvoke(
-                [HumanMessage(content=eval_prompt)]
-            )
+            eval_res: QualityEvaluation = await llm.ainvoke([HumanMessage(content=eval_prompt)])
 
             return {
                 "should_retry": eval_res.should_retry,
@@ -75,12 +75,7 @@ class ReasoningAgent:
             return {
                 "should_retry": True,
                 "feedback": "The system encountered an error during the quality evaluation phase",
-                "scores": {
-                    "relevance": 0.0,
-                    "grounding": 0.0,
-                    "completeness": 0.0,
-                    "overall": 0.0,
-                },
+                "scores": {"relevance": 0.0, "grounding": 0.0, "completeness": 0.0, "overall": 0.0},
             }
 
     def _build_context(self, documents: List[Dict]) -> str:
@@ -93,5 +88,6 @@ class ReasoningAgent:
             text = doc.get("text", "")[:800]
             parts.append(f"Source Document {i} {title} authored by {author}\n{text}")
         return "\n\n".join(parts)
+
 
 reasoner = ReasoningAgent()

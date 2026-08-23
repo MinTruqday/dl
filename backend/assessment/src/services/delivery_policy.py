@@ -31,10 +31,20 @@ def normalize_delivery_policy(policy: dict):
     if normalized["navigation"] not in {"free", "linear"}:
         raise ValueError("Chính sách điều hướng không hợp lệ")
     attempt_limit = normalized.get("attempt_limit")
-    if not isinstance(attempt_limit, int) or isinstance(attempt_limit, bool) or attempt_limit < 1 or attempt_limit > 100:
+    if (
+        not isinstance(attempt_limit, int)
+        or isinstance(attempt_limit, bool)
+        or attempt_limit < 1
+        or attempt_limit > 100
+    ):
         raise ValueError("Giới hạn số lần làm không hợp lệ")
     duration = normalized.get("duration_minutes")
-    if duration is not None and (not isinstance(duration, int) or isinstance(duration, bool) or duration < 1 or duration > 1440):
+    if duration is not None and (
+        not isinstance(duration, int)
+        or isinstance(duration, bool)
+        or duration < 1
+        or duration > 1440
+    ):
         raise ValueError("Thời lượng làm bài không hợp lệ")
     for field in ["review_answers", "shuffle_options", "shuffle_questions", "allow_review_flags"]:
         if not isinstance(normalized[field], bool):

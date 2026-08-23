@@ -12,12 +12,8 @@ from src.core.infrastructure.redis import redis
 from src.repositories.document import DocumentRepository
 from src.schemas.document import DocumentContentUpdate, DocumentCreate, DocumentInDB, DocumentStatus
 from src.clients.rag import rag_client
-from src.services.document.base import (
-    serialize_document,
-    is_admin,
-    can_read_full,
-    pwd_context,
-)
+from src.services.document.base import serialize_document, is_admin, can_read_full, pwd_context
+
 
 class DocumentCrudService:
     @staticmethod
@@ -67,10 +63,7 @@ class DocumentCrudService:
                 async with httpx.AsyncClient(timeout=5.0) as client:
                     await client.post(
                         f"{settings.AI_URL}/su-kien/webhook/tai-lieu-dang-tai",
-                        params={
-                            "document_id": doc_data["_id"],
-                            "user_id": str(current_user.id),
-                        },
+                        params={"document_id": doc_data["_id"], "user_id": str(current_user.id)},
                         headers={"X-Internal-Token": settings.SECRET_KEY},
                     )
             except Exception:
@@ -79,12 +72,7 @@ class DocumentCrudService:
         return serialize_document(doc_data)
 
     @staticmethod
-    async def get_my_documents(
-        current_user,
-        q: str = None,
-        cursor: str = None,
-        limit: int = 50,
-    ):
+    async def get_my_documents(current_user, q: str = None, cursor: str = None, limit: int = 50):
         user_id = str(current_user.id)
         query = {"creator_id": user_id, "is_deleted": {"$ne": True}}
         if q:
@@ -115,7 +103,9 @@ class DocumentCrudService:
                 "is_indexed": document.get("is_indexed", False),
                 "indexing_status": document.get("indexing_status", "not_started"),
                 "indexing_error": document.get("indexing_error"),
-                "index_report": document.get("index_report", {"failed_chunks": [], "quarantined_chunks": []}),
+                "index_report": document.get(
+                    "index_report", {"failed_chunks": [], "quarantined_chunks": []}
+                ),
                 "extraction_method": document.get("extraction_method"),
                 "extracted_text_available": bool(document.get("extracted_text")),
                 "extracted_text_truncated": bool(document.get("extracted_text_truncated")),
@@ -137,9 +127,7 @@ class DocumentCrudService:
 
     @staticmethod
     async def update_document_content(
-        document_id: str,
-        update_data: DocumentContentUpdate,
-        current_user,
+        document_id: str, update_data: DocumentContentUpdate, current_user
     ):
         document = await DocumentRepository.find_one({"_id": document_id})
         if not document:
@@ -152,15 +140,16 @@ class DocumentCrudService:
 
         if not is_creator and not is_admin(current_user):
             raise HTTPException(
-                status_code=403,
-                detail="Bạn không có quyền chỉnh sửa nội dung tài liệu này",
+                status_code=403, detail="Bạn không có quyền chỉnh sửa nội dung tài liệu này"
             )
 
         if update_data.expected_version:
             stored_version = document.get("updated_at")
-            if stored_version and str(stored_version).split("+")[0] != str(
-                update_data.expected_version
-            ).split("+")[0]:
+            if (
+                stored_version
+                and str(stored_version).split("+")[0]
+                != str(update_data.expected_version).split("+")[0]
+            ):
                 raise HTTPException(
                     status_code=409,
                     detail="Xung đột phiên bản: Tài liệu đã được cập nhật bởi một phiên làm việc khác",
@@ -231,8 +220,7 @@ class DocumentCrudService:
 
         if not is_creator and not is_admin(current_user):
             raise HTTPException(
-                status_code=403,
-                detail="Bạn không có quyền cập nhật thông tin tài liệu này",
+                status_code=403, detail="Bạn không có quyền cập nhật thông tin tài liệu này"
             )
 
         update_data = (
@@ -251,21 +239,18 @@ class DocumentCrudService:
         expected_version = update_data.pop("expected_version", None)
         if expected_version:
             stored_version = document.get("updated_at")
-            if stored_version and str(stored_version).split("+")[0] != str(
-                expected_version
-            ).split("+")[0]:
+            if (
+                stored_version
+                and str(stored_version).split("+")[0] != str(expected_version).split("+")[0]
+            ):
                 raise HTTPException(
-                    status_code=409,
-                    detail="Không thể chỉnh sửa do đã có phiên bản mới hơn",
+                    status_code=409, detail="Không thể chỉnh sửa do đã có phiên bản mới hơn"
                 )
 
         if "slug" in update_data and update_data["slug"] != document.get("slug"):
             existing = await DocumentRepository.find_one({"slug": update_data["slug"]})
             if existing:
-                raise HTTPException(
-                    status_code=400,
-                    detail="Đường dẫn định tuyến đã được sử dụng",
-                )
+                raise HTTPException(status_code=400, detail="Đường dẫn định tuyến đã được sử dụng")
 
         update_data["updated_at"] = datetime.now(timezone.utc)
 
@@ -297,14 +282,22 @@ class DocumentCrudService:
                 async with httpx.AsyncClient(timeout=5.0) as client:
                     response = await client.post(
                         f"{settings.AI_URL}/su-kien/webhook/tai-lieu-dang-tai",
-                        params={"document_id": document_id, "user_id": document.get("creator_id", "")},
+                        params={
+                            "document_id": document_id,
+                            "user_id": document.get("creator_id", ""),
+                        },
                         headers={"X-Internal-Token": settings.SECRET_KEY},
                     )
                     response.raise_for_status()
             except Exception:
                 await DocumentRepository.update_one(
                     {"_id": document_id},
-                    {"$set": {"indexing_status": "failed", "indexing_error": "indexing_dispatch_failed"}},
+                    {
+                        "$set": {
+                            "indexing_status": "failed",
+                            "indexing_error": "indexing_dispatch_failed",
+                        }
+                    },
                 )
                 logger.exception(f"Ingest webhook dispatch failed for document_id={document_id}")
 
@@ -313,7 +306,9 @@ class DocumentCrudService:
 
     @staticmethod
     async def retry_document_indexing(document_id: str, current_user):
-        document = await DocumentRepository.find_one({"_id": document_id, "is_deleted": {"$ne": True}})
+        document = await DocumentRepository.find_one(
+            {"_id": document_id, "is_deleted": {"$ne": True}}
+        )
         if not document:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
         if document.get("creator_id") != str(current_user.id) and not is_admin(current_user):
@@ -335,9 +330,16 @@ class DocumentCrudService:
         except Exception:
             await DocumentRepository.update_one(
                 {"_id": document_id},
-                {"$set": {"indexing_status": "failed", "indexing_error": "indexing_dispatch_failed"}},
+                {
+                    "$set": {
+                        "indexing_status": "failed",
+                        "indexing_error": "indexing_dispatch_failed",
+                    }
+                },
             )
-            raise HTTPException(status_code=503, detail="Không thể đưa tài liệu vào hàng đợi lập chỉ mục")
+            raise HTTPException(
+                status_code=503, detail="Không thể đưa tài liệu vào hàng đợi lập chỉ mục"
+            )
         return serialize_document(await DocumentRepository.find_one({"_id": document_id}))
 
     @staticmethod
@@ -371,9 +373,7 @@ class DocumentCrudService:
         return [serialize_document(d) for d in documents]
 
     @staticmethod
-    async def get_document_by_id(
-        document_id: str, current_user, password: str = None
-    ):
+    async def get_document_by_id(document_id: str, current_user, password: str = None):
         user_id = str(current_user.id) if current_user else None
         document = await DocumentRepository.find_one({"_id": document_id})
         if not document:
@@ -383,11 +383,7 @@ class DocumentCrudService:
 
         is_creator = document.get("creator_id") == user_id
 
-        if (
-            document.get("is_deleted") is True
-            and not is_creator
-            and not is_admin(current_user)
-        ):
+        if document.get("is_deleted") is True and not is_creator and not is_admin(current_user):
             raise HTTPException(
                 status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn"
             )
@@ -398,8 +394,7 @@ class DocumentCrudService:
             and not is_admin(current_user)
         ):
             raise HTTPException(
-                status_code=403,
-                detail="Tài liệu hiện đang ở trạng thái nháp và chưa được công bố",
+                status_code=403, detail="Tài liệu hiện đang ở trạng thái nháp và chưa được công bố"
             )
 
         if document.get("is_password_protected") and not is_creator:
@@ -485,7 +480,9 @@ class DocumentCrudService:
             raise HTTPException(
                 status_code=404, detail="Hệ thống không tìm thấy tài liệu yêu cầu trong thùng rác"
             )
-        restored = await DocumentRepository.find_one({"_id": document_id, "creator_id": str(current_user.id)})
+        restored = await DocumentRepository.find_one(
+            {"_id": document_id, "creator_id": str(current_user.id)}
+        )
         if restored and restored.get("file_url"):
             await DocumentCrudService.retry_document_indexing(document_id, current_user)
         logger.info("Document restored from recycle bin")
@@ -518,8 +515,7 @@ class DocumentCrudService:
         )
         if not document:
             raise HTTPException(
-                status_code=404,
-                detail="Không tìm thấy tài liệu hoặc thiếu quyền cập nhật",
+                status_code=404, detail="Không tìm thấy tài liệu hoặc thiếu quyền cập nhật"
             )
         starred = not bool(document.get("is_starred", False))
         await DocumentRepository.update_one(

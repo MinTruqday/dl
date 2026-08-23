@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from loguru import logger
 from typing import List
 
+
 @dataclass
 class ScanResult:
     passed: bool
@@ -11,6 +12,7 @@ class ScanResult:
     sanitized_text: str
     blocked: bool = False
     violations: List[str] = field(default_factory=list)
+
 
 class SecurityHarness:
     """
@@ -23,6 +25,7 @@ class SecurityHarness:
     - Error Handling: Defaults to strict blocking if the security analysis engine fails.
     </contract>
     """
+
     def __init__(self):
         self.analyzer = None
         self.anonymizer = None
@@ -34,12 +37,11 @@ class SecurityHarness:
             from presidio_analyzer import AnalyzerEngine
             from presidio_anonymizer import AnonymizerEngine
             from presidio_analyzer.nlp_engine import NlpEngineProvider
+
             provider = NlpEngineProvider(
                 nlp_configuration={
                     "nlp_engine_name": "spacy",
-                    "models": [
-                        {"lang_code": "en", "model_name": "en_core_web_sm"}
-                    ],
+                    "models": [{"lang_code": "en", "model_name": "en_core_web_sm"}],
                 }
             )
             self.analyzer = AnalyzerEngine(nlp_engine=provider.create_engine())
@@ -68,7 +70,7 @@ class SecurityHarness:
         from src.core.infrastructure.configuration import settings
         from src.schemas.security import SecurityEvaluation
         from src.core.registry import PromptType, registry
-        
+
         violations = []
         from src.core.security.guardrails import guardrails_engine
 
@@ -84,10 +86,16 @@ class SecurityHarness:
 
         if self.analyzer and self.anonymizer:
             try:
-                results = self.analyzer.analyze(text=sanitized, entities=["EMAIL_ADDRESS", "PHONE_NUMBER", "CREDIT_CARD", "CRYPTO"], language='en')
+                results = self.analyzer.analyze(
+                    text=sanitized,
+                    entities=["EMAIL_ADDRESS", "PHONE_NUMBER", "CREDIT_CARD", "CRYPTO"],
+                    language="en",
+                )
                 if results:
                     violations.append("pii_detected")
-                    anonymized_result = self.anonymizer.anonymize(text=sanitized, analyzer_results=results)
+                    anonymized_result = self.anonymizer.anonymize(
+                        text=sanitized, analyzer_results=results
+                    )
                     sanitized = anonymized_result.text
             except Exception:
                 logger.exception("Presidio scan failed")
@@ -120,9 +128,9 @@ class SecurityHarness:
         try:
             llm = create_chat_model()
             structured_llm = llm.with_structured_output(SecurityEvaluation)
-            
+
             prompt = registry.get(PromptType.SECURITY_SCAN).format(text=sanitized)
-            
+
             result = await structured_llm.ainvoke([HumanMessage(content=prompt)])
             if result.is_malicious:
                 violations.append(f"prompt_injection:{result.reason[:60]}")
@@ -135,45 +143,38 @@ class SecurityHarness:
         except Exception:
             logger.exception("AI security tracing failed")
             violations.append("security_classifier_unavailable")
-            
+
         return sanitized, violations
 
     def _anomaly_score(self, text: str) -> float:
         if not text:
             return 0.0
-        special_ratio = sum(
-            1 for c in text if not c.isalnum() and not c.isspace()
-        ) / max(len(text), 1)
+        special_ratio = sum(1 for c in text if not c.isalnum() and not c.isspace()) / max(
+            len(text), 1
+        )
         length_penalty = min(len(text) / 10000, 0.3)
         return min(special_ratio * 0.5 + length_penalty, 1.0)
 
     async def ascan_input(
-        self,
-        text: str,
-        session_id: str = "",
-        user_id: str = "",
-        allow_ai_review: bool = True,
+        self, text: str, session_id: str = "", user_id: str = "", allow_ai_review: bool = True
     ) -> ScanResult:
         """Inspect and sanitize inbound text with deterministic and optional model checks"""
         if not text or not text.strip():
             return ScanResult(passed=True, risk_score=0.0, sanitized_text=text or "")
 
         sanitized, violations = await self._adetect_security_issues(
-            text,
-            allow_ai_review=allow_ai_review,
+            text, allow_ai_review=allow_ai_review
         )
-        
+
         injection_violations = [v for v in violations if "prompt_injection" in v]
         credential_violations = [v for v in violations if "credential_leak" in v]
         pii_violations = [v for v in violations if "pii" in v]
-        
+
         anomaly = self._anomaly_score(text)
         injection_score = min(len(injection_violations) * 0.4, 1.0)
         risk_score = min(injection_score + anomaly * 0.2, 1.0)
 
-        classifier_failures = [
-            v for v in violations if "security_classifier_unavailable" in v
-        ]
+        classifier_failures = [v for v in violations if "security_classifier_unavailable" in v]
 
         if injection_violations or credential_violations or classifier_failures:
             logger.warning("Malicious command or credential leak blocked")
@@ -205,9 +206,7 @@ class SecurityHarness:
         text = baseline.get("sanitized_text", text)
         if baseline.get("threat_category") == "credential_leak":
             raise PermissionError("output_credential_leak_blocked")
-        sanitized, violations = await self._adetect_security_issues(
-            text, allow_ai_review=False
-        )
+        sanitized, violations = await self._adetect_security_issues(text, allow_ai_review=False)
         sanitized = re.sub(
             r"<(think|thought)>.*?</\1>", "", sanitized, flags=re.IGNORECASE | re.DOTALL
         ).strip()
@@ -215,5 +214,6 @@ class SecurityHarness:
             logger.error("System proactively blocked and neutralized credential leak risk")
             raise PermissionError("output_credential_leak_blocked")
         return sanitized
+
 
 security = SecurityHarness()

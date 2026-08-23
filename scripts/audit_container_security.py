@@ -3,6 +3,8 @@ import re
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+
+
 def main():
     issues = []
     dockerfiles = sorted((ROOT / "backend").glob("*/Dockerfile"))

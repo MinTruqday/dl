@@ -15,6 +15,7 @@ async def init_db():
     if not settings.SECRET_KEY:
         raise RuntimeError("SECRET_KEY is required")
     from motor.motor_asyncio import AsyncIOMotorClient
+
     database.mongodb = AsyncIOMotorClient(settings.MONGODB_URI)
     await database.mongodb.admin.command("ping")
     jobs = database.mongodb[settings.WORKER_DB_NAME].worker_jobs
@@ -32,13 +33,7 @@ async def record_job(job_id: str, values: dict, insert: dict | None = None):
     now = datetime.now(timezone.utc)
     update = {"$set": {**values, "updated_at": now}}
     if insert is not None:
-        update["$setOnInsert"] = {
-            "_id": job_id,
-            "created_at": now,
-            **insert,
-        }
+        update["$setOnInsert"] = {"_id": job_id, "created_at": now, **insert}
     await database.mongodb[settings.WORKER_DB_NAME].worker_jobs.update_one(
-        {"_id": job_id},
-        update,
-        upsert=insert is not None,
+        {"_id": job_id}, update, upsert=insert is not None
     )

@@ -24,6 +24,7 @@ FailureType = Literal[
     "UNKNOWN",
 ]
 
+
 @dataclass
 class FailureRecord:
     session_id: str
@@ -36,6 +37,7 @@ class FailureRecord:
     context_snapshot: Dict[str, Any]
     occurred_at: datetime
 
+
 @dataclass
 class AttributionReport:
     session_id: str
@@ -43,11 +45,13 @@ class AttributionReport:
     failure_breakdown: Dict[str, int] = field(default_factory=dict)
     most_recent: Optional[FailureRecord] = None
 
+
 def _redact_diagnostics(value: str) -> str:
     from src.core.security.guardrails import guardrails_engine
 
     result = guardrails_engine.inspect_output(str(value))
     return result.get("sanitized_text", str(value))
+
 
 def _summarize_context(context_snapshot: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     if not context_snapshot:
@@ -55,16 +59,17 @@ def _summarize_context(context_snapshot: Optional[Dict[str, Any]]) -> Dict[str, 
     summary = {}
     for key, value in list(context_snapshot.items())[:30]:
         normalized = str(key).lower()
-        if any(marker in normalized for marker in ("token", "secret", "password", "key", "authorization")):
+        if any(
+            marker in normalized
+            for marker in ("token", "secret", "password", "key", "authorization")
+        ):
             summary[str(key)[:80]] = "[REDACTED]"
         elif isinstance(value, (str, bytes, list, tuple, dict, set)):
-            summary[str(key)[:80]] = {
-                "type": type(value).__name__,
-                "size": len(value),
-            }
+            summary[str(key)[:80]] = {"type": type(value).__name__, "size": len(value)}
         else:
             summary[str(key)[:80]] = type(value).__name__
     return summary
+
 
 def _classify_failure(error: Exception, node: str = "") -> FailureType:
     if isinstance(error, (json.JSONDecodeError, OutputParserException)):
@@ -78,6 +83,7 @@ def _classify_failure(error: Exception, node: str = "") -> FailureType:
     if isinstance(error, KeyError):
         return "MISSING_CONTEXT"
     return "UNKNOWN"
+
 
 class FailureAttributionHarness:
     def __init__(self):
@@ -108,9 +114,7 @@ class FailureAttributionHarness:
         if session_id not in self._records:
             self._records[session_id] = []
         self._records[session_id].append(record)
-        logger.warning(
-            f"Session failure recorded: type={failure_type}, node={node or 'unknown'}"
-        )
+        logger.warning(f"Session failure recorded: type={failure_type}, node={node or 'unknown'}")
         try:
             asyncio.get_running_loop()
             create_background_task(
@@ -155,5 +159,6 @@ class FailureAttributionHarness:
 
     def classify(self, error: Exception, node: str = "") -> FailureType:
         return _classify_failure(error, node)
+
 
 failure = FailureAttributionHarness()

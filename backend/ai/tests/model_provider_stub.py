@@ -69,8 +69,7 @@ class Handler(BaseHTTPRequestHandler):
         size = int(self.headers.get("Content-Length", "0"))
         payload = json.loads(self.rfile.read(size) or b"{}")
         prompt = "\n".join(
-            str(message.get("content", ""))
-            for message in payload.get("messages", [])
+            str(message.get("content", "")) for message in payload.get("messages", [])
         )
         content = structured_content(prompt)
         self.send_json(
