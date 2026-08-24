@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import close_db, database, init_db, record_job
 from src.core.infrastructure.mq import mq
-from src.core.metrics import PrometheusMiddleware, metrics_endpoint
+from src.core.metrics import PrometheusMiddleware, metrics_collector, metrics_endpoint
 from src.jobs.task import worker_runner
 
 
@@ -40,11 +40,15 @@ app.add_middleware(PrometheusMiddleware, service_name="worker")
 app.add_route("/metrics", metrics_endpoint("worker"))
 
 
-class AssessmentCalibrationRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+class QAJobRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", protected_namespaces=())
 
-    owner_id: str = Field(min_length=1, max_length=128)
-    owner_email: str = Field(min_length=1, max_length=320)
+    event: str = Field(pattern=r"^(document\.parse|requirement\.extract|requirement\.semantic_diff|test\.generate|duplicate\.scan|impact\.analysis|rag\.index)\.requested$")
+    project_id: str = Field(min_length=1, max_length=128)
+    artifact_version_id: str = Field(min_length=1, max_length=128)
+    model_version: str = Field(min_length=1, max_length=128)
+    requester_id: str = Field(min_length=1, max_length=128)
+    requester_email: str = Field(min_length=1, max_length=320)
     payload: dict
 
 
@@ -62,7 +66,7 @@ async def ready():
     except Exception:
         checks["mongodb"] = "unavailable"
     try:
-        await mq.get_queue("assessment_calibration_queue")
+        await mq.get_queue("qa_job_queue")
         checks["rabbitmq"] = "ready"
     except Exception:
         checks["rabbitmq"] = "unavailable"
@@ -79,17 +83,13 @@ async def ready():
 
 
 @app.post(
-    "/worker/internal/assessment/calibration",
+    "/worker/internal/qa/jobs",
     dependencies=[Depends(require_internal_token)],
     status_code=202,
 )
-async def enqueue_assessment_calibration(payload: AssessmentCalibrationRequest):
-    idempotency_key = str(payload.payload.get("idempotency_key") or "")
-    job_id = (
-        f"calibration-{hashlib.sha256(idempotency_key.encode()).hexdigest()[:40]}"
-        if idempotency_key
-        else f"calibration-{uuid.uuid4()}"
-    )
+async def enqueue_qa_job(payload: QAJobRequest):
+    idempotency_key = ":".join([payload.project_id, payload.artifact_version_id, payload.event, payload.model_version])
+    job_id = f"qa-{hashlib.sha256(idempotency_key.encode()).hexdigest()[:40]}"
     existing = await database.mongodb[settings.WORKER_DB_NAME].worker_jobs.find_one({"_id": job_id})
     if existing:
         return {"job_id": job_id, "status": existing["status"]}
@@ -97,10 +97,11 @@ async def enqueue_assessment_calibration(payload: AssessmentCalibrationRequest):
     await record_job(
         job_id,
         {"status": "queued"},
-        {"kind": "assessment_calibration", "owner_id": payload.owner_id},
+        {"kind": payload.event, "project_id": payload.project_id, "requester_id": payload.requester_id},
     )
     try:
-        await mq.publish("assessment_calibration_queue", task_payload)
+        await mq.publish("qa_job_queue", task_payload)
+        metrics_collector.change_queue_depth("qa_job_queue", 1)
     except Exception:
         await record_job(job_id, {"status": "failed", "error": "Queue unavailable"})
         raise HTTPException(status_code=503, detail="Worker queue is unavailable")

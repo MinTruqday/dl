@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { assessmentRequest, reviewSourceMapping } from "../services/assessment.service";
 import AdminAccountSecurityPanel from "../components/AdminAccountSecurityPanel";
+import { formatDateTime, labelStatus } from "../lib/assessment.presentation";
 function messageOf(reason) {
   return reason instanceof Error ? reason.message : "Không thể hoàn tất thao tác";
 }
@@ -14,6 +15,11 @@ export default function AdminOperationsPage({ view }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [curriculumLimit, setCurriculumLimit] = useState(10);
+  const [mappingLimit, setMappingLimit] = useState(10);
+  const [collectionJobLimit, setCollectionJobLimit] = useState(10);
+  const [calibrationJobLimit, setCalibrationJobLimit] = useState(20);
+  const [auditLimit, setAuditLimit] = useState(20);
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
@@ -50,6 +56,11 @@ export default function AdminOperationsPage({ view }) {
     }
   }, [view]);
   useEffect(() => {
+    setCurriculumLimit(10);
+    setMappingLimit(10);
+    setCollectionJobLimit(10);
+    setCalibrationJobLimit(20);
+    setAuditLimit(20);
     void load();
   }, [load]);
   const startCollection = async () => {
@@ -261,7 +272,7 @@ export default function AdminOperationsPage({ view }) {
     <div className="mx-auto max-w-[1450px] space-y-6 p-5 md:p-8">
       <div>
         <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-brand">
-          Admin Operations
+          Quản trị hệ thống
         </p>
         <h1 className="mt-2 text-[30px] font-semibold">{title}</h1>
       </div>
@@ -271,10 +282,10 @@ export default function AdminOperationsPage({ view }) {
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
             {[
               ["Sách đã thu", data.stats?.total_documents_collected || 0],
-              ["Job đang chạy", data.stats?.active_jobs || 0],
-              ["Job lỗi", data.stats?.failed_jobs || 0],
+              ["Tác vụ đang chạy", data.stats?.active_jobs || 0],
+              ["Tác vụ lỗi", data.stats?.failed_jobs || 0],
               ["Trùng đã bỏ", data.stats?.duplicates_skipped || 0],
-              ["Mapping cần rà soát", data.mappings?.items?.length || 0],
+              ["Ánh xạ cần rà soát", data.mappings?.items?.length || 0],
             ].map(([label, value]) => (
               <section
                 key={String(label)}
@@ -337,21 +348,21 @@ export default function AdminOperationsPage({ view }) {
             <table className="w-full min-w-[900px] text-left text-[12px]">
               <thead className="bg-surface-quiet text-ink-muted">
                 <tr>
-                  <th className="p-4">Job</th>
+                  <th className="p-4">Mã tác vụ</th>
                   <th className="p-4">Trạng thái</th>
                   <th className="p-4">Tiến độ</th>
-                  <th className="p-4">Detected</th>
-                  <th className="p-4">Saved</th>
-                  <th className="p-4">Failed</th>
-                  <th className="p-4">Skipped</th>
+                  <th className="p-4">Phát hiện</th>
+                  <th className="p-4">Đã lưu</th>
+                  <th className="p-4">Thất bại</th>
+                  <th className="p-4">Đã bỏ qua</th>
                   <th className="p-4">Thao tác</th>
                 </tr>
               </thead>
               <tbody>
-                {(data.jobs || []).map((job) => (
+                {(data.jobs || []).slice(0, collectionJobLimit).map((job) => (
                   <tr key={job._id} className="border-t border-border">
                     <td className="p-4 font-mono">{job._id}</td>
-                    <td className="p-4">{job.status}</td>
+                    <td className="p-4">{labelStatus(job.status)}</td>
                     <td className="p-4">{job.progress || 0} phần trăm</td>
                     <td className="p-4">{job.documents_detected || 0}</td>
                     <td className="p-4">{job.completed_items || 0}</td>
@@ -374,7 +385,7 @@ export default function AdminOperationsPage({ view }) {
                             className="text-brand"
                             onClick={() => void jobAction(job._id, "retry")}
                           >
-                            Retry
+                            Chạy lại
                           </button>
                         )}
                       </div>
@@ -383,31 +394,42 @@ export default function AdminOperationsPage({ view }) {
                 ))}
               </tbody>
             </table>
+            {(data.jobs || []).length > collectionJobLimit && (
+              <div className="border-t border-border p-4 text-center">
+                <button
+                  type="button"
+                  className="apple-button-secondary"
+                  onClick={() => setCollectionJobLimit((value) => value + 10)}
+                >
+                  Xem thêm job
+                </button>
+              </div>
+            )}
           </section>
           <section className="rounded-panel border border-border bg-surface">
             <div className="border-b border-border px-5 py-4">
-              <h2 className="font-semibold">Hierarchy curriculum</h2>
+              <h2 className="font-semibold">Cây chương trình học</h2>
               <p className="mt-1 text-[12px] text-ink-muted">
-                Chỉnh tên canonical parent version taxonomy merge split và trạng thái obsolete với
-                optimistic revision
+                Chỉnh tên quan hệ cha phiên bản phân loại gộp tách và trạng thái ngừng sử dụng với
+                cơ chế chống ghi đè thay đổi mới hơn
               </p>
             </div>
             <div className="divide-y divide-border">
-              {(data.curriculum || []).slice(0, 500).map((node) => (
+              {(data.curriculum || []).slice(0, curriculumLimit).map((node) => (
                 <div
                   key={node._id}
                   className="grid items-center gap-2 px-5 py-3 text-[12px] md:grid-cols-[1fr_180px_120px_300px]"
                 >
                   <div>
                     <p className="font-semibold">{node.title}</p>
-                    <p className="text-ink-muted">
+                    <p className="break-all text-ink-muted">
                       {node.canonical_code} · parent {node.parent_id || "root"} · revision{" "}
                       {node.revision || 1}
                     </p>
                   </div>
                   <p>{node.node_type}</p>
                   <p>
-                    {node.curriculum_version} · {node.status || "active"}
+                    {node.curriculum_version} · {labelStatus(node.status || "active")}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     <button
@@ -439,17 +461,28 @@ export default function AdminOperationsPage({ view }) {
                 </div>
               ))}
             </div>
+            {(data.curriculum || []).length > curriculumLimit && (
+              <div className="border-t border-border p-4 text-center">
+                <button
+                  type="button"
+                  className="apple-button-secondary"
+                  onClick={() => setCurriculumLimit((value) => value + 10)}
+                >
+                  Xem thêm node chương trình học
+                </button>
+              </div>
+            )}
           </section>
           <section className="rounded-panel border border-border bg-surface">
             <div className="border-b border-border px-5 py-4">
-              <h2 className="font-semibold">Mapping cần rà soát</h2>
+              <h2 className="font-semibold">Ánh xạ cần rà soát</h2>
               <p className="mt-1 text-[12px] text-ink-muted">
-                Độ tin cậy thấp {data.mappings?.low_confidence_count || 0} · Chưa map{" "}
+                Độ tin cậy thấp {data.mappings?.low_confidence_count || 0} · Chưa ánh xạ{" "}
                 {data.mappings?.unmapped_count || 0}
               </p>
             </div>
             <div className="divide-y divide-border">
-              {(data.mappings?.items || []).slice(0, 100).map((mapping) => {
+              {(data.mappings?.items || []).slice(0, mappingLimit).map((mapping) => {
                 return (
                   <article
                     key={mapping._id}
@@ -459,12 +492,12 @@ export default function AdminOperationsPage({ view }) {
                       <p className="font-semibold">{mapping.document_id}</p>
                       <p className="mt-1 text-ink-muted">
                         Chunk {mapping.chunk_id} ·{" "}
-                        {mapping.curriculum_node_ids?.join(", ") || "Chưa map"} · source{" "}
-                        {mapping.source_status || "active"}
+                        {mapping.curriculum_node_ids?.join(", ") || "Chưa ánh xạ"} · nguồn{" "}
+                        {labelStatus(mapping.source_status || "active")}
                       </p>
                     </div>
-                    <p>Confidence {mapping.mapping_confidence ?? 0}</p>
-                    <p>{mapping.mapping_status}</p>
+                    <p>Độ tin cậy {mapping.mapping_confidence ?? 0}</p>
+                    <p>{labelStatus(mapping.mapping_status)}</p>
                     <div className="flex flex-wrap gap-2">
                       <a
                         className="apple-button-secondary"
@@ -507,6 +540,17 @@ export default function AdminOperationsPage({ view }) {
                 );
               })}
             </div>
+            {(data.mappings?.items || []).length > mappingLimit && (
+              <div className="border-t border-border p-4 text-center">
+                <button
+                  type="button"
+                  className="apple-button-secondary"
+                  onClick={() => setMappingLimit((value) => value + 10)}
+                >
+                  Xem thêm ánh xạ
+                </button>
+              </div>
+            )}
           </section>
         </>
       )}
@@ -514,11 +558,11 @@ export default function AdminOperationsPage({ view }) {
         <>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
             {[
-              ["Prediction thấp confidence", data.low_confidence_prediction_count || 0],
-              ["Calibration jobs", data.calibration_jobs?.length || 0],
-              ["Job lỗi", data.failed_jobs?.length || 0],
-              ["Drift alerts", data.drift_alerts?.length || 0],
-              ["Model versions", data.prediction_versions?.length || 0],
+              ["Dự đoán có độ tin cậy thấp", data.low_confidence_prediction_count || 0],
+              ["Tác vụ hiệu chỉnh", data.calibration_jobs?.length || 0],
+              ["Tác vụ lỗi", data.failed_jobs?.length || 0],
+              ["Cảnh báo lệch", data.drift_alerts?.length || 0],
+              ["Phiên bản mô hình", data.prediction_versions?.length || 0],
             ].map(([label, value]) => (
               <section
                 key={String(label)}
@@ -532,7 +576,7 @@ export default function AdminOperationsPage({ view }) {
           <section className="rounded-panel border border-border bg-surface">
             <div className="flex items-center justify-between border-b border-border px-5 py-4">
               <div>
-                <h2 className="font-semibold">Sức khỏe dịch vụ Core</h2>
+                <h2 className="font-semibold">Sức khỏe dịch vụ lõi</h2>
                 <p className="mt-1 text-[12px] text-ink-muted">
                   Sẵn sàng {data.health?.ready_count || 0} · Chưa sẵn sàng{" "}
                   {data.health?.unavailable_count || 0}
@@ -549,7 +593,7 @@ export default function AdminOperationsPage({ view }) {
                     <div className="flex items-center justify-between gap-3">
                       <span className="font-semibold">{name}</span>
                       <span className={value.status === "ready" ? "text-brand" : "text-danger"}>
-                        {value.status}
+                        {labelStatus(value.status)}
                       </span>
                     </div>
                     <p className="mt-1 text-ink-muted">
@@ -573,7 +617,7 @@ export default function AdminOperationsPage({ view }) {
                   <div key={model._id} className="grid gap-2 px-5 py-4 text-[13px] md:grid-cols-5">
                     <span>{model._id}</span>
                     <span>{model.count} dự đoán</span>
-                    <span>Confidence {Number(model.average_confidence || 0).toFixed(3)}</span>
+                    <span>Độ tin cậy {Number(model.average_confidence || 0).toFixed(3)}</span>
                     <span>MAE {errorMetric?.mae ?? "Chưa đủ dữ liệu"}</span>
                     <span>RMSE {errorMetric?.rmse ?? "Chưa đủ dữ liệu"}</span>
                   </div>
@@ -583,23 +627,23 @@ export default function AdminOperationsPage({ view }) {
           </section>
           <section className="overflow-x-auto rounded-panel border border-border bg-surface">
             <div className="border-b border-border px-5 py-4 font-semibold">
-              Calibration jobs và lỗi
+              Tác vụ hiệu chỉnh và lỗi
             </div>
             <table className="w-full min-w-[760px] text-left text-[12px]">
               <thead className="bg-surface-quiet text-ink-muted">
                 <tr>
-                  <th className="p-4">Job</th>
+                  <th className="p-4">Mã tác vụ</th>
                   <th className="p-4">Trạng thái</th>
-                  <th className="p-4">Model</th>
+                  <th className="p-4">Mô hình</th>
                   <th className="p-4">Thời gian</th>
                   <th className="p-4">Lỗi</th>
                 </tr>
               </thead>
               <tbody>
-                {(data.calibration_jobs || []).map((job) => (
+                {(data.calibration_jobs || []).slice(0, calibrationJobLimit).map((job) => (
                   <tr key={job._id} className="border-t border-border">
                     <td className="p-4 font-mono">{job._id}</td>
-                    <td className="p-4">{job.status}</td>
+                    <td className="p-4">{labelStatus(job.status)}</td>
                     <td className="p-4">{job.model_type}</td>
                     <td className="p-4">
                       {job.created_at
@@ -613,11 +657,22 @@ export default function AdminOperationsPage({ view }) {
                 ))}
               </tbody>
             </table>
+            {(data.calibration_jobs || []).length > calibrationJobLimit && (
+              <div className="border-t border-border p-4 text-center">
+                <button
+                  type="button"
+                  className="apple-button-secondary"
+                  onClick={() => setCalibrationJobLimit((value) => value + 20)}
+                >
+                  Xem thêm job hiệu chỉnh
+                </button>
+              </div>
+            )}
           </section>
           <div className="grid gap-4 lg:grid-cols-2">
             <section className="rounded-panel border border-border bg-surface">
               <div className="border-b border-border px-5 py-4 font-semibold">
-                Item drift alerts
+                Cảnh báo độ khó bị lệch
               </div>
               <div className="divide-y divide-border">
                 {(data.drift_alerts || []).map((alert) => {
@@ -625,7 +680,7 @@ export default function AdminOperationsPage({ view }) {
                     <div key={alert._id} className="px-5 py-4 text-[12px]">
                       <p className="font-semibold">{alert.question_version_id}</p>
                       <p className="mt-1 text-ink-muted">
-                        Difficulty {alert.difficulty} · Sample {alert.sample_size} · Context{" "}
+                        Độ khó {alert.difficulty} · Mẫu {alert.sample_size} · Bối cảnh{" "}
                         {alert.calibration_context?.delivery_context || "mixed"}
                       </p>
                     </div>
@@ -633,14 +688,14 @@ export default function AdminOperationsPage({ view }) {
                 })}
                 {!data.drift_alerts?.length && (
                   <p className="px-5 py-8 text-center text-[12px] text-ink-muted">
-                    Không có cảnh báo drift
+                    Không có cảnh báo độ lệch
                   </p>
                 )}
               </div>
             </section>
             <section className="rounded-panel border border-border bg-surface">
               <div className="border-b border-border px-5 py-4 font-semibold">
-                Bank coverage theo môn và difficulty
+                Độ phủ ngân hàng theo môn và độ khó
               </div>
               <div className="divide-y divide-border">
                 {(data.bank_coverage || []).map((row) => (
@@ -649,7 +704,7 @@ export default function AdminOperationsPage({ view }) {
                     className="grid grid-cols-3 px-5 py-3 text-[12px]"
                   >
                     <span>{row.subject}</span>
-                    <span>Level {row.difficulty_level}</span>
+                    <span>Mức {row.difficulty_level}</span>
                     <span>{row.count} câu</span>
                   </div>
                 ))}
@@ -694,30 +749,82 @@ export default function AdminOperationsPage({ view }) {
             </div>
           </section>
           <section className="overflow-x-auto rounded-panel border border-border bg-surface">
-            <table className="w-full min-w-[900px] text-left text-[12px]">
+            <table className="hidden w-full min-w-[900px] text-left text-[12px] md:table">
               <thead className="bg-surface-quiet text-ink-muted">
                 <tr>
                   <th className="p-4">Thời gian</th>
-                  <th className="p-4">Actor</th>
+                  <th className="p-4">Người thực hiện</th>
                   <th className="p-4">Hành động</th>
-                  <th className="p-4">Entity</th>
+                  <th className="p-4">Đối tượng</th>
                   <th className="p-4">Chi tiết</th>
                 </tr>
               </thead>
               <tbody>
-                {(data.events || []).map((event) => (
+                {(data.events || []).slice(0, auditLimit).map((event) => (
                   <tr key={event._id} className="border-t border-border">
-                    <td className="p-4">{new Date(event.created_at).toLocaleString("vi-VN")}</td>
-                    <td className="p-4">{event.actor_id}</td>
+                    <td className="p-4">{formatDateTime(event.created_at)}</td>
+                    <td className="p-4">{event.actor_email || event.actor_id || "Hệ thống"}</td>
                     <td className="p-4 font-semibold">{event.action}</td>
                     <td className="p-4">
                       {event.entity_type} {event.entity_id}
                     </td>
-                    <td className="p-4 font-mono">{JSON.stringify(event.details || {})}</td>
+                    <td className="max-w-md p-4">
+                      {Object.keys(event.details || {}).length ? (
+                        <details>
+                          <summary className="cursor-pointer font-semibold text-brand">
+                            Xem chi tiết
+                          </summary>
+                          <pre className="mt-2 max-w-md overflow-auto whitespace-pre-wrap rounded-control bg-surface-quiet p-3 text-[11px]">
+                            {JSON.stringify(event.details, null, 2)}
+                          </pre>
+                        </details>
+                      ) : (
+                        "Không có"
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            <div className="divide-y divide-border md:hidden">
+              {(data.events || []).slice(0, auditLimit).map((event) => (
+                <article key={event._id} className="space-y-2 p-4 text-[12px]">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="font-semibold">{event.action}</p>
+                    <time className="shrink-0 text-ink-muted">
+                      {formatDateTime(event.created_at)}
+                    </time>
+                  </div>
+                  <p className="break-all text-ink-muted">
+                    {event.actor_email || event.actor_id || "Hệ thống"}
+                  </p>
+                  <p>
+                    {event.entity_type} {event.entity_id}
+                  </p>
+                  {Object.keys(event.details || {}).length > 0 && (
+                    <details>
+                      <summary className="cursor-pointer font-semibold text-brand">
+                        Xem chi tiết
+                      </summary>
+                      <pre className="mt-2 overflow-auto whitespace-pre-wrap break-all rounded-control bg-surface-quiet p-3 text-[11px]">
+                        {JSON.stringify(event.details, null, 2)}
+                      </pre>
+                    </details>
+                  )}
+                </article>
+              ))}
+            </div>
+            {(data.events || []).length > auditLimit && (
+              <div className="border-t border-border p-4 text-center">
+                <button
+                  type="button"
+                  className="apple-button-secondary"
+                  onClick={() => setAuditLimit((value) => value + 20)}
+                >
+                  Xem thêm sự kiện kiểm toán
+                </button>
+              </div>
+            )}
           </section>
         </>
       )}

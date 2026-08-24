@@ -1,5 +1,6 @@
 "use client";
 import { useEffect } from "react";
+import Link from "next/link";
 export default function AppError({ error, reset }) {
   useEffect(() => {
     console.error(error);
@@ -14,7 +15,7 @@ export default function AppError({ error, reset }) {
           Không thể hiển thị trang này
         </h1>
         <p className="mt-2 text-[14px] leading-6 text-ink-muted">
-          Thử tải lại trang hoặc quay về Khám phá để tiếp tục
+          Thử tải lại trang hoặc quay về trang chủ để tiếp tục
         </p>
         <div className="mt-6 flex flex-wrap gap-2">
           <button
@@ -24,12 +25,12 @@ export default function AppError({ error, reset }) {
           >
             Thử lại
           </button>
-          <a
-            href="/kham-pha"
+          <Link
+            href="/"
             className="inline-flex min-h-11 items-center rounded-control border border-border-strong px-4 py-2 text-[14px] font-semibold text-ink hover:bg-surface-quiet"
           >
-            Về Khám phá
-          </a>
+            Về trang chủ
+          </Link>
         </div>
       </section>
     </main>

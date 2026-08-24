@@ -45,6 +45,21 @@ export function getUserFromToken(token = getToken()) {
     return null;
   }
 }
+function errorMessage(data, fallback) {
+  const detail = data?.detail ?? data?.message;
+  if (typeof detail === "string" && detail.trim()) return detail;
+  if (Array.isArray(detail)) {
+    const messages = detail
+      .map((item) => (typeof item === "string" ? item : item?.msg || item?.message))
+      .filter(Boolean);
+    if (messages.length) return messages.join("; ");
+  }
+  if (detail && typeof detail === "object") {
+    const message = detail.message || detail.msg || detail.code;
+    if (typeof message === "string" && message.trim()) return message;
+  }
+  return fallback;
+}
 export async function logoutAPI(allDevices = false) {
   const token = getToken();
   if (!token) return;
@@ -67,7 +82,7 @@ export async function login(email, password) {
     credentials: "include",
   });
   const json = await res.json();
-  if (!res.ok) throw new Error(json.detail || json.message || "Lỗi xác thực thông tin đăng nhập");
+  if (!res.ok) throw new Error(errorMessage(json, "Lỗi xác thực thông tin đăng nhập"));
   return json.data;
 }
 export async function register(email, password, full_name, slug, agreed_to_terms) {
@@ -79,7 +94,7 @@ export async function register(email, password, full_name, slug, agreed_to_terms
     body: JSON.stringify({ email, password, full_name, slug, agreed_to_terms }),
   });
   const json = await res.json();
-  if (!res.ok) throw new Error(json.detail || json.message || "Không thể tạo hồ sơ người dùng mới");
+  if (!res.ok) throw new Error(errorMessage(json, "Không thể tạo hồ sơ người dùng mới"));
   return json.data;
 }
 export async function getUserMe() {
@@ -120,8 +135,7 @@ export const resetPasswordAPI = async (token, newPassword) => {
     body: JSON.stringify({ token, new_password: newPassword }),
   });
   const data = await res.json();
-  if (!res.ok)
-    throw new Error(data.message || data.detail || "Không thể cập nhật cấu trúc mật khẩu mới");
+  if (!res.ok) throw new Error(errorMessage(data, "Không thể cập nhật cấu trúc mật khẩu mới"));
   return data.data || data;
 };
 export const verifyCodeAPI = async (token) => {
@@ -131,7 +145,7 @@ export const verifyCodeAPI = async (token) => {
     body: JSON.stringify({ token }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || data.detail || "Lỗi sai lệch mã thông báo xác thực");
+  if (!res.ok) throw new Error(errorMessage(data, "Lỗi sai lệch mã thông báo xác thực"));
   return data.data || data;
 };
 export const passkeyLoginBeginAPI = async (email) => {
@@ -141,8 +155,7 @@ export const passkeyLoginBeginAPI = async (email) => {
     body: JSON.stringify({ email }),
   });
   const data = await res.json();
-  if (!res.ok)
-    throw new Error(data.message || data.detail || "Không thể tạo luồng đăng nhập chứng thư số");
+  if (!res.ok) throw new Error(errorMessage(data, "Không thể tạo luồng đăng nhập chứng thư số"));
   return data.data || data;
 };
 export const passkeyLoginFinishAPI = async (email, credential) => {
@@ -153,8 +166,7 @@ export const passkeyLoginFinishAPI = async (email, credential) => {
     credentials: "include",
   });
   const data = await res.json();
-  if (!res.ok)
-    throw new Error(data.message || data.detail || "Lỗi hoàn tất luồng đăng nhập chứng thư số");
+  if (!res.ok) throw new Error(errorMessage(data, "Lỗi hoàn tất luồng đăng nhập chứng thư số"));
   return data.data || data;
 };
 export const passkeyRegisterBeginAPI = async (email) => {
@@ -164,8 +176,7 @@ export const passkeyRegisterBeginAPI = async (email) => {
     body: JSON.stringify({ email }),
   });
   const data = await res.json();
-  if (!res.ok)
-    throw new Error(data.message || data.detail || "Không thể tạo luồng đăng ký chứng thư số");
+  if (!res.ok) throw new Error(errorMessage(data, "Không thể tạo luồng đăng ký chứng thư số"));
   return data.data || data;
 };
 export const passkeyRegisterFinishAPI = async (email, credential) => {
@@ -175,8 +186,7 @@ export const passkeyRegisterFinishAPI = async (email, credential) => {
     body: JSON.stringify({ email, credential }),
   });
   const data = await res.json();
-  if (!res.ok)
-    throw new Error(data.message || data.detail || "Lỗi hoàn tất luồng đăng ký chứng thư số");
+  if (!res.ok) throw new Error(errorMessage(data, "Lỗi hoàn tất luồng đăng ký chứng thư số"));
   return data.data || data;
 };
 export const getGoogleLoginUrlAPI = async () => {
@@ -192,6 +202,6 @@ export const completeGoogleLoginAPI = async (code, state) => {
     { credentials: "include" },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || data.detail || "Không thể xác thực bằng Google");
+  if (!res.ok) throw new Error(errorMessage(data, "Không thể xác thực bằng Google"));
   return data.data || data;
 };

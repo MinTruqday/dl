@@ -6,22 +6,14 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Bell, Menu, Search, X } from "lucide-react";
 import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import { useAnnouncements } from "@/shared/contexts/AnnouncementContext";
-import { availableNavigation, navigationGroups } from "./navigation";
-import { assessmentRequest } from "@/features/assessment/services/assessment.service";
-const fullWidthRoutes = ["/giao-vien/de/soan-thao", "/hoc-sinh/lam-bai"];
+import { availableNavigation, navigationGroupsFor, projectIdFromPath } from "./navigation";
+const fullWidthRoutes = [];
 function NavigationList({ onNavigate }) {
   const pathname = usePathname();
   const { user } = useAuth();
-  const [personas, setPersonas] = useState([]);
-  useEffect(() => {
-    if (!user) return;
-    assessmentRequest("/education/profiles/me")
-      .then((profile) => setPersonas(profile.personas || []))
-      .catch(() => setPersonas([]));
-  }, [user]);
   const groups = useMemo(
-    () => availableNavigation(navigationGroups, user, personas),
-    [personas, user],
+    () => availableNavigation(navigationGroupsFor(pathname), user),
+    [pathname, user],
   );
   return (
     <div className="flex flex-col gap-6">
@@ -117,6 +109,7 @@ export default function AppShell({ children, requireAuth }) {
     .trim()
     .charAt(0)
     .toUpperCase();
+  const projectId = projectIdFromPath(pathname);
   return (
     <div className="min-h-[100dvh] bg-canvas text-ink">
       <a
@@ -135,40 +128,44 @@ export default function AppShell({ children, requireAuth }) {
           >
             <Menu size={20} strokeWidth={1.75} />
           </button>
-          <form
-            action="/giao-vien/cau-hoi"
-            className="relative hidden w-full max-w-[520px] md:block"
-          >
-            <button
-              type="submit"
-              aria-label="Thực hiện tìm kiếm"
-              className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center text-ink-faint hover:text-ink"
+          {projectId && (
+            <form
+              action={`/qa/projects/${projectId}/knowledge`}
+              className="relative hidden w-full max-w-[520px] md:block"
             >
-              <Search aria-hidden="true" size={18} strokeWidth={1.75} />
-            </button>
-            <label htmlFor="workspace-search" className="sr-only">
-              Tìm câu hỏi bài đánh giá và tài liệu
-            </label>
-            <input
-              id="workspace-search"
-              name="q"
-              type="search"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              className="h-10 w-full rounded-control border border-transparent bg-surface-quiet pl-10 pr-3 text-[14px] text-ink outline-none transition focus:border-brand focus:bg-surface focus:ring-2 focus:ring-brand-soft"
-              placeholder="Tìm câu hỏi bài đánh giá và tài liệu"
-            />
-          </form>
+              <button
+                type="submit"
+                aria-label="Thực hiện tìm kiếm"
+                className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center text-ink-faint hover:text-ink"
+              >
+                <Search aria-hidden="true" size={18} strokeWidth={1.75} />
+              </button>
+              <label htmlFor="workspace-search" className="sr-only">
+                Tìm trong tri thức dự án
+              </label>
+              <input
+                id="workspace-search"
+                name="q"
+                type="search"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                className="h-10 w-full rounded-control border border-transparent bg-surface-quiet pl-10 pr-3 text-[14px] text-ink outline-none transition focus:border-brand focus:bg-surface focus:ring-2 focus:ring-brand-soft"
+                placeholder="Tìm Requirement Test Case Defect"
+              />
+            </form>
+          )}
           <div className="ml-auto flex items-center gap-2">
             {user ? (
               <>
-                <Link
-                  href="/giao-vien/cau-hoi"
-                  className="flex h-11 w-11 items-center justify-center rounded-control text-ink-muted hover:bg-surface-quiet hover:text-ink md:hidden"
-                  aria-label="Tìm kiếm"
-                >
-                  <Search size={19} strokeWidth={1.75} />
-                </Link>
+                {projectId && (
+                  <Link
+                    href={`/qa/projects/${projectId}/knowledge`}
+                    className="flex h-11 w-11 items-center justify-center rounded-control text-ink-muted hover:bg-surface-quiet hover:text-ink md:hidden"
+                    aria-label="Tìm kiếm"
+                  >
+                    <Search size={19} strokeWidth={1.75} />
+                  </Link>
+                )}
                 {notificationEnabled && (
                   <Link
                     href="/thong-bao"
@@ -254,7 +251,7 @@ export default function AppShell({ children, requireAuth }) {
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-[224px] border-r border-border bg-surface lg:block">
         <div className="flex h-[60px] items-center border-b border-border px-5">
           <Link href="/" className="text-[19px] font-semibold tracking-[-0.035em] text-ink">
-            Hiệu chỉnh AI
+            QA Intelligence
           </Link>
         </div>
         <nav
@@ -280,7 +277,7 @@ export default function AppShell({ children, requireAuth }) {
                 onClick={() => setMobileOpen(false)}
                 className="text-[19px] font-semibold tracking-[-0.035em]"
               >
-                Hiệu chỉnh AI
+                QA Intelligence
               </Link>
               <button
                 type="button"
@@ -296,7 +293,10 @@ export default function AppShell({ children, requireAuth }) {
         </div>
       )}
 
-      <main id="main-content" className="min-h-[100dvh] pt-[60px] lg:pl-[224px]">
+      <main
+        id="main-content"
+        className="min-h-[100dvh] min-w-0 overflow-x-hidden pt-[60px] lg:pl-[224px]"
+      >
         <div
           className={fullWidth ? "flex min-h-[calc(100dvh-60px)] w-full flex-col" : "page-shell"}
         >

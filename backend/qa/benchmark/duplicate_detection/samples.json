@@ -1,0 +1,27 @@
+[
+  {
+    "id": "duplicate-phone-001",
+    "task": "duplicate_detection",
+    "input": {
+      "threshold": 0.72,
+      "left": {
+        "title": "Phone 11 digits",
+        "preconditions_doc": {"type": "doc", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "User exists"}]}]},
+        "steps": [{"action_doc": {"type": "doc", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Enter 11 digits"}]}]}, "expected_doc": {"type": "doc", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Rejected"}]}]}}],
+        "expected_result_doc": {"type": "doc", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Rejected"}]}]},
+        "requirement_version_ids": ["REQV-1"],
+        "acceptance_criterion_ids": ["AC-1"]
+      },
+      "right": {
+        "title": "Phone 11 digits",
+        "preconditions_doc": {"type": "doc", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "User exists"}]}]},
+        "steps": [{"action_doc": {"type": "doc", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Enter 11 digits"}]}]}, "expected_doc": {"type": "doc", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Rejected"}]}]}}],
+        "expected_result_doc": {"type": "doc", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Rejected"}]}]},
+        "requirement_version_ids": ["REQV-1"],
+        "acceptance_criterion_ids": ["AC-1"]
+      }
+    },
+    "ground_truth": {"labels": ["duplicate"]},
+    "tags": ["duplicate", "boundary"]
+  }
+]

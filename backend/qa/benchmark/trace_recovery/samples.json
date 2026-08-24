@@ -1,0 +1,16 @@
+[
+  {
+    "id": "trace-phone-001",
+    "task": "trace_recovery",
+    "input": {
+      "requirement": "profile phone validation accepts 10 digits",
+      "threshold": 0.18,
+      "tests": [
+        {"id": "TCV-PHONE", "text": "profile phone validation with 10 digits"},
+        {"id": "TCV-LOGIN", "text": "login password expiration and reset"}
+      ]
+    },
+    "ground_truth": {"labels": ["TCV-PHONE"]},
+    "tags": ["trace", "lexical", "validation"]
+  }
+]

@@ -4,6 +4,18 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getAttemptResult } from "../services/assessment.service";
 import TiptapReadOnly from "../editor/TiptapReadOnly";
+import { labelStatus } from "../lib/assessment.presentation";
+
+function formatAnswer(value) {
+  if (value === null || value === undefined || value === "") return "Chưa trả lời";
+  if (Array.isArray(value)) return value.map(formatAnswer).join(", ");
+  if (typeof value !== "object") return String(value);
+  if (value.option_id) return `Phương án ${value.option_id}`;
+  if (value.option_ids) return `Các phương án ${value.option_ids.join(", ")}`;
+  if (value.value !== undefined) return String(value.value);
+  if (value.text !== undefined) return String(value.text);
+  return Object.values(value).map(formatAnswer).filter(Boolean).join(" · ");
+}
 export default function StudentResultPage() {
   const attemptId = useSearchParams().get("id") || "";
   const [result, setResult] = useState(null);
@@ -16,6 +28,15 @@ export default function StudentResultPage() {
           setError(reason instanceof Error ? reason.message : "Không thể tải kết quả"),
         );
   }, [attemptId]);
+  if (!attemptId)
+    return (
+      <div role="alert" className="space-y-4 p-10 text-center">
+        <p className="text-danger">Chưa chọn lượt làm bài</p>
+        <Link className="apple-button" href="/hoc-sinh/bai-duoc-giao">
+          Quay lại bài được giao
+        </Link>
+      </div>
+    );
   if (error)
     return (
       <div role="alert" className="p-10 text-center text-danger">
@@ -32,7 +53,7 @@ export default function StudentResultPage() {
         <h1 className="mt-4 text-[38px] font-semibold">
           {result.total_score} trên {result.total_possible_score}
         </h1>
-        <p className="mt-2 text-[13px] text-ink-muted">Trạng thái {result.status}</p>
+        <p className="mt-2 text-[13px] text-ink-muted">Trạng thái {labelStatus(result.status)}</p>
         {result.pending_scores > 0 && (
           <p className="mt-3 rounded-control bg-warning-soft p-3 text-warning">
             Có {result.pending_scores} câu đang chờ chấm thủ công
@@ -63,10 +84,19 @@ export default function StudentResultPage() {
                         : "Sai"}
                   </p>
                 </div>
-                <p className="text-[12px] text-ink-muted">
-                  Câu trả lời {JSON.stringify(response.submitted_answer)} · Đáp án{" "}
-                  {JSON.stringify(response.answer_key)}
-                </p>
+                {response.stem_doc && (
+                  <TiptapReadOnly value={response.stem_doc} label={`Nội dung câu ${index + 1}`} />
+                )}
+                <div className="grid gap-3 rounded-control bg-surface-quiet p-4 text-[13px] sm:grid-cols-2">
+                  <div>
+                    <p className="text-ink-muted">Câu trả lời của bạn</p>
+                    <p className="mt-1 font-semibold">{formatAnswer(response.submitted_answer)}</p>
+                  </div>
+                  <div>
+                    <p className="text-ink-muted">Đáp án</p>
+                    <p className="mt-1 font-semibold">{formatAnswer(response.answer_key)}</p>
+                  </div>
+                </div>
                 {response.solution_doc && (
                   <TiptapReadOnly
                     value={response.solution_doc}

@@ -10,19 +10,29 @@ import {
   listAssessments,
   unpublishAssessment,
 } from "../services/assessment.service";
+import { labelStatus } from "../lib/assessment.presentation";
 export default function AssessmentListPage() {
   const [drafts, setDrafts] = useState([]);
   const [assessments, setAssessments] = useState([]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
   const load = useCallback(async () => {
-    const [draftValues, assessmentValues] = await Promise.all([
-      listAssessmentDrafts(),
-      listAssessments(),
-    ]);
-    setDrafts(draftValues);
-    setAssessments(assessmentValues);
+    setLoading(true);
+    setError("");
+    try {
+      const [draftValues, assessmentValues] = await Promise.all([
+        listAssessmentDrafts(),
+        listAssessments(),
+      ]);
+      setDrafts(draftValues);
+      setAssessments(assessmentValues);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Không thể tải bài đánh giá");
+    } finally {
+      setLoading(false);
+    }
   }, []);
   useEffect(() => {
     void load();
@@ -57,7 +67,7 @@ export default function AssessmentListPage() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-brand">
-            Assessments
+            Quản lý đề kiểm tra
           </p>
           <h1 className="mt-2 text-[30px] font-semibold">Bài đánh giá</h1>
         </div>
@@ -85,10 +95,13 @@ export default function AssessmentListPage() {
               >
                 <p className="font-semibold">{draft.title}</p>
                 <p className="mt-1 text-[12px] text-ink-muted">
-                  Revision {draft.revision} · {draft.status}
+                  Phiên bản chỉnh sửa {draft.revision} · {labelStatus(draft.status)}
                 </p>
               </Link>
             ))}
+            {!loading && !drafts.length && (
+              <p className="px-5 py-10 text-center text-[13px] text-ink-muted">Chưa có bản nháp</p>
+            )}
           </div>
         </section>
         <section className="rounded-panel border border-border bg-surface">
@@ -106,7 +119,7 @@ export default function AssessmentListPage() {
                   >
                     <p className="font-semibold">{assessment.title || assessment._id}</p>
                     <p className="mt-1 text-[12px] text-ink-muted">
-                      {assessment.status} · {assessment.current_version_id}
+                      {labelStatus(assessment.status)} · Phiên bản đã khóa
                     </p>
                   </Link>
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -152,9 +165,16 @@ export default function AssessmentListPage() {
                   </div>
                 </article>
               ))}
+            {!loading &&
+              !assessments.some((item) => ["published", "scheduled"].includes(item.status)) && (
+                <p className="px-5 py-10 text-center text-[13px] text-ink-muted">
+                  Chưa có bài đã xuất bản hoặc lên lịch
+                </p>
+              )}
           </div>
         </section>
       </div>
+      {loading && <div className="skeleton h-32" />}
       {message && (
         <p role="status" className="rounded-control bg-brand-soft p-3 text-brand">
           {message}

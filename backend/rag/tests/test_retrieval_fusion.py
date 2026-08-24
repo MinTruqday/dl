@@ -100,4 +100,4 @@ def test_retrieve_fails_explicitly_when_dense_and_sparse_are_unavailable(monkeyp
     monkeypatch.setattr(retrieval.bm25_store, "search", failed)
 
     with pytest.raises(RetrievalUnavailableError):
-        asyncio.run(service.retrieve("curriculum evidence", k=1))
+        asyncio.run(service.retrieve("project evidence", k=1))

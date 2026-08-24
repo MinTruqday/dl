@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, List, Literal, Optional
+from typing import Any, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -32,24 +32,21 @@ class DocumentContentFormat(str, Enum):
     CSV = "csv"
 
 
-class EducationMetadata(BaseModel):
+class ArtifactMetadata(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    source_type: Literal["teacher_material"] = "teacher_material"
-    authority: Literal["supplementary"] = "supplementary"
-    education_level: str = Field(min_length=1, max_length=100)
-    subject: str = Field(min_length=1, max_length=100)
-    target_program: str = Field(min_length=1, max_length=100)
-    chapter_id: Optional[str] = Field(default=None, max_length=200)
-    lesson_id: Optional[str] = Field(default=None, max_length=200)
-    section_id: Optional[str] = Field(default=None, max_length=200)
-    concept_ids: List[str] = Field(default_factory=list, max_length=200)
-    skill_ids: List[str] = Field(default_factory=list, max_length=200)
-    learning_objective_ids: List[str] = Field(default_factory=list, max_length=200)
-    content_type: str = Field(default="teacher_material", min_length=1, max_length=100)
-    source_version: str = Field(min_length=1, max_length=200)
-    mapping_confidence: float = Field(default=0.5, ge=0, le=1)
-    mapping_status: Literal["needs_review"] = "needs_review"
+    project_id: str = Field(min_length=1, max_length=128)
+    artifact_type: str = Field(default="project_document", min_length=1, max_length=100)
+    artifact_id: Optional[str] = Field(default=None, max_length=128)
+    artifact_version_id: Optional[str] = Field(default=None, max_length=128)
+    module: Optional[str] = Field(default=None, max_length=200)
+    status: str = Field(default="active", min_length=1, max_length=100)
+    authority: str = Field(default="reference", min_length=1, max_length=100)
+    source_type: str = Field(default="project_document", min_length=1, max_length=100)
+    source_version: Optional[str] = Field(default=None, max_length=200)
+    content_type: Optional[str] = Field(default=None, max_length=100)
+    conflict_key: Optional[str] = Field(default=None, max_length=200)
+    claim_value: Optional[str] = Field(default=None, max_length=500)
 
 
 class DocumentBase(BaseModel):
@@ -76,7 +73,7 @@ class DocumentBase(BaseModel):
     draft_content: Optional[Any] = None
     toc: List[dict] = Field(default_factory=list)
     reading_time_minutes: int = 0
-    education_metadata: Optional[EducationMetadata] = None
+    artifact_metadata: Optional[ArtifactMetadata] = None
 
 
 class DocumentContentUpdate(BaseModel):
@@ -98,7 +95,7 @@ class DocumentUpdate(BaseModel):
     expected_version: Optional[datetime] = None
     file_url: Optional[str] = None
     content_format: Optional[DocumentContentFormat] = None
-    education_metadata: Optional[EducationMetadata] = None
+    artifact_metadata: Optional[ArtifactMetadata] = None
 
 
 class DocumentCreate(DocumentBase):

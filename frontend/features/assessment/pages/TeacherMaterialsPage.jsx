@@ -15,6 +15,7 @@ import {
   reviewSourceMapping,
   searchTeacherMaterials,
 } from "@/features/assessment/services/assessment.service";
+import { labelStatus, labelSubject } from "../lib/assessment.presentation";
 function slugOf(value) {
   return (
     value
@@ -480,11 +481,13 @@ export default function TeacherMaterialsPage() {
             value={materialSearch}
             onChange={(event) => setMaterialSearch(event.target.value)}
             placeholder="Tìm tài liệu theo từ khóa hoặc vector"
+            aria-label="Tìm tài liệu"
           />
           <select
             className="apple-input"
             value={subjectFilter}
             onChange={(event) => setSubjectFilter(event.target.value)}
+            aria-label="Lọc môn học"
           >
             <option value="">Mọi môn học</option>
             <option value="math">Toán</option>
@@ -496,6 +499,7 @@ export default function TeacherMaterialsPage() {
             className="apple-input"
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value)}
+            aria-label="Lọc trạng thái"
           >
             <option value="">Mọi trạng thái</option>
             <option value="queued">Đang chờ</option>
@@ -508,11 +512,13 @@ export default function TeacherMaterialsPage() {
             value={topicFilter}
             onChange={(event) => setTopicFilter(event.target.value)}
             placeholder="Topic concept skill"
+            aria-label="Lọc chủ đề concept hoặc kỹ năng"
           />
           <select
             className="apple-input"
             value={typeFilter}
             onChange={(event) => setTypeFilter(event.target.value)}
+            aria-label="Lọc loại tệp"
           >
             <option value="">Mọi loại tệp</option>
             {["pdf", "docx", "pptx", "txt", "markdown", "latex", "png", "jpg", "jpeg", "webp"].map(
@@ -629,10 +635,10 @@ export default function TeacherMaterialsPage() {
                   </div>
                 </div>
                 <p className="text-[12px] text-ink-muted">
-                  {material.education_metadata?.subject} ·{" "}
+                  {labelSubject(material.education_metadata?.subject)} ·{" "}
                   {material.education_metadata?.target_program} ·{" "}
-                  {mapping?.mapping_status || "Chưa có ánh xạ"} · confidence{" "}
-                  {mapping?.mapping_confidence ?? 0} · source version{" "}
+                  {mapping ? labelStatus(mapping.mapping_status) : "Chưa có ánh xạ"} · độ tin cậy{" "}
+                  {mapping?.mapping_confidence ?? 0} · phiên bản nguồn{" "}
                   {material.education_metadata?.source_version || "chưa có"} · cập nhật{" "}
                   {material.updated_at
                     ? new Date(material.updated_at).toLocaleDateString("vi-VN")

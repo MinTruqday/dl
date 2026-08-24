@@ -1,0 +1,9 @@
+[
+  {
+    "id": "generation-category-001",
+    "task": "test_generation",
+    "input": {"requested_categories": ["happy_path", "negative", "boundary", "validation"]},
+    "ground_truth": {"labels": ["happy_path", "negative", "boundary", "validation"]},
+    "tags": ["coverage", "generation"]
+  }
+]

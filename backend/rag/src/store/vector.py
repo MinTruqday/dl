@@ -43,19 +43,15 @@ class VectorStore:
                 "owner_id",
                 "source_type",
                 "authority",
-                "education_level",
-                "subject",
-                "target_program",
-                "chapter_id",
-                "lesson_id",
-                "section_id",
-                "concept_ids",
-                "skill_ids",
-                "learning_objective_ids",
+                "project_id",
+                "artifact_type",
+                "artifact_id",
+                "artifact_version_id",
+                "module",
+                "status",
                 "document_id",
                 "visibility",
                 "source_version",
-                "mapping_status",
                 "content_type",
                 "conflict_key",
                 "claim_value",
@@ -106,17 +102,7 @@ class VectorStore:
             match = MatchAny(any=value) if isinstance(value, list) else MatchValue(value=value)
             must.append(FieldCondition(key=key, match=match))
         if not is_admin:
-            access_conditions = [
-                Filter(
-                    must=[FieldCondition(key="visibility", match=MatchValue(value="public"))],
-                    must_not=[
-                        FieldCondition(
-                            key="source_type", match=MatchValue(value="teacher_material")
-                        )
-                    ],
-                ),
-                FieldCondition(key="source_type", match=MatchValue(value="curriculum")),
-            ]
+            access_conditions = [FieldCondition(key="visibility", match=MatchValue(value="public"))]
             if requester_id:
                 access_conditions.extend(
                     [

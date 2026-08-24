@@ -66,6 +66,7 @@ export default function CalibrationPage() {
         className="apple-input max-w-xl"
         value={assessmentId}
         onChange={(event) => setAssessmentId(event.target.value)}
+        aria-label="Chọn bài đánh giá"
       >
         <option value="">Chọn bài đánh giá</option>
         {assessments.map((assessment) => (

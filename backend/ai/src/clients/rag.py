@@ -4,42 +4,9 @@ from src.core.infrastructure.configuration import settings
 
 
 class RagClient:
-    """Thin HTTP boundary to the standalone RAG service."""
+    """Thin HTTP boundary to the project isolated RAG service."""
 
     embedding_dimensions = 1024
-
-    @staticmethod
-    async def teacher_materials_allowed(requester_id: Optional[str]) -> bool:
-        if not requester_id:
-            return False
-        try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.get(
-                    f"{settings.ASSESSMENT_URL}/education/internal/teacher-profile/{requester_id}/material-policy",
-                    headers={"X-Internal-Token": settings.SECRET_KEY},
-                )
-            if response.status_code >= 400:
-                return False
-            return response.json().get("use_own_materials") is not False
-        except (httpx.HTTPError, ValueError):
-            return False
-
-    @staticmethod
-    async def filter_teacher_materials(
-        documents: List[Dict], requester_id: Optional[str]
-    ) -> List[Dict]:
-        if not any(
-            (document.get("metadata") or {}).get("source_type") == "teacher_material"
-            for document in documents
-        ):
-            return documents
-        if await RagClient.teacher_materials_allowed(requester_id):
-            return documents
-        return [
-            document
-            for document in documents
-            if (document.get("metadata") or {}).get("source_type") != "teacher_material"
-        ]
 
     @staticmethod
     async def embed_query(text: str) -> List[float]:
@@ -108,7 +75,7 @@ class RagClient:
             )
             response.raise_for_status()
             data = response.json().get("data", {})
-            return await RagClient.filter_teacher_materials(data.get("documents", []), requester_id)
+            return data.get("documents", [])
 
     @staticmethod
     async def multi_query_retrieve(
@@ -132,7 +99,7 @@ class RagClient:
             )
             response.raise_for_status()
             data = response.json().get("data", {})
-            return await RagClient.filter_teacher_materials(data.get("documents", []), requester_id)
+            return data.get("documents", [])
 
     @staticmethod
     async def cross_document_retrieve(
@@ -156,7 +123,7 @@ class RagClient:
             )
             response.raise_for_status()
             data = response.json().get("data", {})
-            return await RagClient.filter_teacher_materials(data.get("documents", []), requester_id)
+            return data.get("documents", [])
 
     @staticmethod
     async def get_cache(

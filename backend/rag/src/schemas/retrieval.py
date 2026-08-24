@@ -1,55 +1,49 @@
 from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class CurriculumFilters(BaseModel):
+class ArtifactFilters(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    education_level: Optional[str] = None
-    subject: Optional[str] = None
-    target_program: Optional[str] = None
-    chapter_id: Optional[str] = None
-    lesson_id: Optional[str] = None
-    section_id: Optional[str] = None
-    concept_ids: Optional[List[str]] = None
-    skill_ids: Optional[List[str]] = None
-    learning_objective_ids: Optional[List[str]] = None
-    content_type: Optional[str] = None
-    source_type: Optional[str] = None
+    project_id: Optional[str] = None
+    artifact_type: Optional[str] = None
+    artifact_id: Optional[str] = None
+    artifact_version_id: Optional[str] = None
+    module: Optional[str] = None
+    status: Optional[str] = None
     authority: Optional[List[str]] = None
+    source_type: Optional[str] = None
     source_version: Optional[str] = None
+    content_type: Optional[str] = None
 
 
 class RetrieveRequest(BaseModel):
-    query: str = Field(description="Nội dung truy vấn")
-    document_ids: Optional[List[str]] = Field(
-        default=None, description="Danh sách ID tài liệu giới hạn phạm vi tìm kiếm"
-    )
-    k: int = Field(default=5, ge=1, le=100, description="Số lượng kết quả tối đa cần lấy")
-    query_vector_override: Optional[List[float]] = Field(
-        default=None, description="Vector truy vấn ghi đè nếu có"
-    )
+    query: str = Field(min_length=1, max_length=10000)
+    document_ids: Optional[List[str]] = None
+    k: int = Field(default=5, ge=1, le=100)
+    query_vector_override: Optional[List[float]] = None
     requester_id: Optional[str] = None
     is_admin: bool = False
-    metadata_filters: CurriculumFilters = Field(default_factory=CurriculumFilters)
+    metadata_filters: ArtifactFilters = Field(default_factory=ArtifactFilters)
 
 
 class MultiQueryRetrieveRequest(BaseModel):
-    question: str = Field(description="Câu hỏi truy vấn đa chiều")
-    document_ids: Optional[List[str]] = Field(default=None, description="Danh sách ID tài liệu")
-    k: int = Field(default=5, ge=1, le=100, description="Số lượng kết quả tối đa cần lấy")
+    question: str = Field(min_length=1, max_length=10000)
+    document_ids: Optional[List[str]] = None
+    k: int = Field(default=5, ge=1, le=100)
     requester_id: Optional[str] = None
     is_admin: bool = False
-    metadata_filters: CurriculumFilters = Field(default_factory=CurriculumFilters)
+    metadata_filters: ArtifactFilters = Field(default_factory=ArtifactFilters)
 
 
 class CrossDocRetrieveRequest(BaseModel):
-    question: str = Field(description="Câu hỏi truy vấn liên tài liệu")
-    document_ids: List[str] = Field(description="Danh sách ID các tài liệu cần phân tích so sánh")
-    k: int = Field(default=5, ge=1, le=100, description="Số lượng kết quả tối đa cần lấy")
+    question: str = Field(min_length=1, max_length=10000)
+    document_ids: List[str]
+    k: int = Field(default=5, ge=1, le=100)
     requester_id: Optional[str] = None
     is_admin: bool = False
-    metadata_filters: CurriculumFilters = Field(default_factory=CurriculumFilters)
+    metadata_filters: ArtifactFilters = Field(default_factory=ArtifactFilters)
 
 
 class RetrievedDocument(BaseModel):

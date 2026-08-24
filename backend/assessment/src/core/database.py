@@ -17,7 +17,7 @@ database = Database()
 
 
 async def connect_database():
-    database.client = AsyncIOMotorClient(settings.MONGODB_URI)
+    database.client = AsyncIOMotorClient(settings.MONGODB_URI, tz_aware=True)
     await database.client.admin.command("ping")
     await create_indexes()
 
@@ -47,6 +47,11 @@ async def create_indexes():
     await db.assignment_batches.create_index([("owner_id", 1), ("idempotency_key", 1)], unique=True)
     await db.attempts.create_index(
         [("assignment_id", 1), ("student_id", 1), ("idempotency_key", 1)], unique=True
+    )
+    await db.attempts.create_index(
+        [("active_slot", 1)],
+        unique=True,
+        partialFilterExpression={"active_slot": {"$type": "string"}},
     )
     await db.attempts.create_index(
         [("student_id", 1), ("assessment_version_id", 1), ("updated_at", -1)]

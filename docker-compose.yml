@@ -155,11 +155,12 @@ services:
       - ./frontend:/app
       - frontend_node_modules:/app/node_modules
       - ./packages:/packages
-      - frontend_next_cache:/app/.next
+      - frontend_next_cache:/app/.next-dev
     environment:
       WATCHPACK_POLLING: "true"
       CHOKIDAR_USEPOLLING: "true"
       NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_DIST_DIR: .next-dev
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
@@ -271,39 +272,38 @@ services:
     networks:
       - doclib_network
 
-  assessment:
+  qa:
     healthcheck: *app-healthcheck
     build:
       context: ./backend
-      dockerfile: ./assessment/Dockerfile
-    container_name: doclib_assessment
+      dockerfile: ./qa/Dockerfile
+    container_name: doclib_qa
     restart: always
     ports:
-      - 8016:8000
+      - 8017:8000
     labels:
       - traefik.enable=true
-      - traefik.http.routers.assessment.rule=PathPrefix(`/education`) || PathPrefix(`/assessment-drafts`) || PathPrefix(`/assessment-versions`) || PathPrefix(`/question-drafts`) || PathPrefix(`/question-versions`) || PathPrefix(`/question-bank`) || PathPrefix(`/questions`) || PathPrefix(`/blueprints`) || PathPrefix(`/assessments`) || PathPrefix(`/attempts`) || PathPrefix(`/calibration`) || PathPrefix(`/revisions`) || PathPrefix(`/imports`) || PathPrefix(`/draft-revisions`) || PathPrefix(`/students`) || PathPrefix(`/dashboard`) || PathPrefix(`/review-queue`) || PathPrefix(`/research`) || PathPrefix(`/audit`) || PathPrefix(`/entities`) || PathPrefix(`/operations`) || PathPrefix(`/teacher-materials`)
-      - traefik.http.routers.assessment.priority=100
-      - traefik.http.services.assessment.loadbalancer.server.port=8000
+      - traefik.http.routers.qa.rule=PathPrefix(`/api/qa`)
+      - traefik.http.routers.qa.priority=110
+      - traefik.http.services.qa.loadbalancer.server.port=8000
     environment:
       <<: *service-environment
-      ASSESSMENT_DB_NAME: ${ASSESSMENT_DB_NAME:-assessment}
-      ASSESSMENT_ALLOW_TEST_IDENTITY: ${ASSESSMENT_ALLOW_TEST_IDENTITY:-false}
-      CALIBRATION_MIN_SAMPLE_SIZE: ${CALIBRATION_MIN_SAMPLE_SIZE:-20}
-      ASSESSMENT_PII_RETENTION_DAYS: ${ASSESSMENT_PII_RETENTION_DAYS:-730}
+      QA_DB_NAME: ${QA_DB_NAME:-qa}
+      QA_ALLOW_TEST_IDENTITY: ${QA_ALLOW_TEST_IDENTITY:-false}
       WORKER_URL: http://worker:8000
       RAG_URL: http://rag:8000
+      QDRANT_URL: http://qdrant:6333
       AI_URL: http://ai:8000
       CONTENT_URL: http://content:8000
     depends_on:
       - mongodb
-      - redis
       - rag
       - ai
       - content
+      - worker
     volumes:
-      - ./backend/assessment/src:/app/src
-      - ./backend/assessment/tests:/app/tests
+      - ./backend/qa/src:/app/src
+      - ./backend/qa/tests:/app/tests
     networks:
       - doclib_network
 
@@ -403,60 +403,6 @@ services:
       timeout: 20s
       retries: 3
 
-  collection:
-    healthcheck: *app-healthcheck
-    build:
-      context: ./backend
-      dockerfile: ./collection/Dockerfile
-    container_name: doclib_collection
-    restart: always
-    ports:
-      - 8012:8000
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.collector.rule=PathPrefix(`/thu-thap`)
-      - traefik.http.services.collector.loadbalancer.server.port=8000
-    environment:
-      <<: [*service-environment, *minio-environment]
-      COLLECTION_DB_NAME: ${COLLECTION_DB_NAME:?COLLECTION_DB_NAME is required}
-      RABBITMQ_URI: ${RABBITMQ_URI:?RABBITMQ_URI is required}
-      MAX_DOWNLOAD_SIZE_BYTES: ${MAX_DOWNLOAD_SIZE_BYTES:?MAX_DOWNLOAD_SIZE_BYTES is required}
-      MIN_FILE_SIZE_BYTES: ${MIN_FILE_SIZE_BYTES:?MIN_FILE_SIZE_BYTES is required}
-    depends_on:
-      - mongodb
-      - redis
-      - rabbitmq
-      - minio
-    volumes:
-      - ./backend/collection/src:/app/src
-      - ./backend/logs/collector:/app/logs
-    networks:
-      - doclib_network
-
-  compilation:
-    healthcheck: *app-healthcheck
-    build:
-      context: ./backend
-      dockerfile: ./compilation/Dockerfile
-    container_name: doclib_compilation
-    restart: always
-    ports:
-      - 8011:8000
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.editor.rule=PathPrefix(`/exports`)
-      - traefik.http.services.editor.loadbalancer.server.port=8000
-    environment:
-      <<: *service-environment
-      ASSESSMENT_URL: http://assessment:8000
-    depends_on:
-      - redis
-      - assessment
-    volumes:
-      - ./backend/compilation/src:/app/src
-    networks:
-      - doclib_network
-
   authentication:
     healthcheck: *app-healthcheck
     build:
@@ -468,7 +414,7 @@ services:
       - 8007:8000
     labels:
       - traefik.enable=true
-      - traefik.http.routers.authentication.rule=PathPrefix(`/xac-thuc`) || PathPrefix(`/google`)
+      - traefik.http.routers.authentication.rule=PathPrefix(`/xac-thuc/`) || PathPrefix(`/google`)
       - traefik.http.services.authentication.loadbalancer.server.port=8000
     environment:
       <<: *service-environment
@@ -581,6 +527,7 @@ services:
       RABBITMQ_URI: ${RABBITMQ_URI:?RABBITMQ_URI is required}
       WORKER_DB_NAME: ${WORKER_DB_NAME:?WORKER_DB_NAME is required}
       WORKER_MAX_RETRIES: ${WORKER_MAX_RETRIES:?WORKER_MAX_RETRIES is required}
+      QA_URL: http://qa:8000
     depends_on:
       mongodb:
         condition: service_started

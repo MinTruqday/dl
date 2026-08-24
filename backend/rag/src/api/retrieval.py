@@ -22,16 +22,11 @@ from src.core.infrastructure.configuration import settings
 router = APIRouter(dependencies=[Depends(verify_internal_token)])
 
 
-async def record_material_access(operation, query, requester_id, is_admin, source_type, docs):
-    material_docs = [
-        doc for doc in docs if (doc.get("metadata") or {}).get("source_type") == "teacher_material"
-    ]
-    if source_type != "teacher_material" and not material_docs:
-        return
+async def record_retrieval_access(operation, query, requester_id, is_admin, docs):
     document_ids = sorted(
         {
             str((doc.get("metadata") or {}).get("document_id"))
-            for doc in material_docs
+            for doc in docs
             if (doc.get("metadata") or {}).get("document_id")
         }
     )
@@ -41,9 +36,15 @@ async def record_material_access(operation, query, requester_id, is_admin, sourc
             "operation": operation,
             "requester_id": requester_id or "unknown",
             "is_admin": bool(is_admin),
-            "source_type": "teacher_material",
+            "project_ids": sorted(
+                {
+                    str((doc.get("metadata") or {}).get("project_id"))
+                    for doc in docs
+                    if (doc.get("metadata") or {}).get("project_id")
+                }
+            ),
             "document_ids": document_ids,
-            "chunk_count": len(material_docs),
+            "chunk_count": len(docs),
             "query_sha256": hmac.new(
                 settings.SECRET_KEY.encode("utf-8"), query.encode("utf-8"), hashlib.sha256
             ).hexdigest(),
@@ -52,15 +53,18 @@ async def record_material_access(operation, query, requester_id, is_admin, sourc
     )
 
 
-@router.get("/audit/material-access")
-async def list_material_access_audit(
+@router.get("/audit/retrieval-access")
+async def list_retrieval_access_audit(
     requester_id: str | None = None,
+    project_id: str | None = None,
     document_id: str | None = None,
     limit: int = Query(default=500, ge=1, le=5000),
 ):
-    query = {"source_type": "teacher_material"}
+    query = {}
     if requester_id:
         query["requester_id"] = requester_id
+    if project_id:
+        query["project_ids"] = project_id
     if document_id:
         query["document_ids"] = document_id
     return (
@@ -89,10 +93,8 @@ async def retrieve_documents(
         )
     except RetrievalUnavailableError as error:
         raise HTTPException(status_code=503, detail={"code": str(error)}) from error
-    await record_material_access(
-        "retrieve", req.query, requester_id, is_admin, req.metadata_filters.source_type, docs
-    )
-    metrics_collector.record_curriculum_retrieval(docs, req.metadata_filters.source_type)
+    await record_retrieval_access("retrieve", req.query, requester_id, is_admin, docs)
+    metrics_collector.record_artifact_retrieval(docs, req.metadata_filters.artifact_type)
     citations_data = retriever.get_citations(docs)
     retrieved_docs = [
         RetrievedDocument(
@@ -137,15 +139,8 @@ async def multi_query_retrieve(
         )
     except RetrievalUnavailableError as error:
         raise HTTPException(status_code=503, detail={"code": str(error)}) from error
-    await record_material_access(
-        "multi_query_retrieve",
-        req.question,
-        requester_id,
-        is_admin,
-        req.metadata_filters.source_type,
-        docs,
-    )
-    metrics_collector.record_curriculum_retrieval(docs, req.metadata_filters.source_type)
+    await record_retrieval_access("multi_query_retrieve", req.question, requester_id, is_admin, docs)
+    metrics_collector.record_artifact_retrieval(docs, req.metadata_filters.artifact_type)
     citations_data = retriever.get_citations(docs)
     retrieved_docs = [
         RetrievedDocument(
@@ -190,15 +185,10 @@ async def cross_document_retrieve(
         )
     except RetrievalUnavailableError as error:
         raise HTTPException(status_code=503, detail={"code": str(error)}) from error
-    await record_material_access(
-        "cross_document_retrieve",
-        req.question,
-        requester_id,
-        is_admin,
-        req.metadata_filters.source_type,
-        docs,
+    await record_retrieval_access(
+        "cross_document_retrieve", req.question, requester_id, is_admin, docs
     )
-    metrics_collector.record_curriculum_retrieval(docs, req.metadata_filters.source_type)
+    metrics_collector.record_artifact_retrieval(docs, req.metadata_filters.artifact_type)
     citations_data = retriever.get_citations(docs)
     retrieved_docs = [
         RetrievedDocument(

@@ -59,7 +59,10 @@ export default function AssessmentComposerPage() {
   const requestedId = searchParams.get("id") || "";
   const [draft, setDraft] = useState(null);
   const [layout, setLayout] = useState(emptyTiptapDoc());
-  const [title, setTitle] = useState("Đề kiểm tra Toán THPT");
+  const [title, setTitle] = useState("");
+  const [educationLevel, setEducationLevel] = useState("THPT");
+  const [subject, setSubject] = useState("math");
+  const [targetProgram, setTargetProgram] = useState("grade_12");
   const [loading, setLoading] = useState(Boolean(requestedId));
   const [status, setStatus] = useState(requestedId ? "Đang tải" : "Bản nháp mới");
   const [error, setError] = useState("");
@@ -108,6 +111,9 @@ export default function AssessmentComposerPage() {
       const value = await getAssessmentDraft(id);
       setDraft(value);
       setTitle(value.title);
+      setEducationLevel(value.context?.education_level || "THPT");
+      setSubject(value.context?.subject || "math");
+      setTargetProgram(value.context?.target_program || "grade_12");
       setLayout(value.layout_doc);
       setHighStakes(Boolean(value.context?.high_stakes));
       const questionCount = value.questions?.length || 0;
@@ -189,15 +195,19 @@ export default function AssessmentComposerPage() {
     return () => window.clearTimeout(timer);
   }, [draft?._id, highStakes, layout, title]);
   const startDraft = async () => {
+    if (!title.trim()) {
+      setError("Nhập tên bài đánh giá trước khi tạo bản nháp");
+      return;
+    }
     setLoading(true);
     setError("");
     try {
       const created = await createAssessmentDraft({
-        title,
+        title: title.trim(),
         context: {
-          education_level: "THPT",
-          subject: "math",
-          target_program: "grade_12",
+          education_level: educationLevel,
+          subject,
+          target_program: targetProgram,
           high_stakes: highStakes,
         },
         layout_doc: textDoc("Hướng dẫn làm bài"),
@@ -235,7 +245,12 @@ export default function AssessmentComposerPage() {
         answer_key: { option_id: "A" },
         solution_doc: emptyTiptapDoc(),
         scoring_rule: { points: 1 },
-        curriculum_links: [{ subject: "math", target_program: "grade_12" }],
+        curriculum_links: [
+          {
+            subject: draft.context?.subject || subject,
+            target_program: draft.context?.target_program || targetProgram,
+          },
+        ],
         concept_ids: [],
         skill_ids: [],
         tags: [],
@@ -580,12 +595,16 @@ export default function AssessmentComposerPage() {
       <header className="sticky top-[60px] z-20 border-b border-border bg-surface/95 px-4 py-3 backdrop-blur md:px-7">
         <div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-3">
           <BookOpenCheck className="text-brand" size={22} />
-          <input
-            className="min-w-0 flex-1 bg-transparent text-[18px] font-semibold outline-none"
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            aria-label="Tên bài đánh giá"
-          />
+          {draft ? (
+            <input
+              className="min-w-0 flex-1 bg-transparent text-[18px] font-semibold outline-none"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              aria-label="Tên bài đánh giá"
+            />
+          ) : (
+            <p className="min-w-0 flex-1 text-[18px] font-semibold">Soạn bài đánh giá mới</p>
+          )}
           <span className="text-[12px] text-ink-muted">{status}</span>
           <Button variant="secondary" disabled={!draft} onClick={showPreview}>
             Xem như học sinh
@@ -599,23 +618,83 @@ export default function AssessmentComposerPage() {
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-[1500px] gap-6 p-4 md:p-7 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <main className="space-y-5">
+      <div
+        className={`mx-auto grid max-w-[1500px] gap-6 p-4 md:p-7 ${draft ? "xl:grid-cols-[minmax(0,1fr)_320px]" : "max-w-[980px]"}`}
+      >
+        <div className="space-y-5">
           {!draft && !loading ? (
-            <section className="rounded-panel border border-border bg-surface p-8 text-center">
+            <section className="rounded-panel border border-border bg-surface p-6 md:p-8">
               <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-brand">
-                Assessment Composer
+                Thiết lập bài đánh giá
               </p>
               <h1 className="mt-3 text-[30px] font-semibold tracking-[-0.035em]">
                 Bắt đầu một đề kiểm tra có bằng chứng
               </h1>
-              <p className="mx-auto mt-3 max-w-[620px] text-[14px] text-ink-muted">
+              <p className="mt-3 max-w-[680px] text-[14px] text-ink-muted">
                 Soạn thủ công nhập đề có sẵn hoặc nhận đề xuất từ AI trong cùng một cấu trúc câu hỏi
                 có version và kiểm định
               </p>
-              <Button className="mt-6" onClick={startDraft}>
-                Tạo bản nháp
-              </Button>
+              <div className="mt-7 grid gap-4 sm:grid-cols-2">
+                <label className="text-[12px] font-semibold text-ink-muted sm:col-span-2">
+                  Tên bài đánh giá
+                  <input
+                    className="apple-input mt-1 w-full"
+                    value={title}
+                    onChange={(event) => setTitle(event.target.value)}
+                    placeholder="Ví dụ Kiểm tra cuối chương Hàm số"
+                    autoFocus
+                  />
+                </label>
+                <label className="text-[12px] font-semibold text-ink-muted">
+                  Cấp học
+                  <select
+                    className="apple-input mt-1 w-full"
+                    value={educationLevel}
+                    onChange={(event) => setEducationLevel(event.target.value)}
+                  >
+                    <option value="THCS">Trung học cơ sở</option>
+                    <option value="THPT">Trung học phổ thông</option>
+                  </select>
+                </label>
+                <label className="text-[12px] font-semibold text-ink-muted">
+                  Môn học
+                  <select
+                    className="apple-input mt-1 w-full"
+                    value={subject}
+                    onChange={(event) => setSubject(event.target.value)}
+                  >
+                    <option value="math">Toán</option>
+                    <option value="physics">Vật lý</option>
+                    <option value="chemistry">Hóa học</option>
+                    <option value="biology">Sinh học</option>
+                    <option value="literature">Ngữ văn</option>
+                    <option value="english">Tiếng Anh</option>
+                  </select>
+                </label>
+                <label className="text-[12px] font-semibold text-ink-muted">
+                  Chương trình mục tiêu
+                  <input
+                    className="apple-input mt-1 w-full"
+                    value={targetProgram}
+                    onChange={(event) => setTargetProgram(event.target.value)}
+                    placeholder="Ví dụ grade_12"
+                  />
+                </label>
+                <label className="flex items-center gap-2 self-end rounded-control bg-surface-quiet p-3 text-[12px]">
+                  <input
+                    type="checkbox"
+                    checked={highStakes}
+                    onChange={(event) => setHighStakes(event.target.checked)}
+                  />
+                  Dùng cho quyết định quan trọng
+                </label>
+              </div>
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                <Button onClick={startDraft}>Tạo bản nháp</Button>
+                <p className="text-[12px] text-ink-muted">
+                  Mọi dự đoán độ khó vẫn phải qua giáo viên kiểm định trước khi xuất bản
+                </p>
+              </div>
             </section>
           ) : loading ? (
             <div className="skeleton h-80" />
@@ -711,674 +790,686 @@ export default function AssessmentComposerPage() {
               {error}
             </p>
           )}
-        </main>
+        </div>
 
-        <aside className="space-y-4 xl:sticky xl:top-[132px] xl:self-start">
-          <section className="rounded-panel border border-border bg-surface p-5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-ink-faint">
-              Blueprint
-            </p>
-            <label className="mt-3 block text-[12px] font-semibold text-ink-muted">
-              Tổng số câu mục tiêu
-              <input
-                className="apple-input mt-1 w-full"
-                type="number"
-                min="1"
-                max="500"
-                value={blueprintTotalQuestions}
-                onChange={(event) =>
-                  setBlueprintTotalQuestions(Math.max(1, Number(event.target.value) || 1))
-                }
-              />
-            </label>
-            <label className="mt-3 block text-[12px] font-semibold text-ink-muted">
-              Tổng điểm mục tiêu
-              <input
-                className="apple-input mt-1 w-full"
-                type="number"
-                min="0.1"
-                max="10000"
-                step="0.1"
-                value={blueprintTotalPoints}
-                onChange={(event) => setBlueprintTotalPoints(event.target.value)}
-              />
-            </label>
-            <div className="mt-4 grid grid-cols-5 gap-1.5">
-              {[1, 2, 3, 4, 5].map((level) => (
-                <div key={level} className="rounded-control bg-surface-quiet px-2 py-3 text-center">
-                  <p className="text-[11px] text-ink-muted">Mức {level}</p>
-                  <input
-                    className="mt-1 w-full bg-transparent text-center text-[18px] font-semibold outline-none"
-                    type="number"
-                    min="0"
-                    value={difficultyDistribution[String(level)] || 0}
-                    onChange={(event) =>
-                      setDifficultyDistribution((current) => ({
-                        ...current,
-                        [String(level)]: Math.max(0, Number(event.target.value) || 0),
-                      }))
-                    }
-                    aria-label={`Số câu mức ${level}`}
-                  />
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 h-2 overflow-hidden rounded-full bg-surface-quiet">
-              <div
-                className="h-full bg-brand transition-[width]"
-                style={{
-                  width: `${Math.min(100, (Object.values(difficultyDistribution).reduce((sum, value) => sum + value, 0) / Math.max(1, blueprintTotalQuestions)) * 100)}%`,
-                }}
-              />
-            </div>
-            <p className="mt-2 text-[12px] text-ink-muted">
-              Tổng {Object.values(difficultyDistribution).reduce((sum, value) => sum + value, 0)}{" "}
-              trên {blueprintTotalQuestions} câu mục tiêu và hiện có {draft?.questions?.length || 0}{" "}
-              câu
-            </p>
-            <button
-              type="button"
-              className="apple-button-secondary mt-3 w-full"
-              disabled={!draft}
-              onClick={suggestDistribution}
-            >
-              Gợi ý phần phân bố còn thiếu
-            </button>
-            <details className="mt-3 rounded-control border border-border px-3 py-2">
-              <summary className="cursor-pointer text-[12px] font-semibold">
-                Phân bố loại câu hỏi
-              </summary>
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                {questionTypes.map((type) => (
-                  <label key={type} className="text-[11px] text-ink-muted">
-                    {questionTypeLabels[type]}
-                    <input
-                      className="apple-input mt-1 w-full"
-                      type="number"
-                      min="0"
-                      max="500"
-                      value={questionTypeConstraints[type] || 0}
-                      onChange={(event) =>
-                        setQuestionTypeConstraints((current) => ({
-                          ...current,
-                          [type]: Math.max(0, Number(event.target.value) || 0),
-                        }))
-                      }
-                    />
-                  </label>
-                ))}
-              </div>
-            </details>
-            <details className="mt-3 rounded-control border border-border px-3 py-2">
-              <summary className="cursor-pointer text-[12px] font-semibold">
-                Phân bố mức nhận thức
-              </summary>
-              <label className="mt-3 flex items-center gap-2 text-[11px] text-ink-muted">
-                <input
-                  type="checkbox"
-                  checked={includeCognitiveConstraints}
-                  onChange={(event) => setIncludeCognitiveConstraints(event.target.checked)}
-                />{" "}
-                Áp dụng ràng buộc nhận thức
-              </label>
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                {cognitiveLevels.map(([level, label]) => (
-                  <label key={level} className="text-[11px] text-ink-muted">
-                    {label}
-                    <input
-                      className="apple-input mt-1 w-full"
-                      type="number"
-                      min="0"
-                      max="500"
-                      disabled={!includeCognitiveConstraints}
-                      value={cognitiveLevelConstraints[level] || 0}
-                      onChange={(event) =>
-                        setCognitiveLevelConstraints((current) => ({
-                          ...current,
-                          [level]: Math.max(0, Number(event.target.value) || 0),
-                        }))
-                      }
-                    />
-                  </label>
-                ))}
-              </div>
-            </details>
-            <label className="mt-3 block text-[12px] font-semibold text-ink-muted">
-              Concept bắt buộc
-              <input
-                className="apple-input mt-1 w-full"
-                value={coverageConcepts}
-                onChange={(event) => setCoverageConcepts(event.target.value)}
-                placeholder="dao_ham cuc_tri"
-              />
-            </label>
-            <label className="mt-3 block text-[12px] font-semibold text-ink-muted">
-              Skill bắt buộc
-              <input
-                className="apple-input mt-1 w-full"
-                value={coverageSkills}
-                onChange={(event) => setCoverageSkills(event.target.value)}
-                placeholder="differentiate analyze"
-              />
-            </label>
-            <label className="mt-3 block text-[12px] font-semibold text-ink-muted">
-              Topic hoặc curriculum node
-              <input
-                className="apple-input mt-1 w-full"
-                value={coverageCurriculumNodes}
-                onChange={(event) => setCoverageCurriculumNodes(event.target.value)}
-                placeholder="chapter lesson section"
-              />
-            </label>
-            <label className="mt-3 flex items-center gap-2 text-[12px] font-semibold text-ink-muted">
-              <input
-                type="checkbox"
-                checked={coverageRequired}
-                onChange={(event) => setCoverageRequired(event.target.checked)}
-              />{" "}
-              Coverage là bắt buộc
-            </label>
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <label className="text-[12px] font-semibold text-ink-muted">
-                Năng lực từ
+        {draft && (
+          <aside className="space-y-4 xl:sticky xl:top-[132px] xl:self-start">
+            <section className="rounded-panel border border-border bg-surface p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-ink-faint">
+                Blueprint
+              </p>
+              <label className="mt-3 block text-[12px] font-semibold text-ink-muted">
+                Tổng số câu mục tiêu
                 <input
                   className="apple-input mt-1 w-full"
                   type="number"
                   min="1"
-                  max="5"
-                  step="0.1"
-                  value={abilityMinimum}
-                  onChange={(event) => setAbilityMinimum(event.target.value)}
+                  max="500"
+                  value={blueprintTotalQuestions}
+                  onChange={(event) =>
+                    setBlueprintTotalQuestions(Math.max(1, Number(event.target.value) || 1))
+                  }
                 />
               </label>
-              <label className="text-[12px] font-semibold text-ink-muted">
-                Đến
+              <label className="mt-3 block text-[12px] font-semibold text-ink-muted">
+                Tổng điểm mục tiêu
                 <input
                   className="apple-input mt-1 w-full"
                   type="number"
-                  min="1"
-                  max="5"
+                  min="0.1"
+                  max="10000"
                   step="0.1"
-                  value={abilityMaximum}
-                  onChange={(event) => setAbilityMaximum(event.target.value)}
+                  value={blueprintTotalPoints}
+                  onChange={(event) => setBlueprintTotalPoints(event.target.value)}
                 />
               </label>
-            </div>
-            <label className="mt-3 block text-[12px] font-semibold text-ink-muted">
-              Mục đích
-              <select
-                className="apple-input mt-1 w-full"
-                value={assessmentPurpose}
-                onChange={(event) => setAssessmentPurpose(event.target.value)}
+              <div className="mt-4 grid grid-cols-5 gap-1.5">
+                {[1, 2, 3, 4, 5].map((level) => (
+                  <div
+                    key={level}
+                    className="rounded-control bg-surface-quiet px-2 py-3 text-center"
+                  >
+                    <p className="text-[11px] text-ink-muted">Mức {level}</p>
+                    <input
+                      className="mt-1 w-full bg-transparent text-center text-[18px] font-semibold outline-none"
+                      type="number"
+                      min="0"
+                      value={difficultyDistribution[String(level)] || 0}
+                      onChange={(event) =>
+                        setDifficultyDistribution((current) => ({
+                          ...current,
+                          [String(level)]: Math.max(0, Number(event.target.value) || 0),
+                        }))
+                      }
+                      aria-label={`Số câu mức ${level}`}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 h-2 overflow-hidden rounded-full bg-surface-quiet">
+                <div
+                  className="h-full bg-brand transition-[width]"
+                  style={{
+                    width: `${Math.min(100, (Object.values(difficultyDistribution).reduce((sum, value) => sum + value, 0) / Math.max(1, blueprintTotalQuestions)) * 100)}%`,
+                  }}
+                />
+              </div>
+              <p className="mt-2 text-[12px] text-ink-muted">
+                Tổng {Object.values(difficultyDistribution).reduce((sum, value) => sum + value, 0)}{" "}
+                trên {blueprintTotalQuestions} câu mục tiêu và hiện có{" "}
+                {draft?.questions?.length || 0} câu
+              </p>
+              <button
+                type="button"
+                className="apple-button-secondary mt-3 w-full"
+                disabled={!draft}
+                onClick={suggestDistribution}
               >
-                <option value="assigned_assessment">Bài được giao</option>
-                <option value="formative">Đánh giá thường xuyên</option>
-                <option value="summative">Đánh giá tổng kết</option>
-                <option value="research_retest">Kiểm định lại nghiên cứu</option>
-              </select>
-            </label>
-            <label className="mt-3 block text-[12px] font-semibold text-ink-muted">
-              Exposure tối đa mỗi câu
-              <input
-                className="apple-input mt-1 w-full"
-                type="number"
-                min="0"
-                value={maximumExposureCount}
-                onChange={(event) => setMaximumExposureCount(event.target.value)}
-                placeholder="Không giới hạn"
-              />
-            </label>
-            <label className="mt-3 flex items-center gap-2 text-[12px] font-semibold text-ink-muted">
-              <input
-                type="checkbox"
-                checked={saveAsTemplate}
-                onChange={(event) => setSaveAsTemplate(event.target.checked)}
-              />{" "}
-              Lưu thành Blueprint mẫu
-            </label>
-            {saveAsTemplate && (
-              <label className="mt-2 block text-[12px] font-semibold text-ink-muted">
-                Tên mẫu
-                <input
-                  className="apple-input mt-1 w-full"
-                  value={templateName}
-                  onChange={(event) => setTemplateName(event.target.value)}
-                  placeholder="Mẫu kiểm tra chương một"
-                />
-              </label>
-            )}
-            <button
-              type="button"
-              className="apple-button-secondary mt-4 w-full"
-              disabled={!draft}
-              onClick={buildBlueprint}
-            >
-              Tạo Blueprint target hiện tại
-            </button>
-            <button
-              type="button"
-              className="apple-button-secondary mt-2 w-full"
-              disabled={!draft}
-              onClick={analyzeDifficulty}
-            >
-              Phân tích và đề xuất cân phân bố
-            </button>
-            <button
-              type="button"
-              className="apple-button-secondary mt-2 w-full"
-              disabled={!draft}
-              onClick={analyzeLearnerFit}
-            >
-              Phân tích phù hợp người học
-            </button>
-            <button
-              type="button"
-              className="apple-button-secondary mt-2 w-full"
-              disabled={!draft?.blueprint_id}
-              onClick={proposeRebalance}
-            >
-              Đề xuất cân bằng toàn bộ Blueprint
-            </button>
-            {blueprintTemplates.length > 0 && (
+                Gợi ý phần phân bố còn thiếu
+              </button>
               <details className="mt-3 rounded-control border border-border px-3 py-2">
                 <summary className="cursor-pointer text-[12px] font-semibold">
-                  Blueprint mẫu đã lưu
+                  Phân bố loại câu hỏi
                 </summary>
-                <div className="mt-3 space-y-2">
-                  {blueprintTemplates.map((template) => (
-                    <div
-                      key={template._id}
-                      className="flex items-center justify-between gap-2 text-[11px]"
-                    >
-                      <span>
-                        {String(template.name)} · {Number(template.total_questions)} câu
-                      </span>
-                      <button
-                        type="button"
-                        className="apple-button-secondary px-2 py-1"
-                        onClick={() => void applyBlueprintTemplate(String(template._id))}
-                      >
-                        Nhân bản và áp dụng
-                      </button>
-                    </div>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  {questionTypes.map((type) => (
+                    <label key={type} className="text-[11px] text-ink-muted">
+                      {questionTypeLabels[type]}
+                      <input
+                        className="apple-input mt-1 w-full"
+                        type="number"
+                        min="0"
+                        max="500"
+                        value={questionTypeConstraints[type] || 0}
+                        onChange={(event) =>
+                          setQuestionTypeConstraints((current) => ({
+                            ...current,
+                            [type]: Math.max(0, Number(event.target.value) || 0),
+                          }))
+                        }
+                      />
+                    </label>
                   ))}
                 </div>
               </details>
-            )}
-            {difficultyAnalysis && (
-              <div className="mt-4 space-y-2 rounded-control bg-surface-quiet p-3 text-[12px]">
-                <p className="font-semibold">Blueprint target</p>
-                <p>
-                  {[1, 2, 3, 4, 5]
-                    .map((level) => {
-                      return `L${level} ${difficultyAnalysis.blueprint_distribution?.[String(level)] || 0}`;
-                    })
-                    .join(" · ")}
-                </p>
-                <p className="font-semibold">Target từng câu</p>
-                <p>
-                  {[1, 2, 3, 4, 5]
-                    .map((level) => {
-                      return `L${level} ${difficultyAnalysis.target_distribution?.[String(level)] || 0}`;
-                    })
-                    .join(" · ")}
-                </p>
-                <p className="font-semibold">Ước lượng giáo viên</p>
-                <p>
-                  {[1, 2, 3, 4, 5]
-                    .map((level) => {
-                      return `L${level} ${difficultyAnalysis.teacher_distribution?.[String(level)] || 0}`;
-                    })
-                    .join(" · ")}
-                </p>
-                <p className="font-semibold">AI dự đoán hiện tại</p>
-                <p>
-                  {[1, 2, 3, 4, 5]
-                    .map((level) => {
-                      return `L${level} ${difficultyAnalysis.predicted_distribution?.[String(level)] || 0}`;
-                    })
-                    .join(" · ")}
-                </p>
-                <p className="font-semibold">Hiệu chỉnh thực nghiệm</p>
-                <p>
-                  {[1, 2, 3, 4, 5]
-                    .map((level) => {
-                      return `L${level} ${difficultyAnalysis.calibrated_distribution?.[String(level)] || 0}`;
-                    })
-                    .join(" · ")}
-                </p>
-                <p className="font-semibold">Khoảng thiếu thừa so với Blueprint</p>
-                <p>
-                  {difficultyAnalysis.recommendations
-                    ?.map(
-                      (item) =>
-                        `L${item.difficulty_level} ${item.delta > 0 ? "+" : ""}${item.delta}`,
-                    )
-                    .join(" · ") || "Đã khớp hoặc chưa có Blueprint"}
-                </p>
-                {difficultyAnalysis.unresolved_question_draft_ids?.length > 0 && (
-                  <p className="text-warning">
-                    Còn {difficultyAnalysis.unresolved_question_draft_ids.length} câu chưa có dự
-                    đoán được phép hiển thị
-                  </p>
-                )}
-                <p className="text-ink-muted">
-                  Đề xuất không tự sửa câu và cần giáo viên chấp nhận
-                </p>
-              </div>
-            )}
-            {learnerFit && (
-              <div className="mt-4 space-y-2 rounded-control bg-surface-quiet p-3 text-[12px]">
-                <p className="font-semibold">Mức phù hợp người học</p>
-                <p>
-                  Điểm phù hợp {Math.round(Number(learnerFit.expected_fit_overall || 0) * 100)} phần
-                  trăm
-                </p>
-                <p>
-                  Xác suất làm đúng dự kiến{" "}
-                  {Math.round(Number(learnerFit.expected_probability_correct || 0) * 100)} phần trăm
-                </p>
-                <p>
-                  Khoảng thành công{" "}
-                  {Math.round(Number(learnerFit.expected_success_range?.[0] || 0) * 100)} đến{" "}
-                  {Math.round(Number(learnerFit.expected_success_range?.[1] || 0) * 100)} phần trăm
-                </p>
-                <p>Độ tin cậy {Math.round(Number(learnerFit.confidence || 0) * 100)} phần trăm</p>
-                <p>
-                  Dễ quá {learnerFit.categories?.too_easy || 0} · Phù hợp{" "}
-                  {learnerFit.categories?.suitable || 0} · Thách thức{" "}
-                  {learnerFit.categories?.challenging || 0} · Khó quá{" "}
-                  {learnerFit.categories?.too_hard || 0}
-                </p>
-                {learnerFit.per_topic?.map((topic) => (
-                  <p key={topic.topic}>
-                    {topic.topic} · phù hợp {Math.round(Number(topic.fit_score || 0) * 100)} phần
-                    trăm · {topic.item_count} câu
-                  </p>
-                ))}
-                {learnerFit.item_level_mismatch?.length > 0 && (
-                  <p>
-                    Có {learnerFit.item_level_mismatch.length} câu lệch dải mục tiêu cần rà soát
-                  </p>
-                )}
-                {learnerFit.low_evidence_warning && (
-                  <p className="text-warning">
-                    Có dữ liệu độ khó hoặc năng lực chưa đủ mạnh nên kết quả dùng fallback độ tin
-                    cậy thấp
-                  </p>
-                )}
-                <p className="text-ink-muted">
-                  Phân tích không tự thay đổi câu hỏi và cần giáo viên quyết định
-                </p>
-              </div>
-            )}
-            {rebalanceProposal && (
-              <div className="mt-4 space-y-2 rounded-control border border-border bg-surface-quiet p-3 text-[12px]">
-                <p className="font-semibold">Đề xuất cân bằng Blueprint</p>
-                <p>Trước {rebalanceProposal.before?.length || 0} câu</p>
-                <p>Sau {rebalanceProposal.after?.length || 0} câu</p>
-                <p>
-                  Mục tiêu{" "}
-                  {Object.entries(rebalanceProposal.target_effect?.difficulty_distribution || {})
-                    .map(([level, count]) => `L${level} ${count}`)
-                    .join(" · ")}
-                </p>
-                <p>
-                  Kiểm tra construct{" "}
-                  {rebalanceProposal.construct_check?.passed ? "đạt" : "chưa đạt"}
-                </p>
-                {rebalanceProposal.why?.length > 0 && (
-                  <div>
-                    <p className="font-semibold">Lý do chọn</p>
-                    {rebalanceProposal.why.map((item) => {
-                      return (
-                        <p key={item.item_id}>
-                          {item.item_id}· {item.reasons?.join(" · ") || "đáp ứng mục tiêu"}
-                        </p>
-                      );
-                    })}
-                  </div>
-                )}
-                {rebalanceProposal.infeasibility?.length > 0 && (
-                  <div className="text-warning">
-                    <p className="font-semibold">Ràng buộc chưa thể đáp ứng</p>
-                    {rebalanceProposal.infeasibility.map((gap, index) => {
-                      return (
-                        <p key={`${gap.code}-${index}`}>
-                          {gap.code}· hiện có {gap.actual ?? "không xác định"}· cần{" "}
-                          {gap.expected ?? gap.constraint?.minimum_count ?? "không xác định"}
-                        </p>
-                      );
-                    })}
-                  </div>
-                )}
-                {rebalanceProposal.status === "proposed" && (
-                  <div className="grid grid-cols-2 gap-2 pt-1">
-                    <button
-                      type="button"
-                      className="apple-button-secondary"
-                      onClick={() => void decideRebalance("reject")}
-                    >
-                      Từ chối
-                    </button>
-                    <button
-                      type="button"
-                      className="apple-button"
-                      onClick={() => void decideRebalance("approve")}
-                    >
-                      Chấp nhận
-                    </button>
-                  </div>
-                )}
-                {rebalanceProposal.status === "approved" && (
-                  <button
-                    type="button"
-                    className="apple-button-secondary w-full"
-                    onClick={() => void undoRebalance()}
-                  >
-                    Hoàn tác trước khi xuất bản
-                  </button>
-                )}
-                <p className="text-ink-muted">
-                  Không có thay đổi nào được áp dụng trước khi giáo viên chấp nhận
-                </p>
-              </div>
-            )}
-          </section>
-
-          <section className="rounded-panel border border-border bg-surface p-5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-ink-faint">
-              Chính sách làm bài
-            </p>
-            <div className="mt-3 space-y-3">
-              <label className="block text-[12px] font-semibold text-ink-muted">
-                Thời gian phút
+              <details className="mt-3 rounded-control border border-border px-3 py-2">
+                <summary className="cursor-pointer text-[12px] font-semibold">
+                  Phân bố mức nhận thức
+                </summary>
+                <label className="mt-3 flex items-center gap-2 text-[11px] text-ink-muted">
+                  <input
+                    type="checkbox"
+                    checked={includeCognitiveConstraints}
+                    onChange={(event) => setIncludeCognitiveConstraints(event.target.checked)}
+                  />{" "}
+                  Áp dụng ràng buộc nhận thức
+                </label>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  {cognitiveLevels.map(([level, label]) => (
+                    <label key={level} className="text-[11px] text-ink-muted">
+                      {label}
+                      <input
+                        className="apple-input mt-1 w-full"
+                        type="number"
+                        min="0"
+                        max="500"
+                        disabled={!includeCognitiveConstraints}
+                        value={cognitiveLevelConstraints[level] || 0}
+                        onChange={(event) =>
+                          setCognitiveLevelConstraints((current) => ({
+                            ...current,
+                            [level]: Math.max(0, Number(event.target.value) || 0),
+                          }))
+                        }
+                      />
+                    </label>
+                  ))}
+                </div>
+              </details>
+              <label className="mt-3 block text-[12px] font-semibold text-ink-muted">
+                Concept bắt buộc
                 <input
                   className="apple-input mt-1 w-full"
-                  type="number"
-                  min="1"
-                  max="1440"
-                  value={durationMinutes}
-                  onChange={(event) =>
-                    setDurationMinutes(Math.max(1, Number(event.target.value) || 1))
-                  }
+                  value={coverageConcepts}
+                  onChange={(event) => setCoverageConcepts(event.target.value)}
+                  placeholder="dao_ham cuc_tri"
                 />
               </label>
-              <label className="block text-[12px] font-semibold text-ink-muted">
-                Số lần làm
+              <label className="mt-3 block text-[12px] font-semibold text-ink-muted">
+                Skill bắt buộc
                 <input
                   className="apple-input mt-1 w-full"
-                  type="number"
-                  min="1"
-                  max="100"
-                  value={attemptLimit}
-                  onChange={(event) =>
-                    setAttemptLimit(Math.max(1, Number(event.target.value) || 1))
-                  }
+                  value={coverageSkills}
+                  onChange={(event) => setCoverageSkills(event.target.value)}
+                  placeholder="differentiate analyze"
                 />
               </label>
-              <label className="block text-[12px] font-semibold text-ink-muted">
-                Điều hướng
+              <label className="mt-3 block text-[12px] font-semibold text-ink-muted">
+                Topic hoặc curriculum node
+                <input
+                  className="apple-input mt-1 w-full"
+                  value={coverageCurriculumNodes}
+                  onChange={(event) => setCoverageCurriculumNodes(event.target.value)}
+                  placeholder="chapter lesson section"
+                />
+              </label>
+              <label className="mt-3 flex items-center gap-2 text-[12px] font-semibold text-ink-muted">
+                <input
+                  type="checkbox"
+                  checked={coverageRequired}
+                  onChange={(event) => setCoverageRequired(event.target.checked)}
+                />{" "}
+                Coverage là bắt buộc
+              </label>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <label className="text-[12px] font-semibold text-ink-muted">
+                  Năng lực từ
+                  <input
+                    className="apple-input mt-1 w-full"
+                    type="number"
+                    min="1"
+                    max="5"
+                    step="0.1"
+                    value={abilityMinimum}
+                    onChange={(event) => setAbilityMinimum(event.target.value)}
+                  />
+                </label>
+                <label className="text-[12px] font-semibold text-ink-muted">
+                  Đến
+                  <input
+                    className="apple-input mt-1 w-full"
+                    type="number"
+                    min="1"
+                    max="5"
+                    step="0.1"
+                    value={abilityMaximum}
+                    onChange={(event) => setAbilityMaximum(event.target.value)}
+                  />
+                </label>
+              </div>
+              <label className="mt-3 block text-[12px] font-semibold text-ink-muted">
+                Mục đích
                 <select
                   className="apple-input mt-1 w-full"
-                  value={navigation}
-                  onChange={(event) => setNavigation(event.target.value)}
+                  value={assessmentPurpose}
+                  onChange={(event) => setAssessmentPurpose(event.target.value)}
                 >
-                  <option value="free">Tự do</option>
-                  <option value="linear">Tuần tự</option>
+                  <option value="assigned_assessment">Bài được giao</option>
+                  <option value="formative">Đánh giá thường xuyên</option>
+                  <option value="summative">Đánh giá tổng kết</option>
+                  <option value="research_retest">Kiểm định lại nghiên cứu</option>
                 </select>
               </label>
-            </div>
-            <div className="mt-3 space-y-2 text-[12px]">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={shuffleQuestions}
-                  onChange={(event) => setShuffleQuestions(event.target.checked)}
-                />{" "}
-                Trộn thứ tự câu ổn định
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={shuffleOptions}
-                  onChange={(event) => setShuffleOptions(event.target.checked)}
-                />{" "}
-                Trộn phương án ổn định
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={highStakes}
-                  onChange={(event) => setHighStakes(event.target.checked)}
-                />{" "}
-                Dùng cho quyết định quan trọng
-              </label>
-              <label className="block font-semibold text-ink-muted">
-                Lên lịch xuất bản
+              <label className="mt-3 block text-[12px] font-semibold text-ink-muted">
+                Exposure tối đa mỗi câu
                 <input
                   className="apple-input mt-1 w-full"
-                  type="datetime-local"
-                  value={scheduledFor}
-                  onChange={(event) => setScheduledFor(event.target.value)}
+                  type="number"
+                  min="0"
+                  value={maximumExposureCount}
+                  onChange={(event) => setMaximumExposureCount(event.target.value)}
+                  placeholder="Không giới hạn"
                 />
               </label>
-            </div>
-          </section>
+              <label className="mt-3 flex items-center gap-2 text-[12px] font-semibold text-ink-muted">
+                <input
+                  type="checkbox"
+                  checked={saveAsTemplate}
+                  onChange={(event) => setSaveAsTemplate(event.target.checked)}
+                />{" "}
+                Lưu thành Blueprint mẫu
+              </label>
+              {saveAsTemplate && (
+                <label className="mt-2 block text-[12px] font-semibold text-ink-muted">
+                  Tên mẫu
+                  <input
+                    className="apple-input mt-1 w-full"
+                    value={templateName}
+                    onChange={(event) => setTemplateName(event.target.value)}
+                    placeholder="Mẫu kiểm tra chương một"
+                  />
+                </label>
+              )}
+              <button
+                type="button"
+                className="apple-button-secondary mt-4 w-full"
+                disabled={!draft}
+                onClick={buildBlueprint}
+              >
+                Tạo Blueprint target hiện tại
+              </button>
+              <button
+                type="button"
+                className="apple-button-secondary mt-2 w-full"
+                disabled={!draft}
+                onClick={analyzeDifficulty}
+              >
+                Phân tích và đề xuất cân phân bố
+              </button>
+              <button
+                type="button"
+                className="apple-button-secondary mt-2 w-full"
+                disabled={!draft}
+                onClick={analyzeLearnerFit}
+              >
+                Phân tích phù hợp người học
+              </button>
+              <button
+                type="button"
+                className="apple-button-secondary mt-2 w-full"
+                disabled={!draft?.blueprint_id}
+                onClick={proposeRebalance}
+              >
+                Đề xuất cân bằng toàn bộ Blueprint
+              </button>
+              {blueprintTemplates.length > 0 && (
+                <details className="mt-3 rounded-control border border-border px-3 py-2">
+                  <summary className="cursor-pointer text-[12px] font-semibold">
+                    Blueprint mẫu đã lưu
+                  </summary>
+                  <div className="mt-3 space-y-2">
+                    {blueprintTemplates.map((template) => (
+                      <div
+                        key={template._id}
+                        className="flex items-center justify-between gap-2 text-[11px]"
+                      >
+                        <span>
+                          {String(template.name)} · {Number(template.total_questions)} câu
+                        </span>
+                        <button
+                          type="button"
+                          className="apple-button-secondary px-2 py-1"
+                          onClick={() => void applyBlueprintTemplate(String(template._id))}
+                        >
+                          Nhân bản và áp dụng
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              )}
+              {difficultyAnalysis && (
+                <div className="mt-4 space-y-2 rounded-control bg-surface-quiet p-3 text-[12px]">
+                  <p className="font-semibold">Blueprint target</p>
+                  <p>
+                    {[1, 2, 3, 4, 5]
+                      .map((level) => {
+                        return `L${level} ${difficultyAnalysis.blueprint_distribution?.[String(level)] || 0}`;
+                      })
+                      .join(" · ")}
+                  </p>
+                  <p className="font-semibold">Target từng câu</p>
+                  <p>
+                    {[1, 2, 3, 4, 5]
+                      .map((level) => {
+                        return `L${level} ${difficultyAnalysis.target_distribution?.[String(level)] || 0}`;
+                      })
+                      .join(" · ")}
+                  </p>
+                  <p className="font-semibold">Ước lượng giáo viên</p>
+                  <p>
+                    {[1, 2, 3, 4, 5]
+                      .map((level) => {
+                        return `L${level} ${difficultyAnalysis.teacher_distribution?.[String(level)] || 0}`;
+                      })
+                      .join(" · ")}
+                  </p>
+                  <p className="font-semibold">AI dự đoán hiện tại</p>
+                  <p>
+                    {[1, 2, 3, 4, 5]
+                      .map((level) => {
+                        return `L${level} ${difficultyAnalysis.predicted_distribution?.[String(level)] || 0}`;
+                      })
+                      .join(" · ")}
+                  </p>
+                  <p className="font-semibold">Hiệu chỉnh thực nghiệm</p>
+                  <p>
+                    {[1, 2, 3, 4, 5]
+                      .map((level) => {
+                        return `L${level} ${difficultyAnalysis.calibrated_distribution?.[String(level)] || 0}`;
+                      })
+                      .join(" · ")}
+                  </p>
+                  <p className="font-semibold">Khoảng thiếu thừa so với Blueprint</p>
+                  <p>
+                    {difficultyAnalysis.recommendations
+                      ?.map(
+                        (item) =>
+                          `L${item.difficulty_level} ${item.delta > 0 ? "+" : ""}${item.delta}`,
+                      )
+                      .join(" · ") || "Đã khớp hoặc chưa có Blueprint"}
+                  </p>
+                  {difficultyAnalysis.unresolved_question_draft_ids?.length > 0 && (
+                    <p className="text-warning">
+                      Còn {difficultyAnalysis.unresolved_question_draft_ids.length} câu chưa có dự
+                      đoán được phép hiển thị
+                    </p>
+                  )}
+                  <p className="text-ink-muted">
+                    Đề xuất không tự sửa câu và cần giáo viên chấp nhận
+                  </p>
+                </div>
+              )}
+              {learnerFit && (
+                <div className="mt-4 space-y-2 rounded-control bg-surface-quiet p-3 text-[12px]">
+                  <p className="font-semibold">Mức phù hợp người học</p>
+                  <p>
+                    Điểm phù hợp {Math.round(Number(learnerFit.expected_fit_overall || 0) * 100)}{" "}
+                    phần trăm
+                  </p>
+                  <p>
+                    Xác suất làm đúng dự kiến{" "}
+                    {Math.round(Number(learnerFit.expected_probability_correct || 0) * 100)} phần
+                    trăm
+                  </p>
+                  <p>
+                    Khoảng thành công{" "}
+                    {Math.round(Number(learnerFit.expected_success_range?.[0] || 0) * 100)} đến{" "}
+                    {Math.round(Number(learnerFit.expected_success_range?.[1] || 0) * 100)} phần
+                    trăm
+                  </p>
+                  <p>Độ tin cậy {Math.round(Number(learnerFit.confidence || 0) * 100)} phần trăm</p>
+                  <p>
+                    Dễ quá {learnerFit.categories?.too_easy || 0} · Phù hợp{" "}
+                    {learnerFit.categories?.suitable || 0} · Thách thức{" "}
+                    {learnerFit.categories?.challenging || 0} · Khó quá{" "}
+                    {learnerFit.categories?.too_hard || 0}
+                  </p>
+                  {learnerFit.per_topic?.map((topic) => (
+                    <p key={topic.topic}>
+                      {topic.topic} · phù hợp {Math.round(Number(topic.fit_score || 0) * 100)} phần
+                      trăm · {topic.item_count} câu
+                    </p>
+                  ))}
+                  {learnerFit.item_level_mismatch?.length > 0 && (
+                    <p>
+                      Có {learnerFit.item_level_mismatch.length} câu lệch dải mục tiêu cần rà soát
+                    </p>
+                  )}
+                  {learnerFit.low_evidence_warning && (
+                    <p className="text-warning">
+                      Có dữ liệu độ khó hoặc năng lực chưa đủ mạnh nên kết quả dùng fallback độ tin
+                      cậy thấp
+                    </p>
+                  )}
+                  <p className="text-ink-muted">
+                    Phân tích không tự thay đổi câu hỏi và cần giáo viên quyết định
+                  </p>
+                </div>
+              )}
+              {rebalanceProposal && (
+                <div className="mt-4 space-y-2 rounded-control border border-border bg-surface-quiet p-3 text-[12px]">
+                  <p className="font-semibold">Đề xuất cân bằng Blueprint</p>
+                  <p>Trước {rebalanceProposal.before?.length || 0} câu</p>
+                  <p>Sau {rebalanceProposal.after?.length || 0} câu</p>
+                  <p>
+                    Mục tiêu{" "}
+                    {Object.entries(rebalanceProposal.target_effect?.difficulty_distribution || {})
+                      .map(([level, count]) => `L${level} ${count}`)
+                      .join(" · ")}
+                  </p>
+                  <p>
+                    Kiểm tra construct{" "}
+                    {rebalanceProposal.construct_check?.passed ? "đạt" : "chưa đạt"}
+                  </p>
+                  {rebalanceProposal.why?.length > 0 && (
+                    <div>
+                      <p className="font-semibold">Lý do chọn</p>
+                      {rebalanceProposal.why.map((item) => {
+                        return (
+                          <p key={item.item_id}>
+                            {item.item_id}· {item.reasons?.join(" · ") || "đáp ứng mục tiêu"}
+                          </p>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {rebalanceProposal.infeasibility?.length > 0 && (
+                    <div className="text-warning">
+                      <p className="font-semibold">Ràng buộc chưa thể đáp ứng</p>
+                      {rebalanceProposal.infeasibility.map((gap, index) => {
+                        return (
+                          <p key={`${gap.code}-${index}`}>
+                            {gap.code}· hiện có {gap.actual ?? "không xác định"}· cần{" "}
+                            {gap.expected ?? gap.constraint?.minimum_count ?? "không xác định"}
+                          </p>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {rebalanceProposal.status === "proposed" && (
+                    <div className="grid grid-cols-2 gap-2 pt-1">
+                      <button
+                        type="button"
+                        className="apple-button-secondary"
+                        onClick={() => void decideRebalance("reject")}
+                      >
+                        Từ chối
+                      </button>
+                      <button
+                        type="button"
+                        className="apple-button"
+                        onClick={() => void decideRebalance("approve")}
+                      >
+                        Chấp nhận
+                      </button>
+                    </div>
+                  )}
+                  {rebalanceProposal.status === "approved" && (
+                    <button
+                      type="button"
+                      className="apple-button-secondary w-full"
+                      onClick={() => void undoRebalance()}
+                    >
+                      Hoàn tác trước khi xuất bản
+                    </button>
+                  )}
+                  <p className="text-ink-muted">
+                    Không có thay đổi nào được áp dụng trước khi giáo viên chấp nhận
+                  </p>
+                </div>
+              )}
+            </section>
 
-          {publishedAssessmentId && (
             <section className="rounded-panel border border-border bg-surface p-5">
               <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-ink-faint">
-                Phân phối
+                Chính sách làm bài
               </p>
               <div className="mt-3 space-y-3">
                 <label className="block text-[12px] font-semibold text-ink-muted">
-                  Mã học sinh
-                  <textarea
-                    className="apple-input mt-1 min-h-24 w-full"
-                    value={studentIds}
-                    onChange={(event) => setStudentIds(event.target.value)}
-                    placeholder="Mỗi mã cách nhau bằng dấu phẩy hoặc xuống dòng"
+                  Thời gian phút
+                  <input
+                    className="apple-input mt-1 w-full"
+                    type="number"
+                    min="1"
+                    max="1440"
+                    value={durationMinutes}
+                    onChange={(event) =>
+                      setDurationMinutes(Math.max(1, Number(event.target.value) || 1))
+                    }
                   />
                 </label>
                 <label className="block text-[12px] font-semibold text-ink-muted">
-                  Mở bài
+                  Số lần làm
                   <input
                     className="apple-input mt-1 w-full"
-                    type="datetime-local"
-                    value={availableFrom}
-                    onChange={(event) => setAvailableFrom(event.target.value)}
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={attemptLimit}
+                    onChange={(event) =>
+                      setAttemptLimit(Math.max(1, Number(event.target.value) || 1))
+                    }
                   />
                 </label>
                 <label className="block text-[12px] font-semibold text-ink-muted">
-                  Hạn nộp
+                  Điều hướng
+                  <select
+                    className="apple-input mt-1 w-full"
+                    value={navigation}
+                    onChange={(event) => setNavigation(event.target.value)}
+                  >
+                    <option value="free">Tự do</option>
+                    <option value="linear">Tuần tự</option>
+                  </select>
+                </label>
+              </div>
+              <div className="mt-3 space-y-2 text-[12px]">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={shuffleQuestions}
+                    onChange={(event) => setShuffleQuestions(event.target.checked)}
+                  />{" "}
+                  Trộn thứ tự câu ổn định
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={shuffleOptions}
+                    onChange={(event) => setShuffleOptions(event.target.checked)}
+                  />{" "}
+                  Trộn phương án ổn định
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={highStakes}
+                    onChange={(event) => setHighStakes(event.target.checked)}
+                  />{" "}
+                  Dùng cho quyết định quan trọng
+                </label>
+                <label className="block font-semibold text-ink-muted">
+                  Lên lịch xuất bản
                   <input
                     className="apple-input mt-1 w-full"
                     type="datetime-local"
-                    value={dueAt}
-                    onChange={(event) => setDueAt(event.target.value)}
+                    value={scheduledFor}
+                    onChange={(event) => setScheduledFor(event.target.value)}
                   />
                 </label>
-                <button type="button" className="apple-button w-full" onClick={() => void assign()}>
-                  Giao bài
-                </button>
               </div>
             </section>
-          )}
 
-          <section className="rounded-panel border border-border bg-surface p-5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-ink-faint">
-              Bốn tín hiệu độ khó
-            </p>
-            <dl className="mt-3 space-y-3 text-[13px]">
-              <div className="flex justify-between">
-                <dt>Target</dt>
-                <dd className="font-semibold">
-                  {difficultyAnalysis
-                    ? Object.values(difficultyAnalysis.target_distribution || {}).reduce(
-                        (sum, value) => sum + Number(value),
-                        0,
-                      )
-                    : 0}{" "}
-                  câu
-                </dd>
-              </div>
-              <div className="flex justify-between">
-                <dt>Giáo viên</dt>
-                <dd className="font-semibold">
-                  {difficultyAnalysis
-                    ? Object.values(difficultyAnalysis.teacher_distribution || {}).reduce(
-                        (sum, value) => sum + Number(value),
-                        0,
-                      )
-                    : 0}{" "}
-                  câu
-                </dd>
-              </div>
-              <div className="flex justify-between">
-                <dt>AI cold start</dt>
-                <dd className="font-semibold">
-                  {difficultyAnalysis
-                    ? Object.values(difficultyAnalysis.predicted_distribution || {}).reduce(
-                        (sum, value) => sum + Number(value),
-                        0,
-                      )
-                    : 0}{" "}
-                  câu
-                </dd>
-              </div>
-              <div className="flex justify-between">
-                <dt>Thực nghiệm</dt>
-                <dd className="font-semibold">
-                  {difficultyAnalysis
-                    ? Object.values(difficultyAnalysis.calibrated_distribution || {}).reduce(
-                        (sum, value) => sum + Number(value),
-                        0,
-                      )
-                    : 0}{" "}
-                  câu
-                </dd>
-              </div>
-            </dl>
-          </section>
+            {publishedAssessmentId && (
+              <section className="rounded-panel border border-border bg-surface p-5">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-ink-faint">
+                  Phân phối
+                </p>
+                <div className="mt-3 space-y-3">
+                  <label className="block text-[12px] font-semibold text-ink-muted">
+                    Mã học sinh
+                    <textarea
+                      className="apple-input mt-1 min-h-24 w-full"
+                      value={studentIds}
+                      onChange={(event) => setStudentIds(event.target.value)}
+                      placeholder="Mỗi mã cách nhau bằng dấu phẩy hoặc xuống dòng"
+                    />
+                  </label>
+                  <label className="block text-[12px] font-semibold text-ink-muted">
+                    Mở bài
+                    <input
+                      className="apple-input mt-1 w-full"
+                      type="datetime-local"
+                      value={availableFrom}
+                      onChange={(event) => setAvailableFrom(event.target.value)}
+                    />
+                  </label>
+                  <label className="block text-[12px] font-semibold text-ink-muted">
+                    Hạn nộp
+                    <input
+                      className="apple-input mt-1 w-full"
+                      type="datetime-local"
+                      value={dueAt}
+                      onChange={(event) => setDueAt(event.target.value)}
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    className="apple-button w-full"
+                    onClick={() => void assign()}
+                  >
+                    Giao bài
+                  </button>
+                </div>
+              </section>
+            )}
 
-          <section className="rounded-panel border border-border bg-ink p-5 text-white">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-white/60">
-              AI Workspace
-            </p>
-            <h2 className="mt-3 text-[17px] font-semibold">Đề xuất có kiểm soát</h2>
-            <p className="mt-2 text-[12px] leading-relaxed text-white/70">
-              AI chỉ tạo proposal và không thay đổi phiên bản đã xuất bản khi chưa có giáo viên phê
-              duyệt
-            </p>
-            <button
-              type="button"
-              className="mt-4 min-h-10 w-full rounded-control bg-white px-3 text-[13px] font-semibold text-ink"
-            >
-              Mở bảng đề xuất
-            </button>
-          </section>
-        </aside>
+            <section className="rounded-panel border border-border bg-surface p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-ink-faint">
+                Bốn tín hiệu độ khó
+              </p>
+              <dl className="mt-3 space-y-3 text-[13px]">
+                <div className="flex justify-between">
+                  <dt>Target</dt>
+                  <dd className="font-semibold">
+                    {difficultyAnalysis
+                      ? Object.values(difficultyAnalysis.target_distribution || {}).reduce(
+                          (sum, value) => sum + Number(value),
+                          0,
+                        )
+                      : 0}{" "}
+                    câu
+                  </dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt>Giáo viên</dt>
+                  <dd className="font-semibold">
+                    {difficultyAnalysis
+                      ? Object.values(difficultyAnalysis.teacher_distribution || {}).reduce(
+                          (sum, value) => sum + Number(value),
+                          0,
+                        )
+                      : 0}{" "}
+                    câu
+                  </dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt>AI cold start</dt>
+                  <dd className="font-semibold">
+                    {difficultyAnalysis
+                      ? Object.values(difficultyAnalysis.predicted_distribution || {}).reduce(
+                          (sum, value) => sum + Number(value),
+                          0,
+                        )
+                      : 0}{" "}
+                    câu
+                  </dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt>Thực nghiệm</dt>
+                  <dd className="font-semibold">
+                    {difficultyAnalysis
+                      ? Object.values(difficultyAnalysis.calibrated_distribution || {}).reduce(
+                          (sum, value) => sum + Number(value),
+                          0,
+                        )
+                      : 0}{" "}
+                    câu
+                  </dd>
+                </div>
+              </dl>
+            </section>
+
+            <section className="rounded-panel border border-border bg-ink p-5 text-white">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-white/60">
+                Không gian AI
+              </p>
+              <h2 className="mt-3 text-[17px] font-semibold">Đề xuất có kiểm soát</h2>
+              <p className="mt-2 text-[12px] leading-relaxed text-white/70">
+                AI chỉ tạo proposal và không thay đổi phiên bản đã xuất bản khi chưa có giáo viên
+                phê duyệt
+              </p>
+              <button
+                type="button"
+                className="mt-4 min-h-10 w-full rounded-control bg-white px-3 text-[13px] font-semibold text-ink"
+                onClick={() => router.push(`/giao-vien/de/sinh-ai?id=${draft._id}`)}
+              >
+                Mở bảng đề xuất
+              </button>
+            </section>
+          </aside>
+        )}
       </div>
     </div>
   );

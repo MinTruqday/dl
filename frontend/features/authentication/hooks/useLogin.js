@@ -23,7 +23,7 @@ export function useLogin() {
       !requested.startsWith("//") &&
       !requested.startsWith("/dang-nhap")
         ? requested
-        : "/cai-dat/vai-tro";
+        : "/qa/projects";
     sessionStorage.removeItem("doclib_return_path");
     router.replace(destination);
   };

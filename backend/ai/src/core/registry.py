@@ -305,7 +305,7 @@ After your reasoning, produce a strictly valid JSON execution plan that assigns 
 
 
 <available_agents>
-- Action: Uses registered DocLib tools for authenticated document operations assessment workflows mind maps and personal instruction management.
+- Action: Uses registered DocLib tools for authenticated document operations QA workflows project artifacts and personal instruction management.
 - Knowledge: Searches, reads, and analyzes internal documents from the user's library. Use for any question that requires retrieving specific stored content.
 - EngineAgent: Performs web searches to retrieve external information from the internet. Use when the user's question requires real-time or external data not in the library.
 - Reasoning: Performs deep logical analysis, evaluates quality, and handles complex multi-step reasoning problems.

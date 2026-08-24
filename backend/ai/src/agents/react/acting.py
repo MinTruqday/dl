@@ -18,18 +18,20 @@ _REQUIRES_APPROVAL_TOOLS = frozenset(
         "manage_user_instructions",
         "restore_document",
         "update_document_metadata",
-        "create_question_draft",
-        "create_revision_draft",
-        "import_assessment",
-        "map_question_to_curriculum",
-        "record_teacher_difficulty_estimate",
-        "propose_question_revision",
-        "publish_assessment_version",
-        "run_calibration",
+        "create_test_case_draft",
+        "create_trace_link_suggestion",
+        "create_impact_analysis",
+        "create_maintenance_proposal",
+        "create_regression_recommendation",
+        "apply_test_case_revision",
+        "confirm_trace_link",
+        "baseline_requirement_version",
+        "approve_test_case_version",
+        "mark_test_case_obsolete",
     }
 )
 
-_HUMAN_ONLY_APPROVAL_TOOLS = frozenset({"publish_assessment_version"})
+_HUMAN_ONLY_APPROVAL_TOOLS = frozenset({"apply_test_case_revision", "confirm_trace_link", "baseline_requirement_version", "approve_test_case_version", "mark_test_case_obsolete"})
 
 _AUTO_SAFE_TOOLS = frozenset({"update_document_metadata"})
 

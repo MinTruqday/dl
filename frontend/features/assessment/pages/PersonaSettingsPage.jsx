@@ -1,8 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import { assessmentRequest } from "../services/assessment.service";
 export default function PersonaSettingsPage() {
-  const [personas, setPersonas] = useState([]);
+  const { user } = useAuth();
+  const [personas, setPersonas] = useState(null);
   const [status, setStatus] = useState("");
   const [preferredQuestionTypes, setPreferredQuestionTypes] = useState("");
   const [preferredDifficulty, setPreferredDifficulty] = useState("");
@@ -11,7 +13,10 @@ export default function PersonaSettingsPage() {
   const [useOwnMaterials, setUseOwnMaterials] = useState(true);
   const [inferredPreferences, setInferredPreferences] = useState({});
   const [signals, setSignals] = useState([]);
-  const loadTeacherProfile = async () => {
+  const canManageTeacherProfile = ["author", "admin"].includes(
+    String(user?.role || "").toLowerCase(),
+  );
+  const loadTeacherProfile = useCallback(async () => {
     const [profile, recentSignals] = await Promise.all([
       assessmentRequest("/education/teacher-profile/me"),
       assessmentRequest("/education/teacher-profile/me/events"),
@@ -28,21 +33,26 @@ export default function PersonaSettingsPage() {
     setUseOwnMaterials(profile.use_own_materials !== false);
     setInferredPreferences(profile.inferred_preferences || {});
     setSignals(recentSignals);
-  };
-  useEffect(() => {
-    assessmentRequest("/education/profiles/me").then((profile) =>
-      setPersonas(profile.personas || []),
-    );
-    loadTeacherProfile().catch(() => undefined);
   }, []);
+  useEffect(() => {
+    if (!user) return;
+    assessmentRequest("/education/profiles/me")
+      .then((profile) => setPersonas(profile.personas || []))
+      .catch(() => setStatus("Không thể tải vai trò sử dụng"));
+    if (canManageTeacherProfile) {
+      loadTeacherProfile().catch(() => setStatus("Không thể tải tùy chọn giáo viên"));
+    }
+  }, [canManageTeacherProfile, loadTeacherProfile, user]);
   const toggle = (persona) =>
     setPersonas((current) =>
-      current.includes(persona)
-        ? current.filter((value) => value !== persona)
-        : [...current, persona],
+      !current
+        ? current
+        : current.includes(persona)
+          ? current.filter((value) => value !== persona)
+          : [...current, persona],
     );
   const save = async () => {
-    if (!personas.length) return;
+    if (!personas?.length) return;
     await assessmentRequest("/education/profiles/me", {
       method: "PUT",
       body: JSON.stringify({ personas }),
@@ -98,9 +108,10 @@ export default function PersonaSettingsPage() {
           ].map(([value, label]) => (
             <button
               key={value}
-              className={`rounded-control border p-5 text-left ${personas.includes(value) ? "border-brand bg-brand-soft" : "border-border"}`}
+              disabled={personas === null}
+              className={`rounded-control border p-5 text-left ${personas?.includes(value) ? "border-brand bg-brand-soft" : "border-border"}`}
               onClick={() => toggle(value)}
-              aria-pressed={personas.includes(value)}
+              aria-pressed={Boolean(personas?.includes(value))}
             >
               <p className="font-semibold">{label}</p>
               <p className="mt-1 text-[12px] text-ink-muted">
@@ -109,89 +120,91 @@ export default function PersonaSettingsPage() {
             </button>
           ))}
         </div>
-        <button className="apple-button mt-5" disabled={!personas.length} onClick={save}>
+        <button className="apple-button mt-5" disabled={!personas?.length} onClick={save}>
           Lưu vai trò sử dụng
         </button>
       </section>
-      <section className="rounded-panel border border-border bg-surface p-5">
-        <h2 className="font-semibold">Tùy chọn giáo viên có thể chỉnh sửa</h2>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <label className="text-[12px] font-semibold text-ink-muted">
-            Loại câu ưa dùng
-            <input
-              className="apple-input mt-1 w-full"
-              value={preferredQuestionTypes}
-              onChange={(event) => setPreferredQuestionTypes(event.target.value)}
-              placeholder="single_choice numeric"
-            />
-          </label>
-          <label className="text-[12px] font-semibold text-ink-muted">
-            Target difficulty thường dùng
-            <input
-              className="apple-input mt-1 w-full"
-              type="number"
-              min="1"
-              max="5"
-              step="0.1"
-              value={preferredDifficulty}
-              onChange={(event) => setPreferredDifficulty(event.target.value)}
-            />
-          </label>
-          <label className="text-[12px] font-semibold text-ink-muted">
-            Phong cách rubric
-            <input
-              className="apple-input mt-1 w-full"
-              value={rubricStyle}
-              onChange={(event) => setRubricStyle(event.target.value)}
-            />
-          </label>
-          <label className="text-[12px] font-semibold text-ink-muted">
-            Phong cách distractor
-            <input
-              className="apple-input mt-1 w-full"
-              value={distractorStyle}
-              onChange={(event) => setDistractorStyle(event.target.value)}
-            />
-          </label>
-          <label className="flex items-center gap-2 text-[12px] font-semibold text-ink-muted sm:col-span-2">
-            <input
-              type="checkbox"
-              checked={useOwnMaterials}
-              onChange={(event) => setUseOwnMaterials(event.target.checked)}
-            />{" "}
-            Cho phép AI dùng tài liệu riêng thuộc sở hữu của tôi
-          </label>
-        </div>
-        <div className="mt-4 flex gap-2">
-          <button className="apple-button" onClick={() => void saveTeacherProfile()}>
-            Lưu tùy chọn
-          </button>
-          <button
-            className="apple-button-secondary text-danger"
-            onClick={() => void resetPersonalization()}
-          >
-            Đặt lại cá nhân hóa
-          </button>
-        </div>
-        <details className="mt-4 rounded-control border border-border p-3 text-[12px]">
-          <summary className="cursor-pointer font-semibold">Tùy chọn hệ thống suy ra</summary>
-          <pre className="mt-2 overflow-auto whitespace-pre-wrap text-ink-muted">
-            {JSON.stringify(inferredPreferences, null, 2)}
-          </pre>
-        </details>
-        <details className="mt-3 rounded-control border border-border p-3 text-[12px]">
-          <summary className="cursor-pointer font-semibold">Tín hiệu gần đây</summary>
-          <div className="mt-2 space-y-2">
-            {signals.slice(0, 20).map((signal) => (
-              <div key={signal._id} className="rounded-control bg-surface-quiet p-2">
-                <p className="font-semibold">{signal.event_type}</p>
-                <p className="mt-1 text-ink-muted">{JSON.stringify(signal.payload)}</p>
-              </div>
-            ))}
-            {!signals.length && <p className="text-ink-muted">Chưa có tín hiệu cá nhân hóa</p>}
+      {canManageTeacherProfile && (
+        <section className="rounded-panel border border-border bg-surface p-5">
+          <h2 className="font-semibold">Tùy chọn giáo viên có thể chỉnh sửa</h2>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <label className="text-[12px] font-semibold text-ink-muted">
+              Loại câu ưa dùng
+              <input
+                className="apple-input mt-1 w-full"
+                value={preferredQuestionTypes}
+                onChange={(event) => setPreferredQuestionTypes(event.target.value)}
+                placeholder="single_choice numeric"
+              />
+            </label>
+            <label className="text-[12px] font-semibold text-ink-muted">
+              Target difficulty thường dùng
+              <input
+                className="apple-input mt-1 w-full"
+                type="number"
+                min="1"
+                max="5"
+                step="0.1"
+                value={preferredDifficulty}
+                onChange={(event) => setPreferredDifficulty(event.target.value)}
+              />
+            </label>
+            <label className="text-[12px] font-semibold text-ink-muted">
+              Phong cách rubric
+              <input
+                className="apple-input mt-1 w-full"
+                value={rubricStyle}
+                onChange={(event) => setRubricStyle(event.target.value)}
+              />
+            </label>
+            <label className="text-[12px] font-semibold text-ink-muted">
+              Phong cách distractor
+              <input
+                className="apple-input mt-1 w-full"
+                value={distractorStyle}
+                onChange={(event) => setDistractorStyle(event.target.value)}
+              />
+            </label>
+            <label className="flex items-center gap-2 text-[12px] font-semibold text-ink-muted sm:col-span-2">
+              <input
+                type="checkbox"
+                checked={useOwnMaterials}
+                onChange={(event) => setUseOwnMaterials(event.target.checked)}
+              />{" "}
+              Cho phép AI dùng tài liệu riêng thuộc sở hữu của tôi
+            </label>
           </div>
-        </details>
-      </section>
+          <div className="mt-4 flex gap-2">
+            <button className="apple-button" onClick={() => void saveTeacherProfile()}>
+              Lưu tùy chọn
+            </button>
+            <button
+              className="apple-button-secondary text-danger"
+              onClick={() => void resetPersonalization()}
+            >
+              Đặt lại cá nhân hóa
+            </button>
+          </div>
+          <details className="mt-4 rounded-control border border-border p-3 text-[12px]">
+            <summary className="cursor-pointer font-semibold">Tùy chọn hệ thống suy ra</summary>
+            <pre className="mt-2 overflow-auto whitespace-pre-wrap text-ink-muted">
+              {JSON.stringify(inferredPreferences, null, 2)}
+            </pre>
+          </details>
+          <details className="mt-3 rounded-control border border-border p-3 text-[12px]">
+            <summary className="cursor-pointer font-semibold">Tín hiệu gần đây</summary>
+            <div className="mt-2 space-y-2">
+              {signals.slice(0, 20).map((signal) => (
+                <div key={signal._id} className="rounded-control bg-surface-quiet p-2">
+                  <p className="font-semibold">{signal.event_type}</p>
+                  <p className="mt-1 text-ink-muted">{JSON.stringify(signal.payload)}</p>
+                </div>
+              ))}
+              {!signals.length && <p className="text-ink-muted">Chưa có tín hiệu cá nhân hóa</p>}
+            </div>
+          </details>
+        </section>
+      )}
       {status && <p className="text-[13px] text-brand">{status}</p>}
     </div>
   );

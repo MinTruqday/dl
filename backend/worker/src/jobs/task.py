@@ -10,6 +10,7 @@ from loguru import logger
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import record_job
 from src.core.infrastructure.mq import mq
+from src.core.metrics import metrics_collector
 
 
 IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{1,128}$")
@@ -24,29 +25,29 @@ def validate_identifier(value: str, field: str):
         raise PermanentTaskError(f"Invalid {field}")
 
 
-async def handle_assessment_calibration(payload: dict):
+async def handle_qa_job(payload: dict):
     job_id = str(payload.get("job_id") or "")
-    owner_id = str(payload.get("owner_id") or "")
-    owner_email = str(payload.get("owner_email") or "")
+    requester_id = str(payload.get("requester_id") or "")
+    requester_email = str(payload.get("requester_email") or "")
     validate_identifier(job_id, "job identifier")
-    validate_identifier(owner_id, "owner identifier")
-    calibration_payload = payload.get("payload")
-    if not isinstance(calibration_payload, dict):
-        raise PermanentTaskError("Calibration payload is required")
+    validate_identifier(requester_id, "requester identifier")
+    job_payload = payload.get("payload")
+    if not isinstance(job_payload, dict):
+        raise PermanentTaskError("QA job payload is required")
     await record_job(
         job_id,
         {"status": "running", "attempt_started_at": datetime.now(timezone.utc)},
-        {"kind": "assessment_calibration", "owner_id": owner_id},
+        {"kind": payload.get("event"), "project_id": payload.get("project_id"), "requester_id": requester_id},
     )
     async with httpx.AsyncClient(timeout=120) as client:
         response = await client.post(
-            f"{settings.ASSESSMENT_URL}/internal/calibration/run",
+            f"{settings.QA_URL}/api/qa/internal/jobs/{payload.get('event')}",
             headers={
                 "X-Internal-Token": settings.SECRET_KEY,
-                "X-Owner-Id": owner_id,
-                "X-Owner-Email": owner_email,
+                "X-Requester-Id": requester_id,
+                "X-Requester-Email": requester_email,
             },
-            json=calibration_payload,
+            json={"job_id": job_id, "project_id": payload.get("project_id"), "artifact_version_id": payload.get("artifact_version_id"), "model_version": payload.get("model_version"), "payload": job_payload},
         )
     response.raise_for_status()
     result = response.json()
@@ -63,7 +64,7 @@ async def handle_assessment_calibration(payload: dict):
     return result
 
 
-HANDLERS = {"assessment_calibration_queue": handle_assessment_calibration}
+HANDLERS = {"qa_job_queue": handle_qa_job}
 
 
 async def mark_failed(queue_name: str, payload: dict, error: Exception):
@@ -126,6 +127,7 @@ class WorkerRunner:
                                     await message.ack()
                                 else:
                                     await message.reject(requeue=False)
+                            metrics_collector.change_queue_depth(queue_name, -1)
                         except Exception:
                             if not message.processed:
                                 await message.reject(requeue=True)

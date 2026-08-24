@@ -1,2 +1,3 @@
-import UserSettingsPage from "@/features/assessment/pages/UserSettingsPage";
-export default UserSettingsPage;
+import AccountPage from "@/features/authentication/pages/AccountPage";
+
+export default AccountPage;

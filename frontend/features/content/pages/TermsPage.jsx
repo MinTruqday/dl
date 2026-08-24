@@ -80,9 +80,9 @@ export default function TermsPage() {
       </div>
 
       <div className="mt-10 border-t border-border pt-5 text-[13px] text-ink-muted">
-        Cần hỗ trợ về điều khoản
-        <Link href="/tro-giup" className="ml-2 font-semibold text-brand">
-          Mở trợ giúp
+        Cần xem lại thông tin tài khoản
+        <Link href="/cai-dat" className="ml-2 font-semibold text-brand">
+          Mở cài đặt
         </Link>
       </div>
     </div>

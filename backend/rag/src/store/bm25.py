@@ -95,12 +95,7 @@ class BM25Store:
     def _can_access(metadata: Dict, requester_id: Optional[str], is_admin: bool) -> bool:
         if is_admin:
             return True
-        if metadata.get("source_type") == "teacher_material":
-            owner_id = metadata.get("owner_id") or metadata.get("creator_id")
-            return bool(requester_id) and str(owner_id or "") == str(requester_id)
         if metadata.get("visibility") == "public":
-            return True
-        if metadata.get("source_type") == "curriculum":
             return True
         owner_id = metadata.get("owner_id") or metadata.get("creator_id")
         return bool(requester_id) and str(owner_id or "") == str(requester_id)

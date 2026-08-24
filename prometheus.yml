@@ -10,11 +10,9 @@ scrape_configs:
           - ai:8000
           - authentication:8000
           - cloud:8000
-          - collection:8000
-          - compilation:8000
           - content:8000
           - rag:8000
-          - assessment:8000
+          - qa:8000
           - worker:8000
 
   - job_name: ai-harness

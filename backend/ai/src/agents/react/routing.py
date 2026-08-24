@@ -8,9 +8,9 @@ from src.core.infrastructure.configuration import settings
 
 VALID_AGENTS = {
     "EngineAgent": "Searches the internet for real-time information, news, current events and external data",
-    "Action": "Calls assessment domain operations for drafts validation calibration revision approval and publication",
-    "Knowledge": "Retrieves curriculum documents and teacher evidence with metadata authority provenance and owner isolation",
-    "Reasoning": "Analyzes difficulty discrepancy construct preservation evidence and revision hypotheses",
+    "Action": "Calls QA domain operations for drafts trace impact proposal regression and human approved version mutations",
+    "Knowledge": "Retrieves project scoped Requirement Test Case Defect API specification and execution evidence",
+    "Reasoning": "Analyzes semantic requirement changes trace evidence test impact duplicate risk and maintenance proposals",
 }
 
 

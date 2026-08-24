@@ -300,7 +300,7 @@ export default function ChatPage() {
           )}
         </div>
       </aside>
-      <main className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex min-h-16 items-center justify-between gap-2 border-b border-border px-4 py-2 md:gap-4 md:px-6 md:py-0">
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-[15px] font-semibold text-ink">
@@ -442,6 +442,7 @@ export default function ChatPage() {
               onChange={(event) => setInput(event.target.value)}
               className="h-12 min-h-12 max-h-32 w-full resize-none bg-transparent px-2 py-2 text-[15px] leading-6 text-ink outline-none"
               placeholder="Nhập yêu cầu"
+              aria-label="Yêu cầu gửi trợ lý AI"
             />
             <div className="flex items-center justify-between">
               <div className="flex min-w-0 items-center gap-2">
@@ -450,6 +451,7 @@ export default function ChatPage() {
                   type="file"
                   accept="image/*,audio/*,.pdf,.txt,.md,.doc,.docx"
                   className="hidden"
+                  aria-label="Chọn tệp đính kèm"
                   onChange={(event) => {
                     const files = Array.from(event.target.files ?? []);
                     if (files.length) setAttachment({ kind: "file", files });
@@ -461,6 +463,7 @@ export default function ChatPage() {
                   type="file"
                   multiple
                   className="hidden"
+                  aria-label="Chọn thư mục đính kèm"
                   {...{ webkitdirectory: "", directory: "" }}
                   onChange={(event) => {
                     const files = Array.from(event.target.files ?? []);
@@ -590,7 +593,7 @@ export default function ChatPage() {
             </div>
           </div>
         </form>
-      </main>
+      </div>
       <ChatInstructionsModal
         open={instructionsOpen}
         close={() => setInstructionsOpen(false)}

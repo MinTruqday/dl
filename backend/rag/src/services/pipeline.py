@@ -64,16 +64,14 @@ class IngestionPipelineService:
             or doc.get("source_name")
             or "user_upload"
         )
-        education_metadata = doc.get("education_metadata") or {}
+        artifact_metadata = doc.get("artifact_metadata") or {}
 
-        def education_value(key: str, default=None):
-            value = education_metadata.get(key)
+        def artifact_value(key: str, default=None):
+            value = artifact_metadata.get(key)
             return doc.get(key, default) if value is None else value
 
-        source_type = (
-            doc.get("source_type") or education_metadata.get("source_type") or "teacher_material"
-        )
-        authority = doc.get("authority") or education_metadata.get("authority") or "supplementary"
+        source_type = doc.get("source_type") or artifact_metadata.get("source_type") or "project_document"
+        authority = doc.get("authority") or artifact_metadata.get("authority") or "reference"
         owner_id = str(doc.get("owner_id") or doc.get("creator_id") or "")
 
         if not file_url:
@@ -96,21 +94,16 @@ class IngestionPipelineService:
             "publisher": doc.get("publisher") or doc.get("publisher_name"),
             "book_title": doc.get("book_title") or title,
             "collector_version": doc.get("collector_version"),
-            "education_level": education_value("education_level"),
-            "subject": education_value("subject"),
-            "target_program": education_value("target_program"),
-            "chapter_id": education_value("chapter_id"),
-            "lesson_id": education_value("lesson_id"),
-            "section_id": education_value("section_id"),
-            "concept_ids": education_value("concept_ids", []),
-            "skill_ids": education_value("skill_ids", []),
-            "learning_objective_ids": education_value("learning_objective_ids", []),
-            "content_type": education_value("content_type"),
-            "source_version": education_value("source_version") or doc.get("version"),
-            "mapping_confidence": education_value("mapping_confidence"),
-            "mapping_status": education_value("mapping_status"),
-            "conflict_key": education_value("conflict_key"),
-            "claim_value": education_value("claim_value"),
+            "project_id": artifact_value("project_id"),
+            "artifact_type": artifact_value("artifact_type", "project_document"),
+            "artifact_id": artifact_value("artifact_id", document_id),
+            "artifact_version_id": artifact_value("artifact_version_id", document_id),
+            "module": artifact_value("module"),
+            "status": artifact_value("status", "active"),
+            "content_type": artifact_value("content_type"),
+            "source_version": artifact_value("source_version") or doc.get("version"),
+            "conflict_key": artifact_value("conflict_key"),
+            "claim_value": artifact_value("claim_value"),
         }
 
         parse_result = await document_parser.parse_document(file_url, visibility=visibility)

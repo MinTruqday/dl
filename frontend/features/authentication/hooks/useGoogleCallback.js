@@ -32,7 +32,7 @@ export function useGoogleCallback() {
               !requested.startsWith("//") &&
               !requested.startsWith("/dang-nhap")
               ? requested
-              : "/cai-dat/vai-tro",
+              : "/qa/projects",
           );
         }
       } catch (reason) {
@@ -56,7 +56,7 @@ export function useGoogleCallback() {
           !requested.startsWith("//") &&
           !requested.startsWith("/dang-nhap")
           ? requested
-          : "/cai-dat/vai-tro",
+          : "/qa/projects",
       );
     },
     back: () => router.replace("/dang-nhap"),

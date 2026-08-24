@@ -12,7 +12,7 @@ export default function AdminAccountSecurityPanel() {
       const query = search.trim() ? `?search=${encodeURIComponent(search.trim())}` : "";
       const [accountResult, auditResult] = await Promise.all([
         assessmentRequest(`/xac-thuc/quan-tri/tai-khoan${query}`),
-        assessmentRequest("/xac-thuc/quan-tri/nhat-ky?limit=200"),
+        assessmentRequest("/xac-thuc/quan-tri/nhat-ky?limit=20"),
       ]);
       setAccounts(accountResult.data || []);
       setEvents(auditResult.data || []);
@@ -50,6 +50,7 @@ export default function AdminAccountSecurityPanel() {
     }
     await updateAccount(account, { role });
   };
+  const visibleAccounts = accounts.slice(0, 25);
   return (
     <div className="space-y-6">
       <section className="rounded-panel border border-border bg-surface">
@@ -63,7 +64,7 @@ export default function AdminAccountSecurityPanel() {
           />
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[850px] text-left text-[12px]">
+          <table className="hidden w-full min-w-[850px] text-left text-[12px] md:table">
             <thead className="bg-surface-quiet text-ink-muted">
               <tr>
                 <th className="p-4">Tài khoản</th>
@@ -73,7 +74,7 @@ export default function AdminAccountSecurityPanel() {
               </tr>
             </thead>
             <tbody>
-              {accounts.map((account) => (
+              {visibleAccounts.map((account) => (
                 <tr key={account._id} className="border-t border-border">
                   <td className="p-4">
                     <p className="font-semibold">{account.full_name}</p>
@@ -107,13 +108,43 @@ export default function AdminAccountSecurityPanel() {
               ))}
             </tbody>
           </table>
+          <div className="divide-y divide-border md:hidden">
+            {visibleAccounts.map((account) => (
+              <article key={account._id} className="space-y-3 p-4 text-[12px]">
+                <div>
+                  <p className="font-semibold">{account.full_name}</p>
+                  <p className="mt-1 break-all text-ink-muted">{account.email}</p>
+                </div>
+                <div className="flex flex-wrap gap-2 text-ink-muted">
+                  <span>{account.role}</span>
+                  <span>{account.is_active ? "Đang hoạt động" : "Đã khóa"}</span>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    className="apple-button-secondary"
+                    onClick={() => void changeRole(account)}
+                  >
+                    Đổi vai trò
+                  </button>
+                  <button
+                    type="button"
+                    className="apple-button-secondary text-danger"
+                    onClick={() => void updateAccount(account, { is_active: !account.is_active })}
+                  >
+                    {account.is_active ? "Khóa" : "Mở khóa"}
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
       <section className="overflow-x-auto rounded-panel border border-border bg-surface">
         <div className="border-b border-border px-5 py-4 font-semibold">
           Nhật ký xác thực và hành động tài khoản
         </div>
-        <table className="w-full min-w-[850px] text-left text-[12px]">
+        <table className="hidden w-full min-w-[850px] text-left text-[12px] md:table">
           <thead className="bg-surface-quiet text-ink-muted">
             <tr>
               <th className="p-4">Thời gian</th>
@@ -135,6 +166,22 @@ export default function AdminAccountSecurityPanel() {
             ))}
           </tbody>
         </table>
+        <div className="divide-y divide-border md:hidden">
+          {events.map((event) => (
+            <article key={event._id} className="space-y-2 p-4 text-[12px]">
+              <div className="flex items-start justify-between gap-3">
+                <p className="font-semibold">{event.action}</p>
+                <time className="shrink-0 text-ink-muted">
+                  {event.timestamp ? new Date(event.timestamp).toLocaleString("vi-VN") : "Chưa có"}
+                </time>
+              </div>
+              <p className="break-all text-ink-muted">
+                {event.actor_email || event.actor_slug || "Không xác định"}
+              </p>
+              <p>{event.reason || event.ip || "Không có lý do bổ sung"}</p>
+            </article>
+          ))}
+        </div>
       </section>
       {message && (
         <p role="status" className="rounded-control bg-brand-soft p-3 text-brand">

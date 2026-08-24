@@ -37,13 +37,17 @@ export default function AssessmentPlayerPage() {
   const saveTimers = useRef({});
   const submittedRef = useRef(false);
   const submitRef = useRef(null);
+  const openingKeyRef = useRef("");
   useEffect(() => {
     if (!assessmentId) return;
+    const openingKey = `${assessmentId}:${assignmentId || "direct"}`;
+    if (openingKeyRef.current === openingKey) return;
+    openingKeyRef.current = openingKey;
     const open = async () => {
       try {
         const [playerValue, attemptValue] = await Promise.all([
           getAssessmentPlayer(assessmentId, assignmentId),
-          createAttempt(assessmentId, `attempt-${crypto.randomUUID()}`, assignmentId),
+          createAttempt(assessmentId, `attempt-${openingKey}`, assignmentId),
         ]);
         const resumed = await getAttempt(attemptValue._id);
         const existingAnswers = Object.fromEntries(
@@ -76,6 +80,7 @@ export default function AssessmentPlayerPage() {
         setSaved(Object.fromEntries(Object.keys(existingAnswers).map((key) => [key, true])));
         setSecondsLeft(remainingSeconds(resumed.expires_at));
       } catch (reason) {
+        if (openingKeyRef.current === openingKey) openingKeyRef.current = "";
         setError(reason instanceof Error ? reason.message : "Không thể mở bài");
       }
     };
@@ -270,6 +275,15 @@ export default function AssessmentPlayerPage() {
     },
     [],
   );
+  if (!assessmentId)
+    return (
+      <div role="alert" className="mx-auto max-w-4xl space-y-4 p-10 text-center">
+        <p className="text-danger">Chưa chọn bài đánh giá</p>
+        <button className="apple-button" onClick={() => router.push("/hoc-sinh/bai-duoc-giao")}>
+          Quay lại bài được giao
+        </button>
+      </div>
+    );
   if (error && (!player || !attempt))
     return (
       <div role="alert" className="mx-auto max-w-4xl p-10 text-center text-danger">
@@ -329,7 +343,7 @@ export default function AssessmentPlayerPage() {
             ))}
           </div>
         </nav>
-        <main className="rounded-panel border border-border bg-surface p-5 md:p-8">
+        <div className="rounded-panel border border-border bg-surface p-5 md:p-8">
           <div className="flex items-center justify-between border-b border-border pb-4">
             <h2 className="text-[18px] font-semibold">Câu {position + 1}</h2>
             <div className="flex items-center gap-3">
@@ -520,7 +534,7 @@ export default function AssessmentPlayerPage() {
               {error}
             </p>
           )}
-        </main>
+        </div>
       </div>
     </div>
   );

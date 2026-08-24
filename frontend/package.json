@@ -14,12 +14,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint --max-warnings=0 \"app/**/*.{js,jsx}\" \"features/**/*.{js,jsx,mjs}\" \"shared/**/*.{js,jsx}\" middleware.js next.config.mjs postcss.config.js tailwind.config.js",
-    "format": "prettier --write app features shared scripts middleware.js next.config.mjs postcss.config.js tailwind.config.js jsconfig.json package.json",
-    "format:check": "prettier --check app features shared scripts middleware.js next.config.mjs postcss.config.js tailwind.config.js jsconfig.json package.json",
+    "lint": "eslint --max-warnings=0 \"app/**/*.{js,jsx}\" \"features/**/*.{js,jsx,mjs}\" \"shared/**/*.{js,jsx}\" \"e2e/**/*.mjs\" middleware.js next.config.mjs playwright.config.mjs postcss.config.js tailwind.config.js",
+    "format": "prettier --write app features shared e2e scripts middleware.js next.config.mjs playwright.config.mjs postcss.config.js tailwind.config.js jsconfig.json package.json",
+    "format:check": "prettier --check app features shared e2e scripts middleware.js next.config.mjs playwright.config.mjs postcss.config.js tailwind.config.js jsconfig.json package.json",
     "audit:source": "node scripts/audit-source-style.mjs",
-    "test:assessment": "node --test features/assessment/tests/*.test.mjs",
-    "quality": "pnpm format:check && pnpm lint && pnpm audit:source && pnpm test:assessment"
+    "test:qa": "node --test features/qa/tests/*.test.mjs",
+    "test:e2e": "playwright test",
+    "quality": "pnpm format:check && pnpm lint && pnpm audit:source && pnpm test:qa"
   },
   "dependencies": {
     "@payos/payos-checkout": "^1.0.8",
@@ -69,6 +70,7 @@
     "tailwind-merge": "^2.3.0"
   },
   "devDependencies": {
+    "@playwright/test": "1.55.0",
     "@tailwindcss/typography": "^0.5.12",
     "autoprefixer": "^10.0.1",
     "eslint": "^8.57.1",

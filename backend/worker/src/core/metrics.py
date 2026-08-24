@@ -11,6 +11,10 @@ class MetricsCollector:
         self._request_count = defaultdict(int)
         self._request_duration = defaultdict(float)
         self._error_count = defaultdict(int)
+        self._queue_depth = defaultdict(int, {"qa_job_queue": 0})
+
+    def change_queue_depth(self, queue_name: str, amount: int):
+        self._queue_depth[queue_name] = max(0, self._queue_depth[queue_name] + amount)
 
     def record(self, method: str, path: str, status: int, duration: float):
         key = f"{method}_{path}"
@@ -42,6 +46,10 @@ class MetricsCollector:
             lines.append(
                 f'http_errors_total{{service="{service_name}",method="{method}",path="{path}"}} {count}'
             )
+        lines.append("# HELP worker_queue_depth Number of queued QA jobs")
+        lines.append("# TYPE worker_queue_depth gauge")
+        for queue_name, depth in self._queue_depth.items():
+            lines.append(f'worker_queue_depth{{queue="{queue_name}"}} {depth}')
         return "\n".join(lines) + "\n"
 
 

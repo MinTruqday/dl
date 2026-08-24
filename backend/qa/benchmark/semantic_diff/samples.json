@@ -1,0 +1,12 @@
+[
+  {
+    "id": "semantic-boundary-001",
+    "task": "semantic_diff",
+    "input": {
+      "before": {"_id": "REQV-1", "plain_text_projection": "Phone exactly 10 digits"},
+      "after": {"_id": "REQV-2", "plain_text_projection": "Phone accepts 10 or 11 digits"}
+    },
+    "ground_truth": {"labels": ["MODIFIED_BOUNDARY"]},
+    "tags": ["boundary", "validation"]
+  }
+]

@@ -262,35 +262,41 @@ export default function QuestionBankPage() {
             value={subject}
             onChange={(event) => setSubject(event.target.value)}
             placeholder="Môn học"
+            aria-label="Môn học"
           />
           <input
             className="apple-input"
             value={targetProgram}
             onChange={(event) => setTargetProgram(event.target.value)}
             placeholder="Chương trình mục tiêu"
+            aria-label="Chương trình mục tiêu"
           />
           <input
             className="apple-input"
             value={chapter}
             onChange={(event) => setChapter(event.target.value)}
             placeholder="Chương"
+            aria-label="Chương"
           />
           <input
             className="apple-input"
             value={lesson}
             onChange={(event) => setLesson(event.target.value)}
             placeholder="Bài học"
+            aria-label="Bài học"
           />
           <input
             className="apple-input"
             value={conceptId}
             onChange={(event) => setConceptId(event.target.value)}
             placeholder="Concept ID"
+            aria-label="Concept ID"
           />
           <select
             className="apple-input"
             value={cognitiveLevel}
             onChange={(event) => setCognitiveLevel(event.target.value)}
+            aria-label="Mức nhận thức"
           >
             <option value="">Mọi mức nhận thức</option>
             <option value="recognition">Nhận biết</option>
@@ -302,6 +308,7 @@ export default function QuestionBankPage() {
             className="apple-input"
             value={authoringSource}
             onChange={(event) => setAuthoringSource(event.target.value)}
+            aria-label="Nguồn soạn thảo"
           >
             <option value="">Mọi nguồn</option>
             <option value="manual_tiptap">Thủ công</option>
@@ -313,6 +320,7 @@ export default function QuestionBankPage() {
             className="apple-input"
             value={publicationStatus}
             onChange={(event) => setPublicationStatus(event.target.value)}
+            aria-label="Trạng thái xuất bản"
           >
             <option value="">Mọi trạng thái xuất bản</option>
             <option value="published">Đã dùng trong đề xuất bản</option>
@@ -327,6 +335,7 @@ export default function QuestionBankPage() {
             value={minimumConfidence}
             onChange={(event) => setMinimumConfidence(event.target.value)}
             placeholder="Confidence tối thiểu"
+            aria-label="Confidence tối thiểu"
           />
           <input
             className="apple-input"
@@ -337,6 +346,7 @@ export default function QuestionBankPage() {
             value={minimumPredicted}
             onChange={(event) => setMinimumPredicted(event.target.value)}
             placeholder="AI từ"
+            aria-label="Độ khó AI tối thiểu"
           />
           <input
             className="apple-input"
@@ -347,6 +357,7 @@ export default function QuestionBankPage() {
             value={maximumPredicted}
             onChange={(event) => setMaximumPredicted(event.target.value)}
             placeholder="AI đến"
+            aria-label="Độ khó AI tối đa"
           />
           <input
             className="apple-input"
@@ -357,6 +368,7 @@ export default function QuestionBankPage() {
             value={minimumCalibrated}
             onChange={(event) => setMinimumCalibrated(event.target.value)}
             placeholder="Empirical từ"
+            aria-label="Độ khó thực nghiệm tối thiểu"
           />
           <input
             className="apple-input"
@@ -367,11 +379,13 @@ export default function QuestionBankPage() {
             value={maximumCalibrated}
             onChange={(event) => setMaximumCalibrated(event.target.value)}
             placeholder="Empirical đến"
+            aria-label="Độ khó thực nghiệm tối đa"
           />
           <select
             className="apple-input"
             value={sortDirection}
             onChange={(event) => setSortDirection(event.target.value)}
+            aria-label="Chiều sắp xếp"
           >
             <option value="desc">Giảm dần</option>
             <option value="asc">Tăng dần</option>

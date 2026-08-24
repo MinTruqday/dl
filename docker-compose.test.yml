@@ -1,4 +1,19 @@
 services:
+  frontend_e2e:
+    profiles: ["e2e"]
+    image: mcr.microsoft.com/playwright:v1.55.0-noble@sha256:b27e719ecbfef153e13fd24e8341736733bf2658b229677eb21ff57ff5d7fb29
+    working_dir: /work
+    command: ["./node_modules/.bin/playwright", "test"]
+    network_mode: host
+    ipc: host
+    environment:
+      E2E_BASE_URL: http://localhost:3000
+      CI: "true"
+      PLAYWRIGHT_OUTPUT_DIR: /tmp/doclib-playwright-results
+    volumes:
+      - ./frontend:/work
+      - frontend_node_modules:/work/node_modules
+
   model_stub:
     image: doclib-ai
     container_name: doclib_model_stub
@@ -25,7 +40,6 @@ services:
       model_stub:
         condition: service_healthy
 
-  assessment:
+  qa:
     environment:
-      ASSESSMENT_ALLOW_TEST_IDENTITY: "true"
-      CALIBRATION_MIN_SAMPLE_SIZE: "2"
+      QA_ALLOW_TEST_IDENTITY: "true"

@@ -32,15 +32,6 @@ class DocumentCrudService:
             slug = f"{slug}-{uuid.uuid4().hex[:8]}"
 
         doc_dict = doc_in.model_dump(exclude={"password"})
-        if doc_dict.get("education_metadata"):
-            doc_dict["education_metadata"].update(
-                {
-                    "source_type": "teacher_material",
-                    "authority": "supplementary",
-                    "mapping_status": "needs_review",
-                }
-            )
-            doc_dict["visibility"] = "private"
         doc_dict["slug"] = slug
         if not doc_dict.get("publisher_name"):
             doc_dict["publisher_name"] = current_user.full_name
@@ -99,7 +90,7 @@ class DocumentCrudService:
                 "content_format": document.get("content_format", "doclib"),
                 "cover_url": document.get("cover_url"),
                 "file_url": document.get("file_url"),
-                "education_metadata": document.get("education_metadata"),
+                "artifact_metadata": document.get("artifact_metadata"),
                 "is_indexed": document.get("is_indexed", False),
                 "indexing_status": document.get("indexing_status", "not_started"),
                 "indexing_error": document.get("indexing_error"),
@@ -228,14 +219,6 @@ class DocumentCrudService:
             if hasattr(doc_update, "model_dump")
             else dict(doc_update)
         )
-        if update_data.get("education_metadata"):
-            update_data["education_metadata"].update(
-                {
-                    "source_type": "teacher_material",
-                    "authority": "supplementary",
-                    "mapping_status": "needs_review",
-                }
-            )
         expected_version = update_data.pop("expected_version", None)
         if expected_version:
             stored_version = document.get("updated_at")

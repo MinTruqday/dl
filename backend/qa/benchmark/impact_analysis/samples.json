@@ -1,0 +1,17 @@
+[
+  {
+    "id": "impact-boundary-001",
+    "task": "impact_analysis",
+    "input": {
+      "before": {"_id": "REQV-1", "plain_text_projection": "Phone exactly 10 digits"},
+      "after": {"_id": "REQV-2", "plain_text_projection": "Phone accepts 10 or 11 digits"},
+      "tests": [
+        {"id": "TCV-041", "key": "TC-041", "text": "Phone 9 digits rejected", "direct_trace": true},
+        {"id": "TCV-042", "key": "TC-042", "text": "Phone 10 digits accepted", "direct_trace": true},
+        {"id": "TCV-043", "key": "TC-043", "text": "Phone 11 digits rejected", "direct_trace": true}
+      ]
+    },
+    "ground_truth": {"labels": ["TCV-043"]},
+    "tags": ["boundary", "impact", "regression"]
+  }
+]

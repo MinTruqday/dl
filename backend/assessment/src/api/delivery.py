@@ -114,7 +114,8 @@ async def finalize_attempt_record(attempt: dict, user_id: str, timed_out: bool =
                 "total_score": total_score,
                 "pending_scores": pending,
                 "updated_at": now(),
-            }
+            },
+            "$unset": {"active_slot": ""},
         },
         return_document=ReturnDocument.AFTER,
     )
@@ -753,6 +754,7 @@ async def create_attempt(
         "assessment_version_id": version["_id"],
         "assignment_id": assignment["_id"],
         "student_id": user.id,
+        "active_slot": f"{assignment['_id']}:{user.id}",
         "attempt_number": attempt_count + 1,
         "delivery_mode": "fixed",
         "status": "active",
@@ -785,12 +787,16 @@ async def create_attempt(
         await database.value.attempts.insert_one(attempt)
     except DuplicateKeyError:
         duplicate = await database.value.attempts.find_one(
-            {
-                "assignment_id": assignment["_id"],
-                "student_id": user.id,
-                "idempotency_key": payload.idempotency_key,
-            }
+            {"active_slot": f"{assignment['_id']}:{user.id}"}
         )
+        if not duplicate:
+            duplicate = await database.value.attempts.find_one(
+                {
+                    "assignment_id": assignment["_id"],
+                    "student_id": user.id,
+                    "idempotency_key": payload.idempotency_key,
+                }
+            )
         if duplicate:
             return duplicate
         raise HTTPException(status_code=409, detail={"code": "attempt_create_conflict"})
@@ -1002,6 +1008,11 @@ async def get_attempt_result(attempt_id: str, user: CurrentUser = Depends(get_cu
                 "submitted_answer": response.get("answer") if review_answers else None,
                 "answer_key": questions_by_id.get(response["question_version_id"], {}).get(
                     "answer_key"
+                )
+                if review_answers
+                else None,
+                "stem_doc": questions_by_id.get(response["question_version_id"], {}).get(
+                    "stem_doc"
                 )
                 if review_answers
                 else None,

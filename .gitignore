@@ -30,3 +30,6 @@ tectonic-master
 Anthropic
 frontend/.pnpm-store
 frontend/.next
+frontend/.next-dev/
+frontend/playwright-report/
+frontend/test-results/

@@ -25,7 +25,7 @@ from src.utils.structured_output import (
 class FakeEmbedder:
     async def embed_query(self, text):
         lowered = text.lower()
-        if "search documents" in lowered or "document" in lowered:
+        if "search documents" in lowered or "document" in lowered or "project" in lowered:
             return [1.0, 0.0, 0.0]
         if "conversational" in lowered or "hello" in lowered:
             return [0.0, 1.0, 0.0]
@@ -268,26 +268,28 @@ def test_mutating_tools_require_approval():
     from src.agents.react.acting import _HUMAN_ONLY_APPROVAL_TOOLS, _REQUIRES_APPROVAL_TOOLS, _can_approve_automatically
 
     expected = {
-        "create_question_draft",
-        "create_revision_draft",
         "delete_document",
-        "import_assessment",
         "manage_user_instructions",
-        "map_question_to_curriculum",
         "restore_document",
         "update_document_metadata",
-        "record_teacher_difficulty_estimate",
-        "propose_question_revision",
-        "publish_assessment_version",
-        "run_calibration",
+        "create_test_case_draft",
+        "create_trace_link_suggestion",
+        "create_impact_analysis",
+        "create_maintenance_proposal",
+        "create_regression_recommendation",
+        "apply_test_case_revision",
+        "confirm_trace_link",
+        "baseline_requirement_version",
+        "approve_test_case_version",
+        "mark_test_case_obsolete",
     }
     assert expected <= _REQUIRES_APPROVAL_TOOLS
-    assert _HUMAN_ONLY_APPROVAL_TOOLS == {"publish_assessment_version"}
-    assert _can_approve_automatically("publish_assessment_version", True, "auto_safe") is False
+    assert _HUMAN_ONLY_APPROVAL_TOOLS == {"apply_test_case_revision", "confirm_trace_link", "baseline_requirement_version", "approve_test_case_version", "mark_test_case_obsolete"}
+    assert _can_approve_automatically("apply_test_case_revision", True, "auto_safe") is False
     assert _can_approve_automatically("update_document_metadata", False, "auto_safe") is True
 
 
-def test_assessment_domain_tools_replace_legacy_editor_runtime():
+def test_qa_domain_tools_replace_education_runtime():
     from src.tools import tools
 
     names = {registered.name for registered in tools}
@@ -295,28 +297,28 @@ def test_assessment_domain_tools_replace_legacy_editor_runtime():
     assert "replace_document_content" not in names
     assert "edit_document_block" not in names
     assert {
-        "get_curriculum_context",
-        "get_teacher_material_context",
-        "evaluate_learner_fit",
-        "analyze_blueprint_impact",
-        "get_question_research_metrics",
-        "get_research_evaluation",
-        "import_assessment",
-        "inspect_question_versions",
-        "map_question_to_curriculum",
-        "analyze_question",
-        "compare_difficulty_signals",
-        "propose_question_revision",
-        "create_revision_draft",
-        "publish_assessment_version",
-        "predict_item_difficulty",
+        "get_project_context",
+        "search_project_knowledge",
+        "get_requirement_version",
+        "compare_requirement_versions",
+        "get_trace_links",
+        "search_test_cases",
+        "get_test_case_version",
+        "get_test_results",
+        "find_near_duplicates",
+        "create_test_case_draft",
+        "create_trace_link_suggestion",
+        "create_impact_analysis",
+        "create_maintenance_proposal",
+        "create_regression_recommendation",
+        "apply_test_case_revision",
     } <= names
 
 
-def test_assessment_tool_calls_domain_operation_with_identity():
+def test_qa_tool_calls_domain_operation_with_identity():
     import json
     from unittest.mock import patch
-    from src.tools.assessment import compare_difficulty_signals
+    from src.tools.qa import compare_requirement_versions
 
     requests = []
 
@@ -324,106 +326,25 @@ def test_assessment_tool_calls_domain_operation_with_identity():
         status_code = 200
 
         def json(self):
-            return {"target": 3, "teacher_estimate": 3.2, "ai_prediction": 3.5, "empirical": 4.1}
+            return {"data": {"changes": [{"type": "MODIFIED_BOUNDARY"}]}}
 
     async def fake_request(method, url, **kwargs):
         requests.append((method, url, kwargs))
         return FakeResponse()
 
-    with patch("src.tools.assessment.make_api_request", side_effect=fake_request):
+    with patch("src.tools.qa.make_api_request", side_effect=fake_request):
         result = json.loads(
             asyncio.run(
-                compare_difficulty_signals.ainvoke(
-                    {"question_version_id": "Q-1-v1"},
+                compare_requirement_versions.ainvoke(
+                    {"requirement_id": "REQ-1", "from_version_id": "REQV-1", "to_version_id": "REQV-2"},
                     config={"configurable": {"token": "Bearer test"}},
                 )
             )
         )
-    assert result["empirical"] == 4.1
-    assert requests[0][0] == "GET"
-    assert requests[0][1].endswith("/questions/Q-1-v1/difficulty-signals")
-    assert requests[0][2]["headers"]["Authorization"] == "Bearer test"
-
-
-def test_teacher_material_tool_honors_disabled_profile():
-    import json
-    from unittest.mock import patch
-    from src.tools.assessment import get_teacher_material_context
-
-    requests = []
-
-    class FakeResponse:
-        status_code = 200
-
-        def json(self):
-            return {"use_own_materials": False}
-
-    async def fake_request(method, url, **kwargs):
-        requests.append((method, url, kwargs))
-        return FakeResponse()
-
-    with patch("src.tools.assessment.make_api_request", side_effect=fake_request):
-        result = json.loads(
-            asyncio.run(
-                get_teacher_material_context.ainvoke(
-                    {"query": "đạo hàm"},
-                    config={"configurable": {"token": "Bearer test"}},
-                )
-            )
-        )
-    assert result == {"status": "teacher_material_use_disabled"}
-    assert len(requests) == 1
-    assert requests[0][0] == "GET"
-    assert requests[0][1].endswith("/education/teacher-profile/me")
-
-
-def test_ai_rag_filters_teacher_material_when_profile_disables_it():
-    from unittest.mock import AsyncMock, patch
-    from src.clients.rag import RagClient
-
-    documents = [
-        {"text": "Chương trình", "metadata": {"source_type": "curriculum"}},
-        {"text": "Tài liệu riêng", "metadata": {"source_type": "teacher_material"}},
-    ]
-    with patch.object(RagClient, "teacher_materials_allowed", new=AsyncMock(return_value=False)):
-        filtered = asyncio.run(RagClient.filter_teacher_materials(documents, "teacher-1"))
-    assert filtered == [documents[0]]
-
-
-def test_difficulty_prediction_tool_preserves_predictor_kind_and_model_version():
-    import json
-    from unittest.mock import patch
-    from src.tools.assessment import predict_item_difficulty
-
-    requests = []
-
-    class FakeResponse:
-        status_code = 200
-
-        def json(self):
-            return {"predictor_kind": "llm_direct", "predicted_difficulty": 3.4}
-
-    async def fake_request(method, url, **kwargs):
-        requests.append((method, url, kwargs))
-        return FakeResponse()
-
-    with patch("src.tools.assessment.make_api_request", side_effect=fake_request):
-        result = json.loads(
-            asyncio.run(
-                predict_item_difficulty.ainvoke(
-                    {
-                        "question_draft_id": "QD-1",
-                        "model_version": "direct-v3",
-                        "prediction_kind": "llm_direct",
-                    },
-                    config={"configurable": {"token": "Bearer test"}},
-                )
-            )
-        )
-    assert result["predictor_kind"] == "llm_direct"
+    assert result["changes"][0]["type"] == "MODIFIED_BOUNDARY"
     assert requests[0][0] == "POST"
-    assert requests[0][1].endswith("/question-drafts/QD-1/predict-difficulty")
-    assert requests[0][2]["json"] == {"model_version": "direct-v3", "prediction_kind": "llm_direct"}
+    assert requests[0][1].endswith("/api/qa/requirements/REQ-1/compare")
+    assert requests[0][2]["headers"]["Authorization"] == "Bearer test"
 
 
 def test_dependent_agent_task_receives_verified_results_as_untrusted_data():
@@ -796,7 +717,7 @@ def test_orchestration_rejects_machine_readable_failures():
     assert _result_succeeded('{"status":"tool_execution_failed"}') is False
 
 
-def test_collected_document_reindex_removes_superseded_chunks():
+def test_versioned_project_document_reindex_removes_superseded_chunks():
     from unittest.mock import AsyncMock, patch
     from src.loop.event import _index_uploaded_document
 
@@ -812,14 +733,14 @@ def test_collected_document_reindex_removes_superseded_chunks():
     ingest.assert_awaited_once_with("DOC-v2", "platform-system", True)
 
 
-def test_teacher_document_reindex_uses_owner_scope():
+def test_private_project_document_reindex_uses_owner_scope():
     from unittest.mock import AsyncMock, patch
     from src.loop.event import _index_uploaded_document
 
     ingest = AsyncMock(return_value={"status": "indexed"})
     with patch("src.clients.rag.rag_client.ingest_document", ingest):
-        asyncio.run(_index_uploaded_document("DOC-1", "teacher-1", ""))
-    ingest.assert_awaited_once_with("DOC-1", "teacher-1", False)
+        asyncio.run(_index_uploaded_document("DOC-1", "qa-owner-1", ""))
+    ingest.assert_awaited_once_with("DOC-1", "qa-owner-1", False)
 
 
 def test_supervisor_replans_failed_observation():
@@ -996,108 +917,63 @@ def test_prompt_json_examples_are_format_safe():
     assert malformed == []
 
 
-def test_assessment_generation_is_guarded_and_structured():
+def test_qa_assistance_is_guarded_and_structured():
     from unittest.mock import AsyncMock, patch
 
     from fastapi import HTTPException
 
-    from src.api.inference import generate_assessment_question
-    from src.schemas.inference import AssessmentQuestionGenerationRequest, GeneratedAssessmentQuestion
+    from src.api.inference import qa_assistance
+    from src.schemas.inference import QAAssistanceRequest, QAAssistanceResult
 
-    request = AssessmentQuestionGenerationRequest(
-        education_level="THPT",
-        target_program="grade_12",
-        subject="math",
-        topic="đạo hàm",
-        question_type="single_choice",
-        target_difficulty=3,
-        evidence=[{"chunk_id": "chunk-1", "text": "Đạo hàm của x bình phương là hai x"}],
-    )
-    generated = GeneratedAssessmentQuestion(
-        stem="Đạo hàm của x bình phương là gì",
-        options=[
-            {"id": "A", "text": "Hai x"},
-            {"id": "B", "text": "x"},
-        ],
-        answer_key={"option_id": "A"},
-        solution="Áp dụng quy tắc đạo hàm lũy thừa",
-        primary_concept="đạo hàm",
-        primary_skill="tính đạo hàm",
-        learning_objective="Tính được đạo hàm hàm đa thức",
-    )
+    request = QAAssistanceRequest(capability="impact_analysis", project_id="PROJECT-1", instruction="Classify impacted tests", evidence=[{"artifact_type": "requirement_version", "artifact_version_id": "REQV-2", "text": "Phone accepts 10 or 11 digits"}])
+    generated = QAAssistanceResult(capability="impact_analysis", suggestions=[{"test_case_version_id": "TCV-043", "classification": "NEEDS_UPDATE"}], evidence_refs=["REQV-2"], confidence=0.92, warnings=[])
     with patch(
         "src.core.security.guardrails.guardrails_engine.async_inspect_input",
-        new=AsyncMock(return_value={"is_safe": True, "sanitized_text": "Bằng chứng an toàn"}),
+        new=AsyncMock(return_value={"is_safe": True, "sanitized_text": "Safe project evidence"}),
     ), patch(
-        "src.api.inference._structured_direct",
+        "src.api.inference.structured",
         new=AsyncMock(return_value=generated),
     ):
-        result = asyncio.run(generate_assessment_question(request))
-    assert result["answer_key"] == {"option_id": "A"}
-    assert result["primary_concept"] == "đạo hàm"
+        result = asyncio.run(qa_assistance(request))
+    assert result.capability == "impact_analysis"
+    assert result.suggestions[0]["classification"] == "NEEDS_UPDATE"
 
     with patch(
         "src.core.security.guardrails.guardrails_engine.async_inspect_input",
         new=AsyncMock(return_value={"is_safe": False}),
     ):
         try:
-            asyncio.run(generate_assessment_question(request))
+            asyncio.run(qa_assistance(request))
             assert False
         except HTTPException as error:
             assert error.status_code == 422
-            assert error.detail["code"] == "assessment_evidence_unsafe"
+            assert error.detail["code"] == "qa_evidence_unsafe"
 
 
-def test_assessment_generation_schema_validator_covers_structured_question_types():
-    from src.api.inference import _generated_assessment_shape_valid
-    from src.schemas.inference import GeneratedAssessmentQuestion
+def test_qa_assistance_schema_rejects_unsupported_capability_and_empty_evidence():
+    from pydantic import ValidationError
+    from src.schemas.inference import QAAssistanceRequest
 
-    def generated(options, answer_key):
-        return GeneratedAssessmentQuestion(
-            stem="Nội dung câu hỏi hợp lệ",
-            options=options,
-            answer_key=answer_key,
-            solution="Lời giải theo bằng chứng",
-            primary_concept="khái niệm",
-            primary_skill="kỹ năng",
-            learning_objective="mục tiêu",
-        )
-
-    options = [{"id": "A", "text": "Một"}, {"id": "B", "text": "Hai"}]
-    assert _generated_assessment_shape_valid("multiple_choice", generated(options, {"option_ids": ["A", "B"]}))
-    assert _generated_assessment_shape_valid("matching", generated(options, {"pairs": {"A": "1", "B": "2"}}))
-    assert _generated_assessment_shape_valid("ordering", generated(options, {"order": ["B", "A"]}))
-    assert _generated_assessment_shape_valid("numeric", generated([], {"value": "3.14", "tolerance": "0.01"}))
-    assert not _generated_assessment_shape_valid("true_false", generated([], {"value": "true"}))
+    with pytest.raises(ValidationError):
+        QAAssistanceRequest(capability="arbitrary_database_query", project_id="PROJECT-1", evidence=[{"text": "x"}])
+    with pytest.raises(ValidationError):
+        QAAssistanceRequest(capability="test_generation", project_id="PROJECT-1", evidence=[])
 
 
-def test_direct_difficulty_judge_is_a_separate_structured_baseline():
+def test_qa_assistance_rejects_capability_mismatch():
     from unittest.mock import AsyncMock, patch
 
-    from src.api.inference import judge_assessment_difficulty_directly
-    from src.core.infrastructure.configuration import settings
-    from src.schemas.inference import DirectDifficultyJudgment, DirectDifficultyJudgmentRequest
+    from fastapi import HTTPException
+    from src.api.inference import qa_assistance
+    from src.schemas.inference import QAAssistanceRequest, QAAssistanceResult
 
-    request = DirectDifficultyJudgmentRequest(
-        question_type="numeric",
-        stem="Tính đạo hàm của x bình phương tại x bằng ba",
-        answer_key={"value": "6"},
-        solution="Đạo hàm là hai x",
-        education_level="THPT",
-        subject="math",
-        target_program="grade_12",
-    )
-    judged = DirectDifficultyJudgment(
-        predicted_difficulty=2.75,
-        confidence=0.72,
-        reason_summary=["Một phép biến đổi quen thuộc"],
-    )
-    with patch("src.api.inference._structured_direct", new=AsyncMock(return_value=judged)) as direct:
-        result = asyncio.run(judge_assessment_difficulty_directly(request))
-    assert result["predicted_difficulty"] == 2.75
-    assert result["confidence"] == 0.72
-    assert result["provider_model_version"] == settings.LLM_MODEL
-    assert "response" not in direct.await_args.args[0]
+    request = QAAssistanceRequest(capability="test_generation", project_id="PROJECT-1", evidence=[{"text": "Baseline evidence"}])
+    mismatch = QAAssistanceResult(capability="impact_analysis", suggestions=[], evidence_refs=[], confidence=0.4, warnings=["Mismatch"])
+    with patch("src.core.security.guardrails.guardrails_engine.async_inspect_input", new=AsyncMock(return_value={"is_safe": True, "sanitized_text": "Safe"})), patch("src.api.inference.structured", new=AsyncMock(return_value=mismatch)):
+        with pytest.raises(HTTPException) as captured:
+            asyncio.run(qa_assistance(request))
+    assert captured.value.status_code == 502
+    assert captured.value.detail["code"] == "qa_capability_mismatch"
 
 if __name__ == "__main__":
     import inspect

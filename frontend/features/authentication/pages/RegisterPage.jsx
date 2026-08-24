@@ -57,7 +57,7 @@ export default function RegisterPage() {
             required
             minLength={3}
             maxLength={50}
-            pattern="[a-zA-Z0-9_-]+"
+            pattern={"[a-zA-Z0-9_\\-]+"}
             value={slug}
             onChange={(event) => setSlug(event.target.value)}
             helper="Chữ, số, gạch dưới hoặc gạch nối"

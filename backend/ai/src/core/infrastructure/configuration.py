@@ -48,7 +48,6 @@ class Settings(BaseModel):
     NLI_MODEL_NAME: str = os.environ["NLI_MODEL_NAME"]
     PLATFORM_SYSTEM_ID: str = os.environ["PLATFORM_SYSTEM_ID"]
     RAG_URL: str = get_service_url("RAG")
-    ASSESSMENT_URL: str = get_service_url("ASSESSMENT")
     AI_DB_NAME: str = os.environ["AI_DB_NAME"]
     CONTENT_URL: str = get_service_url("CONTENT")
     AGENT_SLOW_DURATION_MS_THRESHOLD: int = int(os.environ["AGENT_SLOW_DURATION_MS_THRESHOLD"])
