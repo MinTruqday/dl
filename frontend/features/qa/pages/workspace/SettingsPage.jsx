@@ -21,9 +21,8 @@ export default function SettingsPage({ project, onProjectChange }) {
   }, [project._id]);
   return (
     <QaPage
-      eyebrow={`${project.key} · Settings`}
       title="Cài đặt và kiểm toán"
-      description="Cấu hình dùng optimistic concurrency và mọi quyết định quan trọng đều được ghi vào audit log"
+      description="Cấu hình an toàn theo phiên bản và ghi lại mọi quyết định quan trọng trong nhật ký"
       actions={<ProjectCrumb projectId={project._id} />}
     >
       {error && <ErrorState message={error} />}
@@ -62,19 +61,19 @@ export default function SettingsPage({ project, onProjectChange }) {
               />
             </label>
             <button className="apple-button" type="submit">
-              Lưu bằng revision {project.revision}
+              Lưu với phiên bản {project.revision}
             </button>
           </form>
         </Panel>
-        <Panel title="Maintenance analytics">
+        <Panel title="Phân tích bảo trì">
           <div className="grid grid-cols-2 gap-4 p-5">
             <div>
               <p className="text-3xl font-semibold">{analytics?.impact_analysis_count || 0}</p>
-              <p className="field-label mt-2">Impact Analysis</p>
+              <p className="field-label mt-2">Phân tích ảnh hưởng</p>
             </div>
             <div>
               <p className="text-3xl font-semibold">{analytics?.tests_stale || 0}</p>
-              <p className="field-label mt-2">Test stale</p>
+              <p className="field-label mt-2">Ca kiểm thử cũ</p>
             </div>
             <div>
               <p className="text-3xl font-semibold">
@@ -82,7 +81,7 @@ export default function SettingsPage({ project, onProjectChange }) {
                   ? "N/A"
                   : `${Math.round(analytics.proposal_acceptance_rate * 100)}%`}
               </p>
-              <p className="field-label mt-2">Proposal acceptance</p>
+              <p className="field-label mt-2">Tỷ lệ chấp nhận đề xuất</p>
             </div>
           </div>
         </Panel>
@@ -93,7 +92,7 @@ export default function SettingsPage({ project, onProjectChange }) {
           empty="Chưa có sự kiện"
           columns={[
             { key: "action", label: "Hành động" },
-            { key: "artifact_type", label: "Artifact" },
+            { key: "artifact_type", label: "Loại dữ liệu" },
             { key: "artifact_id", label: "Mã" },
             { key: "actor_id", label: "Người thực hiện" },
             {

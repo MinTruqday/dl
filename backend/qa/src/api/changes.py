@@ -184,16 +184,30 @@ async def reject_proposal(proposal_id: str, payload: ProposalAction, user: Curre
 
 async def apply_proposal(proposal_id, payload, user, final_status):
     proposal = await get_project_entity("maintenance_proposals", proposal_id, user, write=True)
-    require_pending_revision(proposal, payload)
+    require_pending_revision(proposal, payload, allow_partial=True)
     patch = {**proposal.get("patch", {}), **(payload.patch or {})}
-    if proposal["proposal_type"] == "CREATE_TEST_CASE":
-        result = await create_test_draft_from_proposal(proposal, patch, user)
-    elif proposal["proposal_type"] == "UPDATE_TEST_CASE":
-        result = await create_test_version_from_proposal(proposal, patch, user)
-    elif proposal["proposal_type"] == "MARK_OBSOLETE":
-        result = await mark_test_obsolete(proposal, user)
-    else:
-        raise HTTPException(status_code=422, detail={"code": "UNSUPPORTED_PROPOSAL_TYPE"})
+    try:
+        if proposal.get("status") == "APPLY_PARTIAL" and proposal.get("partial_version_id"):
+            result = await recover_partial_proposal(proposal, user)
+        elif proposal["proposal_type"] == "CREATE_TEST_CASE":
+            result = await create_test_draft_from_proposal(proposal, patch, user)
+        elif proposal["proposal_type"] == "UPDATE_TEST_CASE":
+            result = await create_test_version_from_proposal(proposal, patch, user)
+        elif proposal["proposal_type"] == "MARK_OBSOLETE":
+            result = await mark_test_obsolete(proposal, user)
+        else:
+            raise HTTPException(status_code=422, detail={"code": "UNSUPPORTED_PROPOSAL_TYPE"})
+    except HTTPException:
+        raise
+    except Exception as error:
+        partial = await database.value.maintenance_proposals.find_one({"_id": proposal_id})
+        if partial and partial.get("partial_version_id"):
+            await database.value.maintenance_proposals.update_one(
+                {"_id": proposal_id},
+                {"$set": {"status": "APPLY_PARTIAL", "recovery_error": str(error)[:500], "updated_at": now()}, "$inc": {"revision": 1}},
+            )
+            raise HTTPException(status_code=503, detail={"code": "PROPOSAL_APPLY_PARTIAL", "retryable": True, "state_after_failure": "APPLY_PARTIAL", "user_action_required": True}) from error
+        raise HTTPException(status_code=503, detail={"code": "PROPOSAL_APPLY_FAILED", "retryable": True, "state_after_failure": "UNCHANGED", "user_action_required": True}) from error
     await database.value.maintenance_proposals.update_one({"_id": proposal_id}, {"$set": {"status": final_status, "applied_artifact_id": result.get("_id"), "review_note": payload.review_note, "reviewed_by": user.id, "reviewed_at": now(), "updated_at": now()}, "$inc": {"revision": 1}})
     await update_proposal_acceptance_rate(proposal["project_id"])
     await audit(user.id, "maintenance_proposal_applied", "MaintenanceProposal", proposal_id, proposal["project_id"], {"result_id": result.get("_id")})
@@ -218,10 +232,28 @@ async def create_test_version_from_proposal(proposal, patch, user):
     merged["plain_text_projection"] = project_test_text(merged)
     version = {**{key: value for key, value in merged.items() if key not in {"_id", "version", "created_at", "approved_by", "parent_version_id", "change_reason"}}, "_id": new_id("TCV"), "version": int(base["version"]) + 1, "parent_version_id": base["_id"], "change_reason": proposal["reason"], "approved_by": user.id, "created_at": now()}
     await database.value.test_case_versions.insert_one(version)
+    await database.value.maintenance_proposals.update_one({"_id": proposal["_id"]}, {"$set": {"partial_version_id": version["_id"], "apply_state": "VERSION_CREATED", "updated_at": now()}})
     await database.value.test_cases.update_one({"_id": test_case["_id"]}, {"$set": {"current_version_id": version["_id"], "status": "ACTIVE", "updated_at": now()}})
     await database.value.trace_links.update_many({"project_id": proposal["project_id"], "target_id": base["_id"], "status": {"$in": ["CONFIRMED", "STALE"]}}, {"$set": {"status": "STALE", "updated_at": now()}})
     change_set = await database.value.requirement_change_sets.find_one({"_id": (await database.value.impact_analyses.find_one({"_id": proposal["impact_analysis_id"]}))["change_set_id"]})
     await database.value.trace_links.insert_one({"_id": new_id("TL"), "project_id": proposal["project_id"], "source_type": "requirement_version", "source_id": change_set["to_version_id"], "target_type": "test_case_version", "target_id": version["_id"], "link_type": "verifies", "confidence": 1, "origin": "manual", "status": "CONFIRMED", "evidence": proposal["evidence"], "created_by": user.id, "created_at": now(), "updated_at": now()})
+    await index_artifact(version["project_id"], "test_case_version", version["test_case_id"], version["_id"], version["title"], version["plain_text_projection"], version["status"], "approved", version["version"])
+    return version
+
+
+async def recover_partial_proposal(proposal, user):
+    version = await database.value.test_case_versions.find_one({"_id": proposal["partial_version_id"], "project_id": proposal["project_id"]})
+    if not version:
+        raise HTTPException(status_code=409, detail={"code": "PARTIAL_ARTIFACT_NOT_FOUND", "state_after_failure": "APPLY_PARTIAL"})
+    test_case = await database.value.test_cases.find_one({"_id": proposal["target_artifact_id"], "project_id": proposal["project_id"]})
+    if test_case and test_case.get("current_version_id") != version["_id"]:
+        await database.value.test_cases.update_one({"_id": test_case["_id"]}, {"$set": {"current_version_id": version["_id"], "status": "ACTIVE", "updated_at": now()}})
+    analysis = await database.value.impact_analyses.find_one({"_id": proposal["impact_analysis_id"]})
+    change_set = await database.value.requirement_change_sets.find_one({"_id": analysis["change_set_id"]}) if analysis else None
+    if change_set:
+        trace = await database.value.trace_links.find_one({"project_id": proposal["project_id"], "source_id": change_set["to_version_id"], "target_id": version["_id"], "status": "CONFIRMED"})
+        if not trace:
+            await database.value.trace_links.insert_one({"_id": new_id("TL"), "project_id": proposal["project_id"], "source_type": "requirement_version", "source_id": change_set["to_version_id"], "target_type": "test_case_version", "target_id": version["_id"], "link_type": "verifies", "confidence": 1, "origin": "manual", "status": "CONFIRMED", "evidence": proposal.get("evidence", []), "created_by": user.id, "created_at": now(), "updated_at": now()})
     await index_artifact(version["project_id"], "test_case_version", version["test_case_id"], version["_id"], version["title"], version["plain_text_projection"], version["status"], "approved", version["version"])
     return version
 
@@ -290,8 +322,9 @@ def proposed_patch(base, changes):
     return patch
 
 
-def require_pending_revision(proposal, payload):
-    if proposal["status"] != "PENDING":
+def require_pending_revision(proposal, payload, allow_partial=False):
+    allowed = {"PENDING", "APPLY_PARTIAL"} if allow_partial else {"PENDING"}
+    if proposal["status"] not in allowed:
         raise HTTPException(status_code=409, detail={"code": "PROPOSAL_ALREADY_REVIEWED"})
     if proposal["revision"] != payload.expected_revision:
         raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT", "current_revision": proposal["revision"]})

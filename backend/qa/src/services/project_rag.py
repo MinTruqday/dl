@@ -47,6 +47,11 @@ async def index_artifact(project_id, artifact_type, artifact_id, artifact_versio
 
 
 async def search_project(project_id, query, artifact_types, limit):
+    result = await search_project_with_status(project_id, query, artifact_types, limit)
+    return result["items"]
+
+
+async def search_project_with_status(project_id, query, artifact_types, limit):
     must = [{"key": "project_id", "match": {"value": project_id}}]
     if artifact_types:
         must.append({"key": "artifact_type", "match": {"any": artifact_types}})
@@ -57,6 +62,6 @@ async def search_project(project_id, query, artifact_types, limit):
                 response = await client.post(f"/collections/{COLLECTION}/points/search", json={"vector": embedding(query), "filter": {"must": must}, "limit": limit, "with_payload": True, "score_threshold": 0.05})
                 response.raise_for_status()
                 points = response.json().get("result", [])
-            return [{**item.get("payload", {}), "score": round(float(item.get("score", 0)), 4), "retrieval_source": "qdrant_dense"} for item in points]
+            return {"items": [{**item.get("payload", {}), "score": round(float(item.get("score", 0)), 4), "retrieval_source": "qdrant_dense"} for item in points], "degraded_mode": "NORMAL", "error_code": None}
         except httpx.HTTPError:
-            return []
+            return {"items": [], "degraded_mode": "DEGRADED_VECTOR", "error_code": "QDRANT_UNAVAILABLE"}

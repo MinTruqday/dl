@@ -1,7 +1,14 @@
 "use client";
 import { useState } from "react";
 import DataTable from "../../components/DataTable";
-import { ErrorState, Panel, ProjectCrumb, QaPage, StatusPill } from "../../components/QaUi";
+import {
+  DegradedBanner,
+  ErrorState,
+  Panel,
+  ProjectCrumb,
+  QaPage,
+  StatusPill,
+} from "../../components/QaUi";
 import { qaApi } from "../../services/qa.service";
 import { messageOf } from "../../lib/qa";
 
@@ -11,13 +18,13 @@ export default function KnowledgePage({ project }) {
   const [error, setError] = useState("");
   return (
     <QaPage
-      eyebrow={`${project.key} · Knowledge`}
-      title="Project scoped retrieval"
-      description="Mọi kết quả bị giới hạn theo project và hiển thị nguồn phiên bản authority cùng điểm truy hồi"
+      title="Tìm kiếm trong tri thức dự án"
+      description="Kết quả chỉ nằm trong phạm vi dự án và luôn hiển thị nguồn cùng phiên bản để kiểm chứng"
       actions={<ProjectCrumb projectId={project._id} />}
     >
       {error && <ErrorState message={error} />}
-      <Panel title="Tìm trong Requirement Test Case Defect và Test Plan">
+      <DegradedBanner mode={result?.degraded_mode} />
+      <Panel title="Tìm trong yêu cầu ca kiểm thử lỗi và kế hoạch kiểm thử">
         <form
           className="flex gap-3 p-5"
           onSubmit={async (event) => {
@@ -37,7 +44,7 @@ export default function KnowledgePage({ project }) {
             required
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Nhập hành vi quy tắc lỗi hoặc Test Case cần tìm"
+            placeholder="Nhập hành vi quy tắc lỗi hoặc ca kiểm thử cần tìm"
           />
           <button className="apple-button" type="submit">
             Tìm kiếm
@@ -45,10 +52,10 @@ export default function KnowledgePage({ project }) {
         </form>
       </Panel>
       {result && (
-        <Panel title={`Kết quả theo ${result.retrieval_version}`}>
+        <Panel title={`Kết quả từ ${result.retrieval_version || "nguồn tri thức"}`}>
           <DataTable
             items={result.items}
-            empty="Không tìm thấy artifact phù hợp"
+            empty="Không tìm thấy dữ liệu phù hợp"
             columns={[
               { key: "artifact_type", label: "Loại" },
               { key: "title", label: "Tên" },

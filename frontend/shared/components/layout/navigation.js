@@ -25,7 +25,7 @@ export function navigationGroupsFor(pathname) {
         { id: "dashboard", label: "Tổng quan", href: root, icon: LayoutDashboard },
         {
           id: "requirements",
-          label: "Requirement",
+          label: "Yêu cầu",
           href: `${root}/requirements`,
           icon: FileCheck2,
         },
@@ -35,19 +35,24 @@ export function navigationGroupsFor(pathname) {
           href: `${root}/test-design`,
           icon: TestTube2,
         },
-        { id: "traceability", label: "Traceability", href: `${root}/traceability`, icon: Network },
+        { id: "traceability", label: "Truy vết", href: `${root}/traceability`, icon: Network },
         {
           id: "changes",
-          label: "Change Intelligence",
+          label: "Phân tích thay đổi",
           href: `${root}/changes`,
           icon: GitCompareArrows,
         },
-        { id: "execution", label: "Execution", href: `${root}/execution`, icon: PlayCircle },
-        { id: "defects", label: "Defect", href: `${root}/defects`, icon: Bug },
-        { id: "knowledge", label: "Knowledge Search", href: `${root}/knowledge`, icon: Search },
+        {
+          id: "execution",
+          label: "Thực thi kiểm thử",
+          href: `${root}/execution`,
+          icon: PlayCircle,
+        },
+        { id: "defects", label: "Lỗi", href: `${root}/defects`, icon: Bug },
+        { id: "knowledge", label: "Kho tri thức", href: `${root}/knowledge`, icon: Search },
         {
           id: "project-settings",
-          label: "Cài đặt và audit",
+          label: "Cài đặt và nhật ký",
           href: `${root}/settings`,
           icon: Activity,
         },
@@ -55,7 +60,7 @@ export function navigationGroupsFor(pathname) {
     : [];
   return [
     {
-      label: "Workspace",
+      label: "Không gian làm việc",
       items: [
         { id: "projects", label: "Dự án", href: "/qa/projects", icon: FolderKanban },
         ...projectItems,

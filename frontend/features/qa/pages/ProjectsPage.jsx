@@ -55,9 +55,8 @@ export default function ProjectsPage() {
   };
   return (
     <QaPage
-      eyebrow="QA Workspace"
       title="Dự án kiểm thử"
-      description="Quản lý Requirement Test Case Traceability Change Impact Test Run và Defect trong cùng một nguồn dữ liệu có phiên bản"
+      description="Quản lý yêu cầu, kịch bản kiểm thử, truy vết, thay đổi, lần chạy và lỗi trong cùng một nguồn dữ liệu có phiên bản"
       actions={
         <button
           type="button"
@@ -71,7 +70,7 @@ export default function ProjectsPage() {
     >
       {error && <ErrorState message={error} />}
       {creating && (
-        <Panel title="Dự án mới" description="Mã dự án là duy nhất và không đổi sau khi tạo">
+        <Panel title="Tạo dự án mới" description="Mã dự án là duy nhất và không đổi sau khi tạo">
           <form onSubmit={submit} className="grid gap-4 p-5 md:grid-cols-2">
             <label className="field-label">
               Mã dự án
@@ -104,10 +103,10 @@ export default function ProjectsPage() {
                 onChange={(event) => setForm({ ...form, project_type: event.target.value })}
               >
                 <option value="web">Web</option>
-                <option value="mobile">Mobile</option>
+                <option value="mobile">Ứng dụng di động</option>
                 <option value="api">API</option>
-                <option value="desktop">Desktop</option>
-                <option value="embedded">Embedded</option>
+                <option value="desktop">Ứng dụng máy tính</option>
+                <option value="embedded">Thiết bị nhúng</option>
                 <option value="other">Khác</option>
               </select>
             </label>

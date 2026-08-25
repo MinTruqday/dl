@@ -975,6 +975,21 @@ def test_qa_assistance_rejects_capability_mismatch():
     assert captured.value.status_code == 502
     assert captured.value.detail["code"] == "qa_capability_mismatch"
 
+
+def test_qa_assistance_returns_degraded_deterministic_fallback_when_provider_is_down():
+    from unittest.mock import AsyncMock, patch
+
+    from src.api.inference import qa_assistance
+    from src.schemas.inference import QAAssistanceRequest
+
+    request = QAAssistanceRequest(capability="impact_analysis", project_id="PROJECT-1", evidence=[{"artifact_type": "requirement_version", "artifact_version_id": "REQV-2", "text": "Phone accepts 10 or 11 digits"}])
+    with patch("src.core.security.guardrails.guardrails_engine.async_inspect_input", new=AsyncMock(return_value={"is_safe": True, "sanitized_text": "safe"})), patch("src.api.inference.structured", new=AsyncMock(side_effect=RuntimeError("provider down"))):
+        result = asyncio.run(qa_assistance(request))
+    assert result.status == "DEGRADED"
+    assert result.degraded_mode == "DEGRADED_AI"
+    assert "AI_PROVIDER_UNAVAILABLE" in result.warnings
+    assert result.model["provider"] == "deterministic-fallback"
+
 if __name__ == "__main__":
     import inspect
     for name, obj in list(globals().items()):

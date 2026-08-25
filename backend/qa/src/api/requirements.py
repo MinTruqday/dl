@@ -251,9 +251,10 @@ async def baseline_requirement_version(
         {"$set": {"current_version_id": version_id, "status": "BASELINED", "updated_at": timestamp}},
     )
     version = await database.value.requirement_versions.find_one({"_id": version_id})
-    await index_requirement(version)
+    indexed = await index_requirement(version)
+    version = await database.value.requirement_versions.find_one({"_id": version_id})
     await audit(user.id, "requirement_version_baselined", "RequirementVersion", version_id, version["project_id"])
-    return envelope(version, revision=version["revision"])
+    return envelope(version, revision=version["revision"], status="DEGRADED" if not indexed else "SUCCESS", degraded_mode="DEGRADED_VECTOR" if not indexed else None)
 
 
 @router.post("/requirement-versions/{version_id}/ai/lint")
@@ -501,4 +502,6 @@ def text_doc(value):
 
 
 async def index_requirement(version):
-    await index_artifact(version["project_id"], "requirement_version", version["requirement_id"], version["_id"], version["title"], version.get("plain_text_projection", ""), version.get("status", "DRAFT"), "baseline" if version.get("status") == "BASELINED" else "draft", version.get("version"))
+    indexed = await index_artifact(version["project_id"], "requirement_version", version["requirement_id"], version["_id"], version["title"], version.get("plain_text_projection", ""), version.get("status", "DRAFT"), "baseline" if version.get("status") == "BASELINED" else "draft", version.get("version"))
+    await database.value.requirement_versions.update_one({"_id": version["_id"]}, {"$set": {"index_status": "READY" if indexed else "FAILED", "index_error_code": None if indexed else "RAG_INDEX_FAILED", "updated_at": now()}})
+    return indexed

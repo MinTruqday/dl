@@ -68,9 +68,8 @@ export default function ChangesPage({ project }) {
   };
   return (
     <QaPage
-      eyebrow={`${project.key} · Change Intelligence`}
-      title="Change impact và bảo trì"
-      description="Semantic diff phân loại thay đổi rồi người dùng duyệt từng đề xuất trước khi tạo phiên bản Test Case mới"
+      title="Ảnh hưởng thay đổi và bảo trì"
+      description="Hệ thống phân loại thay đổi, sau đó người dùng duyệt từng đề xuất trước khi tạo phiên bản ca kiểm thử mới"
       actions={<ProjectCrumb projectId={project._id} />}
     >
       {error && <ErrorState message={error} />}
@@ -78,10 +77,10 @@ export default function ChangesPage({ project }) {
         <DataTable
           onSelect={analyze}
           items={sets}
-          empty="Tạo phiên bản Requirement mới rồi tạo Change Set để bắt đầu"
+          empty="Tạo phiên bản yêu cầu mới rồi tạo bộ thay đổi để bắt đầu"
           columns={[
             { key: "_id", label: "Mã" },
-            { key: "requirement_id", label: "Requirement" },
+            { key: "requirement_id", label: "Yêu cầu" },
             {
               key: "status",
               label: "Trạng thái",
@@ -93,7 +92,7 @@ export default function ChangesPage({ project }) {
       </Panel>
       {selected && (
         <div className="grid gap-5 xl:grid-cols-2">
-          <Panel title="Semantic diff">
+          <Panel title="So sánh thay đổi">
             <DataTable
               items={(selected.changes || []).map((item, index) => ({ ...item, _id: index }))}
               empty="Không phát hiện thay đổi ngữ nghĩa"
@@ -110,7 +109,7 @@ export default function ChangesPage({ project }) {
               items={regression?.items || []}
               empty="Chưa có khuyến nghị"
               columns={[
-                { key: "test_case_id", label: "Test Case" },
+                { key: "test_case_id", label: "Ca kiểm thử" },
                 {
                   key: "level",
                   label: "Khuyến nghị",
@@ -123,11 +122,11 @@ export default function ChangesPage({ project }) {
         </div>
       )}
       {impact && (
-        <Panel title="Impact Analysis">
+        <Panel title="Phân tích ảnh hưởng">
           <DataTable
             items={impact.items || []}
             columns={[
-              { key: "test_case_key", label: "Test Case" },
+              { key: "test_case_key", label: "Ca kiểm thử" },
               {
                 key: "classification",
                 label: "Phân loại",
@@ -139,12 +138,12 @@ export default function ChangesPage({ project }) {
           />
         </Panel>
       )}
-      <Panel title="Maintenance Proposal chờ duyệt">
+      <Panel title="Đề xuất bảo trì chờ duyệt">
         <DataTable
           items={proposals}
           empty="Không có đề xuất chờ duyệt"
           columns={[
-            { key: "test_case_key", label: "Test Case" },
+            { key: "test_case_key", label: "Ca kiểm thử" },
             { key: "proposal_type", label: "Loại đề xuất" },
             {
               key: "status",
@@ -155,7 +154,7 @@ export default function ChangesPage({ project }) {
               key: "decision",
               label: "Quyết định HITL",
               render: (item) => (
-                <span className="flex gap-2">
+                <span className="flex flex-wrap gap-2">
                   <button
                     className="secondary-button"
                     type="button"

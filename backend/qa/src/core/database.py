@@ -48,6 +48,7 @@ async def create_indexes():
     await db.test_suites.create_index([("project_id", 1), ("updated_at", -1)])
     await db.test_runs.create_index([("project_id", 1), ("status", 1), ("updated_at", -1)])
     await db.test_results.create_index([("test_run_id", 1), ("test_case_version_id", 1)], unique=True)
+    await db.test_result_corrections.create_index([("test_result_id", 1), ("idempotency_key", 1)], unique=True)
     await db.defects.create_index([("project_id", 1), ("defect_key", 1)], unique=True)
     await db.audit_events.create_index([("project_id", 1), ("created_at", -1)])
     await db.import_jobs.create_index([("project_id", 1), ("created_at", -1)])

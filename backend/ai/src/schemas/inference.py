@@ -35,3 +35,6 @@ class QAAssistanceResult(BaseModel):
     evidence_refs: List[str] = Field(default_factory=list, max_length=200, description="Mã bằng chứng hỗ trợ kết quả")
     confidence: float = Field(ge=0, le=1, description="Độ tin cậy tham khảo của mô hình")
     warnings: List[str] = Field(default_factory=list, max_length=50, description="Cảnh báo giới hạn và xung đột bằng chứng")
+    status: Literal["SUCCESS", "DEGRADED"] = Field(default="SUCCESS", description="Trạng thái vận hành của năng lực AI")
+    degraded_mode: str | None = Field(default=None, description="Chế độ fallback khi provider hoặc retrieval không sẵn sàng")
+    model: dict[str, Any] = Field(default_factory=dict, description="Metadata version của model prompt và tool schema")

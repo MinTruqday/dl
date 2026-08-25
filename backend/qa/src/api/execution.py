@@ -11,6 +11,7 @@ from src.domain.schemas import (
     DefectCreate,
     DefectTransition,
     TestPlanCreate,
+    TestResultCorrectionInput,
     TestResultInput,
     TestRunCreate,
     TestSuiteCreate,
@@ -145,6 +146,19 @@ async def record_test_result(
     await database.value.test_runs.update_one({"_id": run_id}, {"$set": {"updated_at": now()}, "$inc": {"revision": 1}})
     await audit(user.id, "test_result_recorded", "TestResult", result["_id"], run["project_id"], {"status": payload.status})
     return envelope(result)
+
+
+@router.post("/test-results/{result_id}/corrections")
+async def correct_test_result(result_id: str, payload: TestResultCorrectionInput, user: CurrentUser = Depends(get_current_user)):
+    result = await get_project_entity("test_results", result_id, user, write=True)
+    existing = await database.value.test_result_corrections.find_one({"test_result_id": result_id, "idempotency_key": payload.idempotency_key})
+    if existing:
+        return envelope({"result": await database.value.test_results.find_one({"_id": result_id}), "correction": existing})
+    event = {"_id": new_id("TRC"), "project_id": result["project_id"], "test_result_id": result_id, "from_status": result.get("status"), "to_status": payload.status, "reason": payload.reason, "idempotency_key": payload.idempotency_key, "corrected_by": user.id, "created_at": now()}
+    await database.value.test_result_corrections.insert_one(event)
+    await database.value.test_results.update_one({"_id": result_id}, {"$set": {"status": payload.status, "corrected": True, "last_correction_id": event["_id"], "updated_at": now()}, "$push": {"correction_event_ids": event["_id"]}})
+    await audit(user.id, "test_result_corrected", "TestResult", result_id, result["project_id"], {"from": result.get("status"), "to": payload.status, "correction_id": event["_id"]})
+    return envelope({"result": await database.value.test_results.find_one({"_id": result_id}), "correction": event})
 
 
 @router.post("/test-runs/{run_id}/complete")

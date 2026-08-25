@@ -7,8 +7,8 @@ const manrope = Manrope({
   display: "swap",
 });
 export const metadata = {
-  title: "Nền tảng kiểm định bài đánh giá",
-  description: "Soạn thảo kiểm định và hiệu chỉnh bài đánh giá bằng bằng chứng thực nghiệm",
+  title: "QA Intelligence",
+  description: "Nền tảng quản lý kiểm thử có truy vết và hỗ trợ AI",
 };
 import { AuthProvider } from "@/features/authentication/contexts/AuthContext";
 import { ToastProvider } from "@/shared/contexts/ToastContext";

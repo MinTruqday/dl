@@ -34,11 +34,10 @@ export default function TraceabilityPage({ project }) {
   };
   return (
     <QaPage
-      eyebrow={`${project.key} · Traceability`}
-      title="Ma trận truy vết và coverage"
-      description="Coverage chỉ tính liên kết đã xác nhận và không xem AI suggestion là sự thật"
+      title="Ma trận truy vết và độ phủ"
+      description="Độ phủ chỉ tính liên kết đã xác nhận và không xem đề xuất AI là sự thật"
       actions={
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button
             className="secondary-button"
             type="button"
@@ -60,7 +59,7 @@ export default function TraceabilityPage({ project }) {
               }
             }}
           >
-            Khôi phục trace bằng AI
+            Khôi phục liên kết bằng AI
           </button>
           <ProjectCrumb projectId={project._id} />
         </div>
@@ -68,22 +67,22 @@ export default function TraceabilityPage({ project }) {
     >
       {error && <ErrorState message={error} />}
       <div className="grid gap-4 sm:grid-cols-3">
-        <Metric label="Coverage Requirement" value={`${coverage.requirement_coverage || 0}%`} />
+        <Metric label="Độ phủ yêu cầu" value={`${coverage.requirement_coverage || 0}%`} />
         <Metric
-          label="Coverage Acceptance Criteria"
+          label="Độ phủ tiêu chí chấp nhận"
           value={`${coverage.acceptance_criterion_coverage || 0}%`}
         />
-        <Metric label="Test Case chưa liên kết" value={coverage.unlinked_tests?.length || 0} />
+        <Metric label="Ca kiểm thử chưa liên kết" value={coverage.unlinked_tests?.length || 0} />
       </div>
-      <Panel title="Trace Link">
+      <Panel title="Liên kết truy vết">
         <DataTable
           items={matrix.trace_links || []}
-          empty="Chưa có Trace Link"
+          empty="Chưa có liên kết truy vết"
           columns={[
             { key: "source_type", label: "Nguồn" },
             { key: "source_id", label: "Mã nguồn" },
-            { key: "target_id", label: "Test Case Version" },
-            { key: "confidence", label: "Confidence" },
+            { key: "target_id", label: "Phiên bản ca kiểm thử" },
+            { key: "confidence", label: "Độ tin cậy" },
             {
               key: "status",
               label: "Trạng thái",
@@ -94,7 +93,7 @@ export default function TraceabilityPage({ project }) {
               label: "Quyết định",
               render: (item) =>
                 item.status === "SUGGESTED" ? (
-                  <span className="flex gap-2">
+                  <span className="flex flex-wrap gap-2">
                     <button
                       className="secondary-button"
                       type="button"

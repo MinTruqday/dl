@@ -245,6 +245,12 @@ class TestResultInput(BaseModel):
     idempotency_key: str = Field(min_length=8, max_length=200)
 
 
+class TestResultCorrectionInput(BaseModel):
+    status: Literal["PASS", "FAIL", "BLOCKED", "SKIPPED", "NOT_APPLICABLE"]
+    reason: str = Field(min_length=2, max_length=2000)
+    idempotency_key: str = Field(min_length=8, max_length=200)
+
+
 class DefectCreate(BaseModel):
     project_id: str
     defect_key: str | None = Field(default=None, max_length=80)

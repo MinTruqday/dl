@@ -6,7 +6,7 @@ from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope, get_project
 from src.core.database import database
 from src.domain.schemas import SearchInput
-from src.services.project_rag import search_project
+from src.services.project_rag import search_project_with_status
 
 
 router = APIRouter(prefix="/api/qa", tags=["QA Analytics"])
@@ -33,7 +33,8 @@ async def search_knowledge(
     user: CurrentUser = Depends(get_current_user),
 ):
     await get_project(project_id, user)
-    dense = await search_project(project_id, payload.query, payload.artifact_types, payload.limit)
+    dense_result = await search_project_with_status(project_id, payload.query, payload.artifact_types, payload.limit)
+    dense = dense_result["items"]
     pattern = re.escape(payload.query)
     requested = set(payload.artifact_types)
     results = []
@@ -60,7 +61,7 @@ async def search_knowledge(
             by_version[version_id] = item
     results = list(by_version.values())
     results.sort(key=lambda item: (item.get("authority") != "baseline", -item.get("score", 0)))
-    return envelope({"items": results[: payload.limit], "filters": {"project_id": project_id, "artifact_types": list(requested)}, "retrieval_version": "project-hybrid-qdrant-v1"})
+    return envelope({"items": results[: payload.limit], "filters": {"project_id": project_id, "artifact_types": list(requested)}, "retrieval_version": "project-hybrid-qdrant-v1", "degraded_mode": dense_result["degraded_mode"], "fallback": dense_result["degraded_mode"] != "NORMAL", "error_code": dense_result["error_code"]}, degraded_mode=dense_result["degraded_mode"] if dense_result["degraded_mode"] != "NORMAL" else None)
 
 
 @router.get("/projects/{project_id}/audit")

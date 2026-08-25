@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import DataTable from "../../components/DataTable";
 import { ErrorState, Panel, ProjectCrumb, QaPage, StatusPill } from "../../components/QaUi";
 import { qaApi } from "../../services/qa.service";
-import { emptyDoc, messageOf, textDoc } from "../../lib/qa";
+import { emptyDoc, messageOf, textDoc, valueLabel } from "../../lib/qa";
 import QaDocumentEditor from "../../editor/QaDocumentEditor";
 
 export default function TestDesignPage({ project }) {
@@ -44,12 +44,13 @@ export default function TestDesignPage({ project }) {
       setDrafts(draftValues);
       setTests(testValues);
       setOperations(operationValues);
-      if (!selectedRequirement && requirementValues[0])
-        setSelectedRequirement(requirementValues[0].current_version_id);
+      setSelectedRequirement(
+        (current) => current || requirementValues[0]?.current_version_id || "",
+      );
     } catch (reason) {
       setError(messageOf(reason));
     }
-  }, [project._id, selectedRequirement]);
+  }, [project._id]);
   useEffect(() => {
     void load();
   }, [load]);
@@ -95,12 +96,12 @@ export default function TestDesignPage({ project }) {
     }
   };
   const generate = async () => {
-    if (!selectedRequirement) return setError("Cần chọn Requirement trước khi sinh Test Case");
+    if (!selectedRequirement) return setError("Cần chọn yêu cầu trước khi tạo ca kiểm thử");
     try {
       await qaApi.generateTestCases(selectedRequirement, {
         categories: ["happy_path", "negative", "boundary", "validation"],
         count_per_category: 1,
-        instruction: "Sinh theo baseline và Acceptance Criteria",
+        instruction: "Tạo theo phiên bản chuẩn và tiêu chí chấp nhận",
       });
       await load();
     } catch (reason) {
@@ -118,24 +119,23 @@ export default function TestDesignPage({ project }) {
   };
   return (
     <QaPage
-      eyebrow={`${project.key} · Test Design`}
-      title="Scenario và Test Case"
-      description="Sinh AI có evidence nhưng mọi Test Case vẫn đi qua draft lint review và phê duyệt của con người"
+      title="Kịch bản và ca kiểm thử"
+      description="AI chỉ tạo bản nháp có bằng chứng, mọi ca kiểm thử đều phải qua rà soát và phê duyệt của người dùng"
       actions={<ProjectCrumb projectId={project._id} />}
     >
       {error && <ErrorState message={error} />}
       <Panel
-        title="AI generation"
-        description="Kết quả chỉ là draft và không tự động trở thành phiên bản hoạt động"
+        title="Tạo bằng AI"
+        description="Kết quả chỉ là bản nháp và không tự động trở thành phiên bản hoạt động"
       >
         <div className="flex flex-wrap gap-3 p-5">
           <select
-            aria-label="Requirement nguồn"
+            aria-label="Yêu cầu nguồn"
             className="apple-input min-w-72"
             value={selectedRequirement}
             onChange={(event) => setSelectedRequirement(event.target.value)}
           >
-            <option value="">Chọn Requirement</option>
+            <option value="">Chọn yêu cầu</option>
             {requirements.map((item) => (
               <option key={item._id} value={item.current_version_id}>
                 {item.requirement_key} {item.current_version?.title}
@@ -143,7 +143,7 @@ export default function TestDesignPage({ project }) {
             ))}
           </select>
           <button className="apple-button" type="button" onClick={generate}>
-            Sinh 4 nhóm Test Case
+            Tạo 4 nhóm ca kiểm thử
           </button>
           <button
             className="secondary-button"
@@ -161,7 +161,7 @@ export default function TestDesignPage({ project }) {
               }
             }}
           >
-            Sinh Scenario
+            Tạo kịch bản
           </button>
           <button
             className="secondary-button"
@@ -174,15 +174,15 @@ export default function TestDesignPage({ project }) {
               }
             }}
           >
-            Phát hiện trùng lặp
+            Tìm ca kiểm thử trùng lặp
           </button>
         </div>
       </Panel>
       <div className="grid gap-5 xl:grid-cols-2">
-        <Panel title="Test Case Draft">
+        <Panel title="Bản nháp ca kiểm thử">
           <DataTable
             items={drafts}
-            empty="Chưa có draft"
+            empty="Chưa có bản nháp"
             columns={[
               { key: "test_case_key", label: "Mã" },
               { key: "title", label: "Tên" },
@@ -207,10 +207,10 @@ export default function TestDesignPage({ project }) {
             ]}
           />
         </Panel>
-        <Panel title="Test Case Version">
+        <Panel title="Phiên bản ca kiểm thử">
           <DataTable
             items={tests}
-            empty="Chưa có Test Case được phê duyệt"
+            empty="Chưa có ca kiểm thử được phê duyệt"
             columns={[
               { key: "test_case_key", label: "Mã" },
               { key: "title", label: "Tên", render: (item) => item.current_version?.title },
@@ -229,7 +229,7 @@ export default function TestDesignPage({ project }) {
         </Panel>
       </div>
       <div className="grid gap-5 xl:grid-cols-2">
-        <Panel title="Tạo Test Case thủ công">
+        <Panel title="Tạo ca kiểm thử thủ công">
           <form onSubmit={create} className="space-y-4 p-5">
             <label className="field-label">
               Tên
@@ -240,9 +240,9 @@ export default function TestDesignPage({ project }) {
                 onChange={(event) => setForm({ ...form, title: event.target.value })}
               />
             </label>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid gap-3 sm:grid-cols-3">
               <select
-                aria-label="Loại Test Case"
+                aria-label="Loại ca kiểm thử"
                 className="apple-input"
                 value={form.type}
                 onChange={(event) => setForm({ ...form, type: event.target.value })}
@@ -262,27 +262,33 @@ export default function TestDesignPage({ project }) {
                   "ui",
                   "custom",
                 ].map((value) => (
-                  <option key={value}>{value}</option>
+                  <option key={value} value={value}>
+                    {valueLabel(value)}
+                  </option>
                 ))}
               </select>
               <select
-                aria-label="Ưu tiên Test Case"
+                aria-label="Ưu tiên ca kiểm thử"
                 className="apple-input"
                 value={form.priority}
                 onChange={(event) => setForm({ ...form, priority: event.target.value })}
               >
                 {["critical", "high", "medium", "low"].map((value) => (
-                  <option key={value}>{value}</option>
+                  <option key={value} value={value}>
+                    {valueLabel(value)}
+                  </option>
                 ))}
               </select>
               <select
-                aria-label="Rủi ro Test Case"
+                aria-label="Rủi ro ca kiểm thử"
                 className="apple-input"
                 value={form.risk}
                 onChange={(event) => setForm({ ...form, risk: event.target.value })}
               >
                 {["critical", "high", "medium", "low"].map((value) => (
-                  <option key={value}>{value}</option>
+                  <option key={value} value={value}>
+                    {valueLabel(value)}
+                  </option>
                 ))}
               </select>
             </div>
@@ -291,7 +297,7 @@ export default function TestDesignPage({ project }) {
               <QaDocumentEditor
                 value={form.action}
                 onChange={(action) => setForm({ ...form, action })}
-                label="Thao tác Test Case"
+                label="Thao tác của ca kiểm thử"
                 minHeight="min-h-24"
               />
             </div>
@@ -300,19 +306,19 @@ export default function TestDesignPage({ project }) {
               <QaDocumentEditor
                 value={form.expected}
                 onChange={(expected) => setForm({ ...form, expected })}
-                label="Kết quả mong đợi của Test Case"
+                label="Kết quả mong đợi của ca kiểm thử"
                 minHeight="min-h-24"
               />
             </div>
             <button className="apple-button" type="submit">
-              Lưu draft
+              Lưu bản nháp
             </button>
           </form>
         </Panel>
-        <Panel title="Scenario">
+        <Panel title="Kịch bản">
           <DataTable
             items={scenarios}
-            empty="Chưa có Scenario"
+            empty="Chưa có kịch bản"
             columns={[
               { key: "scenario_key", label: "Mã" },
               { key: "title", label: "Tên" },
@@ -323,12 +329,20 @@ export default function TestDesignPage({ project }) {
         </Panel>
       </div>
       {duplicates.length > 0 && (
-        <Panel title="Cặp Test Case có khả năng trùng">
+        <Panel title="Các ca kiểm thử có khả năng trùng">
           <DataTable
             items={duplicates.map((item, index) => ({ ...item, _id: index }))}
             columns={[
-              { key: "left", label: "Test Case trái", render: (item) => item.left.test_case_key },
-              { key: "right", label: "Test Case phải", render: (item) => item.right.test_case_key },
+              {
+                key: "left",
+                label: "Ca kiểm thử bên trái",
+                render: (item) => item.left.test_case_key,
+              },
+              {
+                key: "right",
+                label: "Ca kiểm thử bên phải",
+                render: (item) => item.right.test_case_key,
+              },
               { key: "similarity", label: "Độ tương đồng" },
               { key: "reasons", label: "Bằng chứng", render: (item) => item.reasons.join(", ") },
             ]}
@@ -336,21 +350,29 @@ export default function TestDesignPage({ project }) {
         </Panel>
       )}
       <Panel
-        title="Import và export Test Case"
+        title="Nhập và xuất ca kiểm thử"
         description="CSV và XLSX luôn tạo bản xem trước trước khi người dùng xác nhận"
         actions={
           <div className="flex flex-wrap gap-2">
             <button
               className="secondary-button"
               type="button"
-              onClick={() => qaApi.exportTestCases(project._id, "csv").catch((reason) => setError(messageOf(reason)))}
+              onClick={() =>
+                qaApi
+                  .exportTestCases(project._id, "csv")
+                  .catch((reason) => setError(messageOf(reason)))
+              }
             >
               Xuất CSV
             </button>
             <button
               className="secondary-button"
               type="button"
-              onClick={() => qaApi.exportTestCases(project._id, "xlsx").catch((reason) => setError(messageOf(reason)))}
+              onClick={() =>
+                qaApi
+                  .exportTestCases(project._id, "xlsx")
+                  .catch((reason) => setError(messageOf(reason)))
+              }
             >
               Xuất XLSX
             </button>
@@ -360,7 +382,7 @@ export default function TestDesignPage({ project }) {
         <div className="space-y-4 p-5">
           <input
             className="apple-input"
-            aria-label="Tệp Test Case CSV hoặc XLSX"
+            aria-label="Tệp ca kiểm thử CSV hoặc XLSX"
             type="file"
             accept=".csv,.xlsx"
             onChange={async (event) => {
@@ -377,7 +399,7 @@ export default function TestDesignPage({ project }) {
             <>
               <DataTable
                 items={testImport.preview.map((item, index) => ({ ...item, _id: index }))}
-                empty="Tệp không có Test Case hợp lệ"
+                empty="Tệp không có ca kiểm thử hợp lệ"
                 columns={[
                   { key: "title", label: "Tên" },
                   { key: "type", label: "Loại" },
@@ -409,7 +431,7 @@ export default function TestDesignPage({ project }) {
       </Panel>
       <Panel
         title="OpenAPI và Postman"
-        description="Import metadata đã lọc secret rồi sinh Test Case chỉ từ response có trong đặc tả"
+        description="Nhập dữ liệu đã lọc thông tin nhạy cảm rồi tạo ca kiểm thử chỉ từ phản hồi có trong đặc tả"
       >
         <div className="grid gap-5 p-5 xl:grid-cols-2">
           <form
@@ -478,7 +500,7 @@ export default function TestDesignPage({ project }) {
                       }
                     }}
                   >
-                    Sinh Test Case
+                    Tạo ca kiểm thử
                   </button>
                 ),
               },

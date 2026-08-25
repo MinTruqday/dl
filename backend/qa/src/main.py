@@ -16,7 +16,7 @@ from src.api.projects import router as projects_router
 from src.api.requirements import router as requirements_router
 from src.api.test_design import router as test_design_router
 from src.api.traceability import router as traceability_router
-from src.core.common import new_id
+from src.core.common import failure_metadata, new_id
 from src.core.configuration import settings
 from src.core.database import close_database, connect_database, database
 from src.core.metrics import PrometheusMiddleware, metrics_endpoint
@@ -64,13 +64,22 @@ async def http_exception_handler(request: Request, error: HTTPException):
         code = "REQUEST_FAILED"
         details = {}
         message = str(detail)
-    return JSONResponse(status_code=error.status_code, content={"error": {"code": code, "message": message, "details": details}, "trace_id": trace_id}, headers=error.headers)
+    operation = failure_metadata(code, error.status_code, detail)
+    return JSONResponse(status_code=error.status_code, content={"error": {"code": code, "message": message, "details": details}, "trace_id": trace_id, **operation}, headers=error.headers)
 
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, error: RequestValidationError):
     trace_id = new_id("TRC")
-    return JSONResponse(status_code=422, content=jsonable_encoder({"error": {"code": "VALIDATION_ERROR", "message": "Dữ liệu đầu vào không hợp lệ", "details": {"issues": error.errors()}}, "trace_id": trace_id}))
+    operation = failure_metadata("VALIDATION_ERROR", 422)
+    return JSONResponse(status_code=422, content=jsonable_encoder({"error": {"code": "VALIDATION_ERROR", "message": "Dữ liệu đầu vào không hợp lệ", "details": {"issues": error.errors()}}, "trace_id": trace_id, **operation}))
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, error: Exception):
+    trace_id = new_id("TRC")
+    operation = failure_metadata("INTERNAL_SERVER_ERROR", 500)
+    return JSONResponse(status_code=500, content={"error": {"code": "INTERNAL_SERVER_ERROR", "message": "Thao tác thất bại", "details": {}}, "trace_id": trace_id, **operation})
 
 
 @app.get("/health", include_in_schema=False)

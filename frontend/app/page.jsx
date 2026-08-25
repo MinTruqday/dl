@@ -1,4 +1,1 @@
-import { redirect } from "next/navigation";
-export default function HomePage() {
-  redirect("/qa/projects");
-}
+export { default } from "@/features/marketing/pages/HomePage";

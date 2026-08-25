@@ -10,7 +10,7 @@ import {
   StatusPill,
 } from "../../components/QaUi";
 import { qaApi } from "../../services/qa.service";
-import { emptyDoc, messageOf, textDoc } from "../../lib/qa";
+import { emptyDoc, messageOf, textDoc, valueLabel } from "../../lib/qa";
 import QaDocumentEditor from "../../editor/QaDocumentEditor";
 
 const initialForm = {
@@ -95,7 +95,7 @@ export default function RequirementsPage({ project, section }) {
     }
   };
   const baseline = async () => {
-    if (!window.confirm("Xác nhận đặt phiên bản Requirement này làm baseline")) return;
+    if (!window.confirm("Xác nhận đặt phiên bản yêu cầu này làm phiên bản chuẩn")) return;
     try {
       await qaApi.baselineRequirement(current._id, current.revision);
       await load();
@@ -104,7 +104,7 @@ export default function RequirementsPage({ project, section }) {
     }
   };
   const createVersion = async () => {
-    const title = window.prompt("Tên Requirement cho phiên bản mới", current.title);
+    const title = window.prompt("Tên yêu cầu cho phiên bản mới", current.title);
     if (!title) return;
     const reason = window.prompt("Lý do thay đổi", "Cập nhật quy tắc nghiệp vụ");
     if (!reason) return;
@@ -165,11 +165,12 @@ export default function RequirementsPage({ project, section }) {
   };
   return (
     <QaPage
-      eyebrow={`${project.key} · Requirement`}
       title={
-        selected ? `${selected.requirement_key} ${current?.title || ""}` : "Requirement và baseline"
+        selected
+          ? `${selected.requirement_key} ${current?.title || ""}`
+          : "Yêu cầu và phiên bản chuẩn"
       }
-      description="Requirement bất biến theo phiên bản với Acceptance Criteria nguồn và quyết định baseline do con người kiểm soát"
+      description="Yêu cầu được quản lý theo phiên bản cùng tiêu chí chấp nhận và quyết định phiên bản chuẩn do người dùng kiểm soát"
       actions={<ProjectCrumb projectId={project._id} />}
     >
       {error && <ErrorState message={error} />}
@@ -178,7 +179,7 @@ export default function RequirementsPage({ project, section }) {
           <Panel
             title="Phiên bản hiện tại"
             actions={
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <button
                   className="secondary-button"
                   type="button"
@@ -190,14 +191,14 @@ export default function RequirementsPage({ project, section }) {
                     }
                   }}
                 >
-                  AI lint
+                  Kiểm tra chất lượng bằng AI
                 </button>
                 <button className="secondary-button" type="button" onClick={createVersion}>
                   Tạo phiên bản mới
                 </button>
                 {current.status !== "BASELINED" && (
                   <button className="apple-button" type="button" onClick={baseline}>
-                    Baseline
+                    Đặt làm phiên bản chuẩn
                   </button>
                 )}
               </div>
@@ -222,7 +223,7 @@ export default function RequirementsPage({ project, section }) {
                 <QaDocumentEditor
                   value={current.content_doc}
                   onChange={() => {}}
-                  label="Nội dung Requirement"
+                  label="Nội dung yêu cầu"
                   readOnly
                 />
               </div>
@@ -263,14 +264,14 @@ export default function RequirementsPage({ project, section }) {
             <LoadingState />
           ) : (
             <Panel
-              title="Danh sách Requirement"
+              title="Danh sách yêu cầu"
               actions={
                 <input
-                  aria-label="Tìm Requirement"
+                  aria-label="Tìm yêu cầu"
                   className="apple-input w-64"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Tìm Requirement"
+                  placeholder="Tìm yêu cầu"
                 />
               }
             >
@@ -279,12 +280,20 @@ export default function RequirementsPage({ project, section }) {
                   window.location.assign(`/qa/projects/${project._id}/requirements/${item._id}`)
                 }
                 items={items}
-                empty="Chưa có Requirement"
+                empty="Chưa có yêu cầu"
                 columns={[
                   { key: "requirement_key", label: "Mã" },
                   { key: "title", label: "Tên", render: (item) => item.current_version?.title },
-                  { key: "type", label: "Loại", render: (item) => item.current_version?.type },
-                  { key: "risk", label: "Rủi ro", render: (item) => item.current_version?.risk },
+                  {
+                    key: "type",
+                    label: "Loại",
+                    render: (item) => valueLabel(item.current_version?.type),
+                  },
+                  {
+                    key: "risk",
+                    label: "Rủi ro",
+                    render: (item) => valueLabel(item.current_version?.risk),
+                  },
                   {
                     key: "status",
                     label: "Trạng thái",
@@ -295,7 +304,7 @@ export default function RequirementsPage({ project, section }) {
             </Panel>
           )}
           <div className="grid gap-5 xl:grid-cols-2">
-            <Panel title="Tạo Requirement thủ công">
+            <Panel title="Tạo yêu cầu thủ công">
               <form className="space-y-4 p-5" onSubmit={create}>
                 <label className="field-label">
                   Tên
@@ -307,7 +316,7 @@ export default function RequirementsPage({ project, section }) {
                     onChange={(event) => setForm({ ...form, title: event.target.value })}
                   />
                 </label>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid gap-3 sm:grid-cols-3">
                   <label className="field-label">
                     Loại
                     <select
@@ -315,9 +324,9 @@ export default function RequirementsPage({ project, section }) {
                       value={form.type}
                       onChange={(event) => setForm({ ...form, type: event.target.value })}
                     >
-                      <option value="functional">Functional</option>
-                      <option value="non_functional">Non functional</option>
-                      <option value="business_rule">Business rule</option>
+                      <option value="functional">Chức năng</option>
+                      <option value="non_functional">Phi chức năng</option>
+                      <option value="business_rule">Quy tắc nghiệp vụ</option>
                       <option value="api">API</option>
                       <option value="ui">UI</option>
                     </select>
@@ -330,7 +339,9 @@ export default function RequirementsPage({ project, section }) {
                       onChange={(event) => setForm({ ...form, priority: event.target.value })}
                     >
                       {["critical", "high", "medium", "low"].map((value) => (
-                        <option key={value}>{value}</option>
+                        <option key={value} value={value}>
+                          {valueLabel(value)}
+                        </option>
                       ))}
                     </select>
                   </label>
@@ -342,7 +353,9 @@ export default function RequirementsPage({ project, section }) {
                       onChange={(event) => setForm({ ...form, risk: event.target.value })}
                     >
                       {["critical", "high", "medium", "low"].map((value) => (
-                        <option key={value}>{value}</option>
+                        <option key={value} value={value}>
+                          {valueLabel(value)}
+                        </option>
                       ))}
                     </select>
                   </label>
@@ -350,10 +363,10 @@ export default function RequirementsPage({ project, section }) {
                 <QaDocumentEditor
                   value={form.content_doc}
                   onChange={(content_doc) => setForm({ ...form, content_doc })}
-                  label="Nội dung Requirement"
+                  label="Nội dung yêu cầu"
                 />
                 <label className="field-label">
-                  Acceptance Criteria mỗi dòng một điều kiện
+                  Tiêu chí chấp nhận mỗi dòng một điều kiện
                   <textarea
                     className="apple-input mt-2 min-h-28"
                     value={form.acceptance}
@@ -361,14 +374,14 @@ export default function RequirementsPage({ project, section }) {
                   />
                 </label>
                 <button className="apple-button" type="submit">
-                  Lưu Requirement
+                  Lưu yêu cầu
                 </button>
               </form>
             </Panel>
             <Panel title="Nhập tài liệu" description="Luôn xem trước và xác nhận trước khi ghi">
               <form onSubmit={uploadPreview} className="space-y-4 border-b border-border p-5">
                 <label className="field-label">
-                  Tệp SRS BRD hoặc bảng Requirement
+                  Tệp SRS BRD hoặc bảng yêu cầu
                   <input
                     className="apple-input mt-2"
                     type="file"
@@ -427,12 +440,12 @@ export default function RequirementsPage({ project, section }) {
                   <DataTable
                     items={preview.preview.map((item, index) => ({ ...item, _id: index }))}
                     columns={[
-                      { key: "title", label: "Requirement phát hiện" },
+                      { key: "title", label: "Yêu cầu phát hiện" },
                       { key: "type", label: "Loại" },
                     ]}
                   />
                   <button className="apple-button mt-4" type="button" onClick={confirmImport}>
-                    Xác nhận nhập {preview.preview.length} Requirement
+                    Xác nhận nhập {preview.preview.length} yêu cầu
                   </button>
                 </div>
               )}

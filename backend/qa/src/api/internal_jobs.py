@@ -32,7 +32,8 @@ async def process_job(
     user = CurrentUser(_id=x_requester_id, email=x_requester_email or "worker@internal", role="author")
     payload = body.get("payload") if isinstance(body.get("payload"), dict) else {}
     result = await execute(event, body, payload, user)
-    record = {"_id": body.get("job_id"), "project_id": body.get("project_id"), "artifact_version_id": body.get("artifact_version_id"), "event": event, "model_version": body.get("model_version"), "status": "COMPLETED", "result": result, "completed_at": now()}
+    completed = not (isinstance(result, dict) and result.get("indexed") is False)
+    record = {"_id": body.get("job_id"), "project_id": body.get("project_id"), "artifact_version_id": body.get("artifact_version_id"), "event": event, "model_version": body.get("model_version"), "status": "COMPLETED" if completed else "FAILED", "error_code": None if completed else "RAG_INDEX_FAILED", "retryable": not completed, "state_after_failure": "INDEX_FAILED" if not completed else None, "result": result, "completed_at": now()}
     await database.value.worker_events.update_one({"_id": record["_id"]}, {"$set": record}, upsert=True)
     return envelope(record)
 

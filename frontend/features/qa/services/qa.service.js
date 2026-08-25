@@ -123,7 +123,10 @@ export const qaApi = {
       body: JSON.stringify({ selected_indexes: selectedIndexes }),
     }),
   exportTestCases: (id, format = "csv") =>
-    downloadQaFile(`/projects/${id}/test-cases/export?format=${format}`, `test-cases-${id}.${format}`),
+    downloadQaFile(
+      `/projects/${id}/test-cases/export?format=${format}`,
+      `test-cases-${id}.${format}`,
+    ),
   importApiArtifact: (id, payload) =>
     qaRequest(`/projects/${id}/api-imports`, { method: "POST", body: JSON.stringify(payload) }),
   listApiOperations: (id) => qaRequest(`/projects/${id}/api-operations`),

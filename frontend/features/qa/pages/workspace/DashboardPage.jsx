@@ -26,9 +26,8 @@ export default function DashboardPage({ project }) {
   const base = `/qa/projects/${project._id}`;
   return (
     <QaPage
-      eyebrow={project.key}
       title={project.name}
-      description={project.description || "Trung tâm kiểm soát chất lượng và thay đổi"}
+      description={project.description}
       actions={<ProjectCrumb projectId={project._id} projectName="Tổng quan dự án" />}
     >
       {error && <ErrorState message={error} />}
@@ -36,29 +35,29 @@ export default function DashboardPage({ project }) {
         <LoadingState />
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <Metric label="Requirement" value={value.requirements} />
-            <Metric label="Test Case đang hoạt động" value={value.active_tests} />
-            <Metric label="Test cần cập nhật" value={value.tests_needing_update} />
-            <Metric label="Defect đang mở" value={value.open_defects} />
-            <Metric label="Coverage Requirement" value={`${value.requirement_coverage}%`} />
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <Metric label="Yêu cầu" value={value.requirements} />
+            <Metric label="Kiểm thử đang hoạt động" value={value.active_tests} />
+            <Metric label="Kiểm thử cần cập nhật" value={value.tests_needing_update} />
+            <Metric label="Lỗi đang mở" value={value.open_defects} />
+            <Metric label="Độ phủ yêu cầu" value={`${value.requirement_coverage}%`} />
             <Metric
-              label="Coverage Acceptance Criteria"
+              label="Độ phủ tiêu chí chấp nhận"
               value={`${value.acceptance_criterion_coverage}%`}
             />
             <Metric label="Đề xuất chờ duyệt" value={value.pending_proposals} />
-            <Metric label="Test Run hiện tại" value={value.current_runs} />
+            <Metric label="Lần chạy hiện tại" value={value.current_runs} />
           </div>
           <div className="grid gap-4 lg:grid-cols-3">
             <Panel title="Luồng công việc" className="lg:col-span-2">
               <div className="grid gap-3 p-5 sm:grid-cols-2">
                 {[
-                  ["requirements", "Requirement và baseline"],
-                  ["test-design", "Scenario và Test Case"],
-                  ["traceability", "Traceability và coverage"],
-                  ["changes", "Change impact và proposal"],
-                  ["execution", "Plan Suite và Run"],
-                  ["defects", "Defect lifecycle"],
+                  ["requirements", "Yêu cầu và phiên bản chuẩn"],
+                  ["test-design", "Kịch bản và ca kiểm thử"],
+                  ["traceability", "Truy vết và độ phủ"],
+                  ["changes", "Ảnh hưởng thay đổi và đề xuất"],
+                  ["execution", "Kế hoạch và lần chạy"],
+                  ["defects", "Vòng đời lỗi"],
                 ].map(([href, label]) => (
                   <Link
                     className="rounded-control border border-border p-4 text-[13px] font-semibold hover:border-brand hover:text-brand"
@@ -76,7 +75,7 @@ export default function DashboardPage({ project }) {
                   Tìm theo phạm vi dự án với nguồn và phiên bản có thể kiểm chứng
                 </p>
                 <Link className="apple-button w-full" href={`${base}/knowledge`}>
-                  Mở Knowledge Search
+                  Mở kho tri thức
                 </Link>
               </div>
             </Panel>

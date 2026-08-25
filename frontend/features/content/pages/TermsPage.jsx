@@ -5,7 +5,7 @@ const sections = [
     id: "su-dung",
     title: "Sử dụng dịch vụ",
     paragraphs: [
-      "Khi tạo tài khoản hoặc sử dụng DocLib bạn đồng ý cung cấp thông tin chính xác và chịu trách nhiệm với hoạt động phát sinh từ tài khoản của mình",
+      "Khi tạo tài khoản hoặc sử dụng QA Intelligence bạn đồng ý cung cấp thông tin chính xác và chịu trách nhiệm với hoạt động phát sinh từ tài khoản của mình",
       "Bạn không được dùng dịch vụ để phát tán nội dung trái pháp luật xâm phạm quyền của người khác hoặc can thiệp vào hoạt động của hệ thống",
     ],
   },
@@ -21,7 +21,7 @@ const sections = [
     id: "du-lieu",
     title: "Dữ liệu cá nhân",
     paragraphs: [
-      "DocLib sử dụng dữ liệu tài khoản để vận hành xác thực bảo vệ tài liệu và cung cấp các chức năng mà bạn lựa chọn",
+      "QA Intelligence sử dụng dữ liệu tài khoản để vận hành xác thực bảo vệ dữ liệu dự án và cung cấp các chức năng mà bạn lựa chọn",
       "Bạn có thể thay đổi quyền riêng tư tải dữ liệu liên quan hoặc yêu cầu xóa tài khoản trong phần cài đặt",
     ],
   },
@@ -30,7 +30,7 @@ const sections = [
     title: "Thay đổi điều khoản",
     paragraphs: [
       "Phiên bản mới có hiệu lực từ ngày được ghi ở đầu trang và thay thế phiên bản trước đó",
-      "Nếu thay đổi ảnh hưởng đáng kể đến quyền của người dùng DocLib sẽ thông báo qua tài khoản trước khi áp dụng",
+      "Nếu thay đổi ảnh hưởng đáng kể đến quyền của người dùng QA Intelligence sẽ thông báo qua tài khoản trước khi áp dụng",
     ],
   },
 ];

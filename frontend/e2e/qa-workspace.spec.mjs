@@ -271,19 +271,46 @@ test("luồng chữ ký Requirement đến Regression bảo toàn phiên bản v
   await expect(page.getByRole("heading", { level: 1, name: project.name })).toBeVisible();
   await expect(page.getByText("100%", { exact: true }).first()).toBeVisible();
   for (const [path, heading] of [
-    ["requirements", "Requirement và baseline"],
-    ["test-design", "Scenario và Test Case"],
-    ["traceability", "Ma trận truy vết và coverage"],
-    ["changes", "Change impact và bảo trì"],
-    ["execution", "Test Plan Suite và Run"],
-    ["defects", "Quản lý Defect"],
-    ["knowledge", "Project scoped retrieval"],
+    ["requirements", "Yêu cầu và phiên bản chuẩn"],
+    ["test-design", "Kịch bản và ca kiểm thử"],
+    ["traceability", "Ma trận truy vết và độ phủ"],
+    ["changes", "Ảnh hưởng thay đổi và bảo trì"],
+    ["execution", "Kế hoạch, bộ kiểm thử và lần chạy"],
+    ["defects", "Quản lý lỗi"],
+    ["knowledge", "Tìm kiếm trong tri thức dự án"],
     ["settings", "Cài đặt và kiểm toán"],
   ]) {
     await page.goto(`/qa/projects/${project._id}/${path}`);
     await expect(page.getByRole("heading", { level: 1, name: heading })).toBeVisible();
+    if (path === "test-design") {
+      const toolbar = page.getByRole("toolbar", { name: "Công cụ soạn thảo QA" }).first();
+      await expect(toolbar).toBeVisible();
+      for (const name of [
+        "Đánh dấu",
+        "Chỉ số dưới",
+        "Chỉ số trên",
+        "Danh sách tác vụ",
+        "Căn giữa",
+        "Màu chữ",
+        "Phông chữ",
+        "Công thức",
+        "Khối thu gọn",
+        "Chèn bảng",
+      ]) {
+        await expect(toolbar.getByLabel(name, { exact: true })).toBeVisible();
+      }
+      const actionEditor = page.getByRole("textbox", { name: "Thao tác của ca kiểm thử" });
+      await actionEditor.click();
+      await toolbar.getByRole("button", { name: "In đậm" }).click();
+      await actionEditor.pressSequentially("Nội dung in đậm");
+      await expect(actionEditor.locator("strong")).toHaveText("Nội dung in đậm");
+      await expect(toolbar.getByText(/\d+ ký tự/)).toBeVisible();
+    }
     await expectUsablePage(page);
   }
+  await page.goto("/cai-dat");
+  await expect(page.getByRole("heading", { level: 1, name: "Tài khoản và bảo mật" })).toBeVisible();
+  await expectUsablePage(page);
   await expectRuntimeClean(errors);
 });
 

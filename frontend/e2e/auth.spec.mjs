@@ -1,6 +1,20 @@
 import { test, expect } from "@playwright/test";
 import { credentials, expectRuntimeClean, observeRuntime } from "./support.mjs";
 
+test("trang chủ giới thiệu sản phẩm rõ ràng và không tràn trên thiết bị di động", async ({
+  page,
+}) => {
+  const errors = observeRuntime(page);
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Quản lý kiểm thử phần mềm" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Tạo tài khoản" })).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth),
+  ).toBeLessThanOrEqual(1);
+  await expectRuntimeClean(errors);
+});
+
 test("đăng nhập báo đúng lỗi và đăng nhập giáo viên thành công", async ({ page }) => {
   const errors = observeRuntime(page);
   await page.goto("/dang-nhap");

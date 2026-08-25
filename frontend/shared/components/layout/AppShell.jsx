@@ -118,7 +118,7 @@ export default function AppShell({ children, requireAuth }) {
       >
         Bỏ qua điều hướng
       </a>
-      <header className="fixed inset-x-0 top-0 z-40 h-[60px] border-b border-border bg-surface/95 backdrop-blur-md lg:left-[224px]">
+      <header className="fixed inset-x-0 top-0 z-40 h-[68px] border-b border-border bg-surface/95 backdrop-blur-md lg:left-[260px]">
         <div className="flex h-full items-center gap-3 px-4 md:px-6">
           <button
             type="button"
@@ -128,6 +128,15 @@ export default function AppShell({ children, requireAuth }) {
           >
             <Menu size={20} strokeWidth={1.75} />
           </button>
+          <Link
+            href={projectId ? `/qa/projects/${projectId}` : "/qa/projects"}
+            className="flex items-center gap-2 lg:hidden"
+          >
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand text-[12px] font-bold text-white">
+              Q
+            </span>
+            <span className="text-[15px] font-bold tracking-[-0.02em]">QA Intelligence</span>
+          </Link>
           {projectId && (
             <form
               action={`/qa/projects/${projectId}/knowledge`}
@@ -150,7 +159,7 @@ export default function AppShell({ children, requireAuth }) {
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 className="h-10 w-full rounded-control border border-transparent bg-surface-quiet pl-10 pr-3 text-[14px] text-ink outline-none transition focus:border-brand focus:bg-surface focus:ring-2 focus:ring-brand-soft"
-                placeholder="Tìm Requirement Test Case Defect"
+                placeholder="Tìm trong yêu cầu, kiểm thử hoặc lỗi"
               />
             </form>
           )}
@@ -248,14 +257,20 @@ export default function AppShell({ children, requireAuth }) {
         </div>
       </header>
 
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[224px] border-r border-border bg-surface lg:block">
-        <div className="flex h-[60px] items-center border-b border-border px-5">
-          <Link href="/" className="text-[19px] font-semibold tracking-[-0.035em] text-ink">
-            QA Intelligence
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[260px] border-r border-border bg-surface lg:block">
+        <div className="flex h-[68px] items-center border-b border-border px-5">
+          <Link
+            href="/"
+            className="flex items-center gap-3 text-[19px] font-semibold tracking-[-0.035em] text-ink"
+          >
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand text-[13px] font-bold text-white">
+              Q
+            </span>
+            <span>QA Intelligence</span>
           </Link>
         </div>
         <nav
-          className="h-[calc(100dvh-60px)] overflow-y-auto px-3 py-5"
+          className="h-[calc(100dvh-68px)] overflow-y-auto px-4 py-6"
           aria-label="Điều hướng chính"
         >
           <NavigationList />
@@ -295,10 +310,10 @@ export default function AppShell({ children, requireAuth }) {
 
       <main
         id="main-content"
-        className="min-h-[100dvh] min-w-0 overflow-x-hidden pt-[60px] lg:pl-[224px]"
+        className="min-h-[100dvh] min-w-0 overflow-x-hidden pt-[68px] lg:pl-[260px]"
       >
         <div
-          className={fullWidth ? "flex min-h-[calc(100dvh-60px)] w-full flex-col" : "page-shell"}
+          className={fullWidth ? "flex min-h-[calc(100dvh-68px)] w-full flex-col" : "page-shell"}
         >
           {children}
         </div>

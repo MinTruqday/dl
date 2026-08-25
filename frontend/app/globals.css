@@ -217,6 +217,29 @@
     @apply bg-transparent p-0 text-inherit;
   }
 
+  .qa-tiptap pre .hljs-keyword,
+  .qa-tiptap pre .hljs-selector-tag,
+  .qa-tiptap pre .hljs-literal {
+    color: #ff7ab2;
+  }
+
+  .qa-tiptap pre .hljs-string,
+  .qa-tiptap pre .hljs-title,
+  .qa-tiptap pre .hljs-section {
+    color: #a8ff60;
+  }
+
+  .qa-tiptap pre .hljs-number,
+  .qa-tiptap pre .hljs-symbol,
+  .qa-tiptap pre .hljs-bullet {
+    color: #d7b8ff;
+  }
+
+  .qa-tiptap pre .hljs-comment,
+  .qa-tiptap pre .hljs-quote {
+    color: #a1a1aa;
+  }
+
   .qa-tiptap a {
     @apply text-brand underline decoration-brand/40 underline-offset-2 hover:decoration-brand;
   }
@@ -262,6 +285,10 @@
     @apply w-full border-collapse overflow-hidden rounded-control;
   }
 
+  .qa-tiptap .tableWrapper {
+    @apply overflow-x-auto;
+  }
+
   .qa-tiptap th,
   .qa-tiptap td {
     @apply min-w-20 border border-border px-3 py-2 align-top;
@@ -269,6 +296,31 @@
 
   .qa-tiptap th {
     @apply bg-surface-quiet text-left font-semibold;
+  }
+
+  .qa-tiptap .selectedCell {
+    @apply relative;
+  }
+
+  .qa-tiptap .selectedCell::after {
+    @apply pointer-events-none absolute inset-0 bg-brand-soft/60;
+    content: "";
+  }
+
+  .qa-tiptap .column-resize-handle {
+    @apply pointer-events-none absolute -bottom-px -right-px top-0 w-0.5 bg-brand;
+  }
+
+  .resize-cursor {
+    cursor: col-resize;
+  }
+
+  .qa-tiptap .Tiptap-mathematics-render {
+    @apply rounded bg-surface-quiet px-1.5 py-0.5;
+  }
+
+  .qa-tiptap .Tiptap-mathematics-render--editable {
+    @apply cursor-pointer hover:bg-brand-soft;
   }
 
   .qa-tiptap img {

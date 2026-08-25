@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import DataTable from "../../components/DataTable";
 import { ErrorState, Panel, ProjectCrumb, QaPage, StatusPill } from "../../components/QaUi";
 import { qaApi } from "../../services/qa.service";
-import { messageOf } from "../../lib/qa";
+import { messageOf, valueLabel } from "../../lib/qa";
 
 export default function ExecutionPage({ project, section }) {
   const runId = section[0] || "";
@@ -70,20 +70,21 @@ export default function ExecutionPage({ project, section }) {
   if (run)
     return (
       <QaPage
-        eyebrow={`${project.key} · Test Run`}
         title={run.name}
-        description={`Snapshot bất biến gồm ${run.test_case_version_ids.length} Test Case Version`}
+        description={`Ảnh chụp bất biến gồm ${run.test_case_version_ids.length} phiên bản ca kiểm thử`}
         actions={<ProjectCrumb projectId={project._id} />}
       >
         {error && <ErrorState message={error} />}
         <Panel
-          title="Điều khiển Run"
+          title="Điều khiển lần chạy"
           actions={
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button
                 className="secondary-button"
                 type="button"
-                onClick={() => qaApi.exportRunReport(run._id).catch((reason) => setError(messageOf(reason)))}
+                onClick={() =>
+                  qaApi.exportRunReport(run._id).catch((reason) => setError(messageOf(reason)))
+                }
               >
                 Xuất báo cáo
               </button>
@@ -128,7 +129,7 @@ export default function ExecutionPage({ project, section }) {
           <DataTable
             items={run.test_case_versions || []}
             columns={[
-              { key: "test_case_key", label: "Test Case" },
+              { key: "test_case_key", label: "Ca kiểm thử" },
               { key: "version", label: "Phiên bản", render: (item) => `v${item.version}` },
               { key: "title", label: "Tên" },
               {
@@ -141,7 +142,7 @@ export default function ExecutionPage({ project, section }) {
                   return result ? (
                     <StatusPill value={result.status} />
                   ) : run.status === "IN_PROGRESS" ? (
-                    <span className="flex gap-2">
+                    <span className="flex flex-wrap gap-2">
                       {["PASS", "FAIL", "BLOCKED", "SKIPPED"].map((value) => (
                         <button
                           className="secondary-button"
@@ -165,14 +166,13 @@ export default function ExecutionPage({ project, section }) {
     );
   return (
     <QaPage
-      eyebrow={`${project.key} · Execution`}
-      title="Test Plan Suite và Run"
-      description="Mỗi Test Run giữ snapshot chính xác của Test Case Version tại thời điểm tạo"
+      title="Kế hoạch, bộ kiểm thử và lần chạy"
+      description="Mỗi lần chạy giữ đúng ảnh chụp các phiên bản ca kiểm thử tại thời điểm tạo"
       actions={<ProjectCrumb projectId={project._id} />}
     >
       {error && <ErrorState message={error} />}
       <div className="grid gap-5 xl:grid-cols-3">
-        <Panel title="Tạo Test Plan">
+        <Panel title="Tạo kế hoạch kiểm thử">
           <form
             className="space-y-3 p-5"
             onSubmit={async (event) => {
@@ -202,24 +202,24 @@ export default function ExecutionPage({ project, section }) {
             }}
           >
             <input
-              aria-label="Tên Test Plan"
+              aria-label="Tên kế hoạch kiểm thử"
               name="name"
               required
               className="apple-input"
-              placeholder="Tên Test Plan"
+              placeholder="Tên kế hoạch kiểm thử"
             />
             <textarea
-              aria-label="Mục tiêu Test Plan"
+              aria-label="Mục tiêu kế hoạch kiểm thử"
               name="objective"
               className="apple-input min-h-20"
               placeholder="Mục tiêu"
             />
             <button className="secondary-button" type="submit">
-              Lưu Plan
+              Lưu kế hoạch
             </button>
           </form>
         </Panel>
-        <Panel title="Tạo Test Suite">
+        <Panel title="Tạo bộ kiểm thử">
           <form
             className="space-y-3 p-5"
             onSubmit={async (event) => {
@@ -240,53 +240,57 @@ export default function ExecutionPage({ project, section }) {
             }}
           >
             <input
-              aria-label="Tên Test Suite"
+              aria-label="Tên bộ kiểm thử"
               name="name"
               required
               className="apple-input"
-              placeholder="Tên Test Suite"
+              placeholder="Tên bộ kiểm thử"
             />
-            <select aria-label="Loại Test Suite" name="type" className="apple-input">
-              <option value="smoke">Smoke</option>
-              <option value="regression">Regression</option>
-              <option value="feature">Feature</option>
+            <select aria-label="Loại bộ kiểm thử" name="type" className="apple-input">
+              <option value="smoke">{valueLabel("smoke")}</option>
+              <option value="regression">{valueLabel("regression")}</option>
+              <option value="feature">{valueLabel("feature")}</option>
             </select>
             <button className="secondary-button" type="submit">
-              Lưu Suite
+              Lưu bộ kiểm thử
             </button>
           </form>
         </Panel>
-        <Panel title="Tạo Test Run">
+        <Panel title="Tạo lần chạy">
           <form className="space-y-3 p-5" onSubmit={createRun}>
             <input
-              aria-label="Tên Test Run"
+              aria-label="Tên lần chạy"
               required
               className="apple-input"
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder="Tên Test Run"
+              placeholder="Tên lần chạy"
             />
             <p className="text-[12px] text-ink-muted">
               Snapshot {versions.length} phiên bản hiện tại
             </p>
             <button className="apple-button" type="submit">
-              Tạo Run
+              Tạo lần chạy
             </button>
           </form>
         </Panel>
       </div>
-      <Panel title="Test Run">
+      <Panel title="Danh sách lần chạy">
         <DataTable
           onSelect={(item) =>
             window.location.assign(`/qa/projects/${project._id}/execution/${item._id}`)
           }
           items={runs}
-          empty="Chưa có Test Run"
+          empty="Chưa có lần chạy"
           columns={[
             { key: "name", label: "Tên" },
             { key: "environment", label: "Môi trường" },
             { key: "build", label: "Build" },
-            { key: "count", label: "Số Test", render: (item) => item.test_case_version_ids.length },
+            {
+              key: "count",
+              label: "Số ca kiểm thử",
+              render: (item) => item.test_case_version_ids.length,
+            },
             {
               key: "status",
               label: "Trạng thái",

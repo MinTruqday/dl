@@ -2,20 +2,19 @@
 import Link from "next/link";
 import { statusLabel } from "../lib/qa";
 
-export function QaPage({ eyebrow, title, description, actions, children }) {
+export function QaPage({ title, description, actions, children }) {
   return (
-    <div className="mx-auto w-full max-w-[1450px] space-y-6 p-5 md:p-8">
-      <header className="flex flex-wrap items-end justify-between gap-4">
+    <div className="mx-auto w-full max-w-[1480px] space-y-7 p-4 sm:p-6 md:p-9">
+      <header className="flex flex-col gap-5 border-b border-border pb-6 md:flex-row md:items-end md:justify-between">
         <div className="min-w-0">
-          <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-brand">
-            {eyebrow}
-          </p>
-          <h1 className="mt-2 text-[30px] font-semibold tracking-[-0.035em]">{title}</h1>
+          <h1 className="text-[30px] font-semibold leading-[1.08] tracking-[-0.045em] md:text-[38px]">
+            {title}
+          </h1>
           {description && (
-            <p className="mt-2 max-w-3xl text-[14px] leading-6 text-ink-muted">{description}</p>
+            <p className="mt-3 max-w-3xl text-[14px] leading-7 text-ink-muted">{description}</p>
           )}
         </div>
-        {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
+        {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
       </header>
       {children}
     </div>
@@ -24,9 +23,11 @@ export function QaPage({ eyebrow, title, description, actions, children }) {
 
 export function Panel({ title, description, actions, children, className = "" }) {
   return (
-    <section className={`rounded-panel border border-border bg-surface ${className}`}>
+    <section
+      className={`overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_8px_24px_rgba(48,47,42,0.04)] ${className}`}
+    >
       {(title || actions) && (
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-surface-raised px-5 py-4">
           <div>
             {title && <h2 className="font-semibold">{title}</h2>}
             {description && <p className="mt-1 text-[12px] text-ink-muted">{description}</p>}
@@ -72,11 +73,24 @@ export function ErrorState({ message }) {
   );
 }
 
+export function DegradedBanner({ mode, message }) {
+  if (!mode || mode === "NORMAL") return null;
+  return (
+    <p
+      role="status"
+      className="rounded-control border border-warning/30 bg-warning-soft p-4 text-[13px] text-warning"
+    >
+      {message ||
+        `Hệ thống đang ở chế độ ${mode} các thao tác lõi vẫn được lưu và có thể cần kiểm tra thủ công`}
+    </p>
+  );
+}
+
 export function Metric({ label, value, detail }) {
   return (
-    <section className="rounded-panel border border-border bg-surface p-5">
-      <p className="text-[28px] font-semibold">{value}</p>
-      <p className="mt-1 text-[12px] font-semibold text-ink-muted">{label}</p>
+    <section className="rounded-2xl border border-border bg-surface p-4 shadow-[0_8px_20px_rgba(48,47,42,0.035)] sm:p-5">
+      <p className="text-[30px] font-semibold tracking-[-0.04em]">{value}</p>
+      <p className="mt-2 text-[12px] font-semibold leading-5 text-ink-muted">{label}</p>
       {detail && <p className="mt-2 text-[11px] text-ink-faint">{detail}</p>}
     </section>
   );

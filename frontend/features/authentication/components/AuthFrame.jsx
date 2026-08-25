@@ -1,24 +1,47 @@
 import Link from "next/link";
 export default function AuthFrame({ title, description, children, footer, width = "sm" }) {
   return (
-    <main className="flex min-h-[100dvh] flex-col bg-canvas px-4 py-6 sm:px-6">
-      <div className="mx-auto flex w-full max-w-[1280px] items-center justify-between">
-        <Link href="/" className="text-[19px] font-semibold tracking-[-0.035em] text-ink">
-          DocLib
+    <main className="min-h-[100dvh] bg-[#eef3ef] px-4 py-5 sm:px-6 md:px-10 md:py-8">
+      <div className="mx-auto flex w-full max-w-[1180px] items-center justify-between">
+        <Link
+          href="/"
+          className="flex items-center gap-3 text-[19px] font-semibold tracking-[-0.035em] text-ink"
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand text-[13px] font-bold text-white">
+            Q
+          </span>
+          <span>QA Intelligence</span>
         </Link>
         <Link
           href="/"
           className="rounded-control px-3 py-2 text-[14px] font-semibold text-ink-muted hover:bg-surface-quiet hover:text-ink"
         >
-          Khám phá
+          Về trang chủ
         </Link>
       </div>
-      <div className="flex flex-1 items-center justify-center py-10">
+      <div className="mx-auto grid min-h-[calc(100dvh-104px)] w-full max-w-[1180px] items-center gap-8 py-8 lg:grid-cols-[minmax(0,1fr)_minmax(420px,500px)] lg:gap-16">
+        <section className="hidden max-w-xl lg:block">
+          <h2 className="text-[28px] font-semibold tracking-[-0.035em] text-ink">
+            Chức năng chính
+          </h2>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            {[
+              "Quản lý yêu cầu và phiên bản",
+              "Thiết kế ca kiểm thử",
+              "Theo dõi truy vết và độ phủ",
+              "Quản lý thay đổi và lỗi",
+            ].map((label) => (
+              <div key={label} className="rounded-2xl border border-brand/10 bg-white/70 p-4">
+                <p className="text-[14px] font-semibold leading-6 text-ink">{label}</p>
+              </div>
+            ))}
+          </div>
+        </section>
         <section
-          className={`w-full ${width === "md" ? "max-w-[520px]" : "max-w-[420px]"} rounded-workspace border border-border bg-surface p-6 shadow-[0_20px_60px_rgba(48,47,42,0.08)] sm:p-8`}
+          className={`w-full ${width === "md" ? "max-w-[520px]" : "max-w-[500px]"} justify-self-center rounded-3xl border border-border bg-surface p-6 shadow-[0_24px_70px_rgba(48,47,42,0.12)] sm:p-9 lg:justify-self-end`}
         >
           <header className="mb-6">
-            <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.02em] text-ink">
+            <h1 className="text-[28px] font-semibold leading-tight tracking-[-0.035em] text-ink">
               {title}
             </h1>
             {description && (

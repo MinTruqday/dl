@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import DataTable from "../../components/DataTable";
 import { ErrorState, Panel, ProjectCrumb, QaPage, StatusPill } from "../../components/QaUi";
 import { qaApi } from "../../services/qa.service";
-import { messageOf, textDoc } from "../../lib/qa";
+import { messageOf, textDoc, valueLabel } from "../../lib/qa";
 
 const nextStates = {
   NEW: ["CONFIRMED", "REJECTED", "DUPLICATE"],
@@ -87,15 +87,16 @@ export default function DefectsPage({ project }) {
   };
   return (
     <QaPage
-      eyebrow={`${project.key} · Defect`}
-      title="Quản lý Defect"
-      description="Defect có vòng đời được kiểm soát và có thể liên kết ngược với kết quả Test Run Requirement cùng Test Case Version"
+      title="Quản lý lỗi"
+      description="Mỗi lỗi có vòng đời rõ ràng và có thể liên kết ngược với lần chạy yêu cầu cùng phiên bản ca kiểm thử"
       actions={
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button
             className="secondary-button"
             type="button"
-            onClick={() => qaApi.exportDefects(project._id).catch((reason) => setError(messageOf(reason)))}
+            onClick={() =>
+              qaApi.exportDefects(project._id).catch((reason) => setError(messageOf(reason)))
+            }
           >
             Xuất CSV
           </button>
@@ -104,7 +105,7 @@ export default function DefectsPage({ project }) {
       }
     >
       {error && <ErrorState message={error} />}
-      <Panel title="Tạo Defect">
+      <Panel title="Tạo lỗi">
         <form className="grid gap-4 p-5 md:grid-cols-2" onSubmit={create}>
           <label className="field-label md:col-span-2">
             Tên
@@ -116,26 +117,30 @@ export default function DefectsPage({ project }) {
             />
           </label>
           <label className="field-label">
-            Severity
+            Mức độ nghiêm trọng
             <select
               className="apple-input mt-2"
               value={form.severity}
               onChange={(event) => setForm({ ...form, severity: event.target.value })}
             >
               {["blocker", "critical", "major", "minor", "trivial"].map((value) => (
-                <option key={value}>{value}</option>
+                <option key={value} value={value}>
+                  {valueLabel(value)}
+                </option>
               ))}
             </select>
           </label>
           <label className="field-label">
-            Priority
+            Mức ưu tiên
             <select
               className="apple-input mt-2"
               value={form.priority}
               onChange={(event) => setForm({ ...form, priority: event.target.value })}
             >
               {["critical", "high", "medium", "low"].map((value) => (
-                <option key={value}>{value}</option>
+                <option key={value} value={value}>
+                  {valueLabel(value)}
+                </option>
               ))}
             </select>
           </label>
@@ -164,7 +169,7 @@ export default function DefectsPage({ project }) {
             />
           </label>
           <label className="field-label">
-            Actual Result
+            Kết quả thực tế
             <textarea
               className="apple-input mt-2 min-h-24"
               value={form.actual}
@@ -172,7 +177,7 @@ export default function DefectsPage({ project }) {
             />
           </label>
           <label className="field-label md:col-span-2">
-            Expected Result
+            Kết quả mong đợi
             <textarea
               className="apple-input mt-2 min-h-24"
               value={form.expected}
@@ -181,20 +186,20 @@ export default function DefectsPage({ project }) {
           </label>
           <div>
             <button className="apple-button" type="submit">
-              Lưu Defect
+              Lưu lỗi
             </button>
           </div>
         </form>
       </Panel>
-      <Panel title="Danh sách Defect">
+      <Panel title="Danh sách lỗi">
         <DataTable
           items={items}
-          empty="Chưa có Defect"
+          empty="Chưa có lỗi"
           columns={[
             { key: "defect_key", label: "Mã" },
             { key: "title", label: "Tên" },
-            { key: "severity", label: "Severity" },
-            { key: "priority", label: "Priority" },
+            { key: "severity", label: "Mức độ", render: (item) => valueLabel(item.severity) },
+            { key: "priority", label: "Ưu tiên", render: (item) => valueLabel(item.priority) },
             {
               key: "status",
               label: "Trạng thái",
@@ -212,7 +217,9 @@ export default function DefectsPage({ project }) {
                 >
                   <option value="">Chọn</option>
                   {(nextStates[item.status] || []).map((value) => (
-                    <option key={value}>{value}</option>
+                    <option key={value} value={value}>
+                      {valueLabel(value)}
+                    </option>
                   ))}
                 </select>
               ),

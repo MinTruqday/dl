@@ -177,6 +177,20 @@ with httpx.Client(base_url=BASE_URL, timeout=30) as client:
         f"/api/qa/test-runs/{run['_id']}/results/{test_version_1['_id']}",
         json={"status": "FAIL", "step_results": [{"step_id": "step-1", "status": "FAIL"}], "attachments": [], "note": "Ứng dụng chấp nhận 11 số", "idempotency_key": f"result-{stamp}"},
     )
+    correction = request(
+        client,
+        "POST",
+        f"/api/qa/test-results/{result['_id']}/corrections",
+        json={"status": "FAIL", "reason": "Xác nhận lại sau khi đối chiếu evidence", "idempotency_key": f"correction-{stamp}"},
+    )
+    assert correction["result"]["status"] == "FAIL"
+    duplicate_correction = request(
+        client,
+        "POST",
+        f"/api/qa/test-results/{result['_id']}/corrections",
+        json={"status": "FAIL", "reason": "Xác nhận lại sau khi đối chiếu evidence", "idempotency_key": f"correction-{stamp}"},
+    )
+    assert duplicate_correction["correction"]["_id"] == correction["correction"]["_id"]
     defect = request(
         client,
         "POST",
@@ -187,6 +201,10 @@ with httpx.Client(base_url=BASE_URL, timeout=30) as client:
     assert defect["status"] == "NEW"
     request(client, "POST", f"/api/qa/defects/{defect['_id']}/transition", json={"to_status": "CONFIRMED", "reason": "Đã tái hiện"})
     request(client, "POST", f"/api/qa/test-runs/{run['_id']}/complete")
+    late_result = client.post(f"/api/qa/test-runs/{run['_id']}/results/{test_version_1['_id']}", headers=HEADERS, json={"status": "PASS", "step_results": [], "attachments": [], "note": "late", "idempotency_key": f"late-{stamp}"})
+    assert late_result.status_code == 409
+    assert late_result.json()["status"] == "FAILED"
+    assert late_result.json()["error_code"] == "TEST_RUN_NOT_IN_PROGRESS"
     run_report = client.get(f"/api/qa/test-runs/{run['_id']}/report", headers=HEADERS)
     assert run_report.status_code == 200
     assert "TC-PROFILE-043" in run_report.text and "FAIL" in run_report.text

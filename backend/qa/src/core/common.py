@@ -9,6 +9,14 @@ from src.core.database import database
 
 
 PROJECT_WRITE_ROLES = {"qa_lead", "tester", "ba", "product", "developer"}
+RETRYABLE_ERROR_CODES = {
+    "WORKER_UNAVAILABLE",
+    "QDRANT_UNAVAILABLE",
+    "RAG_INDEX_FAILED",
+    "AI_PROVIDER_UNAVAILABLE",
+    "PROPOSAL_APPLY_PARTIAL",
+    "WORKER_JOB_FAILED",
+}
 
 
 def new_id(prefix: str):
@@ -19,11 +27,45 @@ def now():
     return datetime.now(timezone.utc)
 
 
-def envelope(data=None, revision=None, trace_id=None):
+def envelope(
+    data=None,
+    revision=None,
+    trace_id=None,
+    status="SUCCESS",
+    error_code=None,
+    retryable=False,
+    state_after_failure=None,
+    user_action_required=False,
+    degraded_mode=None,
+):
     meta = {"trace_id": trace_id or new_id("TRC")}
     if revision is not None:
         meta["revision"] = revision
-    return {"data": data, "meta": meta}
+    operation = {
+        "status": status,
+        "error_code": error_code,
+        "retryable": retryable,
+        "state_after_failure": state_after_failure,
+        "user_action_required": user_action_required,
+    }
+    if degraded_mode:
+        operation["degraded_mode"] = degraded_mode
+    meta["operation"] = operation
+    return {"data": data, "meta": meta, **operation}
+
+
+def failure_metadata(code, status_code=500, detail=None):
+    detail = detail if isinstance(detail, dict) else {}
+    retryable = detail.get("retryable", code in RETRYABLE_ERROR_CODES or status_code in {502, 503, 504})
+    state_after_failure = detail.get("state_after_failure") or ("UNCHANGED" if status_code < 500 else "RETRYABLE_FAILURE")
+    user_action_required = detail.get("user_action_required", status_code in {409, 422, 403} or not retryable)
+    return {
+        "status": "FAILED",
+        "error_code": code,
+        "retryable": retryable,
+        "state_after_failure": state_after_failure,
+        "user_action_required": user_action_required,
+    }
 
 
 async def audit(
