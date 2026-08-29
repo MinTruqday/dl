@@ -1,25 +1,25 @@
 from typing import Dict, List, Optional
 
 
-class KnowledgeClient:
+class KnowledgeService:
     embedding_dimensions = 1024
 
     @staticmethod
     async def embed_query(text: str) -> List[float]:
-        from src.knowledge.services.embedding import embedder
+        from src.services.embedding import embedder
 
         embedding = await embedder.embed_query(text)
-        if len(embedding) != KnowledgeClient.embedding_dimensions:
+        if len(embedding) != KnowledgeService.embedding_dimensions:
             raise RuntimeError("Knowledge embedding dimension mismatch")
         return embedding
 
     @staticmethod
     async def embed_batch(texts: List[str]) -> List[List[float]]:
-        from src.knowledge.services.embedding import embedder
+        from src.services.embedding import embedder
 
         embeddings = await embedder.embed_batch(texts)
         if len(embeddings) != len(texts) or any(
-            len(embedding) != KnowledgeClient.embedding_dimensions
+            len(embedding) != KnowledgeService.embedding_dimensions
             for embedding in embeddings
         ):
             raise RuntimeError("Knowledge batch embedding dimension mismatch")
@@ -27,13 +27,10 @@ class KnowledgeClient:
 
     @staticmethod
     async def extract_attachment(data: str, filename: str = "attachment.pdf") -> str:
-        from src.knowledge.api.ingestion import convert_attachment
-        from src.knowledge.schemas.ingestion import AttachmentConversionRequest
+        from src.services.ingestion import convert_attachment
 
-        result = await convert_attachment(
-            AttachmentConversionRequest(data=data, filename=filename)
-        )
-        return str(result.data.get("markdown") or "")
+        result = await convert_attachment(data, filename)
+        return str(result.get("markdown") or "")
 
     @staticmethod
     async def retrieve(
@@ -44,7 +41,7 @@ class KnowledgeClient:
         requester_id: Optional[str] = None,
         is_admin: bool = False,
     ) -> List[Dict]:
-        from src.knowledge.services.retrieval import retriever
+        from src.services.retrieval import retriever
 
         return await retriever.retrieve(
             query=query,
@@ -63,7 +60,7 @@ class KnowledgeClient:
         requester_id: Optional[str] = None,
         is_admin: bool = False,
     ) -> List[Dict]:
-        from src.knowledge.services.retrieval import retriever
+        from src.services.retrieval import retriever
 
         return await retriever.multi_query_retrieve(
             question=question,
@@ -81,7 +78,7 @@ class KnowledgeClient:
         requester_id: Optional[str] = None,
         is_admin: bool = False,
     ) -> List[Dict]:
-        from src.knowledge.services.retrieval import retriever
+        from src.services.retrieval import retriever
 
         return await retriever.cross_document_retrieve(
             question=question,
@@ -95,7 +92,7 @@ class KnowledgeClient:
     async def get_cache(
         query_text: str, query_vector: Optional[List[float]] = None
     ) -> Optional[str]:
-        from src.knowledge.services.cache import cache_service
+        from src.services.cache import cache_service
 
         cached = await cache_service.get_response(query_text, query_vector)
         return cached.response if cached.hit else None
@@ -106,7 +103,7 @@ class KnowledgeClient:
         response_text: str,
         query_vector: Optional[List[float]] = None,
     ) -> None:
-        from src.knowledge.services.cache import cache_service
+        from src.services.cache import cache_service
 
         await cache_service.set_response(query_text, response_text, query_vector)
 
@@ -117,18 +114,9 @@ class KnowledgeClient:
         is_admin: bool = False,
         auth_token: Optional[str] = None,
     ) -> Dict:
-        from src.knowledge.api.ingestion import ingest_document as ingest_operation
-        from src.knowledge.schemas.ingestion import IngestRequest
+        from src.services.ingestion import index_document
 
-        result = await ingest_operation(
-            IngestRequest(
-                document_id=document_id,
-                requester_id=requester_id,
-                is_admin=is_admin,
-            ),
-            None,
-        )
-        return result.data.model_dump()
+        return await index_document(document_id, requester_id, is_admin)
 
     @staticmethod
     async def extract_document(
@@ -137,18 +125,9 @@ class KnowledgeClient:
         is_admin: bool = False,
         auth_token: Optional[str] = None,
     ) -> str:
-        from src.knowledge.api.ingestion import extract_document as extract_operation
-        from src.knowledge.schemas.ingestion import IngestRequest
+        from src.services.ingestion import extract_document
 
-        result = await extract_operation(
-            IngestRequest(
-                document_id=document_id,
-                requester_id=requester_id,
-                is_admin=is_admin,
-            ),
-            None,
-        )
-        return str(result.data.get("text") or "")
+        return await extract_document(document_id, requester_id, is_admin)
 
     @staticmethod
     async def delete_document(
@@ -157,15 +136,9 @@ class KnowledgeClient:
         is_admin: bool = False,
         auth_token: Optional[str] = None,
     ) -> Dict:
-        from src.knowledge.api.ingestion import delete_document as delete_operation
+        from src.services.ingestion import remove_document
 
-        result = await delete_operation(
-            document_id,
-            requester_id=requester_id,
-            is_admin=is_admin,
-            user=None,
-        )
-        return result.data
+        return await remove_document(document_id, requester_id, is_admin)
 
 
-knowledge_client = KnowledgeClient()
+knowledge_service = KnowledgeService()

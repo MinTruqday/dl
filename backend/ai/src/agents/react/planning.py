@@ -6,7 +6,7 @@ from loguru import logger
 from src.schemas.planning import ExecutionPlan
 from src.utils.huggingface import create_chat_model
 from src.core.infrastructure.configuration import settings
-from src.memory.management import memory_manager
+from src.agents.memory.management import memory_manager
 
 llm = create_chat_model()
 

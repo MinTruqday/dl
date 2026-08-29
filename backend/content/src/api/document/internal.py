@@ -197,10 +197,13 @@ async def exchange_internal_document(req: dict):
         user_id = str(req.get("user_id", ""))
         is_admin = bool(req.get("is_admin", False))
         edit = bool(req.get("edit", False))
+        allow_deleted = bool(req.get("allow_deleted", False))
         access = [{"creator_id": user_id}]
         if not edit:
             access.append({"visibility": "public", "status": "published"})
-        query = {"_id": document_id, "is_deleted": {"$ne": True}}
+        query = {"_id": document_id}
+        if not allow_deleted:
+            query["is_deleted"] = {"$ne": True}
         if not is_admin:
             query["$or"] = access
         document = await documents.find_one(query)
@@ -218,8 +221,48 @@ async def exchange_internal_document(req: dict):
             {
                 "$set": {
                     "indexing_status": "indexed",
+                    "is_indexed": True,
+                    "chunks_count": int(req.get("indexed_chunks", 0)),
                     "indexed_chunks": int(req.get("indexed_chunks", 0)),
                     "extraction_method": str(req.get("extraction_method", "")),
+                    "index_report": dict(req.get("index_report") or {}),
+                    "extracted_text": str(req.get("extracted_text") or "")[:200000],
+                    "extracted_text_truncated": bool(req.get("extracted_text_truncated", False)),
+                    "updated_at": datetime.now(timezone.utc),
+                }
+            },
+        )
+        return {"data": {"updated": result.matched_count == 1}}
+    if action == "mark_indexing":
+        result = await documents.update_one(
+            {"_id": document_id, "is_deleted": {"$ne": True}},
+            {
+                "$set": {"indexing_status": "indexing", "updated_at": datetime.now(timezone.utc)},
+                "$unset": {"indexing_error": ""},
+            },
+        )
+        return {"data": {"updated": result.matched_count == 1}}
+    if action == "mark_index_failed":
+        result = await documents.update_one(
+            {"_id": document_id, "is_deleted": {"$ne": True}},
+            {
+                "$set": {
+                    "indexing_status": "failed",
+                    "indexing_error": str(req.get("error_code") or "unknown"),
+                    "updated_at": datetime.now(timezone.utc),
+                }
+            },
+        )
+        return {"data": {"updated": result.matched_count == 1}}
+    if action == "mark_unindexed":
+        result = await documents.update_one(
+            {"_id": document_id, "is_deleted": {"$ne": True}},
+            {
+                "$set": {
+                    "chunks_count": 0,
+                    "indexed_chunks": 0,
+                    "is_indexed": False,
+                    "indexing_status": "not_started",
                     "updated_at": datetime.now(timezone.utc),
                 }
             },

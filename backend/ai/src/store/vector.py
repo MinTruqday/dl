@@ -13,7 +13,7 @@ from qdrant_client.http.models import (
     PointStruct,
     VectorParams,
 )
-from src.knowledge.core.infrastructure.configuration import settings
+from src.core.infrastructure.configuration import settings
 
 
 class VectorStore:
@@ -30,7 +30,7 @@ class VectorStore:
             collections = await self.client.get_collections()
             exists = any(c.name == self.collection_name for c in collections.collections)
             if not exists:
-                from src.knowledge.services.embedding import embedder
+                from src.services.embedding import embedder
 
                 try:
                     await self.client.create_collection(

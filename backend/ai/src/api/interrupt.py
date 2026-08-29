@@ -9,7 +9,7 @@ router = APIRouter(prefix="/ngat-qua-trinh")
 @router.post("/{session_id}")
 async def cancel_execution(session_id: str, current_user: CurrentUser = Depends(get_current_user)):
     """Cancel one authenticated session and persist its cancelled workspace state"""
-    from src.harness.orchestration import orchestration
+    from src.agents.harness.orchestration import orchestration
     from src.services.history import HistoryService
     from src.services.workspace import workspace
 
@@ -25,7 +25,7 @@ async def pending_approvals(session_id: str, current_user: CurrentUser = Depends
     """Return pending sensitive actions owned by the authenticated session user"""
     from dataclasses import asdict
 
-    from src.loop.intervention import intervention
+    from src.agents.loop.intervention import intervention
 
     requests = [
         request
@@ -44,7 +44,7 @@ async def resolve_approval(
     """Resolve one pending sensitive action after verifying its authenticated owner"""
     from dataclasses import asdict
 
-    from src.loop.intervention import intervention
+    from src.agents.loop.intervention import intervention
 
     pending = await intervention.check_pending(intervention_id)
     if not pending or pending.user_id != str(current_user.id):

@@ -29,24 +29,24 @@ logger.add(
     diagnose=False,
 )
 from fastapi.middleware.cors import CORSMiddleware
-from src.harness.agentops import agentops
-from src.loop.evaluation import evaluation
-from src.harness.orchestration import orchestration
+from src.agents.harness.agentops import agentops
+from src.agents.loop.evaluation import evaluation
+from src.agents.harness.orchestration import orchestration
 from src.api.interaction import router as chat
 from src.api.feedback import router as feedback
 from src.api.history import router as history
 from src.api.inference import router as inference
-from src.api.ingestion import router as ingest
+from src.api.indexing import router as ingest
 from src.api.events import router as events
 from src.api.interrupt import router as interrupt_router
-from src.knowledge.api.retrieval import router as knowledge_retrieval
-from src.knowledge.api.embedding import router as knowledge_embedding
-from src.knowledge.api.ingestion import router as knowledge_ingestion
-from src.knowledge.api.cache import router as knowledge_cache
-from src.knowledge.api.project import router as knowledge_project
-from src.knowledge.lifecycle import initialize_knowledge, shutdown_knowledge
+from src.api.retrieval import router as retrieval_router
+from src.api.embedding import router as embedding_router
+from src.api.indexing import indexing_router
+from src.api.cache import router as cache_router
+from src.api.projects import router as projects_router
+from src.services.retrieval import initialize_retrieval
 
-knowledge_ready = False
+retrieval_ready = False
 
 app = FastAPI(title="Veriq AI", version=settings.VERSION)
 app.add_middleware(PrometheusMiddleware, service_name="ai")
@@ -88,11 +88,11 @@ app.include_router(feedback)
 app.include_router(history)
 app.include_router(events)
 app.include_router(interrupt_router)
-app.include_router(knowledge_retrieval, prefix="/knowledge")
-app.include_router(knowledge_embedding, prefix="/knowledge/embedding")
-app.include_router(knowledge_ingestion, prefix="/knowledge")
-app.include_router(knowledge_cache, prefix="/knowledge/cache")
-app.include_router(knowledge_project, prefix="/knowledge")
+app.include_router(retrieval_router, prefix="/knowledge")
+app.include_router(embedding_router, prefix="/knowledge/embedding")
+app.include_router(indexing_router, prefix="/knowledge")
+app.include_router(cache_router, prefix="/knowledge/cache")
+app.include_router(projects_router, prefix="/knowledge")
 
 
 @app.get("/health")
@@ -130,7 +130,7 @@ async def readiness_check():
         checks["qdrant"] = "ready" if response.status_code == 200 else "unavailable"
     except Exception:
         checks["qdrant"] = "unavailable"
-    checks["knowledge"] = "ready" if knowledge_ready else "unavailable"
+    checks["knowledge"] = "ready" if retrieval_ready else "unavailable"
     try:
         import httpx
 
@@ -185,15 +185,15 @@ async def startup_event():
         await init_db()
     except Exception:
         logger.exception("MongoDB indexing error")
-    global knowledge_ready
+    global retrieval_ready
     try:
-        await initialize_knowledge()
-        knowledge_ready = True
+        await initialize_retrieval()
+        retrieval_ready = True
     except Exception:
-        knowledge_ready = False
-        logger.exception("Knowledge subsystem startup error")
+        retrieval_ready = False
+        logger.exception("AI retrieval capability startup error")
     try:
-        from src.loop.event import cron_scheduler, event_driven_loop
+        from src.agents.loop.event import cron_scheduler, event_driven_loop
 
         await event_driven_loop.start_worker()
         await cron_scheduler.start()
@@ -210,12 +210,8 @@ async def startup_event():
 
 
 async def shutdown_event():
-    global knowledge_ready
-    try:
-        await shutdown_knowledge()
-    except Exception:
-        logger.exception("Knowledge subsystem shutdown error")
-    knowledge_ready = False
+    global retrieval_ready
+    retrieval_ready = False
     try:
         from src.utils.background import drain_background_tasks
 
@@ -223,7 +219,7 @@ async def shutdown_event():
     except Exception:
         logger.exception("Background task shutdown failed")
     try:
-        from src.loop.event import cron_scheduler, event_driven_loop
+        from src.agents.loop.event import cron_scheduler, event_driven_loop
 
         await cron_scheduler.stop()
         await event_driven_loop.stop_worker()
@@ -248,13 +244,13 @@ async def shutdown_event():
     except Exception:
         logger.exception("Database shutdown failed")
     try:
-        from src.memory.management import memory_manager
+        from src.agents.memory.management import memory_manager
 
         await memory_manager.close()
     except Exception:
         logger.exception("Memory manager shutdown failed")
     try:
-        from src.workflow.orchestration import supervisor
+        from src.agents.workflow.orchestration import supervisor
 
         if supervisor.checkpointer is not None:
             supervisor.checkpointer.close()

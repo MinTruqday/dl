@@ -4,9 +4,9 @@ import hmac
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from src.knowledge.core.response import APIResponse
-from src.knowledge.core.dependency import CurrentUser, get_current_user_optional, verify_internal_token
-from src.knowledge.schemas.retrieval import (
+from src.schemas.response import APIResponse
+from src.core.dependency import CurrentUser, get_current_user_optional, verify_internal_token
+from src.schemas.retrieval import (
     RetrieveRequest,
     MultiQueryRetrieveRequest,
     CrossDocRetrieveRequest,
@@ -14,10 +14,10 @@ from src.knowledge.schemas.retrieval import (
     RetrievedDocument,
     CitationItem,
 )
-from src.knowledge.services.retrieval import RetrievalUnavailableError, retriever
-from src.knowledge.core.metrics import metrics_collector
-from src.knowledge.core.infrastructure.database import database
-from src.knowledge.core.infrastructure.configuration import settings
+from src.services.retrieval import RetrievalUnavailableError, retriever
+from src.core.metrics import metrics_collector
+from src.core.infrastructure.mongo import mongo
+from src.core.infrastructure.configuration import settings
 
 router = APIRouter(dependencies=[Depends(verify_internal_token)])
 
@@ -30,7 +30,7 @@ async def record_retrieval_access(operation, query, requester_id, is_admin, docs
             if (doc.get("metadata") or {}).get("document_id")
         }
     )
-    await database.mongodb.retrieval_audit.insert_one(
+    await mongo.get_db().retrieval_audit.insert_one(
         {
             "_id": f"KNOWLEDGE-AUD-{uuid4().hex}",
             "operation": operation,
@@ -68,7 +68,7 @@ async def list_retrieval_access_audit(
     if document_id:
         query["document_ids"] = document_id
     return (
-        await database.mongodb.retrieval_audit.find(query)
+        await mongo.get_db().retrieval_audit.find(query)
         .sort("created_at", -1)
         .limit(limit)
         .to_list(limit)

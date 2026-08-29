@@ -45,7 +45,7 @@ def _check_response_not_empty(response: str) -> CheckResult:
 
 
 async def _check_no_hallucination_markers(response: str) -> CheckResult:
-    from src.workflow.graph import llm
+    from src.agents.workflow.graph import llm
 
     try:
         evaluator = llm.with_structured_output(HallucinationGrade)
@@ -102,7 +102,7 @@ def _check_tool_result_valid(tool_result: Any) -> CheckResult:
 
 
 async def _check_no_error_prefix(response: str) -> CheckResult:
-    from src.workflow.graph import llm
+    from src.agents.workflow.graph import llm
 
     try:
         evaluator = llm.with_structured_output(ErrorMessageJudgment)

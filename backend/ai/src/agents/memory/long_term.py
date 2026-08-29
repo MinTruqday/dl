@@ -18,7 +18,7 @@ from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
 from src.core.registry import PromptType, registry
-from src.clients.knowledge import knowledge_client
+from src.services.knowledge import knowledge_service
 from src.schemas.memory import MemoryOperation
 from src.utils.huggingface import create_chat_model
 
@@ -30,7 +30,7 @@ class LongTermMemory:
         self.collection_name = "veriq_memories"
         self.client = AsyncQdrantClient(url=settings.QDRANT_URL, timeout=10.0)
         self.llm = create_chat_model()
-        self.embedder = knowledge_client
+        self.embedder = knowledge_service
         self._initialized = False
         self._init_lock: Optional[asyncio.Lock] = None
 

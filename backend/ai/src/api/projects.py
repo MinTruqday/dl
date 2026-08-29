@@ -4,13 +4,13 @@ from uuid import NAMESPACE_URL, uuid5
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from src.knowledge.core.dependency import verify_internal_token
-from src.knowledge.schemas.project import ProjectArtifactIndexRequest, ProjectKnowledgeSearchRequest
-from src.knowledge.services.embedding import embedder
-from src.knowledge.services.chunking import chunker
-from src.knowledge.services.retrieval import RetrievalUnavailableError, retriever
-from src.knowledge.store.vector import vector_store
-from src.knowledge.store.bm25 import bm25_store
+from src.core.dependency import verify_internal_token
+from src.schemas.project import ProjectArtifactIndexRequest, ProjectKnowledgeSearchRequest
+from src.services.embedding import embedder
+from src.services.chunking import chunker
+from src.services.retrieval import RetrievalUnavailableError, retriever
+from src.store.vector import vector_store
+from src.store.bm25 import bm25_store
 
 
 router = APIRouter(dependencies=[Depends(verify_internal_token)])

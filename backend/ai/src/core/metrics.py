@@ -10,6 +10,8 @@ class MetricsCollector:
         self._request_count = defaultdict(int)
         self._request_duration = defaultdict(float)
         self._error_count = defaultdict(int)
+        self._artifact_retrievals = 0
+        self._artifact_hits = 0
 
     def record(self, method: str, path: str, status: int, duration: float):
         key = f"{method}_{path}"
@@ -17,6 +19,15 @@ class MetricsCollector:
         self._request_duration[key] += duration
         if status >= 500:
             self._error_count[key] += 1
+
+    def record_artifact_retrieval(self, documents: list, artifact_type: str | None):
+        self._artifact_retrievals += 1
+        if any(
+            not artifact_type
+            or document.get("metadata", {}).get("artifact_type") == artifact_type
+            for document in documents
+        ):
+            self._artifact_hits += 1
 
     def render(self, service_name: str) -> str:
         lines = []
@@ -41,6 +52,8 @@ class MetricsCollector:
             lines.append(
                 f'http_errors_total{{service="{service_name}",method="{method}",path="{path}"}} {count}'
             )
+        hit_rate = self._artifact_hits / self._artifact_retrievals if self._artifact_retrievals else 0
+        lines.append(f"knowledge_artifact_retrieval_hit_rate {hit_rate}")
         return "\n".join(lines) + "\n"
 
 

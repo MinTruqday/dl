@@ -6,7 +6,7 @@ from typing import Dict, List, Optional, Sequence
 from loguru import logger
 from uuid import NAMESPACE_URL, uuid5
 
-from src.knowledge.services.embedding import embedder
+from src.services.embedding import embedder
 
 
 class ChunkingService:

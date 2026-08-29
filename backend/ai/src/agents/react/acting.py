@@ -4,8 +4,8 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from loguru import logger
 from src.core.registry import PromptType, registry
 from src.agents.react.planning import llm
-from src.harness.agentops import agentops
-from src.harness.tool import ToolHarness
+from src.agents.harness.agentops import agentops
+from src.agents.harness.tool import ToolHarness
 from src.tools import tools
 
 from src.core.infrastructure.configuration import settings
@@ -200,7 +200,7 @@ class ActingAgent:
                     "high" if tool_name in {"delete_document", "restore_document"} else "medium"
                 )
                 if tool_name in _REQUIRES_APPROVAL_TOOLS:
-                    from src.loop.intervention import intervention
+                    from src.agents.loop.intervention import intervention
 
                     if tool_name not in _HUMAN_ONLY_APPROVAL_TOOLS:
                         approved_automatically = (

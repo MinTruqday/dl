@@ -27,6 +27,7 @@ test_*.py
 !backend/ai/tests/test_knowledge_retrieval.py
 !backend/ai/tests/test_knowledge_pipeline.py
 !backend/ai/tests/test_knowledge_project.py
+!backend/ai/tests/test_ai_architecture.py
 mem0-main
 tectonic-master
 Anthropic

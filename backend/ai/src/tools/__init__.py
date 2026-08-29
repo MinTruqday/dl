@@ -10,7 +10,7 @@ from src.tools.document import (
 )
 from src.tools.mindmap import generate_mindmap
 from src.tools.instructions import manage_user_instructions
-from src.workflow.reduction import agent_summarize_long_document
+from src.agents.workflow.reduction import agent_summarize_long_document
 from src.tools.testing import (
     apply_test_case_revision,
     analyze_change_impact,

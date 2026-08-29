@@ -13,7 +13,7 @@ from src.agents.react.reasoning import reasoner
 from src.agents.specialists.knowledge import researcher
 from src.agents.specialists.response import response_generator
 from src.agents.specialists.web_search import search_engine
-from src.workflow.state import ActingState
+from src.agents.workflow.state import ActingState
 from uuid6 import uuid7
 
 from src.schemas.evaluation import TaskEvaluation
@@ -53,7 +53,7 @@ async def supervisor_node(state: ActingState):
     req_data = state.get("req_data", {})
     session_id = req_data.get("session_id", "")
     if session_id:
-        from src.harness.governance import governance
+        from src.agents.harness.governance import governance
 
         session_summary = governance.get_session_summary(session_id)
         if session_summary:
@@ -84,7 +84,7 @@ async def supervisor_node(state: ActingState):
             deps = n.get("dependencies", [])
             if all(dep in completed_tasks for dep in deps):
                 if session_id:
-                    from src.harness.governance import governance
+                    from src.agents.harness.governance import governance
 
                     session_summary = governance.get_session_summary(session_id)
                     decision = governance.check_tool_allowed(session_id, n.get("agent", "Action"))
@@ -229,11 +229,11 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
         current_task = _task_with_dependency_context(task_obj, stored_results)
         try:
             if session_id:
-                from src.harness.governance import governance
+                from src.agents.harness.governance import governance
 
                 if governance.get_session_summary(session_id):
                     governance.record_tool_call(session_id, current_task)
-            from src.workflow.graph import llm
+            from src.agents.workflow.graph import llm
 
             evaluator_llm = llm.with_structured_output(TaskEvaluation)
 
@@ -380,7 +380,7 @@ async def trimmer_node(state: ActingState):
     if total_length > 12000:
         logger.info("Aggregating and consolidating node results")
         try:
-            from src.workflow.graph import llm
+            from src.agents.workflow.graph import llm
 
             combined = "\n\n".join(str(r) for r in results)
             from src.core.registry import registry, PromptType
@@ -489,9 +489,9 @@ class OrchestrationWorkflow:
 
     async def execute_plan(self, req_data):
         self.initialize()
-        from src.harness.governance import governance
-        from src.loop.rubric import standard_rubric_middleware
-        from src.loop.verification import verification
+        from src.agents.harness.governance import governance
+        from src.agents.loop.rubric import standard_rubric_middleware
+        from src.agents.loop.verification import verification
 
         logger.info(
             f"Initializing orchestration execution stream for query length {len(req_data.get('query', ''))}"

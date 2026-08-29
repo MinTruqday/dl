@@ -49,7 +49,7 @@ class ContextHarness:
     """
 
     async def _load_short_term_history(self, session_id: str) -> list:
-        from src.memory.short_term import short_term_memory
+        from src.agents.memory.short_term import short_term_memory
 
         return await short_term_memory.get_short_term(session_id)
 
@@ -58,7 +58,7 @@ class ContextHarness:
             return ""
         try:
             from src.core.infrastructure.database import database
-            from src.memory.management import memory_manager
+            from src.agents.memory.management import memory_manager
 
             db = database.mongodb[settings.AI_DB_NAME]
             instruction_doc, memories = await asyncio.gather(
@@ -123,12 +123,12 @@ class ContextHarness:
         return ctx
 
     async def save_turn(self, session_id: str, role: str, content: str):
-        from src.memory.short_term import short_term_memory
+        from src.agents.memory.short_term import short_term_memory
 
         await short_term_memory.save_short_term(session_id, {"role": role, "content": content})
 
     async def clear_session(self, session_id: str):
-        from src.memory.short_term import short_term_memory
+        from src.agents.memory.short_term import short_term_memory
 
         await short_term_memory.clear(session_id)
 

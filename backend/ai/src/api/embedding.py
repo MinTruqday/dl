@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends
-from src.knowledge.core.dependency import verify_internal_token
-from src.knowledge.core.response import APIResponse
-from src.knowledge.schemas.embedding import (
+from src.core.dependency import verify_internal_token
+from src.schemas.response import APIResponse
+from src.schemas.embedding import (
     EmbedQueryRequest,
     EmbedBatchRequest,
     EmbeddingResponse,
     BatchEmbeddingResponse,
 )
-from src.knowledge.services.embedding import embedder
+from src.services.embedding import embedder
 
 router = APIRouter(dependencies=[Depends(verify_internal_token)])
 

@@ -1,16 +1,18 @@
 import asyncio
+import base64
 from hashlib import sha256
+from pathlib import Path
 from typing import Dict
 from uuid import NAMESPACE_URL, uuid5
 from loguru import logger
-from src.knowledge.store.vector import vector_store
-from src.knowledge.store.bm25 import bm25_store
-from src.knowledge.services.embedding import embedder
-from src.knowledge.services.chunking import chunker
-from src.knowledge.services.conversion import document_parser
-from src.knowledge.clients.content import content_client
-from src.knowledge.clients.ai import ai_client
-from src.knowledge.services.security import prompt_injection_flags
+from src.store.vector import vector_store
+from src.store.bm25 import bm25_store
+from src.services.embedding import embedder
+from src.services.chunking import chunker
+from src.services.conversion import document_parser
+from src.clients.content import ContentClient
+from src.services.inference import inspect_chunks, summarize_document
+from src.services.content_security import prompt_injection_flags
 
 
 async def embed_available_chunks(chunks):
@@ -51,7 +53,7 @@ class IngestionPipelineService:
         self, document_id: str, requester_id: str, is_admin: bool = False
     ) -> Dict:
         logger.info(f"Starting ingestion for document {document_id}")
-        doc = await content_client.authorize_document(document_id, requester_id, is_admin)
+        doc = await ContentClient.authorize_document(document_id, requester_id, is_admin)
 
         file_url = doc.get("file_url", "") if doc else ""
         title = doc.get("title") or ""
@@ -134,7 +136,7 @@ class IngestionPipelineService:
             chunks = locally_safe
 
         if chunks:
-            safe_indices = await ai_client.inspect_knowledge_chunks([chunk["text"] for chunk in chunks])
+            safe_indices = await inspect_chunks([chunk["text"] for chunk in chunks])
             rejected = [chunk for index, chunk in enumerate(chunks) if index not in safe_indices]
             quarantined_chunks.extend(
                 {"chunk_id": chunk["metadata"].get("chunk_id"), "flags": ["ai_safety_rejection"]}
@@ -148,7 +150,7 @@ class IngestionPipelineService:
             summary = first_pages.strip()
         else:
             try:
-                summary = await ai_client.summarize_knowledge_document(first_pages)
+                summary = await summarize_document(first_pages)
             except Exception:
                 logger.exception("Document summary generation error")
                 summary = ""
@@ -213,7 +215,7 @@ class IngestionPipelineService:
         )
 
         index_report = {"failed_chunks": failed_chunks, "quarantined_chunks": quarantined_chunks}
-        await content_client.mark_indexed(
+        await ContentClient.mark_indexed(
             document_id, len(chunks), index_report, raw_markdown, extraction_method
         )
 
@@ -229,3 +231,61 @@ class IngestionPipelineService:
 
 
 ingestion_pipeline = IngestionPipelineService()
+
+
+async def index_document(document_id: str, requester_id: str, is_admin: bool) -> dict:
+    authorized = False
+    try:
+        await ContentClient.authorize_document(document_id, requester_id, is_admin)
+        authorized = True
+        await ContentClient.mark_indexing(document_id)
+        return await ingestion_pipeline.ingest_document(document_id, requester_id, is_admin)
+    except Exception as error:
+        if authorized:
+            try:
+                await ContentClient.mark_index_failed(document_id, type(error).__name__)
+            except Exception:
+                pass
+        raise
+
+
+async def extract_document(document_id: str, requester_id: str, is_admin: bool) -> str:
+    document = await ContentClient.authorize_document(document_id, requester_id, is_admin)
+    file_url = str(document.get("file_url") or "")
+    if not file_url:
+        raise ValueError("Document file not found")
+    markdown = await document_parser.get_markdown(
+        file_url, visibility=document.get("visibility") or "private"
+    )
+    if not markdown:
+        raise ValueError("Document text unavailable")
+    return markdown
+
+
+async def convert_attachment(data: str, filename: str) -> dict:
+    payload = data.split(",", 1)[-1]
+    try:
+        file_bytes = base64.b64decode(payload, validate=True)
+    except (ValueError, base64.binascii.Error) as error:
+        raise ValueError("Invalid base64 attachment") from error
+    if not file_bytes:
+        raise ValueError("Empty attachment")
+    if len(file_bytes) > 25 * 1024 * 1024:
+        raise ValueError("Attachment exceeds 25 MB")
+    result = await document_parser.parse_bytes(file_bytes, Path(filename).suffix or ".pdf")
+    markdown = str(result.get("markdown") or "")
+    if not markdown:
+        raise ValueError("Document text unavailable")
+    return {
+        "markdown": markdown,
+        "structure": result.get("structure", []),
+        "page_count": result.get("page_count", 1),
+    }
+
+
+async def remove_document(document_id: str, requester_id: str, is_admin: bool) -> dict:
+    await ContentClient.authorize_document(document_id, requester_id, is_admin, True)
+    await vector_store.delete_by_document(document_id)
+    await bm25_store.delete_by_document(document_id)
+    await ContentClient.mark_unindexed(document_id)
+    return {"document_id": document_id, "status": "deleted"}

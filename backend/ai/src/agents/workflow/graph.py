@@ -16,11 +16,11 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.prompts import PromptTemplate
 from langgraph.graph import END, StateGraph
 from loguru import logger
-from src.memory.management import memory_manager
+from src.agents.memory.management import memory_manager
 
-from src.clients.knowledge import knowledge_client
+from src.services.knowledge import knowledge_service
 from src.utils.processing import extract_text_from_base64
-from src.workflow.state import AgentState
+from src.agents.workflow.state import AgentState
 
 from src.core.infrastructure.configuration import settings
 
@@ -63,7 +63,7 @@ try:
     redis_url = settings.REDIS_URI
     from langchain_community.cache import RedisSemanticCache
 
-    langchain.llm_cache = RedisSemanticCache(redis_url=redis_url, embedding=knowledge_client)
+    langchain.llm_cache = RedisSemanticCache(redis_url=redis_url, embedding=knowledge_service)
     logger.info("Redis semantic cache initialized")
 except Exception:
     logger.exception("Redis semantic cache initialization error")
@@ -167,7 +167,7 @@ async def retrieve_db(state: AgentState):
     if document_ids and len(document_ids) >= 2:
         logger.info("Processing cross-document retrieval")
         try:
-            raw_documents = await knowledge_client.cross_document_retrieve(
+            raw_documents = await knowledge_service.cross_document_retrieve(
                 question, document_ids, k=6, requester_id=requester_id
             )
             extracted_documents = []
@@ -200,7 +200,7 @@ async def retrieve_db(state: AgentState):
     all_raw_documents = []
     for q in list(dict.fromkeys(queries))[:3]:
         try:
-            results = await knowledge_client.retrieve(
+            results = await knowledge_service.retrieve(
                 q, document_ids=document_ids, k=10, requester_id=requester_id
             )
             for doc in results:

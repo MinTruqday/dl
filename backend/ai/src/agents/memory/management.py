@@ -1,7 +1,7 @@
 from typing import Dict, List, Optional
 
-from src.memory.long_term import LongTermMemory, long_term_memory
-from src.memory.short_term import ShortTermMemory, short_term_memory
+from src.agents.memory.long_term import LongTermMemory, long_term_memory
+from src.agents.memory.short_term import ShortTermMemory, short_term_memory
 
 
 class MemoryManager:

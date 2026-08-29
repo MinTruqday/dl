@@ -1,7 +1,7 @@
 from typing import List, Optional
-from src.knowledge.store.cache import semantic_cache
-from src.knowledge.services.embedding import embedder
-from src.knowledge.schemas.cache import CacheGetResponse
+from src.store.semantic_cache import semantic_cache
+from src.services.embedding import embedder
+from src.schemas.cache import CacheGetResponse
 
 
 class CacheService:

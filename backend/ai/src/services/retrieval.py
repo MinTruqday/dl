@@ -1,15 +1,25 @@
 import asyncio
 from typing import Dict, List, Optional
 from loguru import logger
-from src.knowledge.core.infrastructure.configuration import settings
-from src.knowledge.store.vector import vector_store
-from src.knowledge.store.bm25 import bm25_store
-from src.knowledge.services.embedding import embedder
-from src.knowledge.clients.ai import ai_client
+from src.core.infrastructure.configuration import settings
+from src.store.vector import vector_store
+from src.store.bm25 import bm25_store
+from src.services.embedding import embedder
+from src.services.inference import decompose_retrieval, expand_retrieval
 
 
 class RetrievalUnavailableError(RuntimeError):
     pass
+
+
+async def initialize_retrieval():
+    embedding = await embedder.initialize()
+    if len(embedding) != embedder._dimensions:
+        raise RuntimeError("Embedding model dimension does not match the retrieval index")
+    await vector_store.ensure_collection()
+    await bm25_store.initialize(await vector_store.scroll_all())
+    await retriever.initialize()
+    logger.info("AI retrieval capability initialized and ready")
 
 
 class RetrievalService:
@@ -199,7 +209,7 @@ class RetrievalService:
         metadata_filters: Optional[Dict] = None,
     ) -> List[Dict]:
         try:
-            expansion = await ai_client.expand_retrieval_query(question)
+            expansion = await expand_retrieval(question)
         except Exception:
             logger.exception("Retrieval query expansion failed")
             expansion = {"hypothetical_document": question, "queries": []}
@@ -267,7 +277,7 @@ class RetrievalService:
 
         sub_queries = [question] * len(document_ids)
         try:
-            decomposed = await ai_client.decompose_cross_document_query(question, document_ids)
+            decomposed = await decompose_retrieval(question, document_ids)
             if len(decomposed) == len(document_ids):
                 sub_queries = decomposed
         except Exception:

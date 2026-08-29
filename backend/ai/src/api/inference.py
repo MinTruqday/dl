@@ -1,79 +1,42 @@
 import json
 from datetime import datetime, timezone
-from typing import List
-
 from fastapi import APIRouter, Depends, HTTPException
 
 from src.core.dependency import verify_internal_token
 from src.core.infrastructure.configuration import settings
-from src.core.model_runtime import run_chat_completion
-from src.core.registry import PromptType, registry
 from src.schemas.inference import CrossDocumentExpansionRequest, QAAssistanceRequest, QAAssistanceResult, KnowledgeChunkSafetyRequest, KnowledgeDocumentSummaryRequest, RetrievalExpansionRequest
-from src.utils.local_models import local_model_client
+from src.services.inference import chat, decompose_retrieval, expand_retrieval, inspect_chunks, structured, summarize_document
 
 
 router = APIRouter(prefix="/suy-luan")
-client = local_model_client
-
-
-async def chat(messages: List[dict], max_tokens=500, temperature=0.2, attempts=1, timeout_seconds=60):
-    return await run_chat_completion(client=client, messages=messages, model=settings.LLM_MODEL, max_tokens=max_tokens, temperature=temperature, attempts=attempts, timeout_seconds=timeout_seconds)
-
-
-async def structured(prompt, schema, max_tokens=1200, timeout_seconds=90):
-    from src.utils.structured_output import validate_structured_output
-
-    raw = await chat([{"role": "user", "content": prompt}], max_tokens=max_tokens, temperature=0.1, attempts=3, timeout_seconds=timeout_seconds)
-    try:
-        return validate_structured_output(raw, schema)
-    except Exception:
-        corrected = await chat([{"role": "user", "content": prompt}, {"role": "assistant", "content": raw[:4000]}, {"role": "user", "content": "Return one corrected strictly valid JSON object only"}], max_tokens=max_tokens, temperature=0, attempts=2, timeout_seconds=timeout_seconds)
-        return validate_structured_output(corrected, schema)
 
 
 @router.post("/noi-bo/mo-rong-truy-van", dependencies=[Depends(verify_internal_token)], description="Mở rộng truy vấn thành giả thuyết và các truy vấn con phục vụ knowledge")
 async def expand_retrieval_query(req: RetrievalExpansionRequest):
-    from src.schemas.routing import MultiQueryOutput
-
-    hypothetical_document = await chat([{"role": "user", "content": registry.get(PromptType.HYDE_GENERATION).format(question=req.question)}], max_tokens=384, timeout_seconds=20)
-    result = await structured(registry.get(PromptType.MULTI_QUERY).format(question=req.question), MultiQueryOutput, max_tokens=192, timeout_seconds=20)
-    return {"hypothetical_document": hypothetical_document.strip() or req.question, "queries": [value.strip() for value in result.queries if value.strip()][:5]}
+    return await expand_retrieval(req.question)
 
 
 @router.post("/noi-bo/phan-ra-lien-tai-lieu", dependencies=[Depends(verify_internal_token)], description="Phân rã truy vấn theo từng tài liệu đã được chỉ định")
 async def decompose_cross_document_query(req: CrossDocumentExpansionRequest):
-    from src.schemas.routing import CrossDocumentQueries
-
-    result = await structured(registry.get(PromptType.CROSS_DOCUMENT_QUERY).format(question=req.question, document_ids=req.document_ids), CrossDocumentQueries, max_tokens=min(1024, 96 * len(req.document_ids)), timeout_seconds=20)
-    queries = [value.strip() for value in result.queries if value.strip()]
-    if len(queries) != len(req.document_ids):
-        raise HTTPException(status_code=502, detail={"code": "cross_document_decomposition_invalid"})
+    try:
+        queries = await decompose_retrieval(req.question, req.document_ids)
+    except ValueError as error:
+        raise HTTPException(status_code=502, detail={"code": str(error)}) from error
     return {"queries": queries}
 
 
 @router.post("/noi-bo/kiem-tra-doan-knowledge", dependencies=[Depends(verify_internal_token)], description="Kiểm tra prompt injection và độ an toàn của các đoạn knowledge")
 async def inspect_knowledge_chunks(req: KnowledgeChunkSafetyRequest):
-    import asyncio
-    from src.harness.security import security
-
-    semaphore = asyncio.Semaphore(4)
-    async def inspect(index, text):
-        async with semaphore:
-            result = await security.ascan_input(text)
-            return index if result.passed else None
-    values = await asyncio.gather(*[inspect(index, text) for index, text in enumerate(req.texts)])
-    return {"safe_indices": [value for value in values if value is not None]}
+    return {"safe_indices": sorted(await inspect_chunks(req.texts))}
 
 
 @router.post("/noi-bo/tom-tat-tai-lieu-knowledge", dependencies=[Depends(verify_internal_token)], description="Tóm tắt tài liệu knowledge sau khi kiểm tra an toàn")
 async def summarize_knowledge_document(req: KnowledgeDocumentSummaryRequest):
-    from src.core.security.guardrails import guardrails_engine
-
-    inspected = await guardrails_engine.async_inspect_input(req.text)
-    if not inspected.get("is_safe", False):
-        raise HTTPException(status_code=422, detail={"code": "knowledge_summary_input_unsafe"})
-    summary = await chat([{"role": "user", "content": registry.get(PromptType.DOCUMENT_GLOBAL_SUMMARY).format(text=inspected.get("sanitized_text") or req.text)}], max_tokens=512)
-    return {"summary": summary.strip()}
+    try:
+        summary = await summarize_document(req.text)
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail={"code": str(error)}) from error
+    return {"summary": summary}
 
 
 @router.post("/noi-bo/qa/ho-tro", dependencies=[Depends(verify_internal_token)], response_model=QAAssistanceResult, description="Sinh đề xuất QA có evidence và không tự thực hiện quyết định chỉ dành cho con người")

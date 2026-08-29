@@ -8,13 +8,13 @@ from src.agents.react.routing import semantic_router
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 from src.core.registry import PromptType, registry
-from src.harness.agentops import agentops
-from src.harness.context import context
-from src.harness.orchestration import orchestration
-from src.harness.security import security
+from src.agents.harness.agentops import agentops
+from src.agents.harness.context import context
+from src.agents.harness.orchestration import orchestration
+from src.agents.harness.security import security
 from src.schemas.interaction import ChatRequest
 from src.core.dependency import CurrentUser, get_current_user
-from src.workflow.orchestration import supervisor
+from src.agents.workflow.orchestration import supervisor
 from src.services.workspace import workspace
 from src.services.token_accounting import start_accounting
 from src.api.interaction.executor import (

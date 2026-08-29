@@ -4,7 +4,7 @@ from typing import Literal
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from loguru import logger
 
-from src.loop.event import AgentEvent, CronSchedule, EventType, cron_scheduler, event_driven_loop
+from src.agents.loop.event import AgentEvent, CronSchedule, EventType, cron_scheduler, event_driven_loop
 
 from src.schemas.events import CreateScheduleRequest, ManualTriggerRequest, WebhookPayload
 from src.core.dependency import Role, require_role, verify_internal_token

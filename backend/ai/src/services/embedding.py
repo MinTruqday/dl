@@ -4,7 +4,7 @@ import json
 from typing import List
 import redis
 from sentence_transformers import SentenceTransformer
-from src.knowledge.core.infrastructure.configuration import settings
+from src.core.infrastructure.configuration import settings
 
 
 class EmbeddingService:

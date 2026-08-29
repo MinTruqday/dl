@@ -6,7 +6,7 @@ from typing import Dict, List, Optional
 
 from loguru import logger
 
-from src.knowledge.core.infrastructure.configuration import settings
+from src.core.infrastructure.configuration import settings
 
 
 class ConversionService:

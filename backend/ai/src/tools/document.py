@@ -165,9 +165,9 @@ async def delete_document(
         )
         if response.status_code == 200:
             try:
-                from src.clients.knowledge import knowledge_client
+                from src.services.knowledge import knowledge_service
 
-                await knowledge_client.delete_document(document_id, settings.PLATFORM_SYSTEM_ID, True)
+                await knowledge_service.delete_document(document_id, settings.PLATFORM_SYSTEM_ID, True)
                 logger.info("Document index cleanup completed")
             except Exception:
                 logger.exception("Failed to clean up document index")

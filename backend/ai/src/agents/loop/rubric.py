@@ -169,7 +169,7 @@ class HallucinationGrader(BaseGrader):
 
     async def grade(self, response: str, context: dict) -> GraderResult:
         try:
-            from src.workflow.graph import llm
+            from src.agents.workflow.graph import llm
 
             evaluator = llm.with_structured_output(HallucinationJudgment)
             query = context.get("query", "user query")
@@ -207,7 +207,7 @@ class RelevanceGrader(BaseGrader):
         if not query:
             return GraderResult(grader_name=self.name, passed=True, score=1.0)
         try:
-            from src.workflow.graph import llm
+            from src.agents.workflow.graph import llm
 
             evaluator = llm.with_structured_output(RelevanceJudgment)
             from src.core.registry import registry, PromptType
