@@ -62,7 +62,7 @@ def _estimate_tokens(text: str) -> int:
 class GovernanceHarness:
     """
     <module_purpose>
-    DocLib Governance Harness for enforcing role-based access control and quota limits on agent sessions.
+    Veriq Governance Harness for enforcing role-based access control and quota limits on agent sessions.
     </module_purpose>
     <contract>
     - Precondition: Valid session and user role attributes.

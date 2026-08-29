@@ -54,7 +54,7 @@ def _is_ssrf_attempt(query: str) -> bool:
 class WebSearchAgent:
     """
     <module_purpose>
-    DocLib Engine Agent for real-time external information retrieval with caching and semantic re-ranking.
+    Veriq Engine Agent for real-time external information retrieval with caching and semantic re-ranking.
     </module_purpose>
     <contract>
     - Precondition: Tavily API key and Redis connection configured.

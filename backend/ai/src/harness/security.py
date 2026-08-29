@@ -17,7 +17,7 @@ class ScanResult:
 class SecurityHarness:
     """
     <module_purpose>
-    DocLib Security Harness for runtime prompt injection detection and content sanitization.
+    Veriq Security Harness for runtime prompt injection detection and content sanitization.
     </module_purpose>
     <contract>
     - Precondition: Raw input text from users or external sources.

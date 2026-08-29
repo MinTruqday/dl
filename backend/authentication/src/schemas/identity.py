@@ -30,6 +30,11 @@ class Role(str, Enum):
     ADMIN = "admin"
 
 
+class SystemRole(str, Enum):
+    USER = "USER"
+    ADMIN = "ADMIN"
+
+
 class UserBase(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
@@ -37,6 +42,7 @@ class UserBase(BaseModel):
     full_name: str = Field(min_length=2, max_length=100)
     slug: str = Field(min_length=3, max_length=50, pattern=r"^[a-zA-Z0-9_-]+$")
     role: Role = Role.READER
+    system_role: SystemRole = SystemRole.USER
     bio: Optional[str] = None
     avatar_url: Optional[str] = None
     social_links: Optional[Dict[str, str]] = Field(default_factory=dict)

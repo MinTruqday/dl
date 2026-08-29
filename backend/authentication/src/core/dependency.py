@@ -19,12 +19,18 @@ class Role(str, Enum):
     ADMIN = "admin"
 
 
+class SystemRole(str, Enum):
+    USER = "USER"
+    ADMIN = "ADMIN"
+
+
 class CurrentUser(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="ignore")
 
     id: str = Field(alias="_id")
     email: str
     role: Role = Role.READER
+    system_role: SystemRole = SystemRole.USER
     permissions: List[str] = Field(default_factory=list)
     is_active: bool = True
     full_name: str = ""
@@ -36,6 +42,13 @@ class CurrentUser(BaseModel):
     def validate_role_case(cls, v: Any):
         if isinstance(v, str):
             return v.lower()
+        return v
+
+    @field_validator("system_role", mode="before")
+    @classmethod
+    def validate_system_role_case(cls, v: Any):
+        if isinstance(v, str):
+            return v.upper()
         return v
 
 
@@ -80,6 +93,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
         "_id": uid,
         "email": email,
         "role": payload.get("role", "reader"),
+        "system_role": payload.get("system_role", "USER"),
         "permissions": payload.get("permissions", []),
         "session_id": session_id,
         "full_name": payload.get("full_name", ""),
@@ -108,7 +122,7 @@ async def get_current_user_token_param(token: str) -> CurrentUser:
 
 def require_role(required_roles: List[Role]):
     async def role_checker(current_user: CurrentUser = Depends(get_current_user)) -> CurrentUser:
-        if current_user.role == Role.ADMIN:
+        if current_user.system_role == SystemRole.ADMIN or current_user.role == Role.ADMIN:
             return current_user
         if current_user.role not in required_roles:
             logger.warning("Access denied due to insufficient authorization privileges")
@@ -145,7 +159,7 @@ def require_permissions(required_permissions: List[str]):
         current_user: CurrentUser = Depends(get_current_user),
     ) -> CurrentUser:
         user_perms = current_user.permissions or []
-        if current_user.role == Role.ADMIN:
+        if current_user.system_role == SystemRole.ADMIN or current_user.role == Role.ADMIN:
             return current_user
         missing = [p for p in required_permissions if p not in user_perms]
         if missing:

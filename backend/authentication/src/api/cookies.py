@@ -6,7 +6,7 @@ from src.services.session import SessionService
 def set_refresh_cookie(response: Response, request: Request, token_data: dict):
     refresh_token = token_data.pop("_refresh_token")
     response.set_cookie(
-        key="doclib_refresh_token",
+        key="veriq_refresh_token",
         value=refresh_token,
         max_age=SessionService.refresh_cookie_seconds(),
         httponly=True,

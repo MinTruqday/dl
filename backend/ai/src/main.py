@@ -40,7 +40,7 @@ from src.api.ingestion import router as ingest
 from src.api.events import router as events
 from src.api.interrupt import router as interrupt_router
 
-app = FastAPI(title="DocLib AI", version=settings.VERSION)
+app = FastAPI(title="Veriq AI", version=settings.VERSION)
 app.add_middleware(PrometheusMiddleware, service_name="ai")
 app.add_route("/metrics", metrics_endpoint("ai"))
 

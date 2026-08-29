@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
 import httpx
+import jwt
 from pymongo import MongoClient
 
 
@@ -40,15 +41,18 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     login = client.post("/xac-thuc/dang-nhap", data={"username": email, "password": password})
     assert login.status_code == 200, login.text
     token = login.json()["data"]["access_token"]
-    original_refresh = client.cookies.get("doclib_refresh_token")
+    claims = jwt.decode(token, os.environ["SECRET_KEY"], algorithms=["HS256"])
+    assert claims["system_role"] == "USER"
+    assert "project_role" not in claims
+    original_refresh = client.cookies.get("veriq_refresh_token")
     assert original_refresh
     refreshed = client.post("/xac-thuc/lam-moi-phien")
     assert refreshed.status_code == 200, refreshed.text
     refreshed_token = refreshed.json()["data"]["access_token"]
     assert refreshed_token != token
-    assert client.cookies.get("doclib_refresh_token") != original_refresh
+    assert client.cookies.get("veriq_refresh_token") != original_refresh
     with httpx.Client(
-        base_url=base_url, timeout=30, cookies={"doclib_refresh_token": original_refresh}
+        base_url=base_url, timeout=30, cookies={"veriq_refresh_token": original_refresh}
     ) as replay_client:
         replay = replay_client.post("/xac-thuc/lam-moi-phien")
         assert replay.status_code == 401
@@ -83,18 +87,24 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     managed_id = managed.json()["data"].get("id") or managed.json()["data"]["_id"]
     mongo_client = MongoClient(os.environ["MONGODB_URI"])
     mongo_client[os.environ["AUTHENTICATION_DB_NAME"]].auth_credentials.update_one(
-        {"_id": account_id}, {"$set": {"role": "admin"}}
+        {"_id": account_id}, {"$set": {"role": "admin", "system_role": "ADMIN"}}
     )
     mongo_client.close()
 
     logout = client.post("/xac-thuc/dang-xuat", headers=bearer)
     assert logout.status_code == 200, logout.text
-    assert client.cookies.get("doclib_refresh_token") is None
+    assert client.cookies.get("veriq_refresh_token") is None
     assert client.get("/xac-thuc/ca-nhan", headers=bearer).status_code == 401
 
     admin_login = client.post("/xac-thuc/dang-nhap", data={"username": email, "password": password})
     assert admin_login.status_code == 200, admin_login.text
     admin_headers = {"Authorization": f"Bearer {admin_login.json()['data']['access_token']}"}
+    admin_claims = jwt.decode(
+        admin_login.json()["data"]["access_token"],
+        os.environ["SECRET_KEY"],
+        algorithms=["HS256"],
+    )
+    assert admin_claims["system_role"] == "ADMIN"
     accounts = client.get("/xac-thuc/quan-tri/tai-khoan", headers=admin_headers)
     assert accounts.status_code == 200, accounts.text
     assert managed_id in {row["_id"] for row in accounts.json()["data"]}

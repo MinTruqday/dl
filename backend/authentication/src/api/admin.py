@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field, model_validator
 from pymongo import ReturnDocument
 
 from src.api.internal import account_view
-from src.core.dependency import CurrentUser, Role, get_current_user, require_role
+from src.core.dependency import CurrentUser, Role, SystemRole, get_current_user, require_role
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 from src.core.response import APIResponse
@@ -16,12 +16,13 @@ from src.repositories.identity import IdentityRepository
 
 class AdminAccountUpdate(BaseModel):
     role: Role | None = None
+    system_role: SystemRole | None = None
     is_active: bool | None = None
     reason: str = Field(min_length=3, max_length=1000)
 
     @model_validator(mode="after")
     def validate_change(self):
-        if self.role is None and self.is_active is None:
+        if self.role is None and self.system_role is None and self.is_active is None:
             raise ValueError("Cần cung cấp thay đổi vai trò hoặc trạng thái")
         return self
 
@@ -33,6 +34,7 @@ router = APIRouter(prefix="/xac-thuc/quan-tri", dependencies=[Depends(require_ro
 async def list_accounts(
     search: str | None = None,
     role: Role | None = None,
+    system_role: SystemRole | None = None,
     is_active: bool | None = None,
     limit: int = Query(default=100, ge=1, le=200),
     current_user: CurrentUser = Depends(get_current_user),
@@ -47,6 +49,8 @@ async def list_accounts(
         ]
     if role is not None:
         query["role"] = role.value
+    if system_role is not None:
+        query["system_role"] = system_role.value
     if is_active is not None:
         query["is_active"] = is_active
     accounts = (
@@ -67,13 +71,15 @@ async def update_account(
     user_id: str, payload: AdminAccountUpdate, current_user: CurrentUser = Depends(get_current_user)
 ):
     if user_id == current_user.id and (
-        payload.is_active is False or payload.role not in {None, Role.ADMIN}
+        payload.is_active is False
+        or payload.role not in {None, Role.ADMIN}
+        or payload.system_role not in {None, SystemRole.ADMIN}
     ):
         raise HTTPException(
             status_code=422, detail="Không thể tự khóa hoặc hạ quyền tài khoản quản trị hiện tại"
         )
     changes = {
-        key: value.value if isinstance(value, Role) else value
+        key: value.value if isinstance(value, (Role, SystemRole)) else value
         for key, value in payload.model_dump(exclude={"reason"}).items()
         if value is not None
     }

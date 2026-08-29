@@ -49,7 +49,7 @@ def _can_approve_automatically(tool_name: str, auto_approve: bool, approval_poli
 class ActingAgent:
     """
     <module_purpose>
-    DocLib Acting Agent for executing registered tools based on LLM decisions.
+    Veriq Acting Agent for executing registered tools based on LLM decisions.
     </module_purpose>
     <contract>
     - Precondition: Tool name and validated arguments. User authentication for sensitive tools.

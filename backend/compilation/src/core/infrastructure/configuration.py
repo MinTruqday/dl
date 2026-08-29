@@ -11,7 +11,6 @@ class Settings(BaseModel):
     MONGODB_URI: str = os.environ["MONGODB_URI"]
     REDIS_URI: str = os.environ["REDIS_URI"]
     PLATFORM_SYSTEM_ID: str = os.environ["PLATFORM_SYSTEM_ID"]
-    ASSESSMENT_URL: str = os.getenv("ASSESSMENT_URL", "http://assessment:8000")
 
 
 settings = Settings()

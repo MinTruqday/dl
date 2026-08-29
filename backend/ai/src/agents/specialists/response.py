@@ -9,7 +9,7 @@ from src.harness.security import security
 class GenerationAgent:
     """
     <module_purpose>
-    DocLib Generation Agent for handling final text generation from search results.
+    Veriq Generation Agent for handling final text generation from search results.
     </module_purpose>
     <contract>
     - Precondition: Consolidated search results and an unblocked user query.

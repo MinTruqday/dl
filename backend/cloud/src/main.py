@@ -38,7 +38,7 @@ async def lifespan(app: FastAPI):
     await close_db()
 
 
-app = FastAPI(title="DocLib Cloud", version=settings.VERSION, lifespan=lifespan)
+app = FastAPI(title="Veriq Cloud", version=settings.VERSION, lifespan=lifespan)
 app.add_middleware(PrometheusMiddleware, service_name="cloud")
 app.add_route("/metrics", metrics_endpoint("cloud"))
 

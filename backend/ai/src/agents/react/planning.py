@@ -14,7 +14,7 @@ llm = create_chat_model()
 class PlanAgent:
     """
     <module_purpose>
-    DocLib Plan Agent for decomposing complex requests into execution plans.
+    Veriq Plan Agent for decomposing complex requests into execution plans.
     </module_purpose>
     <contract>
     - Precondition: Complex user query requiring multi-step execution.
@@ -188,7 +188,7 @@ class PlanAgent:
 class CriticAgent:
     """
     <module_purpose>
-    DocLib Critic Agent for reviewing and optimizing execution plans.
+    Veriq Critic Agent for reviewing and optimizing execution plans.
     </module_purpose>
     <contract>
     - Precondition: Receives a parsed execution plan from PlanAgent.

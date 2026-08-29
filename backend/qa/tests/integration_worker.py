@@ -5,7 +5,7 @@ import httpx
 
 
 BASE_URL = os.getenv("QA_TEST_URL", "http://qa:8000")
-HEADERS = {"x-test-user-id": "qa-lead-e2e", "x-test-user-role": "author"}
+HEADERS = {"x-test-user-id": "qa-lead-e2e"}
 
 
 with httpx.Client(base_url=BASE_URL, headers=HEADERS, timeout=20) as client:

@@ -1,3 +1,5 @@
+name: veriq
+
 x-service-environment: &service-environment
   PYTHONDONTWRITEBYTECODE: "1"
   PROJECT_NAME: ${PROJECT_NAME:?PROJECT_NAME is required}
@@ -28,7 +30,7 @@ x-app-healthcheck: &app-healthcheck
 services:
   mongodb:
     image: mongo:7.0@sha256:35a5926f71f8b6cb19206bee928c5a85f241a8be99f20c81abe35ae78a73415d
-    container_name: doclib_mongodb
+    container_name: veriq_mongodb
     restart: always
     command:
       - --replSet
@@ -45,22 +47,22 @@ services:
       start_period: 3s
       retries: 20
     networks:
-      - doclib_network
+      - veriq_network
 
   redis:
     image: redis:7-alpine@sha256:e7723ff73d963f5cc6d9c4643ea3d989527a402a319239054e9472a7fb9219a2
-    container_name: doclib_redis
+    container_name: veriq_redis
     restart: always
     ports:
       - 6379:6379
     volumes:
       - redis_data:/data
     networks:
-      - doclib_network
+      - veriq_network
 
   rabbitmq:
     image: rabbitmq:3-management-alpine@sha256:606d8c0d6b3c18d1da9afc53bc7cdb2a8d5486df91b5a9830e9e07626c9ae281
-    container_name: doclib_rabbitmq
+    container_name: veriq_rabbitmq
     restart: always
     ports:
       - 5672:5672
@@ -78,11 +80,11 @@ services:
       start_period: 10s
       retries: 12
     networks:
-      - doclib_network
+      - veriq_network
 
   minio:
     image: minio/minio:RELEASE.2025-09-07T16-13-09Z@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
-    container_name: doclib_minio
+    container_name: veriq_minio
     restart: always
     ports:
       - 9000:9000
@@ -94,11 +96,11 @@ services:
     volumes:
       - minio_data:/data
     networks:
-      - doclib_network
+      - veriq_network
 
   traefik:
     image: traefik:v3.7.6@sha256:21a3d83696379bac6434bb32e1dde0aff0e84ef2abd053ed3db87d3f45e749b2
-    container_name: doclib_traefik
+    container_name: veriq_traefik
     restart: always
     command:
       - --api.dashboard=false
@@ -117,11 +119,11 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
-      - doclib_network
+      - veriq_network
 
   nginx:
     image: fholzer/nginx-brotli@sha256:e0aa855b74b7cdd0bb13a8cb1599e3af9b6210a98fb6234081b551899bfb924c
-    container_name: doclib_nginx
+    container_name: veriq_nginx
     restart: always
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
@@ -131,7 +133,7 @@ services:
       - traefik.http.routers.frontend.priority=1
       - traefik.http.services.frontend.loadbalancer.server.port=80
     networks:
-      - doclib_network
+      - veriq_network
     depends_on:
       - frontend
     healthcheck:
@@ -145,7 +147,7 @@ services:
       context: .
       dockerfile: ./frontend/Dockerfile
       target: deps
-    container_name: doclib_frontend
+    container_name: veriq_frontend
     restart: always
     ports:
       - 3000:3000
@@ -171,7 +173,7 @@ services:
     depends_on:
       - traefik
     networks:
-      - doclib_network
+      - veriq_network
 
   notification:
     profiles: ["optional"]
@@ -179,7 +181,7 @@ services:
     build:
       context: ./backend
       dockerfile: ./notification/Dockerfile
-    container_name: doclib_notification
+    container_name: veriq_notification
     restart: always
     ports:
       - 8004:8000
@@ -198,7 +200,7 @@ services:
       - ./backend/notification/src:/app/src
       - ./backend/logs/notification:/app/logs
     networks:
-      - doclib_network
+      - veriq_network
 
   ai:
     healthcheck:
@@ -210,7 +212,7 @@ services:
     build:
       context: ./backend
       dockerfile: ./ai/Dockerfile
-    container_name: doclib_ai
+    container_name: veriq_ai
     restart: always
     ports:
       - 8015:8000
@@ -251,7 +253,7 @@ services:
       LANGSMITH_TRACING: ${LANGSMITH_TRACING:-false}
       LANGSMITH_ENDPOINT: ${LANGSMITH_ENDPOINT:-https://api.smith.langchain.com}
       LANGSMITH_API_KEY: ${LANGSMITH_API_KEY:-}
-      LANGSMITH_PROJECT: ${LANGSMITH_PROJECT:-DocLib}
+      LANGSMITH_PROJECT: ${LANGSMITH_PROJECT:-Veriq}
     depends_on:
       mongodb:
         condition: service_started
@@ -270,14 +272,14 @@ services:
       - ./backend/ai/tests:/app/tests
       - hf_cache:/home/appuser/.cache/huggingface
     networks:
-      - doclib_network
+      - veriq_network
 
   qa:
     healthcheck: *app-healthcheck
     build:
       context: ./backend
       dockerfile: ./qa/Dockerfile
-    container_name: doclib_qa
+    container_name: veriq_qa
     restart: always
     ports:
       - 8017:8000
@@ -295,22 +297,24 @@ services:
       QDRANT_URL: http://qdrant:6333
       AI_URL: http://ai:8000
       CONTENT_URL: http://content:8000
+      CLOUD_URL: http://cloud:8000
     depends_on:
       - mongodb
       - rag
       - ai
       - content
+      - cloud
       - worker
     volumes:
       - ./backend/qa/src:/app/src
       - ./backend/qa/tests:/app/tests
     networks:
-      - doclib_network
+      - veriq_network
 
   ollama:
     profiles: ["optional"]
     image: ollama/ollama@sha256:b88c73ace3e115f8ec53dc8761ae1c0aabfa675406e3681786b98757ce050f42
-    container_name: doclib_ollama
+    container_name: veriq_ollama
     restart: unless-stopped
     ports:
       - 127.0.0.1:11434:11434
@@ -329,7 +333,7 @@ services:
       timeout: 20s
       retries: 12
     networks:
-      - doclib_network
+      - veriq_network
 
   ollama_models:
     profiles: ["optional"]
@@ -346,10 +350,10 @@ services:
       ollama:
         condition: service_healthy
     networks:
-      - doclib_network
+      - veriq_network
   qdrant:
     image: qdrant/qdrant:v1.18.2@sha256:75eab8c4ba42096724fdcfde8b4de0b5713d529dde32f285a1f86fdcb2c9e50c
-    container_name: doclib_qdrant
+    container_name: veriq_qdrant
     restart: always
     ports:
       - 6333:6333
@@ -357,11 +361,11 @@ services:
     volumes:
       - qdrant_data:/qdrant/storage
     networks:
-      - doclib_network
+      - veriq_network
 
   prometheus:
     image: prom/prometheus:v3.13.0@sha256:c6b27ea434f8389bfe233fbc7be381cf50587c286e871bc842008f5a1b1908a7
-    container_name: doclib_prometheus
+    container_name: veriq_prometheus
     restart: always
     ports:
       - 127.0.0.1:9090:9090
@@ -369,7 +373,7 @@ services:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     networks:
-      - doclib_network
+      - veriq_network
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:9090/-/healthy"]
       interval: 30s
@@ -378,7 +382,7 @@ services:
 
   grafana:
     image: grafana/grafana:13.1.0@sha256:121a7a9ece6dc10b969f1f96eed64b4f07dfac0d0b8abc070f7cb83bbde86f63
-    container_name: doclib_grafana
+    container_name: veriq_grafana
     restart: always
     ports:
       - 127.0.0.1:3001:3000
@@ -396,7 +400,7 @@ services:
     depends_on:
       - prometheus
     networks:
-      - doclib_network
+      - veriq_network
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3000/api/health"]
       interval: 30s
@@ -408,7 +412,7 @@ services:
     build:
       context: ./backend
       dockerfile: ./authentication/Dockerfile
-    container_name: doclib_authentication
+    container_name: veriq_authentication
     restart: always
     ports:
       - 8007:8000
@@ -444,13 +448,13 @@ services:
       - ./backend/authentication/tests:/app/tests
       - ./backend/logs/authentication:/app/logs
     networks:
-      - doclib_network
+      - veriq_network
   content:
     healthcheck: *app-healthcheck
     build:
       context: ./backend
       dockerfile: ./content/Dockerfile
-    container_name: doclib_content
+    container_name: veriq_content
     restart: always
     ports:
       - 8010:8000
@@ -474,14 +478,14 @@ services:
       - ./backend/content/src:/app/src
       - ./backend/logs/content:/app/logs
     networks:
-      - doclib_network
+      - veriq_network
 
   cloud:
     healthcheck: *app-healthcheck
     build:
       context: ./backend
       dockerfile: ./cloud/Dockerfile
-    container_name: doclib_cloud
+    container_name: veriq_cloud
     restart: always
     ports:
       - 8008:8000
@@ -504,14 +508,14 @@ services:
       - ./backend/cloud/src:/app/src
       - ./backend/logs/cloud:/app/logs
     networks:
-      - doclib_network
+      - veriq_network
 
   worker:
     healthcheck: *app-healthcheck
     build:
       context: ./backend
       dockerfile: ./worker/Dockerfile
-    container_name: doclib_worker
+    container_name: veriq_worker
     restart: always
     ports:
       - 8009:8000
@@ -536,14 +540,14 @@ services:
     volumes:
       - ./backend/worker/src:/app/src
     networks:
-      - doclib_network
+      - veriq_network
 
   rag:
     healthcheck: *app-healthcheck
     build:
       context: ./backend
       dockerfile: ./rag/Dockerfile
-    container_name: doclib_rag
+    container_name: veriq_rag
     restart: always
     ports:
       - 8014:8000
@@ -568,11 +572,12 @@ services:
       - ./backend/logs/rag:/app/logs
       - hf_cache:/home/appuser/.cache/huggingface
     networks:
-      - doclib_network
+      - veriq_network
 
 
 networks:
-  doclib_network:
+  veriq_network:
+    name: veriq_network
     driver: bridge
 
 volumes:
@@ -583,7 +588,15 @@ volumes:
   qdrant_data: null
   prometheus_data: null
   grafana_data: null
-  hf_cache: null
-  frontend_node_modules: null
-  frontend_next_cache: null
-  ollama_data: null
+  hf_cache:
+    name: ${VERIQ_HF_CACHE_VOLUME:?VERIQ_HF_CACHE_VOLUME is required}
+    external: true
+  frontend_node_modules:
+    name: ${VERIQ_FRONTEND_NODE_MODULES_VOLUME:?VERIQ_FRONTEND_NODE_MODULES_VOLUME is required}
+    external: true
+  frontend_next_cache:
+    name: ${VERIQ_FRONTEND_NEXT_CACHE_VOLUME:?VERIQ_FRONTEND_NEXT_CACHE_VOLUME is required}
+    external: true
+  ollama_data:
+    name: ${VERIQ_OLLAMA_VOLUME:?VERIQ_OLLAMA_VOLUME is required}
+    external: true

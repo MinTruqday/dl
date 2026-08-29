@@ -35,7 +35,7 @@ async def lifespan(app: FastAPI):
         await close_db()
 
 
-app = FastAPI(title="DocLib Worker", version=settings.VERSION, lifespan=lifespan)
+app = FastAPI(title="Veriq Worker", version=settings.VERSION, lifespan=lifespan)
 app.add_middleware(PrometheusMiddleware, service_name="worker")
 app.add_route("/metrics", metrics_endpoint("worker"))
 
@@ -97,7 +97,12 @@ async def enqueue_qa_job(payload: QAJobRequest):
     await record_job(
         job_id,
         {"status": "queued"},
-        {"kind": payload.event, "project_id": payload.project_id, "requester_id": payload.requester_id},
+        {
+            "kind": payload.event,
+            "project_id": payload.project_id,
+            "requester_id": payload.requester_id,
+            "request": task_payload,
+        },
     )
     try:
         await mq.publish("qa_job_queue", task_payload)
@@ -106,6 +111,31 @@ async def enqueue_qa_job(payload: QAJobRequest):
         await record_job(job_id, {"status": "failed", "error": "Queue unavailable"})
         raise HTTPException(status_code=503, detail="Worker queue is unavailable")
     return {"job_id": job_id, "status": "queued"}
+
+
+@app.post("/worker/internal/jobs/{job_id}/retry", dependencies=[Depends(require_internal_token)], status_code=202)
+async def retry_job(job_id: str):
+    if len(job_id) > 128:
+        raise HTTPException(status_code=422, detail="Invalid job identifier")
+    jobs = database.mongodb[settings.WORKER_DB_NAME].worker_jobs
+    job = await jobs.find_one({"_id": job_id})
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    if job.get("status") != "failed":
+        raise HTTPException(status_code=409, detail="Only failed jobs can be retried")
+    request = job.get("request")
+    if not isinstance(request, dict):
+        raise HTTPException(status_code=422, detail="Job payload is unavailable for retry")
+    retry_count = int(job.get("manual_retry_count", 0))
+    if retry_count >= settings.WORKER_MAX_RETRIES * 3:
+        raise HTTPException(status_code=409, detail="Manual retry limit reached")
+    await record_job(
+        job_id,
+        {"status": "queued", "manual_retry_count": retry_count + 1, "error": None, "error_code": None},
+    )
+    await mq.publish("qa_job_queue", request)
+    metrics_collector.change_queue_depth("qa_job_queue", 1)
+    return {"job_id": job_id, "status": "queued", "manual_retry_count": retry_count + 1}
 
 
 @app.get("/worker/internal/jobs/{job_id}", dependencies=[Depends(require_internal_token)])

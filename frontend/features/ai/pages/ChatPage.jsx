@@ -41,14 +41,6 @@ const toolLabels = {
   delete_document: "Xóa tài liệu",
   restore_document: "Khôi phục tài liệu",
   manage_user_instructions: "Cập nhật chỉ dẫn cá nhân",
-  create_question_draft: "Tạo câu hỏi nháp",
-  create_revision_draft: "Tạo đề xuất sửa bản nháp",
-  import_assessment: "Nhập đề đánh giá",
-  map_question_to_curriculum: "Gắn câu hỏi vào chương trình",
-  propose_question_revision: "Tạo đề xuất phiên bản câu hỏi",
-  publish_assessment_version: "Xuất bản phiên bản bài đánh giá",
-  record_teacher_difficulty_estimate: "Lưu ước lượng độ khó giáo viên",
-  run_calibration: "Chạy hiệu chỉnh tâm trắc học",
 };
 const toolDescriptions = {
   create_document: "Tạo một tài liệu mới trong không gian của bạn.",
@@ -60,19 +52,11 @@ const toolDescriptions = {
   delete_document: "Xóa tài liệu đã chọn.",
   restore_document: "Khôi phục tài liệu đã xóa.",
   manage_user_instructions: "Thay đổi chỉ dẫn phản hồi của trợ lý.",
-  create_question_draft: "Tạo QuestionDraft để giáo viên rà soát.",
-  create_revision_draft: "Tạo proposal sửa bản nháp và chờ giáo viên duyệt.",
-  import_assessment: "Phân tích đề có sẵn thành candidate và giữ bước xác nhận.",
-  map_question_to_curriculum: "Cập nhật curriculum links bằng optimistic concurrency.",
-  propose_question_revision: "Tạo RevisionProposal mới mà không sửa phiên bản production.",
-  publish_assessment_version: "Đóng băng AssessmentVersion sau phê duyệt trực tiếp của giáo viên.",
-  record_teacher_difficulty_estimate: "Lưu judgment độc lập của giáo viên vào lịch sử.",
-  run_calibration: "Tạo snapshot hiệu chỉnh deterministic từ response đủ điều kiện.",
 };
-function normalizeDoclibHref(href) {
+function normalizeVeriqHref(href) {
   if (!href) return "#";
   const uuid = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}";
-  const legacyHost = href.match(new RegExp(`^https?://docs\\.doclib\\.ai/(${uuid})/?$`));
+  const legacyHost = href.match(new RegExp(`^https?://docs\\.veriq\\.ai/(${uuid})/?$`));
   if (legacyHost) return `/tai-lieu/xem-truoc/${legacyHost[1]}`;
   const legacyPath = href.match(new RegExp(`^/tai-lieu/(${uuid})/?$`));
   if (legacyPath) return `/tai-lieu/xem-truoc/${legacyPath[1]}`;
@@ -90,7 +74,7 @@ function MessageBody({ content, collapsible = false }) {
           remarkPlugins={[remarkGfm]}
           components={{
             a: ({ href, children, ...props }) => {
-              const normalized = normalizeDoclibHref(href);
+              const normalized = normalizeVeriqHref(href);
               const external = /^https?:\/\//i.test(normalized);
               return (
                 <a

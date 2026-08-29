@@ -23,7 +23,7 @@ class VectorStore:
             limits=httpx.Limits(max_connections=100, max_keepalive_connections=20),
             timeout=60.0,
         )
-        self.collection_name = "doclib"
+        self.collection_name = "veriq"
 
     async def ensure_collection(self):
         try:
@@ -32,12 +32,17 @@ class VectorStore:
             if not exists:
                 from src.services.embedding import embedder
 
-                await self.client.create_collection(
-                    collection_name=self.collection_name,
-                    vectors_config=VectorParams(
-                        size=embedder._dimensions, distance=Distance.COSINE
-                    ),
-                )
+                try:
+                    await self.client.create_collection(
+                        collection_name=self.collection_name,
+                        vectors_config=VectorParams(
+                            size=embedder._dimensions, distance=Distance.COSINE
+                        ),
+                    )
+                except Exception as error:
+                    if "Alias with the same name already exists" not in str(error):
+                        raise
+                    logger.info("Using existing Qdrant alias for %s", self.collection_name)
             for field in [
                 "creator_id",
                 "owner_id",

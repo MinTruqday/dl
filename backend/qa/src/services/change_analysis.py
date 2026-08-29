@@ -2,6 +2,40 @@ import re
 from difflib import SequenceMatcher
 
 
+def semantic_candidate_score(requirement_text, test_text):
+    requirement_tokens = {
+        token
+        for token in re.findall(r"[\w-]{3,}", requirement_text.lower())
+        if token not in {"the", "and", "with", "when", "then", "must", "should"}
+    }
+    test_tokens = set(re.findall(r"[\w-]{3,}", test_text.lower()))
+    if not requirement_tokens or not test_tokens:
+        return 0.0
+    return len(requirement_tokens & test_tokens) / max(1, len(requirement_tokens))
+
+
+def technique_candidate(test_version, change_types):
+    text = " ".join(
+        [
+            str(test_version.get("type", "")),
+            str(test_version.get("title", "")),
+            str(test_version.get("plain_text_projection", "")),
+        ]
+    ).lower()
+    mapping = {
+        "MODIFIED_BOUNDARY": ("boundary", "range", "limit", "min", "max"),
+        "MODIFIED_PERMISSION": ("permission", "role", "admin", "tester", "viewer", "access"),
+        "MODIFIED_ERROR": ("error", "invalid", "exception", "reject"),
+        "ADDED_BEHAVIOR": ("happy_path", "functional", "integration", "workflow"),
+    }
+    matched = [
+        change_type
+        for change_type in change_types
+        if any(term in text for term in mapping.get(change_type, ()))
+    ]
+    return matched
+
+
 def semantic_changes(before, after):
     before_text = before.get("plain_text_projection", "")
     after_text = after.get("plain_text_projection", "")

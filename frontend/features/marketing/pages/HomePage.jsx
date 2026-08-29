@@ -41,7 +41,7 @@ export default function HomePage() {
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand text-[13px] font-bold text-white">
               Q
             </span>
-            <span>QA Intelligence</span>
+            <span>Veriq</span>
           </Link>
           <div className="flex items-center gap-2">
             <Link
@@ -63,10 +63,6 @@ export default function HomePage() {
           <h1 className="max-w-3xl text-[44px] font-semibold leading-[1.02] tracking-[-0.055em] sm:text-[58px] lg:text-[66px]">
             Quản lý kiểm thử phần mềm
           </h1>
-          <p className="mt-7 max-w-2xl text-[17px] leading-8 text-ink-muted md:text-[19px]">
-            Quản lý yêu cầu phiên bản ca kiểm thử truy vết thay đổi lần chạy và lỗi trong cùng một
-            hệ thống
-          </p>
           <div className="mt-9 flex flex-wrap gap-3">
             <Link href="/dang-ky" className="apple-button px-6">
               Tạo tài khoản
@@ -167,7 +163,7 @@ export default function HomePage() {
 
       <footer className="border-t border-brand/10 bg-white/60">
         <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-3 px-5 py-8 text-[13px] text-ink-muted sm:flex-row sm:items-center sm:justify-between md:px-8">
-          <span className="font-semibold text-ink">QA Intelligence</span>
+          <span className="font-semibold text-ink">Veriq</span>
           <div className="flex gap-5">
             <Link href="/dieu-khoan" className="hover:text-ink">
               Điều khoản

@@ -84,7 +84,7 @@ def test_chat_capabilities_are_available_without_subscription_tiers():
     from src.api.interaction.stream import chat_capabilities
     from src.core.infrastructure.configuration import settings
 
-    user = CurrentUser(_id="user", email="user@doclib.com")
+    user = CurrentUser(_id="user", email="user@veriq.com")
     capabilities = asyncio.run(chat_capabilities(user))
 
     assert capabilities["model"] == settings.LLM_MODEL
@@ -125,7 +125,7 @@ class FakeToolClient:
         message = type(
             "Message",
             (),
-            {"content": 'Tool selected {"name":"lookup","arguments":{"query":"DocLib"}}'},
+            {"content": 'Tool selected {"name":"lookup","arguments":{"query":"Veriq"}}'},
         )()
         choice = type("Choice", (), {"message": message})()
         return type("Response", (), {"choices": [choice]})()
@@ -245,11 +245,11 @@ def test_hf_tool_binding_parses_and_validates_tool_call():
     llm = HFInferenceChat(client=client, model="test")
     result = asyncio.run(
         llm.bind_tools([lookup]).ainvoke(
-            [HumanMessage(content="Find the DocLib document")]
+            [HumanMessage(content="Find the Veriq document")]
         )
     )
     assert result.tool_calls[0]["name"] == "lookup"
-    assert result.tool_calls[0]["args"] == {"query": "DocLib"}
+    assert result.tool_calls[0]["args"] == {"query": "Veriq"}
     assert "tools" not in client.calls[0]
 
 

@@ -24,7 +24,7 @@ export function useLogin() {
       !requested.startsWith("/dang-nhap")
         ? requested
         : "/qa/projects";
-    sessionStorage.removeItem("doclib_return_path");
+    sessionStorage.removeItem("veriq_return_path");
     router.replace(destination);
   };
   const passwordLogin = async (email, password) => {
@@ -92,7 +92,7 @@ export function useLogin() {
         !requested.startsWith("//") &&
         !requested.startsWith("/dang-nhap")
       ) {
-        sessionStorage.setItem("doclib_return_path", requested);
+        sessionStorage.setItem("veriq_return_path", requested);
       }
       window.location.assign(await getGoogleLoginUrlAPI());
     } catch (reason) {

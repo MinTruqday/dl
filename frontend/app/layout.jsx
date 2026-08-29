@@ -7,8 +7,7 @@ const manrope = Manrope({
   display: "swap",
 });
 export const metadata = {
-  title: "QA Intelligence",
-  description: "Nền tảng quản lý kiểm thử có truy vết và hỗ trợ AI",
+  title: "Veriq",
 };
 import { AuthProvider } from "@/features/authentication/contexts/AuthContext";
 import { ToastProvider } from "@/shared/contexts/ToastContext";

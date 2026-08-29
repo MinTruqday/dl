@@ -1,6 +1,151 @@
 "use client";
 import Link from "next/link";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { statusLabel } from "../lib/qa";
+
+export function useQaActionDialog() {
+  const titleId = useId();
+  const dialogRef = useRef(null);
+  const previousFocusRef = useRef(null);
+  const [state, setState] = useState(null);
+  const [values, setValues] = useState({});
+  const ask = useCallback(
+    (options) =>
+      new Promise((resolve) => {
+        const fields = options.fields || [];
+        setValues(
+          Object.fromEntries(fields.map((field) => [field.name, field.initialValue || ""])),
+        );
+        setState({ ...options, resolve });
+      }),
+    [],
+  );
+  useEffect(() => {
+    if (!state) return undefined;
+    previousFocusRef.current = document.activeElement;
+    const dialogElement = dialogRef.current;
+    const focusableSelector =
+      'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [href], [tabindex]:not([tabindex="-1"])';
+    const focusable = () => Array.from(dialogElement?.querySelectorAll(focusableSelector) || []);
+    const first = focusable()[0];
+    first?.focus();
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        state.resolve(null);
+        setState(null);
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const elements = focusable();
+      if (!elements.length) {
+        event.preventDefault();
+        dialogElement?.focus();
+        return;
+      }
+      const firstElement = elements[0];
+      const lastElement = elements[elements.length - 1];
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+      } else if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      previousFocusRef.current?.focus?.();
+    };
+  }, [state]);
+  const close = (result) => {
+    state?.resolve(result);
+    setState(null);
+  };
+  const dialog = state ? (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 p-4"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) close(null);
+      }}
+    >
+      <section
+        aria-labelledby={titleId}
+        aria-modal="true"
+        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-border bg-surface p-6 shadow-2xl"
+        ref={dialogRef}
+        role="dialog"
+        tabIndex={-1}
+      >
+        <h2 className="text-xl font-semibold" id={titleId}>
+          {state.title}
+        </h2>
+        {state.description && (
+          <p className="mt-2 text-[13px] leading-6 text-ink-muted">{state.description}</p>
+        )}
+        <form
+          className="mt-5 space-y-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            close(values);
+          }}
+        >
+          {(state.fields || []).map((field) => (
+            <label className="field-label block" key={field.name}>
+              {field.label}
+              {field.options ? (
+                <select
+                  autoFocus={field.autoFocus}
+                  className="apple-input mt-2"
+                  required={field.required}
+                  value={values[field.name] || ""}
+                  onChange={(event) =>
+                    setValues((current) => ({ ...current, [field.name]: event.target.value }))
+                  }
+                >
+                  {field.options.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              ) : field.multiline ? (
+                <textarea
+                  autoFocus={field.autoFocus}
+                  className="apple-input mt-2 min-h-28"
+                  required={field.required}
+                  value={values[field.name] || ""}
+                  onChange={(event) =>
+                    setValues((current) => ({ ...current, [field.name]: event.target.value }))
+                  }
+                />
+              ) : (
+                <input
+                  autoFocus={field.autoFocus}
+                  className="apple-input mt-2"
+                  required={field.required}
+                  value={values[field.name] || ""}
+                  onChange={(event) =>
+                    setValues((current) => ({ ...current, [field.name]: event.target.value }))
+                  }
+                />
+              )}
+            </label>
+          ))}
+          <div className="flex justify-end gap-2 pt-2">
+            <button className="secondary-button" type="button" onClick={() => close(null)}>
+              Hủy
+            </button>
+            <button className={state.danger ? "danger-button" : "apple-button"} type="submit">
+              {state.confirmLabel || "Xác nhận"}
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+  ) : null;
+  return { ask, dialog };
+}
 
 export function QaPage({ title, description, actions, children }) {
   return (
@@ -101,5 +246,39 @@ export function ProjectCrumb({ projectId, projectName }) {
     <Link className="text-[13px] font-semibold text-brand" href={`/qa/projects/${projectId}`}>
       {projectName || "Về dự án"}
     </Link>
+  );
+}
+
+export function Pagination({ value, onChange }) {
+  if (!value || value.total_pages <= 1) return null;
+  return (
+    <nav
+      aria-label="Phân trang"
+      className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-4"
+    >
+      <p className="text-[12px] text-ink-muted">
+        Trang {value.page} trên {value.total_pages} với {value.total} kết quả
+      </p>
+      <div className="flex gap-2">
+        <button
+          aria-label="Trang trước"
+          className="secondary-button"
+          disabled={value.page <= 1}
+          type="button"
+          onClick={() => onChange(value.page - 1)}
+        >
+          Trang trước
+        </button>
+        <button
+          aria-label="Trang sau"
+          className="secondary-button"
+          disabled={value.page >= value.total_pages}
+          type="button"
+          onClick={() => onChange(value.page + 1)}
+        >
+          Trang sau
+        </button>
+      </div>
+    </nav>
   );
 }

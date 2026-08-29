@@ -14,16 +14,60 @@ router = APIRouter(prefix="/api/qa", tags=["QA Analytics"])
 
 @router.get("/projects/{project_id}/dashboard")
 async def dashboard(project_id: str, user: CurrentUser = Depends(get_current_user)):
-    await get_project(project_id, user)
-    requirements = await database.value.requirements.count_documents({"project_id": project_id, "status": {"$ne": "ARCHIVED"}})
+    await get_project(project_id, user, "coverage.read")
+    requirements = await database.value.requirements.count_documents({"project_id": project_id, "status": "BASELINED"})
     active_tests = await database.value.test_cases.count_documents({"project_id": project_id, "status": "ACTIVE"})
     stale_tests = await database.value.test_cases.count_documents({"project_id": project_id, "status": "NEEDS_UPDATE"})
     pending_proposals = await database.value.maintenance_proposals.count_documents({"project_id": project_id, "status": "PENDING"})
     current_runs = await database.value.test_runs.count_documents({"project_id": project_id, "status": {"$in": ["READY", "IN_PROGRESS"]}})
     open_defects = await database.value.defects.count_documents({"project_id": project_id, "status": {"$nin": ["CLOSED", "REJECTED", "DUPLICATE"]}})
+    defect_severity_rows = await database.value.defects.aggregate(
+        [
+            {
+                "$match": {
+                    "project_id": project_id,
+                    "status": {"$nin": ["CLOSED", "REJECTED", "DUPLICATE"]},
+                }
+            },
+            {"$group": {"_id": "$severity", "count": {"$sum": 1}}},
+        ]
+    ).to_list(20)
+    open_defects_by_severity = {
+        severity: next(
+            (item["count"] for item in defect_severity_rows if item["_id"] == severity),
+            0,
+        )
+        for severity in ("blocker", "critical", "major", "minor", "trivial")
+    }
+    latest_run = await database.value.test_runs.find_one(
+        {"project_id": project_id}, sort=[("updated_at", -1)]
+    )
+    latest_run_summary = None
+    if latest_run:
+        result_rows = await database.value.test_results.aggregate(
+            [
+                {"$match": {"project_id": project_id, "test_run_id": latest_run["_id"]}},
+                {"$group": {"_id": "$status", "count": {"$sum": 1}}},
+            ]
+        ).to_list(20)
+        latest_run_summary = {
+            "_id": latest_run["_id"],
+            "name": latest_run["name"],
+            "status": latest_run["status"],
+            "environment": latest_run.get("environment"),
+            "build": latest_run.get("build"),
+            "result_counts": {item["_id"]: item["count"] for item in result_rows},
+            "updated_at": latest_run.get("updated_at"),
+        }
+    changes_waiting_impact = await database.value.requirement_change_sets.count_documents(
+        {"project_id": project_id, "status": {"$in": ["READY", "REVIEWED"]}}
+    )
+    changes_waiting_impact += await database.value.impact_analyses.count_documents(
+        {"project_id": project_id, "status": "REVIEW_READY"}
+    )
     coverage = await coverage_snapshot(project_id)
     recent_changes = await database.value.requirement_change_sets.find({"project_id": project_id}).sort("created_at", -1).to_list(10)
-    return envelope({"requirements": requirements, "active_tests": active_tests, "tests_needing_update": stale_tests, "pending_proposals": pending_proposals, "current_runs": current_runs, "open_defects": open_defects, **coverage, "recent_changes": recent_changes})
+    return envelope({"requirements": requirements, "active_tests": active_tests, "tests_needing_update": stale_tests, "pending_proposals": pending_proposals, "current_runs": current_runs, "open_defects": open_defects, "open_defects_by_severity": open_defects_by_severity, "latest_run": latest_run_summary, "changes_waiting_impact": changes_waiting_impact, **coverage, "recent_changes": recent_changes})
 
 
 @router.post("/projects/{project_id}/knowledge/search")
@@ -32,7 +76,7 @@ async def search_knowledge(
     payload: SearchInput,
     user: CurrentUser = Depends(get_current_user),
 ):
-    await get_project(project_id, user)
+    await get_project(project_id, user, "knowledge.read")
     dense_result = await search_project_with_status(project_id, payload.query, payload.artifact_types, payload.limit)
     dense = dense_result["items"]
     pattern = re.escape(payload.query)
@@ -70,13 +114,13 @@ async def project_audit(
     limit: int = Query(default=100, ge=1, le=500),
     user: CurrentUser = Depends(get_current_user),
 ):
-    await get_project(project_id, user)
+    await get_project(project_id, user, "project.audit.read")
     return envelope(await database.value.audit_events.find({"project_id": project_id}).sort("created_at", -1).to_list(limit))
 
 
 @router.get("/projects/{project_id}/maintenance-analytics")
 async def maintenance_analytics(project_id: str, user: CurrentUser = Depends(get_current_user)):
-    await get_project(project_id, user)
+    await get_project(project_id, user, "coverage.read")
     pipeline = [
         {"$match": {"project_id": project_id}},
         {"$group": {"_id": "$status", "count": {"$sum": 1}}},
@@ -90,9 +134,9 @@ async def maintenance_analytics(project_id: str, user: CurrentUser = Depends(get
 
 
 async def coverage_snapshot(project_id):
-    requirements = await database.value.requirements.find({"project_id": project_id, "status": {"$ne": "ARCHIVED"}}).to_list(10000)
+    requirements = await database.value.requirements.find({"project_id": project_id, "status": "BASELINED"}).to_list(10000)
     requirement_versions = {item["current_version_id"] for item in requirements}
-    criteria = await database.value.acceptance_criteria.find({"project_id": project_id, "status": {"$ne": "obsolete"}}).to_list(20000)
+    criteria = await database.value.acceptance_criteria.find({"project_id": project_id, "requirement_version_id": {"$in": list(requirement_versions)}, "status": {"$ne": "obsolete"}}).to_list(20000)
     links = await database.value.trace_links.find({"project_id": project_id, "status": "CONFIRMED"}).to_list(50000)
     covered_requirements = {item["source_id"] for item in links if item["source_type"] == "requirement_version"}
     covered_criteria = {item["source_id"] for item in links if item["source_type"] == "acceptance_criterion"}

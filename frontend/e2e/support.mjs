@@ -3,17 +3,17 @@ import { expect } from "@playwright/test";
 const tokens = new Map();
 
 export const credentials = {
-  teacher: {
-    email: "e2e-teacher@example.com",
-    password: "DocLib-E2E-Password-2026",
+  lead: {
+    email: "e2e-qa-lead@example.com",
+    password: "Veriq-E2E-Password-2026",
   },
-  student: {
-    email: "e2e-student@example.com",
-    password: "DocLib-E2E-Password-2026",
+  viewer: {
+    email: "e2e-viewer@example.com",
+    password: "Veriq-E2E-Password-2026",
   },
   admin: {
     email: "e2e-admin@example.com",
-    password: "DocLib-E2E-Password-2026",
+    password: "Veriq-E2E-Password-2026",
   },
 };
 
@@ -61,9 +61,9 @@ export async function authenticatePage(page, request, role) {
   const token = await loginByApi(request, role);
   await page.context().addCookies([
     { name: "token", value: token, url: "http://localhost:3000", sameSite: "Lax" },
-    { name: "role", value: role === "teacher" ? "author" : role, url: "http://localhost:3000" },
+    { name: "role", value: role, url: "http://localhost:3000" },
   ]);
-  await page.addInitScript((value) => localStorage.setItem("doclib_token", value), token);
+  await page.addInitScript((value) => localStorage.setItem("veriq_token", value), token);
   return token;
 }
 

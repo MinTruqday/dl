@@ -11,7 +11,7 @@ from src.tools.document import (
 from src.tools.mindmap import generate_mindmap
 from src.tools.instructions import manage_user_instructions
 from src.workflow.reduction import agent_summarize_long_document
-from src.tools.qa import (
+from src.tools.testing import (
     apply_test_case_revision,
     approve_test_case_version,
     baseline_requirement_version,

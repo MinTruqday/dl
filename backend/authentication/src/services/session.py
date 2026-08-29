@@ -24,6 +24,10 @@ class SessionService:
                 "sub": user_doc["email"],
                 "sid": session_id,
                 "role": user_doc.get("role", "reader"),
+                "system_role": user_doc.get(
+                    "system_role",
+                    "ADMIN" if user_doc.get("role") == "admin" else "USER",
+                ),
                 "uid": str(user_doc["_id"]),
                 "permissions": user_doc.get("permissions", []),
                 "full_name": user_doc.get("full_name", ""),
@@ -56,6 +60,7 @@ class SessionService:
             "slug": user_in.slug.lower(),
             "full_name": user_in.full_name,
             "role": "reader",
+            "system_role": "USER",
             "permissions": [],
             "is_active": True,
             "password_hash": get_password_hash(user_in.password),
@@ -78,6 +83,7 @@ class SessionService:
             "full_name": user_in.full_name,
             "slug": user_in.slug.lower(),
             "role": "reader",
+            "system_role": "USER",
             "id": user_id,
             "created_at": created_at,
         }

@@ -15,15 +15,15 @@ test("trang chủ giới thiệu sản phẩm rõ ràng và không tràn trên t
   await expectRuntimeClean(errors);
 });
 
-test("đăng nhập báo đúng lỗi và đăng nhập giáo viên thành công", async ({ page }) => {
+test("đăng nhập báo đúng lỗi và đăng nhập người dùng thành công", async ({ page }) => {
   const errors = observeRuntime(page);
   await page.goto("/dang-nhap");
   await expect(page.getByRole("heading", { name: "Đăng nhập" })).toBeVisible();
-  await page.getByLabel("Email").fill(credentials.teacher.email);
+  await page.getByLabel("Email").fill(credentials.lead.email);
   await page.locator("#login-password").fill("MatKhauKhongDung-2026");
   await page.getByRole("button", { name: "Đăng nhập" }).click();
   await expect(page.getByText("Không thể đăng nhập")).toBeVisible();
-  await page.locator("#login-password").fill(credentials.teacher.password);
+  await page.locator("#login-password").fill(credentials.lead.password);
   await page.getByRole("button", { name: "Đăng nhập" }).click();
   await expect(page).toHaveURL(/\/qa\/projects$/);
   await expect(page.getByRole("heading", { name: "Dự án kiểm thử" })).toBeVisible();

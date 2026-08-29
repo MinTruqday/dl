@@ -29,7 +29,11 @@ async def process_job(
     allowed = {"document.parse.requested", "requirement.extract.requested", "requirement.semantic_diff.requested", "test.generate.requested", "duplicate.scan.requested", "impact.analysis.requested", "rag.index.requested"}
     if event not in allowed:
         raise HTTPException(status_code=422, detail={"code": "UNSUPPORTED_JOB_EVENT"})
-    user = CurrentUser(_id=x_requester_id, email=x_requester_email or "worker@internal", role="author")
+    user = CurrentUser(
+        _id=x_requester_id,
+        email=x_requester_email or "worker@internal",
+        system_role="USER",
+    )
     payload = body.get("payload") if isinstance(body.get("payload"), dict) else {}
     result = await execute(event, body, payload, user)
     completed = not (isinstance(result, dict) and result.get("indexed") is False)

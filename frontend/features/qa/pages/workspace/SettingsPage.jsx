@@ -1,21 +1,40 @@
 "use client";
 import { useEffect, useState } from "react";
 import DataTable from "../../components/DataTable";
-import { ErrorState, Panel, ProjectCrumb, QaPage } from "../../components/QaUi";
+import {
+  ErrorState,
+  Panel,
+  ProjectCrumb,
+  QaPage,
+  useQaActionDialog,
+} from "../../components/QaUi";
 import { qaApi } from "../../services/qa.service";
 import { formatDate, messageOf } from "../../lib/qa";
 
 export default function SettingsPage({ project, onProjectChange }) {
+  const { ask, dialog } = useQaActionDialog();
   const [audit, setAudit] = useState([]);
+  const [members, setMembers] = useState([]);
   const [analytics, setAnalytics] = useState(null);
   const [name, setName] = useState(project.name);
   const [description, setDescription] = useState(project.description || "");
+  const [settings, setSettings] = useState({
+    requirement_approval_required: project.settings?.requirement_approval_required ?? true,
+    testcase_approval_required: project.settings?.testcase_approval_required ?? true,
+    ai_auto_draft: project.settings?.ai_auto_draft ?? true,
+    impact_confidence_threshold: project.settings?.impact_confidence_threshold ?? 0.75,
+  });
   const [error, setError] = useState("");
   useEffect(() => {
-    Promise.all([qaApi.audit(project._id), qaApi.maintenanceAnalytics(project._id)])
-      .then(([events, value]) => {
+    Promise.all([
+      qaApi.audit(project._id),
+      qaApi.maintenanceAnalytics(project._id),
+      qaApi.listMembers(project._id),
+    ])
+      .then(([events, value, memberValues]) => {
         setAudit(events);
         setAnalytics(value);
+        setMembers(memberValues);
       })
       .catch((reason) => setError(messageOf(reason)));
   }, [project._id]);
@@ -37,6 +56,12 @@ export default function SettingsPage({ project, onProjectChange }) {
                   expected_revision: project.revision,
                   name,
                   description,
+                  settings: {
+                    ...(project.settings || {}),
+                    ...settings,
+                    requirement_approval_required: true,
+                    testcase_approval_required: true,
+                  },
                 });
                 await onProjectChange();
               } catch (reason) {
@@ -52,6 +77,37 @@ export default function SettingsPage({ project, onProjectChange }) {
                 onChange={(event) => setName(event.target.value)}
               />
             </label>
+            <div className="space-y-3 rounded-xl border border-border p-4">
+              <p className="text-[13px] font-semibold">Phê duyệt yêu cầu luôn bắt buộc</p>
+              <p className="text-[13px] font-semibold">Phê duyệt ca kiểm thử luôn bắt buộc</p>
+              <label className="flex items-center gap-3 text-[13px]">
+                <input
+                  type="checkbox"
+                  checked={settings.ai_auto_draft}
+                  onChange={(event) =>
+                    setSettings({ ...settings, ai_auto_draft: event.target.checked })
+                  }
+                />
+                Cho phép AI tạo bản nháp
+              </label>
+              <label className="field-label">
+                Ngưỡng tin cậy phân tích ảnh hưởng
+                <input
+                  className="apple-input mt-2"
+                  type="number"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={settings.impact_confidence_threshold}
+                  onChange={(event) =>
+                    setSettings({
+                      ...settings,
+                      impact_confidence_threshold: Number(event.target.value),
+                    })
+                  }
+                />
+              </label>
+            </div>
             <label className="field-label">
               Mô tả
               <textarea
@@ -63,7 +119,163 @@ export default function SettingsPage({ project, onProjectChange }) {
             <button className="apple-button" type="submit">
               Lưu với phiên bản {project.revision}
             </button>
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={async () => {
+                const answer = await ask({
+                  title: "Lưu trữ dự án",
+                  description: `${project.key} sẽ ngừng nhận thay đổi mới nhưng vẫn giữ lịch sử và bằng chứng`,
+                  confirmLabel: "Lưu trữ",
+                  danger: true,
+                  fields: [
+                    {
+                      name: "reason",
+                      label: "Lý do lưu trữ",
+                      initialValue: "Dự án đã kết thúc vòng đời hoạt động",
+                      required: true,
+                      multiline: true,
+                      autoFocus: true,
+                    },
+                  ],
+                });
+                if (!answer) return;
+                try {
+                  await qaApi.archiveProject(project._id, {
+                    expected_revision: project.revision,
+                    reason: answer.reason,
+                  });
+                  window.location.assign("/qa/projects");
+                } catch (value) {
+                  setError(messageOf(value));
+                }
+              }}
+            >
+              Lưu trữ dự án
+            </button>
           </form>
+        </Panel>
+        <Panel title="Thành viên dự án">
+          <div className="space-y-3 p-5">
+            <form
+              className="grid gap-2 sm:grid-cols-[1fr_150px_auto]"
+              onSubmit={async (event) => {
+                event.preventDefault();
+                const value = new FormData(event.currentTarget);
+                try {
+                  await qaApi.addMember(project._id, {
+                    user_id: value.get("user_id"),
+                    project_role: value.get("project_role"),
+                  });
+                  event.currentTarget.reset();
+                  setMembers(await qaApi.listMembers(project._id));
+                } catch (reason) {
+                  setError(messageOf(reason));
+                }
+              }}
+            >
+              <input
+                className="apple-input"
+                name="user_id"
+                required
+                placeholder="Mã người dùng"
+                aria-label="Mã người dùng"
+              />
+              <select className="apple-input" name="project_role" aria-label="Vai trò dự án">
+                <option value="TESTER">TESTER</option>
+                <option value="BA">BA</option>
+                <option value="DEVELOPER">DEVELOPER</option>
+                <option value="VIEWER">VIEWER</option>
+                <option value="QA_LEAD">QA_LEAD</option>
+              </select>
+              <button className="secondary-button" type="submit">
+                Thêm
+              </button>
+            </form>
+            <DataTable
+              items={members}
+              empty="Chưa có thành viên"
+              columns={[
+                { key: "user_id", label: "Người dùng" },
+                {
+                  key: "project_role",
+                  label: "Vai trò",
+                  render: (item) => (
+                    <select
+                      aria-label={`Vai trò ${item.user_id}`}
+                      className="apple-input"
+                      value={item.project_role}
+                      onChange={async (event) => {
+                        try {
+                          await qaApi.updateMember(project._id, item.user_id, {
+                            expected_revision: item.membership_revision,
+                            project_role: event.target.value,
+                          });
+                          setMembers(await qaApi.listMembers(project._id));
+                        } catch (reason) {
+                          setError(messageOf(reason));
+                        }
+                      }}
+                    >
+                      {["QA_LEAD", "TESTER", "BA", "DEVELOPER", "VIEWER"].map((role) => (
+                        <option key={role} value={role}>
+                          {role}
+                        </option>
+                      ))}
+                    </select>
+                  ),
+                },
+                { key: "status", label: "Trạng thái" },
+                { key: "membership_revision", label: "Revision" },
+                {
+                  key: "actions",
+                  label: "Thao tác",
+                  render: (item) => (
+                    <span className="flex flex-wrap gap-2">
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            await qaApi.updateMember(project._id, item.user_id, {
+                              expected_revision: item.membership_revision,
+                              status: item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
+                            });
+                            setMembers(await qaApi.listMembers(project._id));
+                          } catch (reason) {
+                            setError(messageOf(reason));
+                          }
+                        }}
+                      >
+                        {item.status === "ACTIVE" ? "Vô hiệu hóa" : "Kích hoạt"}
+                      </button>
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={async () => {
+                          const answer = await ask({
+                            title: "Xóa thành viên khỏi dự án",
+                            description: `${item.user_id} sẽ mất toàn bộ quyền truy cập dự án này`,
+                            confirmLabel: "Xóa thành viên",
+                            danger: true,
+                          });
+                          if (!answer) return;
+                          try {
+                            await qaApi.removeMember(project._id, item.user_id);
+                            setMembers(await qaApi.listMembers(project._id));
+                          } catch (reason) {
+                            setError(messageOf(reason));
+                          }
+                        }}
+                      >
+                        Xóa
+                      </button>
+                    </span>
+                  ),
+                },
+              ]}
+            />
+          </div>
         </Panel>
         <Panel title="Phân tích bảo trì">
           <div className="grid grid-cols-2 gap-4 p-5">
@@ -103,6 +315,7 @@ export default function SettingsPage({ project, onProjectChange }) {
           ]}
         />
       </Panel>
+      {dialog}
     </QaPage>
   );
 }

@@ -4,7 +4,7 @@ const Theme = createContext(undefined);
 export function ThemeProvider({ children }) {
   const [theme, setThemeState] = useState("light");
   useEffect(() => {
-    const saved = localStorage.getItem("doclib_theme");
+    const saved = localStorage.getItem("veriq_theme");
     if (saved && (saved === "light" || saved === "dark" || saved === "gray")) {
       setThemeState(saved);
       document.documentElement.classList.add(saved);
@@ -19,7 +19,7 @@ export function ThemeProvider({ children }) {
     document.documentElement.classList.remove(theme);
     setThemeState(newTheme);
     document.documentElement.classList.add(newTheme);
-    localStorage.setItem("doclib_theme", newTheme);
+    localStorage.setItem("veriq_theme", newTheme);
   };
   return <Theme.Provider value={{ theme, setTheme }}>{children}</Theme.Provider>;
 }

@@ -18,9 +18,8 @@ export default function DashboardPage({ project }) {
   const [value, setValue] = useState(null);
   const [error, setError] = useState("");
   useEffect(() => {
-    qaApi
-      .dashboard(project._id)
-      .then(setValue)
+    Promise.all([qaApi.dashboard(project._id), qaApi.coverage(project._id)])
+      .then(([dashboard, coverage]) => setValue({ ...dashboard, ...coverage }))
       .catch((reason) => setError(messageOf(reason)));
   }, [project._id]);
   const base = `/qa/projects/${project._id}`;
@@ -45,8 +44,11 @@ export default function DashboardPage({ project }) {
               label="Độ phủ tiêu chí chấp nhận"
               value={`${value.acceptance_criterion_coverage}%`}
             />
+            <Metric label="Độ phủ còn hiệu lực" value={`${value.fresh_coverage}%`} />
+            <Metric label="Độ phủ thực thi" value={`${value.execution_coverage}%`} />
             <Metric label="Đề xuất chờ duyệt" value={value.pending_proposals} />
             <Metric label="Lần chạy hiện tại" value={value.current_runs} />
+            <Metric label="Thay đổi chờ rà soát" value={value.changes_waiting_impact} />
           </div>
           <div className="grid gap-4 lg:grid-cols-3">
             <Panel title="Luồng công việc" className="lg:col-span-2">
@@ -56,8 +58,10 @@ export default function DashboardPage({ project }) {
                   ["test-design", "Kịch bản và ca kiểm thử"],
                   ["traceability", "Truy vết và độ phủ"],
                   ["changes", "Ảnh hưởng thay đổi và đề xuất"],
+                  ["ai-review", "Hàng đợi rà soát AI"],
                   ["execution", "Kế hoạch và lần chạy"],
                   ["defects", "Vòng đời lỗi"],
+                  ["reports", "Báo cáo chất lượng"],
                 ].map(([href, label]) => (
                   <Link
                     className="rounded-control border border-border p-4 text-[13px] font-semibold hover:border-brand hover:text-brand"
@@ -78,6 +82,45 @@ export default function DashboardPage({ project }) {
                   Mở kho tri thức
                 </Link>
               </div>
+            </Panel>
+          </div>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Panel title="Lỗi đang mở theo mức độ">
+              <div className="grid grid-cols-2 gap-3 p-5 sm:grid-cols-5">
+                {Object.entries(value.open_defects_by_severity || {}).map(([severity, count]) => (
+                  <div className="rounded-xl border border-border p-3" key={severity}>
+                    <p className="text-[11px] text-ink-muted">{severity}</p>
+                    <p className="mt-1 text-xl font-semibold">{count}</p>
+                  </div>
+                ))}
+              </div>
+            </Panel>
+            <Panel title="Lần chạy mới nhất">
+              {value.latest_run ? (
+                <div className="space-y-3 p-5">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <Link
+                      className="font-semibold text-brand"
+                      href={`${base}/execution/${value.latest_run._id}`}
+                    >
+                      {value.latest_run.name}
+                    </Link>
+                    <StatusPill value={value.latest_run.status} />
+                  </div>
+                  <p className="text-[12px] text-ink-muted">
+                    Build {value.latest_run.build || "Chưa đặt"} tại {value.latest_run.environment || "Chưa đặt"}
+                  </p>
+                  <div className="flex flex-wrap gap-3 text-[12px]">
+                    {Object.entries(value.latest_run.result_counts || {}).map(([status, count]) => (
+                      <span className="rounded-full border border-border px-3 py-1" key={status}>
+                        {status} {count}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="p-5 text-[13px] text-ink-muted">Chưa có lần chạy</p>
+              )}
             </Panel>
           </div>
           <Panel title="Thay đổi gần đây">

@@ -108,6 +108,7 @@ class GoogleService:
                 "full_name": google_user.get("name") or email.split("@")[0],
                 "slug": slug,
                 "role": "reader",
+                "system_role": "USER",
                 "permissions": [],
                 "is_active": True,
                 "password_hash": None,

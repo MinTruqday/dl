@@ -9,14 +9,15 @@ services:
     environment:
       E2E_BASE_URL: http://localhost:3000
       CI: "true"
-      PLAYWRIGHT_OUTPUT_DIR: /tmp/doclib-playwright-results
+      PLAYWRIGHT_OUTPUT_DIR: /tmp/veriq-playwright-results
     volumes:
       - ./frontend:/work
       - frontend_node_modules:/work/node_modules
 
   model_stub:
-    image: doclib-ai
-    container_name: doclib_model_stub
+    image: veriq-ai
+    pull_policy: never
+    container_name: veriq_model_stub
     command: ["python", "/test-support/model_provider_stub.py"]
     restart: "no"
     volumes:
@@ -27,7 +28,7 @@ services:
       timeout: 5s
       retries: 20
     networks:
-      - doclib_network
+      - veriq_network
 
   ai:
     environment:

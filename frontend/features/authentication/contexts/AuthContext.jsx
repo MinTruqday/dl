@@ -50,7 +50,7 @@ export function AuthProvider({ children }) {
     void fetchUser();
   }, [fetchUser]);
   const loginState = async (token) => {
-    localStorage.setItem("doclib_token", token);
+    localStorage.setItem("veriq_token", token);
     document.cookie = `token=${token}; path=/; max-age=604800; SameSite=Lax`;
     await fetchUser();
   };

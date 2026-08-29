@@ -1,6 +1,6 @@
 """
 <module_purpose>
-DocLib Orchestration Graph configuring the state machine nodes, edges, and conditions for the LangGraph workflow.
+Veriq Orchestration Graph configuring the state machine nodes, edges, and conditions for the LangGraph workflow.
 </module_purpose>
 <contract>
 - Precondition: All necessary tools and models properly initialized.

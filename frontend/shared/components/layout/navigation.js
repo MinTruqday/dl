@@ -1,6 +1,8 @@
 import {
   Activity,
+  BrainCircuit,
   Bug,
+  BarChart3,
   FileCheck2,
   FolderKanban,
   GitCompareArrows,
@@ -48,7 +50,19 @@ export function navigationGroupsFor(pathname) {
           href: `${root}/execution`,
           icon: PlayCircle,
         },
+        {
+          id: "ai-review",
+          label: "Rà soát đề xuất AI",
+          href: `${root}/ai-review`,
+          icon: BrainCircuit,
+        },
         { id: "defects", label: "Lỗi", href: `${root}/defects`, icon: Bug },
+        {
+          id: "reports",
+          label: "Báo cáo",
+          href: `${root}/reports`,
+          icon: BarChart3,
+        },
         { id: "knowledge", label: "Kho tri thức", href: `${root}/knowledge`, icon: Search },
         {
           id: "project-settings",
@@ -63,6 +77,7 @@ export function navigationGroupsFor(pathname) {
       label: "Không gian làm việc",
       items: [
         { id: "projects", label: "Dự án", href: "/qa/projects", icon: FolderKanban },
+        { id: "operations", label: "Vận hành nền tảng", href: "/qa/operations", icon: Activity, requireAdmin: true },
         ...projectItems,
       ],
     },
@@ -83,6 +98,11 @@ export function navigationGroupsFor(pathname) {
 
 export function availableNavigation(groups, user) {
   return groups
-    .map((group) => ({ ...group, items: group.items.filter((item) => !item.requireAuth || user) }))
+    .map((group) => ({
+      ...group,
+      items: group.items.filter(
+        (item) => (!item.requireAuth || user) && (!item.requireAdmin || user?.system_role === "ADMIN"),
+      ),
+    }))
     .filter((group) => group.items.length > 0);
 }

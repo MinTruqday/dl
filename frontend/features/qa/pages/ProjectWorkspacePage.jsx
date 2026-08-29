@@ -7,6 +7,8 @@ import DefectsPage from "./workspace/DefectsPage";
 import ExecutionPage from "./workspace/ExecutionPage";
 import KnowledgePage from "./workspace/KnowledgePage";
 import RequirementsPage from "./workspace/RequirementsPage";
+import ReportsPage from "./workspace/ReportsPage";
+import ReviewQueuePage from "./workspace/ReviewQueuePage";
 import SettingsPage from "./workspace/SettingsPage";
 import TestDesignPage from "./workspace/TestDesignPage";
 import TraceabilityPage from "./workspace/TraceabilityPage";
@@ -35,9 +37,11 @@ export default function ProjectWorkspacePage({ projectId, section }) {
   if (area === "test-design") return <TestDesignPage {...props} />;
   if (area === "traceability") return <TraceabilityPage {...props} />;
   if (area === "changes") return <ChangesPage {...props} />;
+  if (area === "ai-review") return <ReviewQueuePage {...props} />;
   if (area === "execution") return <ExecutionPage {...props} />;
   if (area === "defects") return <DefectsPage {...props} />;
   if (area === "knowledge") return <KnowledgePage {...props} />;
+  if (area === "reports") return <ReportsPage {...props} />;
   if (area === "settings") return <SettingsPage {...props} onProjectChange={state.reload} />;
   return <DashboardPage {...props} />;
 }

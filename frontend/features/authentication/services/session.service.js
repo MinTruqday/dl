@@ -7,13 +7,13 @@ import {
 export { API_URL, getAuthHeaders, getToken };
 export function setToken(token) {
   if (typeof window !== "undefined") {
-    localStorage.setItem("doclib_token", token);
+    localStorage.setItem("veriq_token", token);
     userMePromise = null;
   }
 }
 export function removeToken() {
   if (typeof window !== "undefined") {
-    localStorage.removeItem("doclib_token");
+    localStorage.removeItem("veriq_token");
     userMePromise = null;
   }
 }

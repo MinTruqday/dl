@@ -1,36 +1,61 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import DataTable from "../../components/DataTable";
-import { ErrorState, Panel, ProjectCrumb, QaPage, StatusPill } from "../../components/QaUi";
+import { uploadAssetAPI } from "@/features/cloud/services/upload.service";
+import {
+  ErrorState,
+  Pagination,
+  Panel,
+  ProjectCrumb,
+  QaPage,
+  StatusPill,
+  useQaActionDialog,
+} from "../../components/QaUi";
 import { qaApi } from "../../services/qa.service";
-import { messageOf, valueLabel } from "../../lib/qa";
+import { docText, messageOf, textDoc, valueLabel } from "../../lib/qa";
 
 export default function ExecutionPage({ project, section }) {
+  const { ask, dialog } = useQaActionDialog();
   const runId = section[0] || "";
   const [plans, setPlans] = useState([]);
   const [suites, setSuites] = useState([]);
   const [runs, setRuns] = useState([]);
+  const [runPage, setRunPage] = useState(1);
+  const [runPageInfo, setRunPageInfo] = useState(null);
+  const [runFilters, setRunFilters] = useState({ name: "", status: "", environment: "", sort: "-updated_at" });
   const [tests, setTests] = useState([]);
   const [run, setRun] = useState(null);
   const [error, setError] = useState("");
-  const [name, setName] = useState("");
+  const [runForm, setRunForm] = useState({
+    name: "",
+    release: "",
+    build: "",
+    environment: "staging",
+    testPlanId: "",
+    suiteIds: [],
+    versionIds: [],
+  });
+  const [actuals, setActuals] = useState({});
+  const [stepResults, setStepResults] = useState({});
+  const [attachments, setAttachments] = useState({});
   const load = useCallback(async () => {
     try {
       const [planValues, suiteValues, runValues, testValues] = await Promise.all([
         qaApi.listPlans(project._id),
         qaApi.listSuites(project._id),
-        qaApi.listRuns(project._id),
-        qaApi.listTestCases(project._id),
+        qaApi.listRunPage(project._id, { ...runFilters, page: runPage, page_size: 50 }),
+        qaApi.listTestCases(project._id, { page_size: 500 }),
       ]);
       setPlans(planValues);
       setSuites(suiteValues);
-      setRuns(runValues);
+      setRuns(runValues.items);
+      setRunPageInfo(runValues);
       setTests(testValues);
       if (runId) setRun(await qaApi.getRun(runId));
     } catch (reason) {
       setError(messageOf(reason));
     }
-  }, [project._id, runId]);
+  }, [project._id, runFilters, runId, runPage]);
   useEffect(() => {
     void load();
   }, [load]);
@@ -40,27 +65,72 @@ export default function ExecutionPage({ project, section }) {
     try {
       await qaApi.createRun({
         project_id: project._id,
-        name,
-        test_plan_id: plans[0]?._id || null,
-        test_suite_ids: [],
-        test_case_version_ids: versions,
-        environment: "staging",
-        build: "local",
+        name: runForm.name,
+        test_plan_id: runForm.testPlanId || null,
+        test_suite_ids: runForm.suiteIds,
+        test_case_version_ids: runForm.versionIds,
+        environment: runForm.environment,
+        release: runForm.release,
+        build: runForm.build,
       });
-      setName("");
+      setRunForm({
+        name: "",
+        release: "",
+        build: "",
+        environment: "staging",
+        testPlanId: "",
+        suiteIds: [],
+        versionIds: [],
+      });
       await load();
     } catch (reason) {
       setError(messageOf(reason));
     }
   };
-  const record = async (versionId, status) => {
+  const transition = async (execution, status, version) => {
     try {
-      await qaApi.recordResult(run._id, versionId, {
+      const values = (version.steps || []).map((step) => {
+        const existing = execution.step_results?.find((item) => item.step_id === step.id);
+        const edited = stepResults[execution._id]?.[step.id];
+        return {
+          step_id: step.id,
+          status: edited?.status || existing?.status || "PASS",
+          actual_doc: textDoc(edited?.actual || docText(existing?.actual_doc)),
+          attachments: existing?.attachments || [],
+          note: existing?.note || "",
+        };
+      });
+      await qaApi.updateExecution(project._id, execution._id, {
         status,
-        step_results: [],
-        attachments: [],
+        step_results: status === "IN_PROGRESS" ? execution.step_results || [] : values,
+        actual_result_doc: textDoc(actuals[execution._id] || docText(execution.actual_result_doc)),
+        attachments: attachments[execution._id] || execution.attachments || [],
         note: "Kết quả thực thi thủ công",
         idempotency_key: crypto.randomUUID(),
+        expected_revision: execution.revision,
+      });
+      setRun(await qaApi.getRun(run._id));
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
+  };
+  const createDefectFromResult = async (result, version) => {
+    try {
+      await qaApi.createDefect(project._id, {
+        project_id: project._id,
+        title: `Lỗi khi thực thi ${version.test_case_key} ${version.title}`,
+        description_doc: textDoc(`Phát hiện trong lần chạy ${run.name}`),
+        steps_to_reproduce: version.steps || [],
+        actual_result_doc: result.actual_result_doc || textDoc(""),
+        expected_result_doc: version.expected_result_doc || textDoc(""),
+        severity: "major",
+        priority: version.priority || "medium",
+        environment: run.environment || "",
+        build: run.build || "",
+        attachments: result.attachments || [],
+        linked_test_result_id: result._id,
+        linked_test_case_version_id: version._id,
+        linked_requirement_version_ids: version.requirement_version_ids || [],
       });
       setRun(await qaApi.getRun(run._id));
     } catch (reason) {
@@ -94,7 +164,8 @@ export default function ExecutionPage({ project, section }) {
                   type="button"
                   onClick={async () => {
                     try {
-                      setRun(await qaApi.startRun(run._id));
+                      await qaApi.startRun(run._id);
+                      setRun(await qaApi.getRun(run._id));
                     } catch (reason) {
                       setError(messageOf(reason));
                     }
@@ -104,19 +175,53 @@ export default function ExecutionPage({ project, section }) {
                 </button>
               )}
               {run.status === "IN_PROGRESS" && (
-                <button
-                  className="apple-button"
-                  type="button"
-                  onClick={async () => {
-                    try {
-                      setRun(await qaApi.completeRun(run._id));
-                    } catch (reason) {
-                      setError(messageOf(reason));
-                    }
-                  }}
-                >
-                  Hoàn tất
-                </button>
+                <>
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={async () => {
+                      const answer = await ask({
+                        title: "Hủy lần chạy kiểm thử",
+                        description: `${run.name} sẽ dừng và giữ nguyên toàn bộ kết quả đã ghi nhận`,
+                        confirmLabel: "Hủy lần chạy",
+                        danger: true,
+                        fields: [
+                          {
+                            name: "reason",
+                            label: "Lý do hủy",
+                            initialValue: "Dừng theo quyết định kiểm thử",
+                            required: true,
+                            multiline: true,
+                            autoFocus: true,
+                          },
+                        ],
+                      });
+                      if (!answer) return;
+                      try {
+                        await qaApi.abortRun(run._id, answer.reason);
+                        setRun(await qaApi.getRun(run._id));
+                      } catch (value) {
+                        setError(messageOf(value));
+                      }
+                    }}
+                  >
+                    Hủy lần chạy
+                  </button>
+                  <button
+                    className="apple-button"
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await qaApi.completeRun(run._id);
+                        setRun(await qaApi.getRun(run._id));
+                      } catch (reason) {
+                        setError(messageOf(reason));
+                      }
+                    }}
+                  >
+                    Hoàn tất
+                  </button>
+                </>
               )}
             </div>
           }
@@ -139,29 +244,180 @@ export default function ExecutionPage({ project, section }) {
                   const result = run.results?.find(
                     (value) => value.test_case_version_id === item._id,
                   );
-                  return result ? (
-                    <StatusPill value={result.status} />
-                  ) : run.status === "IN_PROGRESS" ? (
-                    <span className="flex flex-wrap gap-2">
-                      {["PASS", "FAIL", "BLOCKED", "SKIPPED"].map((value) => (
+                  if (!result) return "Không có ảnh chụp thực thi";
+                  if (!["NOT_RUN", "IN_PROGRESS"].includes(result.status)) {
+                    const hasDefect = run.defects?.some(
+                      (defect) => defect.linked_test_result_id === result._id,
+                    );
+                    return (
+                      <span className="flex min-w-48 flex-col items-start gap-2">
+                        <StatusPill value={result.status} />
+                        {result.status === "FAIL" && !hasDefect && (
+                          <button
+                            className="apple-button"
+                            type="button"
+                            onClick={() => createDefectFromResult(result, item)}
+                          >
+                            Tạo lỗi từ kết quả thất bại
+                          </button>
+                        )}
+                        {hasDefect && (
+                          <span className="text-[11px] text-ink-muted">
+                            Đã liên kết lỗi
+                          </span>
+                        )}
+                      </span>
+                    );
+                  }
+                  if (run.status !== "IN_PROGRESS") {
+                    return <StatusPill value={result.status} />;
+                  }
+                  if (result.status === "NOT_RUN") {
+                    return (
+                      <span className="flex flex-wrap gap-2">
                         <button
                           className="secondary-button"
                           type="button"
-                          key={value}
-                          onClick={() => record(item._id, value)}
+                          onClick={() => transition(result, "IN_PROGRESS", item)}
                         >
-                          {value}
+                          Bắt đầu ca kiểm thử
                         </button>
+                        <button
+                          className="secondary-button"
+                          type="button"
+                          onClick={() => transition(result, "SKIPPED", item)}
+                        >
+                          Bỏ qua
+                        </button>
+                      </span>
+                    );
+                  }
+                  return (
+                    <div className="min-w-72 space-y-3">
+                      {(item.steps || []).map((step, stepIndex) => {
+                        const existing = result.step_results?.find(
+                          (value) => value.step_id === step.id,
+                        );
+                        const edited = stepResults[result._id]?.[step.id] || {};
+                        return (
+                          <fieldset
+                            className="space-y-2 rounded-xl border border-border p-3"
+                            key={step.id}
+                          >
+                            <legend className="px-2 text-[12px] font-semibold">
+                              Bước {stepIndex + 1}
+                            </legend>
+                            <p className="text-[12px]">{docText(step.action_doc)}</p>
+                            <p className="text-[12px] text-ink-muted">
+                              Mong đợi {docText(step.expected_doc)}
+                            </p>
+                            <select
+                              aria-label={`Trạng thái bước ${stepIndex + 1} ${item.test_case_key}`}
+                              className="apple-input"
+                              value={edited.status || existing?.status || "PASS"}
+                              onChange={(event) =>
+                                setStepResults((values) => ({
+                                  ...values,
+                                  [result._id]: {
+                                    ...values[result._id],
+                                    [step.id]: {
+                                      ...values[result._id]?.[step.id],
+                                      status: event.target.value,
+                                    },
+                                  },
+                                }))
+                              }
+                            >
+                              {["PASS", "FAIL", "BLOCKED", "SKIPPED", "NOT_APPLICABLE"].map(
+                                (value) => (
+                                  <option value={value} key={value}>
+                                    {valueLabel(value)}
+                                  </option>
+                                ),
+                              )}
+                            </select>
+                            <textarea
+                              aria-label={`Kết quả bước ${stepIndex + 1} ${item.test_case_key}`}
+                              className="apple-input min-h-16"
+                              value={edited.actual ?? docText(existing?.actual_doc)}
+                              onChange={(event) =>
+                                setStepResults((values) => ({
+                                  ...values,
+                                  [result._id]: {
+                                    ...values[result._id],
+                                    [step.id]: {
+                                      ...values[result._id]?.[step.id],
+                                      actual: event.target.value,
+                                    },
+                                  },
+                                }))
+                              }
+                              placeholder="Kết quả thực tế của bước"
+                            />
+                          </fieldset>
+                        );
+                      })}
+                      <textarea
+                        aria-label={`Kết quả thực tế ${item.test_case_key}`}
+                        className="apple-input min-h-20"
+                        value={actuals[result._id] ?? docText(result.actual_result_doc)}
+                        onChange={(event) =>
+                          setActuals({ ...actuals, [result._id]: event.target.value })
+                        }
+                        placeholder="Kết quả thực tế và bằng chứng"
+                      />
+                      <input
+                        aria-label={`Tệp bằng chứng ${item.test_case_key}`}
+                        className="apple-input"
+                        type="file"
+                        onChange={async (event) => {
+                          const file = event.target.files?.[0];
+                          if (!file) return;
+                          try {
+                            const uploaded = await uploadAssetAPI(file);
+                            const current = attachments[result._id] || result.attachments || [];
+                            setAttachments({
+                              ...attachments,
+                              [result._id]: [...current, uploaded.data],
+                            });
+                          } catch (reason) {
+                            setError(messageOf(reason));
+                          }
+                        }}
+                      />
+                      {(attachments[result._id] || result.attachments || []).map((attachment) => (
+                        <p className="break-all text-[11px] text-ink-muted" key={attachment.url}>
+                          {attachment.filename}
+                        </p>
                       ))}
-                    </span>
-                  ) : (
-                    "Chưa chạy"
+                      <span className="flex flex-wrap gap-2">
+                        {["PASS", "FAIL", "BLOCKED", "SKIPPED", "NOT_APPLICABLE"].map(
+                          (value) => (
+                            <button
+                              className="secondary-button"
+                              type="button"
+                              key={value}
+                              onClick={() => transition(result, value, item)}
+                            >
+                              {valueLabel(value)}
+                            </button>
+                          ),
+                        )}
+                      </span>
+                    </div>
                   );
+                },
+                mobileRender: (item) => {
+                  const result = run.results?.find(
+                    (value) => value.test_case_version_id === item._id,
+                  );
+                  return result ? `Kết quả ${valueLabel(result.status)}` : "Không có ảnh chụp thực thi";
                 },
               },
             ]}
           />
         </Panel>
+        {dialog}
       </QaPage>
     );
   return (
@@ -262,12 +518,78 @@ export default function ExecutionPage({ project, section }) {
               aria-label="Tên lần chạy"
               required
               className="apple-input"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
+              value={runForm.name}
+              onChange={(event) => setRunForm({ ...runForm, name: event.target.value })}
               placeholder="Tên lần chạy"
             />
+            <div className="grid gap-3 sm:grid-cols-3">
+              <input
+                aria-label="Release"
+                className="apple-input"
+                placeholder="Release"
+                value={runForm.release}
+                onChange={(event) => setRunForm({ ...runForm, release: event.target.value })}
+              />
+              <input
+                aria-label="Build"
+                className="apple-input"
+                placeholder="Build"
+                value={runForm.build}
+                onChange={(event) => setRunForm({ ...runForm, build: event.target.value })}
+              />
+              <input
+                aria-label="Môi trường"
+                className="apple-input"
+                placeholder="Môi trường"
+                value={runForm.environment}
+                onChange={(event) => setRunForm({ ...runForm, environment: event.target.value })}
+              />
+            </div>
+            <select
+              aria-label="Kế hoạch kiểm thử"
+              className="apple-input"
+              value={runForm.testPlanId}
+              onChange={(event) => setRunForm({ ...runForm, testPlanId: event.target.value })}
+            >
+              <option value="">Không gắn kế hoạch</option>
+              {plans.map((item) => <option key={item._id} value={item._id}>{item.name}</option>)}
+            </select>
+            <label className="field-label block">
+              Bộ kiểm thử
+              <select
+                aria-label="Bộ kiểm thử"
+                className="apple-input mt-2 min-h-28"
+                multiple
+                value={runForm.suiteIds}
+                onChange={(event) => setRunForm({
+                  ...runForm,
+                  suiteIds: Array.from(event.target.selectedOptions, (option) => option.value),
+                })}
+              >
+                {suites.map((item) => <option key={item._id} value={item._id}>{item.name}</option>)}
+              </select>
+            </label>
+            <label className="field-label block">
+              Phiên bản ca kiểm thử
+              <select
+                aria-label="Phiên bản ca kiểm thử"
+                className="apple-input mt-2 min-h-36"
+                multiple
+                value={runForm.versionIds}
+                onChange={(event) => setRunForm({
+                  ...runForm,
+                  versionIds: Array.from(event.target.selectedOptions, (option) => option.value),
+                })}
+              >
+                {tests.map((item) => (
+                  <option key={item.current_version_id} value={item.current_version_id}>
+                    {item.test_case_key} {item.current_version?.title}
+                  </option>
+                ))}
+              </select>
+            </label>
             <p className="text-[12px] text-ink-muted">
-              Snapshot {versions.length} phiên bản hiện tại
+              Snapshot {runForm.versionIds.length} phiên bản được chọn cùng các phiên bản trong bộ kiểm thử
             </p>
             <button className="apple-button" type="submit">
               Tạo lần chạy
@@ -276,6 +598,55 @@ export default function ExecutionPage({ project, section }) {
         </Panel>
       </div>
       <Panel title="Danh sách lần chạy">
+        <div className="grid gap-3 border-b border-border p-4 sm:grid-cols-2 xl:grid-cols-4">
+          <input
+            aria-label="Tìm lần chạy"
+            className="apple-input"
+            placeholder="Tên lần chạy"
+            value={runFilters.name}
+            onChange={(event) => {
+              setRunFilters({ ...runFilters, name: event.target.value });
+              setRunPage(1);
+            }}
+          />
+          <select
+            aria-label="Lọc trạng thái lần chạy"
+            className="apple-input"
+            value={runFilters.status}
+            onChange={(event) => {
+              setRunFilters({ ...runFilters, status: event.target.value });
+              setRunPage(1);
+            }}
+          >
+            <option value="">Mọi trạng thái</option>
+            {['DRAFT', 'READY', 'IN_PROGRESS', 'COMPLETED', 'ABORTED'].map((value) => (
+              <option key={value} value={value}>{valueLabel(value)}</option>
+            ))}
+          </select>
+          <input
+            aria-label="Lọc môi trường lần chạy"
+            className="apple-input"
+            placeholder="Môi trường"
+            value={runFilters.environment}
+            onChange={(event) => {
+              setRunFilters({ ...runFilters, environment: event.target.value });
+              setRunPage(1);
+            }}
+          />
+          <select
+            aria-label="Sắp xếp lần chạy"
+            className="apple-input"
+            value={runFilters.sort}
+            onChange={(event) => {
+              setRunFilters({ ...runFilters, sort: event.target.value });
+              setRunPage(1);
+            }}
+          >
+            <option value="-updated_at">Mới cập nhật</option>
+            <option value="updated_at">Cũ cập nhật</option>
+            <option value="name">Tên tăng dần</option>
+          </select>
+        </div>
         <DataTable
           onSelect={(item) =>
             window.location.assign(`/qa/projects/${project._id}/execution/${item._id}`)
@@ -298,7 +669,9 @@ export default function ExecutionPage({ project, section }) {
             },
           ]}
         />
+        <Pagination value={runPageInfo} onChange={setRunPage} />
       </Panel>
+      {dialog}
     </QaPage>
   );
 }

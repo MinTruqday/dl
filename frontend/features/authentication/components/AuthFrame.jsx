@@ -10,7 +10,7 @@ export default function AuthFrame({ title, description, children, footer, width 
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand text-[13px] font-bold text-white">
             Q
           </span>
-          <span>QA Intelligence</span>
+          <span>Veriq</span>
         </Link>
         <Link
           href="/"

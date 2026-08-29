@@ -8,10 +8,10 @@ from redis import Redis
 from src.core.security.access import get_password_hash
 
 
-PASSWORD = "DocLib-E2E-Password-2026"
+PASSWORD = "Veriq-E2E-Password-2026"
 ACCOUNTS = (
-    ("teacher", "e2e-teacher@example.com", "author", "Giáo viên E2E"),
-    ("student", "e2e-student@example.com", "reader", "Học sinh E2E"),
+    ("qa-lead", "e2e-qa-lead@example.com", "reader", "QA Lead E2E"),
+    ("viewer", "e2e-viewer@example.com", "reader", "Viewer E2E"),
     ("admin", "e2e-admin@example.com", "admin", "Quản trị E2E"),
 )
 
@@ -39,6 +39,7 @@ for slug, email, role, full_name in ACCOUNTS:
                 "slug": slug,
                 "full_name": full_name,
                 "role": role,
+                "system_role": "ADMIN" if role == "admin" else "USER",
                 "permissions": [],
                 "is_active": True,
                 "password_hash": password_hash,

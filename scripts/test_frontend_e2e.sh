@@ -1,4 +1,3 @@
-#!/bin/sh
 set -eu
 
 docker compose -f docker-compose.yml -f docker-compose.test.yml exec -T authentication python tests/seed_frontend_e2e.py

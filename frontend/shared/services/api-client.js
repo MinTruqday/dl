@@ -2,7 +2,7 @@ const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
 export const API_URL = configuredApiUrl || "http://localhost:8000";
 export function getToken() {
   if (typeof window === "undefined") return null;
-  const token = localStorage.getItem("doclib_token");
+  const token = localStorage.getItem("veriq_token");
   return token && token !== "null" && token !== "undefined" ? token : null;
 }
 export function getAuthHeaders() {
@@ -11,7 +11,7 @@ export function getAuthHeaders() {
 }
 let refreshPromise = null;
 function applyToken(token) {
-  localStorage.setItem("doclib_token", token);
+  localStorage.setItem("veriq_token", token);
   document.cookie = `token=${token}; path=/; max-age=604800; SameSite=Lax`;
 }
 export async function refreshAccessToken() {

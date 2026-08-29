@@ -74,7 +74,7 @@ def merge_unique_values(left: list, right: list) -> list:
 class AgentState(TypedDict):
     """
     <module_purpose>
-    DocLib Agent State defining the graph state schema for the primary RAG and AI workflow.
+    Veriq Agent State defining the graph state schema for the primary RAG and AI workflow.
     </module_purpose>
     <contract>
     - Precondition: Initialized at the start of the LangGraph execution.
@@ -110,7 +110,7 @@ class AgentState(TypedDict):
 class ActingState(TypedDict):
     """
     <module_purpose>
-    DocLib Acting State defining the minimal state payload for Tool execution graphs.
+    Veriq Acting State defining the minimal state payload for Tool execution graphs.
     </module_purpose>
     <contract>
     - Precondition: Tool execution requests containing req_data.

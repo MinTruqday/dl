@@ -137,6 +137,10 @@
     @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand px-4 py-2.5 text-[14px] font-semibold text-white transition hover:bg-brand-hover active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50;
   }
 
+  .danger-button {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-danger px-4 py-2.5 text-[14px] font-semibold text-white transition active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
   .apple-button-secondary {
     @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-border-strong bg-surface px-4 py-2.5 text-[14px] font-semibold text-ink transition hover:bg-surface-quiet active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50;
   }

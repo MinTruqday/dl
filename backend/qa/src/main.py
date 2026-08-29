@@ -8,12 +8,16 @@ from fastapi.responses import JSONResponse
 
 from src.api.analytics import router as analytics_router
 from src.api.api_artifacts import router as api_artifacts_router
+from src.api.bulk import router as bulk_router
 from src.api.changes import router as changes_router
+from src.api.data_sets import router as data_sets_router
 from src.api.execution import router as execution_router
 from src.api.internal_jobs import router as internal_jobs_router
 from src.api.jobs import router as jobs_router
+from src.api.operations import router as operations_router
 from src.api.projects import router as projects_router
 from src.api.requirements import router as requirements_router
+from src.api.reviews import router as reviews_router
 from src.api.test_design import router as test_design_router
 from src.api.traceability import router as traceability_router
 from src.core.common import failure_metadata, new_id
@@ -29,7 +33,7 @@ async def lifespan(app: FastAPI):
     await close_database()
 
 
-app = FastAPI(title="Agentic AI Test Management", version=settings.VERSION, lifespan=lifespan)
+app = FastAPI(title="Veriq", version=settings.VERSION, lifespan=lifespan)
 app.add_middleware(PrometheusMiddleware)
 app.add_route("/metrics", metrics_endpoint)
 origins = [origin.strip() for origin in settings.CORS_ALLOWED_ORIGINS.split(",") if origin.strip()]
@@ -42,14 +46,18 @@ app.add_middleware(
 )
 app.include_router(projects_router)
 app.include_router(requirements_router)
+app.include_router(reviews_router)
+app.include_router(data_sets_router)
 app.include_router(test_design_router)
 app.include_router(traceability_router)
 app.include_router(changes_router)
 app.include_router(execution_router)
 app.include_router(analytics_router)
 app.include_router(api_artifacts_router)
+app.include_router(bulk_router)
 app.include_router(internal_jobs_router)
 app.include_router(jobs_router)
+app.include_router(operations_router)
 
 
 @app.exception_handler(HTTPException)

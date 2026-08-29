@@ -16,13 +16,13 @@ class DocumentStatus(str, Enum):
 
 
 class DocumentContentFormat(str, Enum):
-    DOCLIBX = "doclibx"
+    VERIQX = "veriqx"
     MARKDOWN = "markdown"
     CUSTOM = "custom"
     PDF = "pdf"
     ZIP = "zip"
     HTML = "html"
-    DOCLIB = "doclib"
+    VERIQ = "veriq"
     DOCX = "docx"
     XLSX = "xlsx"
     PPTX = "pptx"
@@ -61,7 +61,7 @@ class DocumentBase(BaseModel):
     file_url: Optional[str] = None
     tags: List[str] = Field(default_factory=list, max_length=50)
     content: Optional[Any] = None
-    content_format: Optional[DocumentContentFormat] = DocumentContentFormat.DOCLIB
+    content_format: Optional[DocumentContentFormat] = DocumentContentFormat.VERIQ
     visibility: str = Field(default="public", pattern=r"^(public|private|unlisted)$")
     category: Optional[str] = "Uncategorized"
     pages_count: Optional[int] = 0

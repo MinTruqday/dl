@@ -35,7 +35,7 @@ async def lifespan(app: FastAPI):
         await close_db()
 
 
-app = FastAPI(title="DocLib Notification", version=settings.VERSION, lifespan=lifespan)
+app = FastAPI(title="Veriq Notification", version=settings.VERSION, lifespan=lifespan)
 app.add_middleware(PrometheusMiddleware, service_name="notification")
 app.add_route("/metrics", metrics_endpoint("notification"))
 app.middleware("http")(add_trace_id_header)

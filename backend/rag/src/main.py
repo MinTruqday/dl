@@ -38,7 +38,7 @@ async def lifespan(app: FastAPI):
         await close_db()
 
 
-app = FastAPI(title="DocLib RAG", version=settings.VERSION, lifespan=lifespan)
+app = FastAPI(title="Veriq RAG", version=settings.VERSION, lifespan=lifespan)
 app.add_middleware(PrometheusMiddleware, service_name="rag")
 app.add_route("/metrics", metrics_endpoint("rag"))
 app.add_middleware(
@@ -82,12 +82,8 @@ async def readiness_check():
     except Exception:
         checks["redis"] = "unavailable"
     try:
-        collections = await vector_store.client.get_collections()
-        checks["qdrant"] = (
-            "ready"
-            if any(item.name == vector_store.collection_name for item in collections.collections)
-            else "unavailable"
-        )
+        await vector_store.client.get_collection(vector_store.collection_name)
+        checks["qdrant"] = "ready"
     except Exception:
         checks["qdrant"] = "unavailable"
     checks["embedding"] = "ready" if embedder._model is not None else "unavailable"

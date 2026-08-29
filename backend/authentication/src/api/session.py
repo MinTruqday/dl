@@ -35,10 +35,14 @@ async def read_users_me(current_user: CurrentUser = Depends(get_current_user)):
     user_data.update(
         {
             "email": user_doc.get("email", current_user.email),
-            "full_name": user_doc.get("full_name") or current_user.full_name or "Người dùng DocLib",
+            "full_name": user_doc.get("full_name") or current_user.full_name or "Người dùng Veriq",
             "slug": user_doc.get("slug")
             or str(user_doc.get("email", current_user.email)).split("@", 1)[0],
             "role": user_doc.get("role", "reader"),
+            "system_role": user_doc.get(
+                "system_role",
+                "ADMIN" if user_doc.get("role") == "admin" else "USER",
+            ),
             "permissions": user_doc.get("permissions") or [],
             "created_at": user_doc.get("created_at") or datetime.now(timezone.utc),
             "has_passkey": len(passkeys) > 0,
@@ -126,7 +130,7 @@ async def verify_code(payload: VerifyCodeRequest, request: Request) -> Any:
 
 @router.post("/dang-xuat", response_model=APIResponse[Any])
 async def logout(response: Response, current_user: CurrentUser = Depends(get_current_user)):
-    response.delete_cookie("doclib_refresh_token", path="/")
+    response.delete_cookie("veriq_refresh_token", path="/")
     return APIResponse(
         data=await SessionService.revoke_session(current_user), message="Đăng xuất hoàn tất"
     )
@@ -134,7 +138,7 @@ async def logout(response: Response, current_user: CurrentUser = Depends(get_cur
 
 @router.post("/dang-xuat-tat-ca", response_model=APIResponse[Any])
 async def logout_all(response: Response, current_user: CurrentUser = Depends(get_current_user)):
-    response.delete_cookie("doclib_refresh_token", path="/")
+    response.delete_cookie("veriq_refresh_token", path="/")
     return APIResponse(
         data=await SessionService.revoke_all_sessions(current_user),
         message="Đăng xuất khỏi tất cả thiết bị hoàn tất",
@@ -147,12 +151,12 @@ async def logout_all(response: Response, current_user: CurrentUser = Depends(get
     dependencies=[Depends(RateLimiting(calls=20, period=60))],
 )
 async def refresh_session(
-    request: Request, response: Response, doclib_refresh_token: str | None = Cookie(default=None)
+    request: Request, response: Response, veriq_refresh_token: str | None = Cookie(default=None)
 ):
-    if not doclib_refresh_token:
+    if not veriq_refresh_token:
         raise HTTPException(status_code=401, detail="Không tìm thấy phiên làm mới")
     client_ip = request.client.host if request.client else "unknown"
-    token_data = await SessionService.refresh_session(doclib_refresh_token, client_ip)
+    token_data = await SessionService.refresh_session(veriq_refresh_token, client_ip)
     return APIResponse(
         data=set_refresh_cookie(response, request, token_data),
         message="Làm mới phiên đăng nhập hoàn tất",

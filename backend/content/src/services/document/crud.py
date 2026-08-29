@@ -87,7 +87,7 @@ class DocumentCrudService:
                 "title": document.get("title", ""),
                 "slug": document.get("slug", ""),
                 "status": document.get("status", "draft"),
-                "content_format": document.get("content_format", "doclib"),
+                "content_format": document.get("content_format", "veriq"),
                 "cover_url": document.get("cover_url"),
                 "file_url": document.get("file_url"),
                 "artifact_metadata": document.get("artifact_metadata"),

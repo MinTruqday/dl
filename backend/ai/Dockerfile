@@ -27,10 +27,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         --index-strategy unsafe-best-match -r requirements.txt \
     && apt-get purge -y build-essential \
     && apt-get autoremove -y \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 RUN apt-get update && apt-get install -y --no-install-recommends chromium \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 RUN uv pip install --system --no-cache pytest==8.3.5
 

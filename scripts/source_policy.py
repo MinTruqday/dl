@@ -194,7 +194,7 @@ def scan_compilation_registry(issues):
         issues.append((relative_editor, 1, "unbounded_component_registry"))
     if "WORD_COMMAND_TOOLS" not in source:
         issues.append((relative_editor, 1, "word_command_tools_not_registered"))
-    component_names = set(re.findall(r'await import\("\./(DocLib[^"/]+)"\)', source))
+    component_names = set(re.findall(r'await import\("\./(Veriq[^"/]+)"\)', source))
     for component_name in sorted(component_names):
         component_path = component_root / f"{component_name}.ts"
         if not component_path.is_file():
@@ -254,16 +254,16 @@ def scan_compilation_registry(issues):
         return
     catalog_source = catalog_path.read_text(encoding="utf-8")
     command_imports = re.findall(
-        r'^import (DocLib[A-Za-z0-9]+) from "\./(DocLib[A-Za-z0-9]+)";$', catalog_source, re.M
+        r'^import (Veriq[A-Za-z0-9]+) from "\./(Veriq[A-Za-z0-9]+)";$', catalog_source, re.M
     )
     command_names = [name for name, target in command_imports if name == target]
     mismatched_imports = len(command_imports) - len(command_names)
     command_entries = re.findall(
-        r"^wordCommandClasses\.push\((DocLib[A-Za-z0-9]+)\);$", catalog_source, re.M
+        r"^wordCommandClasses\.push\((Veriq[A-Za-z0-9]+)\);$", catalog_source, re.M
     )
     duplicate_commands = len(command_names) - len(set(command_names))
     overlap = component_names.intersection(command_names)
-    feature_names = {path.stem for path in component_root.glob("DocLib*.ts")}
+    feature_names = {path.stem for path in component_root.glob("Veriq*.ts")}
     registered_features = component_names.union(command_names)
     total_features = len(feature_names)
     if len(component_names) != 153:
@@ -376,10 +376,10 @@ def scan_compilation_registry(issues):
     ):
         issues.append((manifest_path.relative_to(ROOT), 1, "word_feature_icons_not_unique"))
     if any(
-        not isinstance(title, str) or not title.startswith("DocLib ") for title in record_titles
+        not isinstance(title, str) or not title.startswith("Veriq ") for title in record_titles
     ):
         issues.append((manifest_path.relative_to(ROOT), 1, "word_feature_title_prefix_missing"))
-    if any(record.get("product") != "doclib" for record in records):
+    if any(record.get("product") != "veriq" for record in records):
         issues.append((manifest_path.relative_to(ROOT), 1, "word_feature_product_mismatch"))
     legacy_fields = {
         "microsoftControlId",

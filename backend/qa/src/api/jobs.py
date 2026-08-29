@@ -8,14 +8,23 @@ from src.core.configuration import settings
 
 router = APIRouter(prefix="/api/qa", tags=["QA Async Jobs"])
 ALLOWED_EVENTS = {"document.parse.requested", "requirement.extract.requested", "requirement.semantic_diff.requested", "test.generate.requested", "duplicate.scan.requested", "impact.analysis.requested", "rag.index.requested"}
+EVENT_PERMISSIONS = {
+    "document.parse.requested": "knowledge.manage",
+    "requirement.extract.requested": "requirement.create",
+    "requirement.semantic_diff.requested": "impact.execute",
+    "test.generate.requested": "ai.generate_testcase",
+    "duplicate.scan.requested": "testcase.read",
+    "impact.analysis.requested": "impact.execute",
+    "rag.index.requested": "knowledge.manage",
+}
 
 
 @router.post("/projects/{project_id}/jobs", status_code=202)
 async def enqueue_job(project_id: str, body: dict = Body(), user: CurrentUser = Depends(get_current_user)):
-    await get_project(project_id, user, write=True)
     event = body.get("event")
     if event not in ALLOWED_EVENTS:
         raise HTTPException(status_code=422, detail={"code": "UNSUPPORTED_JOB_EVENT"})
+    await get_project(project_id, user, EVENT_PERMISSIONS[event])
     artifact_version_id = str(body.get("artifact_version_id") or "")
     model_version = str(body.get("model_version") or "")
     if not artifact_version_id or not model_version:
@@ -43,5 +52,5 @@ async def get_job(job_id: str, user: CurrentUser = Depends(get_current_user)):
         raise HTTPException(status_code=503, detail={"code": "WORKER_UNAVAILABLE"}) from error
     except httpx.HTTPError as error:
         raise HTTPException(status_code=503, detail={"code": "WORKER_UNAVAILABLE"}) from error
-    project = await get_project(job.get("project_id", ""), user)
+    project = await get_project(job.get("project_id", ""), user, "project.read")
     return envelope({**job, "project_id": project["_id"]})

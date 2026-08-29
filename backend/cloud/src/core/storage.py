@@ -15,7 +15,7 @@ MINIO_PRIVATE_BUCKET = settings.MINIO_PRIVATE_BUCKET
 MINIO_PUBLIC_BUCKET = settings.MINIO_PUBLIC_BUCKET
 MINIO_LEGACY_BUCKET = settings.MINIO_LEGACY_BUCKET
 MINIO_PUBLIC_URL = settings.MINIO_PUBLIC_URL
-TEXT_EXTENSIONS = {"txt", "csv", "json", "md", "doclib", "doclibx"}
+TEXT_EXTENSIONS = {"txt", "csv", "json", "md", "veriq", "veriqx"}
 MIN_BROTLI_BYTES = 1024
 
 

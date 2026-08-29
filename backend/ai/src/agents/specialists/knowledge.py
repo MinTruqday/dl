@@ -5,7 +5,7 @@ from src.workflow.graph import knowledge_app
 class KnowledgeAgent:
     """
     <module_purpose>
-    DocLib Analysis Agent for parsing raw user requests and preparing them for execution.
+    Veriq Analysis Agent for parsing raw user requests and preparing them for execution.
     </module_purpose>
     <contract>
     - Precondition: Receives a raw request object (dict or object).

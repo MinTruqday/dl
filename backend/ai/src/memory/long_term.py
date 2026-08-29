@@ -27,7 +27,7 @@ class LongTermMemory:
     """User-scoped semantic memory stored in Qdrant."""
 
     def __init__(self):
-        self.collection_name = "doclib_memories"
+        self.collection_name = "veriq_memories"
         self.client = AsyncQdrantClient(url=settings.QDRANT_URL, timeout=10.0)
         self.llm = create_chat_model()
         self.embedder = rag_client

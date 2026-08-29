@@ -17,8 +17,8 @@ RUN pip install -q --no-cache-dir -r requirements.txt
 COPY compilation/src/ ./src/
 COPY compilation/tests/ ./tests/
 
-RUN groupadd --gid 10001 doclibuser && useradd --uid 10001 --gid doclibuser -m doclibuser && \
-    chown -R doclibuser:doclibuser /home/doclibuser /app
+RUN groupadd --gid 10001 veriquser && useradd --uid 10001 --gid veriquser -m veriquser && \
+    chown -R veriquser:veriquser /home/veriquser /app
 USER 10001:10001
 
 EXPOSE 8000

@@ -57,12 +57,19 @@ async function createBoundaryTest(request, token, projectId, requirementVersion,
     },
     201,
   );
+  await qa(
+    request,
+    token,
+    "POST",
+    `/projects/${projectId}/test-cases/${draft._id}/submit-review`,
+    { expected_revision: 1, review_note: "Đã rà soát kịch bản" },
+  );
   const frozen = await qa(
     request,
     token,
     "POST",
     `/test-case-drafts/${draft._id}/freeze`,
-    { expected_revision: 1, change_reason: "Phê duyệt kịch bản biên" },
+    { expected_revision: 2, change_reason: "Phê duyệt kịch bản biên" },
     201,
   );
   return frozen;
@@ -74,8 +81,8 @@ test("luồng chữ ký Requirement đến Regression bảo toàn phiên bản v
 }) => {
   test.setTimeout(180000);
   const errors = observeRuntime(page);
-  const token = await loginByApi(request, "teacher");
-  await authenticatePage(page, request, "teacher");
+  const token = await loginByApi(request, "lead");
+  await authenticatePage(page, request, "lead");
   const stamp = Date.now();
   const project = await qa(
     request,
@@ -113,12 +120,19 @@ test("luồng chữ ký Requirement đến Regression bảo toàn phiên bản v
     },
     201,
   );
+  await qa(
+    request,
+    token,
+    "POST",
+    `/projects/${project._id}/requirements/${requirement._id}/submit-review`,
+    { expected_revision: 1, review_note: "Đã rà soát" },
+  );
   const v1 = await qa(
     request,
     token,
     "POST",
     `/requirement-versions/${requirement.current_version._id}/baseline`,
-    { expected_revision: 1 },
+    { expected_revision: 2 },
   );
   const tc41 = await createBoundaryTest(request, token, project._id, v1, 9, false);
   const tc42 = await createBoundaryTest(request, token, project._id, v1, 10, true);
@@ -165,7 +179,13 @@ test("luồng chữ ký Requirement đến Regression bảo toàn phiên bản v
   for (const version of [tc41.version, tc42.version, tc43.version])
     await qa(request, token, "POST", `/test-runs/${run._id}/results/${version._id}`, {
       status: "PASS",
-      step_results: [],
+      step_results: (version.steps || []).map((step) => ({
+        step_id: step.id,
+        status: "PASS",
+        actual_doc: doc("Kết quả từng bước đúng như mong đợi"),
+        attachments: [],
+        note: "Đã kiểm tra thủ công",
+      })),
       attachments: [],
       note: "Manual execution",
       idempotency_key: crypto.randomUUID(),
@@ -195,8 +215,12 @@ test("luồng chữ ký Requirement đến Regression bảo toàn phiên bản v
     },
     201,
   );
-  const v2 = await qa(request, token, "POST", `/requirement-versions/${v2Draft._id}/baseline`, {
+  await qa(request, token, "POST", `/projects/${project._id}/requirements/${requirement._id}/submit-review`, {
     expected_revision: 1,
+    review_note: "Đã rà soát thay đổi",
+  });
+  const v2 = await qa(request, token, "POST", `/requirement-versions/${v2Draft._id}/baseline`, {
+    expected_revision: 2,
   });
   const change = await qa(
     request,
@@ -210,6 +234,11 @@ test("luồng chữ ký Requirement đến Regression bảo toàn phiên bản v
     type: "MODIFIED_BOUNDARY",
     before: { values: [10] },
     after: { values: [10, 11] },
+  });
+  await qa(request, token, "POST", `/change-sets/${change._id}/review`, {
+    expected_revision: 1,
+    changes: change.changes,
+    review_note: "Đã xác nhận ChangeFact",
   });
   const impact = await qa(
     request,
@@ -227,6 +256,13 @@ test("luồng chữ ký Requirement đến Regression bảo toàn phiên bản v
     "TC-PROFILE-042": "STILL_VALID",
     "TC-PROFILE-043": "NEEDS_UPDATE",
   });
+  await qa(
+    request,
+    token,
+    "POST",
+    `/impact-analyses/${impact._id}/review`,
+    { expected_revision: impact.revision, overrides: [], review_note: "Đã duyệt phân tích tác động" },
+  );
   const proposals = await qa(
     request,
     token,
@@ -308,6 +344,22 @@ test("luồng chữ ký Requirement đến Regression bảo toàn phiên bản v
     }
     await expectUsablePage(page);
   }
+  await page.goto(`/qa/projects/${project._id}/requirements/${requirement._id}`);
+  await expect(page.getByRole("heading", { name: "Nhận xét rà soát" })).toBeVisible();
+  await page.getByLabel("Nội dung nhận xét").fill("Đã đối chiếu tiêu chí với nguồn nghiệp vụ");
+  await page.getByRole("button", { name: "Thêm nhận xét" }).click();
+  await expect(page.getByText("Đã đối chiếu tiêu chí với nguồn nghiệp vụ")).toBeVisible();
+  await page.goto(`/qa/projects/${project._id}/test-design`);
+  await page.getByText("TC-PROFILE-041", { exact: true }).first().click();
+  await expect(page.getByRole("heading", { name: "Biên tập TC-PROFILE-041" })).toBeVisible();
+  await page.getByLabel("Nội dung nhận xét").fill("Các bước và dữ liệu biên đã được rà soát");
+  await page.getByRole("button", { name: "Thêm nhận xét" }).click();
+  await expect(page.getByText("Các bước và dữ liệu biên đã được rà soát")).toBeVisible();
+  await page.goto(`/qa/projects/${project._id}/traceability`);
+  await expect(page.getByText("Độ phủ còn hiệu lực")).toBeVisible();
+  await expect(page.getByText("Độ phủ thực thi")).toBeVisible();
+  await page.goto(`/qa/projects/${project._id}/execution/${run._id}`);
+  await expect(page.getByText("Đạt", { exact: true })).toHaveCount(3);
   await page.goto("/cai-dat");
   await expect(page.getByRole("heading", { level: 1, name: "Tài khoản và bảo mật" })).toBeVisible();
   await expectUsablePage(page);
@@ -320,7 +372,7 @@ test("người dùng tạo dự án bằng frontend thật và giao diện di đ
 }) => {
   const errors = observeRuntime(page);
   await page.setViewportSize({ width: 390, height: 844 });
-  await authenticatePage(page, request, "teacher");
+  await authenticatePage(page, request, "lead");
   await page.goto("/qa/projects");
   await page.getByRole("button", { name: "Tạo dự án" }).click();
   const stamp = Date.now();

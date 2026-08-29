@@ -22,7 +22,9 @@ function NavigationList({ onNavigate }) {
           <p className="mb-2 px-3 text-[12px] font-semibold text-ink-faint">{group.label}</p>
           <div className="space-y-1">
             {group.items.map((item) => {
-              const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              const active =
+                pathname === item.href ||
+                (item.id !== "dashboard" && pathname.startsWith(`${item.href}/`));
               return (
                 <Link
                   key={item.id}
@@ -135,7 +137,7 @@ export default function AppShell({ children, requireAuth }) {
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand text-[12px] font-bold text-white">
               Q
             </span>
-            <span className="text-[15px] font-bold tracking-[-0.02em]">QA Intelligence</span>
+            <span className="text-[15px] font-bold tracking-[-0.02em]">Veriq</span>
           </Link>
           {projectId && (
             <form
@@ -266,7 +268,7 @@ export default function AppShell({ children, requireAuth }) {
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand text-[13px] font-bold text-white">
               Q
             </span>
-            <span>QA Intelligence</span>
+            <span>Veriq</span>
           </Link>
         </div>
         <nav
@@ -292,7 +294,7 @@ export default function AppShell({ children, requireAuth }) {
                 onClick={() => setMobileOpen(false)}
                 className="text-[19px] font-semibold tracking-[-0.035em]"
               >
-                QA Intelligence
+                Veriq
               </Link>
               <button
                 type="button"

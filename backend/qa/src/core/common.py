@@ -1,14 +1,14 @@
 from datetime import datetime, timezone
+from math import ceil
 from uuid import uuid4
 
 from fastapi import HTTPException
 from pymongo import ReturnDocument
 
-from src.core.auth import CurrentUser
+from src.core.auth import CurrentUser, READ_PERMISSIONS, permissions_for_role
 from src.core.database import database
 
 
-PROJECT_WRITE_ROLES = {"qa_lead", "tester", "ba", "product", "developer"}
 RETRYABLE_ERROR_CODES = {
     "WORKER_UNAVAILABLE",
     "QDRANT_UNAVAILABLE",
@@ -54,6 +54,28 @@ def envelope(
     return {"data": data, "meta": meta, **operation}
 
 
+def page_payload(items, page, page_size, total):
+    return {
+        "items": items,
+        "page": page,
+        "page_size": page_size,
+        "total": total,
+        "total_pages": ceil(total / page_size) if total else 0,
+    }
+
+
+def sort_spec(value, allowed, default="-updated_at"):
+    selected = value or default
+    descending = selected.startswith("-")
+    field = selected[1:] if descending else selected
+    if field not in allowed:
+        raise HTTPException(
+            status_code=422,
+            detail={"code": "INVALID_SORT_FIELD", "allowed": sorted(allowed)},
+        )
+    return field, -1 if descending else 1
+
+
 def failure_metadata(code, status_code=500, detail=None):
     detail = detail if isinstance(detail, dict) else {}
     retryable = detail.get("retryable", code in RETRYABLE_ERROR_CODES or status_code in {502, 503, 504})
@@ -90,29 +112,99 @@ async def audit(
     return event
 
 
-async def get_project(project_id: str, user: CurrentUser, write=False):
+async def get_project(
+    project_id: str,
+    user: CurrentUser,
+    permission: str = "project.read",
+    assigned_role: str | None = None,
+    assigned_user_id: str | None = None,
+):
     project = await database.value.projects.find_one({"_id": project_id})
     if not project:
-        raise HTTPException(status_code=404, detail="Không tìm thấy dự án")
-    member_role = project.get("member_roles", {}).get(user.id)
-    allowed = user.is_admin or project.get("owner_id") == user.id or member_role
-    if not allowed:
-        await audit(user.id, "project_access_denied", "Project", project_id, project_id)
-        raise HTTPException(status_code=403, detail="Không có quyền truy cập dự án")
-    if write and not (
-        user.is_admin
-        or project.get("owner_id") == user.id
-        or member_role in PROJECT_WRITE_ROLES
-    ):
-        raise HTTPException(status_code=403, detail="Không có quyền thay đổi dự án")
+        raise HTTPException(status_code=404, detail={"code": "ENTITY_NOT_FOUND"})
+    membership = await database.value.project_members.find_one(
+        {
+            "project_id": project_id,
+            "user_id": user.id,
+        }
+    )
+    if not membership:
+        await audit(
+            user.id,
+            "project_membership_required",
+            "Project",
+            project_id,
+            project_id,
+            {"permission": permission, "system_role": user.system_role.value},
+        )
+        raise HTTPException(
+            status_code=403,
+            detail={"code": "PROJECT_MEMBERSHIP_REQUIRED"},
+        )
+    if membership.get("status") != "ACTIVE":
+        raise HTTPException(
+            status_code=403,
+            detail={"code": "PROJECT_MEMBERSHIP_INACTIVE"},
+        )
+    permissions = permissions_for_role(
+        membership.get("project_role", ""),
+        project.get("settings"),
+    )
+    assigned_access = (
+        assigned_role is not None
+        and membership.get("project_role") == assigned_role
+        and assigned_user_id == user.id
+    )
+    if permission not in permissions and not assigned_access:
+        await audit(
+            user.id,
+            "project_permission_denied",
+            "Project",
+            project_id,
+            project_id,
+            {
+                "permission": permission,
+                "project_role": membership.get("project_role"),
+            },
+        )
+        raise HTTPException(
+            status_code=403,
+            detail={"code": "PROJECT_PERMISSION_DENIED", "permission": permission},
+        )
+    if project.get("status", "active").lower() == "archived" and permission not in READ_PERMISSIONS:
+        raise HTTPException(status_code=409, detail={"code": "PROJECT_ARCHIVED"})
     return project
 
 
-async def get_project_entity(collection: str, entity_id: str, user: CurrentUser, write=False):
-    entity = await database.value[collection].find_one({"_id": entity_id})
+async def get_project_entity(
+    collection: str,
+    entity_id: str,
+    user: CurrentUser,
+    permission: str,
+    assigned_role: str | None = None,
+    assigned_user_field: str | None = None,
+):
+    projection = {"_id": 1, "project_id": 1}
+    if assigned_user_field:
+        projection[assigned_user_field] = 1
+    identity = await database.value[collection].find_one(
+        {"_id": entity_id},
+        projection,
+    )
+    if not identity:
+        raise HTTPException(status_code=404, detail={"code": "ENTITY_NOT_FOUND"})
+    await get_project(
+        identity["project_id"],
+        user,
+        permission,
+        assigned_role=assigned_role,
+        assigned_user_id=identity.get(assigned_user_field) if assigned_user_field else None,
+    )
+    entity = await database.value[collection].find_one(
+        {"_id": entity_id, "project_id": identity["project_id"]}
+    )
     if not entity:
-        raise HTTPException(status_code=404, detail="Không tìm thấy dữ liệu")
-    await get_project(entity["project_id"], user, write=write)
+        raise HTTPException(status_code=404, detail={"code": "ENTITY_NOT_FOUND"})
     return entity
 
 
