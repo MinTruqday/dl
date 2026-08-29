@@ -10,7 +10,7 @@ from src.core.common import envelope, now
 from src.core.configuration import settings
 from src.core.database import database
 from src.domain.schemas import GenerateInput, RequirementCompareInput
-from src.services.project_rag import index_artifact
+from src.services.project_knowledge import index_artifact
 
 
 router = APIRouter(prefix="/api/qa/internal/jobs", tags=["QA Internal Jobs"])
@@ -26,7 +26,7 @@ async def process_job(
 ):
     if not hmac.compare_digest(x_internal_token, settings.SECRET_KEY):
         raise HTTPException(status_code=403, detail={"code": "INVALID_INTERNAL_TOKEN"})
-    allowed = {"document.parse.requested", "requirement.extract.requested", "requirement.semantic_diff.requested", "test.generate.requested", "duplicate.scan.requested", "impact.analysis.requested", "rag.index.requested"}
+    allowed = {"document.parse.requested", "requirement.extract.requested", "requirement.semantic_diff.requested", "test.generate.requested", "duplicate.scan.requested", "impact.analysis.requested", "knowledge.index.requested"}
     if event not in allowed:
         raise HTTPException(status_code=422, detail={"code": "UNSUPPORTED_JOB_EVENT"})
     user = CurrentUser(
@@ -37,7 +37,7 @@ async def process_job(
     payload = body.get("payload") if isinstance(body.get("payload"), dict) else {}
     result = await execute(event, body, payload, user)
     completed = not (isinstance(result, dict) and result.get("indexed") is False)
-    record = {"_id": body.get("job_id"), "project_id": body.get("project_id"), "artifact_version_id": body.get("artifact_version_id"), "event": event, "model_version": body.get("model_version"), "status": "COMPLETED" if completed else "FAILED", "error_code": None if completed else "RAG_INDEX_FAILED", "retryable": not completed, "state_after_failure": "INDEX_FAILED" if not completed else None, "result": result, "completed_at": now()}
+    record = {"_id": body.get("job_id"), "project_id": body.get("project_id"), "artifact_version_id": body.get("artifact_version_id"), "event": event, "model_version": body.get("model_version"), "status": "COMPLETED" if completed else "FAILED", "error_code": None if completed else "KNOWLEDGE_INDEX_FAILED", "retryable": not completed, "state_after_failure": "INDEX_FAILED" if not completed else None, "result": result, "completed_at": now()}
     await database.value.worker_events.update_one({"_id": record["_id"]}, {"$set": record}, upsert=True)
     return envelope(record)
 
@@ -53,7 +53,7 @@ async def execute(event, body, payload, user):
     if event == "requirement.semantic_diff.requested":
         request = RequirementCompareInput(from_version_id=payload["from_version_id"], to_version_id=payload["to_version_id"])
         return (await create_change_set(payload["requirement_id"], request, user))["data"]
-    if event == "rag.index.requested":
+    if event == "knowledge.index.requested":
         return await reindex(body["project_id"], body["artifact_version_id"])
     if event == "requirement.extract.requested":
         return {"status": "READY_FOR_PREVIEW", "import_job_id": payload.get("import_job_id")}

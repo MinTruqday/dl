@@ -10,7 +10,7 @@ class Database:
     def value(self):
         if self.client is None:
             raise RuntimeError("Cơ sở dữ liệu chưa sẵn sàng")
-        return self.client[settings.QA_DB_NAME]
+        return self.client[settings.TESTING_DB_NAME]
 
 
 database = Database()

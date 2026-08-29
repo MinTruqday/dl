@@ -41,6 +41,6 @@ services:
       model_stub:
         condition: service_healthy
 
-  qa:
+  testing:
     environment:
-      QA_ALLOW_TEST_IDENTITY: "true"
+      TESTING_ALLOW_TEST_IDENTITY: "true"

@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { docText, formatDate, messageOf, textDoc } from "../lib/qa";
-import { qaApi } from "../services/qa.service";
-import { ErrorState, Panel, StatusPill } from "./QaUi";
+import { docText, formatDate, messageOf, textDoc } from "../lib/testing";
+import { testingApi } from "../services/testing.service";
+import { ErrorState, Panel, StatusPill } from "./TestingUi";
 
 export default function ReviewCommentsPanel({ projectId, artifactType, artifactId, title }) {
   const [items, setItems] = useState([]);
@@ -18,7 +18,7 @@ export default function ReviewCommentsPanel({ projectId, artifactType, artifactI
         artifact_id: artifactId,
         status: "",
       });
-      setItems(await qaApi.listReviewComments(projectId, query.toString()));
+      setItems(await testingApi.listReviewComments(projectId, query.toString()));
       setError("");
     } catch (reason) {
       setError(messageOf(reason));
@@ -33,7 +33,7 @@ export default function ReviewCommentsPanel({ projectId, artifactType, artifactI
     if (!value) return;
     setSaving(true);
     try {
-      await qaApi.createReviewComment(projectId, {
+      await testingApi.createReviewComment(projectId, {
         artifact_type: artifactType,
         artifact_id: artifactId,
         body_doc: textDoc(value),
@@ -48,8 +48,8 @@ export default function ReviewCommentsPanel({ projectId, artifactType, artifactI
   };
   const transition = async (item) => {
     try {
-      if (item.status === "OPEN") await qaApi.resolveReviewComment(item._id);
-      else await qaApi.reopenReviewComment(item._id);
+      if (item.status === "OPEN") await testingApi.resolveReviewComment(item._id);
+      else await testingApi.reopenReviewComment(item._id);
       await load();
     } catch (reason) {
       setError(messageOf(reason));

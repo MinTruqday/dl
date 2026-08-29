@@ -9,9 +9,9 @@ import {
   ProjectCrumb,
   QaPage,
   useQaActionDialog,
-} from "../../components/QaUi";
-import { formatDate, messageOf, valueLabel } from "../../lib/qa";
-import { qaApi } from "../../services/qa.service";
+} from "../../components/TestingUi";
+import { formatDate, messageOf, valueLabel } from "../../lib/testing";
+import { testingApi } from "../../services/testing.service";
 
 export default function ReportsPage({ project }) {
   const { ask, dialog } = useQaActionDialog();
@@ -21,10 +21,10 @@ export default function ReportsPage({ project }) {
   const load = useCallback(async () => {
     try {
       const [dashboard, coverage, snapshots, maintenance] = await Promise.all([
-        qaApi.dashboard(project._id),
-        qaApi.coverage(project._id, scope),
-        qaApi.listCoverageSnapshots(project._id),
-        qaApi.maintenanceAnalytics(project._id),
+        testingApi.dashboard(project._id),
+        testingApi.coverage(project._id, scope),
+        testingApi.listCoverageSnapshots(project._id),
+        testingApi.maintenanceAnalytics(project._id),
       ]);
       setValue({ dashboard, coverage, snapshots, maintenance });
     } catch (reason) {
@@ -56,7 +56,7 @@ export default function ReportsPage({ project }) {
               });
               if (!answer) return;
               try {
-                await qaApi.createCoverageSnapshot(project._id, {
+                await testingApi.createCoverageSnapshot(project._id, {
                   label: answer.label,
                   release: scope.release,
                   build: scope.build,

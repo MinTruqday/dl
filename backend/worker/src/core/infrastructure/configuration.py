@@ -20,7 +20,7 @@ class Settings(BaseModel):
     RABBITMQ_URI: str = os.environ["RABBITMQ_URI"]
     WORKER_DB_NAME: str = os.environ["WORKER_DB_NAME"]
     WORKER_MAX_RETRIES: int = int(os.environ["WORKER_MAX_RETRIES"])
-    QA_URL: str = get_service_url("QA")
+    TESTING_URL: str = get_service_url("TESTING")
 
 
 settings = Settings()

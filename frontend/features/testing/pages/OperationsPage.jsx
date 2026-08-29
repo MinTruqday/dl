@@ -1,9 +1,9 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import DataTable from "../components/DataTable";
-import { ErrorState, LoadingState, Metric, Panel, QaPage, StatusPill } from "../components/QaUi";
-import { formatDate, messageOf } from "../lib/qa";
-import { qaApi } from "../services/qa.service";
+import { ErrorState, LoadingState, Metric, Panel, QaPage, StatusPill } from "../components/TestingUi";
+import { formatDate, messageOf } from "../lib/testing";
+import { testingApi } from "../services/testing.service";
 
 export default function OperationsPage() {
   const [value, setValue] = useState(null);
@@ -11,7 +11,7 @@ export default function OperationsPage() {
   const [auditQuery, setAuditQuery] = useState("");
   const load = useCallback(async () => {
     try {
-      setValue(await qaApi.operations());
+      setValue(await testingApi.operations());
     } catch (reason) {
       setError(messageOf(reason));
     }
@@ -21,7 +21,7 @@ export default function OperationsPage() {
   }, [load]);
   const retryJob = async (jobId) => {
     try {
-      await qaApi.retryOperationJob(jobId);
+      await testingApi.retryOperationJob(jobId);
       await load();
     } catch (reason) {
       setError(messageOf(reason));
@@ -42,7 +42,7 @@ export default function OperationsPage() {
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-            <Metric label="Backlog lập chỉ mục RAG" value={value.rag_indexing_backlog} />
+            <Metric label="Backlog lập chỉ mục knowledge" value={value.knowledge_indexing_backlog} />
             <Metric label="Job nhập liệu lỗi" value={value.failed_ingestion_jobs.length} />
             <Metric label="Phân tích ảnh hưởng lỗi" value={value.failed_impact_jobs.length} />
             <Metric label="Worker failure" value={value.worker_failures.length} />

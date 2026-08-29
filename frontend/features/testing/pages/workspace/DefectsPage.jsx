@@ -10,9 +10,9 @@ import {
   QaPage,
   StatusPill,
   useQaActionDialog,
-} from "../../components/QaUi";
-import { qaApi } from "../../services/qa.service";
-import { messageOf, textDoc, valueLabel } from "../../lib/qa";
+} from "../../components/TestingUi";
+import { testingApi } from "../../services/testing.service";
+import { messageOf, textDoc, valueLabel } from "../../lib/testing";
 
 const nextStates = {
   NEW: ["CONFIRMED", "REJECTED", "DUPLICATE"],
@@ -50,8 +50,8 @@ export default function DefectsPage({ project }) {
   const load = useCallback(async () => {
     try {
       const [defectValues, resultValues] = await Promise.all([
-        qaApi.listDefectPage(project._id, { ...filters, page, page_size: 50 }),
-        qaApi.listResults(project._id, "PASS,FAIL"),
+        testingApi.listDefectPage(project._id, { ...filters, page, page_size: 50 }),
+        testingApi.listResults(project._id, "PASS,FAIL"),
       ]);
       setItems(defectValues.items);
       setPageInfo(defectValues);
@@ -66,7 +66,7 @@ export default function DefectsPage({ project }) {
   const create = async (event) => {
     event.preventDefault();
     try {
-      await qaApi.createDefect(project._id, {
+      await testingApi.createDefect(project._id, {
         project_id: project._id,
         title: form.title,
         description_doc: textDoc(form.description),
@@ -114,7 +114,7 @@ export default function DefectsPage({ project }) {
     });
     if (!answer) return;
     try {
-      await qaApi.transitionDefect(item._id, {
+      await testingApi.transitionDefect(item._id, {
         expected_revision: item.revision,
         to_status,
         reason: answer.reason,
@@ -140,7 +140,7 @@ export default function DefectsPage({ project }) {
     });
     if (!answer) return;
     try {
-      await qaApi.updateDefect(item._id, {
+      await testingApi.updateDefect(item._id, {
         expected_revision: item.revision,
         assignee: answer.assignee.trim() || null,
       });
@@ -159,7 +159,7 @@ export default function DefectsPage({ project }) {
             className="secondary-button"
             type="button"
             onClick={() =>
-              qaApi.exportDefects(project._id).catch((reason) => setError(messageOf(reason)))
+              testingApi.exportDefects(project._id).catch((reason) => setError(messageOf(reason)))
             }
           >
             Xuất CSV
@@ -169,7 +169,7 @@ export default function DefectsPage({ project }) {
             type="button"
             onClick={async () => {
               try {
-                setDuplicates(await qaApi.findDuplicateDefects(project._id));
+                setDuplicates(await testingApi.findDuplicateDefects(project._id));
               } catch (reason) {
                 setError(messageOf(reason));
               }
@@ -329,7 +329,7 @@ export default function DefectsPage({ project }) {
                     type="button"
                     onClick={async () => {
                       try {
-                        await qaApi.updateDefect(traceReview.defect._id, {
+                        await testingApi.updateDefect(traceReview.defect._id, {
                           expected_revision: traceReview.defect.revision,
                           linked_test_case_version_id: candidate.test_case_version_id,
                           linked_requirement_version_ids: candidate.requirement_version_ids,
@@ -443,7 +443,7 @@ export default function DefectsPage({ project }) {
                         try {
                           setTraceReview({
                             defect: item,
-                            candidates: await qaApi.findDefectTraceCandidates(item._id),
+                            candidates: await testingApi.findDefectTraceCandidates(item._id),
                           });
                         } catch (reason) {
                           setError(messageOf(reason));
@@ -465,7 +465,7 @@ export default function DefectsPage({ project }) {
                           });
                           if (!answer) return;
                           try {
-                            await qaApi.updateDefect(item._id, {
+                            await testingApi.updateDefect(item._id, {
                               expected_revision: item.revision,
                               linked_test_case_version_id: null,
                               linked_requirement_version_ids: [],
@@ -504,7 +504,7 @@ export default function DefectsPage({ project }) {
                     onChange={async (event) => {
                       if (!event.target.value) return;
                       try {
-                        await qaApi.retestDefect(project._id, item._id, {
+                        await testingApi.retestDefect(project._id, item._id, {
                           test_result_id: event.target.value,
                           expected_revision: item.revision,
                           note: "Retest từ giao diện quản lý lỗi",

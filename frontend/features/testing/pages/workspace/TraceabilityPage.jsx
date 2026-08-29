@@ -9,9 +9,9 @@ import {
   QaPage,
   StatusPill,
   useQaActionDialog,
-} from "../../components/QaUi";
-import { qaApi } from "../../services/qa.service";
-import { formatDate, messageOf } from "../../lib/qa";
+} from "../../components/TestingUi";
+import { testingApi } from "../../services/testing.service";
+import { formatDate, messageOf } from "../../lib/testing";
 
 export default function TraceabilityPage({ project }) {
   const { ask, dialog } = useQaActionDialog();
@@ -23,9 +23,9 @@ export default function TraceabilityPage({ project }) {
   const load = useCallback(async () => {
     try {
       const [traceValue, coverageValue, snapshotValues] = await Promise.all([
-        qaApi.traceability(project._id),
-        qaApi.coverage(project._id),
-        qaApi.listCoverageSnapshots(project._id),
+        testingApi.traceability(project._id),
+        testingApi.coverage(project._id),
+        testingApi.listCoverageSnapshots(project._id),
       ]);
       setMatrix(traceValue);
       setCoverage(coverageValue);
@@ -39,7 +39,7 @@ export default function TraceabilityPage({ project }) {
   }, [load]);
   const decision = async (item, accept) => {
     try {
-      await (accept ? qaApi.confirmTrace(item._id) : qaApi.rejectTrace(item._id));
+      await (accept ? testingApi.confirmTrace(item._id) : testingApi.rejectTrace(item._id));
       await load();
     } catch (reason) {
       setError(messageOf(reason));
@@ -55,7 +55,7 @@ export default function TraceabilityPage({ project }) {
             className="secondary-button"
             type="button"
             onClick={() =>
-              qaApi.exportTraceability(project._id).catch((reason) => setError(messageOf(reason)))
+              testingApi.exportTraceability(project._id).catch((reason) => setError(messageOf(reason)))
             }
           >
             Xuất CSV
@@ -65,7 +65,7 @@ export default function TraceabilityPage({ project }) {
             type="button"
             onClick={async () => {
               try {
-                await qaApi.recoverTrace(project._id);
+                await testingApi.recoverTrace(project._id);
                 await load();
               } catch (reason) {
                 setError(messageOf(reason));
@@ -94,7 +94,7 @@ export default function TraceabilityPage({ project }) {
               });
               if (!answer) return;
               try {
-                await qaApi.createCoverageSnapshot(project._id, {
+                await testingApi.createCoverageSnapshot(project._id, {
                   label: answer.label,
                   idempotency_key: crypto.randomUUID(),
                 });
@@ -127,7 +127,7 @@ export default function TraceabilityPage({ project }) {
           onSubmit={async (event) => {
             event.preventDefault();
             try {
-              await qaApi.createTrace({
+              await testingApi.createTrace({
                 project_id: project._id,
                 source_type: "requirement_version",
                 source_id: linkForm.source_id,
@@ -254,7 +254,7 @@ export default function TraceabilityPage({ project }) {
                     type="button"
                     onClick={async () => {
                       try {
-                        await qaApi.revokeTrace(item._id);
+                        await testingApi.revokeTrace(item._id);
                         await load();
                       } catch (reason) {
                         setError(messageOf(reason));

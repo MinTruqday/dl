@@ -18,7 +18,7 @@ from langgraph.graph import END, StateGraph
 from loguru import logger
 from src.memory.management import memory_manager
 
-from src.clients.rag import rag_client
+from src.clients.knowledge import knowledge_client
 from src.utils.processing import extract_text_from_base64
 from src.workflow.state import AgentState
 
@@ -63,7 +63,7 @@ try:
     redis_url = settings.REDIS_URI
     from langchain_community.cache import RedisSemanticCache
 
-    langchain.llm_cache = RedisSemanticCache(redis_url=redis_url, embedding=rag_client)
+    langchain.llm_cache = RedisSemanticCache(redis_url=redis_url, embedding=knowledge_client)
     logger.info("Redis semantic cache initialized")
 except Exception:
     logger.exception("Redis semantic cache initialization error")
@@ -112,7 +112,7 @@ async def route_question(state: AgentState):
         return {"current_source": "db", "route": response.route}
     except Exception:
         logger.exception("Graph routing execution error")
-        return {"current_source": "db", "route": "rag"}
+        return {"current_source": "db", "route": "knowledge"}
 
 
 def decide_initial_route(state: AgentState):
@@ -167,7 +167,7 @@ async def retrieve_db(state: AgentState):
     if document_ids and len(document_ids) >= 2:
         logger.info("Processing cross-document retrieval")
         try:
-            raw_documents = await rag_client.cross_document_retrieve(
+            raw_documents = await knowledge_client.cross_document_retrieve(
                 question, document_ids, k=6, requester_id=requester_id
             )
             extracted_documents = []
@@ -200,7 +200,7 @@ async def retrieve_db(state: AgentState):
     all_raw_documents = []
     for q in list(dict.fromkeys(queries))[:3]:
         try:
-            results = await rag_client.retrieve(
+            results = await knowledge_client.retrieve(
                 q, document_ids=document_ids, k=10, requester_id=requester_id
             )
             for doc in results:

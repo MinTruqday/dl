@@ -132,11 +132,11 @@ class ContextHarness:
 
         await short_term_memory.clear(session_id)
 
-    def apply_context_to_rag_state(self, ctx: AgentContext, rag_state: dict) -> dict:
-        rag_state["chat_history"] = ctx.chat_history
-        rag_state["user_id"] = ctx.user_id
-        rag_state["document_ids"] = ctx.active_document_ids
-        return rag_state
+    def apply_context_to_knowledge_state(self, ctx: AgentContext, knowledge_state: dict) -> dict:
+        knowledge_state["chat_history"] = ctx.chat_history
+        knowledge_state["user_id"] = ctx.user_id
+        knowledge_state["document_ids"] = ctx.active_document_ids
+        return knowledge_state
 
     def apply_context_to_acting_req(self, ctx: AgentContext, req: Any) -> Any:
         if hasattr(req, "conversation_history"):

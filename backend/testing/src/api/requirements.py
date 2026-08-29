@@ -44,7 +44,7 @@ from src.domain.schemas import (
 )
 from src.services.change_analysis import semantic_changes
 from src.services.linters import requirement_findings
-from src.services.project_rag import index_artifact
+from src.services.project_knowledge import index_artifact
 
 
 router = APIRouter(prefix="/api/qa", tags=["QA Requirements"])
@@ -1475,5 +1475,5 @@ async def validate_requirement_sources(project_id, source_refs):
 
 async def index_requirement(version):
     indexed = await index_artifact(version["project_id"], "requirement_version", version["requirement_id"], version["_id"], version["title"], version.get("plain_text_projection", ""), version.get("status", "DRAFT"), "baseline" if version.get("status") == "BASELINED" else "draft", version.get("version"))
-    await database.value.requirement_versions.update_one({"_id": version["_id"]}, {"$set": {"index_status": "READY" if indexed else "FAILED", "index_error_code": None if indexed else "RAG_INDEX_FAILED", "updated_at": now()}})
+    await database.value.requirement_versions.update_one({"_id": version["_id"]}, {"$set": {"index_status": "READY" if indexed else "FAILED", "index_error_code": None if indexed else "KNOWLEDGE_INDEX_FAILED", "updated_at": now()}})
     return indexed

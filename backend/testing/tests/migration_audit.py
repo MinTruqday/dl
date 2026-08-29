@@ -6,7 +6,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 async def main():
     client = AsyncIOMotorClient(os.getenv("MONGODB_URI", "mongodb://mongodb:27017"))
-    db = client[os.getenv("QA_DB_NAME", "qa")]
+    db = client[os.getenv("TESTING_DB_NAME", "testing")]
     expected = {
         "requirements": {"project_id_1_requirement_key_1"},
         "requirement_versions": {"requirement_id_1_version_1"},

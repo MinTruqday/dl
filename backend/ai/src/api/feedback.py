@@ -26,7 +26,7 @@ async def submit_feedback(
             "created_at": datetime.now(timezone.utc),
         }
 
-        await mongo.insert_one(collection="rag_feedback", document=feedback_doc)
+        await mongo.insert_one(collection="knowledge_feedback", document=feedback_doc)
         logger.info("User feedback persisted")
         return {"status": "success", "message_code": "feedback_recorded"}
     except Exception:

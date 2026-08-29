@@ -11,9 +11,9 @@ import {
   QaPage,
   StatusPill,
   useQaActionDialog,
-} from "../../components/QaUi";
-import { qaApi } from "../../services/qa.service";
-import { docText, emptyDoc, messageOf, textDoc, valueLabel } from "../../lib/qa";
+} from "../../components/TestingUi";
+import { testingApi } from "../../services/testing.service";
+import { docText, emptyDoc, messageOf, textDoc, valueLabel } from "../../lib/testing";
 import QaDocumentEditor from "../../editor/QaDocumentEditor";
 
 export default function TestDesignPage({ project }) {
@@ -78,17 +78,17 @@ export default function TestDesignPage({ project }) {
         operationValues,
       ] =
         await Promise.all([
-          qaApi.listRequirements(project._id, { page_size: 500 }),
-          qaApi.listScenarios(project._id),
-          qaApi.listDataSets(project._id),
-          qaApi.listTestDrafts(project._id),
-          qaApi.listTestCasePage(project._id, {
+          testingApi.listRequirements(project._id, { page_size: 500 }),
+          testingApi.listScenarios(project._id),
+          testingApi.listDataSets(project._id),
+          testingApi.listTestDrafts(project._id),
+          testingApi.listTestCasePage(project._id, {
             ...testFilters,
             page: testPage,
             page_size: 50,
           }),
-          qaApi.listSuites(project._id),
-          qaApi.listApiOperations(project._id),
+          testingApi.listSuites(project._id),
+          testingApi.listApiOperations(project._id),
         ]);
       setRequirements(requirementValues);
       setScenarios(scenarioValues);
@@ -156,7 +156,7 @@ export default function TestDesignPage({ project }) {
   const create = async (event) => {
     event.preventDefault();
     try {
-      await qaApi.createTestDraft(project._id, {
+      await testingApi.createTestDraft(project._id, {
         title: form.title,
         type: form.type,
         priority: form.priority,
@@ -202,7 +202,7 @@ export default function TestDesignPage({ project }) {
   const createScenario = async (event) => {
     event.preventDefault();
     try {
-      await qaApi.createScenario(project._id, {
+      await testingApi.createScenario(project._id, {
         title: scenarioForm.title,
         objective: scenarioForm.objective,
         category: scenarioForm.category,
@@ -222,7 +222,7 @@ export default function TestDesignPage({ project }) {
   const createDataSet = async (event) => {
     event.preventDefault();
     try {
-      await qaApi.createDataSet(project._id, {
+      await testingApi.createDataSet(project._id, {
         name: dataSetForm.name,
         variables: JSON.parse(dataSetForm.variables || "{}"),
         secret_refs: JSON.parse(dataSetForm.secretRefs || "{}"),
@@ -236,7 +236,7 @@ export default function TestDesignPage({ project }) {
   const generate = async () => {
     if (!selectedRequirement) return setError("Cần chọn yêu cầu trước khi tạo ca kiểm thử");
     try {
-      await qaApi.generateTestCases(selectedRequirement, {
+      await testingApi.generateTestCases(selectedRequirement, {
         categories: ["happy_path", "negative", "boundary", "validation"],
         count_per_category: 1,
         instruction: "Tạo theo phiên bản chuẩn và tiêu chí chấp nhận",
@@ -254,7 +254,7 @@ export default function TestDesignPage({ project }) {
     });
     if (!answer) return;
     try {
-      await qaApi.freezeTestDraft(draft._id, draft.revision, "Phê duyệt sau rà soát của con người");
+      await testingApi.freezeTestDraft(draft._id, draft.revision, "Phê duyệt sau rà soát của con người");
       await load();
     } catch (reason) {
       setError(messageOf(reason));
@@ -281,9 +281,9 @@ export default function TestDesignPage({ project }) {
     try {
       const payload = { expected_revision: draft.revision, review_note: answer.note };
       if (action === "submit") {
-        await qaApi.submitTestCaseReview(project._id, draft._id, payload);
+        await testingApi.submitTestCaseReview(project._id, draft._id, payload);
       } else {
-        await qaApi.requestTestCaseChanges(project._id, draft._id, payload);
+        await testingApi.requestTestCaseChanges(project._id, draft._id, payload);
       }
       await load();
     } catch (reason) {
@@ -301,7 +301,7 @@ export default function TestDesignPage({ project }) {
         expected_doc: textDoc(step.expected),
       }));
       setDraftSaveState("saving");
-      const result = await qaApi.updateTestDraft(selectedDraft._id, {
+      const result = await testingApi.updateTestDraft(selectedDraft._id, {
         expected_revision: selectedDraft.revision,
         title: snapshot.title,
         type: snapshot.type,
@@ -377,7 +377,7 @@ export default function TestDesignPage({ project }) {
             onClick={async () => {
               if (!selectedRequirement) return;
               try {
-                await qaApi.generateScenarios(selectedRequirement, {
+                await testingApi.generateScenarios(selectedRequirement, {
                   categories: ["happy_path", "negative", "boundary", "validation"],
                   count_per_category: 1,
                 });
@@ -394,7 +394,7 @@ export default function TestDesignPage({ project }) {
             type="button"
             onClick={async () => {
               try {
-                setDuplicates(await qaApi.findDuplicates(project._id));
+                setDuplicates(await testingApi.findDuplicates(project._id));
               } catch (reason) {
                 setError(messageOf(reason));
               }
@@ -487,7 +487,7 @@ export default function TestDesignPage({ project }) {
                   if (!answer) return;
                   const splitTags = (value) => value.split(",").map((item) => item.trim()).filter(Boolean);
                   try {
-                    await qaApi.bulkTags(project._id, {
+                    await testingApi.bulkTags(project._id, {
                       artifact_type: "test_case",
                       ids: selectedTestIds,
                       add_tags: splitTags(answer.add),
@@ -523,7 +523,7 @@ export default function TestDesignPage({ project }) {
                   if (!answer) return;
                   const suite = suites.find((item) => item._id === answer.suiteId);
                   try {
-                    await qaApi.bulkAddToSuite(project._id, {
+                    await testingApi.bulkAddToSuite(project._id, {
                       suite_id: answer.suiteId,
                       test_case_ids: selectedTestIds,
                       expected_revision: suite?.revision || 1,
@@ -550,7 +550,7 @@ export default function TestDesignPage({ project }) {
                   });
                   if (!answer) return;
                   try {
-                    await qaApi.bulkMarkReviewRequired(project._id, {
+                    await testingApi.bulkMarkReviewRequired(project._id, {
                       test_case_ids: selectedTestIds,
                       reason: answer.reason,
                     });
@@ -577,7 +577,7 @@ export default function TestDesignPage({ project }) {
                   });
                   if (!answer) return;
                   try {
-                    await qaApi.bulkArchive(project._id, {
+                    await testingApi.bulkArchive(project._id, {
                       artifact_type: "test_case",
                       ids: selectedTestIds,
                       reason: answer.reason,
@@ -666,7 +666,7 @@ export default function TestDesignPage({ project }) {
             onSelect={async (item) => {
               setSelectedTestId(item._id);
               try {
-                setTestVersions(await qaApi.listTestVersions(item._id));
+                setTestVersions(await testingApi.listTestVersions(item._id));
               } catch (reason) {
                 setError(messageOf(reason));
               }
@@ -700,7 +700,7 @@ export default function TestDesignPage({ project }) {
                       onClick={async (event) => {
                         event.stopPropagation();
                         try {
-                          await qaApi.cloneTestCase(item._id, {
+                          await testingApi.cloneTestCase(item._id, {
                             expected_current_version_id: item.current_version_id,
                             title: `${item.current_version?.title || item.test_case_key} bản sao`,
                           });
@@ -736,13 +736,13 @@ export default function TestDesignPage({ project }) {
                           });
                           if (!answer) return;
                           try {
-                            await qaApi.obsoleteTestCase(item._id, {
+                            await testingApi.obsoleteTestCase(item._id, {
                               expected_current_version_id: item.current_version_id,
                               reason: answer.reason,
                             });
                             await load();
                             if (selectedTestId === item._id) {
-                              setTestVersions(await qaApi.listTestVersions(item._id));
+                              setTestVersions(await testingApi.listTestVersions(item._id));
                             }
                           } catch (reasonValue) {
                             setError(messageOf(reasonValue));
@@ -788,7 +788,7 @@ export default function TestDesignPage({ project }) {
                 type="button"
                 onClick={async () => {
                   try {
-                    setTestLint(await qaApi.lintTestDraft(selectedDraft._id));
+                    setTestLint(await testingApi.lintTestDraft(selectedDraft._id));
                   } catch (reason) {
                     setError(messageOf(reason));
                   }
@@ -1313,7 +1313,7 @@ export default function TestDesignPage({ project }) {
               });
               if (!answer || answer.title === item.title) return;
               try {
-                await qaApi.updateScenario(item._id, {
+                await testingApi.updateScenario(item._id, {
                   expected_revision: item.revision,
                   title: answer.title,
                 });
@@ -1414,7 +1414,7 @@ export default function TestDesignPage({ project }) {
             });
             if (!answer) return;
             try {
-              await qaApi.createDataSetVersion(item._id, {
+              await testingApi.createDataSetVersion(item._id, {
                 expected_current_version_id: item.current_version_id,
                 name: answer.name,
                 variables: JSON.parse(answer.variables),
@@ -1478,7 +1478,7 @@ export default function TestDesignPage({ project }) {
               className="secondary-button"
               type="button"
               onClick={() =>
-                qaApi
+                testingApi
                   .exportTestCases(project._id, "csv")
                   .catch((reason) => setError(messageOf(reason)))
               }
@@ -1489,7 +1489,7 @@ export default function TestDesignPage({ project }) {
               className="secondary-button"
               type="button"
               onClick={() =>
-                qaApi
+                testingApi
                   .exportTestCases(project._id, "xlsx")
                   .catch((reason) => setError(messageOf(reason)))
               }
@@ -1509,7 +1509,7 @@ export default function TestDesignPage({ project }) {
               const file = event.target.files?.[0];
               if (!file) return;
               try {
-                setTestImport(await qaApi.uploadTestImport(project._id, file));
+                setTestImport(await testingApi.uploadTestImport(project._id, file));
               } catch (reason) {
                 setError(messageOf(reason));
               }
@@ -1532,7 +1532,7 @@ export default function TestDesignPage({ project }) {
                 type="button"
                 onClick={async () => {
                   try {
-                    await qaApi.confirmTestImport(
+                    await testingApi.confirmTestImport(
                       testImport._id,
                       testImport.preview.map((_, index) => index),
                     );
@@ -1559,7 +1559,7 @@ export default function TestDesignPage({ project }) {
             onSubmit={async (event) => {
               event.preventDefault();
               try {
-                await qaApi.importApiArtifact(project._id, apiImport);
+                await testingApi.importApiArtifact(project._id, apiImport);
                 setApiImport({ ...apiImport, content: "" });
                 await load();
               } catch (reason) {
@@ -1613,7 +1613,7 @@ export default function TestDesignPage({ project }) {
                     type="button"
                     onClick={async () => {
                       try {
-                        await qaApi.generateApiTests(item._id);
+                        await testingApi.generateApiTests(item._id);
                         await load();
                       } catch (reason) {
                         setError(messageOf(reason));

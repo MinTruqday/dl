@@ -10,9 +10,9 @@ import {
   QaPage,
   StatusPill,
   useQaActionDialog,
-} from "../../components/QaUi";
-import { qaApi } from "../../services/qa.service";
-import { docText, messageOf, textDoc, valueLabel } from "../../lib/qa";
+} from "../../components/TestingUi";
+import { testingApi } from "../../services/testing.service";
+import { docText, messageOf, textDoc, valueLabel } from "../../lib/testing";
 
 export default function ExecutionPage({ project, section }) {
   const { ask, dialog } = useQaActionDialog();
@@ -41,17 +41,17 @@ export default function ExecutionPage({ project, section }) {
   const load = useCallback(async () => {
     try {
       const [planValues, suiteValues, runValues, testValues] = await Promise.all([
-        qaApi.listPlans(project._id),
-        qaApi.listSuites(project._id),
-        qaApi.listRunPage(project._id, { ...runFilters, page: runPage, page_size: 50 }),
-        qaApi.listTestCases(project._id, { page_size: 500 }),
+        testingApi.listPlans(project._id),
+        testingApi.listSuites(project._id),
+        testingApi.listRunPage(project._id, { ...runFilters, page: runPage, page_size: 50 }),
+        testingApi.listTestCases(project._id, { page_size: 500 }),
       ]);
       setPlans(planValues);
       setSuites(suiteValues);
       setRuns(runValues.items);
       setRunPageInfo(runValues);
       setTests(testValues);
-      if (runId) setRun(await qaApi.getRun(runId));
+      if (runId) setRun(await testingApi.getRun(runId));
     } catch (reason) {
       setError(messageOf(reason));
     }
@@ -63,7 +63,7 @@ export default function ExecutionPage({ project, section }) {
   const createRun = async (event) => {
     event.preventDefault();
     try {
-      await qaApi.createRun({
+      await testingApi.createRun({
         project_id: project._id,
         name: runForm.name,
         test_plan_id: runForm.testPlanId || null,
@@ -100,7 +100,7 @@ export default function ExecutionPage({ project, section }) {
           note: existing?.note || "",
         };
       });
-      await qaApi.updateExecution(project._id, execution._id, {
+      await testingApi.updateExecution(project._id, execution._id, {
         status,
         step_results: status === "IN_PROGRESS" ? execution.step_results || [] : values,
         actual_result_doc: textDoc(actuals[execution._id] || docText(execution.actual_result_doc)),
@@ -109,14 +109,14 @@ export default function ExecutionPage({ project, section }) {
         idempotency_key: crypto.randomUUID(),
         expected_revision: execution.revision,
       });
-      setRun(await qaApi.getRun(run._id));
+      setRun(await testingApi.getRun(run._id));
     } catch (reason) {
       setError(messageOf(reason));
     }
   };
   const createDefectFromResult = async (result, version) => {
     try {
-      await qaApi.createDefect(project._id, {
+      await testingApi.createDefect(project._id, {
         project_id: project._id,
         title: `Lỗi khi thực thi ${version.test_case_key} ${version.title}`,
         description_doc: textDoc(`Phát hiện trong lần chạy ${run.name}`),
@@ -132,7 +132,7 @@ export default function ExecutionPage({ project, section }) {
         linked_test_case_version_id: version._id,
         linked_requirement_version_ids: version.requirement_version_ids || [],
       });
-      setRun(await qaApi.getRun(run._id));
+      setRun(await testingApi.getRun(run._id));
     } catch (reason) {
       setError(messageOf(reason));
     }
@@ -153,7 +153,7 @@ export default function ExecutionPage({ project, section }) {
                 className="secondary-button"
                 type="button"
                 onClick={() =>
-                  qaApi.exportRunReport(run._id).catch((reason) => setError(messageOf(reason)))
+                  testingApi.exportRunReport(run._id).catch((reason) => setError(messageOf(reason)))
                 }
               >
                 Xuất báo cáo
@@ -164,8 +164,8 @@ export default function ExecutionPage({ project, section }) {
                   type="button"
                   onClick={async () => {
                     try {
-                      await qaApi.startRun(run._id);
-                      setRun(await qaApi.getRun(run._id));
+                      await testingApi.startRun(run._id);
+                      setRun(await testingApi.getRun(run._id));
                     } catch (reason) {
                       setError(messageOf(reason));
                     }
@@ -198,8 +198,8 @@ export default function ExecutionPage({ project, section }) {
                       });
                       if (!answer) return;
                       try {
-                        await qaApi.abortRun(run._id, answer.reason);
-                        setRun(await qaApi.getRun(run._id));
+                        await testingApi.abortRun(run._id, answer.reason);
+                        setRun(await testingApi.getRun(run._id));
                       } catch (value) {
                         setError(messageOf(value));
                       }
@@ -212,8 +212,8 @@ export default function ExecutionPage({ project, section }) {
                     type="button"
                     onClick={async () => {
                       try {
-                        await qaApi.completeRun(run._id);
-                        setRun(await qaApi.getRun(run._id));
+                        await testingApi.completeRun(run._id);
+                        setRun(await testingApi.getRun(run._id));
                       } catch (reason) {
                         setError(messageOf(reason));
                       }
@@ -435,7 +435,7 @@ export default function ExecutionPage({ project, section }) {
               event.preventDefault();
               const value = new FormData(event.currentTarget);
               try {
-                await qaApi.createPlan({
+                await testingApi.createPlan({
                   project_id: project._id,
                   name: value.get("name"),
                   objective: value.get("objective"),
@@ -482,7 +482,7 @@ export default function ExecutionPage({ project, section }) {
               event.preventDefault();
               const value = new FormData(event.currentTarget);
               try {
-                await qaApi.createSuite({
+                await testingApi.createSuite({
                   project_id: project._id,
                   name: value.get("name"),
                   suite_type: value.get("type"),

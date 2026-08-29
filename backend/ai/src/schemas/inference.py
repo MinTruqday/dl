@@ -12,12 +12,12 @@ class CrossDocumentExpansionRequest(BaseModel):
     document_ids: List[Annotated[str, Field(min_length=1, max_length=128)]] = Field(min_length=2, max_length=100, description="Danh sách tài liệu theo thứ tự cần truy xuất")
 
 
-class RagChunkSafetyRequest(BaseModel):
+class KnowledgeChunkSafetyRequest(BaseModel):
     texts: List[Annotated[str, Field(min_length=1, max_length=4000)]] = Field(min_length=1, max_length=500, description="Các đoạn truy xuất cần kiểm tra an toàn")
 
 
-class RagDocumentSummaryRequest(BaseModel):
-    text: str = Field(min_length=1, max_length=15000, description="Nội dung tài liệu cần tóm tắt cho RAG")
+class KnowledgeDocumentSummaryRequest(BaseModel):
+    text: str = Field(min_length=1, max_length=15000, description="Nội dung tài liệu cần tóm tắt cho knowledge")
 
 
 class QAAssistanceRequest(BaseModel):
@@ -38,3 +38,5 @@ class QAAssistanceResult(BaseModel):
     status: Literal["SUCCESS", "DEGRADED"] = Field(default="SUCCESS", description="Trạng thái vận hành của năng lực AI")
     degraded_mode: str | None = Field(default=None, description="Chế độ fallback khi provider hoặc retrieval không sẵn sàng")
     model: dict[str, Any] = Field(default_factory=dict, description="Metadata version của model prompt và tool schema")
+    reason_codes: List[str] = Field(default_factory=list, max_length=100, description="Mã lý do có thể audit không chứa hidden reasoning")
+    workflow: dict[str, Any] = Field(default_factory=dict, description="Trạng thái Observe Reason Act Observe có thể audit")

@@ -6,9 +6,9 @@ import httpx
 SERVICES = {
     "authentication": os.getenv("AUTH_TEST_URL", "http://authentication:8000"),
     "content": os.getenv("CONTENT_TEST_URL", "http://content:8000"),
-    "rag": os.getenv("RAG_TEST_URL", "http://rag:8000"),
+    "knowledge": os.getenv("KNOWLEDGE_TEST_URL", "http://ai:8000"),
     "ai": os.getenv("AI_TEST_URL", "http://ai:8000"),
-    "qa": os.getenv("QA_TEST_URL", "http://qa:8000"),
+    "testing": os.getenv("TESTING_TEST_URL", "http://testing:8000"),
 }
 
 
@@ -20,7 +20,7 @@ for name, base_url in SERVICES.items():
         assert schema.status_code == 200, f"{name} schema contract failed {schema.text}"
         assert schema.json().get("paths"), f"{name} exposes no API paths"
 
-with httpx.Client(base_url=SERVICES["qa"], timeout=20) as client:
+with httpx.Client(base_url=SERVICES["testing"], timeout=20) as client:
     unauthenticated = client.get("/api/qa/projects")
     assert unauthenticated.status_code == 401
     assert unauthenticated.json()["error"]["code"] == "AUTH_REQUIRED"

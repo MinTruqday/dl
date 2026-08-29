@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 
 class IngestRequest(BaseModel):
     """
-    Trigger asynchronous ingestion of a document into the RAG vector store.
+    Trigger asynchronous ingestion of a document into the knowledge vector store.
     Constraint: Requires document_id mapping to the external document storage DB.
     """
 

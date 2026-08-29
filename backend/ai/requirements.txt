@@ -33,3 +33,12 @@ presidio-anonymizer
 en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
 protobuf>=6.33.5,<7.0.0
 click>=8.4.2,<9.0.0
+rank_bm25==0.2.2
+pymupdf==1.24.2
+pypdfium2>=4.30.0
+beautifulsoup4>=4.12.0
+boto3>=1.28.57
+docling>=2.0.0
+docling-core
+onnxruntime>=1.17.0,<2.0.0
+sentencepiece==0.2.2

@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { statusLabel } from "../lib/qa";
+import { statusLabel } from "../lib/testing";
 
 export function useQaActionDialog() {
   const titleId = useId();

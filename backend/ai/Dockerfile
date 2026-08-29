@@ -1,5 +1,3 @@
-FROM ghcr.io/astral-sh/uv:latest AS uv-build
-
 FROM python:3.11-slim
 
 ENV PYTHONUNBUFFERED=1 \
@@ -12,7 +10,6 @@ ENV PYTHONUNBUFFERED=1 \
 WORKDIR /app
 
 COPY ai/requirements.txt .
-COPY --from=uv-build /uv /usr/local/bin/uv
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
@@ -23,6 +20,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     ripgrep \
     && mkdir -p /home/appuser/.cache/tmp \
+    && pip install --no-cache-dir uv==0.12.3 \
     && uv pip install --system --no-cache \
         --index-strategy unsafe-best-match -r requirements.txt \
     && apt-get purge -y build-essential \

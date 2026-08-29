@@ -26,6 +26,7 @@ class Settings(BaseModel):
     REDIS_URI: str = os.environ["REDIS_URI"]
     RABBITMQ_URI: str = os.environ["RABBITMQ_URI"]
     QDRANT_URL: str = os.environ["QDRANT_URL"]
+    EMBEDDING_MODEL: str = os.environ["EMBEDDING_MODEL"]
     DOCKER_HOST: str = os.environ["DOCKER_HOST"]
     MINIO_ENDPOINT: str = os.environ["MINIO_ENDPOINT"]
     MINIO_ACCESS_KEY: str = os.environ["MINIO_ACCESS_KEY"]
@@ -47,9 +48,9 @@ class Settings(BaseModel):
     RERANKER_MODEL: str = os.environ["RERANKER_MODEL"]
     NLI_MODEL_NAME: str = os.environ["NLI_MODEL_NAME"]
     PLATFORM_SYSTEM_ID: str = os.environ["PLATFORM_SYSTEM_ID"]
-    RAG_URL: str = get_service_url("RAG")
     AI_DB_NAME: str = os.environ["AI_DB_NAME"]
     CONTENT_URL: str = get_service_url("CONTENT")
+    AI_REQUEST_TIMEOUT_SECONDS: float = float(os.getenv("AI_REQUEST_TIMEOUT_SECONDS", "900"))
     AGENT_SLOW_DURATION_MS_THRESHOLD: int = int(os.environ["AGENT_SLOW_DURATION_MS_THRESHOLD"])
     AGENT_ROUTE_CONFIDENCE_THRESHOLD: float = float(os.environ["AGENT_ROUTE_CONFIDENCE_THRESHOLD"])
     AGENT_EXECUTION_TIMEOUT_SECONDS: int = int(os.environ["AGENT_EXECUTION_TIMEOUT_SECONDS"])

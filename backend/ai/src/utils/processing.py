@@ -1,11 +1,11 @@
 import base64
 
 from loguru import logger
-from src.clients.rag import rag_client
+from src.clients.knowledge import knowledge_client
 
 
 async def extract_text_from_base64(base64_data: str, filename: str = "attachment.pdf") -> str:
-    """Decode plain text locally and delegate document conversion to RAG."""
+    """Decode plain text locally and delegate document conversion to knowledge."""
     try:
         media_type = ""
         payload = base64_data
@@ -22,7 +22,7 @@ async def extract_text_from_base64(base64_data: str, filename: str = "attachment
             return file_bytes.decode("utf-8", errors="replace")
 
         logger.info("Delegating attachment conversion to knowledge service")
-        return await rag_client.extract_attachment(base64_data, filename)
+        return await knowledge_client.extract_attachment(base64_data, filename)
     except Exception:
         logger.exception("File text extraction error")
         return ""

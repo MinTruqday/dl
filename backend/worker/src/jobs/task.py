@@ -41,7 +41,7 @@ async def handle_qa_job(payload: dict):
     )
     async with httpx.AsyncClient(timeout=120) as client:
         response = await client.post(
-            f"{settings.QA_URL}/api/qa/internal/jobs/{payload.get('event')}",
+            f"{settings.TESTING_URL}/api/qa/internal/jobs/{payload.get('event')}",
             headers={
                 "X-Internal-Token": settings.SECRET_KEY,
                 "X-Requester-Id": requester_id,

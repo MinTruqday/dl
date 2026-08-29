@@ -20,7 +20,7 @@ from src.services.change_analysis import (
     technique_candidate,
 )
 from src.services.ai_assistance import apply_ai_impact_suggestions, request_impact_classification
-from src.services.project_rag import index_artifact
+from src.services.project_knowledge import index_artifact
 
 
 router = APIRouter(prefix="/api/qa", tags=["QA Change Maintenance"])

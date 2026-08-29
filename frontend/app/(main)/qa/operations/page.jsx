@@ -1,4 +1,4 @@
-import OperationsPage from "@/features/qa/pages/OperationsPage";
+import OperationsPage from "@/features/testing/pages/OperationsPage";
 
 export default function Page() {
   return <OperationsPage />;

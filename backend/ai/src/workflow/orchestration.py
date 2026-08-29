@@ -303,6 +303,16 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
         if succeeded:
             completed_task_updates.append(task["id"])
 
+    tool_history = [
+        {
+            "step_id": task["id"],
+            "agent": agent_name,
+            "status": task_status_updates[task["id"]],
+            "result_digest": str(result)[:1000],
+        }
+        for task, result in zip(my_tasks, task_results)
+    ]
+
     return {
         "task_status": task_status_updates,
         "completed_tasks": completed_task_updates,
@@ -310,6 +320,7 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
         "consolidated_results": [
             f"[{agent_name} - {t['id']}]:\n{res}" for t, res in zip(my_tasks, task_results)
         ],
+        "tool_history": tool_history,
         "last_agent_result": task_results[-1]
         if task_results
         else json.dumps({"status": "completed"}),
@@ -505,6 +516,19 @@ class OrchestrationWorkflow:
             "replan_count": 0,
             "results_trimmed": False,
             "start_time": time.time(),
+            "request_id": str(req_data.get("request_id") or session_id),
+            "user_id": user_id,
+            "project_id": str(req_data.get("project_id", "")),
+            "intent": str(req_data.get("intent") or req_data.get("capability") or ""),
+            "current_requirement_version": str(req_data.get("current_requirement_version", "")),
+            "change_set": dict(req_data.get("change_set") or {}),
+            "candidates": list(req_data.get("candidates") or []),
+            "evidence": list(req_data.get("evidence") or []),
+            "tool_history": [],
+            "reason_codes": [],
+            "confidence": float(req_data.get("confidence", 0)),
+            "degraded_flags": list(req_data.get("degraded_flags") or []),
+            "approval_required": bool(req_data.get("approval_required", False)),
         }
 
         final_results = []

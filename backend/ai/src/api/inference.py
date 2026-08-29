@@ -8,7 +8,7 @@ from src.core.dependency import verify_internal_token
 from src.core.infrastructure.configuration import settings
 from src.core.model_runtime import run_chat_completion
 from src.core.registry import PromptType, registry
-from src.schemas.inference import CrossDocumentExpansionRequest, QAAssistanceRequest, QAAssistanceResult, RagChunkSafetyRequest, RagDocumentSummaryRequest, RetrievalExpansionRequest
+from src.schemas.inference import CrossDocumentExpansionRequest, QAAssistanceRequest, QAAssistanceResult, KnowledgeChunkSafetyRequest, KnowledgeDocumentSummaryRequest, RetrievalExpansionRequest
 from src.utils.local_models import local_model_client
 
 
@@ -31,7 +31,7 @@ async def structured(prompt, schema, max_tokens=1200, timeout_seconds=90):
         return validate_structured_output(corrected, schema)
 
 
-@router.post("/noi-bo/mo-rong-truy-van", dependencies=[Depends(verify_internal_token)], description="Mở rộng truy vấn thành giả thuyết và các truy vấn con phục vụ RAG")
+@router.post("/noi-bo/mo-rong-truy-van", dependencies=[Depends(verify_internal_token)], description="Mở rộng truy vấn thành giả thuyết và các truy vấn con phục vụ knowledge")
 async def expand_retrieval_query(req: RetrievalExpansionRequest):
     from src.schemas.routing import MultiQueryOutput
 
@@ -51,8 +51,8 @@ async def decompose_cross_document_query(req: CrossDocumentExpansionRequest):
     return {"queries": queries}
 
 
-@router.post("/noi-bo/kiem-tra-doan-rag", dependencies=[Depends(verify_internal_token)], description="Kiểm tra prompt injection và độ an toàn của các đoạn RAG")
-async def inspect_rag_chunks(req: RagChunkSafetyRequest):
+@router.post("/noi-bo/kiem-tra-doan-knowledge", dependencies=[Depends(verify_internal_token)], description="Kiểm tra prompt injection và độ an toàn của các đoạn knowledge")
+async def inspect_knowledge_chunks(req: KnowledgeChunkSafetyRequest):
     import asyncio
     from src.harness.security import security
 
@@ -65,13 +65,13 @@ async def inspect_rag_chunks(req: RagChunkSafetyRequest):
     return {"safe_indices": [value for value in values if value is not None]}
 
 
-@router.post("/noi-bo/tom-tat-tai-lieu-rag", dependencies=[Depends(verify_internal_token)], description="Tóm tắt tài liệu RAG sau khi kiểm tra an toàn")
-async def summarize_rag_document(req: RagDocumentSummaryRequest):
+@router.post("/noi-bo/tom-tat-tai-lieu-knowledge", dependencies=[Depends(verify_internal_token)], description="Tóm tắt tài liệu knowledge sau khi kiểm tra an toàn")
+async def summarize_knowledge_document(req: KnowledgeDocumentSummaryRequest):
     from src.core.security.guardrails import guardrails_engine
 
     inspected = await guardrails_engine.async_inspect_input(req.text)
     if not inspected.get("is_safe", False):
-        raise HTTPException(status_code=422, detail={"code": "rag_summary_input_unsafe"})
+        raise HTTPException(status_code=422, detail={"code": "knowledge_summary_input_unsafe"})
     summary = await chat([{"role": "user", "content": registry.get(PromptType.DOCUMENT_GLOBAL_SUMMARY).format(text=inspected.get("sanitized_text") or req.text)}], max_tokens=512)
     return {"summary": summary.strip()}
 
@@ -104,4 +104,27 @@ async def qa_assistance(req: QAAssistanceRequest):
         raise HTTPException(status_code=502, detail={"code": "qa_capability_mismatch"})
     if not result.model:
         result.model = model
+    if not result.evidence_refs:
+        result.evidence_refs = [
+            str(item.get("artifact_version_id") or item.get("artifact_id"))
+            for item in req.evidence
+            if item.get("artifact_version_id") or item.get("artifact_id")
+        ]
+    if not result.reason_codes:
+        result.reason_codes = [
+            str(item.get("reason_code") or item.get("action") or "EVIDENCE_REVIEW")
+            for item in result.suggestions
+        ][:100]
+    result.workflow = {
+        "request_id": f"qa-{datetime.now(timezone.utc).timestamp()}",
+        "project_id": req.project_id,
+        "intent": req.capability,
+        "phases": ["OBSERVE_EVIDENCE", "REASON_AND_PLAN", "ACT_VALIDATE_PROPOSAL", "OBSERVE_VALIDATION"],
+        "evidence_count": len(evidence),
+        "candidate_count": len(result.suggestions),
+        "confidence": result.confidence,
+        "degraded_flags": result.warnings if result.status == "DEGRADED" else [],
+        "approval_required": bool(result.suggestions),
+        "hidden_reasoning_stored": False,
+    }
     return result

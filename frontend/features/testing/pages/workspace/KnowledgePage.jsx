@@ -8,9 +8,9 @@ import {
   ProjectCrumb,
   QaPage,
   StatusPill,
-} from "../../components/QaUi";
-import { qaApi } from "../../services/qa.service";
-import { messageOf } from "../../lib/qa";
+} from "../../components/TestingUi";
+import { testingApi } from "../../services/testing.service";
+import { messageOf } from "../../lib/testing";
 
 export default function KnowledgePage({ project }) {
   const [query, setQuery] = useState("");
@@ -31,7 +31,7 @@ export default function KnowledgePage({ project }) {
             event.preventDefault();
             try {
               setResult(
-                await qaApi.searchKnowledge(project._id, { query, artifact_types: [], limit: 50 }),
+                await testingApi.searchKnowledge(project._id, { query, artifact_types: [], limit: 50 }),
               );
             } catch (reason) {
               setError(messageOf(reason));

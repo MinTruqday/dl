@@ -60,7 +60,7 @@ async function listPage(path, value) {
   return result;
 }
 
-export const qaApi = {
+export const testingApi = {
   listProjects: (query = "") =>
     qaRequest(`/projects${query ? `?q=${encodeURIComponent(query)}` : ""}`),
   createProject: (payload) =>

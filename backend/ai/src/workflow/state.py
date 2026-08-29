@@ -74,7 +74,7 @@ def merge_unique_values(left: list, right: list) -> list:
 class AgentState(TypedDict):
     """
     <module_purpose>
-    Veriq Agent State defining the graph state schema for the primary RAG and AI workflow.
+    Veriq Agent State defining the graph state schema for the primary knowledge and AI workflow.
     </module_purpose>
     <contract>
     - Precondition: Initialized at the start of the LangGraph execution.
@@ -135,3 +135,16 @@ class ActingState(TypedDict):
     dynamic_injections: List[Any]
     results_trimmed: bool
     execution_history: List[Any]
+    request_id: str
+    user_id: str
+    project_id: str
+    intent: str
+    current_requirement_version: str
+    change_set: Dict[str, Any]
+    candidates: List[Any]
+    evidence: Annotated[list, reduce_consolidated_results]
+    tool_history: Annotated[list, reduce_consolidated_results]
+    reason_codes: Annotated[list, merge_unique_values]
+    confidence: float
+    degraded_flags: Annotated[list, merge_unique_values]
+    approval_required: bool

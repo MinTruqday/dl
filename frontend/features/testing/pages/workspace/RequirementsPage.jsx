@@ -11,9 +11,9 @@ import {
   QaPage,
   StatusPill,
   useQaActionDialog,
-} from "../../components/QaUi";
-import { qaApi } from "../../services/qa.service";
-import { docText, emptyDoc, messageOf, textDoc, valueLabel } from "../../lib/qa";
+} from "../../components/TestingUi";
+import { testingApi } from "../../services/testing.service";
+import { docText, emptyDoc, messageOf, textDoc, valueLabel } from "../../lib/testing";
 import QaDocumentEditor from "../../editor/QaDocumentEditor";
 
 const initialForm = {
@@ -65,7 +65,7 @@ export default function RequirementsPage({ project, section }) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const values = await qaApi.listRequirementPage(project._id, {
+      const values = await testingApi.listRequirementPage(project._id, {
         q: query,
         ...filters,
         page,
@@ -74,9 +74,9 @@ export default function RequirementsPage({ project, section }) {
       setItems(values.items);
       setPageInfo(values);
       if (requirementId) {
-        const detail = await qaApi.getRequirement(requirementId);
+        const detail = await testingApi.getRequirement(requirementId);
         setSelected(detail);
-        const history = await qaApi.listRequirementVersions(requirementId);
+        const history = await testingApi.listRequirementVersions(requirementId);
         setVersions(history);
         setCompareFrom(history[1]?._id || history[0]?._id || "");
         setCompareTo(history[0]?._id || "");
@@ -124,7 +124,7 @@ export default function RequirementsPage({ project, section }) {
       if (!snapshot || !current || !selected) return;
       setSaveState("saving");
       try {
-        const result = await qaApi.updateRequirementDraft(project._id, selected._id, {
+        const result = await testingApi.updateRequirementDraft(project._id, selected._id, {
           expected_revision: current.revision,
           title: snapshot.title,
           type: snapshot.type,
@@ -191,7 +191,7 @@ export default function RequirementsPage({ project, section }) {
     event.preventDefault();
     setError("");
     try {
-      await qaApi.createRequirement(project._id, {
+      await testingApi.createRequirement(project._id, {
         title: form.title,
         type: form.type,
         priority: form.priority,
@@ -234,11 +234,11 @@ export default function RequirementsPage({ project, section }) {
     try {
       const payload = { expected_revision: current.revision, review_note: answer.note };
       if (action === "submit") {
-        await qaApi.submitRequirementReview(project._id, selected._id, payload);
+        await testingApi.submitRequirementReview(project._id, selected._id, payload);
       } else if (action === "changes") {
-        await qaApi.requestRequirementChanges(project._id, selected._id, payload);
+        await testingApi.requestRequirementChanges(project._id, selected._id, payload);
       } else {
-        await qaApi.approveRequirement(project._id, selected._id, payload);
+        await testingApi.approveRequirement(project._id, selected._id, payload);
       }
       await load();
     } catch (reason) {
@@ -272,7 +272,7 @@ export default function RequirementsPage({ project, section }) {
     });
     if (!answer) return;
     try {
-      await qaApi.createRequirementVersion(selected._id, {
+      await testingApi.createRequirementVersion(selected._id, {
         requirement_key: selected.requirement_key,
         title: answer.title,
         type: current.type,
@@ -301,22 +301,22 @@ export default function RequirementsPage({ project, section }) {
   const importPreview = async (event) => {
     event.preventDefault();
     try {
-      const document = await qaApi.createRequirementDocument(project._id, importValue);
+      const document = await testingApi.createRequirementDocument(project._id, importValue);
       setSourceDocument(document);
-      const result = await qaApi.extractRequirementDocument(
+      const result = await testingApi.extractRequirementDocument(
         document._id,
         `source-${document.content_hash}`,
       );
       setPreview(result);
       setSelectedIndexes(result.preview.map((_, index) => index));
-      setSourceDocument(await qaApi.getRequirementDocument(document._id));
+      setSourceDocument(await testingApi.getRequirementDocument(document._id));
     } catch (reason) {
       setError(messageOf(reason));
     }
   };
   const confirmImport = async () => {
     try {
-      await qaApi.confirmRequirementImport(
+      await testingApi.confirmRequirementImport(
         preview._id,
         selectedIndexes,
         preview.revision,
@@ -333,20 +333,20 @@ export default function RequirementsPage({ project, section }) {
     if (!upload) return;
     const format = upload.name.split(".").pop().toLowerCase();
     try {
-      const document = await qaApi.uploadRequirementDocument(project._id, upload, format);
+      const document = await testingApi.uploadRequirementDocument(project._id, upload, format);
       setSourceDocument(document);
       if (document.status === "PARSE_FAILED") {
         setPreview(null);
         setError("Tệp gốc đã được lưu nhưng bộ phân tích không đọc được nội dung");
         return;
       }
-      const result = await qaApi.extractRequirementDocument(
+      const result = await testingApi.extractRequirementDocument(
         document._id,
         `source-${document.content_hash}`,
       );
       setPreview(result);
       setSelectedIndexes(result.preview.map((_, index) => index));
-      setSourceDocument(await qaApi.getRequirementDocument(document._id));
+      setSourceDocument(await testingApi.getRequirementDocument(document._id));
     } catch (reason) {
       setError(messageOf(reason));
     }
@@ -361,7 +361,7 @@ export default function RequirementsPage({ project, section }) {
   };
   const saveImportReview = async (nextPreview, reviewNote, nextSelection = selectedIndexes) => {
     try {
-      const result = await qaApi.updateRequirementImport(preview._id, {
+      const result = await testingApi.updateRequirementImport(preview._id, {
         expected_revision: preview.revision,
         preview: nextPreview,
         review_note: reviewNote,
@@ -455,7 +455,7 @@ export default function RequirementsPage({ project, section }) {
                   type="button"
                   onClick={async () => {
                     try {
-                      setLint(await qaApi.lintRequirement(current._id));
+                      setLint(await testingApi.lintRequirement(current._id));
                     } catch (reason) {
                       setError(messageOf(reason));
                     }
@@ -491,7 +491,7 @@ export default function RequirementsPage({ project, section }) {
                       });
                       if (!answer) return;
                       try {
-                        await qaApi.obsoleteRequirement(selected._id, {
+                        await testingApi.obsoleteRequirement(selected._id, {
                           expected_current_version_id: selected.current_version_id,
                           reason: answer.reason,
                         });
@@ -756,7 +756,7 @@ export default function RequirementsPage({ project, section }) {
                   onClick={async () => {
                     try {
                       setComparison(
-                        await qaApi.compareRequirement(selected._id, compareFrom, compareTo),
+                        await testingApi.compareRequirement(selected._id, compareFrom, compareTo),
                       );
                     } catch (reason) {
                       setError(messageOf(reason));
@@ -777,7 +777,7 @@ export default function RequirementsPage({ project, section }) {
                   type="button"
                   onClick={async () => {
                     try {
-                      await qaApi.createChangeSet(selected._id, {
+                      await testingApi.createChangeSet(selected._id, {
                         from_version_id: compareFrom,
                         to_version_id: compareTo,
                       });
@@ -845,7 +845,7 @@ export default function RequirementsPage({ project, section }) {
                       if (!answer) return;
                       try {
                         const splitTags = (value) => value.split(",").map((item) => item.trim()).filter(Boolean);
-                        await qaApi.bulkTags(project._id, {
+                        await testingApi.bulkTags(project._id, {
                           artifact_type: "requirement",
                           ids: selectedIds,
                           add_tags: splitTags(answer.add),
@@ -874,7 +874,7 @@ export default function RequirementsPage({ project, section }) {
                       });
                       if (!answer) return;
                       try {
-                        await qaApi.bulkArchive(project._id, {
+                        await testingApi.bulkArchive(project._id, {
                           artifact_type: "requirement",
                           ids: selectedIds,
                           reason: answer.reason,
@@ -1309,7 +1309,7 @@ export default function RequirementsPage({ project, section }) {
                       type="button"
                       onClick={async () => {
                         try {
-                          const document = await qaApi.retryRequirementDocumentParse(
+                          const document = await testingApi.retryRequirementDocumentParse(
                             sourceDocument._id,
                             sourceDocument.revision,
                           );
@@ -1318,7 +1318,7 @@ export default function RequirementsPage({ project, section }) {
                             setError("Bộ phân tích vẫn chưa đọc được tệp gốc");
                             return;
                           }
-                          const result = await qaApi.extractRequirementDocument(
+                          const result = await testingApi.extractRequirementDocument(
                             document._id,
                             `source-${document.content_hash}`,
                           );

@@ -1,9 +1,13 @@
+import time
+
 import httpx
 
 from src.core.configuration import settings
+from src.core.metrics import AI_GENERATION_LATENCY, AI_REQUESTS
 
 
 async def request_impact_classification(project_id, change_set, candidates):
+    started_at = time.perf_counter()
     evidence = [
         {
             "artifact_type": "requirement_change_set",
@@ -40,8 +44,15 @@ async def request_impact_classification(project_id, change_set, candidates):
         result = response.json()
         if result.get("capability") != "impact_analysis":
             raise ValueError("AI capability mismatch")
+        latency_ms = round((time.perf_counter() - started_at) * 1000, 3)
+        result["latency_ms"] = latency_ms
+        AI_GENERATION_LATENCY.labels("impact_classification").observe(latency_ms / 1000)
+        AI_REQUESTS.labels("impact_classification", "success").inc()
         return result
     except Exception as error:
+        latency_ms = round((time.perf_counter() - started_at) * 1000, 3)
+        AI_GENERATION_LATENCY.labels("impact_classification").observe(latency_ms / 1000)
+        AI_REQUESTS.labels("impact_classification", "degraded").inc()
         return {
             "capability": "impact_analysis",
             "suggestions": [],
@@ -52,6 +63,7 @@ async def request_impact_classification(project_id, change_set, candidates):
             "degraded_mode": "DEGRADED_AI",
             "model": {"provider": "deterministic-fallback", "model": "qa-rules-v2"},
             "error_type": type(error).__name__,
+            "latency_ms": latency_ms,
         }
 
 

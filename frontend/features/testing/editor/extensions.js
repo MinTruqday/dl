@@ -1,3 +1,11 @@
+import DragHandle from "@tiptap/extension-drag-handle";
+import Emoji, { emojis } from "@tiptap/extension-emoji";
+import FileHandler from "@tiptap/extension-file-handler";
+import Focus from "@tiptap/extension-focus";
+import InvisibleCharacters from "@tiptap/extension-invisible-characters";
+import ListKeymap from "@tiptap/extension-list-keymap";
+import Mention from "@tiptap/extension-mention";
+import UniqueID from "@tiptap/extension-unique-id";
 import CharacterCount from "@tiptap/extension-character-count";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import Color from "@tiptap/extension-color";
@@ -14,6 +22,7 @@ import Subscript from "@tiptap/extension-subscript";
 import Superscript from "@tiptap/extension-superscript";
 import Table from "@tiptap/extension-table";
 import TableCell from "@tiptap/extension-table-cell";
+import TableOfContents from "@tiptap/extension-table-of-contents";
 import TableHeader from "@tiptap/extension-table-header";
 import TableRow from "@tiptap/extension-table-row";
 import TaskItem from "@tiptap/extension-task-item";
@@ -22,15 +31,54 @@ import TextAlign from "@tiptap/extension-text-align";
 import TextStyle from "@tiptap/extension-text-style";
 import Typography from "@tiptap/extension-typography";
 import Underline from "@tiptap/extension-underline";
+import Youtube from "@tiptap/extension-youtube";
 import StarterKit from "@tiptap/starter-kit";
 import { common, createLowlight } from "lowlight";
 
 const lowlight = createLowlight(common);
 
-export function createQaExtensions(editable, placeholder) {
+function insertImageFiles(editor, files, position) {
+  const images = files.filter((file) => file.type.startsWith("image/"));
+  if (position != null) editor.commands.setTextSelection(position);
+  for (const file of images) {
+    editor
+      .chain()
+      .focus()
+      .setImage({ src: URL.createObjectURL(file), alt: file.name })
+      .run();
+  }
+}
+
+export function createQaExtensions(editable, placeholder, onTableOfContentsUpdate) {
   return [
     StarterKit.configure({ codeBlock: false }),
     CodeBlockLowlight.configure({ lowlight }),
+    Focus.configure({ className: "has-focus", mode: "all" }),
+    ListKeymap.configure({
+      listTypes: [
+        { itemName: "listItem", wrapperNames: ["bulletList", "orderedList"] },
+        { itemName: "taskItem", wrapperNames: ["taskList"] },
+      ],
+    }),
+    UniqueID.configure({
+      attributeName: "data-node-id",
+      types: [
+        "paragraph",
+        "heading",
+        "blockquote",
+        "codeBlock",
+        "listItem",
+        "taskItem",
+        "table",
+        "tableRow",
+        "tableHeader",
+        "tableCell",
+        "image",
+        "youtube",
+        "details",
+      ],
+      updateDocument: editable,
+    }),
     Underline,
     Highlight.configure({ multicolor: true }),
     Subscript,
@@ -48,16 +96,49 @@ export function createQaExtensions(editable, placeholder) {
     Placeholder.configure({ placeholder }),
     CharacterCount,
     Typography,
+    Emoji.configure({ emojis, enableEmoticons: true }),
+    Mention.configure({
+      HTMLAttributes: { class: "tiptap-mention" },
+      suggestion: { char: "@", items: () => [] },
+    }),
+    InvisibleCharacters.configure({ visible: false, injectCSS: true }),
+    FileHandler.configure({
+      allowedMimeTypes: ["image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml"],
+      onPaste: (editor, files) => insertImageFiles(editor, files),
+      onDrop: (editor, files, position) => insertImageFiles(editor, files, position),
+    }),
     Mathematics,
     Image.configure({ allowBase64: false, HTMLAttributes: { loading: "lazy" } }),
+    Youtube.configure({
+      controls: true,
+      nocookie: true,
+      allowFullscreen: true,
+      width: 640,
+      height: 360,
+    }),
     TaskList,
     TaskItem.configure({ nested: true }),
     Details.configure({ persist: true }),
     DetailsSummary,
     DetailsContent,
     Table.configure({ resizable: editable }),
+    TableOfContents.configure({ onUpdate: onTableOfContentsUpdate }),
     TableRow,
     TableHeader,
     TableCell,
+    ...(editable
+      ? [
+          DragHandle.configure({
+            render: () => {
+              const element = document.createElement("button");
+              element.type = "button";
+              element.className = "tiptap-drag-handle";
+              element.setAttribute("aria-label", "Kéo khối nội dung");
+              element.textContent = "⋮⋮";
+              return element;
+            },
+          }),
+        ]
+      : []),
   ];
 }

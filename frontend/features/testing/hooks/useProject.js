@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { qaApi } from "../services/qa.service";
-import { messageOf } from "../lib/qa";
+import { testingApi } from "../services/testing.service";
+import { messageOf } from "../lib/testing";
 
 export function useProject(projectId) {
   const [project, setProject] = useState(null);
@@ -11,7 +11,7 @@ export function useProject(projectId) {
     setLoading(true);
     setError("");
     try {
-      setProject(await qaApi.getProject(projectId));
+      setProject(await testingApi.getProject(projectId));
     } catch (reason) {
       setError(messageOf(reason));
     } finally {

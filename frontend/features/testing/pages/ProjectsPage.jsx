@@ -9,9 +9,9 @@ import {
   Panel,
   QaPage,
   StatusPill,
-} from "../components/QaUi";
-import { qaApi } from "../services/qa.service";
-import { formatDate, messageOf } from "../lib/qa";
+} from "../components/TestingUi";
+import { testingApi } from "../services/testing.service";
+import { formatDate, messageOf } from "../lib/testing";
 
 export default function ProjectsPage() {
   const [items, setItems] = useState([]);
@@ -25,7 +25,7 @@ export default function ProjectsPage() {
       setLoading(true);
       setError("");
       try {
-        setItems(await qaApi.listProjects(value));
+        setItems(await testingApi.listProjects(value));
       } catch (reason) {
         setError(messageOf(reason));
       } finally {
@@ -41,7 +41,7 @@ export default function ProjectsPage() {
     event.preventDefault();
     setError("");
     try {
-      await qaApi.createProject({
+      await testingApi.createProject({
         ...form,
         key: form.key.trim().toUpperCase(),
         name: form.name.trim(),

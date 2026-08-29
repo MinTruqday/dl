@@ -7,9 +7,9 @@ import {
   ProjectCrumb,
   QaPage,
   useQaActionDialog,
-} from "../../components/QaUi";
-import { qaApi } from "../../services/qa.service";
-import { formatDate, messageOf } from "../../lib/qa";
+} from "../../components/TestingUi";
+import { testingApi } from "../../services/testing.service";
+import { formatDate, messageOf } from "../../lib/testing";
 
 export default function SettingsPage({ project, onProjectChange }) {
   const { ask, dialog } = useQaActionDialog();
@@ -27,9 +27,9 @@ export default function SettingsPage({ project, onProjectChange }) {
   const [error, setError] = useState("");
   useEffect(() => {
     Promise.all([
-      qaApi.audit(project._id),
-      qaApi.maintenanceAnalytics(project._id),
-      qaApi.listMembers(project._id),
+      testingApi.audit(project._id),
+      testingApi.maintenanceAnalytics(project._id),
+      testingApi.listMembers(project._id),
     ])
       .then(([events, value, memberValues]) => {
         setAudit(events);
@@ -52,7 +52,7 @@ export default function SettingsPage({ project, onProjectChange }) {
             onSubmit={async (event) => {
               event.preventDefault();
               try {
-                await qaApi.updateProject(project._id, {
+                await testingApi.updateProject(project._id, {
                   expected_revision: project.revision,
                   name,
                   description,
@@ -141,7 +141,7 @@ export default function SettingsPage({ project, onProjectChange }) {
                 });
                 if (!answer) return;
                 try {
-                  await qaApi.archiveProject(project._id, {
+                  await testingApi.archiveProject(project._id, {
                     expected_revision: project.revision,
                     reason: answer.reason,
                   });
@@ -163,12 +163,12 @@ export default function SettingsPage({ project, onProjectChange }) {
                 event.preventDefault();
                 const value = new FormData(event.currentTarget);
                 try {
-                  await qaApi.addMember(project._id, {
+                  await testingApi.addMember(project._id, {
                     user_id: value.get("user_id"),
                     project_role: value.get("project_role"),
                   });
                   event.currentTarget.reset();
-                  setMembers(await qaApi.listMembers(project._id));
+                  setMembers(await testingApi.listMembers(project._id));
                 } catch (reason) {
                   setError(messageOf(reason));
                 }
@@ -207,11 +207,11 @@ export default function SettingsPage({ project, onProjectChange }) {
                       value={item.project_role}
                       onChange={async (event) => {
                         try {
-                          await qaApi.updateMember(project._id, item.user_id, {
+                          await testingApi.updateMember(project._id, item.user_id, {
                             expected_revision: item.membership_revision,
                             project_role: event.target.value,
                           });
-                          setMembers(await qaApi.listMembers(project._id));
+                          setMembers(await testingApi.listMembers(project._id));
                         } catch (reason) {
                           setError(messageOf(reason));
                         }
@@ -237,11 +237,11 @@ export default function SettingsPage({ project, onProjectChange }) {
                         type="button"
                         onClick={async () => {
                           try {
-                            await qaApi.updateMember(project._id, item.user_id, {
+                            await testingApi.updateMember(project._id, item.user_id, {
                               expected_revision: item.membership_revision,
                               status: item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
                             });
-                            setMembers(await qaApi.listMembers(project._id));
+                            setMembers(await testingApi.listMembers(project._id));
                           } catch (reason) {
                             setError(messageOf(reason));
                           }
@@ -261,8 +261,8 @@ export default function SettingsPage({ project, onProjectChange }) {
                           });
                           if (!answer) return;
                           try {
-                            await qaApi.removeMember(project._id, item.user_id);
-                            setMembers(await qaApi.listMembers(project._id));
+                            await testingApi.removeMember(project._id, item.user_id);
+                            setMembers(await testingApi.listMembers(project._id));
                           } catch (reason) {
                             setError(messageOf(reason));
                           }

@@ -9,7 +9,7 @@ from loguru import logger
 
 from src.repositories.document import DocumentRepository
 from src.core.infrastructure.mongo import mongo
-from src.clients.rag import rag_client
+from src.clients.knowledge import knowledge_client
 from src.services.document.base import can_read_full
 
 
@@ -29,7 +29,7 @@ class DocumentBulkService:
         query = {"_id": {"$in": normalized_ids}, "creator_id": user_id, "is_deleted": {"$ne": True}}
         documents = await DocumentRepository.find(query).to_list(length=100)
         for document in documents:
-            await rag_client.delete_document(str(document["_id"]), user_id, False)
+            await knowledge_client.delete_document(str(document["_id"]), user_id, False)
         matched_ids = [str(document["_id"]) for document in documents]
         res = await DocumentRepository.update_many(
             {"_id": {"$in": matched_ids}, "creator_id": user_id, "is_deleted": {"$ne": True}},

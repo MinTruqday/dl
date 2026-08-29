@@ -9,9 +9,9 @@ import {
   QaPage,
   StatusPill,
   useQaActionDialog,
-} from "../../components/QaUi";
-import { messageOf } from "../../lib/qa";
-import { qaApi } from "../../services/qa.service";
+} from "../../components/TestingUi";
+import { messageOf } from "../../lib/testing";
+import { testingApi } from "../../services/testing.service";
 
 export default function ReviewQueuePage({ project }) {
   const { ask, dialog } = useQaActionDialog();
@@ -20,7 +20,7 @@ export default function ReviewQueuePage({ project }) {
   const [error, setError] = useState("");
   const load = useCallback(async () => {
     try {
-      setItems(await qaApi.listProposals(project._id));
+      setItems(await testingApi.listProposals(project._id));
     } catch (reason) {
       setError(messageOf(reason));
     }
@@ -57,7 +57,7 @@ export default function ReviewQueuePage({ project }) {
     if (!answer) return;
     try {
       if (action === "reject") {
-        await qaApi.rejectProposal(item._id, {
+        await testingApi.rejectProposal(item._id, {
           expected_revision: item.revision,
           review_note: answer.note,
         });
@@ -71,7 +71,7 @@ export default function ReviewQueuePage({ project }) {
             return;
           }
         }
-        await qaApi.acceptProposal(
+        await testingApi.acceptProposal(
           item._id,
           { expected_revision: item.revision, review_note: answer.note, patch },
           action === "edit",
@@ -99,7 +99,7 @@ export default function ReviewQueuePage({ project }) {
     });
     if (!answer) return;
     try {
-      await qaApi.regenerateProposal(item._id, {
+      await testingApi.regenerateProposal(item._id, {
         expected_revision: item.revision,
         instruction: answer.instruction,
       });
@@ -131,7 +131,7 @@ export default function ReviewQueuePage({ project }) {
               });
               if (!answer) return;
               try {
-                await qaApi.bulkApproveProposals(project._id, {
+                await testingApi.bulkApproveProposals(project._id, {
                   proposal_ids: selectedIds,
                   review_note: answer.note,
                 });

@@ -10,15 +10,15 @@ import {
   ProjectCrumb,
   QaPage,
   StatusPill,
-} from "../../components/QaUi";
-import { qaApi } from "../../services/qa.service";
-import { formatDate, messageOf } from "../../lib/qa";
+} from "../../components/TestingUi";
+import { testingApi } from "../../services/testing.service";
+import { formatDate, messageOf } from "../../lib/testing";
 
 export default function DashboardPage({ project }) {
   const [value, setValue] = useState(null);
   const [error, setError] = useState("");
   useEffect(() => {
-    Promise.all([qaApi.dashboard(project._id), qaApi.coverage(project._id)])
+    Promise.all([testingApi.dashboard(project._id), testingApi.coverage(project._id)])
       .then(([dashboard, coverage]) => setValue({ ...dashboard, ...coverage }))
       .catch((reason) => setError(messageOf(reason)));
   }, [project._id]);

@@ -6,7 +6,7 @@ import zipfile
 import httpx
 
 
-BASE_URL = os.getenv("QA_TEST_URL", "http://127.0.0.1:8000")
+BASE_URL = os.getenv("TESTING_TEST_URL", "http://127.0.0.1:8000")
 HEADERS = {"x-test-user-id": "qa-lead-e2e"}
 OUTSIDER = {"x-test-user-id": "outsider-e2e"}
 SYSTEM_ADMIN = {"x-test-user-id": "platform-admin-e2e", "x-test-system-role": "ADMIN"}
@@ -31,7 +31,7 @@ with httpx.Client(base_url=BASE_URL, timeout=30) as client:
     stamp = int(time.time() * 1000)
     request(client, "GET", "/api/qa/operations", 403)
     operations = request(client, "GET", "/api/qa/operations", headers=SYSTEM_ADMIN)
-    assert "ai_models" in operations and "rag_indexing_backlog" in operations
+    assert "ai_models" in operations and "knowledge_indexing_backlog" in operations
     project = request(
         client,
         "POST",
@@ -716,4 +716,4 @@ with httpx.Client(base_url=BASE_URL, timeout=30) as client:
     )
     assert len(imported["drafts"]) == 1
 
-print("qa vertical integration passed")
+print("testing vertical integration passed")

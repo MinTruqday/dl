@@ -109,7 +109,7 @@ class EvaluationHarness:
             logger.exception("Test dataset loading error")
             self._dataset = []
 
-    async def evaluate_rag_response(
+    async def evaluate_knowledge_response(
         self,
         query: str,
         expected_answer: str,

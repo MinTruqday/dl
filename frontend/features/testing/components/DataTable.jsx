@@ -1,5 +1,5 @@
 "use client";
-import { EmptyState } from "./QaUi";
+import { EmptyState } from "./TestingUi";
 
 export default function DataTable({
   columns,

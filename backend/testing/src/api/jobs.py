@@ -7,7 +7,7 @@ from src.core.configuration import settings
 
 
 router = APIRouter(prefix="/api/qa", tags=["QA Async Jobs"])
-ALLOWED_EVENTS = {"document.parse.requested", "requirement.extract.requested", "requirement.semantic_diff.requested", "test.generate.requested", "duplicate.scan.requested", "impact.analysis.requested", "rag.index.requested"}
+ALLOWED_EVENTS = {"document.parse.requested", "requirement.extract.requested", "requirement.semantic_diff.requested", "test.generate.requested", "duplicate.scan.requested", "impact.analysis.requested", "knowledge.index.requested"}
 EVENT_PERMISSIONS = {
     "document.parse.requested": "knowledge.manage",
     "requirement.extract.requested": "requirement.create",
@@ -15,7 +15,7 @@ EVENT_PERMISSIONS = {
     "test.generate.requested": "ai.generate_testcase",
     "duplicate.scan.requested": "testcase.read",
     "impact.analysis.requested": "impact.execute",
-    "rag.index.requested": "knowledge.manage",
+    "knowledge.index.requested": "knowledge.manage",
 }
 
 

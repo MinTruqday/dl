@@ -1,4 +1,4 @@
-import ProjectsPage from "@/features/qa/pages/ProjectsPage";
+import ProjectsPage from "@/features/testing/pages/ProjectsPage";
 
 export default function Page() {
   return <ProjectsPage />;

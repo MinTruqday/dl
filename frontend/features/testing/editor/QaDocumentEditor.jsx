@@ -1,11 +1,12 @@
 "use client";
-import { useEffect } from "react";
-import { EditorContent, useEditor } from "@tiptap/react";
+import { useEffect, useState } from "react";
+import { BubbleMenu, EditorContent, FloatingMenu, useEditor } from "@tiptap/react";
 import {
   AlignCenter,
   AlignJustify,
   AlignLeft,
   AlignRight,
+  AtSign,
   Bold,
   Braces,
   ChevronDownSquare,
@@ -17,6 +18,7 @@ import {
   Highlighter,
   ImagePlus,
   Italic,
+  Eye,
   Link as LinkIcon,
   List,
   ListChecks,
@@ -34,6 +36,8 @@ import {
   Underline as UnderlineIcon,
   Undo2,
   Unlink,
+  Smile,
+  Youtube as YoutubeIcon,
 } from "lucide-react";
 import { createQaExtensions } from "./extensions";
 
@@ -44,11 +48,13 @@ export default function QaDocumentEditor({
   minHeight = "min-h-40",
   readOnly = false,
 }) {
+  const [tableOfContents, setTableOfContents] = useState([]);
   const editor = useEditor({
     immediatelyRender: false,
     extensions: createQaExtensions(
       !readOnly,
       label ? `Nhập ${label.toLocaleLowerCase("vi")}` : "Nhập nội dung",
+      setTableOfContents,
     ),
     content: value,
     editable: !readOnly,
@@ -121,6 +127,29 @@ export default function QaDocumentEditor({
   const addMath = () => {
     const latex = window.prompt("Công thức LaTeX");
     if (latex?.trim()) editor.chain().focus().insertContent(`$${latex.trim()}$`).run();
+  };
+
+  const addEmoji = () => {
+    const shortcode = window.prompt("Mã emoji không có dấu hai chấm", "smile");
+    if (shortcode?.trim()) editor.chain().focus().setEmoji(shortcode.trim()).run();
+  };
+
+  const addMention = () => {
+    const label = window.prompt("Tên người dùng hoặc vai trò được nhắc đến");
+    if (label?.trim()) {
+      editor
+        .chain()
+        .focus()
+        .insertContent({ type: "mention", attrs: { id: label.trim(), label: label.trim() } })
+        .insertContent(" ")
+        .run();
+    }
+  };
+
+  const addYoutube = () => {
+    const source = window.prompt("Đường dẫn video YouTube");
+    if (!source?.trim()) return;
+    editor.chain().focus().setYoutubeVideo({ src: source.trim(), width: 640, height: 360 }).run();
   };
 
   const tool = (name, active, action, icon, disabled = false) => (
@@ -307,7 +336,16 @@ export default function QaDocumentEditor({
         </div>
         <div className="editor-tool-group">
           {tool("Công thức", false, addMath, <Sigma size={17} />)}
+          {tool("Emoji", false, addEmoji, <Smile size={17} />)}
+          {tool("Nhắc người dùng", false, addMention, <AtSign size={17} />)}
           {tool("Hình ảnh", false, addImage, <ImagePlus size={17} />)}
+          {tool("Video YouTube", editor.isActive("youtube"), addYoutube, <YoutubeIcon size={17} />)}
+          {tool(
+            "Ký tự ẩn",
+            false,
+            () => editor.chain().focus().toggleInvisibleCharacters().run(),
+            <Eye size={17} />,
+          )}
           {tool(
             editor.isActive("details") ? "Tháo khối thu gọn" : "Khối thu gọn",
             editor.isActive("details"),
@@ -389,6 +427,70 @@ export default function QaDocumentEditor({
           {editor.storage.characterCount.words()} từ
         </output>
       </div>
+      {tableOfContents.length > 0 && (
+        <nav className="qa-table-of-contents" aria-label="Mục lục nội dung">
+          <span className="qa-table-of-contents-title">Mục lục</span>
+          <ol>
+            {tableOfContents.map((item) => (
+              <li key={item.id} style={{ paddingLeft: `${Math.max(item.level - 1, 0) * 0.75}rem` }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    editor.commands.setTextSelection(item.pos);
+                    editor.commands.scrollIntoView();
+                  }}
+                >
+                  {item.textContent}
+                </button>
+              </li>
+            ))}
+          </ol>
+        </nav>
+      )}
+      {!readOnly && (
+        <>
+          <BubbleMenu editor={editor} className="qa-bubble-menu">
+            {tool(
+              "In đậm",
+              editor.isActive("bold"),
+              () => editor.chain().focus().toggleBold().run(),
+              <Bold size={15} />,
+            )}
+            {tool(
+              "In nghiêng",
+              editor.isActive("italic"),
+              () => editor.chain().focus().toggleItalic().run(),
+              <Italic size={15} />,
+            )}
+            {tool(
+              "Đánh dấu",
+              editor.isActive("highlight"),
+              () => editor.chain().focus().toggleHighlight({ color: "#fef08a" }).run(),
+              <Highlighter size={15} />,
+            )}
+          </BubbleMenu>
+          <FloatingMenu editor={editor} className="qa-floating-menu">
+            {tool(
+              "Tiêu đề cấp 2",
+              false,
+              () => editor.chain().focus().toggleHeading({ level: 2 }).run(),
+              <Heading2 size={15} />,
+            )}
+            {tool(
+              "Danh sách dấu đầu dòng",
+              false,
+              () => editor.chain().focus().toggleBulletList().run(),
+              <List size={15} />,
+            )}
+            {tool(
+              "Danh sách tác vụ",
+              false,
+              () => editor.chain().focus().toggleTaskList().run(),
+              <ListChecks size={15} />,
+            )}
+          </FloatingMenu>
+        </>
+      )}
       <EditorContent editor={editor} />
     </div>
   );

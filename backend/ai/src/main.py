@@ -39,6 +39,14 @@ from src.api.inference import router as inference
 from src.api.ingestion import router as ingest
 from src.api.events import router as events
 from src.api.interrupt import router as interrupt_router
+from src.knowledge.api.retrieval import router as knowledge_retrieval
+from src.knowledge.api.embedding import router as knowledge_embedding
+from src.knowledge.api.ingestion import router as knowledge_ingestion
+from src.knowledge.api.cache import router as knowledge_cache
+from src.knowledge.api.project import router as knowledge_project
+from src.knowledge.lifecycle import initialize_knowledge, shutdown_knowledge
+
+knowledge_ready = False
 
 app = FastAPI(title="Veriq AI", version=settings.VERSION)
 app.add_middleware(PrometheusMiddleware, service_name="ai")
@@ -80,6 +88,11 @@ app.include_router(feedback)
 app.include_router(history)
 app.include_router(events)
 app.include_router(interrupt_router)
+app.include_router(knowledge_retrieval, prefix="/knowledge")
+app.include_router(knowledge_embedding, prefix="/knowledge/embedding")
+app.include_router(knowledge_ingestion, prefix="/knowledge")
+app.include_router(knowledge_cache, prefix="/knowledge/cache")
+app.include_router(knowledge_project, prefix="/knowledge")
 
 
 @app.get("/health")
@@ -117,14 +130,7 @@ async def readiness_check():
         checks["qdrant"] = "ready" if response.status_code == 200 else "unavailable"
     except Exception:
         checks["qdrant"] = "unavailable"
-    try:
-        import httpx
-
-        async with httpx.AsyncClient(timeout=3) as client:
-            response = await client.get(f"{settings.RAG_URL}/ready")
-        checks["rag"] = "ready" if response.status_code == 200 else "unavailable"
-    except Exception:
-        checks["rag"] = "unavailable"
+    checks["knowledge"] = "ready" if knowledge_ready else "unavailable"
     try:
         import httpx
 
@@ -179,6 +185,13 @@ async def startup_event():
         await init_db()
     except Exception:
         logger.exception("MongoDB indexing error")
+    global knowledge_ready
+    try:
+        await initialize_knowledge()
+        knowledge_ready = True
+    except Exception:
+        knowledge_ready = False
+        logger.exception("Knowledge subsystem startup error")
     try:
         from src.loop.event import cron_scheduler, event_driven_loop
 
@@ -197,6 +210,12 @@ async def startup_event():
 
 
 async def shutdown_event():
+    global knowledge_ready
+    try:
+        await shutdown_knowledge()
+    except Exception:
+        logger.exception("Knowledge subsystem shutdown error")
+    knowledge_ready = False
     try:
         from src.utils.background import drain_background_tasks
 

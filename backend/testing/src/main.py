@@ -92,7 +92,7 @@ async def unhandled_exception_handler(request: Request, error: Exception):
 
 @app.get("/health", include_in_schema=False)
 async def health():
-    return {"status": "healthy", "service": "qa"}
+    return {"status": "healthy", "service": "testing"}
 
 
 @app.get("/ready", include_in_schema=False)
@@ -101,6 +101,6 @@ async def ready():
         if database.client is None:
             raise RuntimeError
         await database.client.admin.command("ping")
-        return {"status": "ready", "service": "qa"}
+        return {"status": "ready", "service": "testing"}
     except Exception:
-        return JSONResponse(status_code=503, content={"status": "not_ready", "service": "qa"})
+        return JSONResponse(status_code=503, content={"status": "not_ready", "service": "testing"})

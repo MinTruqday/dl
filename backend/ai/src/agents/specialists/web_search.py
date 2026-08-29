@@ -222,7 +222,7 @@ class WebSearchAgent:
                     search_queries.append(current_query)
 
                 search_queries = search_queries[:3]
-                logger.info(f"AI RAG Iteration {i + 1} - Sub-queries: {search_queries}")
+                logger.info(f"Knowledge search iteration {i + 1} - sub-queries: {search_queries}")
 
                 tasks = [self._tavily_search(q) for q in search_queries]
                 results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -268,7 +268,7 @@ class WebSearchAgent:
                 )
 
         except Exception:
-            logger.exception("AI RAG search system encountered an issue")
+            logger.exception("Knowledge search system encountered an issue")
 
         return json.dumps({"status": "search_results_unavailable"})
 

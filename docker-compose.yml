@@ -219,7 +219,7 @@ services:
       - 38470-38479:38470-38479
     labels:
       - traefik.enable=true
-      - traefik.http.routers.ai.rule=PathPrefix(`/lich-su`) || PathPrefix(`/phan-hoi`) || PathPrefix(`/suy-luan`) || PathPrefix(`/tro-chuyen`) || PathPrefix(`/su-kien`) || PathPrefix(`/tiep-nap`) || PathPrefix(`/ngat-qua-trinh`)
+      - traefik.http.routers.ai.rule=PathPrefix(`/lich-su`) || PathPrefix(`/phan-hoi`) || PathPrefix(`/suy-luan`) || PathPrefix(`/tro-chuyen`) || PathPrefix(`/su-kien`) || PathPrefix(`/tiep-nap`) || PathPrefix(`/ngat-qua-trinh`) || PathPrefix(`/knowledge`)
       - traefik.http.services.ai.loadbalancer.server.port=8000
     environment:
       <<: [*service-environment, *minio-environment]
@@ -237,6 +237,7 @@ services:
       MODEL_TIMEOUT_SECONDS: ${MODEL_TIMEOUT_SECONDS:?MODEL_TIMEOUT_SECONDS is required}
       MODEL_KEEP_ALIVE: ${MODEL_KEEP_ALIVE:-30m}
       RERANKER_MODEL: ${RERANKER_MODEL:?RERANKER_MODEL is required}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:?EMBEDDING_MODEL is required}
       NLI_MODEL_NAME: ${NLI_MODEL_NAME:?NLI_MODEL_NAME is required}
       TAVILY_API_KEY: ${TAVILY_API_KEY:?TAVILY_API_KEY is required}
       AGENT_SLOW_DURATION_MS_THRESHOLD: ${AGENT_SLOW_DURATION_MS_THRESHOLD:?AGENT_SLOW_DURATION_MS_THRESHOLD is required}
@@ -265,8 +266,6 @@ services:
         condition: service_started
       qdrant:
         condition: service_started
-      rag:
-        condition: service_started
     volumes:
       - ./backend/ai/src:/app/src
       - ./backend/ai/tests:/app/tests
@@ -274,40 +273,37 @@ services:
     networks:
       - veriq_network
 
-  qa:
+  testing:
     healthcheck: *app-healthcheck
     build:
       context: ./backend
-      dockerfile: ./qa/Dockerfile
-    container_name: veriq_qa
+      dockerfile: ./testing/Dockerfile
+    container_name: veriq_testing
     restart: always
     ports:
       - 8017:8000
     labels:
       - traefik.enable=true
-      - traefik.http.routers.qa.rule=PathPrefix(`/api/qa`)
-      - traefik.http.routers.qa.priority=110
-      - traefik.http.services.qa.loadbalancer.server.port=8000
+      - traefik.http.routers.testing.rule=PathPrefix(`/api/qa`)
+      - traefik.http.routers.testing.priority=110
+      - traefik.http.services.testing.loadbalancer.server.port=8000
     environment:
       <<: *service-environment
-      QA_DB_NAME: ${QA_DB_NAME:-qa}
-      QA_ALLOW_TEST_IDENTITY: ${QA_ALLOW_TEST_IDENTITY:-false}
+      TESTING_DB_NAME: ${TESTING_DB_NAME:-testing}
+      TESTING_ALLOW_TEST_IDENTITY: ${TESTING_ALLOW_TEST_IDENTITY:-false}
       WORKER_URL: http://worker:8000
-      RAG_URL: http://rag:8000
-      QDRANT_URL: http://qdrant:6333
       AI_URL: http://ai:8000
       CONTENT_URL: http://content:8000
       CLOUD_URL: http://cloud:8000
     depends_on:
       - mongodb
-      - rag
       - ai
       - content
       - cloud
       - worker
     volumes:
-      - ./backend/qa/src:/app/src
-      - ./backend/qa/tests:/app/tests
+      - ./backend/testing/src:/app/src
+      - ./backend/testing/tests:/app/tests
     networks:
       - veriq_network
 
@@ -531,7 +527,7 @@ services:
       RABBITMQ_URI: ${RABBITMQ_URI:?RABBITMQ_URI is required}
       WORKER_DB_NAME: ${WORKER_DB_NAME:?WORKER_DB_NAME is required}
       WORKER_MAX_RETRIES: ${WORKER_MAX_RETRIES:?WORKER_MAX_RETRIES is required}
-      QA_URL: http://qa:8000
+      TESTING_URL: http://testing:8000
     depends_on:
       mongodb:
         condition: service_started
@@ -541,39 +537,6 @@ services:
       - ./backend/worker/src:/app/src
     networks:
       - veriq_network
-
-  rag:
-    healthcheck: *app-healthcheck
-    build:
-      context: ./backend
-      dockerfile: ./rag/Dockerfile
-    container_name: veriq_rag
-    restart: always
-    ports:
-      - 8014:8000
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.rag.rule=PathPrefix(`/rag`)
-      - traefik.http.services.rag.loadbalancer.server.port=8000
-    environment:
-      <<: [*service-environment, *minio-environment]
-      RAG_DB_NAME: ${RAG_DB_NAME:?RAG_DB_NAME is required}
-      RABBITMQ_URI: ${RABBITMQ_URI:?RABBITMQ_URI is required}
-      QDRANT_URL: ${QDRANT_URL:?QDRANT_URL is required}
-      EMBEDDING_MODEL: ${EMBEDDING_MODEL:?EMBEDDING_MODEL is required}
-      RERANKER_MODEL: ${RERANKER_MODEL:?RERANKER_MODEL is required}
-    depends_on:
-      - mongodb
-      - redis
-      - qdrant
-      - content
-    volumes:
-      - ./backend/rag/src:/app/src
-      - ./backend/logs/rag:/app/logs
-      - hf_cache:/home/appuser/.cache/huggingface
-    networks:
-      - veriq_network
-
 
 networks:
   veriq_network:

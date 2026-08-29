@@ -5,7 +5,7 @@ import time
 import httpx
 
 
-BASE_URL = os.getenv("QA_TEST_URL", "http://qa:8000")
+BASE_URL = os.getenv("TESTING_TEST_URL", "http://testing:8000")
 HEADERS = {"x-test-user-id": "qa-lead-e2e"}
 
 

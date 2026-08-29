@@ -1,5 +1,5 @@
 "use client";
-import { ErrorState, LoadingState } from "../components/QaUi";
+import { ErrorState, LoadingState } from "../components/TestingUi";
 import { useProject } from "../hooks/useProject";
 import ChangesPage from "./workspace/ChangesPage";
 import DashboardPage from "./workspace/DashboardPage";

@@ -10,9 +10,9 @@ import {
   QaPage,
   StatusPill,
   useQaActionDialog,
-} from "../../components/QaUi";
-import { qaApi } from "../../services/qa.service";
-import { messageOf } from "../../lib/qa";
+} from "../../components/TestingUi";
+import { testingApi } from "../../services/testing.service";
+import { messageOf } from "../../lib/testing";
 
 export default function ChangesPage({ project }) {
   const { ask, dialog } = useQaActionDialog();
@@ -28,8 +28,8 @@ export default function ChangesPage({ project }) {
   const load = useCallback(async () => {
     try {
       const [changeValues, proposalValues] = await Promise.all([
-        qaApi.listChangeSets(project._id),
-        qaApi.listProposals(project._id),
+        testingApi.listChangeSets(project._id),
+        testingApi.listProposals(project._id),
       ]);
       setSets(changeValues);
       setProposals(proposalValues);
@@ -42,17 +42,17 @@ export default function ChangesPage({ project }) {
   }, [load]);
   const openChangeSet = async (item) => {
     try {
-      const value = await qaApi.getChangeSet(item._id);
+      const value = await testingApi.getChangeSet(item._id);
       setSelected(value);
       setChangeFacts(value.changes || []);
       setImpact(null);
       setRegression(null);
       if (value.status === "ANALYZED") {
-        const result = await qaApi.analyzeImpact(item._id);
+        const result = await testingApi.analyzeImpact(item._id);
         setImpact(result);
         setOverrides({});
         if (result.status === "REVIEWED") {
-          setRegression(await qaApi.regression(item._id));
+          setRegression(await testingApi.regression(item._id));
         }
       }
     } catch (reason) {
@@ -61,11 +61,11 @@ export default function ChangesPage({ project }) {
   };
   const analyze = async () => {
     try {
-      const result = await qaApi.analyzeImpact(selected._id);
-      setSelected(await qaApi.getChangeSet(selected._id));
+      const result = await testingApi.analyzeImpact(selected._id);
+      setSelected(await testingApi.getChangeSet(selected._id));
       setImpact(result);
       setOverrides({});
-      setRegression(result.status === "REVIEWED" ? await qaApi.regression(selected._id) : null);
+      setRegression(result.status === "REVIEWED" ? await testingApi.regression(selected._id) : null);
       await load();
     } catch (reason) {
       setError(messageOf(reason));
@@ -101,7 +101,7 @@ export default function ChangesPage({ project }) {
     if (!answer) return;
     try {
       if (action === "reject")
-        await qaApi.rejectProposal(item._id, {
+        await testingApi.rejectProposal(item._id, {
           expected_revision: item.revision,
           review_note: answer.note,
         });
@@ -115,7 +115,7 @@ export default function ChangesPage({ project }) {
             return;
           }
         }
-        await qaApi.acceptProposal(
+        await testingApi.acceptProposal(
           item._id,
           {
             expected_revision: item.revision,
@@ -156,14 +156,14 @@ export default function ChangesPage({ project }) {
           classification: overrides[item.test_case_version_id],
           reason: "Người rà soát điều chỉnh từ giao diện",
         }));
-      const reviewed = await qaApi.reviewImpact(impact._id, {
+      const reviewed = await testingApi.reviewImpact(impact._id, {
         expected_revision: impact.revision,
         overrides: payload,
         review_note: answer.note,
       });
       setImpact(reviewed);
-      await qaApi.createProposals(reviewed._id);
-      setRegression(await qaApi.regression(selected._id));
+      await testingApi.createProposals(reviewed._id);
+      setRegression(await testingApi.regression(selected._id));
       await load();
     } catch (reason) {
       setError(messageOf(reason));
@@ -204,7 +204,7 @@ export default function ChangesPage({ project }) {
                   type="button"
                   onClick={async () => {
                     try {
-                      const value = await qaApi.reviewChangeSet(selected._id, {
+                      const value = await testingApi.reviewChangeSet(selected._id, {
                         expected_revision: selected.revision,
                         changes: changeFacts,
                         review_note: "Đã xác nhận ChangeFact trên giao diện",
@@ -333,7 +333,7 @@ export default function ChangesPage({ project }) {
                     });
                     if (!answer) return;
                     try {
-                      const value = await qaApi.approveRegression(regression._id, {
+                      const value = await testingApi.approveRegression(regression._id, {
                         expected_revision: regression.revision,
                         selected_test_case_version_ids: regression.items
                           .filter((item) => ["MUST_RUN", "SHOULD_RUN"].includes(item.level))
@@ -424,7 +424,7 @@ export default function ChangesPage({ project }) {
               });
               if (!answer) return;
               try {
-                await qaApi.bulkApproveProposals(project._id, {
+                await testingApi.bulkApproveProposals(project._id, {
                   proposal_ids: selectedProposalIds,
                   review_note: answer.note,
                 });
@@ -503,7 +503,7 @@ export default function ChangesPage({ project }) {
                       });
                       if (!answer) return;
                       try {
-                        await qaApi.regenerateProposal(item._id, {
+                        await testingApi.regenerateProposal(item._id, {
                           expected_revision: item.revision,
                           instruction: answer.instruction,
                         });

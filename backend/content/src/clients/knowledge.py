@@ -4,12 +4,12 @@ from fastapi import HTTPException
 from src.core.infrastructure.configuration import settings
 
 
-class RagClient:
+class KnowledgeClient:
     async def delete_document(self, document_id: str, requester_id: str, is_admin: bool = False):
         try:
             async with httpx.AsyncClient(timeout=20) as client:
                 response = await client.delete(
-                    f"{settings.RAG_URL}/rag/document/{document_id}",
+                    f"{settings.AI_URL}/knowledge/document/{document_id}",
                     headers={"X-Internal-Token": settings.SECRET_KEY},
                     params={"requester_id": requester_id, "is_admin": str(is_admin).lower()},
                 )
@@ -20,4 +20,4 @@ class RagClient:
         return response.json()
 
 
-rag_client = RagClient()
+knowledge_client = KnowledgeClient()

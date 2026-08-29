@@ -260,7 +260,7 @@ async def get_current_user(
     x_test_user_id: str | None = Header(default=None),
     x_test_system_role: str = Header(default="USER"),
 ):
-    if settings.QA_ALLOW_TEST_IDENTITY and x_test_user_id:
+    if settings.TESTING_ALLOW_TEST_IDENTITY and x_test_user_id:
         try:
             system_role = SystemRole(x_test_system_role.upper())
         except ValueError:

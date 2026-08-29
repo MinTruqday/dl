@@ -58,6 +58,36 @@ async def project_storage_usage():
     return usage
 
 
+async def ai_request_metrics():
+    impact_total = await database.value.impact_analyses.count_documents({})
+    impact_success = await database.value.impact_analyses.count_documents(
+        {"ai_result.status": "SUCCESS"}
+    )
+    impact_degraded = await database.value.impact_analyses.count_documents(
+        {"ai_result.status": "DEGRADED"}
+    )
+    latency_rows = await database.value.impact_analyses.aggregate(
+        [
+            {"$match": {"ai_result.latency_ms": {"$type": "number"}}},
+            {"$group": {"_id": None, "average_ms": {"$avg": "$ai_result.latency_ms"}}},
+        ]
+    ).to_list(1)
+    measured = impact_success + impact_degraded
+    return {
+        "impact_classification": {
+            "total": impact_total,
+            "success": impact_success,
+            "degraded": impact_degraded,
+            "success_rate": round(impact_success / measured, 4) if measured else 0,
+            "error_rate": round(impact_degraded / measured, 4) if measured else 0,
+            "average_latency_ms": round(latency_rows[0]["average_ms"], 3)
+            if latency_rows
+            else 0,
+        },
+        "proposals": await database.value.maintenance_proposals.count_documents({}),
+    }
+
+
 @router.get("/operations")
 async def operations(
     limit: int = Query(default=100, ge=1, le=500),
@@ -111,12 +141,9 @@ async def operations(
             "worker_failures": worker_failures,
             "storage_usage": await project_storage_usage(),
             "audit_events": audit_events,
-            "rag_indexing_backlog": indexing_backlog,
+            "knowledge_indexing_backlog": indexing_backlog,
             "ai_models": ai_models,
-            "ai_request_metrics": {
-                "impact_analyses": await database.value.impact_analyses.count_documents({}),
-                "proposals": await database.value.maintenance_proposals.count_documents({}),
-            },
+            "ai_request_metrics": await ai_request_metrics(),
         }
     )
 
