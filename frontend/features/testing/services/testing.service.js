@@ -61,14 +61,27 @@ async function listPage(path, value) {
 }
 
 export const testingApi = {
-  listProjects: (query = "") =>
-    qaRequest(`/projects${query ? `?q=${encodeURIComponent(query)}` : ""}`),
+  listProjects: (query = "", status = "active") => {
+    const params = new URLSearchParams();
+    if (query) params.set("q", query);
+    if (status !== "all") params.set("status", status);
+    return qaRequest(`/projects?${params.toString()}`);
+  },
   createProject: (payload) =>
     qaRequest("/projects", { method: "POST", body: JSON.stringify(payload) }),
   getProject: (id) => qaRequest(`/projects/${id}`),
   listMembers: (id) => qaRequest(`/projects/${id}/members`),
   addMember: (id, payload) =>
     qaRequest(`/projects/${id}/members`, { method: "POST", body: JSON.stringify(payload) }),
+  inviteMember: (id, payload) =>
+    qaRequest(`/projects/${id}/invitations`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  resendMemberInvite: (id, userId) =>
+    qaRequest(`/projects/${id}/members/${userId}/resend-invite`, { method: "POST" }),
+  cancelMemberInvite: (id, userId) =>
+    qaRequest(`/projects/${id}/members/${userId}/cancel-invite`, { method: "POST" }),
   updateMember: (id, userId, payload) =>
     qaRequest(`/projects/${id}/members/${userId}`, {
       method: "PATCH",
@@ -80,6 +93,8 @@ export const testingApi = {
     qaRequest(`/projects/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
   archiveProject: (id, payload) =>
     qaRequest(`/projects/${id}/archive`, { method: "POST", body: JSON.stringify(payload) }),
+  restoreProject: (id, payload) =>
+    qaRequest(`/projects/${id}/restore`, { method: "POST", body: JSON.stringify(payload) }),
   dashboard: (id) => qaRequest(`/projects/${id}/dashboard`),
   listRequirementPage: (id, query = "") => listPage(`/projects/${id}/requirements`, query),
   listRequirements: (id, query = "") =>
@@ -141,7 +156,21 @@ export const testingApi = {
     body.append("file", file);
     return qaRequest(`/projects/${id}/requirement-documents/upload`, { method: "POST", body });
   },
+  listRequirementDocuments: (id, query = "") =>
+    qaRequest(`/projects/${id}/requirement-documents${query ? `?${query}` : ""}`),
   getRequirementDocument: (id) => qaRequest(`/requirement-documents/${id}`),
+  downloadRequirementDocument: (id, filename) =>
+    downloadQaFile(`/requirement-documents/${id}/download`, filename),
+  archiveRequirementDocument: (id, payload) =>
+    qaRequest(`/requirement-documents/${id}/archive`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  restoreRequirementDocument: (id, payload) =>
+    qaRequest(`/requirement-documents/${id}/restore`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   retryRequirementDocumentParse: (id, revision) =>
     qaRequest(`/requirement-documents/${id}/retry-parse`, {
       method: "POST",

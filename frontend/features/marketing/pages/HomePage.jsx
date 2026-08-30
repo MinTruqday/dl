@@ -39,7 +39,14 @@ export default function HomePage() {
             href="/"
             className="flex items-center gap-3 text-[19px] font-semibold tracking-[-0.035em]"
           >
-            <Image src="/veriq-logo.png" alt="Veriq" width={36} height={36} className="h-9 w-9 rounded-xl object-cover" priority />
+            <Image
+              src="/veriq-logo.png"
+              alt="Veriq"
+              width={36}
+              height={36}
+              className="h-9 w-9 rounded-xl object-cover"
+              priority
+            />
             <span>Veriq</span>
           </Link>
           <div className="flex items-center gap-2">

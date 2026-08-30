@@ -1,6 +1,8 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import DataTable from "../components/DataTable";
+import AdminPlatformPanel from "../components/AdminPlatformPanel";
+import AdminUsersPanel from "../components/AdminUsersPanel";
 import {
   ErrorState,
   LoadingState,
@@ -25,6 +27,7 @@ const modelLabels = {
 };
 
 export default function OperationsPage() {
+  const [section, setSection] = useState("overview");
   const [value, setValue] = useState(null);
   const [error, setError] = useState("");
   const [auditQuery, setAuditQuery] = useState("");
@@ -79,9 +82,33 @@ export default function OperationsPage() {
     },
   ];
   return (
-    <QaPage title="Vận hành nền tảng">
+    <QaPage
+      title="Quản trị nền tảng"
+      actions={
+        <div className="flex flex-wrap gap-2">
+          {[
+            ["overview", "Tổng quan vận hành"],
+            ["users", "Tài khoản"],
+            ["platform", "Dự án và AI"],
+          ].map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              className={section === value ? "apple-button" : "secondary-button"}
+              onClick={() => setSection(value)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      }
+    >
       {error && <ErrorState message={error} />}
-      {!value ? (
+      {section === "users" ? (
+        <AdminUsersPanel />
+      ) : section === "platform" ? (
+        <AdminPlatformPanel />
+      ) : !value ? (
         <LoadingState />
       ) : (
         <>

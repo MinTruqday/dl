@@ -171,7 +171,11 @@ async def get_project(
             status_code=403,
             detail={"code": "PROJECT_PERMISSION_DENIED", "permission": permission},
         )
-    if project.get("status", "active").lower() == "archived" and permission not in READ_PERMISSIONS:
+    if (
+        project.get("status", "active").lower() == "archived"
+        and permission not in READ_PERMISSIONS
+        and permission != "project.restore"
+    ):
         raise HTTPException(status_code=409, detail={"code": "PROJECT_ARCHIVED"})
     return project
 

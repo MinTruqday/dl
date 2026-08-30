@@ -128,7 +128,8 @@ class SessionService:
         user_id_str = str(auth_cred["_id"])
 
         is_active = auth_cred.get("is_active", True)
-        if not is_active:
+        account_status = auth_cred.get("account_status", "ACTIVE" if is_active else "DISABLED")
+        if not is_active or account_status != "ACTIVE":
             raise HTTPException(
                 status_code=403,
                 detail="Tài khoản hiện đang bị khóa hoặc ở trạng thái không hoạt động",
@@ -246,7 +247,7 @@ class SessionService:
 
     @staticmethod
     async def issue_token_for_user(user_doc: dict, client_ip: str):
-        if not user_doc.get("is_active", True):
+        if not user_doc.get("is_active", True) or user_doc.get("account_status", "ACTIVE") != "ACTIVE":
             raise HTTPException(
                 status_code=403,
                 detail="Tài khoản hiện đang bị khóa hoặc ở trạng thái không hoạt động",

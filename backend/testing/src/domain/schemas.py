@@ -139,6 +139,17 @@ class ReviewCommentAction(BaseModel):
     reason: str = Field(default="", max_length=2000)
 
 
+class ReviewCommentPatch(BaseModel):
+    body_doc: dict[str, Any]
+
+    @field_validator("body_doc")
+    @classmethod
+    def validate_body(cls, value):
+        if value.get("type") != "doc" or not isinstance(value.get("content", []), list):
+            raise ValueError("Tiptap JSON không hợp lệ")
+        return value
+
+
 class ImportConfirm(BaseModel):
     selected_indexes: list[int] = Field(default_factory=list, max_length=2000)
     expected_revision: int | None = Field(default=None, ge=1)
@@ -393,11 +404,36 @@ class TestPlanCreate(BaseModel):
     build: str = Field(default="", max_length=200)
 
 
+class TestPlanPatch(BaseModel):
+    expected_revision: int = Field(ge=1)
+    name: str | None = Field(default=None, min_length=2, max_length=300)
+    objective: str | None = Field(default=None, max_length=5000)
+    scope_in: list[str] | None = Field(default=None, max_length=500)
+    scope_out: list[str] | None = Field(default=None, max_length=500)
+    environment: str | None = Field(default=None, max_length=200)
+    entry_criteria: list[str] | None = Field(default=None, max_length=200)
+    exit_criteria: list[str] | None = Field(default=None, max_length=200)
+    risks: list[str] | None = Field(default=None, max_length=200)
+    test_types: list[str] | None = Field(default=None, max_length=100)
+    members: list[str] | None = Field(default=None, max_length=500)
+    release: str | None = Field(default=None, max_length=200)
+    build: str | None = Field(default=None, max_length=200)
+
+
 class TestSuiteCreate(BaseModel):
     project_id: str
     name: str = Field(min_length=2, max_length=300)
     suite_type: Literal["smoke", "regression", "sanity", "feature", "api", "ui", "integration", "custom"]
     test_case_version_ids: list[str] = Field(default_factory=list, max_length=5000)
+
+
+class TestSuitePatch(BaseModel):
+    expected_revision: int = Field(ge=1)
+    name: str | None = Field(default=None, min_length=2, max_length=300)
+    suite_type: Literal[
+        "smoke", "regression", "sanity", "feature", "api", "ui", "integration", "custom"
+    ] | None = None
+    test_case_version_ids: list[str] | None = Field(default=None, max_length=5000)
 
 
 class TestRunCreate(BaseModel):

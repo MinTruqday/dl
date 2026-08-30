@@ -119,6 +119,82 @@ export async function getUserMe() {
   })();
   return userMePromise;
 }
+async function authenticatedJson(path, options = {}, fallback = "Yêu cầu không thành công") {
+  const response = await authenticatedFetch(`${API_URL}${path}`, options);
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(errorMessage(body, fallback));
+  return body.data ?? body;
+}
+export function updateMyProfile(payload) {
+  return authenticatedJson(
+    "/xac-thuc/ca-nhan",
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    },
+    "Không thể cập nhật thông tin cá nhân",
+  );
+}
+export function changeMyPassword(payload) {
+  return authenticatedJson(
+    "/xac-thuc/doi-mat-khau",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    },
+    "Không thể đổi mật khẩu",
+  );
+}
+export function changeMyEmail(payload) {
+  return authenticatedJson(
+    "/xac-thuc/doi-email",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    },
+    "Không thể đổi email",
+  );
+}
+export function getMySettings() {
+  return authenticatedJson("/xac-thuc/cai-dat", {}, "Không thể tải cài đặt cá nhân");
+}
+export function updateMySettings(payload) {
+  return authenticatedJson(
+    "/xac-thuc/cai-dat",
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    },
+    "Không thể cập nhật cài đặt cá nhân",
+  );
+}
+export function updateMyNotifications(payload) {
+  return authenticatedJson(
+    "/xac-thuc/thong-bao",
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    },
+    "Không thể cập nhật cài đặt thông báo",
+  );
+}
+export function listMySessions() {
+  return authenticatedJson("/xac-thuc/phien", {}, "Không thể tải danh sách phiên đăng nhập");
+}
+export function revokeMySession(sessionId) {
+  return authenticatedJson(
+    `/xac-thuc/phien/${encodeURIComponent(sessionId)}`,
+    {
+      method: "DELETE",
+    },
+    "Không thể thu hồi phiên đăng nhập",
+  );
+}
 export const forgotPasswordAPI = async (email) => {
   const res = await fetch(`${API_URL}/xac-thuc/quen-mat-khau`, {
     method: "POST",

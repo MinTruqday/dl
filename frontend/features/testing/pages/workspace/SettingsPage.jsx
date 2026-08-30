@@ -159,7 +159,7 @@ export default function SettingsPage({ project, onProjectChange }) {
                 event.preventDefault();
                 const value = new FormData(event.currentTarget);
                 try {
-                  await testingApi.addMember(project._id, {
+                  await testingApi.inviteMember(project._id, {
                     user_id: value.get("user_id"),
                     project_role: value.get("project_role"),
                   });
@@ -185,7 +185,7 @@ export default function SettingsPage({ project, onProjectChange }) {
                 <option value="QA_LEAD">Trưởng nhóm kiểm thử</option>
               </select>
               <button className="secondary-button" type="submit">
-                Thêm
+                Gửi lời mời
               </button>
             </form>
             <DataTable
@@ -201,6 +201,7 @@ export default function SettingsPage({ project, onProjectChange }) {
                       aria-label={`Vai trò ${item.user_id}`}
                       className="apple-input"
                       value={item.project_role}
+                      disabled={item.status !== "ACTIVE"}
                       onChange={async (event) => {
                         try {
                           await testingApi.updateMember(project._id, item.user_id, {
@@ -236,23 +237,56 @@ export default function SettingsPage({ project, onProjectChange }) {
                   label: "Thao tác",
                   render: (item) => (
                     <span className="flex flex-wrap gap-2">
-                      <button
-                        className="secondary-button"
-                        type="button"
-                        onClick={async () => {
-                          try {
-                            await testingApi.updateMember(project._id, item.user_id, {
-                              expected_revision: item.membership_revision,
-                              status: item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
-                            });
-                            setMembers(await testingApi.listMembers(project._id));
-                          } catch (reason) {
-                            setError(messageOf(reason));
-                          }
-                        }}
-                      >
-                        {item.status === "ACTIVE" ? "Vô hiệu hóa" : "Kích hoạt"}
-                      </button>
+                      {item.status === "INVITED" ? (
+                        <>
+                          <button
+                            className="secondary-button"
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                await testingApi.resendMemberInvite(project._id, item.user_id);
+                                setMembers(await testingApi.listMembers(project._id));
+                              } catch (reason) {
+                                setError(messageOf(reason));
+                              }
+                            }}
+                          >
+                            Gửi lại lời mời
+                          </button>
+                          <button
+                            className="secondary-button"
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                await testingApi.cancelMemberInvite(project._id, item.user_id);
+                                setMembers(await testingApi.listMembers(project._id));
+                              } catch (reason) {
+                                setError(messageOf(reason));
+                              }
+                            }}
+                          >
+                            Hủy lời mời
+                          </button>
+                        </>
+                      ) : item.status !== "CANCELLED" ? (
+                        <button
+                          className="secondary-button"
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              await testingApi.updateMember(project._id, item.user_id, {
+                                expected_revision: item.membership_revision,
+                                status: item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
+                              });
+                              setMembers(await testingApi.listMembers(project._id));
+                            } catch (reason) {
+                              setError(messageOf(reason));
+                            }
+                          }}
+                        >
+                          {item.status === "ACTIVE" ? "Vô hiệu hóa" : "Kích hoạt"}
+                        </button>
+                      ) : null}
                       <button
                         className="secondary-button"
                         type="button"

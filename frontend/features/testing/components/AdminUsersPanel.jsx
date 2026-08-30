@@ -1,0 +1,372 @@
+"use client";
+import { useCallback, useEffect, useState } from "react";
+import { adminApi } from "@/features/authentication/services/admin.service";
+import DataTable from "./DataTable";
+import { ErrorState, LoadingState, Panel, StatusPill, useQaActionDialog } from "./TestingUi";
+import { formatDate, messageOf } from "../lib/testing";
+
+export default function AdminUsersPanel() {
+  const { ask, dialog } = useQaActionDialog();
+  const [users, setUsers] = useState([]);
+  const [query, setQuery] = useState("");
+  const [selectedId, setSelectedId] = useState("");
+  const [detail, setDetail] = useState(null);
+  const [sessions, setSessions] = useState([]);
+  const [memberships, setMemberships] = useState([]);
+  const [audit, setAudit] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const loadUsers = useCallback(async (search = "") => {
+    setLoading(true);
+    setError("");
+    try {
+      setUsers(await adminApi.listUsers(search));
+    } catch (reason) {
+      setError(messageOf(reason));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const loadDetail = useCallback(async (id) => {
+    if (!id) return;
+    setError("");
+    try {
+      const [user, activeSessions, projectMemberships, events] = await Promise.all([
+        adminApi.getUser(id),
+        adminApi.listSessions(id),
+        adminApi.listMemberships(id),
+        adminApi.listUserAudit(id),
+      ]);
+      setDetail(user);
+      setSessions(activeSessions);
+      setMemberships(projectMemberships);
+      setAudit(events);
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadUsers();
+  }, [loadUsers]);
+
+  useEffect(() => {
+    void loadDetail(selectedId);
+  }, [loadDetail, selectedId]);
+
+  const reasonFor = async (title, description, confirmLabel) => {
+    const result = await ask({
+      title,
+      description,
+      confirmLabel,
+      fields: [
+        {
+          name: "reason",
+          label: "Lý do",
+          required: true,
+          multiline: true,
+          autoFocus: true,
+        },
+      ],
+    });
+    return result?.reason || "";
+  };
+
+  const mutate = async (title, description, confirmLabel, action) => {
+    const reason = await reasonFor(title, description, confirmLabel);
+    if (!reason) return;
+    setError("");
+    try {
+      await action(reason);
+      await Promise.all([loadUsers(query), loadDetail(selectedId)]);
+    } catch (value) {
+      setError(messageOf(value));
+    }
+  };
+
+  return (
+    <div className="space-y-5">
+      {error && <ErrorState message={error} />}
+      <Panel
+        title="Tài khoản hệ thống"
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <button
+              className="apple-button"
+              type="button"
+              onClick={async () => {
+                const answer = await ask({
+                  title: "Tạo tài khoản hệ thống",
+                  description: "Người dùng sẽ nhận quy trình đặt mật khẩu riêng",
+                  confirmLabel: "Tạo và gửi lời mời",
+                  fields: [
+                    { name: "email", label: "Email", required: true, autoFocus: true },
+                    { name: "full_name", label: "Họ tên", required: true },
+                    { name: "slug", label: "Tên đăng nhập", required: true },
+                    { name: "reason", label: "Lý do", required: true, multiline: true },
+                  ],
+                });
+                if (!answer) return;
+                try {
+                  await adminApi.createUser(answer);
+                  await loadUsers(query);
+                } catch (reason) {
+                  setError(messageOf(reason));
+                }
+              }}
+            >
+              Tạo tài khoản
+            </button>
+            <form
+              className="flex gap-2"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void loadUsers(query);
+              }}
+            >
+              <input
+                className="apple-input w-72"
+                aria-label="Tìm tài khoản"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Email tên hoặc tên đăng nhập"
+              />
+              <button className="secondary-button" type="submit">
+                Tìm
+              </button>
+            </form>
+          </div>
+        }
+      >
+        {loading ? (
+          <div className="p-5">
+            <LoadingState />
+          </div>
+        ) : (
+          <DataTable
+            items={users}
+            empty="Không có tài khoản phù hợp"
+            columns={[
+              { key: "email", label: "Email" },
+              { key: "full_name", label: "Tên" },
+              { key: "system_role", label: "Vai trò hệ thống" },
+              {
+                key: "is_active",
+                label: "Trạng thái",
+                render: (item) => <StatusPill value={item.is_active ? "ACTIVE" : "DISABLED"} />,
+              },
+              {
+                key: "open",
+                label: "Thao tác",
+                render: (item) => (
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={() => setSelectedId(item._id)}
+                  >
+                    Xem chi tiết
+                  </button>
+                ),
+              },
+            ]}
+          />
+        )}
+      </Panel>
+
+      {detail && (
+        <>
+          <Panel title={`Chi tiết ${detail.email}`}>
+            <div className="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-4">
+              <div>
+                <p className="field-label">Tên</p>
+                <p>{detail.full_name}</p>
+              </div>
+              <div>
+                <p className="field-label">Vai trò hệ thống</p>
+                <p>{detail.system_role}</p>
+              </div>
+              <div>
+                <p className="field-label">Trạng thái</p>
+                <p>{detail.account_status}</p>
+              </div>
+              <div>
+                <p className="field-label">Phiên đang hoạt động</p>
+                <p>{detail.active_session_count}</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2 border-t border-border p-5">
+              {detail.account_status === "ACTIVE" ? (
+                <>
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={() =>
+                      mutate(
+                        "Khóa tài khoản",
+                        "Tài khoản sẽ mất quyền truy cập ngay lập tức",
+                        "Khóa",
+                        (reason) => adminApi.lockUser(detail._id, reason),
+                      )
+                    }
+                  >
+                    Khóa
+                  </button>
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={() =>
+                      mutate(
+                        "Vô hiệu hóa tài khoản",
+                        "Toàn bộ phiên đăng nhập sẽ bị thu hồi",
+                        "Vô hiệu hóa",
+                        (reason) => adminApi.disableUser(detail._id, reason),
+                      )
+                    }
+                  >
+                    Vô hiệu hóa
+                  </button>
+                </>
+              ) : (
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() =>
+                    mutate(
+                      detail.account_status === "LOCKED"
+                        ? "Mở khóa tài khoản"
+                        : "Kích hoạt tài khoản",
+                      "Tài khoản sẽ được phép đăng nhập trở lại",
+                      detail.account_status === "LOCKED" ? "Mở khóa" : "Kích hoạt",
+                      (reason) =>
+                        detail.account_status === "LOCKED"
+                          ? adminApi.unlockUser(detail._id, reason)
+                          : adminApi.enableUser(detail._id, reason),
+                    )
+                  }
+                >
+                  {detail.account_status === "LOCKED" ? "Mở khóa" : "Kích hoạt"}
+                </button>
+              )}
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={() =>
+                  mutate(
+                    "Buộc đặt lại mật khẩu",
+                    "Toàn bộ phiên cũ sẽ bị thu hồi và quy trình khôi phục sẽ được gửi",
+                    "Khởi tạo",
+                    (reason) => adminApi.forcePasswordReset(detail._id, reason),
+                  )
+                }
+              >
+                Buộc đặt lại mật khẩu
+              </button>
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={() =>
+                  mutate(
+                    "Đặt lại passkey",
+                    "Toàn bộ passkey và phiên đăng nhập của tài khoản sẽ bị thu hồi",
+                    "Đặt lại",
+                    (reason) => adminApi.resetPasskeys(detail._id, reason),
+                  )
+                }
+              >
+                Đặt lại passkey
+              </button>
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={() =>
+                  mutate(
+                    detail.system_role === "ADMIN" ? "Hạ quyền quản trị" : "Cấp quyền quản trị",
+                    "Thay đổi có hiệu lực sau khi toàn bộ phiên hiện tại bị thu hồi",
+                    "Xác nhận",
+                    (reason) =>
+                      adminApi.updateSystemRole(
+                        detail._id,
+                        detail.system_role === "ADMIN" ? "USER" : "ADMIN",
+                        reason,
+                      ),
+                  )
+                }
+              >
+                {detail.system_role === "ADMIN" ? "Hạ xuống USER" : "Cấp ADMIN"}
+              </button>
+            </div>
+          </Panel>
+
+          <Panel title="Phiên đăng nhập">
+            <DataTable
+              items={sessions}
+              empty="Không có phiên đăng nhập"
+              columns={[
+                { key: "_id", label: "Mã phiên" },
+                { key: "ip", label: "Địa chỉ IP" },
+                {
+                  key: "created_at",
+                  label: "Thời điểm tạo",
+                  render: (item) => formatDate(item.created_at),
+                },
+                {
+                  key: "revoke",
+                  label: "Thao tác",
+                  render: (item) => (
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      disabled={Boolean(item.revoked_at)}
+                      onClick={async () => {
+                        setError("");
+                        try {
+                          await adminApi.revokeSession(detail._id, item._id);
+                          await loadDetail(detail._id);
+                        } catch (reason) {
+                          setError(messageOf(reason));
+                        }
+                      }}
+                    >
+                      {item.revoked_at ? "Đã thu hồi" : "Thu hồi"}
+                    </button>
+                  ),
+                },
+              ]}
+            />
+          </Panel>
+
+          <div className="grid gap-5 xl:grid-cols-2">
+            <Panel title="Thành viên dự án">
+              <DataTable
+                items={memberships}
+                empty="Không có thành viên dự án"
+                columns={[
+                  { key: "project_id", label: "Dự án" },
+                  { key: "project_role", label: "Vai trò" },
+                  { key: "status", label: "Trạng thái" },
+                ]}
+              />
+            </Panel>
+            <Panel title="Nhật ký bảo mật">
+              <DataTable
+                items={audit}
+                empty="Không có sự kiện"
+                columns={[
+                  { key: "action", label: "Sự kiện" },
+                  {
+                    key: "timestamp",
+                    label: "Thời điểm",
+                    render: (item) => formatDate(item.timestamp),
+                  },
+                ]}
+              />
+            </Panel>
+          </div>
+        </>
+      )}
+      {dialog}
+    </div>
+  );
+}

@@ -9,6 +9,7 @@ frontend/tsconfig.tsbuildinfo
 frontend/public/
 !frontend/public/
 frontend/public/*
+!frontend/public/veriq-logo.png
 !frontend/public/images/
 frontend/public/images/*
 !frontend/public/images/veriq-document-workspace.png

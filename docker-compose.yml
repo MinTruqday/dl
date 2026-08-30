@@ -36,12 +36,10 @@ services:
       - --replSet
       - rs0
       - --bind_ip_all
-    ports:
-      - 27017:27017
     volumes:
       - mongodb_data:/data/db
     healthcheck:
-      test: ["CMD-SHELL", "mongosh --quiet --eval 'try { quit(rs.status().ok == 1 ? 0 : 1) } catch (error) { quit(rs.initiate({_id:\"rs0\",members:[{_id:0,host:\"mongodb:27017\"}]}).ok == 1 ? 0 : 1) }'"]
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'try { const state = rs.status(); quit(state.ok == 1 ? 0 : 1) } catch (error) { try { quit(rs.initiate({_id:\"rs0\",members:[{_id:0,host:\"mongodb:27017\"}]}).ok == 1 ? 0 : 1) } catch (retryError) { quit(retryError.codeName == \"AlreadyInitialized\" ? 0 : 1) } }'"]
       interval: 3s
       timeout: 10s
       start_period: 3s
@@ -290,6 +288,7 @@ services:
     environment:
       <<: *service-environment
       TESTING_DB_NAME: ${TESTING_DB_NAME:-testing}
+      AUTHENTICATION_DB_NAME: ${AUTHENTICATION_DB_NAME:?AUTHENTICATION_DB_NAME is required}
       TESTING_ALLOW_TEST_IDENTITY: ${TESTING_ALLOW_TEST_IDENTITY:-false}
       WORKER_URL: http://worker:8000
       AI_URL: http://ai:8000
@@ -414,11 +413,16 @@ services:
       - 8007:8000
     labels:
       - traefik.enable=true
-      - traefik.http.routers.authentication.rule=PathPrefix(`/xac-thuc/`) || PathPrefix(`/google`)
+      - traefik.http.routers.authentication.rule=PathPrefix(`/xac-thuc/`) || PathPrefix(`/google`) || PathPrefix(`/api/admin`)
+      - traefik.http.routers.authentication.priority=120
       - traefik.http.services.authentication.loadbalancer.server.port=8000
     environment:
       <<: *service-environment
       AUTHENTICATION_DB_NAME: ${AUTHENTICATION_DB_NAME:?AUTHENTICATION_DB_NAME is required}
+      TESTING_DB_NAME: ${TESTING_DB_NAME:?TESTING_DB_NAME is required}
+      WORKER_DB_NAME: ${WORKER_DB_NAME:?WORKER_DB_NAME is required}
+      AI_INTERNAL_URL: http://ai:8000
+      WORKER_INTERNAL_URL: http://worker:8000
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:?ACCESS_TOKEN_EXPIRE_MINUTES is required}
       REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:?REFRESH_TOKEN_EXPIRE_DAYS is required}
       GOOGLE_AUTH_URL: ${GOOGLE_AUTH_URL:?GOOGLE_AUTH_URL is required}

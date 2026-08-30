@@ -28,6 +28,27 @@ export default function ProjectWorkspacePage({ projectId, section }) {
       </div>
     );
   const area = section[0] || "dashboard";
+  const requiredPermissions = {
+    dashboard: "project.read",
+    requirements: "requirement.read",
+    "test-design": "testcase.read",
+    traceability: "trace.read",
+    changes: "impact.read",
+    "ai-review": "proposal.read",
+    execution: "testrun.read",
+    defects: "defect.read",
+    knowledge: "knowledge.read",
+    reports: "report.read",
+    settings: "project.settings.manage",
+  };
+  const requiredPermission = requiredPermissions[area];
+  if (requiredPermission && !state.project.current_permissions?.includes(requiredPermission)) {
+    return (
+      <div className="p-8">
+        <ErrorState message="Bạn không có quyền mở khu vực này trong dự án" />
+      </div>
+    );
+  }
   const props = {
     project: state.project,
     section: section.slice(1),

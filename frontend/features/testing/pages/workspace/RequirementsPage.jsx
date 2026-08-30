@@ -60,6 +60,7 @@ export default function RequirementsPage({ project, section }) {
   const [selectedIndexes, setSelectedIndexes] = useState([]);
   const [upload, setUpload] = useState(null);
   const [sourceDocument, setSourceDocument] = useState(null);
+  const [sourceDocuments, setSourceDocuments] = useState([]);
   const [draft, setDraft] = useState(null);
   const [draftDirty, setDraftDirty] = useState(false);
   const [saveState, setSaveState] = useState("saved");
@@ -79,6 +80,9 @@ export default function RequirementsPage({ project, section }) {
       });
       setItems(values.items);
       setPageInfo(values);
+      if (project.current_permissions?.includes("requirement_document.read")) {
+        setSourceDocuments(await testingApi.listRequirementDocuments(project._id));
+      }
       if (requirementId) {
         const detail = await testingApi.getRequirement(requirementId);
         setSelected(detail);
@@ -92,7 +96,11 @@ export default function RequirementsPage({ project, section }) {
     } finally {
       setLoading(false);
     }
-  }, [filters, page, project._id, query, requirementId]);
+  }, [filters, page, project._id, project.current_permissions, query, requirementId]);
+  const can = useCallback(
+    (permission) => project.current_permissions?.includes(permission),
+    [project.current_permissions],
+  );
   useEffect(() => {
     void load();
   }, [load]);
@@ -477,25 +485,27 @@ export default function RequirementsPage({ project, section }) {
             title="Phiên bản hiện tại"
             actions={
               <div className="flex flex-wrap gap-2">
-                <button
-                  className="secondary-button"
-                  type="button"
-                  onClick={async () => {
-                    try {
-                      setLint(await testingApi.lintRequirement(current._id));
-                    } catch (reason) {
-                      setError(messageOf(reason));
-                    }
-                  }}
-                >
-                  Kiểm tra chất lượng bằng AI
-                </button>
-                {current.status === "BASELINED" && (
+                {can("ai.run_lint") && (
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        setLint(await testingApi.lintRequirement(current._id));
+                      } catch (reason) {
+                        setError(messageOf(reason));
+                      }
+                    }}
+                  >
+                    Kiểm tra chất lượng bằng AI
+                  </button>
+                )}
+                {current.status === "BASELINED" && can("requirement.version.create") && (
                   <button className="secondary-button" type="button" onClick={createVersion}>
                     Tạo phiên bản mới
                   </button>
                 )}
-                {current.status !== "OBSOLETE" && (
+                {current.status !== "OBSOLETE" && can("requirement.archive") && (
                   <button
                     className="secondary-button"
                     type="button"
@@ -531,12 +541,12 @@ export default function RequirementsPage({ project, section }) {
                     Đánh dấu không còn hiệu lực
                   </button>
                 )}
-                {current.status === "DRAFT" && (
+                {current.status === "DRAFT" && can("requirement.submit_review") && (
                   <button className="apple-button" type="button" onClick={() => review("submit")}>
                     Gửi rà soát
                   </button>
                 )}
-                {current.status === "IN_REVIEW" && (
+                {current.status === "IN_REVIEW" && can("requirement.review") && (
                   <button
                     className="secondary-button"
                     type="button"
@@ -545,7 +555,7 @@ export default function RequirementsPage({ project, section }) {
                     Yêu cầu chỉnh sửa
                   </button>
                 )}
-                {current.status === "IN_REVIEW" && (
+                {current.status === "IN_REVIEW" && can("requirement.approve") && (
                   <button className="apple-button" type="button" onClick={() => review("approve")}>
                     Phê duyệt phiên bản
                   </button>
@@ -568,7 +578,7 @@ export default function RequirementsPage({ project, section }) {
                 <p className="field-label">Rủi ro</p>
                 <p className="mt-2 font-semibold">{current.risk}</p>
               </div>
-              {current.status === "DRAFT" && draft ? (
+              {current.status === "DRAFT" && draft && can("requirement.update") ? (
                 <div className="space-y-4 md:col-span-3">
                   <input
                     aria-label="Tên yêu cầu"
@@ -855,82 +865,86 @@ export default function RequirementsPage({ project, section }) {
                     }}
                     placeholder="Tìm yêu cầu"
                   />
-                  <button
-                    className="secondary-button"
-                    disabled={!selectedIds.length}
-                    type="button"
-                    onClick={async () => {
-                      const answer = await ask({
-                        title: "Cập nhật nhãn hàng loạt",
-                        description: `${selectedIds.length} yêu cầu đã chọn`,
-                        confirmLabel: "Cập nhật nhãn",
-                        fields: [
-                          {
-                            name: "add",
-                            label: "Nhãn cần thêm phân cách bằng dấu phẩy",
-                            autoFocus: true,
-                          },
-                          { name: "remove", label: "Nhãn cần gỡ phân cách bằng dấu phẩy" },
-                        ],
-                      });
-                      if (!answer) return;
-                      try {
-                        const splitTags = (value) =>
-                          value
-                            .split(",")
-                            .map((item) => item.trim())
-                            .filter(Boolean);
-                        await testingApi.bulkTags(project._id, {
-                          artifact_type: "requirement",
-                          ids: selectedIds,
-                          add_tags: splitTags(answer.add),
-                          remove_tags: splitTags(answer.remove),
+                  {can("requirement.update") && (
+                    <button
+                      className="secondary-button"
+                      disabled={!selectedIds.length}
+                      type="button"
+                      onClick={async () => {
+                        const answer = await ask({
+                          title: "Cập nhật nhãn hàng loạt",
+                          description: `${selectedIds.length} yêu cầu đã chọn`,
+                          confirmLabel: "Cập nhật nhãn",
+                          fields: [
+                            {
+                              name: "add",
+                              label: "Nhãn cần thêm phân cách bằng dấu phẩy",
+                              autoFocus: true,
+                            },
+                            { name: "remove", label: "Nhãn cần gỡ phân cách bằng dấu phẩy" },
+                          ],
                         });
-                        setSelectedIds([]);
-                        await load();
-                      } catch (reason) {
-                        setError(messageOf(reason));
-                      }
-                    }}
-                  >
-                    Cập nhật nhãn
-                  </button>
-                  <button
-                    className="danger-button"
-                    disabled={!selectedIds.length}
-                    type="button"
-                    onClick={async () => {
-                      const answer = await ask({
-                        title: "Lưu trữ yêu cầu hàng loạt",
-                        description: `${selectedIds.length} yêu cầu vẫn được giữ toàn bộ lịch sử`,
-                        confirmLabel: "Lưu trữ",
-                        danger: true,
-                        fields: [
-                          {
-                            name: "reason",
-                            label: "Lý do",
-                            required: true,
-                            multiline: true,
-                            autoFocus: true,
-                          },
-                        ],
-                      });
-                      if (!answer) return;
-                      try {
-                        await testingApi.bulkArchive(project._id, {
-                          artifact_type: "requirement",
-                          ids: selectedIds,
-                          reason: answer.reason,
+                        if (!answer) return;
+                        try {
+                          const splitTags = (value) =>
+                            value
+                              .split(",")
+                              .map((item) => item.trim())
+                              .filter(Boolean);
+                          await testingApi.bulkTags(project._id, {
+                            artifact_type: "requirement",
+                            ids: selectedIds,
+                            add_tags: splitTags(answer.add),
+                            remove_tags: splitTags(answer.remove),
+                          });
+                          setSelectedIds([]);
+                          await load();
+                        } catch (reason) {
+                          setError(messageOf(reason));
+                        }
+                      }}
+                    >
+                      Cập nhật nhãn
+                    </button>
+                  )}
+                  {can("requirement.archive") && (
+                    <button
+                      className="danger-button"
+                      disabled={!selectedIds.length}
+                      type="button"
+                      onClick={async () => {
+                        const answer = await ask({
+                          title: "Lưu trữ yêu cầu hàng loạt",
+                          description: `${selectedIds.length} yêu cầu vẫn được giữ toàn bộ lịch sử`,
+                          confirmLabel: "Lưu trữ",
+                          danger: true,
+                          fields: [
+                            {
+                              name: "reason",
+                              label: "Lý do",
+                              required: true,
+                              multiline: true,
+                              autoFocus: true,
+                            },
+                          ],
                         });
-                        setSelectedIds([]);
-                        await load();
-                      } catch (reason) {
-                        setError(messageOf(reason));
-                      }
-                    }}
-                  >
-                    Lưu trữ
-                  </button>
+                        if (!answer) return;
+                        try {
+                          await testingApi.bulkArchive(project._id, {
+                            artifact_type: "requirement",
+                            ids: selectedIds,
+                            reason: answer.reason,
+                          });
+                          setSelectedIds([]);
+                          await load();
+                        } catch (reason) {
+                          setError(messageOf(reason));
+                        }
+                      }}
+                    >
+                      Lưu trữ
+                    </button>
+                  )}
                 </div>
               }
             >
@@ -1030,357 +1044,481 @@ export default function RequirementsPage({ project, section }) {
               <Pagination value={pageInfo} onChange={setPage} />
             </Panel>
           )}
-          <div className="grid gap-5 xl:grid-cols-2">
-            <Panel title="Tạo yêu cầu thủ công">
-              <form className="space-y-4 p-5" onSubmit={create}>
-                <label className="field-label">
-                  Tên
-                  <input
-                    className="apple-input mt-2"
-                    required
-                    minLength={2}
-                    value={form.title}
-                    onChange={(event) => setForm({ ...form, title: event.target.value })}
-                  />
-                </label>
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <label className="field-label">
-                    Loại
-                    <select
-                      className="apple-input mt-2"
-                      value={form.type}
-                      onChange={(event) => setForm({ ...form, type: event.target.value })}
-                    >
-                      <option value="functional">Chức năng</option>
-                      <option value="non_functional">Phi chức năng</option>
-                      <option value="business_rule">Quy tắc nghiệp vụ</option>
-                      <option value="api">API</option>
-                      <option value="ui">UI</option>
-                    </select>
-                  </label>
-                  <label className="field-label">
-                    Ưu tiên
-                    <select
-                      className="apple-input mt-2"
-                      value={form.priority}
-                      onChange={(event) => setForm({ ...form, priority: event.target.value })}
-                    >
-                      {["critical", "high", "medium", "low"].map((value) => (
-                        <option key={value} value={value}>
-                          {valueLabel(value)}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="field-label">
-                    Rủi ro
-                    <select
-                      className="apple-input mt-2"
-                      value={form.risk}
-                      onChange={(event) => setForm({ ...form, risk: event.target.value })}
-                    >
-                      {["critical", "high", "medium", "low"].map((value) => (
-                        <option key={value} value={value}>
-                          {valueLabel(value)}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-                <QaDocumentEditor
-                  value={form.content_doc}
-                  onChange={(content_doc) => setForm({ ...form, content_doc })}
-                  label="Nội dung yêu cầu"
-                />
-                <label className="field-label">
-                  Tiêu chí chấp nhận mỗi dòng một điều kiện
-                  <textarea
-                    className="apple-input mt-2 min-h-28"
-                    value={form.acceptance}
-                    onChange={(event) => setForm({ ...form, acceptance: event.target.value })}
-                  />
-                </label>
-                <label className="field-label">
-                  Quy tắc nghiệp vụ mỗi dòng một quy tắc
-                  <textarea
-                    className="apple-input mt-2 min-h-24"
-                    value={form.businessRules}
-                    onChange={(event) => setForm({ ...form, businessRules: event.target.value })}
-                  />
-                </label>
-                <label className="field-label">
-                  Tác nhân phân tách bằng dấu phẩy
-                  <input
-                    className="apple-input mt-2"
-                    value={form.actors}
-                    onChange={(event) => setForm({ ...form, actors: event.target.value })}
-                  />
-                </label>
-                <label className="field-label">
-                  Phụ thuộc mỗi dòng một mục
-                  <textarea
-                    className="apple-input mt-2 min-h-20"
-                    value={form.dependencies}
-                    onChange={(event) => setForm({ ...form, dependencies: event.target.value })}
-                  />
-                </label>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <label className="field-label">
-                    Nhãn phân cách bằng dấu phẩy
-                    <input
-                      className="apple-input mt-2"
-                      value={form.tags}
-                      onChange={(event) => setForm({ ...form, tags: event.target.value })}
-                    />
-                  </label>
-                  <label className="field-label">
-                    Mã người phụ trách
-                    <input
-                      className="apple-input mt-2"
-                      value={form.ownerId}
-                      onChange={(event) => setForm({ ...form, ownerId: event.target.value })}
-                    />
-                  </label>
-                </div>
-                <button className="apple-button" type="submit">
-                  Lưu yêu cầu
-                </button>
-              </form>
+          {can("requirement_document.read") && (
+            <Panel title="Kho tài liệu nguồn">
+              <DataTable
+                items={sourceDocuments}
+                empty="Chưa có tài liệu nguồn"
+                columns={[
+                  { key: "filename", label: "Tên tệp" },
+                  { key: "format", label: "Định dạng" },
+                  {
+                    key: "status",
+                    label: "Trạng thái",
+                    render: (item) => <StatusPill value={item.status} />,
+                  },
+                  { key: "revision", label: "Phiên bản" },
+                  {
+                    key: "actions",
+                    label: "Thao tác",
+                    render: (item) => (
+                      <span className="flex flex-wrap gap-2">
+                        {can("requirement_document.download") && (
+                          <button
+                            className="secondary-button"
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                await testingApi.downloadRequirementDocument(
+                                  item._id,
+                                  item.filename,
+                                );
+                              } catch (reason) {
+                                setError(messageOf(reason));
+                              }
+                            }}
+                          >
+                            Tải xuống
+                          </button>
+                        )}
+                        {item.status === "ARCHIVED"
+                          ? can("requirement_document.restore") && (
+                              <button
+                                className="secondary-button"
+                                type="button"
+                                onClick={async () => {
+                                  const answer = await ask({
+                                    title: "Khôi phục tài liệu nguồn",
+                                    description: item.filename,
+                                    confirmLabel: "Khôi phục",
+                                    fields: [
+                                      {
+                                        name: "reason",
+                                        label: "Lý do",
+                                        required: true,
+                                        multiline: true,
+                                      },
+                                    ],
+                                  });
+                                  if (!answer) return;
+                                  try {
+                                    await testingApi.restoreRequirementDocument(item._id, {
+                                      expected_revision: item.revision,
+                                      reason: answer.reason,
+                                    });
+                                    await load();
+                                  } catch (reason) {
+                                    setError(messageOf(reason));
+                                  }
+                                }}
+                              >
+                                Khôi phục
+                              </button>
+                            )
+                          : can("requirement_document.archive") && (
+                              <button
+                                className="secondary-button"
+                                type="button"
+                                onClick={async () => {
+                                  const answer = await ask({
+                                    title: "Lưu trữ tài liệu nguồn",
+                                    description: item.filename,
+                                    confirmLabel: "Lưu trữ",
+                                    danger: true,
+                                    fields: [
+                                      {
+                                        name: "reason",
+                                        label: "Lý do",
+                                        required: true,
+                                        multiline: true,
+                                      },
+                                    ],
+                                  });
+                                  if (!answer) return;
+                                  try {
+                                    await testingApi.archiveRequirementDocument(item._id, {
+                                      expected_revision: item.revision,
+                                      reason: answer.reason,
+                                    });
+                                    await load();
+                                  } catch (reason) {
+                                    setError(messageOf(reason));
+                                  }
+                                }}
+                              >
+                                Lưu trữ
+                              </button>
+                            )}
+                      </span>
+                    ),
+                  },
+                ]}
+              />
             </Panel>
-            <Panel title="Nhập tài liệu">
-              <form onSubmit={uploadPreview} className="space-y-4 border-b border-border p-5">
-                <label className="field-label">
-                  Tệp SRS BRD hoặc bảng yêu cầu
-                  <input
-                    className="apple-input mt-2"
-                    type="file"
-                    accept=".pdf,.docx,.txt,.md,.csv,.xlsx"
-                    onChange={(event) => setUpload(event.target.files?.[0] || null)}
+          )}
+          <div className="grid gap-5 xl:grid-cols-2">
+            {can("requirement.create") && (
+              <Panel title="Tạo yêu cầu thủ công">
+                <form className="space-y-4 p-5" onSubmit={create}>
+                  <label className="field-label">
+                    Tên
+                    <input
+                      className="apple-input mt-2"
+                      required
+                      minLength={2}
+                      value={form.title}
+                      onChange={(event) => setForm({ ...form, title: event.target.value })}
+                    />
+                  </label>
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <label className="field-label">
+                      Loại
+                      <select
+                        className="apple-input mt-2"
+                        value={form.type}
+                        onChange={(event) => setForm({ ...form, type: event.target.value })}
+                      >
+                        <option value="functional">Chức năng</option>
+                        <option value="non_functional">Phi chức năng</option>
+                        <option value="business_rule">Quy tắc nghiệp vụ</option>
+                        <option value="api">API</option>
+                        <option value="ui">UI</option>
+                      </select>
+                    </label>
+                    <label className="field-label">
+                      Ưu tiên
+                      <select
+                        className="apple-input mt-2"
+                        value={form.priority}
+                        onChange={(event) => setForm({ ...form, priority: event.target.value })}
+                      >
+                        {["critical", "high", "medium", "low"].map((value) => (
+                          <option key={value} value={value}>
+                            {valueLabel(value)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="field-label">
+                      Rủi ro
+                      <select
+                        className="apple-input mt-2"
+                        value={form.risk}
+                        onChange={(event) => setForm({ ...form, risk: event.target.value })}
+                      >
+                        {["critical", "high", "medium", "low"].map((value) => (
+                          <option key={value} value={value}>
+                            {valueLabel(value)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                  <QaDocumentEditor
+                    value={form.content_doc}
+                    onChange={(content_doc) => setForm({ ...form, content_doc })}
+                    label="Nội dung yêu cầu"
                   />
-                </label>
-                <button className="secondary-button" type="submit" disabled={!upload}>
-                  Tải lên và xem trước
-                </button>
-              </form>
-              <form onSubmit={importPreview} className="space-y-4 p-5">
-                <label className="field-label">
-                  Tên tệp
-                  <input
-                    className="apple-input mt-2"
-                    value={importValue.filename}
-                    onChange={(event) =>
-                      setImportValue({ ...importValue, filename: event.target.value })
-                    }
-                  />
-                </label>
-                <label className="field-label">
-                  Định dạng
-                  <select
-                    className="apple-input mt-2"
-                    value={importValue.format}
-                    onChange={(event) =>
-                      setImportValue({ ...importValue, format: event.target.value })
-                    }
-                  >
-                    {["md", "txt", "csv", "openapi", "postman", "pdf", "docx", "xlsx"].map(
-                      (value) => (
-                        <option key={value}>{value}</option>
-                      ),
-                    )}
-                  </select>
-                </label>
-                <label className="field-label">
-                  Nội dung nguồn
-                  <textarea
-                    className="apple-input mt-2 min-h-48 font-mono"
-                    required
-                    value={importValue.content}
-                    onChange={(event) =>
-                      setImportValue({ ...importValue, content: event.target.value })
-                    }
-                  />
-                </label>
-                <button className="secondary-button" type="submit">
-                  Tạo bản xem trước
-                </button>
-              </form>
-              {preview && (
-                <div className="border-t border-border p-5">
-                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <p className="font-semibold">
-                        {preview.status === "CONFIRMED"
-                          ? "Nguồn này đã được nhập trước đó"
-                          : "Rà soát ứng viên trước khi nhập"}
-                      </p>
-                      <p className="mt-1 text-[12px] text-ink-muted">
-                        Đã chọn {selectedIndexes.length} trên {preview.preview.length} ứng viên
-                      </p>
+                  <label className="field-label">
+                    Tiêu chí chấp nhận mỗi dòng một điều kiện
+                    <textarea
+                      className="apple-input mt-2 min-h-28"
+                      value={form.acceptance}
+                      onChange={(event) => setForm({ ...form, acceptance: event.target.value })}
+                    />
+                  </label>
+                  <label className="field-label">
+                    Quy tắc nghiệp vụ mỗi dòng một quy tắc
+                    <textarea
+                      className="apple-input mt-2 min-h-24"
+                      value={form.businessRules}
+                      onChange={(event) => setForm({ ...form, businessRules: event.target.value })}
+                    />
+                  </label>
+                  <label className="field-label">
+                    Tác nhân phân tách bằng dấu phẩy
+                    <input
+                      className="apple-input mt-2"
+                      value={form.actors}
+                      onChange={(event) => setForm({ ...form, actors: event.target.value })}
+                    />
+                  </label>
+                  <label className="field-label">
+                    Phụ thuộc mỗi dòng một mục
+                    <textarea
+                      className="apple-input mt-2 min-h-20"
+                      value={form.dependencies}
+                      onChange={(event) => setForm({ ...form, dependencies: event.target.value })}
+                    />
+                  </label>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="field-label">
+                      Nhãn phân cách bằng dấu phẩy
+                      <input
+                        className="apple-input mt-2"
+                        value={form.tags}
+                        onChange={(event) => setForm({ ...form, tags: event.target.value })}
+                      />
+                    </label>
+                    <label className="field-label">
+                      Mã người phụ trách
+                      <input
+                        className="apple-input mt-2"
+                        value={form.ownerId}
+                        onChange={(event) => setForm({ ...form, ownerId: event.target.value })}
+                      />
+                    </label>
+                  </div>
+                  <button className="apple-button" type="submit">
+                    Lưu yêu cầu
+                  </button>
+                </form>
+              </Panel>
+            )}
+            {can("requirement_document.upload") && (
+              <Panel title="Nhập tài liệu">
+                <form onSubmit={uploadPreview} className="space-y-4 border-b border-border p-5">
+                  <label className="field-label">
+                    Tệp SRS BRD hoặc bảng yêu cầu
+                    <input
+                      className="apple-input mt-2"
+                      type="file"
+                      accept=".pdf,.docx,.txt,.md,.csv,.xlsx"
+                      onChange={(event) => setUpload(event.target.files?.[0] || null)}
+                    />
+                  </label>
+                  <button className="secondary-button" type="submit" disabled={!upload}>
+                    Tải lên và xem trước
+                  </button>
+                </form>
+                <form onSubmit={importPreview} className="space-y-4 p-5">
+                  <label className="field-label">
+                    Tên tệp
+                    <input
+                      className="apple-input mt-2"
+                      value={importValue.filename}
+                      onChange={(event) =>
+                        setImportValue({ ...importValue, filename: event.target.value })
+                      }
+                    />
+                  </label>
+                  <label className="field-label">
+                    Định dạng
+                    <select
+                      className="apple-input mt-2"
+                      value={importValue.format}
+                      onChange={(event) =>
+                        setImportValue({ ...importValue, format: event.target.value })
+                      }
+                    >
+                      {["md", "txt", "csv", "openapi", "postman", "pdf", "docx", "xlsx"].map(
+                        (value) => (
+                          <option key={value}>{value}</option>
+                        ),
+                      )}
+                    </select>
+                  </label>
+                  <label className="field-label">
+                    Nội dung nguồn
+                    <textarea
+                      className="apple-input mt-2 min-h-48 font-mono"
+                      required
+                      value={importValue.content}
+                      onChange={(event) =>
+                        setImportValue({ ...importValue, content: event.target.value })
+                      }
+                    />
+                  </label>
+                  <button className="secondary-button" type="submit">
+                    Tạo bản xem trước
+                  </button>
+                </form>
+                {preview && (
+                  <div className="border-t border-border p-5">
+                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="font-semibold">
+                          {preview.status === "CONFIRMED"
+                            ? "Nguồn này đã được nhập trước đó"
+                            : "Rà soát ứng viên trước khi nhập"}
+                        </p>
+                        <p className="mt-1 text-[12px] text-ink-muted">
+                          Đã chọn {selectedIndexes.length} trên {preview.preview.length} ứng viên
+                        </p>
+                      </div>
+                      {preview.status === "PREVIEW_READY" && (
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            className="secondary-button"
+                            type="button"
+                            onClick={() =>
+                              saveImportReview(
+                                preview.preview,
+                                "Chỉnh sửa nội dung ứng viên yêu cầu",
+                              )
+                            }
+                          >
+                            Lưu chỉnh sửa
+                          </button>
+                          <button
+                            className="secondary-button"
+                            type="button"
+                            onClick={splitCandidate}
+                          >
+                            Tách mục đã chọn
+                          </button>
+                          <button
+                            className="secondary-button"
+                            type="button"
+                            onClick={mergeCandidates}
+                          >
+                            Gộp các mục đã chọn
+                          </button>
+                        </div>
+                      )}
                     </div>
+                    <DataTable
+                      items={preview.preview.map((item, index) => ({
+                        ...item,
+                        _id: `candidate-${index}`,
+                        candidateIndex: index,
+                      }))}
+                      columns={[
+                        {
+                          key: "selected",
+                          label: "Nhập",
+                          render: (item) => (
+                            <input
+                              aria-label={`Chọn ứng viên ${item.candidateIndex + 1}`}
+                              type="checkbox"
+                              checked={selectedIndexes.includes(item.candidateIndex)}
+                              disabled={preview.status !== "PREVIEW_READY"}
+                              onChange={(event) =>
+                                setSelectedIndexes((values) =>
+                                  event.target.checked
+                                    ? [...values, item.candidateIndex].sort(
+                                        (left, right) => left - right,
+                                      )
+                                    : values.filter((value) => value !== item.candidateIndex),
+                                )
+                              }
+                            />
+                          ),
+                        },
+                        {
+                          key: "title",
+                          label: "Yêu cầu phát hiện",
+                          render: (item) => (
+                            <input
+                              aria-label={`Tên ứng viên ${item.candidateIndex + 1}`}
+                              className="apple-input min-w-64"
+                              value={item.title}
+                              disabled={preview.status !== "PREVIEW_READY"}
+                              onChange={(event) =>
+                                editCandidate(item.candidateIndex, { title: event.target.value })
+                              }
+                            />
+                          ),
+                        },
+                        {
+                          key: "content_doc",
+                          label: "Nội dung",
+                          render: (item) => (
+                            <textarea
+                              aria-label={`Nội dung ứng viên ${item.candidateIndex + 1}`}
+                              className="apple-input min-h-20 min-w-72"
+                              value={docText(item.content_doc)}
+                              disabled={preview.status !== "PREVIEW_READY"}
+                              onChange={(event) =>
+                                editCandidate(item.candidateIndex, {
+                                  content_doc: textDoc(event.target.value),
+                                })
+                              }
+                            />
+                          ),
+                        },
+                        { key: "type", label: "Loại" },
+                        {
+                          key: "candidate_relation",
+                          label: "Quan hệ ứng viên",
+                          render: (item) => item.candidate_relation || "Nguyên bản",
+                        },
+                        {
+                          key: "extraction_confidence",
+                          label: "Độ tin cậy trích xuất",
+                          render: (item) =>
+                            `${Math.round((item.extraction_confidence ?? 1) * 100)}%`,
+                        },
+                        {
+                          key: "source_refs",
+                          label: "Vị trí nguồn",
+                          render: (item) => {
+                            const source = item.source_refs?.[0];
+                            if (!source) return "Không có";
+                            if (source.source_start !== undefined) {
+                              return `${source.source_start} đến ${source.source_end}`;
+                            }
+                            return `Mục ${source.candidate_index + 1}`;
+                          },
+                        },
+                      ]}
+                    />
                     {preview.status === "PREVIEW_READY" && (
-                      <div className="flex flex-wrap gap-2">
+                      <div className="mt-4 flex flex-wrap items-center gap-3">
                         <button
-                          className="secondary-button"
+                          className="apple-button"
                           type="button"
-                          onClick={() =>
-                            saveImportReview(preview.preview, "Chỉnh sửa nội dung ứng viên yêu cầu")
-                          }
+                          disabled={selectedIndexes.length === 0}
+                          onClick={confirmImport}
                         >
-                          Lưu chỉnh sửa
+                          Xác nhận nhập {selectedIndexes.length} yêu cầu
                         </button>
-                        <button className="secondary-button" type="button" onClick={splitCandidate}>
-                          Tách mục đã chọn
-                        </button>
-                        <button
-                          className="secondary-button"
-                          type="button"
-                          onClick={mergeCandidates}
-                        >
-                          Gộp các mục đã chọn
-                        </button>
+                        <p className="text-[12px] text-ink-muted">
+                          {preview.preview.length - selectedIndexes.length} ứng viên bị loại sẽ
+                          không được ghi
+                        </p>
                       </div>
                     )}
                   </div>
-                  <DataTable
-                    items={preview.preview.map((item, index) => ({
-                      ...item,
-                      _id: `candidate-${index}`,
-                      candidateIndex: index,
-                    }))}
-                    columns={[
-                      {
-                        key: "selected",
-                        label: "Nhập",
-                        render: (item) => (
-                          <input
-                            aria-label={`Chọn ứng viên ${item.candidateIndex + 1}`}
-                            type="checkbox"
-                            checked={selectedIndexes.includes(item.candidateIndex)}
-                            disabled={preview.status !== "PREVIEW_READY"}
-                            onChange={(event) =>
-                              setSelectedIndexes((values) =>
-                                event.target.checked
-                                  ? [...values, item.candidateIndex].sort(
-                                      (left, right) => left - right,
-                                    )
-                                  : values.filter((value) => value !== item.candidateIndex),
-                              )
-                            }
-                          />
-                        ),
-                      },
-                      {
-                        key: "title",
-                        label: "Yêu cầu phát hiện",
-                        render: (item) => (
-                          <input
-                            aria-label={`Tên ứng viên ${item.candidateIndex + 1}`}
-                            className="apple-input min-w-64"
-                            value={item.title}
-                            disabled={preview.status !== "PREVIEW_READY"}
-                            onChange={(event) =>
-                              editCandidate(item.candidateIndex, { title: event.target.value })
-                            }
-                          />
-                        ),
-                      },
-                      {
-                        key: "content_doc",
-                        label: "Nội dung",
-                        render: (item) => (
-                          <textarea
-                            aria-label={`Nội dung ứng viên ${item.candidateIndex + 1}`}
-                            className="apple-input min-h-20 min-w-72"
-                            value={docText(item.content_doc)}
-                            disabled={preview.status !== "PREVIEW_READY"}
-                            onChange={(event) =>
-                              editCandidate(item.candidateIndex, {
-                                content_doc: textDoc(event.target.value),
-                              })
-                            }
-                          />
-                        ),
-                      },
-                      { key: "type", label: "Loại" },
-                      {
-                        key: "candidate_relation",
-                        label: "Quan hệ ứng viên",
-                        render: (item) => item.candidate_relation || "Nguyên bản",
-                      },
-                      {
-                        key: "extraction_confidence",
-                        label: "Độ tin cậy trích xuất",
-                        render: (item) => `${Math.round((item.extraction_confidence ?? 1) * 100)}%`,
-                      },
-                      {
-                        key: "source_refs",
-                        label: "Vị trí nguồn",
-                        render: (item) => {
-                          const source = item.source_refs?.[0];
-                          if (!source) return "Không có";
-                          if (source.source_start !== undefined) {
-                            return `${source.source_start} đến ${source.source_end}`;
-                          }
-                          return `Mục ${source.candidate_index + 1}`;
-                        },
-                      },
-                    ]}
-                  />
-                  {preview.status === "PREVIEW_READY" && (
-                    <div className="mt-4 flex flex-wrap items-center gap-3">
+                )}
+                {sourceDocument && (
+                  <div className="border-t border-border p-5 text-[12px] text-ink-muted">
+                    <p>Nguồn {sourceDocument.filename}</p>
+                    <p>Trạng thái {sourceDocument.status}</p>
+                    <p className="break-all">SHA256 {sourceDocument.content_hash}</p>
+                    {sourceDocument.status === "PARSE_FAILED" && (
                       <button
-                        className="apple-button"
+                        className="secondary-button mt-3"
                         type="button"
-                        disabled={selectedIndexes.length === 0}
-                        onClick={confirmImport}
-                      >
-                        Xác nhận nhập {selectedIndexes.length} yêu cầu
-                      </button>
-                      <p className="text-[12px] text-ink-muted">
-                        {preview.preview.length - selectedIndexes.length} ứng viên bị loại sẽ không
-                        được ghi
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-              {sourceDocument && (
-                <div className="border-t border-border p-5 text-[12px] text-ink-muted">
-                  <p>Nguồn {sourceDocument.filename}</p>
-                  <p>Trạng thái {sourceDocument.status}</p>
-                  <p className="break-all">SHA256 {sourceDocument.content_hash}</p>
-                  {sourceDocument.status === "PARSE_FAILED" && (
-                    <button
-                      className="secondary-button mt-3"
-                      type="button"
-                      onClick={async () => {
-                        try {
-                          const document = await testingApi.retryRequirementDocumentParse(
-                            sourceDocument._id,
-                            sourceDocument.revision,
-                          );
-                          setSourceDocument(document);
-                          if (document.status !== "READY") {
-                            setError("Bộ phân tích vẫn chưa đọc được tệp gốc");
-                            return;
+                        onClick={async () => {
+                          try {
+                            const document = await testingApi.retryRequirementDocumentParse(
+                              sourceDocument._id,
+                              sourceDocument.revision,
+                            );
+                            setSourceDocument(document);
+                            if (document.status !== "READY") {
+                              setError("Bộ phân tích vẫn chưa đọc được tệp gốc");
+                              return;
+                            }
+                            const result = await testingApi.extractRequirementDocument(
+                              document._id,
+                              `source-${document.content_hash}`,
+                            );
+                            setPreview(result);
+                            setSelectedIndexes(result.preview.map((_, index) => index));
+                          } catch (reason) {
+                            setError(messageOf(reason));
                           }
-                          const result = await testingApi.extractRequirementDocument(
-                            document._id,
-                            `source-${document.content_hash}`,
-                          );
-                          setPreview(result);
-                          setSelectedIndexes(result.preview.map((_, index) => index));
-                        } catch (reason) {
-                          setError(messageOf(reason));
-                        }
-                      }}
-                    >
-                      Thử phân tích lại từ tệp gốc
-                    </button>
-                  )}
-                </div>
-              )}
-            </Panel>
+                        }}
+                      >
+                        Thử phân tích lại từ tệp gốc
+                      </button>
+                    )}
+                  </div>
+                )}
+              </Panel>
+            )}
           </div>
         </>
       )}

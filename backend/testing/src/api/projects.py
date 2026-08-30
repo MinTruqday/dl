@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
+import os
 from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
 
@@ -23,7 +24,15 @@ async def create_project(
     payload: ProjectCreate,
     user: CurrentUser = Depends(get_current_user),
 ):
-    if settings.PROJECT_CREATION_POLICY == "ADMIN_ONLY" and not user.is_system_admin:
+    policy = settings.PROJECT_CREATION_POLICY
+    authentication_db = os.environ.get("AUTHENTICATION_DB_NAME")
+    if authentication_db:
+        config = await database.client[authentication_db].system_configs.find_one(
+            {"type": "project_creation"}
+        )
+        if config:
+            policy = config.get("project_creation_policy", policy)
+    if policy == "ADMIN_ONLY" and not user.is_system_admin:
         raise HTTPException(
             status_code=403,
             detail={"code": "SYSTEM_PERMISSION_DENIED"},
@@ -180,6 +189,39 @@ async def archive_project(
     return envelope(updated, revision=updated["revision"])
 
 
+@router.post("/projects/{project_id}/restore")
+async def restore_project(
+    project_id: str,
+    payload: ProjectArchiveInput,
+    user: CurrentUser = Depends(get_current_user),
+):
+    await get_project(project_id, user, "project.restore")
+    project = await database.value.projects.find_one({"_id": project_id})
+    if project.get("status") == "active":
+        return envelope(project, revision=project["revision"])
+    updated = await optimistic_patch(
+        "projects",
+        project_id,
+        project_id,
+        payload.expected_revision,
+        {
+            "status": "active",
+            "restored_by": user.id,
+            "restored_at": now(),
+            "restore_reason": payload.reason,
+        },
+    )
+    await audit(
+        user.id,
+        "project_restored",
+        "Project",
+        project_id,
+        project_id,
+        {"reason": payload.reason},
+    )
+    return envelope(updated, revision=updated["revision"])
+
+
 @router.get("/projects/{project_id}/members")
 async def list_project_members(
     project_id: str,
@@ -227,6 +269,124 @@ async def add_project_member(
         {"user_id": payload.user_id, "project_role": payload.project_role},
     )
     return envelope(membership, revision=1)
+
+
+@router.post("/projects/{project_id}/invitations", status_code=201)
+async def invite_project_member(
+    project_id: str,
+    payload: ProjectMemberCreate,
+    user: CurrentUser = Depends(get_current_user),
+):
+    await get_project(project_id, user, "project.members.manage")
+    timestamp = now()
+    membership = {
+        "_id": new_id("PM"),
+        "project_id": project_id,
+        "user_id": payload.user_id,
+        "project_role": payload.project_role,
+        "status": "INVITED",
+        "membership_revision": 1,
+        "invited_by": user.id,
+        "invited_at": timestamp,
+        "created_by": user.id,
+        "created_at": timestamp,
+        "updated_at": timestamp,
+    }
+    try:
+        await database.value.project_members.insert_one(membership)
+    except DuplicateKeyError:
+        raise HTTPException(status_code=409, detail={"code": "PROJECT_MEMBERSHIP_EXISTS"})
+    await audit(
+        user.id,
+        "project_member_invited",
+        "ProjectMember",
+        membership["_id"],
+        project_id,
+        {"user_id": payload.user_id, "project_role": payload.project_role},
+    )
+    return envelope(membership, revision=1)
+
+
+@router.post("/projects/{project_id}/members/{member_user_id}/accept")
+async def accept_project_invitation(
+    project_id: str,
+    member_user_id: str,
+    user: CurrentUser = Depends(get_current_user),
+):
+    if user.id != member_user_id:
+        raise HTTPException(status_code=403, detail={"code": "INVITATION_OWNER_REQUIRED"})
+    membership = await database.value.project_members.find_one_and_update(
+        {"project_id": project_id, "user_id": user.id, "status": "INVITED"},
+        {
+            "$set": {"status": "ACTIVE", "accepted_at": now(), "updated_at": now()},
+            "$inc": {"membership_revision": 1},
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+    if not membership:
+        raise HTTPException(status_code=404, detail={"code": "INVITATION_NOT_FOUND"})
+    await audit(
+        user.id,
+        "project_invitation_accepted",
+        "ProjectMember",
+        membership["_id"],
+        project_id,
+    )
+    return envelope(membership, revision=membership["membership_revision"])
+
+
+@router.post("/projects/{project_id}/members/{member_user_id}/resend-invite")
+async def resend_project_invitation(
+    project_id: str,
+    member_user_id: str,
+    user: CurrentUser = Depends(get_current_user),
+):
+    await get_project(project_id, user, "project.members.manage")
+    membership = await database.value.project_members.find_one_and_update(
+        {"project_id": project_id, "user_id": member_user_id, "status": "INVITED"},
+        {
+            "$set": {"invited_by": user.id, "invited_at": now(), "updated_at": now()},
+            "$inc": {"membership_revision": 1, "invite_send_count": 1},
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+    if not membership:
+        raise HTTPException(status_code=409, detail={"code": "INVITATION_NOT_PENDING"})
+    await audit(
+        user.id,
+        "project_invitation_resent",
+        "ProjectMember",
+        membership["_id"],
+        project_id,
+    )
+    return envelope(membership, revision=membership["membership_revision"])
+
+
+@router.post("/projects/{project_id}/members/{member_user_id}/cancel-invite")
+async def cancel_project_invitation(
+    project_id: str,
+    member_user_id: str,
+    user: CurrentUser = Depends(get_current_user),
+):
+    await get_project(project_id, user, "project.members.manage")
+    membership = await database.value.project_members.find_one_and_update(
+        {"project_id": project_id, "user_id": member_user_id, "status": "INVITED"},
+        {
+            "$set": {"status": "CANCELLED", "cancelled_by": user.id, "cancelled_at": now(), "updated_at": now()},
+            "$inc": {"membership_revision": 1},
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+    if not membership:
+        raise HTTPException(status_code=409, detail={"code": "INVITATION_NOT_PENDING"})
+    await audit(
+        user.id,
+        "project_invitation_cancelled",
+        "ProjectMember",
+        membership["_id"],
+        project_id,
+    )
+    return envelope(membership, revision=membership["membership_revision"])
 
 
 @router.patch("/projects/{project_id}/members/{member_user_id}")

@@ -8,6 +8,7 @@ from xml.etree import ElementTree
 
 import httpx
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
+from fastapi.responses import Response
 from pypdf import PdfReader
 from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
@@ -31,6 +32,7 @@ from src.core.configuration import settings
 from src.domain.schemas import (
     ImportConfirm,
     ImportCreate,
+    ProjectArchiveInput,
     RequirementBaselineInput,
     RequirementCompareInput,
     RequirementCreate,
@@ -57,7 +59,7 @@ def serialized_content(content):
 
 
 async def create_requirement_document_record(project_id, payload, user):
-    await get_project(project_id, user, "requirement.create")
+    await get_project(project_id, user, "requirement_document.upload")
     content = serialized_content(payload.content)
     if len(content.encode("utf-8")) > 25 * 1024 * 1024:
         raise HTTPException(status_code=413, detail={"code": "IMPORT_TOO_LARGE"})
@@ -854,7 +856,7 @@ async def upload_requirement_document(
         raise HTTPException(status_code=422, detail={"code": "EMPTY_IMPORT"})
     if len(data) > 25 * 1024 * 1024:
         raise HTTPException(status_code=413, detail={"code": "IMPORT_TOO_LARGE"})
-    await get_project(project_id, user, "requirement.create")
+    await get_project(project_id, user, "requirement_document.upload")
     filename = file.filename or f"requirements.{format}"
     content_hash = hashlib.sha256(data).hexdigest()
     existing = await database.value.requirement_documents.find_one(
@@ -908,15 +910,150 @@ async def upload_requirement_document(
     return envelope(document, revision=document["revision"])
 
 
+@router.get("/projects/{project_id}/requirement-documents")
+async def list_requirement_documents(
+    project_id: str,
+    status: str = Query(default="", max_length=30),
+    q: str = Query(default="", max_length=200),
+    limit: int = Query(default=200, ge=1, le=1000),
+    user: CurrentUser = Depends(get_current_user),
+):
+    await get_project(project_id, user, "requirement_document.read")
+    query = {"project_id": project_id}
+    if status:
+        query["status"] = status.upper()
+    if q:
+        query["filename"] = {"$regex": re.escape(q), "$options": "i"}
+    documents = (
+        await database.value.requirement_documents.find(query)
+        .sort("updated_at", -1)
+        .limit(limit)
+        .to_list(limit)
+    )
+    return envelope(documents)
+
+
 @router.get("/requirement-documents/{document_id}")
 async def get_requirement_document(
     document_id: str,
     user: CurrentUser = Depends(get_current_user),
 ):
     document = await get_project_entity(
-        "requirement_documents", document_id, user, "requirement.read"
+        "requirement_documents", document_id, user, "requirement_document.read"
     )
     return envelope(document, revision=document["revision"])
+
+
+@router.get("/requirement-documents/{document_id}/download")
+async def download_requirement_document(
+    document_id: str,
+    user: CurrentUser = Depends(get_current_user),
+):
+    document = await get_project_entity(
+        "requirement_documents",
+        document_id,
+        user,
+        "requirement_document.download",
+    )
+    data = await read_raw_requirement_source(document)
+    filename = re.sub(r"[^a-zA-Z0-9._-]", "_", document.get("filename") or "source.bin")
+    return Response(
+        content=data,
+        media_type="application/octet-stream",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.post("/requirement-documents/{document_id}/archive")
+async def archive_requirement_document(
+    document_id: str,
+    payload: ProjectArchiveInput,
+    user: CurrentUser = Depends(get_current_user),
+):
+    document = await get_project_entity(
+        "requirement_documents",
+        document_id,
+        user,
+        "requirement_document.archive",
+    )
+    if document.get("status") == "ARCHIVED":
+        return envelope(document, revision=document["revision"])
+    updated = await database.value.requirement_documents.find_one_and_update(
+        {
+            "_id": document_id,
+            "project_id": document["project_id"],
+            "revision": payload.expected_revision,
+        },
+        {
+            "$set": {
+                "status_before_archive": document.get("status", "READY"),
+                "status": "ARCHIVED",
+                "archived_by": user.id,
+                "archived_at": now(),
+                "archive_reason": payload.reason,
+                "updated_at": now(),
+            },
+            "$inc": {"revision": 1},
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+    if not updated:
+        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+    await audit(
+        user.id,
+        "requirement_document_archived",
+        "RequirementDocument",
+        document_id,
+        document["project_id"],
+        {"reason": payload.reason},
+    )
+    return envelope(updated, revision=updated["revision"])
+
+
+@router.post("/requirement-documents/{document_id}/restore")
+async def restore_requirement_document(
+    document_id: str,
+    payload: ProjectArchiveInput,
+    user: CurrentUser = Depends(get_current_user),
+):
+    document = await get_project_entity(
+        "requirement_documents",
+        document_id,
+        user,
+        "requirement_document.restore",
+    )
+    if document.get("status") != "ARCHIVED":
+        return envelope(document, revision=document["revision"])
+    updated = await database.value.requirement_documents.find_one_and_update(
+        {
+            "_id": document_id,
+            "project_id": document["project_id"],
+            "revision": payload.expected_revision,
+            "status": "ARCHIVED",
+        },
+        {
+            "$set": {
+                "status": document.get("status_before_archive", "READY"),
+                "restored_by": user.id,
+                "restored_at": now(),
+                "restore_reason": payload.reason,
+                "updated_at": now(),
+            },
+            "$inc": {"revision": 1},
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+    if not updated:
+        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+    await audit(
+        user.id,
+        "requirement_document_restored",
+        "RequirementDocument",
+        document_id,
+        document["project_id"],
+        {"reason": payload.reason},
+    )
+    return envelope(updated, revision=updated["revision"])
 
 
 @router.post("/requirement-documents/{document_id}/retry-parse")
@@ -926,7 +1063,7 @@ async def retry_requirement_document_parse(
     user: CurrentUser = Depends(get_current_user),
 ):
     document = await get_project_entity(
-        "requirement_documents", document_id, user, "requirement.create"
+        "requirement_documents", document_id, user, "requirement_document.extract"
     )
     if document.get("status") == "READY":
         return envelope(document, revision=document["revision"])
@@ -1015,8 +1152,10 @@ async def extract_requirement_document(
     user: CurrentUser = Depends(get_current_user),
 ):
     document = await get_project_entity(
-        "requirement_documents", document_id, user, "requirement.create"
+        "requirement_documents", document_id, user, "requirement_document.extract"
     )
+    if document.get("status") == "ARCHIVED":
+        raise HTTPException(status_code=409, detail={"code": "DOCUMENT_ARCHIVED"})
     if document.get("normalized_content") is None:
         raise HTTPException(status_code=409, detail={"code": "DOCUMENT_PARSE_REQUIRED", "status": document.get("status")})
     existing = await database.value.import_jobs.find_one({"source_document_id": document_id})

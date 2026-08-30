@@ -9,34 +9,34 @@ import {
   Panel,
   QaPage,
   StatusPill,
+  useQaActionDialog,
 } from "../components/TestingUi";
 import { testingApi } from "../services/testing.service";
 import { formatDate, messageOf } from "../lib/testing";
 
 export default function ProjectsPage() {
+  const { ask, dialog } = useQaActionDialog();
   const [items, setItems] = useState([]);
   const [query, setQuery] = useState("");
+  const [status, setStatus] = useState("active");
   const [form, setForm] = useState({ key: "", name: "", description: "", project_type: "web" });
   const [creating, setCreating] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const load = useCallback(
-    async (value = query) => {
-      setLoading(true);
-      setError("");
-      try {
-        setItems(await testingApi.listProjects(value));
-      } catch (reason) {
-        setError(messageOf(reason));
-      } finally {
-        setLoading(false);
-      }
-    },
-    [query],
-  );
+  const load = useCallback(async (value = "", statusValue = "active") => {
+    setLoading(true);
+    setError("");
+    try {
+      setItems(await testingApi.listProjects(value, statusValue));
+    } catch (reason) {
+      setError(messageOf(reason));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
   useEffect(() => {
-    void load("");
-  }, [load]);
+    void load("", status);
+  }, [load, status]);
   const submit = async (event) => {
     event.preventDefault();
     setError("");
@@ -48,7 +48,7 @@ export default function ProjectsPage() {
       });
       setForm({ key: "", name: "", description: "", project_type: "web" });
       setCreating(false);
-      await load("");
+      await load("", status);
     } catch (reason) {
       setError(messageOf(reason));
     }
@@ -129,20 +129,32 @@ export default function ProjectsPage() {
         title="Danh sách dự án"
         actions={
           <form
-            className="relative"
+            className="flex flex-wrap items-center gap-2"
             onSubmit={(event) => {
               event.preventDefault();
-              void load(query);
+              void load(query, status);
             }}
           >
-            <Search className="absolute left-3 top-2.5 text-ink-faint" size={16} />
-            <input
-              aria-label="Tìm dự án"
-              className="apple-input w-64 pl-9"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Tìm mã hoặc tên"
-            />
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 text-ink-faint" size={16} />
+              <input
+                aria-label="Tìm dự án"
+                className="apple-input w-64 pl-9"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Tìm mã hoặc tên"
+              />
+            </div>
+            <select
+              aria-label="Trạng thái dự án"
+              className="apple-input"
+              value={status}
+              onChange={(event) => setStatus(event.target.value)}
+            >
+              <option value="active">Đang hoạt động</option>
+              <option value="archived">Đã lưu trữ</option>
+              <option value="all">Tất cả</option>
+            </select>
           </form>
         }
       >
@@ -157,25 +169,59 @@ export default function ProjectsPage() {
         ) : (
           <div className="divide-y divide-border">
             {items.map((item) => (
-              <Link
+              <div
                 key={item._id}
-                href={`/qa/projects/${item._id}`}
-                className="grid gap-3 p-5 transition hover:bg-surface-quiet md:grid-cols-[120px_1fr_140px_160px] md:items-center"
+                className="grid gap-3 p-5 transition hover:bg-surface-quiet md:grid-cols-[120px_1fr_140px_160px_auto] md:items-center"
               >
                 <span className="font-mono text-[13px] font-semibold text-brand">{item.key}</span>
-                <span>
+                <Link href={`/qa/projects/${item._id}`} className="min-w-0">
                   <strong className="block text-[14px]">{item.name}</strong>
                   <small className="line-clamp-1 text-ink-muted">
                     {item.description || "Chưa có mô tả"}
                   </small>
-                </span>
+                </Link>
                 <StatusPill value={String(item.status).toUpperCase()} />
                 <span className="text-[12px] text-ink-muted">{formatDate(item.updated_at)}</span>
-              </Link>
+                {item.status === "archived" &&
+                  item.current_permissions?.includes("project.restore") && (
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={async () => {
+                        const answer = await ask({
+                          title: "Khôi phục dự án",
+                          description: `${item.key} sẽ hoạt động trở lại và tiếp tục nhận thay đổi`,
+                          confirmLabel: "Khôi phục",
+                          fields: [
+                            {
+                              name: "reason",
+                              label: "Lý do khôi phục",
+                              initialValue: "Tiếp tục thực hiện dự án",
+                              required: true,
+                            },
+                          ],
+                        });
+                        if (!answer) return;
+                        try {
+                          await testingApi.restoreProject(item._id, {
+                            expected_revision: item.revision,
+                            reason: answer.reason,
+                          });
+                          await load(query, status);
+                        } catch (reason) {
+                          setError(messageOf(reason));
+                        }
+                      }}
+                    >
+                      Khôi phục
+                    </button>
+                  )}
+              </div>
             ))}
           </div>
         )}
       </Panel>
+      {dialog}
     </QaPage>
   );
 }

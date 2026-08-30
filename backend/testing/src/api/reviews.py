@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import audit, envelope, get_project, get_project_entity, new_id, now
 from src.core.database import database
-from src.domain.schemas import ReviewCommentAction, ReviewCommentCreate
+from src.domain.schemas import ReviewCommentAction, ReviewCommentCreate, ReviewCommentPatch
 
 
 router = APIRouter(prefix="/api/qa", tags=["QA Review"])
@@ -15,7 +15,7 @@ async def create_review_comment(
     payload: ReviewCommentCreate,
     user: CurrentUser = Depends(get_current_user),
 ):
-    await get_project(project_id, user, "review.comment")
+    await get_project(project_id, user, "comment.create")
     comment = {
         "_id": new_id("RC"),
         "project_id": project_id,
@@ -51,7 +51,7 @@ async def list_review_comments(
     status: str | None = Query(default="OPEN", max_length=20),
     user: CurrentUser = Depends(get_current_user),
 ):
-    await get_project(project_id, user, "review.read")
+    await get_project(project_id, user, "comment.read")
     query = {"project_id": project_id}
     if artifact_type:
         query["artifact_type"] = artifact_type
@@ -63,13 +63,73 @@ async def list_review_comments(
     return envelope(comments)
 
 
+async def authorize_comment_change(comment: dict, user: CurrentUser):
+    permission = "comment.update_own" if comment.get("author_id") == user.id else "comment.moderate"
+    await get_project(comment["project_id"], user, permission)
+
+
+@router.patch("/review-comments/{comment_id}")
+async def update_review_comment(
+    comment_id: str,
+    payload: ReviewCommentPatch,
+    user: CurrentUser = Depends(get_current_user),
+):
+    comment = await get_project_entity("review_comments", comment_id, user, "comment.read")
+    await authorize_comment_change(comment, user)
+    if comment.get("deleted_at"):
+        raise HTTPException(status_code=409, detail={"code": "COMMENT_DELETED"})
+    await database.value.review_comments.update_one(
+        {"_id": comment_id, "project_id": comment["project_id"]},
+        {"$set": {"body_doc": payload.body_doc, "edited_at": now(), "updated_at": now()}},
+    )
+    await audit(
+        user.id,
+        "review_comment_updated",
+        "ReviewComment",
+        comment_id,
+        comment["project_id"],
+    )
+    return envelope(await database.value.review_comments.find_one({"_id": comment_id}))
+
+
+@router.delete("/review-comments/{comment_id}")
+async def delete_review_comment(
+    comment_id: str,
+    user: CurrentUser = Depends(get_current_user),
+):
+    comment = await get_project_entity("review_comments", comment_id, user, "comment.read")
+    permission = "comment.delete_own" if comment.get("author_id") == user.id else "comment.moderate"
+    await get_project(comment["project_id"], user, permission)
+    await database.value.review_comments.update_one(
+        {"_id": comment_id, "project_id": comment["project_id"]},
+        {
+            "$set": {
+                "body_doc": {"type": "doc", "content": []},
+                "status": "DELETED",
+                "deleted_by": user.id,
+                "deleted_at": now(),
+                "updated_at": now(),
+            }
+        },
+    )
+    await audit(
+        user.id,
+        "review_comment_deleted",
+        "ReviewComment",
+        comment_id,
+        comment["project_id"],
+    )
+    return envelope({"deleted": True, "comment_id": comment_id})
+
+
 @router.post("/review-comments/{comment_id}/resolve")
 async def resolve_review_comment(
     comment_id: str,
     payload: ReviewCommentAction,
     user: CurrentUser = Depends(get_current_user),
 ):
-    comment = await get_project_entity("review_comments", comment_id, user, "review.resolve")
+    comment = await get_project_entity("review_comments", comment_id, user, "comment.read")
+    await authorize_comment_change(comment, user)
     if comment["status"] == "RESOLVED":
         return envelope(comment)
     updated = await database.value.review_comments.find_one_and_update(
@@ -89,7 +149,8 @@ async def reopen_review_comment(
     payload: ReviewCommentAction,
     user: CurrentUser = Depends(get_current_user),
 ):
-    comment = await get_project_entity("review_comments", comment_id, user, "review.resolve")
+    comment = await get_project_entity("review_comments", comment_id, user, "comment.read")
+    await authorize_comment_change(comment, user)
     if comment["status"] == "OPEN":
         return envelope(comment)
     updated = await database.value.review_comments.find_one_and_update(

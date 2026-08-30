@@ -17,10 +17,14 @@ from src.domain.schemas import (
     DefectTransition,
     TestExecutionPatch,
     TestPlanCreate,
+    TestPlanPatch,
     TestResultCorrectionInput,
     TestResultInput,
     TestRunCreate,
     TestSuiteCreate,
+    TestSuitePatch,
+    ProjectArchiveInput,
+    ReviewTransitionInput,
 )
 from src.services.project_knowledge import index_artifact
 
@@ -29,8 +33,11 @@ router = APIRouter(prefix="/api/qa", tags=["QA Execution"])
 
 
 @router.post("/test-plans", status_code=201)
-async def create_test_plan(payload: TestPlanCreate, user: CurrentUser = Depends(get_current_user)):
-    await get_project(payload.project_id, user, "testplan.manage")
+@router.post("/projects/{project_id}/test-plans", status_code=201)
+async def create_test_plan(payload: TestPlanCreate, project_id: str | None = None, user: CurrentUser = Depends(get_current_user)):
+    if project_id and project_id != payload.project_id:
+        raise HTTPException(status_code=422, detail={"code": "PROJECT_SCOPE_MISMATCH"})
+    await get_project(payload.project_id, user, "testplan.create")
     timestamp = now()
     plan = {"_id": new_id("TP"), **payload.model_dump(), "status": "DRAFT", "revision": 1, "created_by": user.id, "created_at": timestamp, "updated_at": timestamp}
     await database.value.test_plans.insert_one(plan)
@@ -44,9 +51,55 @@ async def list_test_plans(project_id: str, user: CurrentUser = Depends(get_curre
     return envelope(await database.value.test_plans.find({"project_id": project_id}).sort("updated_at", -1).to_list(500))
 
 
+@router.get("/test-plans/{plan_id}")
+async def get_test_plan(plan_id: str, user: CurrentUser = Depends(get_current_user)):
+    return envelope(await get_project_entity("test_plans", plan_id, user, "testplan.read"))
+
+
+@router.patch("/test-plans/{plan_id}")
+async def update_test_plan(plan_id: str, payload: TestPlanPatch, user: CurrentUser = Depends(get_current_user)):
+    plan = await get_project_entity("test_plans", plan_id, user, "testplan.update")
+    if plan.get("status") != "DRAFT":
+        raise HTTPException(status_code=409, detail={"code": "TEST_PLAN_NOT_DRAFT"})
+    updated = await optimistic_patch("test_plans", plan_id, plan["project_id"], payload.expected_revision, payload.model_dump())
+    await audit(user.id, "test_plan_updated", "TestPlan", plan_id, plan["project_id"])
+    return envelope(updated, revision=updated["revision"])
+
+
+@router.post("/test-plans/{plan_id}/submit-review")
+async def submit_test_plan(plan_id: str, payload: ReviewTransitionInput, user: CurrentUser = Depends(get_current_user)):
+    plan = await get_project_entity("test_plans", plan_id, user, "testplan.submit_review")
+    if plan.get("status") != "DRAFT":
+        raise HTTPException(status_code=409, detail={"code": "INVALID_STATE_TRANSITION"})
+    updated = await optimistic_patch("test_plans", plan_id, plan["project_id"], payload.expected_revision, {"status": "IN_REVIEW", "review_note": payload.review_note})
+    await audit(user.id, "test_plan_submitted", "TestPlan", plan_id, plan["project_id"])
+    return envelope(updated, revision=updated["revision"])
+
+
+@router.post("/test-plans/{plan_id}/approve")
+async def approve_test_plan(plan_id: str, payload: ReviewTransitionInput, user: CurrentUser = Depends(get_current_user)):
+    plan = await get_project_entity("test_plans", plan_id, user, "testplan.approve")
+    if plan.get("status") not in {"DRAFT", "IN_REVIEW"}:
+        raise HTTPException(status_code=409, detail={"code": "INVALID_STATE_TRANSITION"})
+    updated = await optimistic_patch("test_plans", plan_id, plan["project_id"], payload.expected_revision, {"status": "APPROVED", "approved_by": user.id, "approved_at": now(), "review_note": payload.review_note})
+    await audit(user.id, "test_plan_approved", "TestPlan", plan_id, plan["project_id"])
+    return envelope(updated, revision=updated["revision"])
+
+
+@router.post("/test-plans/{plan_id}/archive")
+async def archive_test_plan(plan_id: str, payload: ProjectArchiveInput, user: CurrentUser = Depends(get_current_user)):
+    plan = await get_project_entity("test_plans", plan_id, user, "testplan.archive")
+    updated = await optimistic_patch("test_plans", plan_id, plan["project_id"], payload.expected_revision, {"status": "ARCHIVED", "archive_reason": payload.reason, "archived_by": user.id, "archived_at": now()})
+    await audit(user.id, "test_plan_archived", "TestPlan", plan_id, plan["project_id"])
+    return envelope(updated, revision=updated["revision"])
+
+
 @router.post("/test-suites", status_code=201)
-async def create_test_suite(payload: TestSuiteCreate, user: CurrentUser = Depends(get_current_user)):
-    await get_project(payload.project_id, user, "testsuite.manage")
+@router.post("/projects/{project_id}/test-suites", status_code=201)
+async def create_test_suite(payload: TestSuiteCreate, project_id: str | None = None, user: CurrentUser = Depends(get_current_user)):
+    if project_id and project_id != payload.project_id:
+        raise HTTPException(status_code=422, detail={"code": "PROJECT_SCOPE_MISMATCH"})
+    await get_project(payload.project_id, user, "testsuite.create")
     await validate_test_versions(payload.project_id, payload.test_case_version_ids)
     timestamp = now()
     suite = {"_id": new_id("TSU"), **payload.model_dump(), "revision": 1, "created_by": user.id, "created_at": timestamp, "updated_at": timestamp}
@@ -59,6 +112,41 @@ async def create_test_suite(payload: TestSuiteCreate, user: CurrentUser = Depend
 async def list_test_suites(project_id: str, user: CurrentUser = Depends(get_current_user)):
     await get_project(project_id, user, "testsuite.read")
     return envelope(await database.value.test_suites.find({"project_id": project_id}).sort("updated_at", -1).to_list(500))
+
+
+@router.get("/test-suites/{suite_id}")
+async def get_test_suite(suite_id: str, user: CurrentUser = Depends(get_current_user)):
+    return envelope(await get_project_entity("test_suites", suite_id, user, "testsuite.read"))
+
+
+@router.patch("/test-suites/{suite_id}")
+async def update_test_suite(suite_id: str, payload: TestSuitePatch, user: CurrentUser = Depends(get_current_user)):
+    suite = await get_project_entity("test_suites", suite_id, user, "testsuite.update")
+    if payload.test_case_version_ids is not None:
+        await validate_test_versions(suite["project_id"], payload.test_case_version_ids)
+    updated = await optimistic_patch("test_suites", suite_id, suite["project_id"], payload.expected_revision, payload.model_dump())
+    await audit(user.id, "test_suite_updated", "TestSuite", suite_id, suite["project_id"])
+    return envelope(updated, revision=updated["revision"])
+
+
+@router.post("/test-suites/{suite_id}/clone", status_code=201)
+async def clone_test_suite(suite_id: str, user: CurrentUser = Depends(get_current_user)):
+    suite = await get_project_entity("test_suites", suite_id, user, "testsuite.clone")
+    timestamp = now()
+    cloned = {**suite, "_id": new_id("TSU"), "name": f"{suite['name']} bản sao", "revision": 1, "created_by": user.id, "created_at": timestamp, "updated_at": timestamp}
+    for field in ["archived_at", "archived_by", "archive_reason"]:
+        cloned.pop(field, None)
+    await database.value.test_suites.insert_one(cloned)
+    await audit(user.id, "test_suite_cloned", "TestSuite", cloned["_id"], suite["project_id"], {"source_suite_id": suite_id})
+    return envelope(cloned, revision=1)
+
+
+@router.post("/test-suites/{suite_id}/archive")
+async def archive_test_suite(suite_id: str, payload: ProjectArchiveInput, user: CurrentUser = Depends(get_current_user)):
+    suite = await get_project_entity("test_suites", suite_id, user, "testsuite.archive")
+    updated = await optimistic_patch("test_suites", suite_id, suite["project_id"], payload.expected_revision, {"status": "ARCHIVED", "archive_reason": payload.reason, "archived_by": user.id, "archived_at": now()})
+    await audit(user.id, "test_suite_archived", "TestSuite", suite_id, suite["project_id"])
+    return envelope(updated, revision=updated["revision"])
 
 
 @router.post("/test-runs", status_code=201)
@@ -178,7 +266,7 @@ async def get_test_run(run_id: str, user: CurrentUser = Depends(get_current_user
 
 @router.get("/test-runs/{run_id}/report")
 async def export_test_run_report(run_id: str, user: CurrentUser = Depends(get_current_user)):
-    run = await get_project_entity("test_runs", run_id, user, "testrun.read")
+    run = await get_project_entity("test_runs", run_id, user, "report.export")
     versions = await database.value.test_case_versions.find({"_id": {"$in": run["test_case_version_ids"]}}).to_list(10000)
     results = await database.value.test_results.find({"test_run_id": run_id}).to_list(10000)
     by_result = {item["test_case_version_id"]: item for item in results}
@@ -194,7 +282,7 @@ async def export_test_run_report(run_id: str, user: CurrentUser = Depends(get_cu
 
 @router.post("/test-runs/{run_id}/start")
 async def start_test_run(run_id: str, user: CurrentUser = Depends(get_current_user)):
-    run = await get_project_entity("test_runs", run_id, user, "testrun.manage")
+    run = await get_project_entity("test_runs", run_id, user, "testrun.start")
     if run["status"] == "IN_PROGRESS":
         return envelope(run)
     if run["status"] not in {"DRAFT", "READY"}:
@@ -322,7 +410,7 @@ async def patch_test_execution(
 @router.post("/test-results/{result_id}/corrections")
 async def correct_test_result(result_id: str, payload: TestResultCorrectionInput, user: CurrentUser = Depends(get_current_user)):
     result = await get_project_entity(
-        "test_results", result_id, user, "testrun.execute"
+        "test_results", result_id, user, "testresult.correct"
     )
     existing = await database.value.test_result_corrections.find_one({"test_result_id": result_id, "idempotency_key": payload.idempotency_key})
     if existing:
@@ -340,7 +428,7 @@ async def correct_test_result(result_id: str, payload: TestResultCorrectionInput
 
 @router.post("/test-runs/{run_id}/complete")
 async def complete_test_run(run_id: str, user: CurrentUser = Depends(get_current_user)):
-    run = await get_project_entity("test_runs", run_id, user, "testrun.manage")
+    run = await get_project_entity("test_runs", run_id, user, "testrun.complete")
     if run["status"] == "COMPLETED":
         return envelope(run)
     if run["status"] != "IN_PROGRESS":
@@ -355,7 +443,7 @@ async def complete_test_run(run_id: str, user: CurrentUser = Depends(get_current
 
 @router.post("/test-runs/{run_id}/abort")
 async def abort_test_run(run_id: str, reason: str = Body(embed=True, min_length=2, max_length=2000), user: CurrentUser = Depends(get_current_user)):
-    run = await get_project_entity("test_runs", run_id, user, "testrun.manage")
+    run = await get_project_entity("test_runs", run_id, user, "testrun.abort")
     if run["status"] not in {"DRAFT", "READY", "IN_PROGRESS"}:
         raise HTTPException(status_code=409, detail={"code": "INVALID_STATE_TRANSITION"})
     await database.value.test_runs.update_one({"_id": run_id}, {"$set": {"status": "ABORTED", "abort_reason": reason, "aborted_by": user.id, "aborted_at": now(), "updated_at": now()}, "$inc": {"revision": 1}})

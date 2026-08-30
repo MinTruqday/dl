@@ -114,6 +114,23 @@ class ProfileUpdate(BaseModel):
     cover_url: Optional[str] = None
     location: Optional[str] = None
     website: Optional[str] = None
+    locale: Optional[str] = Field(default=None, min_length=2, max_length=20)
+    timezone: Optional[str] = Field(default=None, min_length=2, max_length=100)
+
+
+class PasswordChange(BaseModel):
+    current_password: str = Field(min_length=1, max_length=128)
+    new_password: str = Field(min_length=12, max_length=128)
+
+
+class EmailChange(BaseModel):
+    current_password: str = Field(min_length=1, max_length=128)
+    new_email: EmailStr
+
+
+class AccountDeactivate(BaseModel):
+    current_password: str = Field(min_length=1, max_length=128)
+    confirmation: str = Field(pattern="^DEACTIVATE$")
 
 
 class SettingsUpdate(BaseModel):

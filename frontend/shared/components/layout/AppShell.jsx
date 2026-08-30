@@ -6,14 +6,15 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Bell, Menu, Search, X } from "lucide-react";
 import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import { useAnnouncements } from "@/shared/contexts/AnnouncementContext";
+import { API_URL, authenticatedFetch } from "@/shared/services/api-client";
 import { availableNavigation, navigationGroupsFor, projectIdFromPath } from "./navigation";
 const fullWidthRoutes = [];
-function NavigationList({ onNavigate }) {
+function NavigationList({ onNavigate, projectPermissions }) {
   const pathname = usePathname();
   const { user } = useAuth();
   const groups = useMemo(
-    () => availableNavigation(navigationGroupsFor(pathname), user),
-    [pathname, user],
+    () => availableNavigation(navigationGroupsFor(pathname), user, projectPermissions),
+    [pathname, projectPermissions, user],
   );
   return (
     <div className="flex flex-col gap-6">
@@ -53,16 +54,38 @@ export default function AppShell({ children, requireAuth }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const routeQuery = searchParams.get("q") || "";
+  const projectId = projectIdFromPath(pathname);
   const { user, isLoading, logoutState } = useAuth();
   const { unreadCount } = useAnnouncements();
   const notificationEnabled = process.env.NEXT_PUBLIC_NOTIFICATION_ENABLED === "true";
   const [mobileOpen, setMobileOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState(routeQuery);
+  const [projectPermissions, setProjectPermissions] = useState(null);
   const accountRef = useRef(null);
   useEffect(() => {
     setSearchQuery(routeQuery);
   }, [routeQuery]);
+  useEffect(() => {
+    if (!projectId || !user) {
+      setProjectPermissions(null);
+      return;
+    }
+    let active = true;
+    authenticatedFetch(`${API_URL}/api/qa/projects/${projectId}`)
+      .then(async (response) => {
+        if (!response.ok) return [];
+        const body = await response.json();
+        return body?.data?.current_permissions || [];
+      })
+      .catch(() => [])
+      .then((permissions) => {
+        if (active) setProjectPermissions(permissions);
+      });
+    return () => {
+      active = false;
+    };
+  }, [projectId, user]);
   useEffect(() => {
     if (requireAuth && !isLoading && !user) {
       const query = searchParams.toString();
@@ -111,7 +134,6 @@ export default function AppShell({ children, requireAuth }) {
     .trim()
     .charAt(0)
     .toUpperCase();
-  const projectId = projectIdFromPath(pathname);
   return (
     <div className="min-h-[100dvh] bg-canvas text-ink">
       <a
@@ -134,7 +156,14 @@ export default function AppShell({ children, requireAuth }) {
             href={projectId ? `/qa/projects/${projectId}` : "/qa/projects"}
             className="flex items-center gap-2 lg:hidden"
           >
-            <Image src="/veriq-logo.png" alt="Veriq" width={32} height={32} className="h-8 w-8 rounded-lg object-cover" priority />
+            <Image
+              src="/veriq-logo.png"
+              alt="Veriq"
+              width={32}
+              height={32}
+              className="h-8 w-8 rounded-lg object-cover"
+              priority
+            />
             <span className="text-[15px] font-bold tracking-[-0.02em]">Veriq</span>
           </Link>
           {projectId && (
@@ -263,7 +292,14 @@ export default function AppShell({ children, requireAuth }) {
             href="/"
             className="flex items-center gap-3 text-[19px] font-semibold tracking-[-0.035em] text-ink"
           >
-            <Image src="/veriq-logo.png" alt="Veriq" width={36} height={36} className="h-9 w-9 rounded-xl object-cover" priority />
+            <Image
+              src="/veriq-logo.png"
+              alt="Veriq"
+              width={36}
+              height={36}
+              className="h-9 w-9 rounded-xl object-cover"
+              priority
+            />
             <span>Veriq</span>
           </Link>
         </div>
@@ -271,7 +307,7 @@ export default function AppShell({ children, requireAuth }) {
           className="h-[calc(100dvh-68px)] overflow-y-auto px-4 py-6"
           aria-label="Điều hướng chính"
         >
-          <NavigationList />
+          <NavigationList projectPermissions={projectPermissions} />
         </nav>
       </aside>
 
@@ -290,7 +326,13 @@ export default function AppShell({ children, requireAuth }) {
                 onClick={() => setMobileOpen(false)}
                 className="flex items-center gap-3 text-[19px] font-semibold tracking-[-0.035em]"
               >
-                <Image src="/veriq-logo.png" alt="Veriq" width={36} height={36} className="h-9 w-9 rounded-xl object-cover" />
+                <Image
+                  src="/veriq-logo.png"
+                  alt="Veriq"
+                  width={36}
+                  height={36}
+                  className="h-9 w-9 rounded-xl object-cover"
+                />
                 Veriq
               </Link>
               <button
@@ -302,7 +344,10 @@ export default function AppShell({ children, requireAuth }) {
                 <X size={20} strokeWidth={1.75} />
               </button>
             </div>
-            <NavigationList onNavigate={() => setMobileOpen(false)} />
+            <NavigationList
+              onNavigate={() => setMobileOpen(false)}
+              projectPermissions={projectPermissions}
+            />
           </aside>
         </div>
       )}
