@@ -1,8 +1,8 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import DataTable from "../components/DataTable";
-import AdminPlatformPanel from "../components/AdminPlatformPanel";
-import AdminUsersPanel from "../components/AdminUsersPanel";
+import PlatformOperationsPanel from "../components/PlatformOperationsPanel";
+import PlatformUsersPanel from "../components/PlatformUsersPanel";
 import {
   ErrorState,
   LoadingState,
@@ -105,9 +105,9 @@ export default function OperationsPage() {
     >
       {error && <ErrorState message={error} />}
       {section === "users" ? (
-        <AdminUsersPanel />
+        <PlatformUsersPanel />
       ) : section === "platform" ? (
-        <AdminPlatformPanel />
+        <PlatformOperationsPanel />
       ) : !value ? (
         <LoadingState />
       ) : (

@@ -20,7 +20,7 @@ from src.schemas.identity import UserCreate
 from src.services.session import SessionService
 
 
-class AdminAccountUpdate(BaseModel):
+class AccountUpdate(BaseModel):
     role: Role | None = None
     system_role: SystemRole | None = None
     is_active: bool | None = None
@@ -33,24 +33,24 @@ class AdminAccountUpdate(BaseModel):
         return self
 
 
-class AdminProfileUpdate(BaseModel):
+class ProfileUpdate(BaseModel):
     full_name: str | None = Field(default=None, min_length=2, max_length=200)
     slug: str | None = Field(default=None, min_length=2, max_length=100)
     reason: str = Field(min_length=3, max_length=1000)
 
 
-class AdminUserCreate(BaseModel):
+class UserCreateRequest(BaseModel):
     email: EmailStr
     full_name: str = Field(min_length=2, max_length=100)
     slug: str = Field(min_length=3, max_length=50, pattern=r"^[a-zA-Z0-9_-]+$")
     reason: str = Field(min_length=3, max_length=1000)
 
 
-class AdminReason(BaseModel):
+class ActionReason(BaseModel):
     reason: str = Field(min_length=3, max_length=1000)
 
 
-class AdminRoleUpdate(BaseModel):
+class SystemRoleUpdate(BaseModel):
     system_role: SystemRole
     reason: str = Field(min_length=3, max_length=1000)
 
@@ -116,7 +116,7 @@ async def protect_last_admin(account: dict, desired_role=None, desired_active=No
         )
 
 
-async def admin_audit(
+async def record_audit(
     current_user: CurrentUser,
     action: str,
     user_id: str,
@@ -146,7 +146,7 @@ router = APIRouter(dependencies=[Depends(require_system_admin)])
 
 @router.post("/api/admin/users", response_model=APIResponse[Any], status_code=201)
 async def create_account(
-    payload: AdminUserCreate,
+    payload: UserCreateRequest,
     request: Request,
     current_user: CurrentUser = Depends(get_current_user),
 ):
@@ -165,7 +165,7 @@ async def create_account(
         str(payload.email),
         request.client.host if request.client else "admin",
     )
-    await admin_audit(
+    await record_audit(
         current_user,
         "ADMIN_USER_CREATED",
         user["id"],
@@ -219,7 +219,7 @@ async def list_accounts(
 @router.patch("/xac-thuc/quan-tri/tai-khoan/{user_id}", response_model=APIResponse[Any])
 @router.patch("/api/admin/users/{user_id}", response_model=APIResponse[Any])
 async def update_account(
-    user_id: str, payload: AdminAccountUpdate, current_user: CurrentUser = Depends(get_current_user)
+    user_id: str, payload: AccountUpdate, current_user: CurrentUser = Depends(get_current_user)
 ):
     if user_id == current_user.id and (
         payload.is_active is False
@@ -288,7 +288,7 @@ async def account_detail(
 @router.patch("/api/admin/users/{user_id}/profile", response_model=APIResponse[Any])
 async def update_account_profile(
     user_id: str,
-    payload: AdminProfileUpdate,
+    payload: ProfileUpdate,
     current_user: CurrentUser = Depends(get_current_user),
 ):
     await account_or_404(user_id)
@@ -305,7 +305,7 @@ async def update_account_profile(
     ].auth_credentials.find_one_and_update(
         {"_id": user_id}, {"$set": changes}, return_document=ReturnDocument.AFTER
     )
-    await admin_audit(
+    await record_audit(
         current_user,
         "ADMIN_USER_PROFILE_UPDATED",
         user_id,
@@ -318,7 +318,7 @@ async def update_account_profile(
 async def change_account_status(
     user_id: str,
     desired_status: str,
-    payload: AdminReason,
+    payload: ActionReason,
     current_user: CurrentUser,
 ):
     account = await account_or_404(user_id)
@@ -342,7 +342,7 @@ async def change_account_status(
     )
     if not active:
         await IdentityRepository.revoke_all_sessions(user_id)
-    await admin_audit(
+    await record_audit(
         current_user,
         f"ADMIN_USER_{desired_status}",
         user_id,
@@ -354,7 +354,7 @@ async def change_account_status(
 @router.post("/api/admin/users/{user_id}/enable", response_model=APIResponse[Any])
 async def enable_account(
     user_id: str,
-    payload: AdminReason,
+    payload: ActionReason,
     current_user: CurrentUser = Depends(get_current_user),
 ):
     return await change_account_status(user_id, "ACTIVE", payload, current_user)
@@ -363,7 +363,7 @@ async def enable_account(
 @router.post("/api/admin/users/{user_id}/disable", response_model=APIResponse[Any])
 async def disable_account(
     user_id: str,
-    payload: AdminReason,
+    payload: ActionReason,
     current_user: CurrentUser = Depends(get_current_user),
 ):
     return await change_account_status(user_id, "DISABLED", payload, current_user)
@@ -372,7 +372,7 @@ async def disable_account(
 @router.post("/api/admin/users/{user_id}/lock", response_model=APIResponse[Any])
 async def lock_account(
     user_id: str,
-    payload: AdminReason,
+    payload: ActionReason,
     current_user: CurrentUser = Depends(get_current_user),
 ):
     return await change_account_status(user_id, "LOCKED", payload, current_user)
@@ -381,7 +381,7 @@ async def lock_account(
 @router.post("/api/admin/users/{user_id}/unlock", response_model=APIResponse[Any])
 async def unlock_account(
     user_id: str,
-    payload: AdminReason,
+    payload: ActionReason,
     current_user: CurrentUser = Depends(get_current_user),
 ):
     return await change_account_status(user_id, "ACTIVE", payload, current_user)
@@ -390,7 +390,7 @@ async def unlock_account(
 @router.post("/api/admin/users/{user_id}/force-password-reset", response_model=APIResponse[Any])
 async def force_password_reset(
     user_id: str,
-    payload: AdminReason,
+    payload: ActionReason,
     request: Request,
     current_user: CurrentUser = Depends(get_current_user),
 ):
@@ -399,7 +399,7 @@ async def force_password_reset(
         account["email"], request.client.host if request.client else "unknown"
     )
     await IdentityRepository.revoke_all_sessions(user_id)
-    await admin_audit(current_user, "ADMIN_FORCE_PASSWORD_RESET", user_id, payload.reason)
+    await record_audit(current_user, "ADMIN_FORCE_PASSWORD_RESET", user_id, payload.reason)
     return APIResponse(data=result, message="Khởi tạo quy trình đặt lại mật khẩu hoàn tất")
 
 
@@ -414,7 +414,7 @@ async def list_user_sessions(
         .sort("created_at", -1)
         .to_list(500)
     )
-    await admin_audit(current_user, "ADMIN_USER_SESSIONS_VIEWED", user_id, "security review")
+    await record_audit(current_user, "ADMIN_USER_SESSIONS_VIEWED", user_id, "security review")
     return APIResponse(data=sessions, message="Tải danh sách phiên đăng nhập hoàn tất")
 
 
@@ -426,7 +426,7 @@ async def revoke_user_session(
 ):
     await account_or_404(user_id)
     await IdentityRepository.revoke_session(user_id, session_id)
-    await admin_audit(
+    await record_audit(
         current_user,
         "ADMIN_USER_SESSION_REVOKED",
         user_id,
@@ -445,7 +445,7 @@ async def revoke_all_user_sessions(
 ):
     await account_or_404(user_id)
     await IdentityRepository.revoke_all_sessions(user_id)
-    await admin_audit(
+    await record_audit(
         current_user,
         "ADMIN_USER_SESSIONS_REVOKED",
         user_id,
@@ -457,7 +457,7 @@ async def revoke_all_user_sessions(
 @router.delete("/api/admin/users/{user_id}/passkeys", response_model=APIResponse[Any])
 async def reset_user_passkeys(
     user_id: str,
-    payload: AdminReason,
+    payload: ActionReason,
     current_user: CurrentUser = Depends(get_current_user),
 ):
     await account_or_404(user_id)
@@ -465,14 +465,14 @@ async def reset_user_passkeys(
         {"_id": user_id}, {"$set": {"passkeys": [], "updated_at": datetime.now(timezone.utc)}}
     )
     await IdentityRepository.revoke_all_sessions(user_id)
-    await admin_audit(current_user, "ADMIN_USER_PASSKEYS_RESET", user_id, payload.reason)
+    await record_audit(current_user, "ADMIN_USER_PASSKEYS_RESET", user_id, payload.reason)
     return APIResponse(data={"reset": True}, message="Đặt lại passkey hoàn tất")
 
 
 @router.patch("/api/admin/users/{user_id}/system-role", response_model=APIResponse[Any])
 async def update_system_role(
     user_id: str,
-    payload: AdminRoleUpdate,
+    payload: SystemRoleUpdate,
     current_user: CurrentUser = Depends(get_current_user),
 ):
     account = await account_or_404(user_id)
@@ -493,7 +493,7 @@ async def update_system_role(
         return_document=ReturnDocument.AFTER,
     )
     await IdentityRepository.revoke_all_sessions(user_id)
-    await admin_audit(
+    await record_audit(
         current_user,
         "ADMIN_SYSTEM_ROLE_UPDATED",
         user_id,
@@ -517,7 +517,7 @@ async def list_user_memberships(
         )
         .to_list(5000)
     )
-    await admin_audit(current_user, "ADMIN_USER_MEMBERSHIPS_VIEWED", user_id, "support metadata")
+    await record_audit(current_user, "ADMIN_USER_MEMBERSHIPS_VIEWED", user_id, "support metadata")
     return APIResponse(data=memberships, message="Tải siêu dữ liệu thành viên dự án hoàn tất")
 
 
@@ -584,7 +584,7 @@ async def list_project_metadata(
         {**project, "member_count": count_by_project.get(project["_id"], 0)}
         for project in projects
     ]
-    await admin_audit(current_user, "ADMIN_PROJECT_METADATA_VIEWED", "platform", "operations")
+    await record_audit(current_user, "ADMIN_PROJECT_METADATA_VIEWED", "platform", "operations")
     return APIResponse(data=data, message="Tải siêu dữ liệu dự án hoàn tất")
 
 
@@ -624,7 +624,7 @@ async def update_project_policy(
         },
         upsert=True,
     )
-    await admin_audit(
+    await record_audit(
         current_user,
         "ADMIN_PROJECT_POLICY_UPDATED",
         "platform",
@@ -699,7 +699,7 @@ async def update_ai_provider(
         upsert=True,
         return_document=ReturnDocument.AFTER,
     )
-    await admin_audit(current_user, "ADMIN_AI_PROVIDER_UPDATED", provider_id, payload.reason)
+    await record_audit(current_user, "ADMIN_AI_PROVIDER_UPDATED", provider_id, payload.reason)
     return APIResponse(data=provider_view(provider), message="Cập nhật cấu hình AI hoàn tất")
 
 
@@ -715,9 +715,9 @@ async def test_ai_provider(
             response.raise_for_status()
             health = response.json()
     except httpx.HTTPError as error:
-        await admin_audit(current_user, "ADMIN_AI_PROVIDER_TEST_FAILED", provider_id, "health test")
+        await record_audit(current_user, "ADMIN_AI_PROVIDER_TEST_FAILED", provider_id, "health test")
         raise HTTPException(status_code=503, detail="Nhà cung cấp AI chưa sẵn sàng") from error
-    await admin_audit(current_user, "ADMIN_AI_PROVIDER_TESTED", provider_id, "health test")
+    await record_audit(current_user, "ADMIN_AI_PROVIDER_TESTED", provider_id, "health test")
     return APIResponse(
         data={"provider_id": provider_id, "healthy": True, "service": health},
         message="Kiểm tra kết nối AI hoàn tất",
@@ -743,7 +743,7 @@ async def list_operations_jobs(
         .limit(limit)
         .to_list(limit)
     )
-    await admin_audit(
+    await record_audit(
         current_user,
         "ADMIN_OPERATIONS_JOBS_VIEWED",
         "platform",
@@ -779,7 +779,7 @@ async def retry_operations_job(
         raise HTTPException(status_code=502, detail="Không thể chạy lại tác vụ nền") from error
     except httpx.HTTPError as error:
         raise HTTPException(status_code=503, detail="Dịch vụ tác vụ nền chưa sẵn sàng") from error
-    await admin_audit(
+    await record_audit(
         current_user,
         "ADMIN_OPERATIONS_JOB_RETRIED",
         job_id,
@@ -832,7 +832,7 @@ async def platform_health(
             "details": {"status": "unavailable"},
         }
     results.append(mongodb)
-    await admin_audit(
+    await record_audit(
         current_user,
         "ADMIN_PLATFORM_HEALTH_VIEWED",
         "platform",
@@ -881,7 +881,7 @@ async def get_platform_config(config_type: str, current_user: CurrentUser):
     config = await database.mongodb[settings.AUTHENTICATION_DB_NAME].system_configs.find_one(
         {"type": config_type}
     )
-    await admin_audit(current_user, "ADMIN_CONFIG_VIEWED", config_type, "platform configuration")
+    await record_audit(current_user, "ADMIN_CONFIG_VIEWED", config_type, "platform configuration")
     return APIResponse(data=masked_config(config or {"type": config_type}), message="Tải cấu hình nền tảng hoàn tất")
 
 
@@ -895,7 +895,7 @@ async def update_platform_config(config_type: str, payload: ConfigUpdate, curren
         {"$set": {**allowed, "updated_at": timestamp, "updated_by": current_user.id}, "$setOnInsert": {"type": config_type, "created_at": timestamp}},
         upsert=True,
     )
-    await admin_audit(current_user, "ADMIN_CONFIG_UPDATED", config_type, payload.reason, {"keys": sorted(allowed)})
+    await record_audit(current_user, "ADMIN_CONFIG_UPDATED", config_type, payload.reason, {"keys": sorted(allowed)})
     return await get_platform_config(config_type, current_user)
 
 
@@ -960,7 +960,7 @@ async def register_ai_model(payload: ModelRegistryEntry, current_user: CurrentUs
     }
     result = await database.mongodb[settings.AUTHENTICATION_DB_NAME].ai_models.insert_one(model)
     model["_id"] = str(result.inserted_id)
-    await admin_audit(current_user, "ADMIN_AI_MODEL_REGISTERED", model["_id"], payload.reason)
+    await record_audit(current_user, "ADMIN_AI_MODEL_REGISTERED", model["_id"], payload.reason)
     return APIResponse(data=model, message="Đăng ký mô hình AI hoàn tất", status=201)
 
 
@@ -981,5 +981,5 @@ async def update_ai_model(model_id: str, payload: ConfigUpdate, current_user: Cu
     if not model:
         raise HTTPException(status_code=404, detail="Không tìm thấy mô hình AI")
     model["_id"] = str(model["_id"])
-    await admin_audit(current_user, "ADMIN_AI_MODEL_UPDATED", model_id, payload.reason, {"keys": sorted(changes)})
+    await record_audit(current_user, "ADMIN_AI_MODEL_UPDATED", model_id, payload.reason, {"keys": sorted(changes)})
     return APIResponse(data=model, message="Cập nhật mô hình AI hoàn tất")

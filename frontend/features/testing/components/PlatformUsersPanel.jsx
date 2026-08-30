@@ -1,11 +1,11 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { adminApi } from "@/features/authentication/services/admin.service";
+import { platformApi } from "@/features/authentication/services/platform.service";
 import DataTable from "./DataTable";
 import { ErrorState, LoadingState, Panel, StatusPill, useQaActionDialog } from "./TestingUi";
 import { formatDate, messageOf } from "../lib/testing";
 
-export default function AdminUsersPanel() {
+export default function PlatformUsersPanel() {
   const { ask, dialog } = useQaActionDialog();
   const [users, setUsers] = useState([]);
   const [query, setQuery] = useState("");
@@ -21,7 +21,7 @@ export default function AdminUsersPanel() {
     setLoading(true);
     setError("");
     try {
-      setUsers(await adminApi.listUsers(search));
+      setUsers(await platformApi.listUsers(search));
     } catch (reason) {
       setError(messageOf(reason));
     } finally {
@@ -34,10 +34,10 @@ export default function AdminUsersPanel() {
     setError("");
     try {
       const [user, activeSessions, projectMemberships, events] = await Promise.all([
-        adminApi.getUser(id),
-        adminApi.listSessions(id),
-        adminApi.listMemberships(id),
-        adminApi.listUserAudit(id),
+        platformApi.getUser(id),
+        platformApi.listSessions(id),
+        platformApi.listMemberships(id),
+        platformApi.listUserAudit(id),
       ]);
       setDetail(user);
       setSessions(activeSessions);
@@ -110,7 +110,7 @@ export default function AdminUsersPanel() {
                 });
                 if (!answer) return;
                 try {
-                  await adminApi.createUser(answer);
+                  await platformApi.createUser(answer);
                   await loadUsers(query);
                 } catch (reason) {
                   setError(messageOf(reason));
@@ -207,7 +207,7 @@ export default function AdminUsersPanel() {
                         "Khóa tài khoản",
                         "Tài khoản sẽ mất quyền truy cập ngay lập tức",
                         "Khóa",
-                        (reason) => adminApi.lockUser(detail._id, reason),
+                        (reason) => platformApi.lockUser(detail._id, reason),
                       )
                     }
                   >
@@ -221,7 +221,7 @@ export default function AdminUsersPanel() {
                         "Vô hiệu hóa tài khoản",
                         "Toàn bộ phiên đăng nhập sẽ bị thu hồi",
                         "Vô hiệu hóa",
-                        (reason) => adminApi.disableUser(detail._id, reason),
+                        (reason) => platformApi.disableUser(detail._id, reason),
                       )
                     }
                   >
@@ -241,8 +241,8 @@ export default function AdminUsersPanel() {
                       detail.account_status === "LOCKED" ? "Mở khóa" : "Kích hoạt",
                       (reason) =>
                         detail.account_status === "LOCKED"
-                          ? adminApi.unlockUser(detail._id, reason)
-                          : adminApi.enableUser(detail._id, reason),
+                          ? platformApi.unlockUser(detail._id, reason)
+                          : platformApi.enableUser(detail._id, reason),
                     )
                   }
                 >
@@ -257,7 +257,7 @@ export default function AdminUsersPanel() {
                     "Buộc đặt lại mật khẩu",
                     "Toàn bộ phiên cũ sẽ bị thu hồi và quy trình khôi phục sẽ được gửi",
                     "Khởi tạo",
-                    (reason) => adminApi.forcePasswordReset(detail._id, reason),
+                    (reason) => platformApi.forcePasswordReset(detail._id, reason),
                   )
                 }
               >
@@ -271,7 +271,7 @@ export default function AdminUsersPanel() {
                     "Đặt lại passkey",
                     "Toàn bộ passkey và phiên đăng nhập của tài khoản sẽ bị thu hồi",
                     "Đặt lại",
-                    (reason) => adminApi.resetPasskeys(detail._id, reason),
+                    (reason) => platformApi.resetPasskeys(detail._id, reason),
                   )
                 }
               >
@@ -286,7 +286,7 @@ export default function AdminUsersPanel() {
                     "Thay đổi có hiệu lực sau khi toàn bộ phiên hiện tại bị thu hồi",
                     "Xác nhận",
                     (reason) =>
-                      adminApi.updateSystemRole(
+                      platformApi.updateSystemRole(
                         detail._id,
                         detail.system_role === "ADMIN" ? "USER" : "ADMIN",
                         reason,
@@ -322,7 +322,7 @@ export default function AdminUsersPanel() {
                       onClick={async () => {
                         setError("");
                         try {
-                          await adminApi.revokeSession(detail._id, item._id);
+                          await platformApi.revokeSession(detail._id, item._id);
                           await loadDetail(detail._id);
                         } catch (reason) {
                           setError(messageOf(reason));

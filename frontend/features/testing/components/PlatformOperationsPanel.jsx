@@ -1,11 +1,11 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { adminApi } from "@/features/authentication/services/admin.service";
+import { platformApi } from "@/features/authentication/services/platform.service";
 import DataTable from "./DataTable";
 import { ErrorState, LoadingState, Panel, StatusPill, useQaActionDialog } from "./TestingUi";
 import { formatDate, messageOf } from "../lib/testing";
 
-export default function AdminPlatformPanel() {
+export default function PlatformOperationsPanel() {
   const { ask, dialog } = useQaActionDialog();
   const [projects, setProjects] = useState([]);
   const [policy, setPolicy] = useState(null);
@@ -22,12 +22,12 @@ export default function AdminPlatformPanel() {
     try {
       const [projectValues, policyValue, providerValues, modelValues, healthValue, jobValues] =
         await Promise.all([
-          adminApi.listProjects(),
-          adminApi.getProjectPolicy(),
-          adminApi.listProviders(),
-          adminApi.listModels(),
-          adminApi.getHealth(),
-          adminApi.listJobs(),
+          platformApi.listProjects(),
+          platformApi.getProjectPolicy(),
+          platformApi.listProviders(),
+          platformApi.listModels(),
+          platformApi.getHealth(),
+          platformApi.listJobs(),
         ]);
       setProjects(projectValues);
       setPolicy(policyValue);
@@ -93,7 +93,7 @@ export default function AdminPlatformPanel() {
                 });
                 if (!answer) return;
                 try {
-                  await adminApi.updateProjectPolicy(desired, answer.reason);
+                  await platformApi.updateProjectPolicy(desired, answer.reason);
                   await load();
                 } catch (reason) {
                   setError(messageOf(reason));
@@ -154,7 +154,7 @@ export default function AdminPlatformPanel() {
                     type="button"
                     onClick={async () => {
                       try {
-                        await adminApi.testProvider(item._id);
+                        await platformApi.testProvider(item._id);
                       } catch (reason) {
                         setError(messageOf(reason));
                       }
@@ -180,7 +180,7 @@ export default function AdminPlatformPanel() {
                       });
                       if (!answer) return;
                       try {
-                        await adminApi.updateProvider(item._id, {
+                        await platformApi.updateProvider(item._id, {
                           enabled: !item.enabled,
                           reason: answer.reason,
                         });
@@ -225,7 +225,7 @@ export default function AdminPlatformPanel() {
                     type="button"
                     onClick={async () => {
                       try {
-                        await adminApi.retryJob(item._id);
+                        await platformApi.retryJob(item._id);
                         await load();
                       } catch (reason) {
                         setError(messageOf(reason));
