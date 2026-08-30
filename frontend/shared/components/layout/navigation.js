@@ -77,7 +77,13 @@ export function navigationGroupsFor(pathname) {
       label: "Không gian làm việc",
       items: [
         { id: "projects", label: "Dự án", href: "/qa/projects", icon: FolderKanban },
-        { id: "operations", label: "Vận hành nền tảng", href: "/qa/operations", icon: Activity, requireAdmin: true },
+        {
+          id: "operations",
+          label: "Vận hành nền tảng",
+          href: "/qa/operations",
+          icon: Activity,
+          requireAdmin: true,
+        },
         ...projectItems,
       ],
     },
@@ -101,7 +107,8 @@ export function availableNavigation(groups, user) {
     .map((group) => ({
       ...group,
       items: group.items.filter(
-        (item) => (!item.requireAuth || user) && (!item.requireAdmin || user?.system_role === "ADMIN"),
+        (item) =>
+          (!item.requireAuth || user) && (!item.requireAdmin || user?.system_role === "ADMIN"),
       ),
     }))
     .filter((group) => group.items.length > 0);

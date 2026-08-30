@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 export default function AuthFrame({ title, description, children, footer, width = "sm" }) {
   return (
     <main className="min-h-[100dvh] bg-[#eef3ef] px-4 py-5 sm:px-6 md:px-10 md:py-8">
@@ -7,9 +8,7 @@ export default function AuthFrame({ title, description, children, footer, width 
           href="/"
           className="flex items-center gap-3 text-[19px] font-semibold tracking-[-0.035em] text-ink"
         >
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand text-[13px] font-bold text-white">
-            Q
-          </span>
+          <Image src="/veriq-logo.png" alt="Veriq" width={36} height={36} className="h-9 w-9 rounded-xl object-cover" priority />
           <span>Veriq</span>
         </Link>
         <Link

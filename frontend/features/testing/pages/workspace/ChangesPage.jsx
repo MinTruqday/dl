@@ -65,7 +65,9 @@ export default function ChangesPage({ project }) {
       setSelected(await testingApi.getChangeSet(selected._id));
       setImpact(result);
       setOverrides({});
-      setRegression(result.status === "REVIEWED" ? await testingApi.regression(selected._id) : null);
+      setRegression(
+        result.status === "REVIEWED" ? await testingApi.regression(selected._id) : null,
+      );
       await load();
     } catch (reason) {
       setError(messageOf(reason));
@@ -172,11 +174,10 @@ export default function ChangesPage({ project }) {
   return (
     <QaPage
       title="Ảnh hưởng thay đổi và bảo trì"
-      description="Hệ thống phân loại thay đổi, sau đó người dùng duyệt từng đề xuất trước khi tạo phiên bản ca kiểm thử mới"
       actions={<ProjectCrumb projectId={project._id} />}
     >
       {error && <ErrorState message={error} />}
-      <Panel title="Change Set">
+      <Panel title="Bộ thay đổi">
         <DataTable
           onSelect={openChangeSet}
           items={sets}
@@ -207,7 +208,7 @@ export default function ChangesPage({ project }) {
                       const value = await testingApi.reviewChangeSet(selected._id, {
                         expected_revision: selected.revision,
                         changes: changeFacts,
-                        review_note: "Đã xác nhận ChangeFact trên giao diện",
+                        review_note: "Đã xác nhận chi tiết thay đổi trên giao diện",
                       });
                       setSelected(value);
                       setChangeFacts(value.changes);
@@ -217,7 +218,7 @@ export default function ChangesPage({ project }) {
                     }
                   }}
                 >
-                  Xác nhận ChangeFact
+                  Xác nhận chi tiết thay đổi
                 </button>
               ) : selected.status === "REVIEWED" ? (
                 <button className="apple-button" type="button" onClick={analyze}>
@@ -236,7 +237,7 @@ export default function ChangesPage({ project }) {
                   render: (item) =>
                     selected.status === "READY" ? (
                       <select
-                        aria-label={`Loại ChangeFact ${item.factIndex + 1}`}
+                        aria-label={`Loại thay đổi ${item.factIndex + 1}`}
                         className="apple-input min-w-48"
                         value={item.type}
                         onChange={(event) =>
@@ -258,7 +259,9 @@ export default function ChangesPage({ project }) {
                           "ADDED_BEHAVIOR",
                           "REMOVED_BEHAVIOR",
                         ].map((value) => (
-                          <option key={value} value={value}>{value}</option>
+                          <option key={value} value={value}>
+                            {value}
+                          </option>
                         ))}
                       </select>
                     ) : (
@@ -296,7 +299,7 @@ export default function ChangesPage({ project }) {
               ]}
             />
           </Panel>
-          <Panel title="Regression recommendation">
+          <Panel title="Khuyến nghị kiểm thử hồi quy">
             <DataTable
               items={regression?.items || []}
               empty="Chưa có khuyến nghị"
@@ -402,7 +405,7 @@ export default function ChangesPage({ project }) {
                     <StatusPill value={item.classification} />
                   ),
               },
-              { key: "confidence", label: "Confidence" },
+              { key: "confidence", label: "Mức tin cậy" },
               { key: "reasons", label: "Bằng chứng", render: (item) => item.reasons?.join(", ") },
             ]}
           />
@@ -420,7 +423,15 @@ export default function ChangesPage({ project }) {
                 title: "Duyệt hàng loạt đề xuất an toàn",
                 description: `${selectedProposalIds.length} mục đã chọn sẽ vẫn được kiểm tra ngưỡng chính sách riêng lẻ`,
                 confirmLabel: "Duyệt các mục đạt chính sách",
-                fields: [{ name: "note", label: "Ghi chú duyệt", required: true, multiline: true, autoFocus: true }],
+                fields: [
+                  {
+                    name: "note",
+                    label: "Ghi chú duyệt",
+                    required: true,
+                    multiline: true,
+                    autoFocus: true,
+                  },
+                ],
               });
               if (!answer) return;
               try {
@@ -467,7 +478,7 @@ export default function ChangesPage({ project }) {
             },
             {
               key: "decision",
-              label: "Quyết định HITL",
+              label: "Quyết định của người duyệt",
               render: (item) => (
                 <span className="flex flex-wrap gap-2">
                   <button
@@ -499,7 +510,15 @@ export default function ChangesPage({ project }) {
                         title: "Yêu cầu tạo lại đề xuất",
                         description: item.test_case_key || item.target_artifact_id || item._id,
                         confirmLabel: "Tạo lại",
-                        fields: [{ name: "instruction", label: "Hướng điều chỉnh", required: true, multiline: true, autoFocus: true }],
+                        fields: [
+                          {
+                            name: "instruction",
+                            label: "Hướng điều chỉnh",
+                            required: true,
+                            multiline: true,
+                            autoFocus: true,
+                          },
+                        ],
                       });
                       if (!answer) return;
                       try {

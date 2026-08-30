@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, CheckCircle2, GitBranch, SearchCheck, Sparkles } from "lucide-react";
 
 const capabilities = [
@@ -38,9 +39,7 @@ export default function HomePage() {
             href="/"
             className="flex items-center gap-3 text-[19px] font-semibold tracking-[-0.035em]"
           >
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand text-[13px] font-bold text-white">
-              Q
-            </span>
+            <Image src="/veriq-logo.png" alt="Veriq" width={36} height={36} className="h-9 w-9 rounded-xl object-cover" priority />
             <span>Veriq</span>
           </Link>
           <div className="flex items-center gap-2">

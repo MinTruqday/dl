@@ -66,7 +66,9 @@ export default function ReviewCommentsPanel({ projectId, artifactType, artifactI
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex flex-wrap items-center gap-2">
                     <StatusPill value={item.status} />
-                    <span className="text-[11px] text-ink-faint">{formatDate(item.created_at)}</span>
+                    <span className="text-[11px] text-ink-faint">
+                      {formatDate(item.created_at)}
+                    </span>
                   </div>
                   <button
                     className="secondary-button"

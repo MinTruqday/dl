@@ -386,7 +386,9 @@ export const testingApi = {
   listRuns: (id, query = "") =>
     listPage(`/projects/${id}/test-runs`, query).then((result) => result.items),
   listResults: (id, status = "") =>
-    qaRequest(`/projects/${id}/test-results${status ? `?status=${encodeURIComponent(status)}` : ""}`),
+    qaRequest(
+      `/projects/${id}/test-results${status ? `?status=${encodeURIComponent(status)}` : ""}`,
+    ),
   createRun: (payload) =>
     qaRequest("/test-runs", { method: "POST", body: JSON.stringify(payload) }),
   getRun: (id) => qaRequest(`/test-runs/${id}`),

@@ -26,10 +26,14 @@ export default function ProposalDiffPanel({ proposal }) {
             <tr key={field}>
               <th className="p-2 align-top font-semibold">{field}</th>
               <td className="p-2 align-top">
-                <pre className="max-w-sm whitespace-pre-wrap break-words">{valueText(base[field])}</pre>
+                <pre className="max-w-sm whitespace-pre-wrap break-words">
+                  {valueText(base[field])}
+                </pre>
               </td>
               <td className="bg-brand-soft/30 p-2 align-top">
-                <pre className="max-w-sm whitespace-pre-wrap break-words">{valueText(patch[field])}</pre>
+                <pre className="max-w-sm whitespace-pre-wrap break-words">
+                  {valueText(patch[field])}
+                </pre>
               </td>
             </tr>
           ))}

@@ -19,7 +19,6 @@ export default function KnowledgePage({ project }) {
   return (
     <QaPage
       title="Tìm kiếm trong tri thức dự án"
-      description="Kết quả chỉ nằm trong phạm vi dự án và luôn hiển thị nguồn cùng phiên bản để kiểm chứng"
       actions={<ProjectCrumb projectId={project._id} />}
     >
       {error && <ErrorState message={error} />}
@@ -31,7 +30,11 @@ export default function KnowledgePage({ project }) {
             event.preventDefault();
             try {
               setResult(
-                await testingApi.searchKnowledge(project._id, { query, artifact_types: [], limit: 50 }),
+                await testingApi.searchKnowledge(project._id, {
+                  query,
+                  artifact_types: [],
+                  limit: 50,
+                }),
               );
             } catch (reason) {
               setError(messageOf(reason));
@@ -64,11 +67,11 @@ export default function KnowledgePage({ project }) {
                 label: "Trạng thái",
                 render: (item) => <StatusPill value={item.status} />,
               },
-              { key: "authority", label: "Authority" },
+              { key: "authority", label: "Mức thẩm quyền" },
               { key: "score", label: "Điểm" },
               {
                 key: "text",
-                label: "Evidence",
+                label: "Bằng chứng",
                 render: (item) => <span className="line-clamp-3 max-w-xl">{item.text}</span>,
               },
             ]}

@@ -56,7 +56,6 @@ export default function ProjectsPage() {
   return (
     <QaPage
       title="Dự án kiểm thử"
-      description="Quản lý yêu cầu, kịch bản kiểm thử, truy vết, thay đổi, lần chạy và lỗi trong cùng một nguồn dữ liệu có phiên bản"
       actions={
         <button
           type="button"
@@ -70,24 +69,24 @@ export default function ProjectsPage() {
     >
       {error && <ErrorState message={error} />}
       {creating && (
-        <Panel title="Tạo dự án mới" description="Mã dự án là duy nhất và không đổi sau khi tạo">
-          <form onSubmit={submit} className="grid gap-4 p-5 md:grid-cols-2">
-            <label className="field-label">
+        <Panel title="Tạo dự án mới">
+          <form onSubmit={submit} className="grid gap-5 p-5 md:grid-cols-2">
+            <label className="field-label block min-w-0">
               Mã dự án
               <input
-                className="apple-input mt-2"
+                className="apple-input mt-2 w-full"
                 required
                 minLength={2}
                 pattern="[A-Za-z][A-Za-z0-9_]+"
                 value={form.key}
                 onChange={(event) => setForm({ ...form, key: event.target.value })}
-                placeholder="PAYMENT"
+                placeholder="THANHTOAN"
               />
             </label>
-            <label className="field-label">
+            <label className="field-label block min-w-0">
               Tên dự án
               <input
-                className="apple-input mt-2"
+                className="apple-input mt-2 w-full"
                 required
                 minLength={2}
                 value={form.name}
@@ -95,10 +94,10 @@ export default function ProjectsPage() {
                 placeholder="Nền tảng thanh toán"
               />
             </label>
-            <label className="field-label">
+            <label className="field-label block min-w-0">
               Loại dự án
               <select
-                className="apple-input mt-2"
+                className="apple-input mt-2 w-full"
                 value={form.project_type}
                 onChange={(event) => setForm({ ...form, project_type: event.target.value })}
               >
@@ -110,10 +109,10 @@ export default function ProjectsPage() {
                 <option value="other">Khác</option>
               </select>
             </label>
-            <label className="field-label md:col-span-2">
+            <label className="field-label block min-w-0 md:col-span-2">
               Mô tả
               <textarea
-                className="apple-input mt-2 min-h-24"
+                className="apple-input mt-2 min-h-24 w-full resize-y"
                 value={form.description}
                 onChange={(event) => setForm({ ...form, description: event.target.value })}
               />

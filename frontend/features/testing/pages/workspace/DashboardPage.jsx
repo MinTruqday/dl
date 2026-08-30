@@ -108,7 +108,8 @@ export default function DashboardPage({ project }) {
                     <StatusPill value={value.latest_run.status} />
                   </div>
                   <p className="text-[12px] text-ink-muted">
-                    Build {value.latest_run.build || "Chưa đặt"} tại {value.latest_run.environment || "Chưa đặt"}
+                    Bản dựng {value.latest_run.build || "Chưa đặt"} tại{" "}
+                    {value.latest_run.environment || "Chưa đặt"}
                   </p>
                   <div className="flex flex-wrap gap-3 text-[12px]">
                     {Object.entries(value.latest_run.result_counts || {}).map(([status, count]) => (
@@ -126,7 +127,7 @@ export default function DashboardPage({ project }) {
           <Panel title="Thay đổi gần đây">
             <DataTable
               items={value.recent_changes}
-              empty="Chưa có Change Set"
+              empty="Chưa có bộ thay đổi"
               columns={[
                 { key: "_id", label: "Mã" },
                 {

@@ -57,13 +57,10 @@ async function createBoundaryTest(request, token, projectId, requirementVersion,
     },
     201,
   );
-  await qa(
-    request,
-    token,
-    "POST",
-    `/projects/${projectId}/test-cases/${draft._id}/submit-review`,
-    { expected_revision: 1, review_note: "Đã rà soát kịch bản" },
-  );
+  await qa(request, token, "POST", `/projects/${projectId}/test-cases/${draft._id}/submit-review`, {
+    expected_revision: 1,
+    review_note: "Đã rà soát kịch bản",
+  });
   const frozen = await qa(
     request,
     token,
@@ -215,10 +212,16 @@ test("luồng chữ ký Requirement đến Regression bảo toàn phiên bản v
     },
     201,
   );
-  await qa(request, token, "POST", `/projects/${project._id}/requirements/${requirement._id}/submit-review`, {
-    expected_revision: 1,
-    review_note: "Đã rà soát thay đổi",
-  });
+  await qa(
+    request,
+    token,
+    "POST",
+    `/projects/${project._id}/requirements/${requirement._id}/submit-review`,
+    {
+      expected_revision: 1,
+      review_note: "Đã rà soát thay đổi",
+    },
+  );
   const v2 = await qa(request, token, "POST", `/requirement-versions/${v2Draft._id}/baseline`, {
     expected_revision: 2,
   });
@@ -256,13 +259,11 @@ test("luồng chữ ký Requirement đến Regression bảo toàn phiên bản v
     "TC-PROFILE-042": "STILL_VALID",
     "TC-PROFILE-043": "NEEDS_UPDATE",
   });
-  await qa(
-    request,
-    token,
-    "POST",
-    `/impact-analyses/${impact._id}/review`,
-    { expected_revision: impact.revision, overrides: [], review_note: "Đã duyệt phân tích tác động" },
-  );
+  await qa(request, token, "POST", `/impact-analyses/${impact._id}/review`, {
+    expected_revision: impact.revision,
+    overrides: [],
+    review_note: "Đã duyệt phân tích tác động",
+  });
   const proposals = await qa(
     request,
     token,

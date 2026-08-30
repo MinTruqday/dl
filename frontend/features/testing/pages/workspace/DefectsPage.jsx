@@ -31,7 +31,14 @@ export default function DefectsPage({ project }) {
   const [items, setItems] = useState([]);
   const [page, setPage] = useState(1);
   const [pageInfo, setPageInfo] = useState(null);
-  const [filters, setFilters] = useState({ q: "", status: "", severity: "", priority: "", assignee: "", sort: "-updated_at" });
+  const [filters, setFilters] = useState({
+    q: "",
+    status: "",
+    severity: "",
+    priority: "",
+    assignee: "",
+    sort: "-updated_at",
+  });
   const [results, setResults] = useState([]);
   const [duplicates, setDuplicates] = useState([]);
   const [traceReview, setTraceReview] = useState(null);
@@ -152,7 +159,6 @@ export default function DefectsPage({ project }) {
   return (
     <QaPage
       title="Quản lý lỗi"
-      description="Mỗi lỗi có vòng đời rõ ràng và có thể liên kết ngược với lần chạy yêu cầu cùng phiên bản ca kiểm thử"
       actions={
         <div className="flex flex-wrap items-center gap-3">
           <button
@@ -230,7 +236,7 @@ export default function DefectsPage({ project }) {
             />
           </label>
           <label className="field-label">
-            Build
+            Bản dựng
             <input
               className="apple-input mt-2"
               value={form.build}
@@ -278,7 +284,10 @@ export default function DefectsPage({ project }) {
               }}
             />
             {form.attachments.map((attachment) => (
-              <span className="mt-2 block break-all text-[11px] text-ink-muted" key={attachment.url}>
+              <span
+                className="mt-2 block break-all text-[11px] text-ink-muted"
+                key={attachment.url}
+              >
                 {attachment.filename}
               </span>
             ))}
@@ -295,9 +304,21 @@ export default function DefectsPage({ project }) {
           <DataTable
             items={duplicates}
             columns={[
-              { key: "left", label: "Lỗi thứ nhất", render: (item) => `${item.left.defect_key} ${item.left.title}` },
-              { key: "right", label: "Lỗi thứ hai", render: (item) => `${item.right.defect_key} ${item.right.title}` },
-              { key: "similarity", label: "Mức tương đồng", render: (item) => `${Math.round(item.similarity * 100)}%` },
+              {
+                key: "left",
+                label: "Lỗi thứ nhất",
+                render: (item) => `${item.left.defect_key} ${item.left.title}`,
+              },
+              {
+                key: "right",
+                label: "Lỗi thứ hai",
+                render: (item) => `${item.right.defect_key} ${item.right.title}`,
+              },
+              {
+                key: "similarity",
+                label: "Mức tương đồng",
+                render: (item) => `${Math.round(item.similarity * 100)}%`,
+              },
               { key: "reason", label: "Lý do" },
             ]}
           />
@@ -372,7 +393,9 @@ export default function DefectsPage({ project }) {
           >
             <option value="">Mọi trạng thái</option>
             {Object.keys(nextStates).map((value) => (
-              <option key={value} value={value}>{valueLabel(value)}</option>
+              <option key={value} value={value}>
+                {valueLabel(value)}
+              </option>
             ))}
           </select>
           <select
@@ -385,8 +408,10 @@ export default function DefectsPage({ project }) {
             }}
           >
             <option value="">Mọi mức độ</option>
-            {['blocker', 'critical', 'major', 'minor', 'trivial'].map((value) => (
-              <option key={value} value={value}>{valueLabel(value)}</option>
+            {["blocker", "critical", "major", "minor", "trivial"].map((value) => (
+              <option key={value} value={value}>
+                {valueLabel(value)}
+              </option>
             ))}
           </select>
           <input
@@ -487,7 +512,11 @@ export default function DefectsPage({ project }) {
               key: "assignee",
               label: "Người xử lý",
               render: (item) => (
-                <button className="secondary-button" type="button" onClick={() => assignDefect(item)}>
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() => assignDefect(item)}
+                >
                   {item.assignee || "Gán người xử lý"}
                 </button>
               ),
@@ -495,7 +524,7 @@ export default function DefectsPage({ project }) {
             {
               key: "transition",
               label: "Chuyển trạng thái",
-              render: (item) => (
+              render: (item) =>
                 item.status === "READY_FOR_RETEST" ? (
                   <select
                     aria-label={`Kết quả retest ${item.defect_key}`}
@@ -516,7 +545,7 @@ export default function DefectsPage({ project }) {
                       }
                     }}
                   >
-                    <option value="">Chọn kết quả retest</option>
+                    <option value="">Chọn kết quả kiểm thử lại</option>
                     {results
                       .filter(
                         (result) =>
@@ -543,8 +572,7 @@ export default function DefectsPage({ project }) {
                       </option>
                     ))}
                   </select>
-                )
-              ),
+                ),
             },
           ]}
         />

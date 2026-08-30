@@ -22,7 +22,12 @@ export default function ExecutionPage({ project, section }) {
   const [runs, setRuns] = useState([]);
   const [runPage, setRunPage] = useState(1);
   const [runPageInfo, setRunPageInfo] = useState(null);
-  const [runFilters, setRunFilters] = useState({ name: "", status: "", environment: "", sort: "-updated_at" });
+  const [runFilters, setRunFilters] = useState({
+    name: "",
+    status: "",
+    environment: "",
+    sort: "-updated_at",
+  });
   const [tests, setTests] = useState([]);
   const [run, setRun] = useState(null);
   const [error, setError] = useState("");
@@ -139,11 +144,7 @@ export default function ExecutionPage({ project, section }) {
   };
   if (run)
     return (
-      <QaPage
-        title={run.name}
-        description={`Ảnh chụp bất biến gồm ${run.test_case_version_ids.length} phiên bản ca kiểm thử`}
-        actions={<ProjectCrumb projectId={project._id} />}
-      >
+      <QaPage title={run.name} actions={<ProjectCrumb projectId={project._id} />}>
         {error && <ErrorState message={error} />}
         <Panel
           title="Điều khiển lần chạy"
@@ -262,9 +263,7 @@ export default function ExecutionPage({ project, section }) {
                           </button>
                         )}
                         {hasDefect && (
-                          <span className="text-[11px] text-ink-muted">
-                            Đã liên kết lỗi
-                          </span>
+                          <span className="text-[11px] text-ink-muted">Đã liên kết lỗi</span>
                         )}
                       </span>
                     );
@@ -391,18 +390,16 @@ export default function ExecutionPage({ project, section }) {
                         </p>
                       ))}
                       <span className="flex flex-wrap gap-2">
-                        {["PASS", "FAIL", "BLOCKED", "SKIPPED", "NOT_APPLICABLE"].map(
-                          (value) => (
-                            <button
-                              className="secondary-button"
-                              type="button"
-                              key={value}
-                              onClick={() => transition(result, value, item)}
-                            >
-                              {valueLabel(value)}
-                            </button>
-                          ),
-                        )}
+                        {["PASS", "FAIL", "BLOCKED", "SKIPPED", "NOT_APPLICABLE"].map((value) => (
+                          <button
+                            className="secondary-button"
+                            type="button"
+                            key={value}
+                            onClick={() => transition(result, value, item)}
+                          >
+                            {valueLabel(value)}
+                          </button>
+                        ))}
                       </span>
                     </div>
                   );
@@ -411,7 +408,9 @@ export default function ExecutionPage({ project, section }) {
                   const result = run.results?.find(
                     (value) => value.test_case_version_id === item._id,
                   );
-                  return result ? `Kết quả ${valueLabel(result.status)}` : "Không có ảnh chụp thực thi";
+                  return result
+                    ? `Kết quả ${valueLabel(result.status)}`
+                    : "Không có ảnh chụp thực thi";
                 },
               },
             ]}
@@ -423,7 +422,6 @@ export default function ExecutionPage({ project, section }) {
   return (
     <QaPage
       title="Kế hoạch, bộ kiểm thử và lần chạy"
-      description="Mỗi lần chạy giữ đúng ảnh chụp các phiên bản ca kiểm thử tại thời điểm tạo"
       actions={<ProjectCrumb projectId={project._id} />}
     >
       {error && <ErrorState message={error} />}
@@ -524,16 +522,16 @@ export default function ExecutionPage({ project, section }) {
             />
             <div className="grid gap-3 sm:grid-cols-3">
               <input
-                aria-label="Release"
+                aria-label="Bản phát hành"
                 className="apple-input"
-                placeholder="Release"
+                placeholder="Bản phát hành"
                 value={runForm.release}
                 onChange={(event) => setRunForm({ ...runForm, release: event.target.value })}
               />
               <input
-                aria-label="Build"
+                aria-label="Bản dựng"
                 className="apple-input"
-                placeholder="Build"
+                placeholder="Bản dựng"
                 value={runForm.build}
                 onChange={(event) => setRunForm({ ...runForm, build: event.target.value })}
               />
@@ -552,7 +550,11 @@ export default function ExecutionPage({ project, section }) {
               onChange={(event) => setRunForm({ ...runForm, testPlanId: event.target.value })}
             >
               <option value="">Không gắn kế hoạch</option>
-              {plans.map((item) => <option key={item._id} value={item._id}>{item.name}</option>)}
+              {plans.map((item) => (
+                <option key={item._id} value={item._id}>
+                  {item.name}
+                </option>
+              ))}
             </select>
             <label className="field-label block">
               Bộ kiểm thử
@@ -561,12 +563,18 @@ export default function ExecutionPage({ project, section }) {
                 className="apple-input mt-2 min-h-28"
                 multiple
                 value={runForm.suiteIds}
-                onChange={(event) => setRunForm({
-                  ...runForm,
-                  suiteIds: Array.from(event.target.selectedOptions, (option) => option.value),
-                })}
+                onChange={(event) =>
+                  setRunForm({
+                    ...runForm,
+                    suiteIds: Array.from(event.target.selectedOptions, (option) => option.value),
+                  })
+                }
               >
-                {suites.map((item) => <option key={item._id} value={item._id}>{item.name}</option>)}
+                {suites.map((item) => (
+                  <option key={item._id} value={item._id}>
+                    {item.name}
+                  </option>
+                ))}
               </select>
             </label>
             <label className="field-label block">
@@ -576,10 +584,12 @@ export default function ExecutionPage({ project, section }) {
                 className="apple-input mt-2 min-h-36"
                 multiple
                 value={runForm.versionIds}
-                onChange={(event) => setRunForm({
-                  ...runForm,
-                  versionIds: Array.from(event.target.selectedOptions, (option) => option.value),
-                })}
+                onChange={(event) =>
+                  setRunForm({
+                    ...runForm,
+                    versionIds: Array.from(event.target.selectedOptions, (option) => option.value),
+                  })
+                }
               >
                 {tests.map((item) => (
                   <option key={item.current_version_id} value={item.current_version_id}>
@@ -589,7 +599,8 @@ export default function ExecutionPage({ project, section }) {
               </select>
             </label>
             <p className="text-[12px] text-ink-muted">
-              Snapshot {runForm.versionIds.length} phiên bản được chọn cùng các phiên bản trong bộ kiểm thử
+              Snapshot {runForm.versionIds.length} phiên bản được chọn cùng các phiên bản trong bộ
+              kiểm thử
             </p>
             <button className="apple-button" type="submit">
               Tạo lần chạy
@@ -619,8 +630,10 @@ export default function ExecutionPage({ project, section }) {
             }}
           >
             <option value="">Mọi trạng thái</option>
-            {['DRAFT', 'READY', 'IN_PROGRESS', 'COMPLETED', 'ABORTED'].map((value) => (
-              <option key={value} value={value}>{valueLabel(value)}</option>
+            {["DRAFT", "READY", "IN_PROGRESS", "COMPLETED", "ABORTED"].map((value) => (
+              <option key={value} value={value}>
+                {valueLabel(value)}
+              </option>
             ))}
           </select>
           <input
@@ -656,7 +669,7 @@ export default function ExecutionPage({ project, section }) {
           columns={[
             { key: "name", label: "Tên" },
             { key: "environment", label: "Môi trường" },
-            { key: "build", label: "Build" },
+            { key: "build", label: "Bản dựng" },
             {
               key: "count",
               label: "Số ca kiểm thử",

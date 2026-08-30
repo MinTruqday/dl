@@ -27,7 +27,14 @@ export default function TestDesignPage({ project }) {
   const [selectedTestIds, setSelectedTestIds] = useState([]);
   const [testPage, setTestPage] = useState(1);
   const [testPageInfo, setTestPageInfo] = useState(null);
-  const [testFilters, setTestFilters] = useState({ q: "", status: "", priority: "", stale_status: "", automation_status: "", sort: "-updated_at" });
+  const [testFilters, setTestFilters] = useState({
+    q: "",
+    status: "",
+    priority: "",
+    stale_status: "",
+    automation_status: "",
+    sort: "-updated_at",
+  });
   const [duplicates, setDuplicates] = useState([]);
   const [operations, setOperations] = useState([]);
   const [testImport, setTestImport] = useState(null);
@@ -76,20 +83,19 @@ export default function TestDesignPage({ project }) {
         testValues,
         suiteValues,
         operationValues,
-      ] =
-        await Promise.all([
-          testingApi.listRequirements(project._id, { page_size: 500 }),
-          testingApi.listScenarios(project._id),
-          testingApi.listDataSets(project._id),
-          testingApi.listTestDrafts(project._id),
-          testingApi.listTestCasePage(project._id, {
-            ...testFilters,
-            page: testPage,
-            page_size: 50,
-          }),
-          testingApi.listSuites(project._id),
-          testingApi.listApiOperations(project._id),
-        ]);
+      ] = await Promise.all([
+        testingApi.listRequirements(project._id, { page_size: 500 }),
+        testingApi.listScenarios(project._id),
+        testingApi.listDataSets(project._id),
+        testingApi.listTestDrafts(project._id),
+        testingApi.listTestCasePage(project._id, {
+          ...testFilters,
+          page: testPage,
+          page_size: 50,
+        }),
+        testingApi.listSuites(project._id),
+        testingApi.listApiOperations(project._id),
+      ]);
       setRequirements(requirementValues);
       setScenarios(scenarioValues);
       setDataSets(dataSetValues);
@@ -147,9 +153,7 @@ export default function TestDesignPage({ project }) {
   }, [selectedDraft]);
   const changeDraftEdit = (next) => {
     draftSequence.current += 1;
-    setDraftEdit((value) =>
-      typeof next === "function" ? next(value) : { ...value, ...next },
-    );
+    setDraftEdit((value) => (typeof next === "function" ? next(value) : { ...value, ...next }));
     setDraftDirty(true);
     setDraftSaveState("pending");
   };
@@ -230,7 +234,9 @@ export default function TestDesignPage({ project }) {
       setDataSetForm({ name: "", variables: "{}", secretRefs: "{}" });
       await load();
     } catch (reason) {
-      setError(reason instanceof SyntaxError ? "Bộ dữ liệu phải là JSON hợp lệ" : messageOf(reason));
+      setError(
+        reason instanceof SyntaxError ? "Bộ dữ liệu phải là JSON hợp lệ" : messageOf(reason),
+      );
     }
   };
   const generate = async () => {
@@ -254,7 +260,11 @@ export default function TestDesignPage({ project }) {
     });
     if (!answer) return;
     try {
-      await testingApi.freezeTestDraft(draft._id, draft.revision, "Phê duyệt sau rà soát của con người");
+      await testingApi.freezeTestDraft(
+        draft._id,
+        draft.revision,
+        "Phê duyệt sau rà soát của con người",
+      );
       await load();
     } catch (reason) {
       setError(messageOf(reason));
@@ -290,48 +300,61 @@ export default function TestDesignPage({ project }) {
       setError(messageOf(reason));
     }
   };
-  const persistDraft = useCallback(async (snapshot, sequence) => {
-    try {
-      const testData = JSON.parse(snapshot.testData || "{}");
-      const steps = snapshot.steps.map((step, index) => ({
-        id: step.id || crypto.randomUUID(),
-        order: index + 1,
-        action_doc: textDoc(step.action),
-        test_data: JSON.parse(step.data || "{}"),
-        expected_doc: textDoc(step.expected),
-      }));
-      setDraftSaveState("saving");
-      const result = await testingApi.updateTestDraft(selectedDraft._id, {
-        expected_revision: selectedDraft.revision,
-        title: snapshot.title,
-        type: snapshot.type,
-        priority: snapshot.priority,
-        risk: snapshot.risk,
-        objective_doc: textDoc(snapshot.objective),
-        preconditions_doc: textDoc(snapshot.preconditions),
-        steps,
-        test_data: testData,
-        expected_result_doc: textDoc(snapshot.expected),
-        postconditions_doc: textDoc(snapshot.postconditions),
-        techniques: snapshot.techniques.split(",").map((value) => value.trim()).filter(Boolean),
-        tags: snapshot.tags.split(",").map((value) => value.trim()).filter(Boolean),
-        owner_id: snapshot.ownerId.trim() || null,
-        automation_status: snapshot.automationStatus,
-        attachments: snapshot.attachments,
-        data_set_version_ids: snapshot.dataSetVersionIds,
-      });
-      setDrafts((values) => values.map((item) => (item._id === result._id ? result : item)));
-      if (draftSequence.current === sequence) {
-        setDraftDirty(false);
-        setDraftSaveState("saved");
-      } else {
-        setDraftSaveState("pending");
+  const persistDraft = useCallback(
+    async (snapshot, sequence) => {
+      try {
+        const testData = JSON.parse(snapshot.testData || "{}");
+        const steps = snapshot.steps.map((step, index) => ({
+          id: step.id || crypto.randomUUID(),
+          order: index + 1,
+          action_doc: textDoc(step.action),
+          test_data: JSON.parse(step.data || "{}"),
+          expected_doc: textDoc(step.expected),
+        }));
+        setDraftSaveState("saving");
+        const result = await testingApi.updateTestDraft(selectedDraft._id, {
+          expected_revision: selectedDraft.revision,
+          title: snapshot.title,
+          type: snapshot.type,
+          priority: snapshot.priority,
+          risk: snapshot.risk,
+          objective_doc: textDoc(snapshot.objective),
+          preconditions_doc: textDoc(snapshot.preconditions),
+          steps,
+          test_data: testData,
+          expected_result_doc: textDoc(snapshot.expected),
+          postconditions_doc: textDoc(snapshot.postconditions),
+          techniques: snapshot.techniques
+            .split(",")
+            .map((value) => value.trim())
+            .filter(Boolean),
+          tags: snapshot.tags
+            .split(",")
+            .map((value) => value.trim())
+            .filter(Boolean),
+          owner_id: snapshot.ownerId.trim() || null,
+          automation_status: snapshot.automationStatus,
+          attachments: snapshot.attachments,
+          data_set_version_ids: snapshot.dataSetVersionIds,
+        });
+        setDrafts((values) => values.map((item) => (item._id === result._id ? result : item)));
+        if (draftSequence.current === sequence) {
+          setDraftDirty(false);
+          setDraftSaveState("saved");
+        } else {
+          setDraftSaveState("pending");
+        }
+      } catch (reason) {
+        setDraftSaveState(reason instanceof SyntaxError ? "invalid" : "error");
+        setError(
+          reason instanceof SyntaxError
+            ? "Dữ liệu kiểm thử phải là JSON hợp lệ"
+            : messageOf(reason),
+        );
       }
-    } catch (reason) {
-      setDraftSaveState(reason instanceof SyntaxError ? "invalid" : "error");
-      setError(reason instanceof SyntaxError ? "Dữ liệu kiểm thử phải là JSON hợp lệ" : messageOf(reason));
-    }
-  }, [selectedDraft]);
+    },
+    [selectedDraft],
+  );
   const saveDraft = async () => {
     await persistDraft(draftEdit, draftSequence.current);
   };
@@ -344,11 +367,7 @@ export default function TestDesignPage({ project }) {
     return () => window.clearTimeout(timer);
   }, [draftDirty, draftEdit, persistDraft, selectedDraft?.status]);
   return (
-    <QaPage
-      title="Kịch bản và ca kiểm thử"
-      description="AI chỉ tạo bản nháp có bằng chứng, mọi ca kiểm thử đều phải qua rà soát và phê duyệt của người dùng"
-      actions={<ProjectCrumb projectId={project._id} />}
-    >
+    <QaPage title="Kịch bản và ca kiểm thử" actions={<ProjectCrumb projectId={project._id} />}>
       {error && <ErrorState message={error} />}
       <Panel
         title="Tạo bằng AI"
@@ -480,12 +499,20 @@ export default function TestDesignPage({ project }) {
                     description: `${selectedTestIds.length} ca kiểm thử đã chọn`,
                     confirmLabel: "Cập nhật",
                     fields: [
-                      { name: "add", label: "Nhãn cần thêm phân cách bằng dấu phẩy", autoFocus: true },
+                      {
+                        name: "add",
+                        label: "Nhãn cần thêm phân cách bằng dấu phẩy",
+                        autoFocus: true,
+                      },
                       { name: "remove", label: "Nhãn cần gỡ phân cách bằng dấu phẩy" },
                     ],
                   });
                   if (!answer) return;
-                  const splitTags = (value) => value.split(",").map((item) => item.trim()).filter(Boolean);
+                  const splitTags = (value) =>
+                    value
+                      .split(",")
+                      .map((item) => item.trim())
+                      .filter(Boolean);
                   try {
                     await testingApi.bulkTags(project._id, {
                       artifact_type: "test_case",
@@ -511,14 +538,16 @@ export default function TestDesignPage({ project }) {
                     title: "Thêm vào bộ kiểm thử",
                     description: `${selectedTestIds.length} ca kiểm thử đã chọn`,
                     confirmLabel: "Thêm vào bộ",
-                    fields: [{
-                      name: "suiteId",
-                      label: "Bộ kiểm thử",
-                      required: true,
-                      autoFocus: true,
-                      initialValue: suites[0]?._id || "",
-                      options: suites.map((item) => ({ value: item._id, label: item.name })),
-                    }],
+                    fields: [
+                      {
+                        name: "suiteId",
+                        label: "Bộ kiểm thử",
+                        required: true,
+                        autoFocus: true,
+                        initialValue: suites[0]?._id || "",
+                        options: suites.map((item) => ({ value: item._id, label: item.name })),
+                      },
+                    ],
                   });
                   if (!answer) return;
                   const suite = suites.find((item) => item._id === answer.suiteId);
@@ -546,7 +575,15 @@ export default function TestDesignPage({ project }) {
                     title: "Đánh dấu cần rà soát",
                     description: `${selectedTestIds.length} ca kiểm thử đã chọn`,
                     confirmLabel: "Đánh dấu",
-                    fields: [{ name: "reason", label: "Lý do", required: true, multiline: true, autoFocus: true }],
+                    fields: [
+                      {
+                        name: "reason",
+                        label: "Lý do",
+                        required: true,
+                        multiline: true,
+                        autoFocus: true,
+                      },
+                    ],
                   });
                   if (!answer) return;
                   try {
@@ -570,10 +607,19 @@ export default function TestDesignPage({ project }) {
                 onClick={async () => {
                   const answer = await ask({
                     title: "Lưu trữ ca kiểm thử",
-                    description: "Các ca đang nằm trong lần chạy chưa kết thúc sẽ bị từ chối riêng lẻ",
+                    description:
+                      "Các ca đang nằm trong lần chạy chưa kết thúc sẽ bị từ chối riêng lẻ",
                     confirmLabel: "Lưu trữ",
                     danger: true,
-                    fields: [{ name: "reason", label: "Lý do", required: true, multiline: true, autoFocus: true }],
+                    fields: [
+                      {
+                        name: "reason",
+                        label: "Lý do",
+                        required: true,
+                        multiline: true,
+                        autoFocus: true,
+                      },
+                    ],
                   });
                   if (!answer) return;
                   try {
@@ -772,7 +818,11 @@ export default function TestDesignPage({ project }) {
               { key: "version", label: "Phiên bản", render: (item) => `v${item.version}` },
               { key: "title", label: "Tên" },
               { key: "change_reason", label: "Lý do thay đổi" },
-              { key: "status", label: "Trạng thái", render: (item) => <StatusPill value={item.status} /> },
+              {
+                key: "status",
+                label: "Trạng thái",
+                render: (item) => <StatusPill value={item.status} />,
+              },
             ]}
           />
         </Panel>
@@ -841,9 +891,7 @@ export default function TestDesignPage({ project }) {
                   className="apple-input"
                   disabled={selectedDraft.status !== "DRAFT"}
                   value={draftEdit.priority}
-                  onChange={(event) =>
-                    changeDraftEdit({ priority: event.target.value })
-                  }
+                  onChange={(event) => changeDraftEdit({ priority: event.target.value })}
                 >
                   {["critical", "high", "medium", "low"].map((value) => (
                     <option key={value} value={value}>
@@ -880,9 +928,7 @@ export default function TestDesignPage({ project }) {
                   className="apple-input mt-2 min-h-24"
                   disabled={selectedDraft.status !== "DRAFT"}
                   value={draftEdit.preconditions}
-                  onChange={(event) =>
-                    changeDraftEdit({ preconditions: event.target.value })
-                  }
+                  onChange={(event) => changeDraftEdit({ preconditions: event.target.value })}
                 />
               </label>
               <div className="space-y-4 lg:col-span-2">
@@ -972,9 +1018,7 @@ export default function TestDesignPage({ project }) {
                   className="apple-input mt-2 min-h-28 font-mono"
                   disabled={selectedDraft.status !== "DRAFT"}
                   value={draftEdit.testData}
-                  onChange={(event) =>
-                    changeDraftEdit({ testData: event.target.value })
-                  }
+                  onChange={(event) => changeDraftEdit({ testData: event.target.value })}
                 />
               </label>
               <label className="field-label">
@@ -1007,9 +1051,7 @@ export default function TestDesignPage({ project }) {
                   className="apple-input mt-2 min-h-28"
                   disabled={selectedDraft.status !== "DRAFT"}
                   value={draftEdit.expected}
-                  onChange={(event) =>
-                    changeDraftEdit({ expected: event.target.value })
-                  }
+                  onChange={(event) => changeDraftEdit({ expected: event.target.value })}
                 />
               </label>
               <label className="field-label lg:col-span-2">
@@ -1018,9 +1060,7 @@ export default function TestDesignPage({ project }) {
                   className="apple-input mt-2 min-h-24"
                   disabled={selectedDraft.status !== "DRAFT"}
                   value={draftEdit.postconditions}
-                  onChange={(event) =>
-                    changeDraftEdit({ postconditions: event.target.value })
-                  }
+                  onChange={(event) => changeDraftEdit({ postconditions: event.target.value })}
                 />
               </label>
               <label className="field-label">
@@ -1049,7 +1089,7 @@ export default function TestDesignPage({ project }) {
                   value={draftEdit.automationStatus}
                   onChange={(event) => changeDraftEdit({ automationStatus: event.target.value })}
                 >
-                  {['manual', 'candidate', 'automated'].map((value) => (
+                  {["manual", "candidate", "automated"].map((value) => (
                     <option value={value} key={value}>
                       {valueLabel(value)}
                     </option>
@@ -1251,9 +1291,7 @@ export default function TestDesignPage({ project }) {
               className="apple-input"
               required
               value={scenarioForm.title}
-              onChange={(event) =>
-                setScenarioForm({ ...scenarioForm, title: event.target.value })
-              }
+              onChange={(event) => setScenarioForm({ ...scenarioForm, title: event.target.value })}
               placeholder="Tên kịch bản"
             />
             <textarea
@@ -1335,9 +1373,12 @@ export default function TestDesignPage({ project }) {
       </div>
       <Panel
         title="Bộ dữ liệu kiểm thử có phiên bản"
-        description="Dữ liệu bí mật chỉ được tham chiếu bằng secret URI và không lưu giá trị thật trong MongoDB"
+        description="Dữ liệu bí mật chỉ được tham chiếu bằng địa chỉ bí mật và không lưu giá trị thật"
       >
-        <form className="grid gap-3 border-b border-border p-5 lg:grid-cols-3" onSubmit={createDataSet}>
+        <form
+          className="grid gap-3 border-b border-border p-5 lg:grid-cols-3"
+          onSubmit={createDataSet}
+        >
           <label className="field-label">
             Tên bộ dữ liệu
             <input
@@ -1398,7 +1439,7 @@ export default function TestDesignPage({ project }) {
                 },
                 {
                   name: "secretRefs",
-                  label: "Secret refs JSON",
+                  label: "Danh sách tham chiếu bí mật dạng JSON",
                   initialValue: JSON.stringify(item.current_version?.secret_refs || {}, null, 2),
                   required: true,
                   multiline: true,
@@ -1424,7 +1465,9 @@ export default function TestDesignPage({ project }) {
               await load();
             } catch (reason) {
               setError(
-                reason instanceof SyntaxError ? "Bộ dữ liệu phải là JSON hợp lệ" : messageOf(reason),
+                reason instanceof SyntaxError
+                  ? "Bộ dữ liệu phải là JSON hợp lệ"
+                  : messageOf(reason),
               );
             }
           }}
@@ -1599,14 +1642,14 @@ export default function TestDesignPage({ project }) {
           </form>
           <DataTable
             items={operations}
-            empty="Chưa có API Operation"
+            empty="Chưa có thao tác API"
             columns={[
-              { key: "method", label: "Method" },
-              { key: "path", label: "Path" },
+              { key: "method", label: "Phương thức" },
+              { key: "path", label: "Đường dẫn" },
               { key: "title", label: "Tên" },
               {
                 key: "generate",
-                label: "Sinh test",
+                label: "Tạo ca kiểm thử",
                 render: (item) => (
                   <button
                     className="secondary-button"

@@ -134,9 +134,7 @@ export default function AppShell({ children, requireAuth }) {
             href={projectId ? `/qa/projects/${projectId}` : "/qa/projects"}
             className="flex items-center gap-2 lg:hidden"
           >
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand text-[12px] font-bold text-white">
-              Q
-            </span>
+            <Image src="/veriq-logo.png" alt="Veriq" width={32} height={32} className="h-8 w-8 rounded-lg object-cover" priority />
             <span className="text-[15px] font-bold tracking-[-0.02em]">Veriq</span>
           </Link>
           {projectId && (
@@ -265,9 +263,7 @@ export default function AppShell({ children, requireAuth }) {
             href="/"
             className="flex items-center gap-3 text-[19px] font-semibold tracking-[-0.035em] text-ink"
           >
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand text-[13px] font-bold text-white">
-              Q
-            </span>
+            <Image src="/veriq-logo.png" alt="Veriq" width={36} height={36} className="h-9 w-9 rounded-xl object-cover" priority />
             <span>Veriq</span>
           </Link>
         </div>
@@ -292,8 +288,9 @@ export default function AppShell({ children, requireAuth }) {
               <Link
                 href="/"
                 onClick={() => setMobileOpen(false)}
-                className="text-[19px] font-semibold tracking-[-0.035em]"
+                className="flex items-center gap-3 text-[19px] font-semibold tracking-[-0.035em]"
               >
+                <Image src="/veriq-logo.png" alt="Veriq" width={36} height={36} className="h-9 w-9 rounded-xl object-cover" />
                 Veriq
               </Link>
               <button

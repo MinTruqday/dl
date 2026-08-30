@@ -109,11 +109,7 @@ export default function ReviewQueuePage({ project }) {
     }
   };
   return (
-    <QaPage
-      title="Hàng đợi rà soát AI"
-      description="Mọi thay đổi do AI đề xuất đều hiển thị phiên bản gốc bằng chứng và phần khác biệt trước quyết định của con người"
-      actions={<ProjectCrumb projectId={project._id} />}
-    >
+    <QaPage title="Hàng đợi rà soát AI" actions={<ProjectCrumb projectId={project._id} />}>
       {error && <ErrorState message={error} />}
       <Panel
         title="Đề xuất đang chờ"
@@ -127,7 +123,15 @@ export default function ReviewQueuePage({ project }) {
                 title: "Duyệt hàng loạt theo chính sách",
                 description: `${selectedIds.length} mục đã chọn mỗi mục vẫn phải đạt ngưỡng cấu hình`,
                 confirmLabel: "Duyệt các mục an toàn",
-                fields: [{ name: "note", label: "Ghi chú", required: true, multiline: true, autoFocus: true }],
+                fields: [
+                  {
+                    name: "note",
+                    label: "Ghi chú",
+                    required: true,
+                    multiline: true,
+                    autoFocus: true,
+                  },
+                ],
               });
               if (!answer) return;
               try {
@@ -178,16 +182,44 @@ export default function ReviewQueuePage({ project }) {
               render: (item) => <ProposalDiffPanel proposal={item} />,
             },
             { key: "model_version", label: "Mô hình" },
-            { key: "status", label: "Trạng thái", render: (item) => <StatusPill value={item.status} /> },
+            {
+              key: "status",
+              label: "Trạng thái",
+              render: (item) => <StatusPill value={item.status} />,
+            },
             {
               key: "actions",
               label: "Quyết định",
               render: (item) => (
                 <span className="flex flex-wrap gap-2">
-                  <button className="secondary-button" type="button" onClick={() => decide(item, "accept")}>Duyệt</button>
-                  <button className="secondary-button" type="button" onClick={() => decide(item, "edit")}>Sửa rồi duyệt</button>
-                  <button className="secondary-button" type="button" onClick={() => decide(item, "reject")}>Từ chối</button>
-                  <button className="secondary-button" type="button" onClick={() => regenerate(item)}>Tạo lại</button>
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={() => decide(item, "accept")}
+                  >
+                    Duyệt
+                  </button>
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={() => decide(item, "edit")}
+                  >
+                    Sửa rồi duyệt
+                  </button>
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={() => decide(item, "reject")}
+                  >
+                    Từ chối
+                  </button>
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={() => regenerate(item)}
+                  >
+                    Tạo lại
+                  </button>
                 </span>
               ),
             },

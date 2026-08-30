@@ -74,6 +74,7 @@ export default function QaDocumentEditor({
   useEffect(() => {
     if (!editor) return;
     editor.setEditable(!readOnly, false);
+    if (editor.isFocused) return;
     if (JSON.stringify(editor.getJSON()) !== JSON.stringify(value)) {
       editor.commands.setContent(value, false);
     }
@@ -152,6 +153,14 @@ export default function QaDocumentEditor({
     editor.chain().focus().setYoutubeVideo({ src: source.trim(), width: 640, height: 360 }).run();
   };
 
+  const toggleBold = () => {
+    if (!editor.getText().trim()) {
+      return editor.chain().focus().setTextSelection(1).setBold().run();
+    }
+    const chain = editor.chain().focus();
+    return (editor.isActive("bold") ? chain.unsetBold() : chain.setBold()).run();
+  };
+
   const tool = (name, active, action, icon, disabled = false) => (
     <button
       type="button"
@@ -159,7 +168,11 @@ export default function QaDocumentEditor({
       aria-label={name}
       aria-pressed={active}
       disabled={disabled}
-      onClick={action}
+      onMouseDown={(event) => {
+        event.preventDefault();
+        action();
+      }}
+      onClick={(event) => event.preventDefault()}
     >
       {icon}
     </button>
@@ -169,12 +182,7 @@ export default function QaDocumentEditor({
     <div className="overflow-hidden rounded-panel border border-border bg-surface">
       <div className="qa-editor-toolbar" role="toolbar" aria-label="Công cụ soạn thảo QA">
         <div className="editor-tool-group">
-          {tool(
-            "In đậm",
-            editor.isActive("bold"),
-            () => editor.chain().focus().toggleBold().run(),
-            <Bold size={17} />,
-          )}
+          {tool("In đậm", editor.isActive("bold"), toggleBold, <Bold size={17} />)}
           {tool(
             "In nghiêng",
             editor.isActive("italic"),
@@ -450,12 +458,7 @@ export default function QaDocumentEditor({
       {!readOnly && (
         <>
           <BubbleMenu editor={editor} className="qa-bubble-menu">
-            {tool(
-              "In đậm",
-              editor.isActive("bold"),
-              () => editor.chain().focus().toggleBold().run(),
-              <Bold size={15} />,
-            )}
+            {tool("In đậm", editor.isActive("bold"), toggleBold, <Bold size={15} />)}
             {tool(
               "In nghiêng",
               editor.isActive("italic"),

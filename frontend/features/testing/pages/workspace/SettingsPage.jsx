@@ -39,11 +39,7 @@ export default function SettingsPage({ project, onProjectChange }) {
       .catch((reason) => setError(messageOf(reason)));
   }, [project._id]);
   return (
-    <QaPage
-      title="Cài đặt và kiểm toán"
-      description="Cấu hình an toàn theo phiên bản và ghi lại mọi quyết định quan trọng trong nhật ký"
-      actions={<ProjectCrumb projectId={project._id} />}
-    >
+    <QaPage title="Cài đặt và kiểm toán" actions={<ProjectCrumb projectId={project._id} />}>
       {error && <ErrorState message={error} />}
       <div className="grid gap-5 xl:grid-cols-2">
         <Panel title="Thông tin dự án">
@@ -182,11 +178,11 @@ export default function SettingsPage({ project, onProjectChange }) {
                 aria-label="Mã người dùng"
               />
               <select className="apple-input" name="project_role" aria-label="Vai trò dự án">
-                <option value="TESTER">TESTER</option>
-                <option value="BA">BA</option>
-                <option value="DEVELOPER">DEVELOPER</option>
-                <option value="VIEWER">VIEWER</option>
-                <option value="QA_LEAD">QA_LEAD</option>
+                <option value="TESTER">Kiểm thử viên</option>
+                <option value="BA">Phân tích nghiệp vụ</option>
+                <option value="DEVELOPER">Lập trình viên</option>
+                <option value="VIEWER">Người xem</option>
+                <option value="QA_LEAD">Trưởng nhóm kiểm thử</option>
               </select>
               <button className="secondary-button" type="submit">
                 Thêm
@@ -219,14 +215,22 @@ export default function SettingsPage({ project, onProjectChange }) {
                     >
                       {["QA_LEAD", "TESTER", "BA", "DEVELOPER", "VIEWER"].map((role) => (
                         <option key={role} value={role}>
-                          {role}
+                          {
+                            {
+                              QA_LEAD: "Trưởng nhóm kiểm thử",
+                              TESTER: "Kiểm thử viên",
+                              BA: "Phân tích nghiệp vụ",
+                              DEVELOPER: "Lập trình viên",
+                              VIEWER: "Người xem",
+                            }[role]
+                          }
                         </option>
                       ))}
                     </select>
                   ),
                 },
                 { key: "status", label: "Trạng thái" },
-                { key: "membership_revision", label: "Revision" },
+                { key: "membership_revision", label: "Lần sửa đổi" },
                 {
                   key: "actions",
                   label: "Thao tác",
@@ -290,7 +294,7 @@ export default function SettingsPage({ project, onProjectChange }) {
             <div>
               <p className="text-3xl font-semibold">
                 {analytics?.proposal_acceptance_rate == null
-                  ? "N/A"
+                  ? "Chưa có dữ liệu"
                   : `${Math.round(analytics.proposal_acceptance_rate * 100)}%`}
               </p>
               <p className="field-label mt-2">Tỷ lệ chấp nhận đề xuất</p>
@@ -298,7 +302,7 @@ export default function SettingsPage({ project, onProjectChange }) {
           </div>
         </Panel>
       </div>
-      <Panel title="Audit log bất biến">
+      <Panel title="Nhật ký kiểm toán">
         <DataTable
           items={audit}
           empty="Chưa có sự kiện"

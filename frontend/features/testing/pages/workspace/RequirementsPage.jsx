@@ -39,7 +39,13 @@ export default function RequirementsPage({ project, section }) {
   const [versions, setVersions] = useState([]);
   const [form, setForm] = useState(initialForm);
   const [query, setQuery] = useState("");
-  const [filters, setFilters] = useState({ status: "", coverage: "", tag: "", owner: "", sort: "-updated_at" });
+  const [filters, setFilters] = useState({
+    status: "",
+    coverage: "",
+    tag: "",
+    owner: "",
+    sort: "-updated_at",
+  });
   const [page, setPage] = useState(1);
   const [pageInfo, setPageInfo] = useState(null);
   const [error, setError] = useState("");
@@ -144,12 +150,18 @@ export default function RequirementsPage({ project, section }) {
             .split("\n")
             .map((value) => value.trim())
             .filter(Boolean),
-          actors: snapshot.actors.split(",").map((value) => value.trim()).filter(Boolean),
+          actors: snapshot.actors
+            .split(",")
+            .map((value) => value.trim())
+            .filter(Boolean),
           dependencies: snapshot.dependencies
             .split("\n")
             .map((value) => value.trim())
             .filter(Boolean),
-          tags: snapshot.tags.split(",").map((value) => value.trim()).filter(Boolean),
+          tags: snapshot.tags
+            .split(",")
+            .map((value) => value.trim())
+            .filter(Boolean),
           owner_id: snapshot.ownerId.trim() || null,
         });
         setSelected(result);
@@ -198,11 +210,23 @@ export default function RequirementsPage({ project, section }) {
         risk: form.risk,
         content_doc: form.content_doc,
         acceptance_criteria: criteria,
-        business_rules: form.businessRules.split("\n").map((value) => value.trim()).filter(Boolean),
-        actors: form.actors.split(",").map((value) => value.trim()).filter(Boolean),
-        dependencies: form.dependencies.split("\n").map((value) => value.trim()).filter(Boolean),
+        business_rules: form.businessRules
+          .split("\n")
+          .map((value) => value.trim())
+          .filter(Boolean),
+        actors: form.actors
+          .split(",")
+          .map((value) => value.trim())
+          .filter(Boolean),
+        dependencies: form.dependencies
+          .split("\n")
+          .map((value) => value.trim())
+          .filter(Boolean),
         source_refs: [],
-        tags: form.tags.split(",").map((value) => value.trim()).filter(Boolean),
+        tags: form.tags
+          .split(",")
+          .map((value) => value.trim())
+          .filter(Boolean),
         owner_id: form.ownerId.trim() || null,
       });
       setForm(initialForm);
@@ -316,11 +340,7 @@ export default function RequirementsPage({ project, section }) {
   };
   const confirmImport = async () => {
     try {
-      await testingApi.confirmRequirementImport(
-        preview._id,
-        selectedIndexes,
-        preview.revision,
-      );
+      await testingApi.confirmRequirementImport(preview._id, selectedIndexes, preview.revision);
       setPreview(null);
       setSelectedIndexes([]);
       await load();
@@ -382,12 +402,17 @@ export default function RequirementsPage({ project, section }) {
     const firstIndex = indexes[0];
     const merged = {
       ...candidates[0],
-      title: candidates.map((candidate) => candidate.title).join(" và ").slice(0, 300),
-      content_doc: textDoc(candidates.map((candidate) => docText(candidate.content_doc)).join("\n\n")),
-      acceptance_criteria: candidates.flatMap(
-        (candidate) => candidate.acceptance_criteria || [],
+      title: candidates
+        .map((candidate) => candidate.title)
+        .join(" và ")
+        .slice(0, 300),
+      content_doc: textDoc(
+        candidates.map((candidate) => docText(candidate.content_doc)).join("\n\n"),
       ),
-      business_rules: [...new Set(candidates.flatMap((candidate) => candidate.business_rules || []))],
+      acceptance_criteria: candidates.flatMap((candidate) => candidate.acceptance_criteria || []),
+      business_rules: [
+        ...new Set(candidates.flatMap((candidate) => candidate.business_rules || [])),
+      ],
       actors: [...new Set(candidates.flatMap((candidate) => candidate.actors || []))],
       dependencies: [...new Set(candidates.flatMap((candidate) => candidate.dependencies || []))],
       source_refs: candidates.flatMap((candidate) => candidate.source_refs || []),
@@ -409,7 +434,10 @@ export default function RequirementsPage({ project, section }) {
     const index = selectedIndexes[0];
     const candidate = preview.preview[index];
     const sourceText = docText(candidate.content_doc).trim();
-    let parts = sourceText.split(/\n+/).map((part) => part.trim()).filter(Boolean);
+    let parts = sourceText
+      .split(/\n+/)
+      .map((part) => part.trim())
+      .filter(Boolean);
     if (parts.length < 2) {
       parts = (sourceText.match(/[^.!?;]+[.!?;]?/g) || [])
         .map((part) => part.trim())
@@ -440,7 +468,6 @@ export default function RequirementsPage({ project, section }) {
           ? `${selected.requirement_key} ${current?.title || ""}`
           : "Yêu cầu và phiên bản chuẩn"
       }
-      description="Yêu cầu được quản lý theo phiên bản cùng tiêu chí chấp nhận và quyết định phiên bản chuẩn do người dùng kiểm soát"
       actions={<ProjectCrumb projectId={project._id} />}
     >
       {error && <ErrorState message={error} />}
@@ -578,7 +605,7 @@ export default function RequirementsPage({ project, section }) {
                       value={draft.priority}
                       onChange={(event) => changeDraft({ priority: event.target.value })}
                     >
-                      {['critical', 'high', 'medium', 'low'].map((value) => (
+                      {["critical", "high", "medium", "low"].map((value) => (
                         <option key={value} value={value}>
                           {valueLabel(value)}
                         </option>
@@ -590,7 +617,7 @@ export default function RequirementsPage({ project, section }) {
                       value={draft.risk}
                       onChange={(event) => changeDraft({ risk: event.target.value })}
                     >
-                      {['critical', 'high', 'medium', 'low'].map((value) => (
+                      {["critical", "high", "medium", "low"].map((value) => (
                         <option key={value} value={value}>
                           {valueLabel(value)}
                         </option>
@@ -700,7 +727,7 @@ export default function RequirementsPage({ project, section }) {
             <Panel title={lint.valid ? "AI lint không có lỗi chặn" : "AI lint phát hiện vấn đề"}>
               <DataTable
                 items={lint.findings}
-                empty="Không có finding"
+                empty="Không có vấn đề"
                 columns={[
                   { key: "severity", label: "Mức độ" },
                   { key: "code", label: "Mã" },
@@ -838,13 +865,21 @@ export default function RequirementsPage({ project, section }) {
                         description: `${selectedIds.length} yêu cầu đã chọn`,
                         confirmLabel: "Cập nhật nhãn",
                         fields: [
-                          { name: "add", label: "Nhãn cần thêm phân cách bằng dấu phẩy", autoFocus: true },
+                          {
+                            name: "add",
+                            label: "Nhãn cần thêm phân cách bằng dấu phẩy",
+                            autoFocus: true,
+                          },
                           { name: "remove", label: "Nhãn cần gỡ phân cách bằng dấu phẩy" },
                         ],
                       });
                       if (!answer) return;
                       try {
-                        const splitTags = (value) => value.split(",").map((item) => item.trim()).filter(Boolean);
+                        const splitTags = (value) =>
+                          value
+                            .split(",")
+                            .map((item) => item.trim())
+                            .filter(Boolean);
                         await testingApi.bulkTags(project._id, {
                           artifact_type: "requirement",
                           ids: selectedIds,
@@ -870,7 +905,15 @@ export default function RequirementsPage({ project, section }) {
                         description: `${selectedIds.length} yêu cầu vẫn được giữ toàn bộ lịch sử`,
                         confirmLabel: "Lưu trữ",
                         danger: true,
-                        fields: [{ name: "reason", label: "Lý do", required: true, multiline: true, autoFocus: true }],
+                        fields: [
+                          {
+                            name: "reason",
+                            label: "Lý do",
+                            required: true,
+                            multiline: true,
+                            autoFocus: true,
+                          },
+                        ],
                       });
                       if (!answer) return;
                       try {
@@ -1104,7 +1147,7 @@ export default function RequirementsPage({ project, section }) {
                 </button>
               </form>
             </Panel>
-            <Panel title="Nhập tài liệu" description="Luôn xem trước và xác nhận trước khi ghi">
+            <Panel title="Nhập tài liệu">
               <form onSubmit={uploadPreview} className="space-y-4 border-b border-border p-5">
                 <label className="field-label">
                   Tệp SRS BRD hoặc bảng yêu cầu
@@ -1180,10 +1223,7 @@ export default function RequirementsPage({ project, section }) {
                           className="secondary-button"
                           type="button"
                           onClick={() =>
-                            saveImportReview(
-                              preview.preview,
-                              "Chỉnh sửa nội dung ứng viên yêu cầu",
-                            )
+                            saveImportReview(preview.preview, "Chỉnh sửa nội dung ứng viên yêu cầu")
                           }
                         >
                           Lưu chỉnh sửa
@@ -1191,7 +1231,11 @@ export default function RequirementsPage({ project, section }) {
                         <button className="secondary-button" type="button" onClick={splitCandidate}>
                           Tách mục đã chọn
                         </button>
-                        <button className="secondary-button" type="button" onClick={mergeCandidates}>
+                        <button
+                          className="secondary-button"
+                          type="button"
+                          onClick={mergeCandidates}
+                        >
                           Gộp các mục đã chọn
                         </button>
                       </div>
@@ -1216,7 +1260,9 @@ export default function RequirementsPage({ project, section }) {
                             onChange={(event) =>
                               setSelectedIndexes((values) =>
                                 event.target.checked
-                                  ? [...values, item.candidateIndex].sort((left, right) => left - right)
+                                  ? [...values, item.candidateIndex].sort(
+                                      (left, right) => left - right,
+                                    )
                                   : values.filter((value) => value !== item.candidateIndex),
                               )
                             }
@@ -1264,8 +1310,7 @@ export default function RequirementsPage({ project, section }) {
                       {
                         key: "extraction_confidence",
                         label: "Độ tin cậy trích xuất",
-                        render: (item) =>
-                          `${Math.round((item.extraction_confidence ?? 1) * 100)}%`,
+                        render: (item) => `${Math.round((item.extraction_confidence ?? 1) * 100)}%`,
                       },
                       {
                         key: "source_refs",
@@ -1292,7 +1337,8 @@ export default function RequirementsPage({ project, section }) {
                         Xác nhận nhập {selectedIndexes.length} yêu cầu
                       </button>
                       <p className="text-[12px] text-ink-muted">
-                        {preview.preview.length - selectedIndexes.length} ứng viên bị loại sẽ không được ghi
+                        {preview.preview.length - selectedIndexes.length} ứng viên bị loại sẽ không
+                        được ghi
                       </p>
                     </div>
                   )}

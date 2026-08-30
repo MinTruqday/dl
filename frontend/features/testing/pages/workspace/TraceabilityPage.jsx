@@ -48,14 +48,15 @@ export default function TraceabilityPage({ project }) {
   return (
     <QaPage
       title="Ma trận truy vết và độ phủ"
-      description="Độ phủ chỉ tính liên kết đã xác nhận và không xem đề xuất AI là sự thật"
       actions={
         <div className="flex flex-wrap items-center gap-3">
           <button
             className="secondary-button"
             type="button"
             onClick={() =>
-              testingApi.exportTraceability(project._id).catch((reason) => setError(messageOf(reason)))
+              testingApi
+                .exportTraceability(project._id)
+                .catch((reason) => setError(messageOf(reason)))
             }
           >
             Xuất CSV
@@ -80,7 +81,8 @@ export default function TraceabilityPage({ project }) {
             onClick={async () => {
               const answer = await ask({
                 title: "Lưu ảnh chụp độ phủ",
-                description: "Ảnh chụp giữ nguyên các chỉ số tại thời điểm hiện tại để đối chiếu release",
+                description:
+                  "Ảnh chụp giữ nguyên các chỉ số tại thời điểm hiện tại để đối chiếu release",
                 confirmLabel: "Lưu ảnh chụp",
                 fields: [
                   {
@@ -277,7 +279,11 @@ export default function TraceabilityPage({ project }) {
             empty="Tất cả yêu cầu hiện hành đã có liên kết xác nhận"
             columns={[
               { key: "requirement_key", label: "Mã" },
-              { key: "status", label: "Trạng thái", render: (item) => <StatusPill value={item.status} /> },
+              {
+                key: "status",
+                label: "Trạng thái",
+                render: (item) => <StatusPill value={item.status} />,
+              },
             ]}
           />
         </Panel>
@@ -287,7 +293,11 @@ export default function TraceabilityPage({ project }) {
             empty="Tất cả ca kiểm thử hiện hành đã được liên kết"
             columns={[
               { key: "test_case_key", label: "Mã" },
-              { key: "status", label: "Trạng thái", render: (item) => <StatusPill value={item.status} /> },
+              {
+                key: "status",
+                label: "Trạng thái",
+                render: (item) => <StatusPill value={item.status} />,
+              },
             ]}
           />
         </Panel>
@@ -313,7 +323,11 @@ export default function TraceabilityPage({ project }) {
               label: "Thực thi",
               render: (item) => `${item.metrics?.execution_coverage || 0}%`,
             },
-            { key: "created_at", label: "Thời điểm", render: (item) => formatDate(item.created_at) },
+            {
+              key: "created_at",
+              label: "Thời điểm",
+              render: (item) => formatDate(item.created_at),
+            },
           ]}
         />
       </Panel>
