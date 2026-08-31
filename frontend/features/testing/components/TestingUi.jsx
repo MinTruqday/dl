@@ -195,15 +195,19 @@ export function StatusPill({ value }) {
   );
 }
 
-export function EmptyState({ children, actionHref, actionLabel }) {
+export function EmptyState({ children, actionHref, actionLabel, onAction }) {
   return (
     <div className="p-10 text-center text-[13px] text-ink-muted">
       <p>{children}</p>
-      {actionHref && (
+      {onAction ? (
+        <button type="button" className="apple-button mt-4" onClick={onAction}>
+          {actionLabel}
+        </button>
+      ) : actionHref ? (
         <Link href={actionHref} className="apple-button mt-4">
           {actionLabel}
         </Link>
-      )}
+      ) : null}
     </div>
   );
 }

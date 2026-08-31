@@ -386,3 +386,110 @@ test("người dùng tạo dự án bằng frontend thật và giao diện di đ
   ).toBeLessThanOrEqual(1);
   await expectRuntimeClean(errors);
 });
+
+test("các nút thao tác chính tạo thay đổi thật qua backend", async ({ page, request }) => {
+  test.setTimeout(120000);
+  const errors = observeRuntime(page);
+  const token = await loginByApi(request, "lead");
+  await authenticatePage(page, request, "lead");
+  const stamp = Date.now();
+  const project = await qa(
+    request,
+    token,
+    "POST",
+    "/projects",
+    {
+      key: `BTN${stamp}`,
+      name: `Button Integration ${stamp}`,
+      description: "Dự án kiểm tra thao tác giao diện",
+      project_type: "web",
+      settings: {},
+    },
+    201,
+  );
+
+  await page.goto(`/qa/projects/${project._id}/requirements`);
+  await page.getByLabel("Tên", { exact: true }).fill(`Yêu cầu giao diện ${stamp}`);
+  await page.getByRole("textbox", { name: "Nội dung yêu cầu" }).fill("Nút lưu phải gọi backend");
+  await page
+    .getByLabel("Tiêu chí chấp nhận mỗi dòng một điều kiện")
+    .fill("Yêu cầu được lưu và xuất hiện trong danh sách");
+  const requirementResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith(`/api/qa/projects/${project._id}/requirements`) &&
+      response.request().method() === "POST",
+  );
+  await page.getByRole("button", { name: "Lưu yêu cầu" }).click();
+  expect((await requirementResponse).status()).toBe(201);
+  await expect(
+    page.getByRole("cell", { name: `Yêu cầu giao diện ${stamp}`, exact: true }),
+  ).toBeVisible();
+
+  await page.goto(`/qa/projects/${project._id}/knowledge`);
+  await page.getByLabel("Tiêu đề nguồn").fill(`Nguồn giáo viên ${stamp}`);
+  await page.getByLabel("Môn học").fill("Toán");
+  await page.getByLabel("Khối lớp").fill("12");
+  await page
+    .getByLabel("Nội dung tài liệu")
+    .fill("Phương pháp giải và cách trình bày của giáo viên");
+  const sourceResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith(`/api/qa/projects/${project._id}/knowledge-sources`) &&
+      response.request().method() === "POST",
+  );
+  await page.getByRole("button", { name: "Thêm nguồn tri thức" }).click();
+  expect((await sourceResponse).status()).toBe(201);
+  const sourceRow = page.getByRole("row").filter({ hasText: `Nguồn giáo viên ${stamp}` });
+  await expect(sourceRow).toBeVisible();
+  const reindexResponse = page.waitForResponse(
+    (response) =>
+      /\/api\/qa\/requirement-documents\/[^/]+\/reindex$/.test(response.url()) &&
+      response.request().method() === "POST",
+  );
+  await sourceRow.getByRole("button", { name: "Lập chỉ mục lại" }).click();
+  expect((await reindexResponse).status()).toBe(202);
+  await expect(sourceRow).toContainText(/INDEXED|FAILED/);
+
+  await page.goto(`/qa/projects/${project._id}/execution`);
+  const planName = `Kế hoạch giao diện ${stamp}`;
+  await page.getByLabel("Tên kế hoạch kiểm thử").fill(planName);
+  await page.getByLabel("Mục tiêu kế hoạch kiểm thử").fill("Xác minh nút lưu kế hoạch");
+  const planResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/api/qa/test-plans") && response.request().method() === "POST",
+  );
+  await page.getByRole("button", { name: "Lưu kế hoạch" }).click();
+  expect((await planResponse).status()).toBe(201);
+  await expect(page.getByRole("cell", { name: planName, exact: true })).toBeVisible();
+  const suiteName = `Bộ kiểm thử giao diện ${stamp}`;
+  await page.getByLabel("Tên bộ kiểm thử").fill(suiteName);
+  const suiteResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/api/qa/test-suites") && response.request().method() === "POST",
+  );
+  await page.getByRole("button", { name: "Lưu bộ kiểm thử" }).click();
+  expect((await suiteResponse).status()).toBe(201);
+  await expect(page.getByRole("cell", { name: suiteName, exact: true })).toBeVisible();
+
+  await page.goto(`/qa/projects/${project._id}/settings`);
+  const updatedName = `Button Integration Updated ${stamp}`;
+  await page.getByLabel("Tên", { exact: true }).fill(updatedName);
+  const settingsResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith(`/api/qa/projects/${project._id}`) &&
+      response.request().method() === "PATCH",
+  );
+  await page.getByRole("button", { name: /Lưu với phiên bản/ }).click();
+  expect((await settingsResponse).status()).toBe(200);
+  const updatedProject = await qa(request, token, "GET", `/projects/${project._id}`);
+  expect(updatedProject.name).toBe(updatedName);
+
+  await page.goto("/qa/projects");
+  const missingProject = `Không tồn tại ${stamp}`;
+  await page.getByLabel("Tìm dự án").fill(missingProject);
+  await page.getByLabel("Tìm dự án").press("Enter");
+  await expect(page.getByText("Chưa có dự án kiểm thử")).toBeVisible();
+  await page.getByRole("button", { name: "Tạo dự án đầu tiên" }).click();
+  await expect(page.getByRole("heading", { name: "Tạo dự án mới" })).toBeVisible();
+  await expectRuntimeClean(errors);
+});

@@ -285,13 +285,14 @@ export default function SettingsPage({ project, onProjectChange }) {
               className="grid gap-2 sm:grid-cols-[1fr_150px_auto]"
               onSubmit={async (event) => {
                 event.preventDefault();
-                const value = new FormData(event.currentTarget);
+                const form = event.currentTarget;
+                const value = new FormData(form);
                 try {
                   await testingApi.inviteMember(project._id, {
                     user_id: value.get("user_id"),
                     project_role: value.get("project_role"),
                   });
-                  event.currentTarget.reset();
+                  form.reset();
                   setMembers(await testingApi.listMembers(project._id));
                 } catch (reason) {
                   setError(messageOf(reason));

@@ -191,6 +191,8 @@ export const testingApi = {
     }),
   reindexRequirementDocument: (id) =>
     qaRequest(`/requirement-documents/${id}/reindex`, { method: "POST" }),
+  reindexKnowledgeSource: (id) =>
+    qaRequest(`/requirement-documents/${id}/reindex`, { method: "POST" }),
   downloadRequirementDocument: (id, filename) =>
     downloadQaFile(`/requirement-documents/${id}/download`, filename),
   archiveRequirementDocument: (id, payload) =>

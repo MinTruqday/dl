@@ -163,7 +163,7 @@ export default function ProjectsPage() {
             <LoadingState />
           </div>
         ) : items.length === 0 ? (
-          <EmptyState actionLabel="Tạo dự án đầu tiên" actionHref="#">
+          <EmptyState actionLabel="Tạo dự án đầu tiên" onAction={() => setCreating(true)}>
             Chưa có dự án kiểm thử
           </EmptyState>
         ) : (

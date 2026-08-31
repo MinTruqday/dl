@@ -554,7 +554,8 @@ export default function ExecutionPage({ project, section }) {
               className="space-y-3 p-5"
               onSubmit={async (event) => {
                 event.preventDefault();
-                const value = new FormData(event.currentTarget);
+                const form = event.currentTarget;
+                const value = new FormData(form);
                 try {
                   await testingApi.createPlan({
                     project_id: project._id,
@@ -571,7 +572,7 @@ export default function ExecutionPage({ project, section }) {
                     release: "",
                     build: "",
                   });
-                  event.currentTarget.reset();
+                  form.reset();
                   await load();
                 } catch (reason) {
                   setError(messageOf(reason));
@@ -603,7 +604,8 @@ export default function ExecutionPage({ project, section }) {
               className="space-y-3 p-5"
               onSubmit={async (event) => {
                 event.preventDefault();
-                const value = new FormData(event.currentTarget);
+                const form = event.currentTarget;
+                const value = new FormData(form);
                 try {
                   await testingApi.createSuite({
                     project_id: project._id,
@@ -611,7 +613,7 @@ export default function ExecutionPage({ project, section }) {
                     suite_type: value.get("type"),
                     test_case_version_ids: versions,
                   });
-                  event.currentTarget.reset();
+                  form.reset();
                   await load();
                 } catch (reason) {
                   setError(messageOf(reason));

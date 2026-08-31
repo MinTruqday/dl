@@ -151,7 +151,8 @@ export default function KnowledgePage({ project }) {
             className="grid gap-3 border-b border-border p-5 md:grid-cols-2"
             onSubmit={async (event) => {
               event.preventDefault();
-              const values = new FormData(event.currentTarget);
+              const form = event.currentTarget;
+              const values = new FormData(form);
               try {
                 await testingApi.createKnowledgeSource(project._id, {
                   title: values.get("title"),
@@ -167,7 +168,7 @@ export default function KnowledgePage({ project }) {
                     .map((value) => value.trim())
                     .filter(Boolean),
                 });
-                event.currentTarget.reset();
+                form.reset();
                 await loadSources();
               } catch (reason) {
                 setError(messageOf(reason));
@@ -256,7 +257,7 @@ export default function KnowledgePage({ project }) {
                           type="button"
                           onClick={async () => {
                             try {
-                              await testingApi.reindexRequirementDocument(item._id);
+                              await testingApi.reindexKnowledgeSource(item._id);
                               await loadSources();
                             } catch (reason) {
                               setError(messageOf(reason));
