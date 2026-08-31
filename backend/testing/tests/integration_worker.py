@@ -17,10 +17,28 @@ HEADERS = {
 
 
 with httpx.Client(base_url=BASE_URL, headers=HEADERS, timeout=20) as client:
+    assert "/api/qa/internal/jobs/{event}" in client.get("/openapi.json").json()["paths"]
     projects = client.get("/api/qa/projects")
     projects.raise_for_status()
     project_id = projects.json()["data"][0]["_id"]
     marker = str(time.time_ns())
+    internal = client.post(
+        "/api/qa/internal/jobs/document.parse.requested",
+        headers={
+            "X-Internal-Token": os.environ["SECRET_KEY"],
+            "X-Requester-Id": "qa-lead-e2e",
+            "X-Requester-Email": "qa-lead-e2e@test.local",
+        },
+        json={
+            "job_id": f"DIRECT-{marker}",
+            "project_id": project_id,
+            "artifact_version_id": f"DOC-{marker}",
+            "model_version": "document-parser-v1",
+            "payload": {"document_id": f"DOC-{marker}"},
+        },
+    )
+    assert internal.status_code == 200, internal.text
+    assert internal.json()["data"]["status"] == "COMPLETED"
     payload = {"event": "duplicate.scan.requested", "artifact_version_id": f"ART-{marker}", "model_version": "duplicate-v1", "payload": {}}
     queued = client.post(f"/api/qa/projects/{project_id}/jobs", json=payload)
     assert queued.status_code == 202, queued.text

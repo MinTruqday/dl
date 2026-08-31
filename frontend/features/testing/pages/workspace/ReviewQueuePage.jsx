@@ -191,9 +191,7 @@ export default function ReviewQueuePage({ project }) {
             className="apple-input"
             placeholder="Mã đối tượng"
             value={filters.target_artifact_id}
-            onChange={(event) =>
-              setFilters({ ...filters, target_artifact_id: event.target.value })
-            }
+            onChange={(event) => setFilters({ ...filters, target_artifact_id: event.target.value })}
           />
           <select
             aria-label="Sắp xếp đề xuất"

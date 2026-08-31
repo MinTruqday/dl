@@ -182,6 +182,22 @@ with httpx.Client(base_url=base_url, timeout=60) as client:
         headers=ba,
     )
     assert deleted_attachment["deleted"] is True
+    moderated_attachment = call(
+        client,
+        "POST",
+        f"/api/qa/projects/{project_id}/attachments",
+        headers=ba,
+        expected=201,
+        json={"filename": "moderated-note.txt", "url": "teacher/moderated-note.txt", "size": 21, "content_type": "text/plain"},
+    )
+    moderated = call(
+        client,
+        "POST",
+        f"/api/qa/attachments/{moderated_attachment['_id']}/moderate",
+        headers=lead,
+        json={"reason": "Nội dung không còn được phép sử dụng"},
+    )
+    assert moderated["deleted"] is True
 
     requirements = []
     for index in range(3):
