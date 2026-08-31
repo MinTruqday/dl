@@ -8,6 +8,11 @@ const manrope = Manrope({
 });
 export const metadata = {
   title: "Veriq",
+  icons: {
+    icon: [{ url: "/brand/veriq-logo.png", type: "image/png" }],
+    shortcut: "/brand/veriq-logo.png",
+    apple: "/brand/veriq-logo.png",
+  },
 };
 import { AuthProvider } from "@/features/authentication/contexts/AuthContext";
 import { ToastProvider } from "@/shared/contexts/ToastContext";

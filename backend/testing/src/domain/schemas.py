@@ -12,6 +12,8 @@ class ProjectCreate(BaseModel):
     name: str = Field(min_length=2, max_length=200)
     description: str = Field(default="", max_length=5000)
     project_type: Literal["web", "mobile", "api", "desktop", "embedded", "other"] = "web"
+    locale: str = Field(default="vi-VN", min_length=2, max_length=20)
+    timezone: str = Field(default="Asia/Ho_Chi_Minh", min_length=2, max_length=80)
     settings: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -19,6 +21,9 @@ class ProjectPatch(BaseModel):
     expected_revision: int = Field(ge=1)
     name: str | None = Field(default=None, min_length=2, max_length=200)
     description: str | None = Field(default=None, max_length=5000)
+    project_type: Literal["web", "mobile", "api", "desktop", "embedded", "other"] | None = None
+    locale: str | None = Field(default=None, min_length=2, max_length=20)
+    timezone: str | None = Field(default=None, min_length=2, max_length=80)
     settings: dict[str, Any] | None = None
 
 
@@ -103,6 +108,11 @@ class RequirementObsoleteInput(BaseModel):
     reason: str = Field(min_length=2, max_length=2000)
 
 
+class RequirementRestoreInput(BaseModel):
+    expected_current_version_id: str = Field(min_length=1, max_length=200)
+    reason: str = Field(min_length=2, max_length=2000)
+
+
 class ReviewTransitionInput(BaseModel):
     expected_revision: int = Field(ge=1)
     review_note: str = Field(default="", max_length=2000)
@@ -111,6 +121,11 @@ class ReviewTransitionInput(BaseModel):
 class RequirementCompareInput(BaseModel):
     from_version_id: str
     to_version_id: str
+
+
+class RequirementDependencyInput(BaseModel):
+    dependency_requirement_id: str = Field(min_length=1, max_length=200)
+    expected_revision: int = Field(ge=1)
 
 
 class ImportCreate(BaseModel):
@@ -125,6 +140,50 @@ class RequirementExtractionInput(BaseModel):
 
 class RequirementParseRetry(BaseModel):
     expected_revision: int = Field(ge=1)
+
+
+class RequirementDocumentPatch(BaseModel):
+    expected_revision: int = Field(ge=1)
+    title: str | None = Field(default=None, min_length=2, max_length=300)
+    source_type: Literal["teacher_material", "official_textbook", "curriculum", "reference", "api_contract", "other"] | None = None
+    authority: Literal["teacher", "official", "supplemental", "reference"] | None = None
+    teacher_id: str | None = Field(default=None, max_length=200)
+    subject: str | None = Field(default=None, max_length=200)
+    grade: str | None = Field(default=None, max_length=100)
+    tags: list[str] | None = Field(default=None, max_length=100)
+
+
+class KnowledgeSourceCreate(BaseModel):
+    title: str = Field(min_length=2, max_length=300)
+    content: str = Field(min_length=1, max_length=2_000_000)
+    source_type: Literal[
+        "teacher_material",
+        "official_textbook",
+        "curriculum",
+        "reference",
+        "api_contract",
+        "other",
+    ] = "reference"
+    authority: Literal["teacher", "official", "supplemental", "reference"] = "reference"
+    source_url: str | None = Field(default=None, max_length=2000)
+    teacher_id: str | None = Field(default=None, max_length=200)
+    subject: str | None = Field(default=None, max_length=200)
+    grade: str | None = Field(default=None, max_length=100)
+    tags: list[str] = Field(default_factory=list, max_length=100)
+
+
+class AttachmentCreate(BaseModel):
+    filename: str = Field(min_length=1, max_length=500)
+    url: str = Field(min_length=1, max_length=2000)
+    item_id: str | None = Field(default=None, max_length=200)
+    size: int = Field(default=0, ge=0)
+    content_type: str = Field(default="application/octet-stream", max_length=200)
+    artifact_type: str | None = Field(default=None, max_length=80)
+    artifact_id: str | None = Field(default=None, max_length=200)
+
+
+class AttachmentModeration(BaseModel):
+    reason: str = Field(min_length=3, max_length=2000)
 
 
 class ReviewCommentCreate(BaseModel):
@@ -447,6 +506,23 @@ class TestRunCreate(BaseModel):
     build: str = Field(default="", max_length=200)
 
 
+class TestRunPatch(BaseModel):
+    expected_revision: int = Field(ge=1)
+    name: str | None = Field(default=None, min_length=2, max_length=300)
+    test_plan_id: str | None = None
+    test_suite_ids: list[str] | None = Field(default=None, max_length=500)
+    test_case_version_ids: list[str] | None = Field(default=None, max_length=5000)
+    environment: str | None = Field(default=None, max_length=200)
+    release: str | None = Field(default=None, max_length=200)
+    build: str | None = Field(default=None, max_length=200)
+
+
+class TestRunAssignmentInput(BaseModel):
+    expected_revision: int = Field(ge=1)
+    assignee_id: str = Field(min_length=1, max_length=200)
+    test_case_assignments: dict[str, str] = Field(default_factory=dict)
+
+
 class TestStepResultInput(BaseModel):
     step_id: str = Field(min_length=1, max_length=200)
     status: Literal["PASS", "FAIL", "BLOCKED", "SKIPPED", "NOT_APPLICABLE"]
@@ -537,6 +613,12 @@ class SearchInput(BaseModel):
     query: str = Field(min_length=1, max_length=1000)
     artifact_types: list[str] = Field(default_factory=list, max_length=20)
     limit: int = Field(default=20, ge=1, le=100)
+
+
+class ProjectQuestionInput(BaseModel):
+    question: str = Field(min_length=2, max_length=5000)
+    artifact_types: list[str] = Field(default_factory=list, max_length=20)
+    evidence_limit: int = Field(default=20, ge=1, le=50)
 
 
 class BulkTagInput(BaseModel):

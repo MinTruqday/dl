@@ -17,14 +17,21 @@ export default function ReviewQueuePage({ project }) {
   const { ask, dialog } = useQaActionDialog();
   const [items, setItems] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
+  const [filters, setFilters] = useState({
+    status: "PENDING",
+    proposal_type: "",
+    target_artifact_id: "",
+    sort: "-created_at",
+  });
   const [error, setError] = useState("");
+  const can = (permission) => project.current_permissions?.includes(permission);
   const load = useCallback(async () => {
     try {
-      setItems(await testingApi.listProposals(project._id));
+      setItems(await testingApi.listProposals(project._id, filters));
     } catch (reason) {
       setError(messageOf(reason));
     }
-  }, [project._id]);
+  }, [filters, project._id]);
   useEffect(() => {
     void load();
   }, [load]);
@@ -114,46 +121,95 @@ export default function ReviewQueuePage({ project }) {
       <Panel
         title="Đề xuất đang chờ"
         actions={
-          <button
-            className="apple-button"
-            disabled={!selectedIds.length}
-            type="button"
-            onClick={async () => {
-              const answer = await ask({
-                title: "Duyệt hàng loạt theo chính sách",
-                description: `${selectedIds.length} mục đã chọn mỗi mục vẫn phải đạt ngưỡng cấu hình`,
-                confirmLabel: "Duyệt các mục an toàn",
-                fields: [
-                  {
-                    name: "note",
-                    label: "Ghi chú",
-                    required: true,
-                    multiline: true,
-                    autoFocus: true,
-                  },
-                ],
-              });
-              if (!answer) return;
-              try {
-                await testingApi.bulkApproveProposals(project._id, {
-                  proposal_ids: selectedIds,
-                  review_note: answer.note,
+          can("proposal.approve") ? (
+            <button
+              className="apple-button"
+              disabled={!selectedIds.length}
+              type="button"
+              onClick={async () => {
+                const answer = await ask({
+                  title: "Duyệt hàng loạt theo chính sách",
+                  description: `${selectedIds.length} mục đã chọn mỗi mục vẫn phải đạt ngưỡng cấu hình`,
+                  confirmLabel: "Duyệt các mục an toàn",
+                  fields: [
+                    {
+                      name: "note",
+                      label: "Ghi chú",
+                      required: true,
+                      multiline: true,
+                      autoFocus: true,
+                    },
+                  ],
                 });
-                setSelectedIds([]);
-                await load();
-              } catch (reason) {
-                setError(messageOf(reason));
-              }
-            }}
-          >
-            Duyệt hàng loạt theo chính sách
-          </button>
+                if (!answer) return;
+                try {
+                  await testingApi.bulkApproveProposals(project._id, {
+                    proposal_ids: selectedIds,
+                    review_note: answer.note,
+                  });
+                  setSelectedIds([]);
+                  await load();
+                } catch (reason) {
+                  setError(messageOf(reason));
+                }
+              }}
+            >
+              Duyệt hàng loạt theo chính sách
+            </button>
+          ) : null
         }
       >
+        <div className="grid gap-3 border-b border-border p-4 sm:grid-cols-2 lg:grid-cols-4">
+          <select
+            aria-label="Lọc trạng thái đề xuất"
+            className="apple-input"
+            value={filters.status}
+            onChange={(event) => setFilters({ ...filters, status: event.target.value })}
+          >
+            <option value="">Mọi trạng thái</option>
+            {["PENDING", "APPROVED", "REJECTED", "APPLY_PARTIAL", "EXPIRED"].map((value) => (
+              <option value={value} key={value}>
+                {value}
+              </option>
+            ))}
+          </select>
+          <select
+            aria-label="Lọc loại đề xuất"
+            className="apple-input"
+            value={filters.proposal_type}
+            onChange={(event) => setFilters({ ...filters, proposal_type: event.target.value })}
+          >
+            <option value="">Mọi loại</option>
+            {["UPDATE_TEST_CASE", "CREATE_TEST_CASE", "OBSOLETE_TEST_CASE"].map((value) => (
+              <option value={value} key={value}>
+                {value}
+              </option>
+            ))}
+          </select>
+          <input
+            aria-label="Lọc đối tượng đề xuất"
+            className="apple-input"
+            placeholder="Mã đối tượng"
+            value={filters.target_artifact_id}
+            onChange={(event) =>
+              setFilters({ ...filters, target_artifact_id: event.target.value })
+            }
+          />
+          <select
+            aria-label="Sắp xếp đề xuất"
+            className="apple-input"
+            value={filters.sort}
+            onChange={(event) => setFilters({ ...filters, sort: event.target.value })}
+          >
+            <option value="-created_at">Mới tạo</option>
+            <option value="created_at">Cũ tạo</option>
+            <option value="-confidence">Tin cậy cao</option>
+          </select>
+        </div>
         <DataTable
           items={items}
-          selectedIds={selectedIds}
-          onSelectionChange={setSelectedIds}
+          selectedIds={can("proposal.approve") ? selectedIds : undefined}
+          onSelectionChange={can("proposal.approve") ? setSelectedIds : undefined}
           selectionLabel="Chọn đề xuất"
           empty="Không có đề xuất đang chờ"
           columns={[
@@ -190,38 +246,47 @@ export default function ReviewQueuePage({ project }) {
             {
               key: "actions",
               label: "Quyết định",
-              render: (item) => (
-                <span className="flex flex-wrap gap-2">
-                  <button
-                    className="secondary-button"
-                    type="button"
-                    onClick={() => decide(item, "accept")}
-                  >
-                    Duyệt
-                  </button>
-                  <button
-                    className="secondary-button"
-                    type="button"
-                    onClick={() => decide(item, "edit")}
-                  >
-                    Sửa rồi duyệt
-                  </button>
-                  <button
-                    className="secondary-button"
-                    type="button"
-                    onClick={() => decide(item, "reject")}
-                  >
-                    Từ chối
-                  </button>
-                  <button
-                    className="secondary-button"
-                    type="button"
-                    onClick={() => regenerate(item)}
-                  >
-                    Tạo lại
-                  </button>
-                </span>
-              ),
+              render: (item) =>
+                can("proposal.approve") || can("proposal.reject") || can("ai.create_proposal") ? (
+                  <span className="flex flex-wrap gap-2">
+                    {can("proposal.approve") && (
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={() => decide(item, "accept")}
+                      >
+                        Duyệt
+                      </button>
+                    )}
+                    {can("proposal.approve") && (
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={() => decide(item, "edit")}
+                      >
+                        Sửa rồi duyệt
+                      </button>
+                    )}
+                    {can("proposal.reject") && (
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={() => decide(item, "reject")}
+                      >
+                        Từ chối
+                      </button>
+                    )}
+                    {can("ai.create_proposal") && (
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={() => regenerate(item)}
+                      >
+                        Tạo lại
+                      </button>
+                    )}
+                  </span>
+                ) : null,
             },
           ]}
         />

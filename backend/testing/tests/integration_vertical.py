@@ -4,12 +4,24 @@ import time
 import zipfile
 
 import httpx
+import jwt
 
 
 BASE_URL = os.getenv("TESTING_TEST_URL", "http://127.0.0.1:8000")
-HEADERS = {"x-test-user-id": "qa-lead-e2e"}
-OUTSIDER = {"x-test-user-id": "outsider-e2e"}
-SYSTEM_ADMIN = {"x-test-user-id": "platform-admin-e2e", "x-test-system-role": "ADMIN"}
+def identity(user_id, system_role="USER"):
+    return {
+        "Authorization": "Bearer "
+        + jwt.encode(
+            {"uid": user_id, "sub": f"{user_id}@test.local", "system_role": system_role},
+            os.environ["SECRET_KEY"],
+            algorithm="HS256",
+        )
+    }
+
+
+HEADERS = identity("qa-lead-e2e")
+OUTSIDER = identity("outsider-e2e")
+SYSTEM_ADMIN = identity("platform-admin-e2e", "ADMIN")
 
 
 def doc(text):
@@ -528,6 +540,44 @@ with httpx.Client(base_url=BASE_URL, timeout=30) as client:
     assert defect["assignee"] == "developer-e2e"
     defect = request(client, "POST", f"/api/qa/defects/{defect['_id']}/transition", json={"expected_revision": defect["revision"], "to_status": "CONFIRMED", "reason": "Đã tái hiện"})
     request(client, "POST", f"/api/qa/test-runs/{run['_id']}/complete")
+    partial_run = request(
+        client,
+        "POST",
+        "/api/qa/test-runs",
+        201,
+        json={
+            "project_id": project_id,
+            "name": "Run hoàn tất một phần",
+            "test_case_version_ids": [test_version_1["_id"]],
+            "environment": "staging",
+            "build": "1.0.0-partial",
+        },
+    )
+    request(client, "POST", f"/api/qa/test-runs/{partial_run['_id']}/start")
+    denied_partial = request(
+        client,
+        "POST",
+        f"/api/qa/test-runs/{partial_run['_id']}/complete",
+        409,
+    )
+    assert denied_partial["error"]["code"] == "PARTIAL_EXECUTION"
+    updated_project = request(
+        client,
+        "PATCH",
+        f"/api/qa/projects/{project_id}",
+        json={
+            "expected_revision": updated_project["revision"],
+            "settings": {"partial_complete_allowed": True},
+        },
+    )
+    completed_partial = request(
+        client,
+        "POST",
+        f"/api/qa/test-runs/{partial_run['_id']}/complete",
+    )
+    assert completed_partial["partial_completion"] is True
+    assert completed_partial["completed_result_count"] == 0
+    assert completed_partial["total_result_count"] == 1
     late_result = client.post(f"/api/qa/test-runs/{run['_id']}/results/{test_version_1['_id']}", headers=HEADERS, json={"status": "PASS", "step_results": [], "attachments": [], "note": "late", "idempotency_key": f"late-{stamp}"})
     assert late_result.status_code == 409
     assert late_result.json()["status"] == "FAILED"

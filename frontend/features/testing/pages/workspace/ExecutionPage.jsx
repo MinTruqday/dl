@@ -28,6 +28,18 @@ export default function ExecutionPage({ project, section }) {
     environment: "",
     sort: "-updated_at",
   });
+  const [planFilters, setPlanFilters] = useState({
+    q: "",
+    release: "",
+    status: "",
+    sort: "-updated_at",
+  });
+  const [suiteFilters, setSuiteFilters] = useState({
+    q: "",
+    suite_type: "",
+    status: "",
+    sort: "-updated_at",
+  });
   const [tests, setTests] = useState([]);
   const [run, setRun] = useState(null);
   const [error, setError] = useState("");
@@ -43,11 +55,12 @@ export default function ExecutionPage({ project, section }) {
   const [actuals, setActuals] = useState({});
   const [stepResults, setStepResults] = useState({});
   const [attachments, setAttachments] = useState({});
+  const can = (permission) => project.current_permissions?.includes(permission);
   const load = useCallback(async () => {
     try {
       const [planValues, suiteValues, runValues, testValues] = await Promise.all([
-        testingApi.listPlans(project._id),
-        testingApi.listSuites(project._id),
+        testingApi.listPlans(project._id, planFilters),
+        testingApi.listSuites(project._id, suiteFilters),
         testingApi.listRunPage(project._id, { ...runFilters, page: runPage, page_size: 50 }),
         testingApi.listTestCases(project._id, { page_size: 500 }),
       ]);
@@ -60,7 +73,7 @@ export default function ExecutionPage({ project, section }) {
     } catch (reason) {
       setError(messageOf(reason));
     }
-  }, [project._id, runFilters, runId, runPage]);
+  }, [planFilters, project._id, runFilters, runId, runPage, suiteFilters]);
   useEffect(() => {
     void load();
   }, [load]);
@@ -142,6 +155,104 @@ export default function ExecutionPage({ project, section }) {
       setError(messageOf(reason));
     }
   };
+  const updatePlan = async (item) => {
+    const answer = await ask({
+      title: "Sửa kế hoạch kiểm thử",
+      description: item.name,
+      confirmLabel: "Lưu kế hoạch",
+      fields: [
+        { name: "name", label: "Tên", initialValue: item.name, required: true, autoFocus: true },
+        {
+          name: "objective",
+          label: "Mục tiêu",
+          initialValue: item.objective || "",
+          multiline: true,
+        },
+      ],
+    });
+    if (!answer) return;
+    try {
+      await testingApi.updatePlan(item._id, {
+        expected_revision: item.revision,
+        name: answer.name,
+        objective: answer.objective,
+      });
+      await load();
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
+  };
+  const transitionPlan = async (item, action) => {
+    const answer = await ask({
+      title:
+        action === "approve"
+          ? "Phê duyệt kế hoạch"
+          : action === "archive"
+            ? "Lưu trữ kế hoạch"
+            : "Gửi rà soát kế hoạch",
+      description: item.name,
+      confirmLabel:
+        action === "approve" ? "Phê duyệt" : action === "archive" ? "Lưu trữ" : "Gửi rà soát",
+      danger: action === "archive",
+      fields: [
+        { name: "note", label: "Ghi chú", required: true, multiline: true, autoFocus: true },
+      ],
+    });
+    if (!answer) return;
+    try {
+      const payload =
+        action === "archive"
+          ? { expected_revision: item.revision, reason: answer.note }
+          : { expected_revision: item.revision, review_note: answer.note };
+      if (action === "approve") await testingApi.approvePlan(item._id, payload);
+      else if (action === "archive") await testingApi.archivePlan(item._id, payload);
+      else await testingApi.submitPlan(item._id, payload);
+      await load();
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
+  };
+  const updateSuite = async (item) => {
+    const answer = await ask({
+      title: "Sửa bộ kiểm thử",
+      description: item.name,
+      confirmLabel: "Lưu bộ kiểm thử",
+      fields: [
+        { name: "name", label: "Tên", initialValue: item.name, required: true, autoFocus: true },
+      ],
+    });
+    if (!answer) return;
+    try {
+      await testingApi.updateSuite(item._id, {
+        expected_revision: item.revision,
+        name: answer.name,
+      });
+      await load();
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
+  };
+  const archiveSuite = async (item) => {
+    const answer = await ask({
+      title: "Lưu trữ bộ kiểm thử",
+      description: item.name,
+      confirmLabel: "Lưu trữ",
+      danger: true,
+      fields: [
+        { name: "reason", label: "Lý do", required: true, multiline: true, autoFocus: true },
+      ],
+    });
+    if (!answer) return;
+    try {
+      await testingApi.archiveSuite(item._id, {
+        expected_revision: item.revision,
+        reason: answer.reason,
+      });
+      await load();
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
+  };
   if (run)
     return (
       <QaPage title={run.name} actions={<ProjectCrumb projectId={project._id} />}>
@@ -150,16 +261,20 @@ export default function ExecutionPage({ project, section }) {
           title="Điều khiển lần chạy"
           actions={
             <div className="flex flex-wrap gap-2">
-              <button
-                className="secondary-button"
-                type="button"
-                onClick={() =>
-                  testingApi.exportRunReport(run._id).catch((reason) => setError(messageOf(reason)))
-                }
-              >
-                Xuất báo cáo
-              </button>
-              {run.status === "DRAFT" && (
+              {can("report.export") && (
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() =>
+                    testingApi
+                      .exportRunReport(run._id)
+                      .catch((reason) => setError(messageOf(reason)))
+                  }
+                >
+                  Xuất báo cáo
+                </button>
+              )}
+              {run.status === "DRAFT" && can("testrun.start") && (
                 <button
                   className="apple-button"
                   type="button"
@@ -177,51 +292,55 @@ export default function ExecutionPage({ project, section }) {
               )}
               {run.status === "IN_PROGRESS" && (
                 <>
-                  <button
-                    className="secondary-button"
-                    type="button"
-                    onClick={async () => {
-                      const answer = await ask({
-                        title: "Hủy lần chạy kiểm thử",
-                        description: `${run.name} sẽ dừng và giữ nguyên toàn bộ kết quả đã ghi nhận`,
-                        confirmLabel: "Hủy lần chạy",
-                        danger: true,
-                        fields: [
-                          {
-                            name: "reason",
-                            label: "Lý do hủy",
-                            initialValue: "Dừng theo quyết định kiểm thử",
-                            required: true,
-                            multiline: true,
-                            autoFocus: true,
-                          },
-                        ],
-                      });
-                      if (!answer) return;
-                      try {
-                        await testingApi.abortRun(run._id, answer.reason);
-                        setRun(await testingApi.getRun(run._id));
-                      } catch (value) {
-                        setError(messageOf(value));
-                      }
-                    }}
-                  >
-                    Hủy lần chạy
-                  </button>
-                  <button
-                    className="apple-button"
-                    type="button"
-                    onClick={async () => {
-                      try {
-                        await testingApi.completeRun(run._id);
-                        setRun(await testingApi.getRun(run._id));
-                      } catch (reason) {
-                        setError(messageOf(reason));
-                      }
-                    }}
-                  >
-                    Hoàn tất
-                  </button>
+                  {can("testrun.abort") && (
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      onClick={async () => {
+                        const answer = await ask({
+                          title: "Hủy lần chạy kiểm thử",
+                          description: `${run.name} sẽ dừng và giữ nguyên toàn bộ kết quả đã ghi nhận`,
+                          confirmLabel: "Hủy lần chạy",
+                          danger: true,
+                          fields: [
+                            {
+                              name: "reason",
+                              label: "Lý do hủy",
+                              initialValue: "Dừng theo quyết định kiểm thử",
+                              required: true,
+                              multiline: true,
+                              autoFocus: true,
+                            },
+                          ],
+                        });
+                        if (!answer) return;
+                        try {
+                          await testingApi.abortRun(run._id, answer.reason);
+                          setRun(await testingApi.getRun(run._id));
+                        } catch (value) {
+                          setError(messageOf(value));
+                        }
+                      }}
+                    >
+                      Hủy lần chạy
+                    </button>
+                  )}
+                  {can("testrun.complete") && (
+                    <button
+                      className="apple-button"
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          await testingApi.completeRun(run._id);
+                          setRun(await testingApi.getRun(run._id));
+                        } catch (reason) {
+                          setError(messageOf(reason));
+                        }
+                      }}
+                    >
+                      Hoàn tất
+                    </button>
+                  )}
                 </>
               )}
             </div>
@@ -253,7 +372,7 @@ export default function ExecutionPage({ project, section }) {
                     return (
                       <span className="flex min-w-48 flex-col items-start gap-2">
                         <StatusPill value={result.status} />
-                        {result.status === "FAIL" && !hasDefect && (
+                        {result.status === "FAIL" && !hasDefect && can("defect.create") && (
                           <button
                             className="apple-button"
                             type="button"
@@ -269,6 +388,9 @@ export default function ExecutionPage({ project, section }) {
                     );
                   }
                   if (run.status !== "IN_PROGRESS") {
+                    return <StatusPill value={result.status} />;
+                  }
+                  if (!can("testrun.execute")) {
                     return <StatusPill value={result.status} />;
                   }
                   if (result.status === "NOT_RUN") {
@@ -426,186 +548,425 @@ export default function ExecutionPage({ project, section }) {
     >
       {error && <ErrorState message={error} />}
       <div className="grid gap-5 xl:grid-cols-3">
-        <Panel title="Tạo kế hoạch kiểm thử">
-          <form
-            className="space-y-3 p-5"
-            onSubmit={async (event) => {
-              event.preventDefault();
-              const value = new FormData(event.currentTarget);
-              try {
-                await testingApi.createPlan({
-                  project_id: project._id,
-                  name: value.get("name"),
-                  objective: value.get("objective"),
-                  scope_in: [],
-                  scope_out: [],
-                  environment: "staging",
-                  entry_criteria: [],
-                  exit_criteria: [],
-                  risks: [],
-                  test_types: ["functional"],
-                  members: [],
-                  release: "",
-                  build: "",
-                });
-                event.currentTarget.reset();
-                await load();
-              } catch (reason) {
-                setError(messageOf(reason));
-              }
-            }}
-          >
-            <input
-              aria-label="Tên kế hoạch kiểm thử"
-              name="name"
-              required
-              className="apple-input"
-              placeholder="Tên kế hoạch kiểm thử"
-            />
-            <textarea
-              aria-label="Mục tiêu kế hoạch kiểm thử"
-              name="objective"
-              className="apple-input min-h-20"
-              placeholder="Mục tiêu"
-            />
-            <button className="secondary-button" type="submit">
-              Lưu kế hoạch
-            </button>
-          </form>
-        </Panel>
-        <Panel title="Tạo bộ kiểm thử">
-          <form
-            className="space-y-3 p-5"
-            onSubmit={async (event) => {
-              event.preventDefault();
-              const value = new FormData(event.currentTarget);
-              try {
-                await testingApi.createSuite({
-                  project_id: project._id,
-                  name: value.get("name"),
-                  suite_type: value.get("type"),
-                  test_case_version_ids: versions,
-                });
-                event.currentTarget.reset();
-                await load();
-              } catch (reason) {
-                setError(messageOf(reason));
-              }
-            }}
-          >
-            <input
-              aria-label="Tên bộ kiểm thử"
-              name="name"
-              required
-              className="apple-input"
-              placeholder="Tên bộ kiểm thử"
-            />
-            <select aria-label="Loại bộ kiểm thử" name="type" className="apple-input">
-              <option value="smoke">{valueLabel("smoke")}</option>
-              <option value="regression">{valueLabel("regression")}</option>
-              <option value="feature">{valueLabel("feature")}</option>
-            </select>
-            <button className="secondary-button" type="submit">
-              Lưu bộ kiểm thử
-            </button>
-          </form>
-        </Panel>
-        <Panel title="Tạo lần chạy">
-          <form className="space-y-3 p-5" onSubmit={createRun}>
-            <input
-              aria-label="Tên lần chạy"
-              required
-              className="apple-input"
-              value={runForm.name}
-              onChange={(event) => setRunForm({ ...runForm, name: event.target.value })}
-              placeholder="Tên lần chạy"
-            />
-            <div className="grid gap-3 sm:grid-cols-3">
-              <input
-                aria-label="Bản phát hành"
-                className="apple-input"
-                placeholder="Bản phát hành"
-                value={runForm.release}
-                onChange={(event) => setRunForm({ ...runForm, release: event.target.value })}
-              />
-              <input
-                aria-label="Bản dựng"
-                className="apple-input"
-                placeholder="Bản dựng"
-                value={runForm.build}
-                onChange={(event) => setRunForm({ ...runForm, build: event.target.value })}
-              />
-              <input
-                aria-label="Môi trường"
-                className="apple-input"
-                placeholder="Môi trường"
-                value={runForm.environment}
-                onChange={(event) => setRunForm({ ...runForm, environment: event.target.value })}
-              />
-            </div>
-            <select
-              aria-label="Kế hoạch kiểm thử"
-              className="apple-input"
-              value={runForm.testPlanId}
-              onChange={(event) => setRunForm({ ...runForm, testPlanId: event.target.value })}
-            >
-              <option value="">Không gắn kế hoạch</option>
-              {plans.map((item) => (
-                <option key={item._id} value={item._id}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
-            <label className="field-label block">
-              Bộ kiểm thử
-              <select
-                aria-label="Bộ kiểm thử"
-                className="apple-input mt-2 min-h-28"
-                multiple
-                value={runForm.suiteIds}
-                onChange={(event) =>
-                  setRunForm({
-                    ...runForm,
-                    suiteIds: Array.from(event.target.selectedOptions, (option) => option.value),
-                  })
+        {can("testplan.create") && (
+          <Panel title="Tạo kế hoạch kiểm thử">
+            <form
+              className="space-y-3 p-5"
+              onSubmit={async (event) => {
+                event.preventDefault();
+                const value = new FormData(event.currentTarget);
+                try {
+                  await testingApi.createPlan({
+                    project_id: project._id,
+                    name: value.get("name"),
+                    objective: value.get("objective"),
+                    scope_in: [],
+                    scope_out: [],
+                    environment: "staging",
+                    entry_criteria: [],
+                    exit_criteria: [],
+                    risks: [],
+                    test_types: ["functional"],
+                    members: [],
+                    release: "",
+                    build: "",
+                  });
+                  event.currentTarget.reset();
+                  await load();
+                } catch (reason) {
+                  setError(messageOf(reason));
                 }
+              }}
+            >
+              <input
+                aria-label="Tên kế hoạch kiểm thử"
+                name="name"
+                required
+                className="apple-input"
+                placeholder="Tên kế hoạch kiểm thử"
+              />
+              <textarea
+                aria-label="Mục tiêu kế hoạch kiểm thử"
+                name="objective"
+                className="apple-input min-h-20"
+                placeholder="Mục tiêu"
+              />
+              <button className="secondary-button" type="submit">
+                Lưu kế hoạch
+              </button>
+            </form>
+          </Panel>
+        )}
+        {can("testsuite.create") && (
+          <Panel title="Tạo bộ kiểm thử">
+            <form
+              className="space-y-3 p-5"
+              onSubmit={async (event) => {
+                event.preventDefault();
+                const value = new FormData(event.currentTarget);
+                try {
+                  await testingApi.createSuite({
+                    project_id: project._id,
+                    name: value.get("name"),
+                    suite_type: value.get("type"),
+                    test_case_version_ids: versions,
+                  });
+                  event.currentTarget.reset();
+                  await load();
+                } catch (reason) {
+                  setError(messageOf(reason));
+                }
+              }}
+            >
+              <input
+                aria-label="Tên bộ kiểm thử"
+                name="name"
+                required
+                className="apple-input"
+                placeholder="Tên bộ kiểm thử"
+              />
+              <select aria-label="Loại bộ kiểm thử" name="type" className="apple-input">
+                <option value="smoke">{valueLabel("smoke")}</option>
+                <option value="regression">{valueLabel("regression")}</option>
+                <option value="feature">{valueLabel("feature")}</option>
+              </select>
+              <button className="secondary-button" type="submit">
+                Lưu bộ kiểm thử
+              </button>
+            </form>
+          </Panel>
+        )}
+        {can("testrun.create") && (
+          <Panel title="Tạo lần chạy">
+            <form className="space-y-3 p-5" onSubmit={createRun}>
+              <input
+                aria-label="Tên lần chạy"
+                required
+                className="apple-input"
+                value={runForm.name}
+                onChange={(event) => setRunForm({ ...runForm, name: event.target.value })}
+                placeholder="Tên lần chạy"
+              />
+              <div className="grid gap-3 sm:grid-cols-3">
+                <input
+                  aria-label="Bản phát hành"
+                  className="apple-input"
+                  placeholder="Bản phát hành"
+                  value={runForm.release}
+                  onChange={(event) => setRunForm({ ...runForm, release: event.target.value })}
+                />
+                <input
+                  aria-label="Bản dựng"
+                  className="apple-input"
+                  placeholder="Bản dựng"
+                  value={runForm.build}
+                  onChange={(event) => setRunForm({ ...runForm, build: event.target.value })}
+                />
+                <input
+                  aria-label="Môi trường"
+                  className="apple-input"
+                  placeholder="Môi trường"
+                  value={runForm.environment}
+                  onChange={(event) => setRunForm({ ...runForm, environment: event.target.value })}
+                />
+              </div>
+              <select
+                aria-label="Kế hoạch kiểm thử"
+                className="apple-input"
+                value={runForm.testPlanId}
+                onChange={(event) => setRunForm({ ...runForm, testPlanId: event.target.value })}
               >
-                {suites.map((item) => (
+                <option value="">Không gắn kế hoạch</option>
+                {plans.map((item) => (
                   <option key={item._id} value={item._id}>
                     {item.name}
                   </option>
                 ))}
               </select>
-            </label>
-            <label className="field-label block">
-              Phiên bản ca kiểm thử
-              <select
-                aria-label="Phiên bản ca kiểm thử"
-                className="apple-input mt-2 min-h-36"
-                multiple
-                value={runForm.versionIds}
-                onChange={(event) =>
-                  setRunForm({
-                    ...runForm,
-                    versionIds: Array.from(event.target.selectedOptions, (option) => option.value),
-                  })
-                }
-              >
-                {tests.map((item) => (
-                  <option key={item.current_version_id} value={item.current_version_id}>
-                    {item.test_case_key} {item.current_version?.title}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <p className="text-[12px] text-ink-muted">
-              Snapshot {runForm.versionIds.length} phiên bản được chọn cùng các phiên bản trong bộ
-              kiểm thử
-            </p>
-            <button className="apple-button" type="submit">
-              Tạo lần chạy
-            </button>
-          </form>
+              <label className="field-label block">
+                Bộ kiểm thử
+                <select
+                  aria-label="Bộ kiểm thử"
+                  className="apple-input mt-2 min-h-28"
+                  multiple
+                  value={runForm.suiteIds}
+                  onChange={(event) =>
+                    setRunForm({
+                      ...runForm,
+                      suiteIds: Array.from(event.target.selectedOptions, (option) => option.value),
+                    })
+                  }
+                >
+                  {suites.map((item) => (
+                    <option key={item._id} value={item._id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="field-label block">
+                Phiên bản ca kiểm thử
+                <select
+                  aria-label="Phiên bản ca kiểm thử"
+                  className="apple-input mt-2 min-h-36"
+                  multiple
+                  value={runForm.versionIds}
+                  onChange={(event) =>
+                    setRunForm({
+                      ...runForm,
+                      versionIds: Array.from(
+                        event.target.selectedOptions,
+                        (option) => option.value,
+                      ),
+                    })
+                  }
+                >
+                  {tests.map((item) => (
+                    <option key={item.current_version_id} value={item.current_version_id}>
+                      {item.test_case_key} {item.current_version?.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <p className="text-[12px] text-ink-muted">
+                Snapshot {runForm.versionIds.length} phiên bản được chọn cùng các phiên bản trong bộ
+                kiểm thử
+              </p>
+              <button className="apple-button" type="submit">
+                Tạo lần chạy
+              </button>
+            </form>
+          </Panel>
+        )}
+      </div>
+      <div className="grid gap-5 xl:grid-cols-2">
+        <Panel title="Kế hoạch kiểm thử">
+          <div className="grid gap-3 border-b border-border p-4 sm:grid-cols-2 lg:grid-cols-4">
+            <input
+              aria-label="Tìm kế hoạch kiểm thử"
+              className="apple-input"
+              placeholder="Tìm tên hoặc mục tiêu"
+              value={planFilters.q}
+              onChange={(event) => setPlanFilters({ ...planFilters, q: event.target.value })}
+            />
+            <input
+              aria-label="Lọc bản phát hành kế hoạch"
+              className="apple-input"
+              placeholder="Bản phát hành"
+              value={planFilters.release}
+              onChange={(event) => setPlanFilters({ ...planFilters, release: event.target.value })}
+            />
+            <select
+              aria-label="Lọc trạng thái kế hoạch"
+              className="apple-input"
+              value={planFilters.status}
+              onChange={(event) => setPlanFilters({ ...planFilters, status: event.target.value })}
+            >
+              <option value="">Mọi trạng thái</option>
+              {["DRAFT", "IN_REVIEW", "APPROVED", "ARCHIVED"].map((value) => (
+                <option value={value} key={value}>
+                  {valueLabel(value)}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label="Sắp xếp kế hoạch"
+              className="apple-input"
+              value={planFilters.sort}
+              onChange={(event) => setPlanFilters({ ...planFilters, sort: event.target.value })}
+            >
+              <option value="-updated_at">Mới cập nhật</option>
+              <option value="updated_at">Cũ cập nhật</option>
+              <option value="name">Tên tăng dần</option>
+            </select>
+          </div>
+          <DataTable
+            items={plans}
+            empty="Chưa có kế hoạch kiểm thử"
+            columns={[
+              { key: "name", label: "Tên" },
+              { key: "release", label: "Bản phát hành" },
+              { key: "build", label: "Bản dựng" },
+              {
+                key: "status",
+                label: "Trạng thái",
+                render: (item) => <StatusPill value={item.status} />,
+              },
+              {
+                key: "actions",
+                label: "Thao tác",
+                render: (item) => (
+                  <span className="flex flex-wrap gap-2">
+                    {item.status === "DRAFT" && can("testplan.update") && (
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={() => updatePlan(item)}
+                      >
+                        Sửa
+                      </button>
+                    )}
+                    {item.status === "DRAFT" && can("testplan.submit_review") && (
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={() => transitionPlan(item, "submit")}
+                      >
+                        Gửi rà soát
+                      </button>
+                    )}
+                    {["DRAFT", "IN_REVIEW"].includes(item.status) && can("testplan.approve") && (
+                      <button
+                        className="apple-button"
+                        type="button"
+                        onClick={() => transitionPlan(item, "approve")}
+                      >
+                        Phê duyệt
+                      </button>
+                    )}
+                    {can("testplan.create") && (
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            await testingApi.clonePlan(item._id);
+                            await load();
+                          } catch (reason) {
+                            setError(messageOf(reason));
+                          }
+                        }}
+                      >
+                        Nhân bản
+                      </button>
+                    )}
+                    {item.status !== "ARCHIVED" && can("testplan.archive") && (
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={() => transitionPlan(item, "archive")}
+                      >
+                        Lưu trữ
+                      </button>
+                    )}
+                  </span>
+                ),
+              },
+            ]}
+          />
+        </Panel>
+        <Panel title="Bộ kiểm thử">
+          <div className="grid gap-3 border-b border-border p-4 sm:grid-cols-2 lg:grid-cols-4">
+            <input
+              aria-label="Tìm bộ kiểm thử"
+              className="apple-input"
+              placeholder="Tìm tên bộ kiểm thử"
+              value={suiteFilters.q}
+              onChange={(event) => setSuiteFilters({ ...suiteFilters, q: event.target.value })}
+            />
+            <select
+              aria-label="Lọc loại bộ kiểm thử"
+              className="apple-input"
+              value={suiteFilters.suite_type}
+              onChange={(event) =>
+                setSuiteFilters({ ...suiteFilters, suite_type: event.target.value })
+              }
+            >
+              <option value="">Mọi loại</option>
+              {[
+                "smoke",
+                "regression",
+                "sanity",
+                "feature",
+                "api",
+                "ui",
+                "integration",
+                "custom",
+              ].map((value) => (
+                <option value={value} key={value}>
+                  {valueLabel(value)}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label="Lọc trạng thái bộ kiểm thử"
+              className="apple-input"
+              value={suiteFilters.status}
+              onChange={(event) => setSuiteFilters({ ...suiteFilters, status: event.target.value })}
+            >
+              <option value="">Mọi trạng thái</option>
+              {["ACTIVE", "ARCHIVED"].map((value) => (
+                <option value={value} key={value}>
+                  {valueLabel(value)}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label="Sắp xếp bộ kiểm thử"
+              className="apple-input"
+              value={suiteFilters.sort}
+              onChange={(event) => setSuiteFilters({ ...suiteFilters, sort: event.target.value })}
+            >
+              <option value="-updated_at">Mới cập nhật</option>
+              <option value="updated_at">Cũ cập nhật</option>
+              <option value="name">Tên tăng dần</option>
+            </select>
+          </div>
+          <DataTable
+            items={suites}
+            empty="Chưa có bộ kiểm thử"
+            columns={[
+              { key: "name", label: "Tên" },
+              { key: "suite_type", label: "Loại", render: (item) => valueLabel(item.suite_type) },
+              {
+                key: "count",
+                label: "Số ca",
+                render: (item) => item.test_case_version_ids?.length || 0,
+              },
+              {
+                key: "actions",
+                label: "Thao tác",
+                render: (item) => (
+                  <span className="flex flex-wrap gap-2">
+                    {can("testsuite.update") && (
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={() => updateSuite(item)}
+                      >
+                        Sửa
+                      </button>
+                    )}
+                    {can("testsuite.clone") && (
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            await testingApi.cloneSuite(item._id);
+                            await load();
+                          } catch (reason) {
+                            setError(messageOf(reason));
+                          }
+                        }}
+                      >
+                        Nhân bản
+                      </button>
+                    )}
+                    {item.status !== "ARCHIVED" && can("testsuite.archive") && (
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={() => archiveSuite(item)}
+                      >
+                        Lưu trữ
+                      </button>
+                    )}
+                  </span>
+                ),
+              },
+            ]}
+          />
         </Panel>
       </div>
       <Panel title="Danh sách lần chạy">

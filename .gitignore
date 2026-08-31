@@ -4,12 +4,16 @@ k8s/generated/
 __pycache__/
 node_modules/
 frontend/.next/
+frontend/.next-build/
 frontend/next-env.d.ts
 frontend/tsconfig.tsbuildinfo
 frontend/public/
 !frontend/public/
 frontend/public/*
 !frontend/public/veriq-logo.png
+!frontend/public/brand/
+frontend/public/brand/*
+!frontend/public/brand/veriq-logo.png
 !frontend/public/images/
 frontend/public/images/*
 !frontend/public/images/veriq-document-workspace.png
@@ -21,6 +25,9 @@ backend/.venv/
 !compilation_workflow_and_architecture_guide.md
 .gitignore
 test_*.py
+!backend/testing/src/api/test_design.py
+!backend/testing/tests/test_*.py
+!backend/content/tests/test_*.py
 !backend/ai/tests/test_regressions.py
 !backend/ai/tests/test_knowledge_chunking.py
 !backend/ai/tests/test_knowledge_conversion.py

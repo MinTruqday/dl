@@ -4,6 +4,7 @@ import { platformApi } from "@/features/authentication/services/platform.service
 import DataTable from "./DataTable";
 import { ErrorState, LoadingState, Panel, StatusPill, useQaActionDialog } from "./TestingUi";
 import { formatDate, messageOf } from "../lib/testing";
+import PlatformControlsPanel from "./PlatformControlsPanel";
 
 export default function PlatformOperationsPanel() {
   const { ask, dialog } = useQaActionDialog();
@@ -13,6 +14,8 @@ export default function PlatformOperationsPanel() {
   const [models, setModels] = useState([]);
   const [health, setHealth] = useState(null);
   const [jobs, setJobs] = useState([]);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [projectMemberships, setProjectMemberships] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -126,9 +129,170 @@ export default function PlatformOperationsPanel() {
               label: "Cập nhật",
               render: (item) => formatDate(item.updated_at),
             },
+            {
+              key: "actions",
+              label: "Thao tác",
+              render: (item) => (
+                <span className="flex flex-wrap gap-2">
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        const [detail, memberships] = await Promise.all([
+                          platformApi.getProject(item._id),
+                          platformApi.listProjectMemberships(item._id),
+                        ]);
+                        setSelectedProject(detail);
+                        setProjectMemberships(memberships);
+                      } catch (reason) {
+                        setError(messageOf(reason));
+                      }
+                    }}
+                  >
+                    Chẩn đoán
+                  </button>
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={async () => {
+                      const suspended = item.administrative_status === "SUSPENDED";
+                      const answer = await ask({
+                        title: suspended ? "Kích hoạt lại dự án" : "Tạm ngưng dự án",
+                        confirmLabel: suspended ? "Kích hoạt" : "Tạm ngưng",
+                        danger: !suspended,
+                        fields: [
+                          { name: "reason", label: "Lý do", required: true, multiline: true },
+                        ],
+                      });
+                      if (!answer) return;
+                      try {
+                        await platformApi.updateProjectStatus(
+                          item._id,
+                          suspended ? "ACTIVE" : "SUSPENDED",
+                          answer.reason,
+                        );
+                        await load();
+                      } catch (reason) {
+                        setError(messageOf(reason));
+                      }
+                    }}
+                  >
+                    {item.administrative_status === "SUSPENDED" ? "Kích hoạt" : "Tạm ngưng"}
+                  </button>
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={async () => {
+                      const answer = await ask({
+                        title: "Cập nhật hạn mức dự án",
+                        confirmLabel: "Lưu hạn mức",
+                        fields: [
+                          {
+                            name: "storage_bytes",
+                            label: "Dung lượng byte",
+                            initialValue: String(item.quota?.storage_bytes || 0),
+                          },
+                          {
+                            name: "ai_requests_per_day",
+                            label: "Lượt AI mỗi ngày",
+                            initialValue: String(item.quota?.ai_requests_per_day || 0),
+                          },
+                          {
+                            name: "concurrent_jobs",
+                            label: "Tác vụ đồng thời",
+                            initialValue: String(item.quota?.concurrent_jobs || 0),
+                          },
+                          { name: "reason", label: "Lý do", required: true },
+                        ],
+                      });
+                      if (!answer) return;
+                      try {
+                        await platformApi.updateProjectQuota(
+                          item._id,
+                          {
+                            storage_bytes: Number(answer.storage_bytes),
+                            ai_requests_per_day: Number(answer.ai_requests_per_day),
+                            concurrent_jobs: Number(answer.concurrent_jobs),
+                          },
+                          answer.reason,
+                        );
+                        await load();
+                      } catch (reason) {
+                        setError(messageOf(reason));
+                      }
+                    }}
+                  >
+                    Hạn mức
+                  </button>
+                  <button
+                    className="danger-button"
+                    type="button"
+                    onClick={async () => {
+                      const answer = await ask({
+                        title: "Xóa cứng dự án",
+                        description: `Nhập chính xác ${item.key} để xác nhận`,
+                        confirmLabel: "Xóa dự án",
+                        danger: true,
+                        fields: [
+                          { name: "confirmation", label: "Mã dự án", required: true },
+                          { name: "reason", label: "Lý do", required: true, multiline: true },
+                        ],
+                      });
+                      if (!answer) return;
+                      try {
+                        await platformApi.deleteProject(
+                          item._id,
+                          answer.confirmation,
+                          answer.reason,
+                        );
+                        if (selectedProject?._id === item._id) {
+                          setSelectedProject(null);
+                          setProjectMemberships([]);
+                        }
+                        await load();
+                      } catch (reason) {
+                        setError(messageOf(reason));
+                      }
+                    }}
+                  >
+                    Xóa cứng
+                  </button>
+                </span>
+              ),
+            },
           ]}
         />
       </Panel>
+
+      {selectedProject && (
+        <Panel title={`Chẩn đoán dự án ${selectedProject.key}`}>
+          <div className="grid gap-4 border-b border-border p-5 md:grid-cols-3">
+            <div>
+              <p className="field-label">Thành viên</p>
+              <p>{selectedProject.member_count}</p>
+            </div>
+            <div>
+              <p className="field-label">Thành viên hoạt động</p>
+              <p>{selectedProject.active_member_count}</p>
+            </div>
+            <div>
+              <p className="field-label">Tác vụ nền</p>
+              <p>{selectedProject.job_count}</p>
+            </div>
+          </div>
+          <DataTable
+            items={projectMemberships}
+            empty="Không có thành viên"
+            columns={[
+              { key: "user_id", label: "Tài khoản" },
+              { key: "project_role", label: "Vai trò" },
+              { key: "status", label: "Trạng thái" },
+              { key: "membership_revision", label: "Revision" },
+            ]}
+          />
+        </Panel>
+      )}
 
       <Panel title="Nhà cung cấp và mô hình AI">
         <DataTable
@@ -234,6 +398,21 @@ export default function PlatformOperationsPanel() {
                   >
                     Thử lại
                   </button>
+                ) : String(item.status).toLowerCase() === "queued" ? (
+                  <button
+                    className="danger-button"
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await platformApi.cancelJob(item._id);
+                        await load();
+                      } catch (reason) {
+                        setError(messageOf(reason));
+                      }
+                    }}
+                  >
+                    Hủy
+                  </button>
                 ) : null,
             },
           ]}
@@ -260,6 +439,7 @@ export default function PlatformOperationsPanel() {
           ]}
         />
       </Panel>
+      <PlatformControlsPanel />
       {dialog}
     </div>
   );

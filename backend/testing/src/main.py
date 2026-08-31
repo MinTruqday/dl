@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from src.api.analytics import router as analytics_router
+from src.api.attachments import router as attachments_router
 from src.api.api_artifacts import router as api_artifacts_router
 from src.api.bulk import router as bulk_router
 from src.api.changes import router as changes_router
@@ -53,6 +54,7 @@ app.include_router(traceability_router)
 app.include_router(changes_router)
 app.include_router(execution_router)
 app.include_router(analytics_router)
+app.include_router(attachments_router)
 app.include_router(api_artifacts_router)
 app.include_router(bulk_router)
 app.include_router(internal_jobs_router)

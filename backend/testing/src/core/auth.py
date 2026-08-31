@@ -1,4 +1,5 @@
 from enum import Enum
+import os
 
 import jwt
 from fastapi import Depends, Header, HTTPException, status
@@ -52,9 +53,8 @@ knowledge.read knowledge.manage ai.ask_project ai.generate_scenario ai.generate_
 ai.run_lint ai.run_duplicate_check ai.run_impact ai.create_proposal ai.generate_regression
 ai.result_metadata.read analytics.read analytics.ai.read report.read report.export
 comment.read comment.create comment.update_own comment.delete_own comment.moderate
-attachment.read attachment.upload attachment.delete_own_unreferenced attachment.moderate
+attachment.read attachment.manage attachment.upload attachment.delete_own_unreferenced attachment.moderate
 notification.read notification.mark_read notification.preferences.manage
-testplan.manage testsuite.manage testrun.manage review.comment review.read review.resolve
 """.split()
 )
 
@@ -85,37 +85,38 @@ READ_ONLY_PERMISSIONS = {
     "comment.read",
     "attachment.read",
     "notification.read",
-    "review.read",
 }
 
-COLLABORATOR_PERMISSIONS = {
+COMMENT_COLLABORATOR_PERMISSIONS = {
     "comment.read",
     "comment.create",
     "comment.update_own",
     "comment.delete_own",
-    "attachment.read",
-    "attachment.upload",
     "notification.read",
     "notification.mark_read",
     "notification.preferences.manage",
-    "review.comment",
-    "review.read",
-    "review.resolve",
+}
+
+COLLABORATOR_PERMISSIONS = COMMENT_COLLABORATOR_PERMISSIONS | {
+    "attachment.read",
+    "attachment.upload",
+    "attachment.delete_own_unreferenced",
 }
 
 TESTER_PERMISSIONS = READ_ONLY_PERMISSIONS | COLLABORATOR_PERMISSIONS | set(
     """
-testplan.create testplan.update testplan.submit_review testplan.manage
+testplan.create testplan.update testplan.submit_review
 testscenario.create testscenario.update testscenario.clone testscenario.archive
 testcase.create testcase.update testcase.review testcase.clone testcase.import testcase.export
 testcase.lint testcase.duplicate_check testcase.submit_review testcase.version.create
 requirement_document.download
-testsuite.create testsuite.update testsuite.clone testsuite.archive testsuite.manage
+testsuite.create testsuite.update testsuite.clone testsuite.archive
 trace.create trace.review trace.recover changeset.create changeset.review
 impact.execute impact.review proposal.review regression.generate
-testrun.execute defect.create defect.update defect.triage defect.retest defect.duplicate_check
+testrun.execute defect.create defect.update defect.trace.manage defect.triage defect.retest defect.duplicate_check
 ai.ask_project ai.generate_scenario ai.generate_testcase ai.run_lint ai.run_duplicate_check
 ai.run_impact ai.create_proposal ai.generate_regression analytics.ai.read report.export
+attachment.manage
 """.split()
 )
 
@@ -126,19 +127,20 @@ requirement_document.review_extraction requirement_document.confirm_extraction
 requirement_document.archive requirement_document.restore
 requirement.create requirement.update requirement.review requirement.submit_review
 requirement.version.create acceptance_criteria.manage business_rule.manage requirement_dependency.manage
-trace.create trace.review changeset.create changeset.review impact.review proposal.review
-testcase.export testcase.lint testcase.duplicate_check defect.create
+trace.create trace.review trace.recover changeset.create changeset.review impact.review proposal.review
+testcase.export testcase.lint testcase.duplicate_check testcase.review defect.create defect.trace.manage
 knowledge.manage ai.ask_project ai.run_lint ai.run_duplicate_check analytics.ai.read report.export
+attachment.manage
 """.split()
 )
 
-DEVELOPER_PERMISSIONS = READ_ONLY_PERMISSIONS | COLLABORATOR_PERMISSIONS | {
+DEVELOPER_PERMISSIONS = READ_ONLY_PERMISSIONS | COMMENT_COLLABORATOR_PERMISSIONS | {
     "requirement_document.download",
     "impact.review",
     "proposal.review",
     "defect.create",
-    "defect.transition.developer",
     "defect.duplicate_check",
+    "testcase.review",
     "ai.ask_project",
 }
 
@@ -159,9 +161,11 @@ POLICY_PERMISSIONS = {
     "tester_can_revoke_trace": (ProjectRole.TESTER, "trace.revoke"),
     "tester_can_create_run": (ProjectRole.TESTER, "testrun.create"),
     "tester_can_override_impact": (ProjectRole.TESTER, "impact.override"),
+    "tester_can_close_impact": (ProjectRole.TESTER, "impact.close"),
     "tester_can_close_defect": (ProjectRole.TESTER, "defect.close"),
     "tester_can_manage_knowledge": (ProjectRole.TESTER, "knowledge.manage"),
     "tester_can_manage_runs": (ProjectRole.TESTER, "testrun.update"),
+    "tester_can_assign_runs": (ProjectRole.TESTER, "testrun.assign"),
     "tester_can_start_runs": (ProjectRole.TESTER, "testrun.start"),
     "tester_can_complete_runs": (ProjectRole.TESTER, "testrun.complete"),
     "tester_can_abort_runs": (ProjectRole.TESTER, "testrun.abort"),
@@ -202,7 +206,28 @@ def permissions_for_role(role: ProjectRole | str, settings_value: dict | None = 
     project_settings = settings_value or {}
     for key, (policy_role, permission) in POLICY_PERMISSIONS.items():
         if normalized == policy_role and project_settings.get(key) is True:
-            permissions.add(permission)
+            if isinstance(permission, (set, frozenset, tuple, list)):
+                permissions.update(permission)
+            else:
+                permissions.add(permission)
+    if normalized == ProjectRole.TESTER and project_settings.get("tester_can_manage_runs") is True:
+        permissions.update(
+            {
+                "testrun.update",
+                "testrun.assign",
+                "testrun.start",
+                "testrun.complete",
+                "testrun.abort",
+            }
+        )
+    if normalized == ProjectRole.VIEWER and project_settings.get("viewer_can_export") is True:
+        permissions.update({"report.export", "testcase.export"})
+    if normalized == ProjectRole.DEVELOPER and project_settings.get("developer_can_export") is True:
+        permissions.update({"report.export", "testcase.export"})
+    if normalized == ProjectRole.BA and project_settings.get("ba_can_create_defect") is False:
+        permissions.discard("defect.create")
+    if normalized == ProjectRole.DEVELOPER and project_settings.get("developer_can_create_defect") is False:
+        permissions.discard("defect.create")
     overrides = project_settings.get("permission_overrides", {}).get(normalized.value, {})
     permissions.update(item for item in overrides.get("allow", []) if item in PROJECT_PERMISSIONS)
     permissions.difference_update(overrides.get("deny", []))
@@ -238,6 +263,34 @@ async def get_current_user(
         role_value = payload.get("system_role")
         if not role_value:
             role_value = "ADMIN" if str(payload.get("role", "")).lower() == "admin" else "USER"
+        session_id = payload.get("sid")
+        if session_id:
+            from src.core.database import database
+
+            if database.client is None:
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail={"code": "AUTHENTICATION_UNAVAILABLE"},
+                )
+            auth_db_name = os.environ.get("AUTHENTICATION_DB_NAME", "veriq_authentication")
+            auth_db = database.client[auth_db_name]
+            account = await auth_db.auth_credentials.find_one(
+                {"_id": str(user_id)}, {"is_active": 1, "account_status": 1}
+            )
+            session = await auth_db.sessions.find_one(
+                {"_id": str(session_id), "user_id": str(user_id), "revoked_at": None},
+                {"_id": 1},
+            )
+            if (
+                not account
+                or account.get("is_active", True) is False
+                or account.get("account_status", "ACTIVE") != "ACTIVE"
+                or not session
+            ):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail={"code": "SESSION_REVOKED"},
+                )
         return CurrentUser(
             _id=str(user_id),
             email=str(email),

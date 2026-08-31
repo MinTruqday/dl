@@ -3,10 +3,18 @@ import statistics
 import time
 
 import httpx
+import jwt
 
 
 BASE_URL = os.getenv("TESTING_TEST_URL", "http://testing:8000")
-HEADERS = {"x-test-user-id": "qa-lead-e2e"}
+HEADERS = {
+    "Authorization": "Bearer "
+    + jwt.encode(
+        {"uid": "qa-lead-e2e", "sub": "qa-lead-e2e@test.local", "system_role": "USER"},
+        os.environ["SECRET_KEY"],
+        algorithm="HS256",
+    )
+}
 
 
 def p95(values):

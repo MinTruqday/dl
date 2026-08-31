@@ -62,6 +62,7 @@ async def qa_assistance(req: QAAssistanceRequest):
             status="DEGRADED",
             degraded_mode="DEGRADED_AI",
             model={**model, "provider": "deterministic-fallback", "model": "qa-rules-v2"},
+            answer="Không thể tạo câu trả lời có căn cứ khi nhà cung cấp AI chưa sẵn sàng",
         )
     if result.capability != req.capability:
         raise HTTPException(status_code=502, detail={"code": "qa_capability_mismatch"})

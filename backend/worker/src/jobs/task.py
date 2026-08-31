@@ -8,7 +8,7 @@ import httpx
 from loguru import logger
 
 from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import record_job
+from src.core.infrastructure.database import database, record_job
 from src.core.infrastructure.mq import mq
 from src.core.metrics import metrics_collector
 
@@ -31,6 +31,9 @@ async def handle_qa_job(payload: dict):
     requester_email = str(payload.get("requester_email") or "")
     validate_identifier(job_id, "job identifier")
     validate_identifier(requester_id, "requester identifier")
+    job = await database.mongodb[settings.WORKER_DB_NAME].worker_jobs.find_one({"_id": job_id}, {"status": 1})
+    if job and job.get("status") == "canceled":
+        return
     job_payload = payload.get("payload")
     if not isinstance(job_payload, dict):
         raise PermanentTaskError("QA job payload is required")

@@ -9,13 +9,13 @@ from src.core.configuration import settings
 router = APIRouter(prefix="/api/qa", tags=["QA Async Jobs"])
 ALLOWED_EVENTS = {"document.parse.requested", "requirement.extract.requested", "requirement.semantic_diff.requested", "test.generate.requested", "duplicate.scan.requested", "impact.analysis.requested", "knowledge.index.requested"}
 EVENT_PERMISSIONS = {
-    "document.parse.requested": "knowledge.manage",
-    "requirement.extract.requested": "requirement.create",
-    "requirement.semantic_diff.requested": "impact.execute",
-    "test.generate.requested": "ai.generate_testcase",
-    "duplicate.scan.requested": "testcase.read",
-    "impact.analysis.requested": "impact.execute",
-    "knowledge.index.requested": "knowledge.manage",
+    "document.parse.requested": ("requirement_document.extract",),
+    "requirement.extract.requested": ("requirement_document.extract",),
+    "requirement.semantic_diff.requested": ("changeset.create",),
+    "test.generate.requested": ("ai.generate_testcase", "testcase.create"),
+    "duplicate.scan.requested": ("testcase.duplicate_check", "ai.run_duplicate_check"),
+    "impact.analysis.requested": ("impact.execute", "ai.run_impact"),
+    "knowledge.index.requested": ("knowledge.manage",),
 }
 
 
@@ -24,7 +24,8 @@ async def enqueue_job(project_id: str, body: dict = Body(), user: CurrentUser = 
     event = body.get("event")
     if event not in ALLOWED_EVENTS:
         raise HTTPException(status_code=422, detail={"code": "UNSUPPORTED_JOB_EVENT"})
-    await get_project(project_id, user, EVENT_PERMISSIONS[event])
+    for permission in EVENT_PERMISSIONS[event]:
+        await get_project(project_id, user, permission)
     artifact_version_id = str(body.get("artifact_version_id") or "")
     model_version = str(body.get("model_version") or "")
     if not artifact_version_id or not model_version:

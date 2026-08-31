@@ -35,6 +35,13 @@ export default function TestDesignPage({ project }) {
     automation_status: "",
     sort: "-updated_at",
   });
+  const [scenarioFilters, setScenarioFilters] = useState({
+    q: "",
+    category: "",
+    risk: "",
+    status: "",
+    sort: "-updated_at",
+  });
   const [duplicates, setDuplicates] = useState([]);
   const [operations, setOperations] = useState([]);
   const [testImport, setTestImport] = useState(null);
@@ -73,6 +80,7 @@ export default function TestDesignPage({ project }) {
     dataSetVersionIds: [],
   });
   const [error, setError] = useState("");
+  const can = (permission) => project.current_permissions?.includes(permission);
   const load = useCallback(async () => {
     try {
       const [
@@ -85,7 +93,7 @@ export default function TestDesignPage({ project }) {
         operationValues,
       ] = await Promise.all([
         testingApi.listRequirements(project._id, { page_size: 500 }),
-        testingApi.listScenarios(project._id),
+        testingApi.listScenarios(project._id, scenarioFilters),
         testingApi.listDataSets(project._id),
         testingApi.listTestDrafts(project._id),
         testingApi.listTestCasePage(project._id, {
@@ -110,7 +118,7 @@ export default function TestDesignPage({ project }) {
     } catch (reason) {
       setError(messageOf(reason));
     }
-  }, [project._id, testFilters, testPage]);
+  }, [project._id, scenarioFilters, testFilters, testPage]);
   useEffect(() => {
     void load();
   }, [load]);
@@ -359,70 +367,86 @@ export default function TestDesignPage({ project }) {
     await persistDraft(draftEdit, draftSequence.current);
   };
   useEffect(() => {
-    if (!draftDirty || selectedDraft?.status !== "DRAFT" || !draftEdit) return undefined;
+    if (
+      !draftDirty ||
+      selectedDraft?.status !== "DRAFT" ||
+      !draftEdit ||
+      !project.current_permissions?.includes("testcase.update")
+    )
+      return undefined;
     const sequence = draftSequence.current;
     const timer = window.setTimeout(() => {
       void persistDraft(draftEdit, sequence);
     }, 1500);
     return () => window.clearTimeout(timer);
-  }, [draftDirty, draftEdit, persistDraft, selectedDraft?.status]);
+  }, [draftDirty, draftEdit, persistDraft, project.current_permissions, selectedDraft?.status]);
   return (
     <QaPage title="Kịch bản và ca kiểm thử" actions={<ProjectCrumb projectId={project._id} />}>
       {error && <ErrorState message={error} />}
-      <Panel
-        title="Tạo bằng AI"
-        description="Kết quả chỉ là bản nháp và không tự động trở thành phiên bản hoạt động"
-      >
-        <div className="flex flex-wrap gap-3 p-5">
-          <select
-            aria-label="Yêu cầu nguồn"
-            className="apple-input min-w-72"
-            value={selectedRequirement}
-            onChange={(event) => setSelectedRequirement(event.target.value)}
-          >
-            <option value="">Chọn yêu cầu</option>
-            {requirements.map((item) => (
-              <option key={item._id} value={item.current_version_id}>
-                {item.requirement_key} {item.current_version?.title}
-              </option>
-            ))}
-          </select>
-          <button className="apple-button" type="button" onClick={generate}>
-            Tạo 4 nhóm ca kiểm thử
-          </button>
-          <button
-            className="secondary-button"
-            type="button"
-            onClick={async () => {
-              if (!selectedRequirement) return;
-              try {
-                await testingApi.generateScenarios(selectedRequirement, {
-                  categories: ["happy_path", "negative", "boundary", "validation"],
-                  count_per_category: 1,
-                });
-                await load();
-              } catch (reason) {
-                setError(messageOf(reason));
-              }
-            }}
-          >
-            Tạo kịch bản
-          </button>
-          <button
-            className="secondary-button"
-            type="button"
-            onClick={async () => {
-              try {
-                setDuplicates(await testingApi.findDuplicates(project._id));
-              } catch (reason) {
-                setError(messageOf(reason));
-              }
-            }}
-          >
-            Tìm ca kiểm thử trùng lặp
-          </button>
-        </div>
-      </Panel>
+      {(can("ai.generate_testcase") ||
+        can("ai.generate_scenario") ||
+        can("testcase.duplicate_check")) && (
+        <Panel
+          title="Tạo bằng AI"
+          description="Kết quả chỉ là bản nháp và không tự động trở thành phiên bản hoạt động"
+        >
+          <div className="flex flex-wrap gap-3 p-5">
+            <select
+              aria-label="Yêu cầu nguồn"
+              className="apple-input min-w-72"
+              value={selectedRequirement}
+              onChange={(event) => setSelectedRequirement(event.target.value)}
+            >
+              <option value="">Chọn yêu cầu</option>
+              {requirements.map((item) => (
+                <option key={item._id} value={item.current_version_id}>
+                  {item.requirement_key} {item.current_version?.title}
+                </option>
+              ))}
+            </select>
+            {can("ai.generate_testcase") && can("testcase.create") && (
+              <button className="apple-button" type="button" onClick={generate}>
+                Tạo 4 nhóm ca kiểm thử
+              </button>
+            )}
+            {can("ai.generate_scenario") && can("testscenario.create") && (
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={async () => {
+                  if (!selectedRequirement) return;
+                  try {
+                    await testingApi.generateScenarios(selectedRequirement, {
+                      categories: ["happy_path", "negative", "boundary", "validation"],
+                      count_per_category: 1,
+                    });
+                    await load();
+                  } catch (reason) {
+                    setError(messageOf(reason));
+                  }
+                }}
+              >
+                Tạo kịch bản
+              </button>
+            )}
+            {can("testcase.duplicate_check") && can("ai.run_duplicate_check") && (
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={async () => {
+                  try {
+                    setDuplicates(await testingApi.findDuplicates(project._id));
+                  } catch (reason) {
+                    setError(messageOf(reason));
+                  }
+                }}
+              >
+                Tìm ca kiểm thử trùng lặp
+              </button>
+            )}
+          </div>
+        </Panel>
+      )}
       <div className="grid gap-5 xl:grid-cols-2">
         <Panel title="Bản nháp ca kiểm thử">
           <DataTable
@@ -443,7 +467,7 @@ export default function TestDesignPage({ project }) {
                 label: "Duyệt",
                 render: (item) => (
                   <span className="flex flex-wrap gap-2">
-                    {item.status === "DRAFT" && (
+                    {item.status === "DRAFT" && can("testcase.submit_review") && (
                       <button
                         className="secondary-button"
                         type="button"
@@ -455,7 +479,7 @@ export default function TestDesignPage({ project }) {
                         Gửi rà soát
                       </button>
                     )}
-                    {item.status === "IN_REVIEW" && (
+                    {item.status === "IN_REVIEW" && can("testcase.review") && (
                       <button
                         className="secondary-button"
                         type="button"
@@ -467,7 +491,7 @@ export default function TestDesignPage({ project }) {
                         Yêu cầu sửa
                       </button>
                     )}
-                    {item.status === "IN_REVIEW" && (
+                    {item.status === "IN_REVIEW" && can("testcase.approve") && (
                       <button
                         className="apple-button"
                         type="button"
@@ -489,154 +513,162 @@ export default function TestDesignPage({ project }) {
           title="Phiên bản ca kiểm thử"
           actions={
             <div className="flex flex-wrap gap-2">
-              <button
-                className="secondary-button"
-                disabled={!selectedTestIds.length}
-                type="button"
-                onClick={async () => {
-                  const answer = await ask({
-                    title: "Cập nhật nhãn ca kiểm thử",
-                    description: `${selectedTestIds.length} ca kiểm thử đã chọn`,
-                    confirmLabel: "Cập nhật",
-                    fields: [
-                      {
-                        name: "add",
-                        label: "Nhãn cần thêm phân cách bằng dấu phẩy",
-                        autoFocus: true,
-                      },
-                      { name: "remove", label: "Nhãn cần gỡ phân cách bằng dấu phẩy" },
-                    ],
-                  });
-                  if (!answer) return;
-                  const splitTags = (value) =>
-                    value
-                      .split(",")
-                      .map((item) => item.trim())
-                      .filter(Boolean);
-                  try {
-                    await testingApi.bulkTags(project._id, {
-                      artifact_type: "test_case",
-                      ids: selectedTestIds,
-                      add_tags: splitTags(answer.add),
-                      remove_tags: splitTags(answer.remove),
+              {can("testcase.update") && (
+                <button
+                  className="secondary-button"
+                  disabled={!selectedTestIds.length}
+                  type="button"
+                  onClick={async () => {
+                    const answer = await ask({
+                      title: "Cập nhật nhãn ca kiểm thử",
+                      description: `${selectedTestIds.length} ca kiểm thử đã chọn`,
+                      confirmLabel: "Cập nhật",
+                      fields: [
+                        {
+                          name: "add",
+                          label: "Nhãn cần thêm phân cách bằng dấu phẩy",
+                          autoFocus: true,
+                        },
+                        { name: "remove", label: "Nhãn cần gỡ phân cách bằng dấu phẩy" },
+                      ],
                     });
-                    setSelectedTestIds([]);
-                    await load();
-                  } catch (reason) {
-                    setError(messageOf(reason));
-                  }
-                }}
-              >
-                Cập nhật nhãn
-              </button>
-              <button
-                className="secondary-button"
-                disabled={!selectedTestIds.length || !suites.length}
-                type="button"
-                onClick={async () => {
-                  const answer = await ask({
-                    title: "Thêm vào bộ kiểm thử",
-                    description: `${selectedTestIds.length} ca kiểm thử đã chọn`,
-                    confirmLabel: "Thêm vào bộ",
-                    fields: [
-                      {
-                        name: "suiteId",
-                        label: "Bộ kiểm thử",
-                        required: true,
-                        autoFocus: true,
-                        initialValue: suites[0]?._id || "",
-                        options: suites.map((item) => ({ value: item._id, label: item.name })),
-                      },
-                    ],
-                  });
-                  if (!answer) return;
-                  const suite = suites.find((item) => item._id === answer.suiteId);
-                  try {
-                    await testingApi.bulkAddToSuite(project._id, {
-                      suite_id: answer.suiteId,
-                      test_case_ids: selectedTestIds,
-                      expected_revision: suite?.revision || 1,
+                    if (!answer) return;
+                    const splitTags = (value) =>
+                      value
+                        .split(",")
+                        .map((item) => item.trim())
+                        .filter(Boolean);
+                    try {
+                      await testingApi.bulkTags(project._id, {
+                        artifact_type: "test_case",
+                        ids: selectedTestIds,
+                        add_tags: splitTags(answer.add),
+                        remove_tags: splitTags(answer.remove),
+                      });
+                      setSelectedTestIds([]);
+                      await load();
+                    } catch (reason) {
+                      setError(messageOf(reason));
+                    }
+                  }}
+                >
+                  Cập nhật nhãn
+                </button>
+              )}
+              {can("testsuite.update") && (
+                <button
+                  className="secondary-button"
+                  disabled={!selectedTestIds.length || !suites.length}
+                  type="button"
+                  onClick={async () => {
+                    const answer = await ask({
+                      title: "Thêm vào bộ kiểm thử",
+                      description: `${selectedTestIds.length} ca kiểm thử đã chọn`,
+                      confirmLabel: "Thêm vào bộ",
+                      fields: [
+                        {
+                          name: "suiteId",
+                          label: "Bộ kiểm thử",
+                          required: true,
+                          autoFocus: true,
+                          initialValue: suites[0]?._id || "",
+                          options: suites.map((item) => ({ value: item._id, label: item.name })),
+                        },
+                      ],
                     });
-                    setSelectedTestIds([]);
-                    await load();
-                  } catch (reason) {
-                    setError(messageOf(reason));
-                  }
-                }}
-              >
-                Thêm vào bộ
-              </button>
-              <button
-                className="secondary-button"
-                disabled={!selectedTestIds.length}
-                type="button"
-                onClick={async () => {
-                  const answer = await ask({
-                    title: "Đánh dấu cần rà soát",
-                    description: `${selectedTestIds.length} ca kiểm thử đã chọn`,
-                    confirmLabel: "Đánh dấu",
-                    fields: [
-                      {
-                        name: "reason",
-                        label: "Lý do",
-                        required: true,
-                        multiline: true,
-                        autoFocus: true,
-                      },
-                    ],
-                  });
-                  if (!answer) return;
-                  try {
-                    await testingApi.bulkMarkReviewRequired(project._id, {
-                      test_case_ids: selectedTestIds,
-                      reason: answer.reason,
+                    if (!answer) return;
+                    const suite = suites.find((item) => item._id === answer.suiteId);
+                    try {
+                      await testingApi.bulkAddToSuite(project._id, {
+                        suite_id: answer.suiteId,
+                        test_case_ids: selectedTestIds,
+                        expected_revision: suite?.revision || 1,
+                      });
+                      setSelectedTestIds([]);
+                      await load();
+                    } catch (reason) {
+                      setError(messageOf(reason));
+                    }
+                  }}
+                >
+                  Thêm vào bộ
+                </button>
+              )}
+              {can("testcase.update") && (
+                <button
+                  className="secondary-button"
+                  disabled={!selectedTestIds.length}
+                  type="button"
+                  onClick={async () => {
+                    const answer = await ask({
+                      title: "Đánh dấu cần rà soát",
+                      description: `${selectedTestIds.length} ca kiểm thử đã chọn`,
+                      confirmLabel: "Đánh dấu",
+                      fields: [
+                        {
+                          name: "reason",
+                          label: "Lý do",
+                          required: true,
+                          multiline: true,
+                          autoFocus: true,
+                        },
+                      ],
                     });
-                    setSelectedTestIds([]);
-                    await load();
-                  } catch (reason) {
-                    setError(messageOf(reason));
-                  }
-                }}
-              >
-                Cần rà soát
-              </button>
-              <button
-                className="danger-button"
-                disabled={!selectedTestIds.length}
-                type="button"
-                onClick={async () => {
-                  const answer = await ask({
-                    title: "Lưu trữ ca kiểm thử",
-                    description:
-                      "Các ca đang nằm trong lần chạy chưa kết thúc sẽ bị từ chối riêng lẻ",
-                    confirmLabel: "Lưu trữ",
-                    danger: true,
-                    fields: [
-                      {
-                        name: "reason",
-                        label: "Lý do",
-                        required: true,
-                        multiline: true,
-                        autoFocus: true,
-                      },
-                    ],
-                  });
-                  if (!answer) return;
-                  try {
-                    await testingApi.bulkArchive(project._id, {
-                      artifact_type: "test_case",
-                      ids: selectedTestIds,
-                      reason: answer.reason,
+                    if (!answer) return;
+                    try {
+                      await testingApi.bulkMarkReviewRequired(project._id, {
+                        test_case_ids: selectedTestIds,
+                        reason: answer.reason,
+                      });
+                      setSelectedTestIds([]);
+                      await load();
+                    } catch (reason) {
+                      setError(messageOf(reason));
+                    }
+                  }}
+                >
+                  Cần rà soát
+                </button>
+              )}
+              {can("testcase.archive") && (
+                <button
+                  className="danger-button"
+                  disabled={!selectedTestIds.length}
+                  type="button"
+                  onClick={async () => {
+                    const answer = await ask({
+                      title: "Lưu trữ ca kiểm thử",
+                      description:
+                        "Các ca đang nằm trong lần chạy chưa kết thúc sẽ bị từ chối riêng lẻ",
+                      confirmLabel: "Lưu trữ",
+                      danger: true,
+                      fields: [
+                        {
+                          name: "reason",
+                          label: "Lý do",
+                          required: true,
+                          multiline: true,
+                          autoFocus: true,
+                        },
+                      ],
                     });
-                    setSelectedTestIds([]);
-                    await load();
-                  } catch (reason) {
-                    setError(messageOf(reason));
-                  }
-                }}
-              >
-                Lưu trữ
-              </button>
+                    if (!answer) return;
+                    try {
+                      await testingApi.bulkArchive(project._id, {
+                        artifact_type: "test_case",
+                        ids: selectedTestIds,
+                        reason: answer.reason,
+                      });
+                      setSelectedTestIds([]);
+                      await load();
+                    } catch (reason) {
+                      setError(messageOf(reason));
+                    }
+                  }}
+                >
+                  Lưu trữ
+                </button>
+              )}
             </div>
           }
         >
@@ -718,8 +750,16 @@ export default function TestDesignPage({ project }) {
               }
             }}
             items={tests}
-            selectedIds={selectedTestIds}
-            onSelectionChange={setSelectedTestIds}
+            selectedIds={
+              can("testcase.update") || can("testsuite.update") || can("testcase.archive")
+                ? selectedTestIds
+                : undefined
+            }
+            onSelectionChange={
+              can("testcase.update") || can("testsuite.update") || can("testcase.archive")
+                ? setSelectedTestIds
+                : undefined
+            }
             selectionLabel="Chọn ca kiểm thử"
             empty="Chưa có ca kiểm thử được phê duyệt"
             columns={[
@@ -740,25 +780,27 @@ export default function TestDesignPage({ project }) {
                 label: "Vòng đời",
                 render: (item) => (
                   <span className="flex flex-wrap gap-2">
-                    <button
-                      className="secondary-button"
-                      type="button"
-                      onClick={async (event) => {
-                        event.stopPropagation();
-                        try {
-                          await testingApi.cloneTestCase(item._id, {
-                            expected_current_version_id: item.current_version_id,
-                            title: `${item.current_version?.title || item.test_case_key} bản sao`,
-                          });
-                          await load();
-                        } catch (reasonValue) {
-                          setError(messageOf(reasonValue));
-                        }
-                      }}
-                    >
-                      Nhân bản
-                    </button>
-                    {item.status !== "OBSOLETE" ? (
+                    {can("testcase.clone") && (
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={async (event) => {
+                          event.stopPropagation();
+                          try {
+                            await testingApi.cloneTestCase(item._id, {
+                              expected_current_version_id: item.current_version_id,
+                              title: `${item.current_version?.title || item.test_case_key} bản sao`,
+                            });
+                            await load();
+                          } catch (reasonValue) {
+                            setError(messageOf(reasonValue));
+                          }
+                        }}
+                      >
+                        Nhân bản
+                      </button>
+                    )}
+                    {item.status !== "OBSOLETE" && can("testcase.archive") ? (
                       <button
                         className="secondary-button"
                         type="button"
@@ -797,9 +839,43 @@ export default function TestDesignPage({ project }) {
                       >
                         Đánh dấu không còn hiệu lực
                       </button>
-                    ) : (
+                    ) : item.status === "OBSOLETE" && can("testcase.restore") ? (
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={async (event) => {
+                          event.stopPropagation();
+                          const answer = await ask({
+                            title: "Khôi phục ca kiểm thử",
+                            description: `${item.test_case_key} sẽ trở lại trạng thái hoạt động`,
+                            confirmLabel: "Khôi phục",
+                            fields: [
+                              {
+                                name: "reason",
+                                label: "Lý do",
+                                required: true,
+                                multiline: true,
+                                autoFocus: true,
+                              },
+                            ],
+                          });
+                          if (!answer) return;
+                          try {
+                            await testingApi.restoreTestCase(item._id, {
+                              expected_current_version_id: item.current_version_id,
+                              reason: answer.reason,
+                            });
+                            await load();
+                          } catch (reasonValue) {
+                            setError(messageOf(reasonValue));
+                          }
+                        }}
+                      >
+                        Khôi phục
+                      </button>
+                    ) : item.status === "OBSOLETE" ? (
                       <span className="text-[11px] text-ink-muted">Đã lưu lịch sử</span>
-                    )}
+                    ) : null}
                   </span>
                 ),
               },
@@ -833,19 +909,21 @@ export default function TestDesignPage({ project }) {
             title={`Biên tập ${selectedDraft.test_case_key}`}
             description="Các bước và dữ liệu chỉ sửa được khi còn ở trạng thái bản nháp"
             actions={
-              <button
-                className="secondary-button"
-                type="button"
-                onClick={async () => {
-                  try {
-                    setTestLint(await testingApi.lintTestDraft(selectedDraft._id));
-                  } catch (reason) {
-                    setError(messageOf(reason));
-                  }
-                }}
-              >
-                Kiểm tra chất lượng
-              </button>
+              can("testcase.lint") && can("ai.run_lint") ? (
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      setTestLint(await testingApi.lintTestDraft(selectedDraft._id));
+                    } catch (reason) {
+                      setError(messageOf(reason));
+                    }
+                  }}
+                >
+                  Kiểm tra chất lượng
+                </button>
+              ) : null
             }
           >
             <div className="grid gap-4 p-5 lg:grid-cols-2">
@@ -853,7 +931,7 @@ export default function TestDesignPage({ project }) {
                 Tên ca kiểm thử
                 <input
                   className="apple-input mt-2"
-                  disabled={selectedDraft.status !== "DRAFT"}
+                  disabled={selectedDraft.status !== "DRAFT" || !can("testcase.update")}
                   value={draftEdit.title}
                   onChange={(event) => changeDraftEdit({ title: event.target.value })}
                 />
@@ -862,7 +940,7 @@ export default function TestDesignPage({ project }) {
                 <select
                   aria-label="Loại bản nháp ca kiểm thử"
                   className="apple-input"
-                  disabled={selectedDraft.status !== "DRAFT"}
+                  disabled={selectedDraft.status !== "DRAFT" || !can("testcase.update")}
                   value={draftEdit.type}
                   onChange={(event) => changeDraftEdit({ type: event.target.value })}
                 >
@@ -889,7 +967,7 @@ export default function TestDesignPage({ project }) {
                 <select
                   aria-label="Ưu tiên bản nháp ca kiểm thử"
                   className="apple-input"
-                  disabled={selectedDraft.status !== "DRAFT"}
+                  disabled={selectedDraft.status !== "DRAFT" || !can("testcase.update")}
                   value={draftEdit.priority}
                   onChange={(event) => changeDraftEdit({ priority: event.target.value })}
                 >
@@ -902,7 +980,7 @@ export default function TestDesignPage({ project }) {
                 <select
                   aria-label="Rủi ro bản nháp ca kiểm thử"
                   className="apple-input"
-                  disabled={selectedDraft.status !== "DRAFT"}
+                  disabled={selectedDraft.status !== "DRAFT" || !can("testcase.update")}
                   value={draftEdit.risk}
                   onChange={(event) => changeDraftEdit({ risk: event.target.value })}
                 >
@@ -917,7 +995,7 @@ export default function TestDesignPage({ project }) {
                 Mục tiêu kiểm thử
                 <textarea
                   className="apple-input mt-2 min-h-20"
-                  disabled={selectedDraft.status !== "DRAFT"}
+                  disabled={selectedDraft.status !== "DRAFT" || !can("testcase.update")}
                   value={draftEdit.objective}
                   onChange={(event) => changeDraftEdit({ objective: event.target.value })}
                 />
@@ -926,7 +1004,7 @@ export default function TestDesignPage({ project }) {
                 Điều kiện trước
                 <textarea
                   className="apple-input mt-2 min-h-24"
-                  disabled={selectedDraft.status !== "DRAFT"}
+                  disabled={selectedDraft.status !== "DRAFT" || !can("testcase.update")}
                   value={draftEdit.preconditions}
                   onChange={(event) => changeDraftEdit({ preconditions: event.target.value })}
                 />
@@ -934,7 +1012,7 @@ export default function TestDesignPage({ project }) {
               <div className="space-y-4 lg:col-span-2">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <p className="field-label">Các bước kiểm thử</p>
-                  {selectedDraft.status === "DRAFT" && (
+                  {selectedDraft.status === "DRAFT" && can("testcase.update") && (
                     <button
                       className="secondary-button"
                       type="button"
@@ -961,7 +1039,7 @@ export default function TestDesignPage({ project }) {
                       Thao tác
                       <textarea
                         className="apple-input mt-2 min-h-24"
-                        disabled={selectedDraft.status !== "DRAFT"}
+                        disabled={selectedDraft.status !== "DRAFT" || !can("testcase.update")}
                         value={step.action}
                         onChange={(event) => {
                           const steps = [...draftEdit.steps];
@@ -974,7 +1052,7 @@ export default function TestDesignPage({ project }) {
                       Kết quả mong đợi
                       <textarea
                         className="apple-input mt-2 min-h-24"
-                        disabled={selectedDraft.status !== "DRAFT"}
+                        disabled={selectedDraft.status !== "DRAFT" || !can("testcase.update")}
                         value={step.expected}
                         onChange={(event) => {
                           const steps = [...draftEdit.steps];
@@ -987,7 +1065,7 @@ export default function TestDesignPage({ project }) {
                       Dữ liệu dạng JSON
                       <textarea
                         className="apple-input mt-2 min-h-24 font-mono"
-                        disabled={selectedDraft.status !== "DRAFT"}
+                        disabled={selectedDraft.status !== "DRAFT" || !can("testcase.update")}
                         value={step.data}
                         onChange={(event) => {
                           const steps = [...draftEdit.steps];
@@ -996,19 +1074,21 @@ export default function TestDesignPage({ project }) {
                         }}
                       />
                     </label>
-                    {selectedDraft.status === "DRAFT" && draftEdit.steps.length > 1 && (
-                      <button
-                        className="secondary-button w-fit"
-                        type="button"
-                        onClick={() =>
-                          changeDraftEdit({
-                            steps: draftEdit.steps.filter((_, stepIndex) => stepIndex !== index),
-                          })
-                        }
-                      >
-                        Xóa bước
-                      </button>
-                    )}
+                    {selectedDraft.status === "DRAFT" &&
+                      can("testcase.update") &&
+                      draftEdit.steps.length > 1 && (
+                        <button
+                          className="secondary-button w-fit"
+                          type="button"
+                          onClick={() =>
+                            changeDraftEdit({
+                              steps: draftEdit.steps.filter((_, stepIndex) => stepIndex !== index),
+                            })
+                          }
+                        >
+                          Xóa bước
+                        </button>
+                      )}
                   </fieldset>
                 ))}
               </div>
@@ -1016,7 +1096,7 @@ export default function TestDesignPage({ project }) {
                 Dữ liệu dùng chung dạng JSON
                 <textarea
                   className="apple-input mt-2 min-h-28 font-mono"
-                  disabled={selectedDraft.status !== "DRAFT"}
+                  disabled={selectedDraft.status !== "DRAFT" || !can("testcase.update")}
                   value={draftEdit.testData}
                   onChange={(event) => changeDraftEdit({ testData: event.target.value })}
                 />
@@ -1026,7 +1106,7 @@ export default function TestDesignPage({ project }) {
                 <select
                   aria-label="Phiên bản bộ dữ liệu của bản nháp"
                   className="apple-input mt-2 min-h-28"
-                  disabled={selectedDraft.status !== "DRAFT"}
+                  disabled={selectedDraft.status !== "DRAFT" || !can("testcase.update")}
                   multiple
                   value={draftEdit.dataSetVersionIds}
                   onChange={(event) =>
@@ -1049,7 +1129,7 @@ export default function TestDesignPage({ project }) {
                 Kết quả mong đợi tổng thể
                 <textarea
                   className="apple-input mt-2 min-h-28"
-                  disabled={selectedDraft.status !== "DRAFT"}
+                  disabled={selectedDraft.status !== "DRAFT" || !can("testcase.update")}
                   value={draftEdit.expected}
                   onChange={(event) => changeDraftEdit({ expected: event.target.value })}
                 />
@@ -1058,7 +1138,7 @@ export default function TestDesignPage({ project }) {
                 Điều kiện sau
                 <textarea
                   className="apple-input mt-2 min-h-24"
-                  disabled={selectedDraft.status !== "DRAFT"}
+                  disabled={selectedDraft.status !== "DRAFT" || !can("testcase.update")}
                   value={draftEdit.postconditions}
                   onChange={(event) => changeDraftEdit({ postconditions: event.target.value })}
                 />
@@ -1067,7 +1147,7 @@ export default function TestDesignPage({ project }) {
                 Kỹ thuật kiểm thử phân tách bằng dấu phẩy
                 <input
                   className="apple-input mt-2"
-                  disabled={selectedDraft.status !== "DRAFT"}
+                  disabled={selectedDraft.status !== "DRAFT" || !can("testcase.update")}
                   value={draftEdit.techniques}
                   onChange={(event) => changeDraftEdit({ techniques: event.target.value })}
                 />
@@ -1076,7 +1156,7 @@ export default function TestDesignPage({ project }) {
                 Nhãn phân tách bằng dấu phẩy
                 <input
                   className="apple-input mt-2"
-                  disabled={selectedDraft.status !== "DRAFT"}
+                  disabled={selectedDraft.status !== "DRAFT" || !can("testcase.update")}
                   value={draftEdit.tags}
                   onChange={(event) => changeDraftEdit({ tags: event.target.value })}
                 />
@@ -1085,7 +1165,7 @@ export default function TestDesignPage({ project }) {
                 Trạng thái tự động hóa
                 <select
                   className="apple-input mt-2"
-                  disabled={selectedDraft.status !== "DRAFT"}
+                  disabled={selectedDraft.status !== "DRAFT" || !can("testcase.update")}
                   value={draftEdit.automationStatus}
                   onChange={(event) => changeDraftEdit({ automationStatus: event.target.value })}
                 >
@@ -1100,7 +1180,7 @@ export default function TestDesignPage({ project }) {
                 Mã người phụ trách
                 <input
                   className="apple-input mt-2"
-                  disabled={selectedDraft.status !== "DRAFT"}
+                  disabled={selectedDraft.status !== "DRAFT" || !can("testcase.update")}
                   value={draftEdit.ownerId}
                   onChange={(event) => changeDraftEdit({ ownerId: event.target.value })}
                 />
@@ -1110,7 +1190,7 @@ export default function TestDesignPage({ project }) {
                 <input
                   className="apple-input mt-2"
                   type="file"
-                  disabled={selectedDraft.status !== "DRAFT"}
+                  disabled={selectedDraft.status !== "DRAFT" || !can("testcase.update")}
                   onChange={async (event) => {
                     const file = event.target.files?.[0];
                     if (!file) return;
@@ -1133,7 +1213,7 @@ export default function TestDesignPage({ project }) {
                   </span>
                 ))}
               </label>
-              {selectedDraft.status === "DRAFT" && (
+              {selectedDraft.status === "DRAFT" && can("testcase.update") && (
                 <div className="flex flex-wrap items-center gap-3 lg:col-span-2">
                   <button className="secondary-button w-fit" type="button" onClick={saveDraft}>
                     Lưu bản nháp
@@ -1174,23 +1254,147 @@ export default function TestDesignPage({ project }) {
         </>
       )}
       <div className="grid gap-5 xl:grid-cols-2">
-        <Panel title="Tạo ca kiểm thử thủ công">
-          <form onSubmit={create} className="space-y-4 p-5">
-            <label className="field-label">
-              Tên
+        {can("testcase.create") && (
+          <Panel title="Tạo ca kiểm thử thủ công">
+            <form onSubmit={create} className="space-y-4 p-5">
+              <label className="field-label">
+                Tên
+                <input
+                  className="apple-input mt-2"
+                  required
+                  value={form.title}
+                  onChange={(event) => setForm({ ...form, title: event.target.value })}
+                />
+              </label>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <select
+                  aria-label="Loại ca kiểm thử"
+                  className="apple-input"
+                  value={form.type}
+                  onChange={(event) => setForm({ ...form, type: event.target.value })}
+                >
+                  {[
+                    "happy_path",
+                    "negative",
+                    "boundary",
+                    "validation",
+                    "permission",
+                    "state_transition",
+                    "integration",
+                    "error_handling",
+                    "data_persistence",
+                    "concurrency",
+                    "api",
+                    "ui",
+                    "custom",
+                  ].map((value) => (
+                    <option key={value} value={value}>
+                      {valueLabel(value)}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  aria-label="Ưu tiên ca kiểm thử"
+                  className="apple-input"
+                  value={form.priority}
+                  onChange={(event) => setForm({ ...form, priority: event.target.value })}
+                >
+                  {["critical", "high", "medium", "low"].map((value) => (
+                    <option key={value} value={value}>
+                      {valueLabel(value)}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  aria-label="Rủi ro ca kiểm thử"
+                  className="apple-input"
+                  value={form.risk}
+                  onChange={(event) => setForm({ ...form, risk: event.target.value })}
+                >
+                  {["critical", "high", "medium", "low"].map((value) => (
+                    <option key={value} value={value}>
+                      {valueLabel(value)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <p className="field-label mb-2">Thao tác</p>
+                <QaDocumentEditor
+                  value={form.action}
+                  onChange={(action) => setForm({ ...form, action })}
+                  label="Thao tác của ca kiểm thử"
+                  minHeight="min-h-24"
+                />
+              </div>
+              <div>
+                <p className="field-label mb-2">Kết quả mong đợi</p>
+                <QaDocumentEditor
+                  value={form.expected}
+                  onChange={(expected) => setForm({ ...form, expected })}
+                  label="Kết quả mong đợi của ca kiểm thử"
+                  minHeight="min-h-24"
+                />
+              </div>
+              <label className="field-label">
+                Bộ dữ liệu tham số
+                <select
+                  aria-label="Bộ dữ liệu cho ca kiểm thử mới"
+                  className="apple-input mt-2 min-h-28"
+                  multiple
+                  value={form.dataSetVersionIds}
+                  onChange={(event) =>
+                    setForm({
+                      ...form,
+                      dataSetVersionIds: Array.from(
+                        event.target.selectedOptions,
+                        (option) => option.value,
+                      ),
+                    })
+                  }
+                >
+                  {dataSets.map((item) => (
+                    <option key={item.current_version_id} value={item.current_version_id}>
+                      {item.name} v{item.current_version?.version}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button className="apple-button" type="submit">
+                Lưu bản nháp
+              </button>
+            </form>
+          </Panel>
+        )}
+        <Panel title="Kịch bản">
+          {can("testscenario.create") && (
+            <form className="space-y-3 border-b border-border p-5" onSubmit={createScenario}>
               <input
-                className="apple-input mt-2"
-                required
-                value={form.title}
-                onChange={(event) => setForm({ ...form, title: event.target.value })}
-              />
-            </label>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <select
-                aria-label="Loại ca kiểm thử"
+                aria-label="Tên kịch bản"
                 className="apple-input"
-                value={form.type}
-                onChange={(event) => setForm({ ...form, type: event.target.value })}
+                required
+                value={scenarioForm.title}
+                onChange={(event) =>
+                  setScenarioForm({ ...scenarioForm, title: event.target.value })
+                }
+                placeholder="Tên kịch bản"
+              />
+              <textarea
+                aria-label="Mục tiêu kịch bản"
+                className="apple-input min-h-20"
+                value={scenarioForm.objective}
+                onChange={(event) =>
+                  setScenarioForm({ ...scenarioForm, objective: event.target.value })
+                }
+                placeholder="Mục tiêu và phạm vi"
+              />
+              <select
+                aria-label="Nhóm kịch bản"
+                className="apple-input"
+                value={scenarioForm.category}
+                onChange={(event) =>
+                  setScenarioForm({ ...scenarioForm, category: event.target.value })
+                }
               >
                 {[
                   "happy_path",
@@ -1203,114 +1407,36 @@ export default function TestDesignPage({ project }) {
                   "error_handling",
                   "data_persistence",
                   "concurrency",
-                  "api",
-                  "ui",
-                  "custom",
                 ].map((value) => (
                   <option key={value} value={value}>
                     {valueLabel(value)}
                   </option>
                 ))}
               </select>
-              <select
-                aria-label="Ưu tiên ca kiểm thử"
-                className="apple-input"
-                value={form.priority}
-                onChange={(event) => setForm({ ...form, priority: event.target.value })}
-              >
-                {["critical", "high", "medium", "low"].map((value) => (
-                  <option key={value} value={value}>
-                    {valueLabel(value)}
-                  </option>
-                ))}
-              </select>
-              <select
-                aria-label="Rủi ro ca kiểm thử"
-                className="apple-input"
-                value={form.risk}
-                onChange={(event) => setForm({ ...form, risk: event.target.value })}
-              >
-                {["critical", "high", "medium", "low"].map((value) => (
-                  <option key={value} value={value}>
-                    {valueLabel(value)}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <p className="field-label mb-2">Thao tác</p>
-              <QaDocumentEditor
-                value={form.action}
-                onChange={(action) => setForm({ ...form, action })}
-                label="Thao tác của ca kiểm thử"
-                minHeight="min-h-24"
-              />
-            </div>
-            <div>
-              <p className="field-label mb-2">Kết quả mong đợi</p>
-              <QaDocumentEditor
-                value={form.expected}
-                onChange={(expected) => setForm({ ...form, expected })}
-                label="Kết quả mong đợi của ca kiểm thử"
-                minHeight="min-h-24"
-              />
-            </div>
-            <label className="field-label">
-              Bộ dữ liệu tham số
-              <select
-                aria-label="Bộ dữ liệu cho ca kiểm thử mới"
-                className="apple-input mt-2 min-h-28"
-                multiple
-                value={form.dataSetVersionIds}
-                onChange={(event) =>
-                  setForm({
-                    ...form,
-                    dataSetVersionIds: Array.from(
-                      event.target.selectedOptions,
-                      (option) => option.value,
-                    ),
-                  })
-                }
-              >
-                {dataSets.map((item) => (
-                  <option key={item.current_version_id} value={item.current_version_id}>
-                    {item.name} v{item.current_version?.version}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <button className="apple-button" type="submit">
-              Lưu bản nháp
-            </button>
-          </form>
-        </Panel>
-        <Panel title="Kịch bản">
-          <form className="space-y-3 border-b border-border p-5" onSubmit={createScenario}>
+              <button className="secondary-button" type="submit">
+                Lưu kịch bản
+              </button>
+            </form>
+          )}
+          <div className="grid gap-3 border-b border-border p-5 sm:grid-cols-2 lg:grid-cols-5">
             <input
-              aria-label="Tên kịch bản"
+              aria-label="Tìm kịch bản"
               className="apple-input"
-              required
-              value={scenarioForm.title}
-              onChange={(event) => setScenarioForm({ ...scenarioForm, title: event.target.value })}
-              placeholder="Tên kịch bản"
-            />
-            <textarea
-              aria-label="Mục tiêu kịch bản"
-              className="apple-input min-h-20"
-              value={scenarioForm.objective}
+              placeholder="Tìm mã hoặc tên"
+              value={scenarioFilters.q}
               onChange={(event) =>
-                setScenarioForm({ ...scenarioForm, objective: event.target.value })
+                setScenarioFilters({ ...scenarioFilters, q: event.target.value })
               }
-              placeholder="Mục tiêu và phạm vi"
             />
             <select
-              aria-label="Nhóm kịch bản"
+              aria-label="Lọc nhóm kịch bản"
               className="apple-input"
-              value={scenarioForm.category}
+              value={scenarioFilters.category}
               onChange={(event) =>
-                setScenarioForm({ ...scenarioForm, category: event.target.value })
+                setScenarioFilters({ ...scenarioFilters, category: event.target.value })
               }
             >
+              <option value="">Mọi nhóm</option>
               {[
                 "happy_path",
                 "negative",
@@ -1323,18 +1449,58 @@ export default function TestDesignPage({ project }) {
                 "data_persistence",
                 "concurrency",
               ].map((value) => (
-                <option key={value} value={value}>
+                <option value={value} key={value}>
                   {valueLabel(value)}
                 </option>
               ))}
             </select>
-            <button className="secondary-button" type="submit">
-              Lưu kịch bản
-            </button>
-          </form>
+            <select
+              aria-label="Lọc rủi ro kịch bản"
+              className="apple-input"
+              value={scenarioFilters.risk}
+              onChange={(event) =>
+                setScenarioFilters({ ...scenarioFilters, risk: event.target.value })
+              }
+            >
+              <option value="">Mọi rủi ro</option>
+              {["critical", "high", "medium", "low"].map((value) => (
+                <option value={value} key={value}>
+                  {valueLabel(value)}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label="Lọc trạng thái kịch bản"
+              className="apple-input"
+              value={scenarioFilters.status}
+              onChange={(event) =>
+                setScenarioFilters({ ...scenarioFilters, status: event.target.value })
+              }
+            >
+              <option value="">Mọi trạng thái</option>
+              {["draft", "in_review", "approved", "archived"].map((value) => (
+                <option value={value} key={value}>
+                  {valueLabel(value)}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label="Sắp xếp kịch bản"
+              className="apple-input"
+              value={scenarioFilters.sort}
+              onChange={(event) =>
+                setScenarioFilters({ ...scenarioFilters, sort: event.target.value })
+              }
+            >
+              <option value="-updated_at">Mới cập nhật</option>
+              <option value="updated_at">Cũ cập nhật</option>
+              <option value="scenario_key">Mã tăng dần</option>
+              <option value="title">Tên tăng dần</option>
+            </select>
+          </div>
           <DataTable
             onSelect={async (item) => {
-              if (item.status !== "draft") return;
+              if (item.status !== "draft" || !can("testscenario.update")) return;
               const answer = await ask({
                 title: "Đổi tên kịch bản kiểm thử",
                 description: item.scenario_key,
@@ -1367,6 +1533,67 @@ export default function TestDesignPage({ project }) {
               { key: "title", label: "Tên" },
               { key: "category", label: "Nhóm" },
               { key: "origin", label: "Nguồn" },
+              {
+                key: "actions",
+                label: "Thao tác",
+                render: (item) => (
+                  <span className="flex flex-wrap gap-2">
+                    {can("testscenario.clone") && (
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={async (event) => {
+                          event.stopPropagation();
+                          try {
+                            await testingApi.cloneScenario(item._id);
+                            await load();
+                          } catch (reason) {
+                            setError(messageOf(reason));
+                          }
+                        }}
+                      >
+                        Nhân bản
+                      </button>
+                    )}
+                    {item.status !== "archived" && can("testscenario.archive") && (
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={async (event) => {
+                          event.stopPropagation();
+                          const answer = await ask({
+                            title: "Lưu trữ kịch bản",
+                            description: item.title,
+                            confirmLabel: "Lưu trữ",
+                            danger: true,
+                            fields: [
+                              {
+                                name: "reason",
+                                label: "Lý do",
+                                required: true,
+                                multiline: true,
+                                autoFocus: true,
+                              },
+                            ],
+                          });
+                          if (!answer) return;
+                          try {
+                            await testingApi.archiveScenario(item._id, {
+                              expected_revision: item.revision,
+                              reason: answer.reason,
+                            });
+                            await load();
+                          } catch (reason) {
+                            setError(messageOf(reason));
+                          }
+                        }}
+                      >
+                        Lưu trữ
+                      </button>
+                    )}
+                  </span>
+                ),
+              },
             ]}
           />
         </Panel>
@@ -1375,49 +1602,52 @@ export default function TestDesignPage({ project }) {
         title="Bộ dữ liệu kiểm thử có phiên bản"
         description="Dữ liệu bí mật chỉ được tham chiếu bằng địa chỉ bí mật và không lưu giá trị thật"
       >
-        <form
-          className="grid gap-3 border-b border-border p-5 lg:grid-cols-3"
-          onSubmit={createDataSet}
-        >
-          <label className="field-label">
-            Tên bộ dữ liệu
-            <input
-              className="apple-input mt-2"
-              required
-              value={dataSetForm.name}
-              onChange={(event) => setDataSetForm({ ...dataSetForm, name: event.target.value })}
-            />
-          </label>
-          <label className="field-label">
-            Biến JSON
-            <textarea
-              className="apple-input mt-2 min-h-28 font-mono"
-              required
-              value={dataSetForm.variables}
-              onChange={(event) =>
-                setDataSetForm({ ...dataSetForm, variables: event.target.value })
-              }
-            />
-          </label>
-          <label className="field-label">
-            Secret refs JSON
-            <textarea
-              className="apple-input mt-2 min-h-28 font-mono"
-              required
-              value={dataSetForm.secretRefs}
-              onChange={(event) =>
-                setDataSetForm({ ...dataSetForm, secretRefs: event.target.value })
-              }
-            />
-          </label>
-          <button className="secondary-button w-fit" type="submit">
-            Tạo bộ dữ liệu
-          </button>
-        </form>
+        {can("testcase.create") && (
+          <form
+            className="grid gap-3 border-b border-border p-5 lg:grid-cols-3"
+            onSubmit={createDataSet}
+          >
+            <label className="field-label">
+              Tên bộ dữ liệu
+              <input
+                className="apple-input mt-2"
+                required
+                value={dataSetForm.name}
+                onChange={(event) => setDataSetForm({ ...dataSetForm, name: event.target.value })}
+              />
+            </label>
+            <label className="field-label">
+              Biến JSON
+              <textarea
+                className="apple-input mt-2 min-h-28 font-mono"
+                required
+                value={dataSetForm.variables}
+                onChange={(event) =>
+                  setDataSetForm({ ...dataSetForm, variables: event.target.value })
+                }
+              />
+            </label>
+            <label className="field-label">
+              Secret refs JSON
+              <textarea
+                className="apple-input mt-2 min-h-28 font-mono"
+                required
+                value={dataSetForm.secretRefs}
+                onChange={(event) =>
+                  setDataSetForm({ ...dataSetForm, secretRefs: event.target.value })
+                }
+              />
+            </label>
+            <button className="secondary-button w-fit" type="submit">
+              Tạo bộ dữ liệu
+            </button>
+          </form>
+        )}
         <DataTable
           items={dataSets}
           empty="Chưa có bộ dữ liệu tham số"
           onSelect={async (item) => {
+            if (!can("testcase.update")) return;
             const answer = await ask({
               title: "Tạo phiên bản bộ dữ liệu mới",
               description: `${item.name} v${item.current_version?.version}`,
@@ -1517,129 +1747,137 @@ export default function TestDesignPage({ project }) {
         description="CSV và XLSX luôn tạo bản xem trước trước khi người dùng xác nhận"
         actions={
           <div className="flex flex-wrap gap-2">
-            <button
-              className="secondary-button"
-              type="button"
-              onClick={() =>
-                testingApi
-                  .exportTestCases(project._id, "csv")
-                  .catch((reason) => setError(messageOf(reason)))
-              }
-            >
-              Xuất CSV
-            </button>
-            <button
-              className="secondary-button"
-              type="button"
-              onClick={() =>
-                testingApi
-                  .exportTestCases(project._id, "xlsx")
-                  .catch((reason) => setError(messageOf(reason)))
-              }
-            >
-              Xuất XLSX
-            </button>
+            {can("testcase.export") && (
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={() =>
+                  testingApi
+                    .exportTestCases(project._id, "csv")
+                    .catch((reason) => setError(messageOf(reason)))
+                }
+              >
+                Xuất CSV
+              </button>
+            )}
+            {can("testcase.export") && (
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={() =>
+                  testingApi
+                    .exportTestCases(project._id, "xlsx")
+                    .catch((reason) => setError(messageOf(reason)))
+                }
+              >
+                Xuất XLSX
+              </button>
+            )}
           </div>
         }
       >
-        <div className="space-y-4 p-5">
-          <input
-            className="apple-input"
-            aria-label="Tệp ca kiểm thử CSV hoặc XLSX"
-            type="file"
-            accept=".csv,.xlsx"
-            onChange={async (event) => {
-              const file = event.target.files?.[0];
-              if (!file) return;
-              try {
-                setTestImport(await testingApi.uploadTestImport(project._id, file));
-              } catch (reason) {
-                setError(messageOf(reason));
-              }
-            }}
-          />
-          {testImport && (
-            <>
-              <DataTable
-                items={testImport.preview.map((item, index) => ({ ...item, _id: index }))}
-                empty="Tệp không có ca kiểm thử hợp lệ"
-                columns={[
-                  { key: "title", label: "Tên" },
-                  { key: "type", label: "Loại" },
-                  { key: "priority", label: "Ưu tiên" },
-                  { key: "expected", label: "Kết quả mong đợi" },
-                ]}
-              />
-              <button
-                className="apple-button"
-                type="button"
-                onClick={async () => {
-                  try {
-                    await testingApi.confirmTestImport(
-                      testImport._id,
-                      testImport.preview.map((_, index) => index),
-                    );
-                    setTestImport(null);
-                    await load();
-                  } catch (reason) {
-                    setError(messageOf(reason));
-                  }
-                }}
-              >
-                Xác nhận nhập toàn bộ
-              </button>
-            </>
-          )}
-        </div>
+        {can("testcase.import") && (
+          <div className="space-y-4 p-5">
+            <input
+              className="apple-input"
+              aria-label="Tệp ca kiểm thử CSV hoặc XLSX"
+              type="file"
+              accept=".csv,.xlsx"
+              onChange={async (event) => {
+                const file = event.target.files?.[0];
+                if (!file) return;
+                try {
+                  setTestImport(await testingApi.uploadTestImport(project._id, file));
+                } catch (reason) {
+                  setError(messageOf(reason));
+                }
+              }}
+            />
+            {testImport && (
+              <>
+                <DataTable
+                  items={testImport.preview.map((item, index) => ({ ...item, _id: index }))}
+                  empty="Tệp không có ca kiểm thử hợp lệ"
+                  columns={[
+                    { key: "title", label: "Tên" },
+                    { key: "type", label: "Loại" },
+                    { key: "priority", label: "Ưu tiên" },
+                    { key: "expected", label: "Kết quả mong đợi" },
+                  ]}
+                />
+                <button
+                  className="apple-button"
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await testingApi.confirmTestImport(
+                        testImport._id,
+                        testImport.preview.map((_, index) => index),
+                      );
+                      setTestImport(null);
+                      await load();
+                    } catch (reason) {
+                      setError(messageOf(reason));
+                    }
+                  }}
+                >
+                  Xác nhận nhập toàn bộ
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </Panel>
       <Panel
         title="OpenAPI và Postman"
         description="Nhập dữ liệu đã lọc thông tin nhạy cảm rồi tạo ca kiểm thử chỉ từ phản hồi có trong đặc tả"
       >
         <div className="grid gap-5 p-5 xl:grid-cols-2">
-          <form
-            className="space-y-4"
-            onSubmit={async (event) => {
-              event.preventDefault();
-              try {
-                await testingApi.importApiArtifact(project._id, apiImport);
-                setApiImport({ ...apiImport, content: "" });
-                await load();
-              } catch (reason) {
-                setError(messageOf(reason));
-              }
-            }}
-          >
-            <label className="field-label">
-              Loại nguồn
-              <select
-                className="apple-input mt-2"
-                value={apiImport.format}
-                onChange={(event) =>
-                  setApiImport({
-                    ...apiImport,
-                    format: event.target.value,
-                    filename: `${event.target.value}.json`,
-                  })
+          {can("knowledge.manage") && (
+            <form
+              className="space-y-4"
+              onSubmit={async (event) => {
+                event.preventDefault();
+                try {
+                  await testingApi.importApiArtifact(project._id, apiImport);
+                  setApiImport({ ...apiImport, content: "" });
+                  await load();
+                } catch (reason) {
+                  setError(messageOf(reason));
                 }
-              >
-                <option value="openapi">OpenAPI</option>
-                <option value="postman">Postman</option>
-              </select>
-            </label>
-            <label className="field-label">
-              JSON đặc tả
-              <textarea
-                className="apple-input mt-2 min-h-48 font-mono"
-                required
-                value={apiImport.content}
-                onChange={(event) => setApiImport({ ...apiImport, content: event.target.value })}
-              />
-            </label>
-            <button className="secondary-button" type="submit">
-              Import API metadata
-            </button>
-          </form>
+              }}
+            >
+              <label className="field-label">
+                Loại nguồn
+                <select
+                  className="apple-input mt-2"
+                  value={apiImport.format}
+                  onChange={(event) =>
+                    setApiImport({
+                      ...apiImport,
+                      format: event.target.value,
+                      filename: `${event.target.value}.json`,
+                    })
+                  }
+                >
+                  <option value="openapi">OpenAPI</option>
+                  <option value="postman">Postman</option>
+                </select>
+              </label>
+              <label className="field-label">
+                JSON đặc tả
+                <textarea
+                  className="apple-input mt-2 min-h-48 font-mono"
+                  required
+                  value={apiImport.content}
+                  onChange={(event) => setApiImport({ ...apiImport, content: event.target.value })}
+                />
+              </label>
+              <button className="secondary-button" type="submit">
+                Import API metadata
+              </button>
+            </form>
+          )}
           <DataTable
             items={operations}
             empty="Chưa có thao tác API"
@@ -1650,22 +1888,23 @@ export default function TestDesignPage({ project }) {
               {
                 key: "generate",
                 label: "Tạo ca kiểm thử",
-                render: (item) => (
-                  <button
-                    className="secondary-button"
-                    type="button"
-                    onClick={async () => {
-                      try {
-                        await testingApi.generateApiTests(item._id);
-                        await load();
-                      } catch (reason) {
-                        setError(messageOf(reason));
-                      }
-                    }}
-                  >
-                    Tạo ca kiểm thử
-                  </button>
-                ),
+                render: (item) =>
+                  can("ai.generate_testcase") && can("testcase.create") ? (
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          await testingApi.generateApiTests(item._id);
+                          await load();
+                        } catch (reason) {
+                          setError(messageOf(reason));
+                        }
+                      }}
+                    >
+                      Tạo ca kiểm thử
+                    </button>
+                  ) : null,
               },
             ]}
           />

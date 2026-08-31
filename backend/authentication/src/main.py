@@ -10,6 +10,7 @@ from src.api.passkey import router as passkey_router
 from src.api.session import router as session_router
 from src.api.internal import router as internal_router
 from src.api.platform import router as platform_router
+from src.api.platform_controls import router as platform_controls_router
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import close_db, database, init_db
 from src.core.infrastructure.redis import redis
@@ -44,6 +45,7 @@ app.include_router(passkey_router)
 app.include_router(google_router)
 app.include_router(internal_router)
 app.include_router(platform_router)
+app.include_router(platform_controls_router)
 
 
 @app.get("/health")

@@ -1,6 +1,7 @@
 import os
 
 import httpx
+import jwt
 
 
 SERVICES = {
@@ -26,7 +27,14 @@ with httpx.Client(base_url=SERVICES["testing"], timeout=20) as client:
     assert unauthenticated.json()["error"]["code"] == "AUTH_REQUIRED"
     malformed = client.post(
         "/api/qa/projects",
-        headers={"x-test-user-id": "contract-user"},
+        headers={
+            "Authorization": "Bearer "
+            + jwt.encode(
+                {"uid": "contract-user", "sub": "contract-user@example.com", "system_role": "USER"},
+                os.environ["SECRET_KEY"],
+                algorithm="HS256",
+            )
+        },
         json={"key": "invalid key", "name": ""},
     )
     assert malformed.status_code == 422
@@ -64,6 +72,29 @@ with httpx.Client(base_url=SERVICES["testing"], timeout=20) as client:
         "/api/qa/projects/{project_id}/bulk/approve-proposals",
         "/api/qa/operations",
         "/api/qa/operations/jobs/{job_id}/retry",
+        "/api/qa/projects/{project_id}/trace-links",
+        "/api/qa/projects/{project_id}/trace-links/{link_id}/confirm",
+        "/api/qa/projects/{project_id}/changesets/{change_set_id}/analyze-impact",
+        "/api/qa/projects/{project_id}/ai-proposals/{proposal_id}/review",
+        "/api/qa/projects/{project_id}/ai-proposals/{proposal_id}/approve",
+        "/api/qa/projects/{project_id}/regression/generate",
+        "/api/qa/projects/{project_id}/regression/{recommendation_id}/approve",
+        "/api/qa/projects/{project_id}/test-runs",
+        "/api/qa/projects/{project_id}/test-runs/{run_id}",
+        "/api/qa/projects/{project_id}/test-runs/{run_id}/assign",
+        "/api/qa/projects/{project_id}/defects/{defect_id}",
+        "/api/qa/requirements/{requirement_id}/restore",
+        "/api/qa/projects/{project_id}/reports/execution",
+        "/api/qa/projects/{project_id}/reports/defects",
+        "/api/qa/projects/{project_id}/activity",
+        "/api/qa/projects/{project_id}/ai/ask",
+        "/api/qa/requirements/{requirement_id}/dependencies",
+        "/api/qa/requirements/{requirement_id}/dependencies/{dependency_requirement_id}",
+        "/api/qa/test-plans/{plan_id}/clone",
+        "/api/qa/test-scenarios/{scenario_id}",
+        "/api/qa/maintenance-proposals/{proposal_id}",
+        "/api/qa/regression-recommendations/{recommendation_id}",
+        "/api/qa/requirement-documents/{document_id}/reindex",
     }
     assert required <= set(paths)
 

@@ -24,6 +24,7 @@ from src.core.common import (
     now,
     page_payload,
     plain_text,
+    require_action_policy,
     sort_spec,
     validate_doc,
 )
@@ -32,14 +33,18 @@ from src.core.configuration import settings
 from src.domain.schemas import (
     ImportConfirm,
     ImportCreate,
+    KnowledgeSourceCreate,
     ProjectArchiveInput,
     RequirementBaselineInput,
     RequirementCompareInput,
+    RequirementDependencyInput,
+    RequirementDocumentPatch,
     RequirementCreate,
     RequirementDraftPatch,
     RequirementExtractionInput,
     RequirementImportReview,
     RequirementObsoleteInput,
+    RequirementRestoreInput,
     RequirementParseRetry,
     RequirementVersionCreate,
     ReviewTransitionInput,
@@ -84,7 +89,11 @@ async def create_requirement_document_record(project_id, payload, user):
         },
         "normalized_content": payload.content,
         "normalized_content_hash": content_hash,
+        "source_version": 1,
+        "source_type": "reference",
+        "authority": "reference",
         "status": "READY",
+        "index_status": "PENDING",
         "revision": 1,
         "created_by": user.id,
         "created_at": timestamp,
@@ -107,6 +116,10 @@ async def create_requirement_document_record(project_id, payload, user):
         project_id,
         {"content_hash": content_hash, "format": payload.format},
     )
+    indexed = await index_artifact(project_id, "requirement_document", document["_id"], document["_id"], document["filename"], content, document["status"], document["authority"], document["source_version"])
+    document["index_status"] = "INDEXED" if indexed else "FAILED"
+    document["indexed_at"] = now()
+    await database.value.requirement_documents.update_one({"_id": document["_id"], "project_id": project_id}, {"$set": {"index_status": document["index_status"], "indexed_at": document["indexed_at"]}})
     return document
 
 
@@ -370,6 +383,14 @@ async def update_requirement_draft(
         raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT", "current_revision": version.get("revision")})
     changes = payload.model_dump(exclude_unset=True)
     changes.pop("expected_revision", None)
+    if "acceptance_criteria" in changes:
+        await get_project(project_id, user, "acceptance_criteria.manage")
+    if "business_rules" in changes:
+        await get_project(project_id, user, "business_rule.manage")
+    if "dependencies" in changes:
+        await get_project(project_id, user, "requirement_dependency.manage")
+    if "attachments" in changes:
+        await get_project(project_id, user, "attachment.manage")
     criteria = changes.pop("acceptance_criteria", None)
     if criteria is not None:
         keys = [item.key for item in criteria]
@@ -426,6 +447,84 @@ async def update_requirement_draft(
     return envelope({**requirement, **parent_changes, "current_version": updated_version}, revision=updated_version["revision"])
 
 
+@router.post("/requirements/{requirement_id}/dependencies")
+async def add_requirement_dependency(
+    requirement_id: str,
+    payload: RequirementDependencyInput,
+    user: CurrentUser = Depends(get_current_user),
+):
+    requirement = await get_project_entity("requirements", requirement_id, user, "requirement_dependency.manage")
+    dependency_id = payload.dependency_requirement_id
+    if dependency_id == requirement_id:
+        raise HTTPException(status_code=422, detail={"code": "REQUIREMENT_DEPENDENCY_CYCLE"})
+    dependency = await database.value.requirements.find_one({"_id": dependency_id, "project_id": requirement["project_id"]})
+    if not dependency:
+        raise HTTPException(status_code=422, detail={"code": "INVALID_REQUIREMENT_DEPENDENCY"})
+    version = await database.value.requirement_versions.find_one({"_id": requirement["current_version_id"], "project_id": requirement["project_id"]})
+    if not version or version.get("status") != "DRAFT":
+        raise HTTPException(status_code=409, detail={"code": "IMMUTABLE_REQUIREMENT_VERSION"})
+    if version.get("revision") != payload.expected_revision:
+        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT", "current_revision": version.get("revision")})
+    dependencies = list(dict.fromkeys(version.get("dependencies", [])))
+    if dependency_id in dependencies:
+        return envelope(version, revision=version["revision"])
+    if await requirement_dependency_reaches(dependency_id, requirement_id, requirement["project_id"]):
+        raise HTTPException(status_code=422, detail={"code": "REQUIREMENT_DEPENDENCY_CYCLE"})
+    dependencies.append(dependency_id)
+    updated = await database.value.requirement_versions.find_one_and_update(
+        {"_id": version["_id"], "project_id": requirement["project_id"], "status": "DRAFT", "revision": payload.expected_revision},
+        {"$set": {"dependencies": dependencies, "updated_at": now()}, "$inc": {"revision": 1}},
+        return_document=ReturnDocument.AFTER,
+    )
+    if not updated:
+        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+    await audit(user.id, "requirement_dependency_added", "Requirement", requirement_id, requirement["project_id"], {"dependency_requirement_id": dependency_id})
+    return envelope(updated, revision=updated["revision"])
+
+
+@router.delete("/requirements/{requirement_id}/dependencies/{dependency_requirement_id}")
+async def remove_requirement_dependency(
+    requirement_id: str,
+    dependency_requirement_id: str,
+    expected_revision: int = Query(ge=1),
+    user: CurrentUser = Depends(get_current_user),
+):
+    requirement = await get_project_entity("requirements", requirement_id, user, "requirement_dependency.manage")
+    version = await database.value.requirement_versions.find_one({"_id": requirement["current_version_id"], "project_id": requirement["project_id"]})
+    if not version or version.get("status") != "DRAFT":
+        raise HTTPException(status_code=409, detail={"code": "IMMUTABLE_REQUIREMENT_VERSION"})
+    dependencies = list(dict.fromkeys(version.get("dependencies", [])))
+    if dependency_requirement_id not in dependencies:
+        return envelope(version, revision=version["revision"])
+    updated = await database.value.requirement_versions.find_one_and_update(
+        {"_id": version["_id"], "project_id": requirement["project_id"], "status": "DRAFT", "revision": expected_revision},
+        {"$set": {"dependencies": [item for item in dependencies if item != dependency_requirement_id], "updated_at": now()}, "$inc": {"revision": 1}},
+        return_document=ReturnDocument.AFTER,
+    )
+    if not updated:
+        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+    await audit(user.id, "requirement_dependency_removed", "Requirement", requirement_id, requirement["project_id"], {"dependency_requirement_id": dependency_requirement_id})
+    return envelope(updated, revision=updated["revision"])
+
+
+async def requirement_dependency_reaches(start_id: str, target_id: str, project_id: str):
+    pending = [start_id]
+    visited = set()
+    while pending:
+        current_id = pending.pop()
+        if current_id == target_id:
+            return True
+        if current_id in visited:
+            continue
+        visited.add(current_id)
+        requirement = await database.value.requirements.find_one({"_id": current_id, "project_id": project_id}, {"current_version_id": 1})
+        if not requirement:
+            continue
+        version = await database.value.requirement_versions.find_one({"_id": requirement.get("current_version_id"), "project_id": project_id}, {"dependencies": 1})
+        pending.extend((version or {}).get("dependencies", []))
+    return False
+
+
 @router.post("/requirements/{requirement_id}/versions", status_code=201)
 async def create_requirement_version(
     requirement_id: str,
@@ -433,7 +532,7 @@ async def create_requirement_version(
     user: CurrentUser = Depends(get_current_user),
 ):
     requirement = await get_project_entity(
-        "requirements", requirement_id, user, "requirement.update"
+        "requirements", requirement_id, user, "requirement.version.create"
     )
     if requirement["current_version_id"] != payload.expected_current_version_id:
         raise HTTPException(
@@ -571,7 +670,7 @@ async def request_requirement_changes(
     user: CurrentUser = Depends(get_current_user),
 ):
     requirement = await get_project_entity(
-        "requirements", requirement_id, user, "requirement.approve"
+        "requirements", requirement_id, user, "requirement.review"
     )
     if requirement["project_id"] != project_id:
         raise HTTPException(status_code=422, detail={"code": "PROJECT_MISMATCH"})
@@ -698,6 +797,20 @@ async def mark_requirement_obsolete(
                 "current_version_id": requirement.get("current_version_id"),
             },
         )
+    current_version = await database.value.requirement_versions.find_one(
+        {
+            "_id": payload.expected_current_version_id,
+            "project_id": requirement["project_id"],
+            "requirement_id": requirement_id,
+        }
+    )
+    if not current_version or current_version.get("status") not in {
+        "DRAFT",
+        "IN_REVIEW",
+        "BASELINED",
+    }:
+        raise HTTPException(status_code=409, detail={"code": "REQUIREMENT_VERSION_CONFLICT"})
+    version_status = current_version["status"]
     timestamp = now()
     updated = await database.value.requirements.find_one_and_update(
         {
@@ -709,6 +822,7 @@ async def mark_requirement_obsolete(
         {
             "$set": {
                 "status": "OBSOLETE",
+                "status_before_obsolete": requirement["status"],
                 "obsolete_reason": payload.reason,
                 "obsolete_by": user.id,
                 "obsolete_at": timestamp,
@@ -729,6 +843,7 @@ async def mark_requirement_obsolete(
         {
             "$set": {
                 "status": "OBSOLETE",
+                "status_before_obsolete": version_status,
                 "obsolete_reason": payload.reason,
                 "obsolete_by": user.id,
                 "obsolete_at": timestamp,
@@ -751,6 +866,7 @@ async def mark_requirement_obsolete(
                     "obsolete_reason": "",
                     "obsolete_by": "",
                     "obsolete_at": "",
+                    "status_before_obsolete": "",
                 },
             },
         )
@@ -767,6 +883,123 @@ async def mark_requirement_obsolete(
         {"_id": payload.expected_current_version_id, "project_id": requirement["project_id"]}
     )
     return envelope({**updated, "current_version": current_version})
+
+
+@router.post("/requirements/{requirement_id}/restore")
+async def restore_requirement(
+    requirement_id: str,
+    payload: RequirementRestoreInput,
+    user: CurrentUser = Depends(get_current_user),
+):
+    requirement = await get_project_entity(
+        "requirements", requirement_id, user, "requirement.restore"
+    )
+    if requirement.get("status") != "OBSOLETE":
+        raise HTTPException(status_code=409, detail={"code": "REQUIREMENT_NOT_OBSOLETE"})
+    if requirement.get("current_version_id") != payload.expected_current_version_id:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "REVISION_CONFLICT",
+                "current_version_id": requirement.get("current_version_id"),
+            },
+        )
+    version = await database.value.requirement_versions.find_one(
+        {
+            "_id": payload.expected_current_version_id,
+            "project_id": requirement["project_id"],
+            "requirement_id": requirement_id,
+            "status": "OBSOLETE",
+        }
+    )
+    if not version:
+        raise HTTPException(status_code=409, detail={"code": "REQUIREMENT_VERSION_CONFLICT"})
+    restored_status = requirement.get("status_before_obsolete") or (
+        "BASELINED" if version.get("baselined_at") else "DRAFT"
+    )
+    restored_version_status = version.get("status_before_obsolete") or restored_status
+    if restored_status not in {"DRAFT", "IN_REVIEW", "BASELINED"} or restored_version_status not in {
+        "DRAFT",
+        "IN_REVIEW",
+        "BASELINED",
+    }:
+        raise HTTPException(status_code=409, detail={"code": "REQUIREMENT_RESTORE_STATE_INVALID"})
+    timestamp = now()
+    version_result = await database.value.requirement_versions.update_one(
+        {
+            "_id": version["_id"],
+            "project_id": requirement["project_id"],
+            "requirement_id": requirement_id,
+            "status": "OBSOLETE",
+        },
+        {
+            "$set": {
+                "status": restored_version_status,
+                "restore_reason": payload.reason,
+                "restored_by": user.id,
+                "restored_at": timestamp,
+                "updated_at": timestamp,
+            },
+            "$unset": {
+                "status_before_obsolete": "",
+                "obsolete_reason": "",
+                "obsolete_by": "",
+                "obsolete_at": "",
+            },
+            "$inc": {"revision": 1},
+        },
+    )
+    if version_result.matched_count != 1:
+        raise HTTPException(status_code=409, detail={"code": "REQUIREMENT_VERSION_CONFLICT"})
+    updated = await database.value.requirements.find_one_and_update(
+        {
+            "_id": requirement_id,
+            "project_id": requirement["project_id"],
+            "current_version_id": payload.expected_current_version_id,
+            "status": "OBSOLETE",
+        },
+        {
+            "$set": {
+                "status": restored_status,
+                "restore_reason": payload.reason,
+                "restored_by": user.id,
+                "restored_at": timestamp,
+                "updated_at": timestamp,
+            },
+            "$unset": {
+                "status_before_obsolete": "",
+                "obsolete_reason": "",
+                "obsolete_by": "",
+                "obsolete_at": "",
+            },
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+    if not updated:
+        await database.value.requirement_versions.update_one(
+            {"_id": version["_id"], "project_id": requirement["project_id"]},
+            {
+                "$set": {
+                    "status": "OBSOLETE",
+                    "status_before_obsolete": restored_version_status,
+                    "updated_at": now(),
+                },
+                "$inc": {"revision": 1},
+            },
+        )
+        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+    await audit(
+        user.id,
+        "requirement_restored",
+        "Requirement",
+        requirement_id,
+        requirement["project_id"],
+        {"reason": payload.reason, "version_id": version["_id"]},
+    )
+    restored_version = await database.value.requirement_versions.find_one(
+        {"_id": version["_id"], "project_id": requirement["project_id"]}
+    )
+    return envelope({**updated, "current_version": restored_version})
 
 
 @router.post("/requirement-versions/{version_id}/ai/lint")
@@ -806,7 +1039,7 @@ async def compare_requirement(
     user: CurrentUser = Depends(get_current_user),
 ):
     requirement = await get_project_entity(
-        "requirements", requirement_id, user, "requirement.version.read"
+        "requirements", requirement_id, user, "requirement.diff.read"
     )
     versions = await database.value.requirement_versions.find(
         {"requirement_id": requirement_id, "_id": {"$in": [payload.from_version_id, payload.to_version_id]}}
@@ -815,7 +1048,7 @@ async def compare_requirement(
     if set(by_id) != {payload.from_version_id, payload.to_version_id}:
         raise HTTPException(status_code=404, detail="Không tìm thấy đủ hai phiên bản")
     changes = semantic_changes(by_id[payload.from_version_id], by_id[payload.to_version_id])
-    return envelope({"from_version": by_id[payload.from_version_id], "to_version": by_id[payload.to_version_id], "changes": changes})
+    return envelope({"from_version": by_id[payload.from_version_id], "to_version": by_id[payload.to_version_id], "changes": changes, "comparison_algorithm_version": "semantic-diff-v1"})
 
 
 @router.get("/requirements/{requirement_id}/diff")
@@ -875,7 +1108,11 @@ async def upload_requirement_document(
         "content_hash": source["sha256"],
         "raw_source": source,
         "normalized_content": None,
+        "source_version": 1,
+        "source_type": "reference",
+        "authority": "reference",
         "status": "UPLOADED",
+        "index_status": "PENDING",
         "revision": 1,
         "created_by": user.id,
         "created_at": timestamp,
@@ -907,7 +1144,10 @@ async def upload_requirement_document(
         {"$set": {"normalized_content": content, "normalized_content_hash": hashlib.sha256(normalized.encode("utf-8")).hexdigest(), "status": "READY", "updated_at": now()}, "$inc": {"revision": 1}},
     )
     document = await database.value.requirement_documents.find_one({"_id": document_id, "project_id": project_id})
-    return envelope(document, revision=document["revision"])
+    indexed = await index_artifact(project_id, "requirement_document", document_id, document_id, filename, normalized, document["status"], document["authority"], document["source_version"])
+    await database.value.requirement_documents.update_one({"_id": document_id, "project_id": project_id}, {"$set": {"index_status": "INDEXED" if indexed else "FAILED", "indexed_at": now()}})
+    document = await database.value.requirement_documents.find_one({"_id": document_id, "project_id": project_id})
+    return envelope(document, revision=document["revision"], status="SUCCESS" if indexed else "DEGRADED", degraded_mode=None if indexed else "DEGRADED_VECTOR")
 
 
 @router.get("/projects/{project_id}/requirement-documents")
@@ -933,6 +1173,152 @@ async def list_requirement_documents(
     return envelope(documents)
 
 
+@router.post("/projects/{project_id}/knowledge-sources", status_code=201)
+async def create_knowledge_source(
+    project_id: str,
+    payload: KnowledgeSourceCreate,
+    user: CurrentUser = Depends(get_current_user),
+):
+    await get_project(project_id, user, "knowledge.manage")
+    content_hash = hashlib.sha256(payload.content.encode("utf-8")).hexdigest()
+    existing = await database.value.requirement_documents.find_one(
+        {"project_id": project_id, "content_hash": content_hash}
+    )
+    if existing:
+        return envelope(existing, revision=existing.get("revision", 1))
+    timestamp = now()
+    safe_name = re.sub(r"[^A-Za-z0-9_-]+", "-", payload.title).strip("-") or "knowledge-source"
+    document = {
+        "_id": new_id("KSRC"),
+        "project_id": project_id,
+        "filename": f"{safe_name}.md",
+        "format": "md",
+        "content_hash": content_hash,
+        "raw_source": {
+            "storage": "embedded",
+            "content": payload.content,
+            "sha256": content_hash,
+            "size": len(payload.content.encode("utf-8")),
+            "source_url": payload.source_url,
+        },
+        "normalized_content": payload.content,
+        "normalized_content_hash": content_hash,
+        "source_version": 1,
+        "title": payload.title,
+        "source_type": payload.source_type,
+        "authority": payload.authority,
+        "source_url": payload.source_url,
+        "teacher_id": payload.teacher_id,
+        "subject": payload.subject,
+        "grade": payload.grade,
+        "tags": payload.tags,
+        "status": "READY",
+        "index_status": "PENDING",
+        "revision": 1,
+        "created_by": user.id,
+        "created_at": timestamp,
+        "updated_at": timestamp,
+    }
+    await database.value.requirement_documents.insert_one(document)
+    indexed = await index_artifact(
+        project_id,
+        "requirement_document",
+        document["_id"],
+        document["_id"],
+        payload.title,
+        payload.content,
+        document["status"],
+        payload.authority,
+        1,
+    )
+    document["index_status"] = "INDEXED" if indexed else "FAILED"
+    document["indexed_at"] = now()
+    await database.value.requirement_documents.update_one(
+        {"_id": document["_id"], "project_id": project_id},
+        {"$set": {"index_status": document["index_status"], "indexed_at": document["indexed_at"]}},
+    )
+    await audit(
+        user.id,
+        "knowledge_source_created",
+        "RequirementDocument",
+        document["_id"],
+        project_id,
+        {"source_type": payload.source_type, "authority": payload.authority},
+    )
+    return envelope(
+        document,
+        revision=1,
+        status="SUCCESS" if indexed else "DEGRADED",
+        degraded_mode=None if indexed else "DEGRADED_VECTOR",
+    )
+
+
+@router.get("/projects/{project_id}/knowledge-sources")
+async def list_knowledge_sources(
+    project_id: str,
+    include_archived: bool = Query(default=False),
+    user: CurrentUser = Depends(get_current_user),
+):
+    await get_project(project_id, user, "knowledge.read")
+    query = {"project_id": project_id}
+    if not include_archived:
+        query["status"] = {"$ne": "ARCHIVED"}
+    documents = await database.value.requirement_documents.find(query).sort("updated_at", -1).to_list(1000)
+    order = (await database.value.projects.find_one({"_id": project_id}, {"settings.knowledge_authority_order": 1}) or {}).get("settings", {}).get(
+        "knowledge_authority_order",
+        ["teacher", "official", "baseline", "supplemental", "reference"],
+    )
+    ranks = {value: index for index, value in enumerate(order)}
+    documents.sort(key=lambda item: (ranks.get(item.get("authority"), len(ranks)), item.get("updated_at")))
+    return envelope(documents)
+
+
+@router.post("/knowledge-sources/{document_id}/archive")
+async def archive_knowledge_source(
+    document_id: str,
+    payload: ProjectArchiveInput,
+    user: CurrentUser = Depends(get_current_user),
+):
+    document = await get_project_entity(
+        "requirement_documents", document_id, user, "knowledge.manage"
+    )
+    await require_action_policy(
+        document["project_id"], user, "knowledge.archive", {"QA_LEAD", "BA"}
+    )
+    if document.get("status") == "ARCHIVED":
+        return envelope(document, revision=document["revision"])
+    updated = await database.value.requirement_documents.find_one_and_update(
+        {
+            "_id": document_id,
+            "project_id": document["project_id"],
+            "revision": payload.expected_revision,
+        },
+        {
+            "$set": {
+                "status_before_archive": document.get("status", "READY"),
+                "status": "ARCHIVED",
+                "archived_by": user.id,
+                "archived_at": now(),
+                "archive_reason": payload.reason,
+                "updated_at": now(),
+            },
+            "$inc": {"revision": 1},
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+    if not updated:
+        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+    await audit(
+        user.id,
+        "knowledge_source_archived",
+        "RequirementDocument",
+        document_id,
+        document["project_id"],
+        {"reason": payload.reason},
+    )
+    return envelope(updated, revision=updated["revision"])
+
+
 @router.get("/requirement-documents/{document_id}")
 async def get_requirement_document(
     document_id: str,
@@ -942,6 +1328,55 @@ async def get_requirement_document(
         "requirement_documents", document_id, user, "requirement_document.read"
     )
     return envelope(document, revision=document["revision"])
+
+
+@router.patch("/requirement-documents/{document_id}")
+async def update_requirement_document_metadata(
+    document_id: str,
+    payload: RequirementDocumentPatch,
+    user: CurrentUser = Depends(get_current_user),
+):
+    document = await get_project_entity("requirement_documents", document_id, user, "knowledge.manage")
+    changes = payload.model_dump(exclude_unset=True)
+    changes.pop("expected_revision", None)
+    updated = await database.value.requirement_documents.find_one_and_update(
+        {"_id": document_id, "project_id": document["project_id"], "revision": payload.expected_revision},
+        {"$set": {**changes, "updated_at": now()}, "$inc": {"revision": 1}},
+        return_document=ReturnDocument.AFTER,
+    )
+    if not updated:
+        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+    await audit(user.id, "requirement_document_metadata_updated", "RequirementDocument", document_id, document["project_id"], {"fields": sorted(changes)})
+    return envelope(updated, revision=updated["revision"])
+
+
+@router.post("/requirement-documents/{document_id}/reindex", status_code=202)
+async def reindex_requirement_document(
+    document_id: str,
+    user: CurrentUser = Depends(get_current_user),
+):
+    document = await get_project_entity("requirement_documents", document_id, user, "knowledge.manage")
+    if document.get("status") == "ARCHIVED":
+        raise HTTPException(status_code=409, detail={"code": "DOCUMENT_ARCHIVED"})
+    normalized = serialized_content(document.get("normalized_content") or "")
+    indexed = await index_artifact(
+        document["project_id"],
+        "requirement_document",
+        document_id,
+        document_id,
+        document.get("title") or document.get("filename") or document_id,
+        normalized,
+        document.get("status", "READY"),
+        document.get("authority", "reference"),
+        document.get("source_version", 1),
+    )
+    await database.value.requirement_documents.update_one(
+        {"_id": document_id, "project_id": document["project_id"]},
+        {"$set": {"index_status": "INDEXED" if indexed else "FAILED", "indexed_at": now(), "updated_at": now()}, "$inc": {"revision": 1}},
+    )
+    updated = await database.value.requirement_documents.find_one({"_id": document_id, "project_id": document["project_id"]})
+    await audit(user.id, "requirement_document_reindexed", "RequirementDocument", document_id, document["project_id"], {"indexed": indexed})
+    return envelope(updated, revision=updated["revision"], status="SUCCESS" if indexed else "DEGRADED", degraded_mode=None if indexed else "DEGRADED_VECTOR")
 
 
 @router.get("/requirement-documents/{document_id}/download")
@@ -1261,7 +1696,7 @@ async def upload_requirement_import(
 
 @router.get("/requirement-imports/{job_id}")
 async def get_requirement_import(job_id: str, user: CurrentUser = Depends(get_current_user)):
-    job = await get_project_entity("import_jobs", job_id, user, "requirement.read")
+    job = await get_project_entity("import_jobs", job_id, user, "requirement_document.review_extraction")
     return envelope(job, revision=job.get("revision", 1))
 
 
@@ -1271,7 +1706,7 @@ async def review_requirement_import(
     payload: RequirementImportReview,
     user: CurrentUser = Depends(get_current_user),
 ):
-    job = await get_project_entity("import_jobs", job_id, user, "requirement.create")
+    job = await get_project_entity("import_jobs", job_id, user, "requirement_document.review_extraction")
     if job.get("status") != "PREVIEW_READY":
         raise HTTPException(
             status_code=409,
@@ -1322,8 +1757,9 @@ async def confirm_requirement_import(
     user: CurrentUser = Depends(get_current_user),
 ):
     job = await get_project_entity(
-        "import_jobs", job_id, user, "requirement.create"
+        "import_jobs", job_id, user, "requirement_document.confirm_extraction"
     )
+    await get_project(job["project_id"], user, "requirement.create")
     if job["status"] == "CONFIRMED":
         return envelope(job)
     indexes = payload.selected_indexes or list(range(len(job["preview"])))

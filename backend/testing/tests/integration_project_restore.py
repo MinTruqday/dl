@@ -2,11 +2,23 @@ import os
 import time
 
 import httpx
+import jwt
 
 
 base_url = os.getenv("TESTING_TEST_URL", "http://testing:8000")
-lead = {"x-test-user-id": "restore-lead-v42"}
-viewer = {"x-test-user-id": "restore-viewer-v42"}
+def identity(user_id):
+    return {
+        "Authorization": "Bearer "
+        + jwt.encode(
+            {"uid": user_id, "sub": f"{user_id}@test.local", "system_role": "USER"},
+            os.environ["SECRET_KEY"],
+            algorithm="HS256",
+        )
+    }
+
+
+lead = identity("restore-lead-v42")
+viewer = identity("restore-viewer-v42")
 
 
 with httpx.Client(base_url=base_url, timeout=30) as client:
@@ -19,7 +31,11 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
             "name": "V4.2 Project Restore",
             "description": "Project lifecycle integration",
             "project_type": "web",
-            "settings": {"timezone": "Asia/Ho_Chi_Minh", "locale": "vi"},
+            "settings": {
+                "timezone": "Asia/Ho_Chi_Minh",
+                "locale": "vi",
+                "read_after_archive_policy": "DENY_READ",
+            },
         },
     )
     assert created.status_code == 201, created.text
@@ -59,7 +75,7 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     assert accepted_invitation.status_code == 201, accepted_invitation.text
     accepted = client.post(
         f"/api/qa/projects/{project_id}/members/restore-accept-v42/accept",
-        headers={"x-test-user-id": "restore-accept-v42"},
+        headers=identity("restore-accept-v42"),
     )
     assert accepted.status_code == 200, accepted.text
     assert accepted.json()["data"]["status"] == "ACTIVE"
@@ -113,6 +129,22 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     )
     assert archived.status_code == 200, archived.text
     assert archived.json()["data"]["status"] == "archived"
+
+    denied_archived_artifacts = client.get(
+        f"/api/qa/projects/{project_id}/requirements",
+        headers=viewer,
+    )
+    assert denied_archived_artifacts.status_code == 403, denied_archived_artifacts.text
+    assert (
+        denied_archived_artifacts.json()["error"]["code"]
+        == "PROJECT_ARCHIVED_READ_DENIED"
+    )
+
+    archived_project = client.get(
+        f"/api/qa/projects/{project_id}",
+        headers=viewer,
+    )
+    assert archived_project.status_code == 200, archived_project.text
 
     mutation = client.post(
         f"/api/qa/projects/{project_id}/requirements",

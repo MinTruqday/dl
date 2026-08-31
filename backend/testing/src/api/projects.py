@@ -3,7 +3,7 @@ import os
 from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
 
-from src.core.auth import CurrentUser, get_current_user, permissions_for_role
+from src.core.auth import CurrentUser, PROJECT_PERMISSIONS, get_current_user, permissions_for_role
 from src.core.common import audit, envelope, get_project, new_id, now, optimistic_patch
 from src.core.configuration import settings
 from src.core.database import database
@@ -20,10 +20,7 @@ router = APIRouter(prefix="/api/qa", tags=["QA Projects"])
 
 
 @router.post("/projects", status_code=201)
-async def create_project(
-    payload: ProjectCreate,
-    user: CurrentUser = Depends(get_current_user),
-):
+async def create_project(payload: ProjectCreate, user: CurrentUser = Depends(get_current_user)):
     policy = settings.PROJECT_CREATION_POLICY
     authentication_db = os.environ.get("AUTHENTICATION_DB_NAME")
     if authentication_db:
@@ -33,10 +30,7 @@ async def create_project(
         if config:
             policy = config.get("project_creation_policy", policy)
     if policy == "ADMIN_ONLY" and not user.is_system_admin:
-        raise HTTPException(
-            status_code=403,
-            detail={"code": "SYSTEM_PERMISSION_DENIED"},
-        )
+        raise HTTPException(status_code=403, detail={"code": "SYSTEM_PERMISSION_DENIED"})
     timestamp = now()
     project = {
         "_id": new_id("PRJ"),
@@ -96,7 +90,11 @@ async def list_projects(
         {"user_id": user.id, "status": "ACTIVE"}
     ).to_list(5000)
     by_project = {item["project_id"]: item for item in memberships}
-    query = {"_id": {"$in": list(by_project)}}
+    grants = await database.value.break_glass_grants.find(
+        {"user_id": user.id, "status": "ACTIVE", "expires_at": {"$gt": now()}}
+    ).to_list(5000)
+    by_grant = {item["project_id"]: item for item in grants}
+    query = {"_id": {"$in": list(set(by_project) | set(by_grant))}}
     if status:
         query["status"] = status
     if q:
@@ -105,19 +103,37 @@ async def list_projects(
             {"key": {"$regex": q, "$options": "i"}},
         ]
     projects = await database.value.projects.find(query).sort("updated_at", -1).to_list(limit)
-    items = [
-        {
-            **project,
-            "current_membership": by_project[project["_id"]],
-            "current_permissions": sorted(
-                permissions_for_role(
-                    by_project[project["_id"]]["project_role"],
-                    project.get("settings"),
-                )
-            ),
-        }
-        for project in projects
-    ]
+    items = []
+    for project in projects:
+        membership = by_project.get(project["_id"])
+        grant = by_grant.get(project["_id"])
+        role_permissions = (
+            permissions_for_role(membership["project_role"], project.get("settings"))
+            if membership
+            else set()
+        )
+        grant_permissions = set(grant.get("permissions", [])) & PROJECT_PERMISSIONS if grant else set()
+        permissions = role_permissions | grant_permissions
+        items.append(
+            {
+                **project,
+                "current_membership": membership,
+                "current_permissions": sorted(permissions),
+                "access_context": (
+                    {
+                        "mode": "BREAK_GLASS",
+                        "grant_id": grant["_id"],
+                        "permissions": sorted(
+                            set(grant.get("permissions", [])) & PROJECT_PERMISSIONS
+                        ),
+                        "expires_at": grant["expires_at"],
+                        "reason": grant.get("reason"),
+                    }
+                    if grant and not grant_permissions.issubset(role_permissions)
+                    else None
+                ),
+            }
+        )
     return envelope(items)
 
 
@@ -127,33 +143,52 @@ async def project_detail(project_id: str, user: CurrentUser = Depends(get_curren
     membership = await database.value.project_members.find_one(
         {"project_id": project_id, "user_id": user.id, "status": "ACTIVE"}
     )
+    grant = await database.value.break_glass_grants.find_one(
+        {
+            "project_id": project_id,
+            "user_id": user.id,
+            "status": "ACTIVE",
+            "expires_at": {"$gt": now()},
+        }
+    )
+    role_permissions = (
+        permissions_for_role(membership["project_role"], project.get("settings"))
+        if membership
+        else set()
+    )
+    grant_permissions = set(grant.get("permissions", [])) & PROJECT_PERMISSIONS if grant else set()
+    access_context = (
+        {
+            "mode": "BREAK_GLASS",
+            "grant_id": grant["_id"],
+            "permissions": sorted(grant_permissions),
+            "expires_at": grant["expires_at"],
+            "reason": grant.get("reason"),
+        }
+        if grant and not grant_permissions.issubset(role_permissions)
+        else None
+    )
     return envelope(
         {
             **project,
             "current_membership": membership,
             "current_permissions": sorted(
-                permissions_for_role(
-                    membership["project_role"],
-                    project.get("settings"),
-                )
+                role_permissions | grant_permissions
             ),
+            "access_context": access_context,
         }
     )
 
 
 @router.patch("/projects/{project_id}")
 async def update_project(
-    project_id: str,
-    payload: ProjectPatch,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, payload: ProjectPatch, user: CurrentUser = Depends(get_current_user)
 ):
     await get_project(project_id, user, "project.update")
+    if payload.settings is not None:
+        await get_project(project_id, user, "project.settings.manage")
     updated = await optimistic_patch(
-        "projects",
-        project_id,
-        project_id,
-        payload.expected_revision,
-        payload.model_dump(),
+        "projects", project_id, project_id, payload.expected_revision, payload.model_dump()
     )
     await audit(user.id, "project_updated", "Project", project_id, project_id)
     return envelope(updated, revision=updated["revision"])
@@ -161,9 +196,7 @@ async def update_project(
 
 @router.post("/projects/{project_id}/archive")
 async def archive_project(
-    project_id: str,
-    payload: ProjectArchiveInput,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, payload: ProjectArchiveInput, user: CurrentUser = Depends(get_current_user)
 ):
     await get_project(project_id, user, "project.archive")
     updated = await optimistic_patch(
@@ -179,21 +212,14 @@ async def archive_project(
         },
     )
     await audit(
-        user.id,
-        "project_archived",
-        "Project",
-        project_id,
-        project_id,
-        {"reason": payload.reason},
+        user.id, "project_archived", "Project", project_id, project_id, {"reason": payload.reason}
     )
     return envelope(updated, revision=updated["revision"])
 
 
 @router.post("/projects/{project_id}/restore")
 async def restore_project(
-    project_id: str,
-    payload: ProjectArchiveInput,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, payload: ProjectArchiveInput, user: CurrentUser = Depends(get_current_user)
 ):
     await get_project(project_id, user, "project.restore")
     project = await database.value.projects.find_one({"_id": project_id})
@@ -212,33 +238,25 @@ async def restore_project(
         },
     )
     await audit(
-        user.id,
-        "project_restored",
-        "Project",
-        project_id,
-        project_id,
-        {"reason": payload.reason},
+        user.id, "project_restored", "Project", project_id, project_id, {"reason": payload.reason}
     )
     return envelope(updated, revision=updated["revision"])
 
 
 @router.get("/projects/{project_id}/members")
-async def list_project_members(
-    project_id: str,
-    user: CurrentUser = Depends(get_current_user),
-):
+async def list_project_members(project_id: str, user: CurrentUser = Depends(get_current_user)):
     await get_project(project_id, user, "project.members.read")
-    members = await database.value.project_members.find({"project_id": project_id}).sort(
-        "created_at", 1
-    ).to_list(5000)
+    members = (
+        await database.value.project_members.find({"project_id": project_id})
+        .sort("created_at", 1)
+        .to_list(5000)
+    )
     return envelope(members)
 
 
 @router.post("/projects/{project_id}/members", status_code=201)
 async def add_project_member(
-    project_id: str,
-    payload: ProjectMemberCreate,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, payload: ProjectMemberCreate, user: CurrentUser = Depends(get_current_user)
 ):
     await get_project(project_id, user, "project.members.manage")
     timestamp = now()
@@ -256,10 +274,7 @@ async def add_project_member(
     try:
         await database.value.project_members.insert_one(membership)
     except DuplicateKeyError:
-        raise HTTPException(
-            status_code=409,
-            detail={"code": "PROJECT_MEMBERSHIP_EXISTS"},
-        )
+        raise HTTPException(status_code=409, detail={"code": "PROJECT_MEMBERSHIP_EXISTS"})
     await audit(
         user.id,
         "project_member_added",
@@ -273,9 +288,7 @@ async def add_project_member(
 
 @router.post("/projects/{project_id}/invitations", status_code=201)
 async def invite_project_member(
-    project_id: str,
-    payload: ProjectMemberCreate,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, payload: ProjectMemberCreate, user: CurrentUser = Depends(get_current_user)
 ):
     await get_project(project_id, user, "project.members.manage")
     timestamp = now()
@@ -309,9 +322,7 @@ async def invite_project_member(
 
 @router.post("/projects/{project_id}/members/{member_user_id}/accept")
 async def accept_project_invitation(
-    project_id: str,
-    member_user_id: str,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, member_user_id: str, user: CurrentUser = Depends(get_current_user)
 ):
     if user.id != member_user_id:
         raise HTTPException(status_code=403, detail={"code": "INVITATION_OWNER_REQUIRED"})
@@ -326,20 +337,14 @@ async def accept_project_invitation(
     if not membership:
         raise HTTPException(status_code=404, detail={"code": "INVITATION_NOT_FOUND"})
     await audit(
-        user.id,
-        "project_invitation_accepted",
-        "ProjectMember",
-        membership["_id"],
-        project_id,
+        user.id, "project_invitation_accepted", "ProjectMember", membership["_id"], project_id
     )
     return envelope(membership, revision=membership["membership_revision"])
 
 
 @router.post("/projects/{project_id}/members/{member_user_id}/resend-invite")
 async def resend_project_invitation(
-    project_id: str,
-    member_user_id: str,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, member_user_id: str, user: CurrentUser = Depends(get_current_user)
 ):
     await get_project(project_id, user, "project.members.manage")
     membership = await database.value.project_members.find_one_and_update(
@@ -353,26 +358,25 @@ async def resend_project_invitation(
     if not membership:
         raise HTTPException(status_code=409, detail={"code": "INVITATION_NOT_PENDING"})
     await audit(
-        user.id,
-        "project_invitation_resent",
-        "ProjectMember",
-        membership["_id"],
-        project_id,
+        user.id, "project_invitation_resent", "ProjectMember", membership["_id"], project_id
     )
     return envelope(membership, revision=membership["membership_revision"])
 
 
 @router.post("/projects/{project_id}/members/{member_user_id}/cancel-invite")
 async def cancel_project_invitation(
-    project_id: str,
-    member_user_id: str,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, member_user_id: str, user: CurrentUser = Depends(get_current_user)
 ):
     await get_project(project_id, user, "project.members.manage")
     membership = await database.value.project_members.find_one_and_update(
         {"project_id": project_id, "user_id": member_user_id, "status": "INVITED"},
         {
-            "$set": {"status": "CANCELLED", "cancelled_by": user.id, "cancelled_at": now(), "updated_at": now()},
+            "$set": {
+                "status": "CANCELLED",
+                "cancelled_by": user.id,
+                "cancelled_at": now(),
+                "updated_at": now(),
+            },
             "$inc": {"membership_revision": 1},
         },
         return_document=ReturnDocument.AFTER,
@@ -380,11 +384,7 @@ async def cancel_project_invitation(
     if not membership:
         raise HTTPException(status_code=409, detail={"code": "INVITATION_NOT_PENDING"})
     await audit(
-        user.id,
-        "project_invitation_cancelled",
-        "ProjectMember",
-        membership["_id"],
-        project_id,
+        user.id, "project_invitation_cancelled", "ProjectMember", membership["_id"], project_id
     )
     return envelope(membership, revision=membership["membership_revision"])
 
@@ -417,7 +417,9 @@ async def update_project_member(
     }
     desired_role = changes.get("project_role", previous.get("project_role"))
     desired_status = changes.get("status", previous.get("status"))
-    was_active_lead = previous.get("project_role") == "QA_LEAD" and previous.get("status") == "ACTIVE"
+    was_active_lead = (
+        previous.get("project_role") == "QA_LEAD" and previous.get("status") == "ACTIVE"
+    )
     remains_active_lead = desired_role == "QA_LEAD" and desired_status == "ACTIVE"
     if was_active_lead and not remains_active_lead:
         lead_count = await database.value.project_members.count_documents(
@@ -448,15 +450,28 @@ async def update_project_member(
                 "current_revision": existing["membership_revision"],
             },
         )
-    remains_active_lead = membership.get("project_role") == "QA_LEAD" and membership.get("status") == "ACTIVE"
+    remains_active_lead = (
+        membership.get("project_role") == "QA_LEAD" and membership.get("status") == "ACTIVE"
+    )
     if was_active_lead and not remains_active_lead:
         lead_count = await database.value.project_members.count_documents(
             {"project_id": project_id, "project_role": "QA_LEAD", "status": "ACTIVE"}
         )
         if lead_count == 0:
             await database.value.project_members.update_one(
-                {"_id": membership["_id"], "project_id": project_id, "membership_revision": membership["membership_revision"]},
-                {"$set": {"project_role": previous["project_role"], "status": previous["status"], "updated_at": now()}, "$inc": {"membership_revision": 1}},
+                {
+                    "_id": membership["_id"],
+                    "project_id": project_id,
+                    "membership_revision": membership["membership_revision"],
+                },
+                {
+                    "$set": {
+                        "project_role": previous["project_role"],
+                        "status": previous["status"],
+                        "updated_at": now(),
+                    },
+                    "$inc": {"membership_revision": 1},
+                },
             )
             raise HTTPException(status_code=422, detail={"code": "PROJECT_LAST_QA_LEAD_REQUIRED"})
     await audit(
@@ -472,9 +487,7 @@ async def update_project_member(
 
 @router.delete("/projects/{project_id}/members/{member_user_id}")
 async def remove_project_member(
-    project_id: str,
-    member_user_id: str,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, member_user_id: str, user: CurrentUser = Depends(get_current_user)
 ):
     await get_project(project_id, user, "project.members.manage")
     membership = await database.value.project_members.find_one(
@@ -484,17 +497,10 @@ async def remove_project_member(
         raise HTTPException(status_code=404, detail={"code": "ENTITY_NOT_FOUND"})
     if membership.get("project_role") == "QA_LEAD" and membership.get("status") == "ACTIVE":
         lead_count = await database.value.project_members.count_documents(
-            {
-                "project_id": project_id,
-                "project_role": "QA_LEAD",
-                "status": "ACTIVE",
-            }
+            {"project_id": project_id, "project_role": "QA_LEAD", "status": "ACTIVE"}
         )
         if lead_count <= 1:
-            raise HTTPException(
-                status_code=422,
-                detail={"code": "PROJECT_LAST_QA_LEAD_REQUIRED"},
-            )
+            raise HTTPException(status_code=422, detail={"code": "PROJECT_LAST_QA_LEAD_REQUIRED"})
     await database.value.project_members.delete_one(
         {"project_id": project_id, "user_id": member_user_id}
     )

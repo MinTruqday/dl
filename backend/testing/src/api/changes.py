@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pymongo import ReturnDocument
 
 from src.core.auth import CurrentUser, get_current_user
-from src.core.common import audit, envelope, get_project, get_project_entity, new_id, now
+from src.core.common import audit, envelope, get_project, get_project_entity, new_id, now, sort_spec
 from src.core.database import database
 from src.core.metrics import PROPOSAL_ACCEPTANCE_RATE
 from src.domain.schemas import (
@@ -33,7 +33,7 @@ async def create_change_set(
     user: CurrentUser = Depends(get_current_user),
 ):
     requirement = await get_project_entity(
-        "requirements", requirement_id, user, "impact.execute"
+        "requirements", requirement_id, user, "changeset.create"
     )
     versions = await database.value.requirement_versions.find({"requirement_id": requirement_id, "_id": {"$in": [payload.from_version_id, payload.to_version_id]}}).to_list(2)
     by_id = {item["_id"]: item for item in versions}
@@ -67,18 +67,28 @@ async def create_change_set(
 @router.get("/projects/{project_id}/change-sets")
 async def list_change_sets(
     project_id: str,
+    requirement_id: str = Query(default="", max_length=200),
+    status: str = Query(default="", max_length=30),
+    sort: str = Query(default="-created_at", max_length=80),
     limit: int = Query(default=100, ge=1, le=500),
     user: CurrentUser = Depends(get_current_user),
 ):
-    await get_project(project_id, user, "impact.read")
-    return envelope(await database.value.requirement_change_sets.find({"project_id": project_id}).sort("created_at", -1).to_list(limit))
+    await get_project(project_id, user, "changeset.read")
+    query = {"project_id": project_id}
+    for field, value in {"requirement_id": requirement_id, "status": status}.items():
+        if value:
+            query[field] = value
+    sort_field, direction = sort_spec(
+        sort, {"requirement_id", "status", "created_at", "updated_at"}, "-created_at"
+    )
+    return envelope(await database.value.requirement_change_sets.find(query).sort(sort_field, direction).to_list(limit))
 
 
 @router.get("/change-sets/{change_set_id}")
 async def get_change_set(change_set_id: str, user: CurrentUser = Depends(get_current_user)):
     return envelope(
         await get_project_entity(
-            "requirement_change_sets", change_set_id, user, "impact.read"
+            "requirement_change_sets", change_set_id, user, "changeset.read"
         )
     )
 
@@ -90,7 +100,7 @@ async def review_change_set(
     user: CurrentUser = Depends(get_current_user),
 ):
     change_set = await get_project_entity(
-        "requirement_change_sets", change_set_id, user, "impact.override"
+        "requirement_change_sets", change_set_id, user, "changeset.review"
     )
     if change_set.get("status") == "REVIEWED":
         return envelope(change_set, revision=change_set["revision"])
@@ -130,10 +140,13 @@ async def review_change_set(
 
 
 @router.post("/change-sets/{change_set_id}/impact-analysis", status_code=201)
-async def analyze_impact(change_set_id: str, user: CurrentUser = Depends(get_current_user)):
+@router.post("/projects/{project_id}/changesets/{change_set_id}/analyze-impact", status_code=201)
+async def analyze_impact(change_set_id: str, project_id: str | None = None, user: CurrentUser = Depends(get_current_user)):
     change_set = await get_project_entity(
         "requirement_change_sets", change_set_id, user, "impact.execute"
     )
+    if project_id is not None and change_set["project_id"] != project_id:
+        raise HTTPException(status_code=422, detail={"code": "PROJECT_MISMATCH"})
     if change_set.get("status") not in {"REVIEWED", "ANALYZED"}:
         raise HTTPException(
             status_code=409,
@@ -223,6 +236,23 @@ async def analyze_impact(change_set_id: str, user: CurrentUser = Depends(get_cur
     return envelope(analysis)
 
 
+@router.get("/change-sets/{change_set_id}/impact-analysis")
+async def get_change_set_impact_analysis(
+    change_set_id: str,
+    user: CurrentUser = Depends(get_current_user),
+):
+    change_set = await get_project_entity(
+        "requirement_change_sets", change_set_id, user, "impact.read"
+    )
+    analysis = await database.value.impact_analyses.find_one(
+        {"change_set_id": change_set_id, "project_id": change_set["project_id"]},
+        sort=[("created_at", -1)],
+    )
+    if not analysis:
+        raise HTTPException(status_code=404, detail={"code": "ENTITY_NOT_FOUND"})
+    return envelope(analysis)
+
+
 @router.get("/impact-analyses/{analysis_id}")
 async def get_impact_analysis(analysis_id: str, user: CurrentUser = Depends(get_current_user)):
     return envelope(
@@ -237,8 +267,9 @@ async def review_impact_analysis(
     user: CurrentUser = Depends(get_current_user),
 ):
     analysis = await get_project_entity(
-        "impact_analyses", analysis_id, user, "impact.execute"
+        "impact_analyses", analysis_id, user, "impact.close"
     )
+    await get_project(analysis["project_id"], user, "impact.review")
     if analysis["status"] == "REVIEWED":
         return envelope(analysis, revision=analysis["revision"])
     if analysis["status"] != "REVIEW_READY":
@@ -301,6 +332,22 @@ async def review_impact_analysis(
     return envelope(analysis, revision=analysis["revision"])
 
 
+@router.post("/impact-analyses/{analysis_id}/perspectives", status_code=201)
+async def add_impact_review_perspective(
+    analysis_id: str,
+    payload: dict,
+    user: CurrentUser = Depends(get_current_user),
+):
+    analysis = await get_project_entity("impact_analyses", analysis_id, user, "impact.review")
+    note = str(payload.get("review_note") or "").strip()
+    if len(note) < 2 or len(note) > 5000:
+        raise HTTPException(status_code=422, detail={"code": "IMPACT_REVIEW_NOTE_REQUIRED"})
+    perspective = {"_id": new_id("IMPR"), "project_id": analysis["project_id"], "impact_analysis_id": analysis_id, "review_note": note, "reviewed_by": user.id, "created_at": now()}
+    await database.value.impact_review_perspectives.insert_one(perspective)
+    await audit(user.id, "impact_review_perspective_added", "ImpactAnalysis", analysis_id, analysis["project_id"])
+    return envelope(perspective)
+
+
 @router.post("/impact-analyses/{analysis_id}/maintenance-proposals", status_code=201)
 async def create_maintenance_proposals(analysis_id: str, user: CurrentUser = Depends(get_current_user)):
     analysis = await get_project_entity(
@@ -349,15 +396,26 @@ async def create_maintenance_proposals(analysis_id: str, user: CurrentUser = Dep
 @router.get("/projects/{project_id}/maintenance-proposals")
 async def list_proposals(
     project_id: str,
-    status: str = Query(default="PENDING", max_length=30),
+    status: str = Query(default="", max_length=30),
+    proposal_type: str = Query(default="", max_length=50),
+    target_artifact_id: str = Query(default="", max_length=200),
+    sort: str = Query(default="-created_at", max_length=80),
     limit: int = Query(default=100, ge=1, le=500),
     user: CurrentUser = Depends(get_current_user),
 ):
     await get_project(project_id, user, "proposal.read")
     query = {"project_id": project_id}
-    if status:
-        query["status"] = status
-    proposals = await database.value.maintenance_proposals.find(query).sort("created_at", -1).to_list(limit)
+    for field, value in {
+        "status": status,
+        "proposal_type": proposal_type,
+        "target_artifact_id": target_artifact_id,
+    }.items():
+        if value:
+            query[field] = value
+    sort_field, direction = sort_spec(
+        sort, {"status", "proposal_type", "confidence", "created_at", "updated_at"}, "-created_at"
+    )
+    proposals = await database.value.maintenance_proposals.find(query).sort(sort_field, direction).to_list(limit)
     base_ids = [item.get("base_version_id") for item in proposals if item.get("base_version_id")]
     bases = await database.value.test_case_versions.find(
         {"project_id": project_id, "_id": {"$in": base_ids}}
@@ -371,9 +429,55 @@ async def list_proposals(
     )
 
 
+@router.get("/maintenance-proposals/{proposal_id}")
+async def get_maintenance_proposal(proposal_id: str, user: CurrentUser = Depends(get_current_user)):
+    return envelope(await get_project_entity("maintenance_proposals", proposal_id, user, "proposal.read"))
+
+
+@router.post("/projects/{project_id}/ai-proposals/{proposal_id}/review")
+async def review_project_proposal(
+    project_id: str,
+    proposal_id: str,
+    payload: ProposalAction,
+    user: CurrentUser = Depends(get_current_user),
+):
+    proposal = await get_project_entity("maintenance_proposals", proposal_id, user, "proposal.review")
+    if proposal["project_id"] != project_id:
+        raise HTTPException(status_code=422, detail={"code": "PROJECT_MISMATCH"})
+    if proposal.get("status") != "PENDING":
+        raise HTTPException(status_code=409, detail={"code": "PROPOSAL_NOT_REVIEWABLE"})
+    if proposal.get("revision") != payload.expected_revision:
+        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+    changes = {"review_note": payload.review_note, "updated_at": now(), "last_reviewed_by": user.id, "last_reviewed_at": now()}
+    if payload.patch is not None:
+        changes["patch"] = payload.patch
+    updated = await database.value.maintenance_proposals.find_one_and_update(
+        {"_id": proposal_id, "project_id": project_id, "status": "PENDING", "revision": payload.expected_revision},
+        {"$set": changes, "$inc": {"revision": 1}},
+        return_document=ReturnDocument.AFTER,
+    )
+    if not updated:
+        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+    await audit(user.id, "maintenance_proposal_reviewed", "MaintenanceProposal", proposal_id, project_id)
+    return envelope(updated, revision=updated["revision"])
+
+
 @router.post("/maintenance-proposals/{proposal_id}/accept", status_code=201)
 async def accept_proposal(proposal_id: str, payload: ProposalAction, user: CurrentUser = Depends(get_current_user)):
     return await apply_proposal(proposal_id, payload, user, "ACCEPTED")
+
+
+@router.post("/projects/{project_id}/ai-proposals/{proposal_id}/approve", status_code=201)
+async def approve_project_proposal(
+    project_id: str,
+    proposal_id: str,
+    payload: ProposalAction,
+    user: CurrentUser = Depends(get_current_user),
+):
+    proposal = await get_project_entity("maintenance_proposals", proposal_id, user, "proposal.approve")
+    if proposal["project_id"] != project_id:
+        raise HTTPException(status_code=422, detail={"code": "PROJECT_MISMATCH"})
+    return await apply_proposal(proposal_id, payload, user, "EDITED_ACCEPTED" if payload.patch is not None else "ACCEPTED")
 
 
 @router.post("/maintenance-proposals/{proposal_id}/accept-with-edit", status_code=201)
@@ -384,7 +488,7 @@ async def accept_proposal_with_edit(proposal_id: str, payload: ProposalAction, u
 @router.post("/maintenance-proposals/{proposal_id}/reject")
 async def reject_proposal(proposal_id: str, payload: ProposalAction, user: CurrentUser = Depends(get_current_user)):
     proposal = await get_project_entity(
-        "maintenance_proposals", proposal_id, user, "proposal.review"
+        "maintenance_proposals", proposal_id, user, "proposal.reject"
     )
     if proposal.get("status") == "REJECTED":
         return envelope(proposal)
@@ -399,6 +503,19 @@ async def reject_proposal(proposal_id: str, payload: ProposalAction, user: Curre
     await update_proposal_acceptance_rate(proposal["project_id"])
     await audit(user.id, "maintenance_proposal_rejected", "MaintenanceProposal", proposal_id, proposal["project_id"])
     return envelope(proposal)
+
+
+@router.post("/projects/{project_id}/ai-proposals/{proposal_id}/reject")
+async def reject_project_proposal(
+    project_id: str,
+    proposal_id: str,
+    payload: ProposalAction,
+    user: CurrentUser = Depends(get_current_user),
+):
+    proposal = await get_project_entity("maintenance_proposals", proposal_id, user, "proposal.reject")
+    if proposal["project_id"] != project_id:
+        raise HTTPException(status_code=422, detail={"code": "PROJECT_MISMATCH"})
+    return await reject_proposal(proposal_id, payload, user)
 
 
 @router.post("/maintenance-proposals/{proposal_id}/regenerate", status_code=201)
@@ -643,6 +760,7 @@ async def regression_recommendation(change_set_id: str, user: CurrentUser = Depe
     change_set = await get_project_entity(
         "requirement_change_sets", change_set_id, user, "regression.generate"
     )
+    await get_project(change_set["project_id"], user, "ai.generate_regression")
     existing = await database.value.regression_recommendations.find_one({"change_set_id": change_set_id})
     if existing:
         return envelope(existing)
@@ -668,6 +786,36 @@ async def regression_recommendation(change_set_id: str, user: CurrentUser = Depe
     return envelope(recommendation)
 
 
+@router.get("/change-sets/{change_set_id}/regression-recommendation")
+async def get_change_set_regression_recommendation(
+    change_set_id: str,
+    user: CurrentUser = Depends(get_current_user),
+):
+    change_set = await get_project_entity(
+        "requirement_change_sets", change_set_id, user, "regression.read"
+    )
+    recommendation = await database.value.regression_recommendations.find_one(
+        {"change_set_id": change_set_id, "project_id": change_set["project_id"]},
+        sort=[("created_at", -1)],
+    )
+    if not recommendation:
+        raise HTTPException(status_code=404, detail={"code": "ENTITY_NOT_FOUND"})
+    return envelope(recommendation)
+
+
+@router.post("/projects/{project_id}/regression/generate", status_code=201)
+async def generate_project_regression(
+    project_id: str,
+    payload: dict,
+    user: CurrentUser = Depends(get_current_user),
+):
+    change_set_id = str(payload.get("change_set_id") or "")
+    change_set = await get_project_entity("requirement_change_sets", change_set_id, user, "regression.generate")
+    if change_set["project_id"] != project_id:
+        raise HTTPException(status_code=422, detail={"code": "PROJECT_MISMATCH"})
+    return await regression_recommendation(change_set_id, user)
+
+
 @router.get("/regression-recommendations/{recommendation_id}")
 async def get_regression_recommendation(
     recommendation_id: str,
@@ -681,6 +829,34 @@ async def get_regression_recommendation(
             "regression.read",
         )
     )
+
+
+@router.patch("/regression-recommendations/{recommendation_id}")
+async def edit_regression_recommendation(
+    recommendation_id: str,
+    payload: RegressionApprovalInput,
+    user: CurrentUser = Depends(get_current_user),
+):
+    recommendation = await get_project_entity("regression_recommendations", recommendation_id, user, "regression.generate")
+    if recommendation.get("status") != "PENDING_APPROVAL":
+        raise HTTPException(status_code=409, detail={"code": "INVALID_STATE_TRANSITION"})
+    selected = payload.selected_test_case_version_ids
+    items = recommendation.get("items", [])
+    if selected is not None:
+        by_id = {item["test_case_version_id"]: item for item in items}
+        unknown = set(selected) - set(by_id)
+        if unknown:
+            raise HTTPException(status_code=422, detail={"code": "INVALID_REGRESSION_SCOPE", "test_case_version_ids": sorted(unknown)})
+        items = [by_id[item] for item in selected]
+    updated = await database.value.regression_recommendations.find_one_and_update(
+        {"_id": recommendation_id, "project_id": recommendation["project_id"], "status": "PENDING_APPROVAL", "revision": payload.expected_revision},
+        {"$set": {"items": items, "name": payload.name or recommendation.get("name"), "review_note": payload.review_note, "candidate_edited_by": user.id, "candidate_edited_at": now(), "updated_at": now()}, "$inc": {"revision": 1}},
+        return_document=ReturnDocument.AFTER,
+    )
+    if not updated:
+        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+    await audit(user.id, "regression_recommendation_edited", "RegressionRecommendation", recommendation_id, recommendation["project_id"])
+    return envelope(updated, revision=updated["revision"])
 
 
 @router.post("/regression-recommendations/{recommendation_id}/approve", status_code=201)
@@ -763,6 +939,19 @@ async def approve_regression_recommendation(
     await audit(user.id, "regression_approved", "RegressionRecommendation", recommendation_id, recommendation["project_id"], {"test_suite_id": suite["_id"], "test_count": len(selected_ids)})
     await audit(user.id, "test_suite_created", "TestSuite", suite["_id"], recommendation["project_id"], {"source_regression_recommendation_id": recommendation_id})
     return envelope({"recommendation": recommendation, "test_suite": suite})
+
+
+@router.post("/projects/{project_id}/regression/{recommendation_id}/approve", status_code=201)
+async def approve_project_regression(
+    project_id: str,
+    recommendation_id: str,
+    payload: RegressionApprovalInput,
+    user: CurrentUser = Depends(get_current_user),
+):
+    recommendation = await get_project_entity("regression_recommendations", recommendation_id, user, "regression.approve")
+    if recommendation["project_id"] != project_id:
+        raise HTTPException(status_code=422, detail={"code": "PROJECT_MISMATCH"})
+    return await approve_regression_recommendation(recommendation_id, payload, user)
 
 
 async def recent_failure_versions(project_id):

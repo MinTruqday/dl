@@ -11,6 +11,51 @@ import {
 import { testingApi } from "../../services/testing.service";
 import { formatDate, messageOf } from "../../lib/testing";
 
+const toggleSettings = [
+  ["requirement_lint_blocking", "Chặn duyệt yêu cầu khi còn lỗi kiểm tra"],
+  ["trace_before_baseline", "Bắt buộc truy vết trước khi baseline yêu cầu"],
+  ["ba_can_approve_requirements", "Cho phép BA duyệt yêu cầu theo chính sách"],
+  ["testcase_lint_blocking", "Chặn duyệt ca kiểm thử khi còn lỗi kiểm tra"],
+  ["trace_before_testcase_approve", "Bắt buộc truy vết trước khi duyệt ca kiểm thử"],
+  ["tester_can_create_run", "Cho phép Tester tạo Test Run"],
+  ["tester_can_manage_runs", "Cho phép Tester quản lý Test Run"],
+  ["tester_can_assign_runs", "Cho phép Tester gán Test Run và ca kiểm thử"],
+  ["tester_can_start_runs", "Cho phép Tester bắt đầu Test Run"],
+  ["tester_can_complete_runs", "Cho phép Tester hoàn tất Test Run"],
+  ["tester_can_abort_runs", "Cho phép Tester huỷ Test Run"],
+  ["tester_can_correct_results", "Cho phép Tester sửa kết quả bằng sự kiện hiệu chỉnh"],
+  ["tester_can_assign_testplans", "Cho phép Tester phân công thành viên trong Test Plan"],
+  ["partial_complete_allowed", "Cho phép hoàn tất một phần Test Run"],
+  ["tester_can_close_defect", "Cho phép Tester đóng Defect"],
+  ["tester_can_reject_defect", "Cho phép Tester từ chối Defect"],
+  ["tester_can_mark_duplicate_defect", "Cho phép Tester đánh dấu Defect trùng"],
+  ["ba_can_create_defect", "Cho phép BA tạo Defect"],
+  ["developer_can_create_defect", "Cho phép Developer tạo Defect"],
+  ["ba_can_update_defect", "Cho phép BA cập nhật Defect"],
+  ["tester_can_confirm_trace", "Cho phép Tester xác nhận Trace"],
+  ["tester_can_revoke_trace", "Cho phép Tester thu hồi Trace"],
+  ["ba_can_confirm_trace", "Cho phép BA xác nhận Trace"],
+  ["ba_can_revoke_trace", "Cho phép BA thu hồi Trace"],
+  ["tester_can_override_impact", "Cho phép Tester override Impact"],
+  ["tester_can_close_impact", "Cho phép Tester đóng Impact"],
+  ["tester_can_manage_knowledge", "Cho phép Tester quản lý Knowledge"],
+  ["viewer_can_export", "Cho phép Viewer xuất báo cáo"],
+  ["developer_can_export", "Cho phép Developer xuất báo cáo"],
+  ["ai_auto_draft", "Cho phép AI tạo bản nháp"],
+];
+
+const numberSettings = [
+  ["impact_confidence_threshold", "Ngưỡng tin cậy Impact", 0, 1, 0.01],
+  ["testcase_duplicate_threshold", "Ngưỡng phát hiện ca kiểm thử trùng", 0, 1, 0.01],
+  ["impact_candidate_limit", "Số ứng viên Impact tối đa", 1, 5000, 1],
+];
+
+const selectSettings = [
+  ["default_invite_role", "Vai trò mời mặc định", ["TESTER", "BA", "DEVELOPER", "VIEWER"]],
+  ["read_after_archive_policy", "Quyền đọc sau khi lưu trữ", ["ALLOW_READ", "DENY_READ"]],
+  ["default_environment", "Môi trường mặc định", ["development", "staging", "production"]],
+];
+
 export default function SettingsPage({ project, onProjectChange }) {
   const { ask, dialog } = useQaActionDialog();
   const [audit, setAudit] = useState([]);
@@ -18,22 +63,42 @@ export default function SettingsPage({ project, onProjectChange }) {
   const [analytics, setAnalytics] = useState(null);
   const [name, setName] = useState(project.name);
   const [description, setDescription] = useState(project.description || "");
+  const [projectType, setProjectType] = useState(project.project_type || "web");
+  const [locale, setLocale] = useState(project.locale || "vi-VN");
+  const [timezone, setTimezone] = useState(project.timezone || "Asia/Ho_Chi_Minh");
   const [settings, setSettings] = useState({
     requirement_approval_required: project.settings?.requirement_approval_required ?? true,
     testcase_approval_required: project.settings?.testcase_approval_required ?? true,
     ai_auto_draft: project.settings?.ai_auto_draft ?? true,
     impact_confidence_threshold: project.settings?.impact_confidence_threshold ?? 0.75,
+    ...Object.fromEntries(
+      toggleSettings.map(([key]) => [
+        key,
+        project.settings?.[key] ??
+          ["ai_auto_draft", "ba_can_create_defect", "developer_can_create_defect"].includes(key),
+      ]),
+    ),
+    ...Object.fromEntries(
+      numberSettings.map(([key, , , , step]) => [
+        key,
+        project.settings?.[key] ?? (step === 1 ? 100 : 0.75),
+      ]),
+    ),
+    ...Object.fromEntries(
+      selectSettings.map(([key, , values]) => [key, project.settings?.[key] ?? values[0]]),
+    ),
   });
   const [error, setError] = useState("");
   useEffect(() => {
     Promise.all([
       testingApi.audit(project._id),
       testingApi.maintenanceAnalytics(project._id),
+      testingApi.aiAnalytics(project._id),
       testingApi.listMembers(project._id),
     ])
-      .then(([events, value, memberValues]) => {
+      .then(([events, value, aiValue, memberValues]) => {
         setAudit(events);
-        setAnalytics(value);
+        setAnalytics({ ...value, ...aiValue });
         setMembers(memberValues);
       })
       .catch((reason) => setError(messageOf(reason)));
@@ -52,11 +117,24 @@ export default function SettingsPage({ project, onProjectChange }) {
                   expected_revision: project.revision,
                   name,
                   description,
+                  project_type: projectType,
+                  locale,
+                  timezone,
                   settings: {
                     ...(project.settings || {}),
                     ...settings,
-                    requirement_approval_required: true,
-                    testcase_approval_required: true,
+                    action_policies: {
+                      ...(project.settings?.action_policies || {}),
+                      "defect.rejected": settings.tester_can_reject_defect
+                        ? ["QA_LEAD", "TESTER"]
+                        : ["QA_LEAD"],
+                      "defect.duplicate": settings.tester_can_mark_duplicate_defect
+                        ? ["QA_LEAD", "TESTER"]
+                        : ["QA_LEAD"],
+                      "testplan.assignments": settings.tester_can_assign_testplans
+                        ? ["QA_LEAD", "TESTER"]
+                        : ["QA_LEAD"],
+                    },
                   },
                 });
                 await onProjectChange();
@@ -73,36 +151,86 @@ export default function SettingsPage({ project, onProjectChange }) {
                 onChange={(event) => setName(event.target.value)}
               />
             </label>
-            <div className="space-y-3 rounded-xl border border-border p-4">
-              <p className="text-[13px] font-semibold">Phê duyệt yêu cầu luôn bắt buộc</p>
-              <p className="text-[13px] font-semibold">Phê duyệt ca kiểm thử luôn bắt buộc</p>
-              <label className="flex items-center gap-3 text-[13px]">
-                <input
-                  type="checkbox"
-                  checked={settings.ai_auto_draft}
-                  onChange={(event) =>
-                    setSettings({ ...settings, ai_auto_draft: event.target.checked })
-                  }
-                />
-                Cho phép AI tạo bản nháp
+            <div className="grid gap-3 rounded-xl border border-border p-4 sm:grid-cols-2">
+              <label className="field-label">
+                Loại dự án
+                <select
+                  className="apple-input mt-2"
+                  value={projectType}
+                  onChange={(event) => setProjectType(event.target.value)}
+                >
+                  {["web", "mobile", "api", "desktop", "embedded", "other"].map((value) => (
+                    <option value={value} key={value}>
+                      {value}
+                    </option>
+                  ))}
+                </select>
               </label>
               <label className="field-label">
-                Ngưỡng tin cậy phân tích ảnh hưởng
+                Ngôn ngữ và vùng
                 <input
                   className="apple-input mt-2"
-                  type="number"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value={settings.impact_confidence_threshold}
-                  onChange={(event) =>
-                    setSettings({
-                      ...settings,
-                      impact_confidence_threshold: Number(event.target.value),
-                    })
-                  }
+                  value={locale}
+                  onChange={(event) => setLocale(event.target.value)}
                 />
               </label>
+              <label className="field-label sm:col-span-2">
+                Múi giờ
+                <input
+                  className="apple-input mt-2"
+                  value={timezone}
+                  onChange={(event) => setTimezone(event.target.value)}
+                />
+              </label>
+            </div>
+            <div className="space-y-3 rounded-xl border border-border p-4">
+              <p className="text-[13px] font-semibold">Chính sách dự án</p>
+              {toggleSettings.map(([key, label]) => (
+                <label className="flex items-center gap-3 text-[13px]" key={key}>
+                  <input
+                    type="checkbox"
+                    checked={Boolean(settings[key])}
+                    onChange={(event) =>
+                      setSettings((current) => ({ ...current, [key]: event.target.checked }))
+                    }
+                  />
+                  {label}
+                </label>
+              ))}
+              {numberSettings.map(([key, label, min, max, step]) => (
+                <label className="field-label" key={key}>
+                  {label}
+                  <input
+                    className="apple-input mt-2"
+                    type="number"
+                    min={min}
+                    max={max}
+                    step={step}
+                    value={settings[key]}
+                    onChange={(event) =>
+                      setSettings((current) => ({ ...current, [key]: Number(event.target.value) }))
+                    }
+                  />
+                </label>
+              ))}
+              {selectSettings.map(([key, label, values]) => (
+                <label className="field-label" key={key}>
+                  {label}
+                  <select
+                    className="apple-input mt-2"
+                    value={settings[key]}
+                    onChange={(event) =>
+                      setSettings((current) => ({ ...current, [key]: event.target.value }))
+                    }
+                  >
+                    {values.map((value) => (
+                      <option value={value} key={value}>
+                        {value}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ))}
             </div>
             <label className="field-label">
               Mô tả

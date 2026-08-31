@@ -541,6 +541,41 @@ export default function RequirementsPage({ project, section }) {
                     Đánh dấu không còn hiệu lực
                   </button>
                 )}
+                {current.status === "OBSOLETE" && can("requirement.restore") && (
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={async () => {
+                      const answer = await ask({
+                        title: "Khôi phục yêu cầu",
+                        description: `${selected.requirement_key} sẽ trở lại trạng thái trước khi bị đánh dấu không còn hiệu lực`,
+                        confirmLabel: "Khôi phục",
+                        fields: [
+                          {
+                            name: "reason",
+                            label: "Lý do",
+                            initialValue: "Yêu cầu tiếp tục thuộc phạm vi sản phẩm",
+                            required: true,
+                            multiline: true,
+                            autoFocus: true,
+                          },
+                        ],
+                      });
+                      if (!answer) return;
+                      try {
+                        await testingApi.restoreRequirement(selected._id, {
+                          expected_current_version_id: selected.current_version_id,
+                          reason: answer.reason,
+                        });
+                        await load();
+                      } catch (value) {
+                        setError(messageOf(value));
+                      }
+                    }}
+                  >
+                    Khôi phục yêu cầu
+                  </button>
+                )}
                 {current.status === "DRAFT" && can("requirement.submit_review") && (
                   <button className="apple-button" type="button" onClick={() => review("submit")}>
                     Gửi rà soát
@@ -1053,6 +1088,22 @@ export default function RequirementsPage({ project, section }) {
                   { key: "filename", label: "Tên tệp" },
                   { key: "format", label: "Định dạng" },
                   {
+                    key: "source_type",
+                    label: "Loại nguồn",
+                    render: (item) => valueLabel(item.source_type || "reference"),
+                  },
+                  {
+                    key: "authority",
+                    label: "Thẩm quyền",
+                    render: (item) => valueLabel(item.authority || "reference"),
+                  },
+                  {
+                    key: "subject",
+                    label: "Môn và khối",
+                    render: (item) =>
+                      [item.subject, item.grade].filter(Boolean).join(" · ") || "Chưa khai báo",
+                  },
+                  {
                     key: "status",
                     label: "Trạng thái",
                     render: (item) => <StatusPill value={item.status} />,
@@ -1063,6 +1114,111 @@ export default function RequirementsPage({ project, section }) {
                     label: "Thao tác",
                     render: (item) => (
                       <span className="flex flex-wrap gap-2">
+                        {can("knowledge.manage") && item.status !== "ARCHIVED" && (
+                          <>
+                            <button
+                              className="secondary-button"
+                              type="button"
+                              onClick={async () => {
+                                const answer = await ask({
+                                  title: "Phân loại tài liệu nguồn",
+                                  description: item.filename,
+                                  confirmLabel: "Lưu metadata",
+                                  fields: [
+                                    {
+                                      name: "title",
+                                      label: "Tiêu đề",
+                                      initialValue: item.title || item.filename,
+                                      required: true,
+                                    },
+                                    {
+                                      name: "source_type",
+                                      label: "Loại nguồn",
+                                      initialValue: item.source_type || "reference",
+                                      options: [
+                                        { value: "teacher_material", label: "Tài liệu giáo viên" },
+                                        {
+                                          value: "official_textbook",
+                                          label: "Sách giáo khoa chính thức",
+                                        },
+                                        { value: "curriculum", label: "Chương trình học" },
+                                        { value: "reference", label: "Tài liệu tham khảo" },
+                                        { value: "api_contract", label: "Đặc tả API" },
+                                        { value: "other", label: "Nguồn khác" },
+                                      ],
+                                    },
+                                    {
+                                      name: "authority",
+                                      label: "Mức thẩm quyền",
+                                      initialValue: item.authority || "reference",
+                                      options: [
+                                        { value: "teacher", label: "Giáo viên" },
+                                        { value: "official", label: "Chính thức" },
+                                        { value: "supplemental", label: "Bổ trợ" },
+                                        { value: "reference", label: "Tham khảo" },
+                                      ],
+                                    },
+                                    {
+                                      name: "teacher_id",
+                                      label: "Mã giáo viên",
+                                      initialValue: item.teacher_id || "",
+                                    },
+                                    {
+                                      name: "subject",
+                                      label: "Môn học",
+                                      initialValue: item.subject || "",
+                                    },
+                                    {
+                                      name: "grade",
+                                      label: "Khối lớp",
+                                      initialValue: item.grade || "",
+                                    },
+                                    {
+                                      name: "tags",
+                                      label: "Nhãn phân cách bằng dấu phẩy",
+                                      initialValue: (item.tags || []).join(", "),
+                                    },
+                                  ],
+                                });
+                                if (!answer) return;
+                                try {
+                                  await testingApi.updateRequirementDocument(item._id, {
+                                    expected_revision: item.revision,
+                                    title: answer.title,
+                                    source_type: answer.source_type,
+                                    authority: answer.authority,
+                                    teacher_id: answer.teacher_id || null,
+                                    subject: answer.subject || null,
+                                    grade: answer.grade || null,
+                                    tags: answer.tags
+                                      .split(",")
+                                      .map((value) => value.trim())
+                                      .filter(Boolean),
+                                  });
+                                  await load();
+                                } catch (reason) {
+                                  setError(messageOf(reason));
+                                }
+                              }}
+                            >
+                              Phân loại
+                            </button>
+                            <button
+                              className="secondary-button"
+                              type="button"
+                              onClick={async () => {
+                                try {
+                                  await testingApi.reindexRequirementDocument(item._id);
+                                  await load();
+                                } catch (reason) {
+                                  setError(messageOf(reason));
+                                }
+                              }}
+                            >
+                              Lập chỉ mục lại
+                            </button>
+                          </>
+                        )}
                         {can("requirement_document.download") && (
                           <button
                             className="secondary-button"

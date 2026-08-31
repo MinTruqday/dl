@@ -54,15 +54,27 @@ export default function ProjectWorkspacePage({ projectId, section }) {
     section: section.slice(1),
     setGlobalError: state.setError,
   };
-  if (area === "requirements") return <RequirementsPage {...props} />;
-  if (area === "test-design") return <TestDesignPage {...props} />;
-  if (area === "traceability") return <TraceabilityPage {...props} />;
-  if (area === "changes") return <ChangesPage {...props} />;
-  if (area === "ai-review") return <ReviewQueuePage {...props} />;
-  if (area === "execution") return <ExecutionPage {...props} />;
-  if (area === "defects") return <DefectsPage {...props} />;
-  if (area === "knowledge") return <KnowledgePage {...props} />;
-  if (area === "reports") return <ReportsPage {...props} />;
-  if (area === "settings") return <SettingsPage {...props} onProjectChange={state.reload} />;
-  return <DashboardPage {...props} />;
+  const pages = {
+    requirements: <RequirementsPage {...props} />,
+    "test-design": <TestDesignPage {...props} />,
+    traceability: <TraceabilityPage {...props} />,
+    changes: <ChangesPage {...props} />,
+    "ai-review": <ReviewQueuePage {...props} />,
+    execution: <ExecutionPage {...props} />,
+    defects: <DefectsPage {...props} />,
+    knowledge: <KnowledgePage {...props} />,
+    reports: <ReportsPage {...props} />,
+    settings: <SettingsPage {...props} onProjectChange={state.reload} />,
+  };
+  return (
+    <>
+      {state.project.access_context?.mode === "BREAK_GLASS" && (
+        <div className="border-b border-warning/40 bg-warning-soft px-5 py-3 text-[13px] font-semibold text-warning">
+          Quyền truy cập khẩn cấp đang hoạt động đến{" "}
+          {new Date(state.project.access_context.expires_at).toLocaleString("vi-VN")}
+        </div>
+      )}
+      {pages[area] || <DashboardPage {...props} />}
+    </>
+  );
 }

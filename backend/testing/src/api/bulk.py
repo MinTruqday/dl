@@ -90,7 +90,7 @@ async def bulk_add_to_suite(
     payload: BulkSuiteInput,
     user: CurrentUser = Depends(get_current_user),
 ):
-    await get_project(project_id, user, "testsuite.manage")
+    await get_project(project_id, user, "testsuite.update")
     suite = await database.value.test_suites.find_one(
         {"_id": payload.suite_id, "project_id": project_id}
     )

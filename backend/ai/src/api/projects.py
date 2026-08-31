@@ -1,4 +1,5 @@
 import hashlib
+import time
 from datetime import datetime, timezone
 from uuid import NAMESPACE_URL, uuid5
 
@@ -14,6 +15,10 @@ from src.store.bm25 import bm25_store
 
 
 router = APIRouter(dependencies=[Depends(verify_internal_token)])
+
+_SEARCH_CACHE: dict[tuple, tuple[float, dict]] = {}
+_SEARCH_CACHE_TTL_SECONDS = 30
+_SEARCH_CACHE_MAX_SIZE = 512
 
 
 def project_artifact_metadata(project_id: str, req: ProjectArtifactIndexRequest):
@@ -52,11 +57,20 @@ async def index_project_artifact(project_id: str, req: ProjectArtifactIndexReque
     await bm25_store.delete_ids(old_ids)
     await vector_store.upsert(ids, vectors, documents, metadatas)
     await bm25_store.upsert([{"id": point_id, "text": text, "metadata": item_metadata} for point_id, text, item_metadata in zip(ids, documents, metadatas)])
+    for key in tuple(_SEARCH_CACHE):
+        if key[0] == project_id:
+            _SEARCH_CACHE.pop(key, None)
     return {"status": "indexed", "project_id": project_id, "artifact_version_id": req.artifact_version_id, "chunks_count": len(chunks)}
 
 
 @router.post("/projects/{project_id}/search", description="Tìm evidence knowledge theo phạm vi Project")
 async def search_project_knowledge(project_id: str, req: ProjectKnowledgeSearchRequest):
+    cache_key = (project_id, req.query, tuple(sorted(req.artifact_types or [])), req.limit)
+    cached = _SEARCH_CACHE.get(cache_key)
+    if cached and time.monotonic() - cached[0] < _SEARCH_CACHE_TTL_SECONDS:
+        return cached[1]
+    if cached:
+        _SEARCH_CACHE.pop(cache_key, None)
     filters = {"project_id": project_id}
     if req.artifact_types:
         filters["artifact_type"] = req.artifact_types
@@ -79,4 +93,9 @@ async def search_project_knowledge(project_id: str, req: ProjectKnowledgeSearchR
         }
         for document in documents
     ]
-    return {"items": items, "degraded_mode": "NORMAL", "error_code": None}
+    result = {"items": items, "degraded_mode": "NORMAL", "error_code": None}
+    if len(_SEARCH_CACHE) >= _SEARCH_CACHE_MAX_SIZE:
+        oldest_key = min(_SEARCH_CACHE, key=lambda key: _SEARCH_CACHE[key][0])
+        _SEARCH_CACHE.pop(oldest_key, None)
+    _SEARCH_CACHE[cache_key] = (time.monotonic(), result)
+    return result

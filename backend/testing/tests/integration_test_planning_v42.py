@@ -2,10 +2,18 @@ import os
 import time
 
 import httpx
+import jwt
 
 
 base_url = os.getenv("TESTING_TEST_URL", "http://testing:8000")
-lead = {"x-test-user-id": "planning-lead-v42"}
+lead = {
+    "Authorization": "Bearer "
+    + jwt.encode(
+        {"uid": "planning-lead-v42", "sub": "planning-lead-v42@test.local", "system_role": "USER"},
+        os.environ["SECRET_KEY"],
+        algorithm="HS256",
+    )
+}
 
 
 with httpx.Client(base_url=base_url, timeout=30) as client:
@@ -109,6 +117,7 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     assert suite.status_code == 201, suite.text
     suite_value = suite.json()["data"]
     suite_id = suite_value["_id"]
+    assert suite_value["status"] == "ACTIVE"
     suite_update = client.patch(
         f"/api/qa/test-suites/{suite_id}",
         headers=lead,
@@ -118,6 +127,7 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     cloned = client.post(f"/api/qa/test-suites/{suite_id}/clone", headers=lead)
     assert cloned.status_code == 201, cloned.text
     assert cloned.json()["data"]["_id"] != suite_id
+    assert cloned.json()["data"]["status"] == "ACTIVE"
     suite_archive = client.post(
         f"/api/qa/test-suites/{suite_id}/archive",
         headers=lead,

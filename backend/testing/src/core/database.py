@@ -100,6 +100,11 @@ async def create_indexes():
     await db.test_execution_updates.create_index([("test_result_id", 1), ("idempotency_key", 1)], unique=True)
     await db.audit_events.create_index([("project_id", 1), ("created_at", -1)])
     await db.review_comments.create_index([("project_id", 1), ("artifact_type", 1), ("artifact_id", 1), ("created_at", 1)])
+    await db.attachments.create_index([("project_id", 1), ("status", 1), ("created_at", -1)])
+    await db.attachments.create_index([("project_id", 1), ("owner_id", 1), ("url", 1), ("status", 1)])
+    await db.break_glass_grants.create_index(
+        [("project_id", 1), ("user_id", 1), ("status", 1), ("expires_at", 1)]
+    )
     await db.import_jobs.create_index([("project_id", 1), ("created_at", -1)])
     await db.import_jobs.create_index([("source_document_id", 1), ("idempotency_key", 1)], unique=True, sparse=True)
     await db.import_jobs.create_index([("source_document_id", 1)], unique=True, sparse=True)

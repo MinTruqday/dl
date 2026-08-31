@@ -24,11 +24,17 @@ export default function ChangesPage({ project }) {
   const [regression, setRegression] = useState(null);
   const [overrides, setOverrides] = useState({});
   const [changeFacts, setChangeFacts] = useState([]);
+  const [filters, setFilters] = useState({
+    requirement_id: "",
+    status: "",
+    sort: "-created_at",
+  });
   const [error, setError] = useState("");
+  const can = (permission) => project.current_permissions?.includes(permission);
   const load = useCallback(async () => {
     try {
       const [changeValues, proposalValues] = await Promise.all([
-        testingApi.listChangeSets(project._id),
+        testingApi.listChangeSets(project._id, filters),
         testingApi.listProposals(project._id),
       ]);
       setSets(changeValues);
@@ -36,7 +42,7 @@ export default function ChangesPage({ project }) {
     } catch (reason) {
       setError(messageOf(reason));
     }
-  }, [project._id]);
+  }, [filters, project._id]);
   useEffect(() => {
     void load();
   }, [load]);
@@ -47,12 +53,20 @@ export default function ChangesPage({ project }) {
       setChangeFacts(value.changes || []);
       setImpact(null);
       setRegression(null);
-      if (value.status === "ANALYZED") {
-        const result = await testingApi.analyzeImpact(item._id);
-        setImpact(result);
-        setOverrides({});
-        if (result.status === "REVIEWED") {
-          setRegression(await testingApi.regression(item._id));
+      if (["ANALYZED", "REVIEWED"].includes(value.status)) {
+        try {
+          const result = await testingApi.getChangeSetImpact(item._id);
+          setImpact(result);
+          setOverrides({});
+          if (result.status === "REVIEWED") {
+            try {
+              setRegression(await testingApi.getChangeSetRegression(item._id));
+            } catch (reason) {
+              if (reason.status !== 404) throw reason;
+            }
+          }
+        } catch (reason) {
+          if (reason.status !== 404) throw reason;
         }
       }
     } catch (reason) {
@@ -66,7 +80,7 @@ export default function ChangesPage({ project }) {
       setImpact(result);
       setOverrides({});
       setRegression(
-        result.status === "REVIEWED" ? await testingApi.regression(selected._id) : null,
+        result.status === "REVIEWED" ? await testingApi.getChangeSetRegression(selected._id) : null,
       );
       await load();
     } catch (reason) {
@@ -164,8 +178,10 @@ export default function ChangesPage({ project }) {
         review_note: answer.note,
       });
       setImpact(reviewed);
-      await testingApi.createProposals(reviewed._id);
-      setRegression(await testingApi.regression(selected._id));
+      if (can("ai.create_proposal")) await testingApi.createProposals(reviewed._id);
+      if (can("regression.generate") && can("ai.generate_regression")) {
+        setRegression(await testingApi.regression(selected._id));
+      }
       await load();
     } catch (reason) {
       setError(messageOf(reason));
@@ -178,6 +194,38 @@ export default function ChangesPage({ project }) {
     >
       {error && <ErrorState message={error} />}
       <Panel title="Bộ thay đổi">
+        <div className="grid gap-3 border-b border-border p-4 sm:grid-cols-3">
+          <input
+            aria-label="Lọc bộ thay đổi theo yêu cầu"
+            className="apple-input"
+            placeholder="Mã Requirement"
+            value={filters.requirement_id}
+            onChange={(event) => setFilters({ ...filters, requirement_id: event.target.value })}
+          />
+          <select
+            aria-label="Lọc trạng thái bộ thay đổi"
+            className="apple-input"
+            value={filters.status}
+            onChange={(event) => setFilters({ ...filters, status: event.target.value })}
+          >
+            <option value="">Mọi trạng thái</option>
+            {["READY", "REVIEWED", "ANALYZED"].map((value) => (
+              <option value={value} key={value}>
+                {value}
+              </option>
+            ))}
+          </select>
+          <select
+            aria-label="Sắp xếp bộ thay đổi"
+            className="apple-input"
+            value={filters.sort}
+            onChange={(event) => setFilters({ ...filters, sort: event.target.value })}
+          >
+            <option value="-created_at">Mới tạo</option>
+            <option value="created_at">Cũ tạo</option>
+            <option value="requirement_id">Theo Requirement</option>
+          </select>
+        </div>
         <DataTable
           onSelect={openChangeSet}
           items={sets}
@@ -199,7 +247,7 @@ export default function ChangesPage({ project }) {
           <Panel
             title="So sánh thay đổi"
             actions={
-              selected.status === "READY" ? (
+              selected.status === "READY" && can("changeset.review") ? (
                 <button
                   className="apple-button"
                   type="button"
@@ -220,7 +268,9 @@ export default function ChangesPage({ project }) {
                 >
                   Xác nhận chi tiết thay đổi
                 </button>
-              ) : selected.status === "REVIEWED" ? (
+              ) : selected.status === "REVIEWED" &&
+                can("impact.execute") &&
+                can("ai.run_impact") ? (
                 <button className="apple-button" type="button" onClick={analyze}>
                   Phân tích ảnh hưởng
                 </button>
@@ -235,7 +285,7 @@ export default function ChangesPage({ project }) {
                   key: "type",
                   label: "Loại",
                   render: (item) =>
-                    selected.status === "READY" ? (
+                    selected.status === "READY" && can("changeset.review") ? (
                       <select
                         aria-label={`Loại thay đổi ${item.factIndex + 1}`}
                         className="apple-input min-w-48"
@@ -313,7 +363,7 @@ export default function ChangesPage({ project }) {
                 { key: "reasons", label: "Lý do", render: (item) => item.reasons?.join(", ") },
               ]}
             />
-            {regression?.status === "PENDING_APPROVAL" && (
+            {regression?.status === "PENDING_APPROVAL" && can("regression.approve") && (
               <div className="border-t border-border p-5">
                 <button
                   className="apple-button"
@@ -360,7 +410,7 @@ export default function ChangesPage({ project }) {
         <Panel
           title="Phân tích ảnh hưởng"
           actions={
-            impact.status === "REVIEW_READY" ? (
+            impact.status === "REVIEW_READY" && can("impact.review") ? (
               <button className="apple-button" type="button" onClick={reviewImpact}>
                 Duyệt phân tích
               </button>
@@ -381,7 +431,7 @@ export default function ChangesPage({ project }) {
                 key: "classification",
                 label: "Phân loại",
                 render: (item) =>
-                  impact.status === "REVIEW_READY" ? (
+                  impact.status === "REVIEW_READY" && can("impact.override") ? (
                     <select
                       aria-label={`Phân loại ${item.test_case_key}`}
                       className="apple-input"
@@ -414,46 +464,48 @@ export default function ChangesPage({ project }) {
       <Panel
         title="Đề xuất bảo trì chờ duyệt"
         actions={
-          <button
-            className="apple-button"
-            disabled={!selectedProposalIds.length}
-            type="button"
-            onClick={async () => {
-              const answer = await ask({
-                title: "Duyệt hàng loạt đề xuất an toàn",
-                description: `${selectedProposalIds.length} mục đã chọn sẽ vẫn được kiểm tra ngưỡng chính sách riêng lẻ`,
-                confirmLabel: "Duyệt các mục đạt chính sách",
-                fields: [
-                  {
-                    name: "note",
-                    label: "Ghi chú duyệt",
-                    required: true,
-                    multiline: true,
-                    autoFocus: true,
-                  },
-                ],
-              });
-              if (!answer) return;
-              try {
-                await testingApi.bulkApproveProposals(project._id, {
-                  proposal_ids: selectedProposalIds,
-                  review_note: answer.note,
+          can("proposal.approve") ? (
+            <button
+              className="apple-button"
+              disabled={!selectedProposalIds.length}
+              type="button"
+              onClick={async () => {
+                const answer = await ask({
+                  title: "Duyệt hàng loạt đề xuất an toàn",
+                  description: `${selectedProposalIds.length} mục đã chọn sẽ vẫn được kiểm tra ngưỡng chính sách riêng lẻ`,
+                  confirmLabel: "Duyệt các mục đạt chính sách",
+                  fields: [
+                    {
+                      name: "note",
+                      label: "Ghi chú duyệt",
+                      required: true,
+                      multiline: true,
+                      autoFocus: true,
+                    },
+                  ],
                 });
-                setSelectedProposalIds([]);
-                await load();
-              } catch (reason) {
-                setError(messageOf(reason));
-              }
-            }}
-          >
-            Duyệt hàng loạt theo chính sách
-          </button>
+                if (!answer) return;
+                try {
+                  await testingApi.bulkApproveProposals(project._id, {
+                    proposal_ids: selectedProposalIds,
+                    review_note: answer.note,
+                  });
+                  setSelectedProposalIds([]);
+                  await load();
+                } catch (reason) {
+                  setError(messageOf(reason));
+                }
+              }}
+            >
+              Duyệt hàng loạt theo chính sách
+            </button>
+          ) : null
         }
       >
         <DataTable
           items={proposals}
-          selectedIds={selectedProposalIds}
-          onSelectionChange={setSelectedProposalIds}
+          selectedIds={can("proposal.approve") ? selectedProposalIds : undefined}
+          onSelectionChange={can("proposal.approve") ? setSelectedProposalIds : undefined}
           selectionLabel="Chọn đề xuất"
           empty="Không có đề xuất chờ duyệt"
           columns={[
@@ -479,63 +531,72 @@ export default function ChangesPage({ project }) {
             {
               key: "decision",
               label: "Quyết định của người duyệt",
-              render: (item) => (
-                <span className="flex flex-wrap gap-2">
-                  <button
-                    className="secondary-button"
-                    type="button"
-                    onClick={() => decide(item, "accept")}
-                  >
-                    Chấp nhận
-                  </button>
-                  <button
-                    className="secondary-button"
-                    type="button"
-                    onClick={() => decide(item, "edit")}
-                  >
-                    Sửa rồi nhận
-                  </button>
-                  <button
-                    className="secondary-button"
-                    type="button"
-                    onClick={() => decide(item, "reject")}
-                  >
-                    Từ chối
-                  </button>
-                  <button
-                    className="secondary-button"
-                    type="button"
-                    onClick={async () => {
-                      const answer = await ask({
-                        title: "Yêu cầu tạo lại đề xuất",
-                        description: item.test_case_key || item.target_artifact_id || item._id,
-                        confirmLabel: "Tạo lại",
-                        fields: [
-                          {
-                            name: "instruction",
-                            label: "Hướng điều chỉnh",
-                            required: true,
-                            multiline: true,
-                            autoFocus: true,
-                          },
-                        ],
-                      });
-                      if (!answer) return;
-                      try {
-                        await testingApi.regenerateProposal(item._id, {
-                          expected_revision: item.revision,
-                          instruction: answer.instruction,
-                        });
-                        await load();
-                      } catch (reason) {
-                        setError(messageOf(reason));
-                      }
-                    }}
-                  >
-                    Tạo lại
-                  </button>
-                </span>
-              ),
+              render: (item) =>
+                can("proposal.approve") || can("proposal.reject") || can("ai.create_proposal") ? (
+                  <span className="flex flex-wrap gap-2">
+                    {can("proposal.approve") && (
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={() => decide(item, "accept")}
+                      >
+                        Chấp nhận
+                      </button>
+                    )}
+                    {can("proposal.approve") && (
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={() => decide(item, "edit")}
+                      >
+                        Sửa rồi nhận
+                      </button>
+                    )}
+                    {can("proposal.reject") && (
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={() => decide(item, "reject")}
+                      >
+                        Từ chối
+                      </button>
+                    )}
+                    {can("ai.create_proposal") && (
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={async () => {
+                          const answer = await ask({
+                            title: "Yêu cầu tạo lại đề xuất",
+                            description: item.test_case_key || item.target_artifact_id || item._id,
+                            confirmLabel: "Tạo lại",
+                            fields: [
+                              {
+                                name: "instruction",
+                                label: "Hướng điều chỉnh",
+                                required: true,
+                                multiline: true,
+                                autoFocus: true,
+                              },
+                            ],
+                          });
+                          if (!answer) return;
+                          try {
+                            await testingApi.regenerateProposal(item._id, {
+                              expected_revision: item.revision,
+                              instruction: answer.instruction,
+                            });
+                            await load();
+                          } catch (reason) {
+                            setError(messageOf(reason));
+                          }
+                        }}
+                      >
+                        Tạo lại
+                      </button>
+                    )}
+                  </span>
+                ) : null,
             },
           ]}
         />

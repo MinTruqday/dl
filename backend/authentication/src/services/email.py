@@ -11,6 +11,34 @@ from src.core.infrastructure.configuration import settings
 
 class EmailService:
     @staticmethod
+    async def send_platform_test_email(email: str):
+        if not all(
+            [
+                settings.SMTP_HOST,
+                settings.SMTP_PORT,
+                settings.SMTP_USER,
+                settings.SMTP_PASS,
+                settings.SENDER_EMAIL,
+                settings.SENDER_NAME,
+            ]
+        ):
+            raise Exception("Dịch vụ gửi thư điện tử chưa được cấu hình")
+
+        def send_sync():
+            message = MIMEText("Kiểm tra kết nối thư điện tử Veriq", "plain", "utf-8")
+            message["From"] = f"{settings.SENDER_NAME} <{settings.SENDER_EMAIL}>"
+            message["To"] = email
+            message["Subject"] = "Kiểm tra kết nối Veriq"
+            server = smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10.0)
+            server.starttls()
+            server.login(settings.SMTP_USER, settings.SMTP_PASS)
+            server.send_message(message)
+            server.quit()
+            return True
+
+        return await asyncio.to_thread(send_sync)
+
+    @staticmethod
     async def send_reset_password_email(email: str, token: str):
         smtp_host = settings.SMTP_HOST
         smtp_port_raw = settings.SMTP_PORT

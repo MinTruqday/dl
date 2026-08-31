@@ -9,7 +9,7 @@ export default function AuthFrame({ title, description, children, footer, width 
           className="flex items-center gap-3 text-[19px] font-semibold tracking-[-0.035em] text-ink"
         >
           <Image
-            src="/veriq-logo.png"
+            src="/brand/veriq-logo.png"
             alt="Veriq"
             width={36}
             height={36}

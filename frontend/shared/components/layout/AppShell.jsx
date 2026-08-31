@@ -157,7 +157,7 @@ export default function AppShell({ children, requireAuth }) {
             className="flex items-center gap-2 lg:hidden"
           >
             <Image
-              src="/veriq-logo.png"
+              src="/brand/veriq-logo.png"
               alt="Veriq"
               width={32}
               height={32}
@@ -293,7 +293,7 @@ export default function AppShell({ children, requireAuth }) {
             className="flex items-center gap-3 text-[19px] font-semibold tracking-[-0.035em] text-ink"
           >
             <Image
-              src="/veriq-logo.png"
+              src="/brand/veriq-logo.png"
               alt="Veriq"
               width={36}
               height={36}
@@ -327,7 +327,7 @@ export default function AppShell({ children, requireAuth }) {
                 className="flex items-center gap-3 text-[19px] font-semibold tracking-[-0.035em]"
               >
                 <Image
-                  src="/veriq-logo.png"
+                  src="/brand/veriq-logo.png"
                   alt="Veriq"
                   width={36}
                   height={36}

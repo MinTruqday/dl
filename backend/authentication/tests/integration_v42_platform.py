@@ -172,6 +172,13 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     assert registered_model.status_code == 201, registered_model.text
     model_id = registered_model.json()["data"]["_id"]
     assert client.get("/api/admin/ai/models", headers=admin_headers).status_code == 200
+    defaults = client.patch(
+        "/api/admin/ai/defaults",
+        headers=admin_headers,
+        json={"values": {"chat_model_id": model_id, "structured_model_id": model_id, "fallback_model_ids": []}, "reason": "Kiểm tra mô hình mặc định V4.3"},
+    )
+    assert defaults.status_code == 200, defaults.text
+    assert client.get("/api/admin/ai/versions", headers=admin_headers).status_code == 200
     updated_model = client.patch(
         f"/api/admin/ai/models/{model_id}",
         headers=admin_headers,
@@ -209,6 +216,29 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
             json=project_payload,
         )
         assert admin_project.status_code == 201, admin_project.text
+        project_id = admin_project.json()["data"]["_id"]
+        metadata = client.get(f"/api/admin/projects/{project_id}", headers=admin_headers)
+        assert metadata.status_code == 200, metadata.text
+        quota = client.patch(
+            f"/api/admin/projects/{project_id}/quota",
+            headers=admin_headers,
+            json={"storage_bytes": 1048576, "ai_requests_per_day": 100, "concurrent_jobs": 2, "reason": "Kiểm tra hạn mức V4.3"},
+        )
+        assert quota.status_code == 200, quota.text
+        suspended = client.patch(
+            f"/api/admin/projects/{project_id}/status",
+            headers=admin_headers,
+            json={"status": "SUSPENDED", "reason": "Kiểm tra tạm dừng quản trị V4.3"},
+        )
+        assert suspended.status_code == 200, suspended.text
+        assert testing.get(f"/api/qa/projects/{project_id}", headers=admin_headers).status_code == 423
+        reactivated = client.patch(
+            f"/api/admin/projects/{project_id}/status",
+            headers=admin_headers,
+            json={"status": "ACTIVE", "reason": "Khôi phục dự án sau kiểm thử V4.3"},
+        )
+        assert reactivated.status_code == 200, reactivated.text
+        assert testing.get(f"/api/qa/projects/{project_id}", headers=admin_headers).status_code == 200
     restored_policy = client.patch(
         "/api/admin/platform/project-policy",
         headers=admin_headers,
@@ -218,6 +248,13 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         },
     )
     assert restored_policy.status_code == 200, restored_policy.text
+
+    assert client.post("/api/admin/storage/test", headers=admin_headers).status_code == 200
+    assert client.get("/api/admin/integrations/health", headers=admin_headers).status_code == 200
+    assert client.get("/api/admin/operations/metrics", headers=admin_headers).status_code == 200
+    audit_export = client.get("/api/admin/audit/export", headers=admin_headers)
+    assert audit_export.status_code == 200, audit_export.text
+    assert "text/csv" in audit_export.headers["content-type"]
 
     self_demote = client.patch(
         f"/api/admin/users/{admin_id}/system-role",

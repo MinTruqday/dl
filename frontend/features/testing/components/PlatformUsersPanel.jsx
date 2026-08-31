@@ -119,6 +119,56 @@ export default function PlatformUsersPanel() {
             >
               Tạo tài khoản
             </button>
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={async () => {
+                const answer = await ask({
+                  title: "Thao tác tài khoản hàng loạt",
+                  description: "Nhập mỗi mã tài khoản trên một dòng hoặc phân tách bằng dấu phẩy",
+                  confirmLabel: "Tạo bản xem trước",
+                  fields: [
+                    {
+                      name: "action",
+                      label: "Thao tác",
+                      required: true,
+                      options: [
+                        { value: "DISABLE", label: "Vô hiệu hóa" },
+                        { value: "INVITE", label: "Gửi lại lời mời" },
+                        { value: "REVOKE_SESSIONS", label: "Thu hồi phiên" },
+                      ],
+                    },
+                    { name: "user_ids", label: "Mã tài khoản", required: true, multiline: true },
+                    { name: "reason", label: "Lý do", required: true, multiline: true },
+                  ],
+                });
+                if (!answer) return;
+                try {
+                  const userIds = answer.user_ids
+                    .split(/[\s,]+/)
+                    .map((value) => value.trim())
+                    .filter(Boolean);
+                  const preview = await platformApi.previewBulkUsers(
+                    answer.action,
+                    userIds,
+                    answer.reason,
+                  );
+                  const confirmation = await ask({
+                    title: "Xác nhận thao tác hàng loạt",
+                    description: `${preview.user_ids.length} tài khoản hợp lệ và ${preview.missing_user_ids.length} mã không tồn tại`,
+                    confirmLabel: "Thực hiện",
+                    danger: answer.action === "DISABLE",
+                  });
+                  if (!confirmation) return;
+                  await platformApi.confirmBulkUsers(preview._id);
+                  await loadUsers(query);
+                } catch (reason) {
+                  setError(messageOf(reason));
+                }
+              }}
+            >
+              Thao tác hàng loạt
+            </button>
             <form
               className="flex gap-2"
               onSubmit={(event) => {
@@ -197,6 +247,40 @@ export default function PlatformUsersPanel() {
               </div>
             </div>
             <div className="flex flex-wrap gap-2 border-t border-border p-5">
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={async () => {
+                  const answer = await ask({
+                    title: "Cập nhật hồ sơ tài khoản",
+                    confirmLabel: "Lưu",
+                    fields: [
+                      {
+                        name: "full_name",
+                        label: "Họ tên",
+                        required: true,
+                        initialValue: detail.full_name,
+                      },
+                      {
+                        name: "slug",
+                        label: "Tên đăng nhập",
+                        required: true,
+                        initialValue: detail.slug,
+                      },
+                      { name: "reason", label: "Lý do", required: true, multiline: true },
+                    ],
+                  });
+                  if (!answer) return;
+                  try {
+                    await platformApi.updateProfile(detail._id, answer);
+                    await Promise.all([loadUsers(query), loadDetail(detail._id)]);
+                  } catch (reason) {
+                    setError(messageOf(reason));
+                  }
+                }}
+              >
+                Sửa hồ sơ
+              </button>
               {detail.account_status === "ACTIVE" ? (
                 <>
                   <button
@@ -268,6 +352,20 @@ export default function PlatformUsersPanel() {
                 type="button"
                 onClick={() =>
                   mutate(
+                    "Gửi lại quy trình kích hoạt",
+                    "Hệ thống sẽ gửi lại hướng dẫn kích hoạt và đặt mật khẩu",
+                    "Gửi",
+                    (reason) => platformApi.resendVerification(detail._id, reason),
+                  )
+                }
+              >
+                Gửi lại kích hoạt
+              </button>
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={() =>
+                  mutate(
                     "Đặt lại passkey",
                     "Toàn bộ passkey và phiên đăng nhập của tài khoản sẽ bị thu hồi",
                     "Đặt lại",
@@ -295,6 +393,53 @@ export default function PlatformUsersPanel() {
                 }
               >
                 {detail.system_role === "ADMIN" ? "Hạ xuống USER" : "Cấp ADMIN"}
+              </button>
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={async () => {
+                  const reason = await reasonFor(
+                    "Thu hồi toàn bộ phiên",
+                    "Tài khoản sẽ phải đăng nhập lại trên mọi thiết bị",
+                    "Thu hồi",
+                  );
+                  if (!reason) return;
+                  try {
+                    await platformApi.revokeAllSessions(detail._id);
+                    await loadDetail(detail._id);
+                  } catch (value) {
+                    setError(messageOf(value));
+                  }
+                }}
+              >
+                Thu hồi mọi phiên
+              </button>
+              <button
+                className="danger-button"
+                type="button"
+                onClick={async () => {
+                  const answer = await ask({
+                    title: "Ẩn danh và xóa tài khoản",
+                    description: `Nhập chính xác ${detail.email} để xác nhận`,
+                    confirmLabel: "Xóa tài khoản",
+                    danger: true,
+                    fields: [
+                      { name: "confirmation", label: "Email xác nhận", required: true },
+                      { name: "reason", label: "Lý do", required: true, multiline: true },
+                    ],
+                  });
+                  if (!answer) return;
+                  try {
+                    await platformApi.deleteUser(detail._id, answer.confirmation, answer.reason);
+                    setSelectedId("");
+                    setDetail(null);
+                    await loadUsers(query);
+                  } catch (reason) {
+                    setError(messageOf(reason));
+                  }
+                }}
+              >
+                Xóa và ẩn danh
               </button>
             </div>
           </Panel>

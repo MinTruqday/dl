@@ -20,6 +20,7 @@ export default function TraceabilityPage({ project }) {
   const [snapshots, setSnapshots] = useState([]);
   const [linkForm, setLinkForm] = useState({ source_id: "", target_id: "" });
   const [error, setError] = useState("");
+  const can = (permission) => project.current_permissions?.includes(permission);
   const load = useCallback(async () => {
     try {
       const [traceValue, coverageValue, snapshotValues] = await Promise.all([
@@ -50,64 +51,70 @@ export default function TraceabilityPage({ project }) {
       title="Ma trận truy vết và độ phủ"
       actions={
         <div className="flex flex-wrap items-center gap-3">
-          <button
-            className="secondary-button"
-            type="button"
-            onClick={() =>
-              testingApi
-                .exportTraceability(project._id)
-                .catch((reason) => setError(messageOf(reason)))
-            }
-          >
-            Xuất CSV
-          </button>
-          <button
-            className="secondary-button"
-            type="button"
-            onClick={async () => {
-              try {
-                await testingApi.recoverTrace(project._id);
-                await load();
-              } catch (reason) {
-                setError(messageOf(reason));
+          {can("report.export") && (
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={() =>
+                testingApi
+                  .exportTraceability(project._id)
+                  .catch((reason) => setError(messageOf(reason)))
               }
-            }}
-          >
-            Khôi phục liên kết bằng AI
-          </button>
-          <button
-            className="secondary-button"
-            type="button"
-            onClick={async () => {
-              const answer = await ask({
-                title: "Lưu ảnh chụp độ phủ",
-                description:
-                  "Ảnh chụp giữ nguyên các chỉ số tại thời điểm hiện tại để đối chiếu release",
-                confirmLabel: "Lưu ảnh chụp",
-                fields: [
-                  {
-                    name: "label",
-                    label: "Tên ảnh chụp",
-                    initialValue: "Độ phủ hiện tại",
-                    required: true,
-                    autoFocus: true,
-                  },
-                ],
-              });
-              if (!answer) return;
-              try {
-                await testingApi.createCoverageSnapshot(project._id, {
-                  label: answer.label,
-                  idempotency_key: crypto.randomUUID(),
+            >
+              Xuất CSV
+            </button>
+          )}
+          {can("trace.recover") && (
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={async () => {
+                try {
+                  await testingApi.recoverTrace(project._id);
+                  await load();
+                } catch (reason) {
+                  setError(messageOf(reason));
+                }
+              }}
+            >
+              Khôi phục liên kết bằng AI
+            </button>
+          )}
+          {can("coverage.snapshot.create") && (
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={async () => {
+                const answer = await ask({
+                  title: "Lưu ảnh chụp độ phủ",
+                  description:
+                    "Ảnh chụp giữ nguyên các chỉ số tại thời điểm hiện tại để đối chiếu release",
+                  confirmLabel: "Lưu ảnh chụp",
+                  fields: [
+                    {
+                      name: "label",
+                      label: "Tên ảnh chụp",
+                      initialValue: "Độ phủ hiện tại",
+                      required: true,
+                      autoFocus: true,
+                    },
+                  ],
                 });
-                await load();
-              } catch (reason) {
-                setError(messageOf(reason));
-              }
-            }}
-          >
-            Lưu ảnh chụp độ phủ
-          </button>
+                if (!answer) return;
+                try {
+                  await testingApi.createCoverageSnapshot(project._id, {
+                    label: answer.label,
+                    idempotency_key: crypto.randomUUID(),
+                  });
+                  await load();
+                } catch (reason) {
+                  setError(messageOf(reason));
+                }
+              }}
+            >
+              Lưu ảnh chụp độ phủ
+            </button>
+          )}
           <ProjectCrumb projectId={project._id} />
         </div>
       }
@@ -123,63 +130,65 @@ export default function TraceabilityPage({ project }) {
         <Metric label="Độ phủ thực thi" value={`${coverage.execution_coverage || 0}%`} />
         <Metric label="Ca kiểm thử chưa liên kết" value={coverage.unlinked_tests?.length || 0} />
       </div>
-      <Panel title="Tạo liên kết thủ công">
-        <form
-          className="grid gap-3 p-5 md:grid-cols-[1fr_1fr_auto]"
-          onSubmit={async (event) => {
-            event.preventDefault();
-            try {
-              await testingApi.createTrace({
-                project_id: project._id,
-                source_type: "requirement_version",
-                source_id: linkForm.source_id,
-                target_type: "test_case_version",
-                target_id: linkForm.target_id,
-                link_type: "verifies",
-                confidence: 1,
-                origin: "manual",
-                evidence: [],
-              });
-              setLinkForm({ source_id: "", target_id: "" });
-              await load();
-            } catch (reason) {
-              setError(messageOf(reason));
-            }
-          }}
-        >
-          <select
-            aria-label="Phiên bản yêu cầu nguồn"
-            className="apple-input"
-            required
-            value={linkForm.source_id}
-            onChange={(event) => setLinkForm({ ...linkForm, source_id: event.target.value })}
+      {can("trace.create") && (
+        <Panel title="Tạo liên kết thủ công">
+          <form
+            className="grid gap-3 p-5 md:grid-cols-[1fr_1fr_auto]"
+            onSubmit={async (event) => {
+              event.preventDefault();
+              try {
+                await testingApi.createTrace({
+                  project_id: project._id,
+                  source_type: "requirement_version",
+                  source_id: linkForm.source_id,
+                  target_type: "test_case_version",
+                  target_id: linkForm.target_id,
+                  link_type: "verifies",
+                  confidence: 1,
+                  origin: "manual",
+                  evidence: [],
+                });
+                setLinkForm({ source_id: "", target_id: "" });
+                await load();
+              } catch (reason) {
+                setError(messageOf(reason));
+              }
+            }}
           >
-            <option value="">Chọn phiên bản yêu cầu</option>
-            {(matrix.requirement_versions || []).map((item) => (
-              <option key={item._id} value={item._id}>
-                {item.requirement_key} v{item.version} {item.title}
-              </option>
-            ))}
-          </select>
-          <select
-            aria-label="Phiên bản ca kiểm thử đích"
-            className="apple-input"
-            required
-            value={linkForm.target_id}
-            onChange={(event) => setLinkForm({ ...linkForm, target_id: event.target.value })}
-          >
-            <option value="">Chọn phiên bản ca kiểm thử</option>
-            {(matrix.test_case_versions || []).map((item) => (
-              <option key={item._id} value={item._id}>
-                {item.test_case_key} v{item.version} {item.title}
-              </option>
-            ))}
-          </select>
-          <button className="apple-button" type="submit">
-            Tạo liên kết
-          </button>
-        </form>
-      </Panel>
+            <select
+              aria-label="Phiên bản yêu cầu nguồn"
+              className="apple-input"
+              required
+              value={linkForm.source_id}
+              onChange={(event) => setLinkForm({ ...linkForm, source_id: event.target.value })}
+            >
+              <option value="">Chọn phiên bản yêu cầu</option>
+              {(matrix.requirement_versions || []).map((item) => (
+                <option key={item._id} value={item._id}>
+                  {item.requirement_key} v{item.version} {item.title}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label="Phiên bản ca kiểm thử đích"
+              className="apple-input"
+              required
+              value={linkForm.target_id}
+              onChange={(event) => setLinkForm({ ...linkForm, target_id: event.target.value })}
+            >
+              <option value="">Chọn phiên bản ca kiểm thử</option>
+              {(matrix.test_case_versions || []).map((item) => (
+                <option key={item._id} value={item._id}>
+                  {item.test_case_key} v{item.version} {item.title}
+                </option>
+              ))}
+            </select>
+            <button className="apple-button" type="submit">
+              Tạo liên kết
+            </button>
+          </form>
+        </Panel>
+      )}
       <Panel title="Liên kết truy vết">
         <DataTable
           items={matrix.trace_links || []}
@@ -233,24 +242,28 @@ export default function TraceabilityPage({ project }) {
               key: "decision",
               label: "Quyết định",
               render: (item) =>
-                item.status === "SUGGESTED" ? (
+                item.status === "SUGGESTED" && (can("trace.confirm") || can("trace.review")) ? (
                   <span className="flex flex-wrap gap-2">
-                    <button
-                      className="secondary-button"
-                      type="button"
-                      onClick={() => decision(item, true)}
-                    >
-                      Xác nhận
-                    </button>
-                    <button
-                      className="secondary-button"
-                      type="button"
-                      onClick={() => decision(item, false)}
-                    >
-                      Từ chối
-                    </button>
+                    {can("trace.confirm") && (
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={() => decision(item, true)}
+                      >
+                        Xác nhận
+                      </button>
+                    )}
+                    {can("trace.review") && (
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={() => decision(item, false)}
+                      >
+                        Từ chối
+                      </button>
+                    )}
                   </span>
-                ) : item.status === "CONFIRMED" ? (
+                ) : item.status === "CONFIRMED" && can("trace.revoke") ? (
                   <button
                     className="secondary-button"
                     type="button"

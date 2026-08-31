@@ -82,7 +82,7 @@ async def generate_api_tests(operation_id: str, user: CurrentUser = Depends(get_
 
 @router.post("/projects/{project_id}/trace-recovery", status_code=201)
 async def recover_trace_links(project_id: str, user: CurrentUser = Depends(get_current_user)):
-    await get_project(project_id, user, "trace.create")
+    await get_project(project_id, user, "trace.recover")
     requirements = await database.value.requirement_versions.find({"project_id": project_id, "status": "BASELINED"}).to_list(5000)
     tests = await database.value.test_case_versions.find({"project_id": project_id, "status": "ACTIVE"}).to_list(10000)
     existing = await database.value.trace_links.find({"project_id": project_id, "status": {"$in": ["CONFIRMED", "SUGGESTED"]}}).to_list(50000)
@@ -103,7 +103,7 @@ async def recover_trace_links(project_id: str, user: CurrentUser = Depends(get_c
 
 @router.post("/projects/{project_id}/test-case-imports", status_code=201)
 async def preview_test_import(project_id: str, payload: ImportCreate, user: CurrentUser = Depends(get_current_user)):
-    await get_project(project_id, user, "testcase.create")
+    await get_project(project_id, user, "testcase.import")
     if payload.format not in {"csv", "xlsx"}:
         raise HTTPException(status_code=422, detail={"code": "TEST_IMPORT_FORMAT_UNSUPPORTED"})
     content = str(payload.content)
@@ -137,7 +137,7 @@ async def upload_test_import(
 @router.post("/test-case-imports/{job_id}/confirm")
 async def confirm_test_import(job_id: str, payload: ImportConfirm, user: CurrentUser = Depends(get_current_user)):
     job = await get_project_entity(
-        "test_imports", job_id, user, "testcase.create"
+        "test_imports", job_id, user, "testcase.import"
     )
     if job["status"] == "CONFIRMED":
         return envelope(job)
@@ -159,7 +159,7 @@ async def export_test_cases(
     format: str = Query("csv", pattern="^(csv|xlsx)$"),
     user: CurrentUser = Depends(get_current_user),
 ):
-    await get_project(project_id, user, "testcase.read")
+    await get_project(project_id, user, "testcase.export")
     versions = await database.value.test_case_versions.find({"project_id": project_id}).sort("test_case_key", 1).to_list(20000)
     fields = ["test_case_key", "version", "title", "type", "priority", "risk", "automation_status", "status", "plain_text_projection"]
     rows = [[item.get(field) for field in fields] for item in versions]

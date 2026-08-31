@@ -54,6 +54,33 @@ export default function DefectsPage({ project }) {
     expected: "",
     attachments: [],
   });
+  const can = (permission) => project.current_permissions?.includes(permission);
+  const role = project.current_membership?.project_role;
+  const userId = project.current_membership?.user_id;
+  const canManageTrace = (item) =>
+    can("defect.trace.manage") || (role === "DEVELOPER" && item.assignee === userId);
+  const transitionAllowed = (item, status) => {
+    if (["CONFIRMED", "REJECTED", "DUPLICATE"].includes(status)) {
+      if (!can("defect.triage")) return false;
+      if (status === "REJECTED") {
+        const configured = project.settings?.action_policies?.["defect.rejected"];
+        return Array.isArray(configured) ? configured.includes(role) : role === "QA_LEAD";
+      }
+      if (status === "DUPLICATE") {
+        const configured = project.settings?.action_policies?.["defect.duplicate"];
+        return Array.isArray(configured) ? configured.includes(role) : role === "QA_LEAD";
+      }
+      return true;
+    }
+    if (["IN_PROGRESS", "RESOLVED"].includes(status)) {
+      return (
+        can("defect.transition.developer") || (role === "DEVELOPER" && item.assignee === userId)
+      );
+    }
+    if (["READY_FOR_RETEST", "REOPENED"].includes(status)) return can("defect.retest");
+    if (status === "CLOSED") return can("defect.close");
+    return can("defect.update");
+  };
   const load = useCallback(async () => {
     try {
       const [defectValues, resultValues] = await Promise.all([
@@ -161,144 +188,150 @@ export default function DefectsPage({ project }) {
       title="Quản lý lỗi"
       actions={
         <div className="flex flex-wrap items-center gap-3">
-          <button
-            className="secondary-button"
-            type="button"
-            onClick={() =>
-              testingApi.exportDefects(project._id).catch((reason) => setError(messageOf(reason)))
-            }
-          >
-            Xuất CSV
-          </button>
-          <button
-            className="secondary-button"
-            type="button"
-            onClick={async () => {
-              try {
-                setDuplicates(await testingApi.findDuplicateDefects(project._id));
-              } catch (reason) {
-                setError(messageOf(reason));
+          {can("report.export") && (
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={() =>
+                testingApi.exportDefects(project._id).catch((reason) => setError(messageOf(reason)))
               }
-            }}
-          >
-            Tìm lỗi có thể trùng
-          </button>
+            >
+              Xuất CSV
+            </button>
+          )}
+          {can("defect.duplicate_check") && (
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={async () => {
+                try {
+                  setDuplicates(await testingApi.findDuplicateDefects(project._id));
+                } catch (reason) {
+                  setError(messageOf(reason));
+                }
+              }}
+            >
+              Tìm lỗi có thể trùng
+            </button>
+          )}
           <ProjectCrumb projectId={project._id} />
         </div>
       }
     >
       {error && <ErrorState message={error} />}
-      <Panel title="Tạo lỗi">
-        <form className="grid gap-4 p-5 md:grid-cols-2" onSubmit={create}>
-          <label className="field-label md:col-span-2">
-            Tên
-            <input
-              required
-              className="apple-input mt-2"
-              value={form.title}
-              onChange={(event) => setForm({ ...form, title: event.target.value })}
-            />
-          </label>
-          <label className="field-label">
-            Mức độ nghiêm trọng
-            <select
-              className="apple-input mt-2"
-              value={form.severity}
-              onChange={(event) => setForm({ ...form, severity: event.target.value })}
-            >
-              {["blocker", "critical", "major", "minor", "trivial"].map((value) => (
-                <option key={value} value={value}>
-                  {valueLabel(value)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="field-label">
-            Mức ưu tiên
-            <select
-              className="apple-input mt-2"
-              value={form.priority}
-              onChange={(event) => setForm({ ...form, priority: event.target.value })}
-            >
-              {["critical", "high", "medium", "low"].map((value) => (
-                <option key={value} value={value}>
-                  {valueLabel(value)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="field-label">
-            Môi trường
-            <input
-              className="apple-input mt-2"
-              value={form.environment}
-              onChange={(event) => setForm({ ...form, environment: event.target.value })}
-            />
-          </label>
-          <label className="field-label">
-            Bản dựng
-            <input
-              className="apple-input mt-2"
-              value={form.build}
-              onChange={(event) => setForm({ ...form, build: event.target.value })}
-            />
-          </label>
-          <label className="field-label">
-            Mô tả
-            <textarea
-              className="apple-input mt-2 min-h-24"
-              value={form.description}
-              onChange={(event) => setForm({ ...form, description: event.target.value })}
-            />
-          </label>
-          <label className="field-label">
-            Kết quả thực tế
-            <textarea
-              className="apple-input mt-2 min-h-24"
-              value={form.actual}
-              onChange={(event) => setForm({ ...form, actual: event.target.value })}
-            />
-          </label>
-          <label className="field-label md:col-span-2">
-            Kết quả mong đợi
-            <textarea
-              className="apple-input mt-2 min-h-24"
-              value={form.expected}
-              onChange={(event) => setForm({ ...form, expected: event.target.value })}
-            />
-          </label>
-          <label className="field-label md:col-span-2">
-            Tệp bằng chứng
-            <input
-              className="apple-input mt-2"
-              type="file"
-              onChange={async (event) => {
-                const file = event.target.files?.[0];
-                if (!file) return;
-                try {
-                  const uploaded = await uploadAssetAPI(file);
-                  setForm({ ...form, attachments: [...form.attachments, uploaded.data] });
-                } catch (reason) {
-                  setError(messageOf(reason));
-                }
-              }}
-            />
-            {form.attachments.map((attachment) => (
-              <span
-                className="mt-2 block break-all text-[11px] text-ink-muted"
-                key={attachment.url}
+      {can("defect.create") && (
+        <Panel title="Tạo lỗi">
+          <form className="grid gap-4 p-5 md:grid-cols-2" onSubmit={create}>
+            <label className="field-label md:col-span-2">
+              Tên
+              <input
+                required
+                className="apple-input mt-2"
+                value={form.title}
+                onChange={(event) => setForm({ ...form, title: event.target.value })}
+              />
+            </label>
+            <label className="field-label">
+              Mức độ nghiêm trọng
+              <select
+                className="apple-input mt-2"
+                value={form.severity}
+                onChange={(event) => setForm({ ...form, severity: event.target.value })}
               >
-                {attachment.filename}
-              </span>
-            ))}
-          </label>
-          <div>
-            <button className="apple-button" type="submit">
-              Lưu lỗi
-            </button>
-          </div>
-        </form>
-      </Panel>
+                {["blocker", "critical", "major", "minor", "trivial"].map((value) => (
+                  <option key={value} value={value}>
+                    {valueLabel(value)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="field-label">
+              Mức ưu tiên
+              <select
+                className="apple-input mt-2"
+                value={form.priority}
+                onChange={(event) => setForm({ ...form, priority: event.target.value })}
+              >
+                {["critical", "high", "medium", "low"].map((value) => (
+                  <option key={value} value={value}>
+                    {valueLabel(value)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="field-label">
+              Môi trường
+              <input
+                className="apple-input mt-2"
+                value={form.environment}
+                onChange={(event) => setForm({ ...form, environment: event.target.value })}
+              />
+            </label>
+            <label className="field-label">
+              Bản dựng
+              <input
+                className="apple-input mt-2"
+                value={form.build}
+                onChange={(event) => setForm({ ...form, build: event.target.value })}
+              />
+            </label>
+            <label className="field-label">
+              Mô tả
+              <textarea
+                className="apple-input mt-2 min-h-24"
+                value={form.description}
+                onChange={(event) => setForm({ ...form, description: event.target.value })}
+              />
+            </label>
+            <label className="field-label">
+              Kết quả thực tế
+              <textarea
+                className="apple-input mt-2 min-h-24"
+                value={form.actual}
+                onChange={(event) => setForm({ ...form, actual: event.target.value })}
+              />
+            </label>
+            <label className="field-label md:col-span-2">
+              Kết quả mong đợi
+              <textarea
+                className="apple-input mt-2 min-h-24"
+                value={form.expected}
+                onChange={(event) => setForm({ ...form, expected: event.target.value })}
+              />
+            </label>
+            <label className="field-label md:col-span-2">
+              Tệp bằng chứng
+              <input
+                className="apple-input mt-2"
+                type="file"
+                onChange={async (event) => {
+                  const file = event.target.files?.[0];
+                  if (!file) return;
+                  try {
+                    const uploaded = await uploadAssetAPI(file);
+                    setForm({ ...form, attachments: [...form.attachments, uploaded.data] });
+                  } catch (reason) {
+                    setError(messageOf(reason));
+                  }
+                }}
+              />
+              {form.attachments.map((attachment) => (
+                <span
+                  className="mt-2 block break-all text-[11px] text-ink-muted"
+                  key={attachment.url}
+                >
+                  {attachment.filename}
+                </span>
+              ))}
+            </label>
+            <div>
+              <button className="apple-button" type="submit">
+                Lưu lỗi
+              </button>
+            </div>
+          </form>
+        </Panel>
+      )}
       {duplicates.length > 0 && (
         <Panel title="Ứng viên lỗi trùng cần người dùng xác nhận">
           <DataTable
@@ -344,27 +377,28 @@ export default function DefectsPage({ project }) {
               {
                 key: "action",
                 label: "Quyết định",
-                render: (candidate) => (
-                  <button
-                    className="secondary-button"
-                    type="button"
-                    onClick={async () => {
-                      try {
-                        await testingApi.updateDefect(traceReview.defect._id, {
-                          expected_revision: traceReview.defect.revision,
-                          linked_test_case_version_id: candidate.test_case_version_id,
-                          linked_requirement_version_ids: candidate.requirement_version_ids,
-                        });
-                        setTraceReview(null);
-                        await load();
-                      } catch (reason) {
-                        setError(messageOf(reason));
-                      }
-                    }}
-                  >
-                    Liên kết
-                  </button>
-                ),
+                render: (candidate) =>
+                  canManageTrace(traceReview.defect) ? (
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          await testingApi.updateDefect(traceReview.defect._id, {
+                            expected_revision: traceReview.defect.revision,
+                            linked_test_case_version_id: candidate.test_case_version_id,
+                            linked_requirement_version_ids: candidate.requirement_version_ids,
+                          });
+                          setTraceReview(null);
+                          await load();
+                        } catch (reason) {
+                          setError(messageOf(reason));
+                        }
+                      }}
+                    >
+                      Liên kết
+                    </button>
+                  ) : null,
               },
             ]}
           />
@@ -477,7 +511,7 @@ export default function DefectsPage({ project }) {
                     >
                       Gợi ý liên kết
                     </button>
-                    {item.linked_test_case_version_id && (
+                    {item.linked_test_case_version_id && canManageTrace(item) && (
                       <button
                         className="secondary-button"
                         type="button"
@@ -511,21 +545,24 @@ export default function DefectsPage({ project }) {
             {
               key: "assignee",
               label: "Người xử lý",
-              render: (item) => (
-                <button
-                  className="secondary-button"
-                  type="button"
-                  onClick={() => assignDefect(item)}
-                >
-                  {item.assignee || "Gán người xử lý"}
-                </button>
-              ),
+              render: (item) =>
+                can("defect.assign") ? (
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={() => assignDefect(item)}
+                  >
+                    {item.assignee || "Gán người xử lý"}
+                  </button>
+                ) : (
+                  item.assignee || "Chưa gán"
+                ),
             },
             {
               key: "transition",
               label: "Chuyển trạng thái",
               render: (item) =>
-                item.status === "READY_FOR_RETEST" ? (
+                item.status === "READY_FOR_RETEST" && can("defect.retest") ? (
                   <select
                     aria-label={`Kết quả retest ${item.defect_key}`}
                     className="apple-input"
@@ -549,8 +586,9 @@ export default function DefectsPage({ project }) {
                     {results
                       .filter(
                         (result) =>
-                          !item.linked_test_case_version_id ||
-                          result.test_case_version_id === item.linked_test_case_version_id,
+                          (!item.linked_test_case_version_id ||
+                            result.test_case_version_id === item.linked_test_case_version_id) &&
+                          (result.status !== "PASS" || can("defect.close")),
                       )
                       .map((result) => (
                         <option key={result._id} value={result._id}>
@@ -566,11 +604,13 @@ export default function DefectsPage({ project }) {
                     onChange={(event) => transition(item, event.target.value)}
                   >
                     <option value="">Chọn</option>
-                    {(nextStates[item.status] || []).map((value) => (
-                      <option key={value} value={value}>
-                        {valueLabel(value)}
-                      </option>
-                    ))}
+                    {(nextStates[item.status] || [])
+                      .filter((value) => transitionAllowed(item, value))
+                      .map((value) => (
+                        <option key={value} value={value}>
+                          {valueLabel(value)}
+                        </option>
+                      ))}
                   </select>
                 ),
             },

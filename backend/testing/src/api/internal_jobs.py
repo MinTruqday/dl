@@ -4,9 +4,10 @@ from fastapi import APIRouter, Header, HTTPException
 
 from src.api.api_artifacts import recover_trace_links
 from src.api.changes import analyze_impact, create_change_set
+from src.api.jobs import EVENT_PERMISSIONS
 from src.api.test_design import find_duplicates, generate_test_cases
 from src.core.auth import CurrentUser
-from src.core.common import envelope, now
+from src.core.common import envelope, get_project, now
 from src.core.configuration import settings
 from src.core.database import database
 from src.domain.schemas import GenerateInput, RequirementCompareInput
@@ -34,6 +35,11 @@ async def process_job(
         email=x_requester_email or "worker@internal",
         system_role="USER",
     )
+    project_id = str(body.get("project_id") or "")
+    if not project_id or not x_requester_id:
+        raise HTTPException(status_code=422, detail={"code": "DELEGATED_IDENTITY_REQUIRED"})
+    for permission in EVENT_PERMISSIONS[event]:
+        await get_project(project_id, user, permission)
     payload = body.get("payload") if isinstance(body.get("payload"), dict) else {}
     result = await execute(event, body, payload, user)
     completed = not (isinstance(result, dict) and result.get("indexed") is False)
@@ -44,7 +50,7 @@ async def process_job(
 
 async def execute(event, body, payload, user):
     if event == "impact.analysis.requested":
-        return (await analyze_impact(payload.get("change_set_id") or body.get("artifact_version_id"), user))["data"]
+        return (await analyze_impact(payload.get("change_set_id") or body.get("artifact_version_id"), None, user))["data"]
     if event == "duplicate.scan.requested":
         return (await find_duplicates(body["project_id"], user))["data"]
     if event == "test.generate.requested":

@@ -1,4 +1,6 @@
 import asyncio
+import csv
+import io
 import os
 import re
 import secrets
@@ -6,7 +8,9 @@ from datetime import datetime, timezone
 from typing import Any
 
 import httpx
+from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, EmailStr, Field, model_validator
 from pymongo import ReturnDocument
 
@@ -80,6 +84,18 @@ class ModelRegistryEntry(BaseModel):
     version: str | None = Field(default=None, max_length=100)
     enabled: bool = True
     capabilities: list[str] = Field(default_factory=list, max_length=30)
+    reason: str = Field(min_length=3, max_length=1000)
+
+
+class ProjectStatusUpdate(BaseModel):
+    status: str = Field(pattern="^(ACTIVE|SUSPENDED)$")
+    reason: str = Field(min_length=3, max_length=1000)
+
+
+class ProjectQuotaUpdate(BaseModel):
+    storage_bytes: int | None = Field(default=None, ge=0)
+    ai_requests_per_day: int | None = Field(default=None, ge=0)
+    concurrent_jobs: int | None = Field(default=None, ge=0, le=10000)
     reason: str = Field(min_length=3, max_length=1000)
 
 
@@ -566,7 +582,9 @@ async def list_project_metadata(
             "key": 1,
             "name": 1,
             "status": 1,
+            "administrative_status": 1,
             "project_type": 1,
+            "quota": 1,
             "created_by": 1,
             "created_at": 1,
             "updated_at": 1,
@@ -586,6 +604,65 @@ async def list_project_metadata(
     ]
     await record_audit(current_user, "ADMIN_PROJECT_METADATA_VIEWED", "platform", "operations")
     return APIResponse(data=data, message="Tải siêu dữ liệu dự án hoàn tất")
+
+
+@router.get("/api/admin/projects/{project_id}", response_model=APIResponse[Any])
+async def project_metadata_detail(
+    project_id: str,
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    testing_db = database.mongodb[os.environ.get("TESTING_DB_NAME", "veriq_testing")]
+    project = await testing_db.projects.find_one(
+        {"_id": project_id},
+        {"key": 1, "name": 1, "status": 1, "project_type": 1, "created_by": 1, "created_at": 1, "updated_at": 1, "revision": 1, "quota": 1},
+    )
+    if not project:
+        raise HTTPException(status_code=404, detail="Không tìm thấy dự án")
+    project["member_count"] = await testing_db.project_members.count_documents({"project_id": project_id})
+    project["active_member_count"] = await testing_db.project_members.count_documents({"project_id": project_id, "status": "ACTIVE"})
+    project["job_count"] = await database.mongodb[os.environ.get("WORKER_DB_NAME", "veriq_worker")].worker_jobs.count_documents({"project_id": project_id})
+    await record_audit(current_user, "ADMIN_PROJECT_METADATA_VIEWED", project_id, "support metadata")
+    return APIResponse(data=project, message="Tải siêu dữ liệu dự án hoàn tất")
+
+
+@router.patch("/api/admin/projects/{project_id}/status", response_model=APIResponse[Any])
+async def update_project_status(
+    project_id: str,
+    payload: ProjectStatusUpdate,
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    testing_db = database.mongodb[os.environ.get("TESTING_DB_NAME", "veriq_testing")]
+    timestamp = datetime.now(timezone.utc)
+    project = await testing_db.projects.find_one_and_update(
+        {"_id": project_id},
+        {"$set": {"administrative_status": payload.status, "administrative_reason": payload.reason, "administrative_updated_by": current_user.id, "administrative_updated_at": timestamp, "updated_at": timestamp}, "$inc": {"revision": 1}},
+        return_document=ReturnDocument.AFTER,
+    )
+    if not project:
+        raise HTTPException(status_code=404, detail="Không tìm thấy dự án")
+    await record_audit(current_user, "ADMIN_PROJECT_STATUS_UPDATED", project_id, payload.reason, {"status": payload.status})
+    return APIResponse(data=project, message="Cập nhật trạng thái quản trị dự án hoàn tất")
+
+
+@router.patch("/api/admin/projects/{project_id}/quota", response_model=APIResponse[Any])
+async def update_project_quota(
+    project_id: str,
+    payload: ProjectQuotaUpdate,
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    quota = payload.model_dump(exclude={"reason"}, exclude_none=True)
+    if not quota:
+        raise HTTPException(status_code=422, detail="Không có hạn mức cần cập nhật")
+    testing_db = database.mongodb[os.environ.get("TESTING_DB_NAME", "veriq_testing")]
+    project = await testing_db.projects.find_one_and_update(
+        {"_id": project_id},
+        {"$set": {"quota": quota, "quota_updated_by": current_user.id, "quota_updated_at": datetime.now(timezone.utc)}, "$inc": {"revision": 1}},
+        return_document=ReturnDocument.AFTER,
+    )
+    if not project:
+        raise HTTPException(status_code=404, detail="Không tìm thấy dự án")
+    await record_audit(current_user, "ADMIN_PROJECT_QUOTA_UPDATED", project_id, payload.reason, quota)
+    return APIResponse(data={"project_id": project_id, "quota": quota}, message="Cập nhật hạn mức dự án hoàn tất")
 
 
 @router.get("/api/admin/platform/project-policy", response_model=APIResponse[Any])
@@ -788,6 +865,55 @@ async def retry_operations_job(
     return APIResponse(data=result, message="Đưa tác vụ vào hàng đợi chạy lại hoàn tất")
 
 
+@router.post("/api/admin/operations/jobs/{job_id}/cancel", response_model=APIResponse[Any])
+async def cancel_operations_job(
+    job_id: str,
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    worker_url = os.environ.get("WORKER_INTERNAL_URL", "http://worker:8000").rstrip("/")
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            response = await client.post(f"{worker_url}/worker/internal/jobs/{job_id}/cancel", headers={"X-Internal-Token": settings.SECRET_KEY})
+            response.raise_for_status()
+            result = response.json()
+    except httpx.HTTPStatusError as error:
+        if error.response.status_code in {404, 409, 422}:
+            raise HTTPException(status_code=error.response.status_code, detail="Tác vụ không tồn tại hoặc không thể hủy") from error
+        raise HTTPException(status_code=502, detail="Không thể hủy tác vụ nền") from error
+    except httpx.HTTPError as error:
+        raise HTTPException(status_code=503, detail="Dịch vụ tác vụ nền chưa sẵn sàng") from error
+    await record_audit(current_user, "ADMIN_OPERATIONS_JOB_CANCELED", job_id, "operations cancel")
+    return APIResponse(data=result, message="Hủy tác vụ nền hoàn tất")
+
+
+@router.get("/api/admin/operations/dlq", response_model=APIResponse[Any])
+async def list_dead_letter_jobs(
+    limit: int = Query(default=200, ge=1, le=1000),
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    jobs = await database.mongodb[os.environ.get("WORKER_DB_NAME", "veriq_worker")].worker_jobs.find(
+        {"status": "failed"}, {"request.internal_token": 0}
+    ).sort("updated_at", -1).limit(limit).to_list(limit)
+    return APIResponse(data=jobs, message="Tải danh sách tác vụ lỗi hoàn tất")
+
+
+@router.post("/api/admin/operations/dlq/{job_id}/discard", response_model=APIResponse[Any])
+async def discard_dead_letter_job(
+    job_id: str,
+    payload: ActionReason,
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    job = await database.mongodb[os.environ.get("WORKER_DB_NAME", "veriq_worker")].worker_jobs.find_one_and_update(
+        {"_id": job_id, "status": "failed"},
+        {"$set": {"status": "discarded", "discard_reason": payload.reason, "discarded_by": current_user.id, "discarded_at": datetime.now(timezone.utc)}},
+        return_document=ReturnDocument.AFTER,
+    )
+    if not job:
+        raise HTTPException(status_code=409, detail="Tác vụ không ở trạng thái lỗi")
+    await record_audit(current_user, "ADMIN_DLQ_JOB_DISCARDED", job_id, payload.reason)
+    return APIResponse(data=job, message="Loại bỏ tác vụ lỗi hoàn tất")
+
+
 async def service_health(name: str, url: str):
     try:
         async with httpx.AsyncClient(timeout=5) as client:
@@ -983,3 +1109,100 @@ async def update_ai_model(model_id: str, payload: ConfigUpdate, current_user: Cu
     model["_id"] = str(model["_id"])
     await record_audit(current_user, "ADMIN_AI_MODEL_UPDATED", model_id, payload.reason, {"keys": sorted(changes)})
     return APIResponse(data=model, message="Cập nhật mô hình AI hoàn tất")
+
+
+@router.get("/api/admin/ai/defaults", response_model=APIResponse[Any])
+async def get_ai_defaults(current_user: CurrentUser = Depends(get_current_user)):
+    return await get_platform_config("ai_defaults", current_user)
+
+
+@router.patch("/api/admin/ai/defaults", response_model=APIResponse[Any])
+async def update_ai_defaults(payload: ConfigUpdate, current_user: CurrentUser = Depends(get_current_user)):
+    allowed_keys = {"chat_model_id", "structured_model_id", "fallback_model_ids", "timeout_seconds", "max_output_tokens", "concurrency"}
+    if not set(payload.values) <= allowed_keys:
+        raise HTTPException(status_code=422, detail="Cấu hình mặc định AI chứa trường không hợp lệ")
+    model_ids = [value for key, value in payload.values.items() if key in {"chat_model_id", "structured_model_id"} and value]
+    model_ids.extend(payload.values.get("fallback_model_ids") or [])
+    if model_ids:
+        identifiers = []
+        for model_id in set(model_ids):
+            try:
+                identifiers.append(ObjectId(model_id))
+            except Exception:
+                identifiers.append(model_id)
+        existing = await database.mongodb[settings.AUTHENTICATION_DB_NAME].ai_models.count_documents({"_id": {"$in": identifiers}, "enabled": True})
+        if existing != len(set(model_ids)):
+            raise HTTPException(status_code=422, detail="Mô hình mặc định hoặc dự phòng chưa được đăng ký và kích hoạt")
+    return await update_platform_config("ai_defaults", payload, current_user)
+
+
+@router.get("/api/admin/ai/versions", response_model=APIResponse[Any])
+async def get_ai_versions(current_user: CurrentUser = Depends(get_current_user)):
+    config = await database.mongodb[settings.AUTHENTICATION_DB_NAME].system_configs.find_one({"type": "ai_defaults"}) or {}
+    models = await database.mongodb[settings.AUTHENTICATION_DB_NAME].ai_models.find({"enabled": True}).sort("model", 1).to_list(500)
+    return APIResponse(
+        data={
+            "defaults": masked_config(config),
+            "models": [{**item, "_id": str(item["_id"])} for item in models],
+            "embedding_model": os.environ.get("EMBEDDING_MODEL"),
+            "reranker_model": os.environ.get("RERANKER_MODEL"),
+            "service_version": os.environ.get("VERSION"),
+        },
+        message="Tải phiên bản AI đang hoạt động hoàn tất",
+    )
+
+
+@router.post("/api/admin/storage/test", response_model=APIResponse[Any])
+async def test_storage(current_user: CurrentUser = Depends(get_current_user)):
+    result = await service_health("cloud", "http://cloud:8000/ready")
+    await record_audit(current_user, "ADMIN_STORAGE_TESTED", "storage", "connectivity test", {"healthy": result["healthy"]})
+    if not result["healthy"]:
+        raise HTTPException(status_code=503, detail="Kho lưu trữ chưa sẵn sàng")
+    return APIResponse(data=result, message="Kiểm tra kho lưu trữ hoàn tất")
+
+
+@router.get("/api/admin/integrations/health", response_model=APIResponse[Any])
+async def integration_health(current_user: CurrentUser = Depends(get_current_user)):
+    targets = {
+        "worker": "http://worker:8000/ready",
+        "ai": "http://ai:8000/ready",
+        "cloud": "http://cloud:8000/ready",
+        "testing": "http://testing:8000/ready",
+    }
+    services = await asyncio.gather(*(service_health(name, url) for name, url in targets.items()))
+    try:
+        await database.mongodb.admin.command("ping")
+        services.append({"service": "mongodb", "healthy": True, "status_code": 200, "details": {"status": "ready"}})
+    except Exception:
+        services.append({"service": "mongodb", "healthy": False, "status_code": None, "details": {"status": "unavailable"}})
+    return APIResponse(data={"healthy": all(item["healthy"] for item in services), "services": services}, message="Tải trạng thái tích hợp hoàn tất")
+
+
+@router.get("/api/admin/operations/metrics", response_model=APIResponse[Any])
+async def operations_metrics(current_user: CurrentUser = Depends(get_current_user)):
+    worker_db = database.mongodb[os.environ.get("WORKER_DB_NAME", "veriq_worker")]
+    testing_db = database.mongodb[os.environ.get("TESTING_DB_NAME", "veriq_testing")]
+    status_rows = await worker_db.worker_jobs.aggregate([{"$group": {"_id": "$status", "count": {"$sum": 1}}}]).to_list(100)
+    return APIResponse(
+        data={
+            "jobs_by_status": {item["_id"]: item["count"] for item in status_rows},
+            "impact_analyses": await testing_db.impact_analyses.count_documents({}),
+            "degraded_impact_analyses": await testing_db.impact_analyses.count_documents({"mode": "DEGRADED_AI"}),
+            "pending_proposals": await testing_db.maintenance_proposals.count_documents({"status": "PENDING"}),
+            "generated_at": datetime.now(timezone.utc),
+        },
+        message="Tải số liệu vận hành hoàn tất",
+    )
+
+
+@router.get("/api/admin/audit/export")
+async def export_global_audit(current_user: CurrentUser = Depends(get_current_user)):
+    events = await database.mongodb[settings.AUTHENTICATION_DB_NAME].audit_logs.find({}).sort("timestamp", -1).limit(100000).to_list(100000)
+    stream = io.StringIO()
+    fields = ["timestamp", "action", "actor_email", "target_user_id", "reason"]
+    writer = csv.DictWriter(stream, fieldnames=fields)
+    writer.writeheader()
+    for event in events:
+        writer.writerow({field: event.get(field) for field in fields})
+    await record_audit(current_user, "ADMIN_GLOBAL_AUDIT_EXPORTED", "platform", "audit export")
+    return StreamingResponse(iter([stream.getvalue()]), media_type="text/csv", headers={"Content-Disposition": "attachment; filename=veriq-global-audit.csv"})

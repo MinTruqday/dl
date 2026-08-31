@@ -17,10 +17,14 @@ router = APIRouter(prefix="/api/qa", tags=["QA Traceability"])
 
 
 @router.post("/trace-links", status_code=201)
+@router.post("/projects/{project_id}/trace-links", status_code=201)
 async def create_trace_link(
     payload: TraceLinkCreate,
+    project_id: str | None = None,
     user: CurrentUser = Depends(get_current_user),
 ):
+    if project_id is not None and payload.project_id != project_id:
+        raise HTTPException(status_code=422, detail={"code": "PROJECT_MISMATCH"})
     await get_project(payload.project_id, user, "trace.create")
     await validate_artifact(payload.source_type, payload.source_id, payload.project_id)
     await validate_artifact(payload.target_type, payload.target_id, payload.project_id)
@@ -64,18 +68,31 @@ async def create_trace_link(
 
 
 @router.post("/trace-links/{link_id}/confirm")
-async def confirm_trace_link(link_id: str, user: CurrentUser = Depends(get_current_user)):
+@router.post("/projects/{project_id}/trace-links/{link_id}/confirm")
+async def confirm_trace_link(link_id: str, project_id: str | None = None, user: CurrentUser = Depends(get_current_user)):
+    if project_id is not None:
+        link = await get_project_entity("trace_links", link_id, user, "trace.confirm")
+        if link["project_id"] != project_id:
+            raise HTTPException(status_code=422, detail={"code": "PROJECT_MISMATCH"})
     return await review_link(link_id, "CONFIRMED", user)
 
 
 @router.post("/trace-links/{link_id}/reject")
-async def reject_trace_link(link_id: str, user: CurrentUser = Depends(get_current_user)):
+@router.post("/projects/{project_id}/trace-links/{link_id}/reject")
+async def reject_trace_link(link_id: str, project_id: str | None = None, user: CurrentUser = Depends(get_current_user)):
+    if project_id is not None:
+        link = await get_project_entity("trace_links", link_id, user, "trace.review")
+        if link["project_id"] != project_id:
+            raise HTTPException(status_code=422, detail={"code": "PROJECT_MISMATCH"})
     return await review_link(link_id, "REJECTED", user)
 
 
 @router.delete("/trace-links/{link_id}")
-async def revoke_trace_link(link_id: str, user: CurrentUser = Depends(get_current_user)):
+@router.delete("/projects/{project_id}/trace-links/{link_id}")
+async def revoke_trace_link(link_id: str, project_id: str | None = None, user: CurrentUser = Depends(get_current_user)):
     link = await get_project_entity("trace_links", link_id, user, "trace.revoke")
+    if project_id is not None and link["project_id"] != project_id:
+        raise HTTPException(status_code=422, detail={"code": "PROJECT_MISMATCH"})
     if link.get("status") == "REVOKED":
         return envelope(link)
     if link.get("status") not in {"CONFIRMED", "SUGGESTED"}:
@@ -93,7 +110,7 @@ async def revoke_trace_link(link_id: str, user: CurrentUser = Depends(get_curren
 
 
 async def review_link(link_id, status, user):
-    permission = "trace.confirm" if status == "CONFIRMED" else "trace.revoke"
+    permission = "trace.confirm" if status == "CONFIRMED" else "trace.review"
     link = await get_project_entity("trace_links", link_id, user, permission)
     if link.get("status") == status:
         return envelope(link)
@@ -241,7 +258,7 @@ async def create_coverage_snapshot(
     payload: dict = Body(default={}),
     user: CurrentUser = Depends(get_current_user),
 ):
-    await get_project(project_id, user, "project.update")
+    await get_project(project_id, user, "coverage.snapshot.create")
     idempotency_key = str(payload.get("idempotency_key") or "").strip() or None
     if idempotency_key:
         existing = await database.value.coverage_snapshots.find_one({"project_id": project_id, "idempotency_key": idempotency_key})
@@ -278,7 +295,7 @@ async def test_case_trace(test_case_id: str, user: CurrentUser = Depends(get_cur
 
 @router.get("/projects/{project_id}/traceability/export")
 async def export_traceability(project_id: str, user: CurrentUser = Depends(get_current_user)):
-    await get_project(project_id, user, "trace.read")
+    await get_project(project_id, user, "report.export")
     links = await database.value.trace_links.find({"project_id": project_id}).to_list(50000)
     stream = io.StringIO()
     writer = csv.DictWriter(stream, fieldnames=["source_type", "source_id", "target_type", "target_id", "link_type", "status", "confidence", "origin"])

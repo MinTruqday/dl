@@ -2,6 +2,7 @@ import hmac
 import hashlib
 import uuid
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 
 from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.responses import JSONResponse
@@ -136,6 +137,22 @@ async def retry_job(job_id: str):
     await mq.publish("qa_job_queue", request)
     metrics_collector.change_queue_depth("qa_job_queue", 1)
     return {"job_id": job_id, "status": "queued", "manual_retry_count": retry_count + 1}
+
+
+@app.post("/worker/internal/jobs/{job_id}/cancel", dependencies=[Depends(require_internal_token)])
+async def cancel_job(job_id: str):
+    if len(job_id) > 128:
+        raise HTTPException(status_code=422, detail="Invalid job identifier")
+    jobs = database.mongodb[settings.WORKER_DB_NAME].worker_jobs
+    job = await jobs.find_one({"_id": job_id})
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    if job.get("status") == "canceled":
+        return {"job_id": job_id, "status": "canceled"}
+    if job.get("status") != "queued":
+        raise HTTPException(status_code=409, detail="Only queued jobs can be canceled")
+    await record_job(job_id, {"status": "canceled", "canceled_at": datetime.now(timezone.utc)})
+    return {"job_id": job_id, "status": "canceled"}
 
 
 @app.get("/worker/internal/jobs/{job_id}", dependencies=[Depends(require_internal_token)])

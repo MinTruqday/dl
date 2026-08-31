@@ -21,7 +21,7 @@ class KnowledgeDocumentSummaryRequest(BaseModel):
 
 
 class QAAssistanceRequest(BaseModel):
-    capability: Literal["requirement_lint", "scenario_generation", "test_generation", "trace_recommendation", "semantic_change", "impact_analysis", "maintenance_proposal", "regression_recommendation", "defect_linking"] = Field(description="Năng lực QA cần thực hiện")
+    capability: Literal["project_question", "requirement_lint", "scenario_generation", "test_generation", "trace_recommendation", "semantic_change", "impact_analysis", "maintenance_proposal", "regression_recommendation", "defect_linking"] = Field(description="Năng lực QA cần thực hiện")
     project_id: str = Field(min_length=1, max_length=128, description="Mã Project giới hạn phạm vi xử lý")
     instruction: str = Field(default="", max_length=5000, description="Chỉ dẫn nghiệp vụ bổ sung của người dùng")
     evidence: List[dict[str, Any]] = Field(min_length=1, max_length=100, description="Bằng chứng artifact đã được giới hạn theo Project")
@@ -40,3 +40,4 @@ class QAAssistanceResult(BaseModel):
     model: dict[str, Any] = Field(default_factory=dict, description="Metadata version của model prompt và tool schema")
     reason_codes: List[str] = Field(default_factory=list, max_length=100, description="Mã lý do có thể audit không chứa hidden reasoning")
     workflow: dict[str, Any] = Field(default_factory=dict, description="Trạng thái Observe Reason Act Observe có thể audit")
+    answer: str = Field(default="", max_length=20000, description="Câu trả lời có căn cứ dùng cho hỏi đáp Project")

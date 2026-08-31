@@ -158,7 +158,39 @@ export const testingApi = {
   },
   listRequirementDocuments: (id, query = "") =>
     qaRequest(`/projects/${id}/requirement-documents${query ? `?${query}` : ""}`),
+  createKnowledgeSource: (id, payload) =>
+    qaRequest(`/projects/${id}/knowledge-sources`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  listKnowledgeSources: (id, includeArchived = false) =>
+    qaRequest(`/projects/${id}/knowledge-sources?include_archived=${includeArchived}`),
+  archiveKnowledgeSource: (id, payload) =>
+    qaRequest(`/knowledge-sources/${id}/archive`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  registerAttachment: (id, payload) =>
+    qaRequest(`/projects/${id}/attachments`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  listAttachments: (id, query = "") =>
+    qaRequest(`/projects/${id}/attachments${query ? `?${query}` : ""}`),
+  deleteAttachment: (id) => qaRequest(`/attachments/${id}`, { method: "DELETE" }),
+  moderateAttachment: (id, payload) =>
+    qaRequest(`/attachments/${id}/moderate`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   getRequirementDocument: (id) => qaRequest(`/requirement-documents/${id}`),
+  updateRequirementDocument: (id, payload) =>
+    qaRequest(`/requirement-documents/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+  reindexRequirementDocument: (id) =>
+    qaRequest(`/requirement-documents/${id}/reindex`, { method: "POST" }),
   downloadRequirementDocument: (id, filename) =>
     downloadQaFile(`/requirement-documents/${id}/download`, filename),
   archiveRequirementDocument: (id, payload) =>
@@ -201,6 +233,11 @@ export const testingApi = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  restoreRequirement: (id, payload) =>
+    qaRequest(`/requirements/${id}/restore`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   submitTestCaseReview: (projectId, draftId, payload) =>
     qaRequest(`/projects/${projectId}/test-cases/${draftId}/submit-review`, {
       method: "POST",
@@ -211,7 +248,10 @@ export const testingApi = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  listScenarios: (id) => qaRequest(`/projects/${id}/test-scenarios`),
+  listScenarios: (id, query = "") => {
+    const value = listQuery(query);
+    return qaRequest(`/projects/${id}/test-scenarios${value ? `?${value}` : ""}`);
+  },
   listDataSets: (id, query = "") =>
     qaRequest(`/projects/${id}/data-sets${query ? `?q=${encodeURIComponent(query)}` : ""}`),
   createDataSet: (id, payload) =>
@@ -229,6 +269,12 @@ export const testingApi = {
     qaRequest(`/projects/${id}/test-scenarios`, { method: "POST", body: JSON.stringify(payload) }),
   updateScenario: (id, payload) =>
     qaRequest(`/test-scenarios/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  cloneScenario: (id) => qaRequest(`/test-scenarios/${id}/clone`, { method: "POST" }),
+  archiveScenario: (id, payload) =>
+    qaRequest(`/test-scenarios/${id}/archive`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   generateScenarios: (versionId, payload) =>
     qaRequest(`/requirement-versions/${versionId}/ai/generate-scenarios`, {
       method: "POST",
@@ -260,6 +306,11 @@ export const testingApi = {
     }),
   obsoleteTestCase: (id, payload) =>
     qaRequest(`/test-cases/${id}/obsolete`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  restoreTestCase: (id, payload) =>
+    qaRequest(`/test-cases/${id}/restore`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
@@ -331,7 +382,10 @@ export const testingApi = {
       method: "POST",
       body: JSON.stringify({ reason }),
     }),
-  listChangeSets: (id) => qaRequest(`/projects/${id}/change-sets`),
+  listChangeSets: (id, query = "") => {
+    const value = listQuery(query);
+    return qaRequest(`/projects/${id}/change-sets${value ? `?${value}` : ""}`);
+  },
   createChangeSet: (requirementId, payload) =>
     qaRequest(`/requirements/${requirementId}/change-sets`, {
       method: "POST",
@@ -344,6 +398,7 @@ export const testingApi = {
       body: JSON.stringify(payload),
     }),
   analyzeImpact: (id) => qaRequest(`/change-sets/${id}/impact-analysis`, { method: "POST" }),
+  getChangeSetImpact: (id) => qaRequest(`/change-sets/${id}/impact-analysis`),
   getImpact: (id) => qaRequest(`/impact-analyses/${id}`),
   reviewImpact: (id, payload) =>
     qaRequest(`/impact-analyses/${id}/review`, {
@@ -352,8 +407,10 @@ export const testingApi = {
     }),
   createProposals: (id) =>
     qaRequest(`/impact-analyses/${id}/maintenance-proposals`, { method: "POST" }),
-  listProposals: (id, status = "PENDING") =>
-    qaRequest(`/projects/${id}/maintenance-proposals?status=${status}`),
+  listProposals: (id, query = { status: "PENDING" }) => {
+    const value = listQuery(typeof query === "string" ? { status: query } : query);
+    return qaRequest(`/projects/${id}/maintenance-proposals${value ? `?${value}` : ""}`);
+  },
   acceptProposal: (id, payload, edited = false) =>
     qaRequest(`/maintenance-proposals/${id}/${edited ? "accept-with-edit" : "accept"}`, {
       method: "POST",
@@ -400,17 +457,38 @@ export const testingApi = {
       body: JSON.stringify(payload),
     }),
   regression: (id) => qaRequest(`/change-sets/${id}/regression-recommendation`, { method: "POST" }),
+  getChangeSetRegression: (id) => qaRequest(`/change-sets/${id}/regression-recommendation`),
   approveRegression: (id, payload) =>
     qaRequest(`/regression-recommendations/${id}/approve`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  listPlans: (id) => qaRequest(`/projects/${id}/test-plans`),
+  listPlans: (id, query = "") => {
+    const value = listQuery(query);
+    return qaRequest(`/projects/${id}/test-plans${value ? `?${value}` : ""}`);
+  },
   createPlan: (payload) =>
     qaRequest("/test-plans", { method: "POST", body: JSON.stringify(payload) }),
-  listSuites: (id) => qaRequest(`/projects/${id}/test-suites`),
+  updatePlan: (id, payload) =>
+    qaRequest(`/test-plans/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  submitPlan: (id, payload) =>
+    qaRequest(`/test-plans/${id}/submit-review`, { method: "POST", body: JSON.stringify(payload) }),
+  approvePlan: (id, payload) =>
+    qaRequest(`/test-plans/${id}/approve`, { method: "POST", body: JSON.stringify(payload) }),
+  archivePlan: (id, payload) =>
+    qaRequest(`/test-plans/${id}/archive`, { method: "POST", body: JSON.stringify(payload) }),
+  clonePlan: (id) => qaRequest(`/test-plans/${id}/clone`, { method: "POST" }),
+  listSuites: (id, query = "") => {
+    const value = listQuery(query);
+    return qaRequest(`/projects/${id}/test-suites${value ? `?${value}` : ""}`);
+  },
   createSuite: (payload) =>
     qaRequest("/test-suites", { method: "POST", body: JSON.stringify(payload) }),
+  updateSuite: (id, payload) =>
+    qaRequest(`/test-suites/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  cloneSuite: (id) => qaRequest(`/test-suites/${id}/clone`, { method: "POST" }),
+  archiveSuite: (id, payload) =>
+    qaRequest(`/test-suites/${id}/archive`, { method: "POST", body: JSON.stringify(payload) }),
   listRunPage: (id, query = "") => listPage(`/projects/${id}/test-runs`, query),
   listRuns: (id, query = "") =>
     listPage(`/projects/${id}/test-runs`, query).then((result) => result.items),
@@ -461,8 +539,19 @@ export const testingApi = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  askProject: (id, payload) =>
+    qaRequest(`/projects/${id}/ai/ask`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   audit: (id) => qaRequest(`/projects/${id}/audit`),
   maintenanceAnalytics: (id) => qaRequest(`/projects/${id}/maintenance-analytics`),
+  aiAnalytics: (id) => qaRequest(`/projects/${id}/ai-analytics`),
+  executionReport: (id, scope = {}) =>
+    qaRequest(`/projects/${id}/reports/execution?${listQuery(scope)}`),
+  defectReport: (id, scope = {}) =>
+    qaRequest(`/projects/${id}/reports/defects?${listQuery(scope)}`),
+  projectActivity: (id) => qaRequest(`/projects/${id}/activity`),
   operations: (query = "") => qaRequest(`/operations${query ? `?${query}` : ""}`),
   retryOperationJob: (jobId) => qaRequest(`/operations/jobs/${jobId}/retry`, { method: "POST" }),
 };
