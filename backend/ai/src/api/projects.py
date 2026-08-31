@@ -44,7 +44,7 @@ def project_artifact_metadata(project_id: str, req: ProjectArtifactIndexRequest)
     }
 
 
-@router.post("/projects/{project_id}/artifacts", description="Chỉ mục hóa artifact trong phạm vi Project")
+@router.post("/du-an/{project_id}/doi-tuong", description="Chỉ mục hóa artifact trong phạm vi Project")
 async def index_project_artifact(project_id: str, req: ProjectArtifactIndexRequest):
     metadata = project_artifact_metadata(project_id, req)
     chunks = await chunker.chunk_document(req.text[:50000], metadata)
@@ -63,7 +63,7 @@ async def index_project_artifact(project_id: str, req: ProjectArtifactIndexReque
     return {"status": "indexed", "project_id": project_id, "artifact_version_id": req.artifact_version_id, "chunks_count": len(chunks)}
 
 
-@router.post("/projects/{project_id}/search", description="Tìm evidence knowledge theo phạm vi Project")
+@router.post("/du-an/{project_id}/tim-kiem", description="Tìm evidence knowledge theo phạm vi Project")
 async def search_project_knowledge(project_id: str, req: ProjectKnowledgeSearchRequest):
     cache_key = (project_id, req.query, tuple(sorted(req.artifact_types or [])), req.limit)
     cached = _SEARCH_CACHE.get(cache_key)

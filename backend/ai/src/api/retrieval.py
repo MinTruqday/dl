@@ -53,7 +53,7 @@ async def record_retrieval_access(operation, query, requester_id, is_admin, docs
     )
 
 
-@router.get("/audit/retrieval-access", description="Truy vấn audit access của knowledge retrieval")
+@router.get("/nhat-ky/truy-cap-truy-xuat", description="Truy vấn audit access của knowledge retrieval")
 async def list_retrieval_access_audit(
     requester_id: str | None = None,
     project_id: str | None = None,
@@ -75,7 +75,7 @@ async def list_retrieval_access_audit(
     )
 
 
-@router.post("/retrieve", response_model=APIResponse[RetrieveResponse], description="Truy xuất knowledge bằng dense sparse fusion và rerank")
+@router.post("/truy-xuat", response_model=APIResponse[RetrieveResponse], description="Truy xuất knowledge bằng dense sparse fusion và rerank")
 async def retrieve_documents(
     req: RetrieveRequest, user: CurrentUser = Depends(get_current_user_optional)
 ):
@@ -122,7 +122,7 @@ async def retrieve_documents(
     )
 
 
-@router.post("/multi-query-retrieve", response_model=APIResponse[RetrieveResponse], description="Truy xuất knowledge bằng mở rộng truy vấn")
+@router.post("/truy-xuat-da-truy-van", response_model=APIResponse[RetrieveResponse], description="Truy xuất knowledge bằng mở rộng truy vấn")
 async def multi_query_retrieve(
     req: MultiQueryRetrieveRequest, user: CurrentUser = Depends(get_current_user_optional)
 ):
@@ -168,7 +168,7 @@ async def multi_query_retrieve(
     )
 
 
-@router.post("/cross-document-retrieve", response_model=APIResponse[RetrieveResponse], description="Truy xuất knowledge liên tài liệu")
+@router.post("/truy-xuat-lien-tai-lieu", response_model=APIResponse[RetrieveResponse], description="Truy xuất knowledge liên tài liệu")
 async def cross_document_retrieve(
     req: CrossDocRetrieveRequest, user: CurrentUser = Depends(get_current_user_optional)
 ):

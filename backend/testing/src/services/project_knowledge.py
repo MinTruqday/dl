@@ -33,7 +33,7 @@ async def index_artifact(
     try:
         async with httpx.AsyncClient(timeout=60) as client:
             response = await client.post(
-                f"{settings.AI_URL.rstrip('/')}/knowledge/projects/{project_id}/artifacts",
+                f"{settings.AI_URL.rstrip('/')}/tri-thuc/du-an/{project_id}/doi-tuong",
                 headers={"X-Internal-Token": settings.SECRET_KEY},
                 json=payload,
             )
@@ -47,7 +47,7 @@ async def search_project_with_status(project_id, query, artifact_types, limit):
     try:
         async with httpx.AsyncClient(timeout=30) as client:
             response = await client.post(
-                f"{settings.AI_URL.rstrip('/')}/knowledge/projects/{project_id}/search",
+                f"{settings.AI_URL.rstrip('/')}/tri-thuc/du-an/{project_id}/tim-kiem",
                 headers={"X-Internal-Token": settings.SECRET_KEY},
                 json={"query": query, "artifact_types": artifact_types or [], "limit": limit},
             )

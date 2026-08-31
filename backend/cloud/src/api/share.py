@@ -9,7 +9,7 @@ from src.schemas.storage import ProtectedShareCreate
 router = APIRouter(prefix="/luu-tru")
 
 
-@router.post("/link-chia-se/tao", response_model=APIResponse[Any], status_code=201)
+@router.post("/lien-ket-chia-se/tao", response_model=APIResponse[Any], status_code=201)
 async def create_protected_share_link(
     req: ProtectedShareCreate,
     current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
@@ -20,7 +20,7 @@ async def create_protected_share_link(
     return APIResponse(data=result, message="Tạo link chia sẻ bảo mật hoàn tất", status=201)
 
 
-@router.get("/link-chia-se/xac-thuc/{token}", response_model=APIResponse[Any])
+@router.get("/lien-ket-chia-se/xac-thuc/{token}", response_model=APIResponse[Any])
 async def validate_protected_share_link(
     token: str, password: Optional[str] = Query(default=None, max_length=128)
 ):

@@ -29,7 +29,7 @@ with httpx.Client(base_url=BASE_URL, timeout=60, headers=headers("api-artifact-l
     project = call(
         client,
         "POST",
-        "/api/qa/projects",
+        "/kiem-thu/du-an",
         201,
         json={"key": f"API{stamp}", "name": "API artifact integration", "project_type": "web", "settings": {}},
     )
@@ -50,16 +50,16 @@ with httpx.Client(base_url=BASE_URL, timeout=60, headers=headers("api-artifact-l
     imported = call(
         client,
         "POST",
-        f"/api/qa/projects/{project_id}/api-imports",
+        f"/kiem-thu/du-an/{project_id}/nhap-dac-ta",
         201,
         json={"filename": "openapi.json", "format": "openapi", "content": openapi},
     )
     assert imported["status"] == "CONFIRMED"
     assert len(imported["operations"]) == 1
     operation_id = imported["operations"][0]["_id"]
-    operations = call(client, "GET", f"/api/qa/projects/{project_id}/api-operations", 200)
+    operations = call(client, "GET", f"/kiem-thu/du-an/{project_id}/thao-tac-dac-ta", 200)
     assert operations[0]["operation_id"] == "readUser"
-    generated = call(client, "POST", f"/api/qa/api-operations/{operation_id}/generate-tests", 201)
+    generated = call(client, "POST", f"/kiem-thu/thao-tac-dac-ta/{operation_id}/sinh-kiem-thu", 201)
     assert {"success", "required_missing", "auth", "not_found"} <= {item["tags"][1] for item in generated["items"]}
     postman = {
         "variable": [{"key": "baseUrl", "value": "https://example.test"}],
@@ -68,7 +68,7 @@ with httpx.Client(base_url=BASE_URL, timeout=60, headers=headers("api-artifact-l
     imported_postman = call(
         client,
         "POST",
-        f"/api/qa/projects/{project_id}/api-imports",
+        f"/kiem-thu/du-an/{project_id}/nhap-dac-ta",
         201,
         json={"filename": "collection.json", "format": "postman", "content": postman},
     )

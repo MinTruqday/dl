@@ -1,7 +1,7 @@
 import { API_URL, authenticatedFetch } from "@/shared/services/api-client";
 
 export async function qaRequest(path, options = {}) {
-  const response = await authenticatedFetch(`${API_URL}/api/qa${path}`, {
+  const response = await authenticatedFetch(`${API_URL}/kiem-thu${path}`, {
     ...options,
     headers: {
       ...(options.body instanceof FormData ? {} : { "Content-Type": "application/json" }),
@@ -21,7 +21,7 @@ export async function qaRequest(path, options = {}) {
 }
 
 export async function downloadQaFile(path, filename) {
-  const response = await authenticatedFetch(`${API_URL}/api/qa${path}`);
+  const response = await authenticatedFetch(`${API_URL}/kiem-thu${path}`);
   if (!response.ok) {
     const body = await response.json().catch(() => null);
     throw new Error(body?.error?.message || "Không thể tải tệp");
@@ -65,69 +65,69 @@ export const testingApi = {
     const params = new URLSearchParams();
     if (query) params.set("q", query);
     if (status !== "all") params.set("status", status);
-    return qaRequest(`/projects?${params.toString()}`);
+    return qaRequest(`/du-an?${params.toString()}`);
   },
   createProject: (payload) =>
-    qaRequest("/projects", { method: "POST", body: JSON.stringify(payload) }),
-  getProject: (id) => qaRequest(`/projects/${id}`),
-  listMembers: (id) => qaRequest(`/projects/${id}/members`),
+    qaRequest("/du-an", { method: "POST", body: JSON.stringify(payload) }),
+  getProject: (id) => qaRequest(`/du-an/${id}`),
+  listMembers: (id) => qaRequest(`/du-an/${id}/thanh-vien`),
   addMember: (id, payload) =>
-    qaRequest(`/projects/${id}/members`, { method: "POST", body: JSON.stringify(payload) }),
+    qaRequest(`/du-an/${id}/thanh-vien`, { method: "POST", body: JSON.stringify(payload) }),
   inviteMember: (id, payload) =>
-    qaRequest(`/projects/${id}/invitations`, {
+    qaRequest(`/du-an/${id}/loi-moi`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   resendMemberInvite: (id, userId) =>
-    qaRequest(`/projects/${id}/members/${userId}/resend-invite`, { method: "POST" }),
+    qaRequest(`/du-an/${id}/thanh-vien/${userId}/gui-lai-loi-moi`, { method: "POST" }),
   cancelMemberInvite: (id, userId) =>
-    qaRequest(`/projects/${id}/members/${userId}/cancel-invite`, { method: "POST" }),
+    qaRequest(`/du-an/${id}/thanh-vien/${userId}/huy-loi-moi`, { method: "POST" }),
   updateMember: (id, userId, payload) =>
-    qaRequest(`/projects/${id}/members/${userId}`, {
+    qaRequest(`/du-an/${id}/thanh-vien/${userId}`, {
       method: "PATCH",
       body: JSON.stringify(payload),
     }),
   removeMember: (id, userId) =>
-    qaRequest(`/projects/${id}/members/${userId}`, { method: "DELETE" }),
+    qaRequest(`/du-an/${id}/thanh-vien/${userId}`, { method: "DELETE" }),
   updateProject: (id, payload) =>
-    qaRequest(`/projects/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
+    qaRequest(`/du-an/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
   archiveProject: (id, payload) =>
-    qaRequest(`/projects/${id}/archive`, { method: "POST", body: JSON.stringify(payload) }),
+    qaRequest(`/du-an/${id}/luu-tru`, { method: "POST", body: JSON.stringify(payload) }),
   restoreProject: (id, payload) =>
-    qaRequest(`/projects/${id}/restore`, { method: "POST", body: JSON.stringify(payload) }),
-  dashboard: (id) => qaRequest(`/projects/${id}/dashboard`),
-  listRequirementPage: (id, query = "") => listPage(`/projects/${id}/requirements`, query),
+    qaRequest(`/du-an/${id}/khoi-phuc`, { method: "POST", body: JSON.stringify(payload) }),
+  dashboard: (id) => qaRequest(`/du-an/${id}/tong-quan`),
+  listRequirementPage: (id, query = "") => listPage(`/du-an/${id}/yeu-cau`, query),
   listRequirements: (id, query = "") =>
-    listPage(`/projects/${id}/requirements`, query).then((result) => result.items),
+    listPage(`/du-an/${id}/yeu-cau`, query).then((result) => result.items),
   createRequirement: (id, payload) =>
-    qaRequest(`/projects/${id}/requirements`, { method: "POST", body: JSON.stringify(payload) }),
+    qaRequest(`/du-an/${id}/yeu-cau`, { method: "POST", body: JSON.stringify(payload) }),
   updateRequirementDraft: (projectId, requirementId, payload) =>
-    qaRequest(`/projects/${projectId}/requirements/${requirementId}`, {
+    qaRequest(`/du-an/${projectId}/yeu-cau/${requirementId}`, {
       method: "PATCH",
       body: JSON.stringify(payload),
     }),
-  getRequirement: (id) => qaRequest(`/requirements/${id}`),
-  listRequirementVersions: (id) => qaRequest(`/requirements/${id}/versions`),
+  getRequirement: (id) => qaRequest(`/yeu-cau/${id}`),
+  listRequirementVersions: (id) => qaRequest(`/yeu-cau/${id}/phien-ban`),
   createRequirementVersion: (id, payload) =>
-    qaRequest(`/requirements/${id}/versions`, { method: "POST", body: JSON.stringify(payload) }),
+    qaRequest(`/yeu-cau/${id}/phien-ban`, { method: "POST", body: JSON.stringify(payload) }),
   baselineRequirement: (id, revision) =>
-    qaRequest(`/requirement-versions/${id}/baseline`, {
+    qaRequest(`/phien-ban-yeu-cau/${id}/chot-chuan`, {
       method: "POST",
       body: JSON.stringify({ expected_revision: revision }),
     }),
-  lintRequirement: (id) => qaRequest(`/requirement-versions/${id}/ai/lint`, { method: "POST" }),
+  lintRequirement: (id) => qaRequest(`/phien-ban-yeu-cau/${id}/ai/kiem-tra`, { method: "POST" }),
   compareRequirement: (id, fromId, toId) =>
-    qaRequest(`/requirements/${id}/compare`, {
+    qaRequest(`/yeu-cau/${id}/so-sanh`, {
       method: "POST",
       body: JSON.stringify({ from_version_id: fromId, to_version_id: toId }),
     }),
   createRequirementImport: (id, payload) =>
-    qaRequest(`/projects/${id}/requirement-imports`, {
+    qaRequest(`/du-an/${id}/nhap-yeu-cau`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   confirmRequirementImport: (id, selectedIndexes, expectedRevision) =>
-    qaRequest(`/requirement-imports/${id}/confirm`, {
+    qaRequest(`/nhap-yeu-cau/${id}/xac-nhan`, {
       method: "POST",
       body: JSON.stringify({
         selected_indexes: selectedIndexes,
@@ -135,7 +135,7 @@ export const testingApi = {
       }),
     }),
   updateRequirementImport: (id, payload) =>
-    qaRequest(`/requirement-imports/${id}`, {
+    qaRequest(`/nhap-yeu-cau/${id}`, {
       method: "PATCH",
       body: JSON.stringify(payload),
     }),
@@ -143,10 +143,10 @@ export const testingApi = {
     const body = new FormData();
     body.append("format", format);
     body.append("file", file);
-    return qaRequest(`/projects/${id}/requirement-imports/upload`, { method: "POST", body });
+    return qaRequest(`/du-an/${id}/nhap-yeu-cau/tai-len`, { method: "POST", body });
   },
   createRequirementDocument: (id, payload) =>
-    qaRequest(`/projects/${id}/requirement-documents`, {
+    qaRequest(`/du-an/${id}/tai-lieu-yeu-cau`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
@@ -154,406 +154,411 @@ export const testingApi = {
     const body = new FormData();
     body.append("format", format);
     body.append("file", file);
-    return qaRequest(`/projects/${id}/requirement-documents/upload`, { method: "POST", body });
+    return qaRequest(`/du-an/${id}/tai-lieu-yeu-cau/tai-len`, { method: "POST", body });
   },
   listRequirementDocuments: (id, query = "") =>
-    qaRequest(`/projects/${id}/requirement-documents${query ? `?${query}` : ""}`),
+    qaRequest(`/du-an/${id}/tai-lieu-yeu-cau${query ? `?${query}` : ""}`),
   createKnowledgeSource: (id, payload) =>
-    qaRequest(`/projects/${id}/knowledge-sources`, {
+    qaRequest(`/du-an/${id}/nguon-tri-thuc`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   listKnowledgeSources: (id, includeArchived = false) =>
-    qaRequest(`/projects/${id}/knowledge-sources?include_archived=${includeArchived}`),
+    qaRequest(`/du-an/${id}/nguon-tri-thuc?include_archived=${includeArchived}`),
   archiveKnowledgeSource: (id, payload) =>
-    qaRequest(`/knowledge-sources/${id}/archive`, {
+    qaRequest(`/nguon-tri-thuc/${id}/luu-tru`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   registerAttachment: (id, payload) =>
-    qaRequest(`/projects/${id}/attachments`, {
+    qaRequest(`/du-an/${id}/tep-dinh-kem`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   listAttachments: (id, query = "") =>
-    qaRequest(`/projects/${id}/attachments${query ? `?${query}` : ""}`),
-  deleteAttachment: (id) => qaRequest(`/attachments/${id}`, { method: "DELETE" }),
+    qaRequest(`/du-an/${id}/tep-dinh-kem${query ? `?${query}` : ""}`),
+  deleteAttachment: (id) => qaRequest(`/tep-dinh-kem/${id}`, { method: "DELETE" }),
   moderateAttachment: (id, payload) =>
-    qaRequest(`/attachments/${id}/moderate`, {
+    qaRequest(`/tep-dinh-kem/${id}/kiem-duyet`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  getRequirementDocument: (id) => qaRequest(`/requirement-documents/${id}`),
+  getRequirementDocument: (id) => qaRequest(`/tai-lieu-yeu-cau/${id}`),
   updateRequirementDocument: (id, payload) =>
-    qaRequest(`/requirement-documents/${id}`, {
+    qaRequest(`/tai-lieu-yeu-cau/${id}`, {
       method: "PATCH",
       body: JSON.stringify(payload),
     }),
   reindexRequirementDocument: (id) =>
-    qaRequest(`/requirement-documents/${id}/reindex`, { method: "POST" }),
+    qaRequest(`/tai-lieu-yeu-cau/${id}/lap-chi-muc-lai`, { method: "POST" }),
   reindexKnowledgeSource: (id) =>
-    qaRequest(`/requirement-documents/${id}/reindex`, { method: "POST" }),
+    qaRequest(`/tai-lieu-yeu-cau/${id}/lap-chi-muc-lai`, { method: "POST" }),
   downloadRequirementDocument: (id, filename) =>
-    downloadQaFile(`/requirement-documents/${id}/download`, filename),
+    downloadQaFile(`/tai-lieu-yeu-cau/${id}/tai-xuong`, filename),
   archiveRequirementDocument: (id, payload) =>
-    qaRequest(`/requirement-documents/${id}/archive`, {
+    qaRequest(`/tai-lieu-yeu-cau/${id}/luu-tru`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   restoreRequirementDocument: (id, payload) =>
-    qaRequest(`/requirement-documents/${id}/restore`, {
+    qaRequest(`/tai-lieu-yeu-cau/${id}/khoi-phuc`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   retryRequirementDocumentParse: (id, revision) =>
-    qaRequest(`/requirement-documents/${id}/retry-parse`, {
+    qaRequest(`/tai-lieu-yeu-cau/${id}/thu-lai-phan-tich`, {
       method: "POST",
       body: JSON.stringify({ expected_revision: revision }),
     }),
   extractRequirementDocument: (id, idempotencyKey = crypto.randomUUID()) =>
-    qaRequest(`/requirement-documents/${id}/extract`, {
+    qaRequest(`/tai-lieu-yeu-cau/${id}/trich-xuat`, {
       method: "POST",
       body: JSON.stringify({ idempotency_key: idempotencyKey }),
     }),
   submitRequirementReview: (projectId, requirementId, payload) =>
-    qaRequest(`/projects/${projectId}/requirements/${requirementId}/submit-review`, {
+    qaRequest(`/du-an/${projectId}/yeu-cau/${requirementId}/gui-ra-soat`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   requestRequirementChanges: (projectId, requirementId, payload) =>
-    qaRequest(`/projects/${projectId}/requirements/${requirementId}/request-changes`, {
+    qaRequest(`/du-an/${projectId}/yeu-cau/${requirementId}/yeu-cau-chinh-sua`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   approveRequirement: (projectId, requirementId, payload) =>
-    qaRequest(`/projects/${projectId}/requirements/${requirementId}/approve`, {
+    qaRequest(`/du-an/${projectId}/yeu-cau/${requirementId}/phe-duyet`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   obsoleteRequirement: (id, payload) =>
-    qaRequest(`/requirements/${id}/obsolete`, {
+    qaRequest(`/yeu-cau/${id}/ngung-hieu-luc`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   restoreRequirement: (id, payload) =>
-    qaRequest(`/requirements/${id}/restore`, {
+    qaRequest(`/yeu-cau/${id}/khoi-phuc`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   submitTestCaseReview: (projectId, draftId, payload) =>
-    qaRequest(`/projects/${projectId}/test-cases/${draftId}/submit-review`, {
+    qaRequest(`/du-an/${projectId}/ca-kiem-thu/${draftId}/gui-ra-soat`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   requestTestCaseChanges: (projectId, draftId, payload) =>
-    qaRequest(`/projects/${projectId}/test-cases/${draftId}/request-changes`, {
+    qaRequest(`/du-an/${projectId}/ca-kiem-thu/${draftId}/yeu-cau-chinh-sua`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   listScenarios: (id, query = "") => {
     const value = listQuery(query);
-    return qaRequest(`/projects/${id}/test-scenarios${value ? `?${value}` : ""}`);
+    return qaRequest(`/du-an/${id}/kich-ban-kiem-thu${value ? `?${value}` : ""}`);
   },
   listDataSets: (id, query = "") =>
-    qaRequest(`/projects/${id}/data-sets${query ? `?q=${encodeURIComponent(query)}` : ""}`),
+    qaRequest(`/du-an/${id}/bo-du-lieu${query ? `?q=${encodeURIComponent(query)}` : ""}`),
   createDataSet: (id, payload) =>
-    qaRequest(`/projects/${id}/data-sets`, {
+    qaRequest(`/du-an/${id}/bo-du-lieu`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  listDataSetVersions: (id) => qaRequest(`/data-sets/${id}/versions`),
+  listDataSetVersions: (id) => qaRequest(`/bo-du-lieu/${id}/phien-ban`),
   createDataSetVersion: (id, payload) =>
-    qaRequest(`/data-sets/${id}/versions`, {
+    qaRequest(`/bo-du-lieu/${id}/phien-ban`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   createScenario: (id, payload) =>
-    qaRequest(`/projects/${id}/test-scenarios`, { method: "POST", body: JSON.stringify(payload) }),
+    qaRequest(`/du-an/${id}/kich-ban-kiem-thu`, { method: "POST", body: JSON.stringify(payload) }),
   updateScenario: (id, payload) =>
-    qaRequest(`/test-scenarios/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
-  cloneScenario: (id) => qaRequest(`/test-scenarios/${id}/clone`, { method: "POST" }),
+    qaRequest(`/kich-ban-kiem-thu/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  cloneScenario: (id) => qaRequest(`/kich-ban-kiem-thu/${id}/nhan-ban`, { method: "POST" }),
   archiveScenario: (id, payload) =>
-    qaRequest(`/test-scenarios/${id}/archive`, {
+    qaRequest(`/kich-ban-kiem-thu/${id}/luu-tru`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   generateScenarios: (versionId, payload) =>
-    qaRequest(`/requirement-versions/${versionId}/ai/generate-scenarios`, {
+    qaRequest(`/phien-ban-yeu-cau/${versionId}/ai/sinh-kich-ban`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  listTestDrafts: (id) => qaRequest(`/projects/${id}/test-case-drafts`),
+  listTestDrafts: (id) => qaRequest(`/du-an/${id}/ban-nhap-ca-kiem-thu`),
   createTestDraft: (id, payload) =>
-    qaRequest(`/projects/${id}/test-case-drafts`, {
+    qaRequest(`/du-an/${id}/ban-nhap-ca-kiem-thu`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  getTestDraft: (id) => qaRequest(`/test-case-drafts/${id}`),
+  getTestDraft: (id) => qaRequest(`/ban-nhap-ca-kiem-thu/${id}`),
   updateTestDraft: (id, payload) =>
-    qaRequest(`/test-case-drafts/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
-  lintTestDraft: (id) => qaRequest(`/test-case-drafts/${id}/lint`, { method: "POST" }),
+    qaRequest(`/ban-nhap-ca-kiem-thu/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  lintTestDraft: (id) => qaRequest(`/ban-nhap-ca-kiem-thu/${id}/kiem-tra`, { method: "POST" }),
   freezeTestDraft: (id, revision, reason) =>
-    qaRequest(`/test-case-drafts/${id}/freeze`, {
+    qaRequest(`/ban-nhap-ca-kiem-thu/${id}/dong-bang`, {
       method: "POST",
       body: JSON.stringify({ expected_revision: revision, change_reason: reason }),
     }),
-  listTestCasePage: (id, query = "") => listPage(`/projects/${id}/test-cases`, query),
+  listTestCasePage: (id, query = "") => listPage(`/du-an/${id}/ca-kiem-thu`, query),
   listTestCases: (id, query = "") =>
-    listPage(`/projects/${id}/test-cases`, query).then((result) => result.items),
-  listTestVersions: (id) => qaRequest(`/test-cases/${id}/versions`),
+    listPage(`/du-an/${id}/ca-kiem-thu`, query).then((result) => result.items),
+  listTestVersions: (id) => qaRequest(`/ca-kiem-thu/${id}/phien-ban`),
   cloneTestCase: (id, payload) =>
-    qaRequest(`/test-cases/${id}/clone`, {
+    qaRequest(`/ca-kiem-thu/${id}/nhan-ban`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   obsoleteTestCase: (id, payload) =>
-    qaRequest(`/test-cases/${id}/obsolete`, {
+    qaRequest(`/ca-kiem-thu/${id}/ngung-hieu-luc`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   restoreTestCase: (id, payload) =>
-    qaRequest(`/test-cases/${id}/restore`, {
+    qaRequest(`/ca-kiem-thu/${id}/khoi-phuc`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   generateTestCases: (versionId, payload) =>
-    qaRequest(`/requirement-versions/${versionId}/ai/generate-test-cases`, {
+    qaRequest(`/phien-ban-yeu-cau/${versionId}/ai/sinh-ca-kiem-thu`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   generateProjectTestCases: (projectId, payload) =>
-    qaRequest(`/projects/${projectId}/test-cases/generate`, {
+    qaRequest(`/du-an/${projectId}/ca-kiem-thu/sinh`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  findDuplicates: (id) => qaRequest(`/projects/${id}/test-cases/duplicates`),
+  findDuplicates: (id) => qaRequest(`/du-an/${id}/ca-kiem-thu/trung-lap`),
   uploadTestImport: (id, file) => {
     const body = new FormData();
     const format = file.name.toLowerCase().endsWith(".xlsx") ? "xlsx" : "csv";
     body.append("format", format);
     body.append("file", file);
-    return qaRequest(`/projects/${id}/test-case-imports/upload`, { method: "POST", body });
+    return qaRequest(`/du-an/${id}/nhap-ca-kiem-thu/tai-len`, { method: "POST", body });
   },
   confirmTestImport: (id, selectedIndexes) =>
-    qaRequest(`/test-case-imports/${id}/confirm`, {
+    qaRequest(`/nhap-ca-kiem-thu/${id}/xac-nhan`, {
       method: "POST",
       body: JSON.stringify({ selected_indexes: selectedIndexes }),
     }),
   exportTestCases: (id, format = "csv") =>
-    downloadQaFile(
-      `/projects/${id}/test-cases/export?format=${format}`,
-      `test-cases-${id}.${format}`,
-    ),
+    downloadQaFile(`/du-an/${id}/ca-kiem-thu/xuat?format=${format}`, `test-cases-${id}.${format}`),
   importApiArtifact: (id, payload) =>
-    qaRequest(`/projects/${id}/api-imports`, { method: "POST", body: JSON.stringify(payload) }),
-  listApiOperations: (id) => qaRequest(`/projects/${id}/api-operations`),
-  generateApiTests: (id) => qaRequest(`/api-operations/${id}/generate-tests`, { method: "POST" }),
-  traceability: (id) => qaRequest(`/projects/${id}/traceability`),
+    qaRequest(`/du-an/${id}/nhap-dac-ta`, { method: "POST", body: JSON.stringify(payload) }),
+  listApiOperations: (id) => qaRequest(`/du-an/${id}/thao-tac-dac-ta`),
+  generateApiTests: (id) => qaRequest(`/thao-tac-dac-ta/${id}/sinh-kiem-thu`, { method: "POST" }),
+  traceability: (id) => qaRequest(`/du-an/${id}/truy-vet`),
   exportTraceability: (id) =>
-    downloadQaFile(`/projects/${id}/traceability/export`, `traceability-${id}.csv`),
+    downloadQaFile(`/du-an/${id}/truy-vet/xuat`, `traceability-${id}.csv`),
   coverage: (id, scope = {}) => {
     const query = listQuery(scope);
-    return qaRequest(`/projects/${id}/coverage${query ? `?${query}` : ""}`);
+    return qaRequest(`/du-an/${id}/do-phu${query ? `?${query}` : ""}`);
   },
-  listCoverageSnapshots: (id) => qaRequest(`/projects/${id}/coverage-snapshots`),
+  listCoverageSnapshots: (id) => qaRequest(`/du-an/${id}/anh-chup-do-phu`),
   createCoverageSnapshot: (id, payload = {}) =>
-    qaRequest(`/projects/${id}/coverage-snapshots`, {
+    qaRequest(`/du-an/${id}/anh-chup-do-phu`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  recoverTrace: (id) => qaRequest(`/projects/${id}/trace-recovery`, { method: "POST" }),
+  recoverTrace: (id) => qaRequest(`/du-an/${id}/khoi-phuc-truy-vet`, { method: "POST" }),
   createTrace: (payload) =>
-    qaRequest("/trace-links", { method: "POST", body: JSON.stringify(payload) }),
-  confirmTrace: (id) => qaRequest(`/trace-links/${id}/confirm`, { method: "POST" }),
-  rejectTrace: (id) => qaRequest(`/trace-links/${id}/reject`, { method: "POST" }),
-  revokeTrace: (id) => qaRequest(`/trace-links/${id}`, { method: "DELETE" }),
+    qaRequest("/lien-ket-truy-vet", { method: "POST", body: JSON.stringify(payload) }),
+  confirmTrace: (id) => qaRequest(`/lien-ket-truy-vet/${id}/xac-nhan`, { method: "POST" }),
+  rejectTrace: (id) => qaRequest(`/lien-ket-truy-vet/${id}/tu-choi`, { method: "POST" }),
+  revokeTrace: (id) => qaRequest(`/lien-ket-truy-vet/${id}`, { method: "DELETE" }),
   listReviewComments: (projectId, query = "") =>
-    qaRequest(`/projects/${projectId}/review-comments${query ? `?${query}` : ""}`),
+    qaRequest(`/du-an/${projectId}/nhan-xet-ra-soat${query ? `?${query}` : ""}`),
   createReviewComment: (projectId, payload) =>
-    qaRequest(`/projects/${projectId}/review-comments`, {
+    qaRequest(`/du-an/${projectId}/nhan-xet-ra-soat`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   resolveReviewComment: (id, reason = "") =>
-    qaRequest(`/review-comments/${id}/resolve`, {
+    qaRequest(`/nhan-xet-ra-soat/${id}/giai-quyet`, {
       method: "POST",
       body: JSON.stringify({ reason }),
     }),
   reopenReviewComment: (id, reason = "") =>
-    qaRequest(`/review-comments/${id}/reopen`, {
+    qaRequest(`/nhan-xet-ra-soat/${id}/mo-lai`, {
       method: "POST",
       body: JSON.stringify({ reason }),
     }),
   listChangeSets: (id, query = "") => {
     const value = listQuery(query);
-    return qaRequest(`/projects/${id}/change-sets${value ? `?${value}` : ""}`);
+    return qaRequest(`/du-an/${id}/bo-thay-doi${value ? `?${value}` : ""}`);
   },
   createChangeSet: (requirementId, payload) =>
-    qaRequest(`/requirements/${requirementId}/change-sets`, {
+    qaRequest(`/yeu-cau/${requirementId}/bo-thay-doi`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  getChangeSet: (id) => qaRequest(`/change-sets/${id}`),
+  getChangeSet: (id) => qaRequest(`/bo-thay-doi/${id}`),
   reviewChangeSet: (id, payload) =>
-    qaRequest(`/change-sets/${id}/review`, {
+    qaRequest(`/bo-thay-doi/${id}/ra-soat`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  analyzeImpact: (id) => qaRequest(`/change-sets/${id}/impact-analysis`, { method: "POST" }),
-  getChangeSetImpact: (id) => qaRequest(`/change-sets/${id}/impact-analysis`),
-  getImpact: (id) => qaRequest(`/impact-analyses/${id}`),
+  analyzeImpact: (id) => qaRequest(`/bo-thay-doi/${id}/phan-tich-anh-huong`, { method: "POST" }),
+  getChangeSetImpact: (id) => qaRequest(`/bo-thay-doi/${id}/phan-tich-anh-huong`),
+  getImpact: (id) => qaRequest(`/phan-tich-anh-huong/${id}`),
   reviewImpact: (id, payload) =>
-    qaRequest(`/impact-analyses/${id}/review`, {
+    qaRequest(`/phan-tich-anh-huong/${id}/ra-soat`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   createProposals: (id) =>
-    qaRequest(`/impact-analyses/${id}/maintenance-proposals`, { method: "POST" }),
+    qaRequest(`/phan-tich-anh-huong/${id}/de-xuat-bao-tri`, { method: "POST" }),
   listProposals: (id, query = { status: "PENDING" }) => {
     const value = listQuery(typeof query === "string" ? { status: query } : query);
-    return qaRequest(`/projects/${id}/maintenance-proposals${value ? `?${value}` : ""}`);
+    return qaRequest(`/du-an/${id}/de-xuat-bao-tri${value ? `?${value}` : ""}`);
   },
   acceptProposal: (id, payload, edited = false) =>
-    qaRequest(`/maintenance-proposals/${id}/${edited ? "accept-with-edit" : "accept"}`, {
+    qaRequest(`/de-xuat-bao-tri/${id}/${edited ? "accept-with-edit" : "accept"}`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   rejectProposal: (id, payload) =>
-    qaRequest(`/maintenance-proposals/${id}/reject`, {
+    qaRequest(`/de-xuat-bao-tri/${id}/tu-choi`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   regenerateProposal: (id, payload) =>
-    qaRequest(`/maintenance-proposals/${id}/regenerate`, {
+    qaRequest(`/de-xuat-bao-tri/${id}/sinh-lai`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   bulkTags: (projectId, payload) =>
-    qaRequest(`/projects/${projectId}/bulk/tags`, {
+    qaRequest(`/du-an/${projectId}/hang-loat/nhan`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   bulkAddToSuite: (projectId, payload) =>
-    qaRequest(`/projects/${projectId}/bulk/test-cases/add-to-suite`, {
+    qaRequest(`/du-an/${projectId}/hang-loat/ca-kiem-thu/them-vao-bo-kiem-thu`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   bulkMarkReviewRequired: (projectId, payload) =>
-    qaRequest(`/projects/${projectId}/bulk/test-cases/mark-review-required`, {
+    qaRequest(`/du-an/${projectId}/hang-loat/ca-kiem-thu/danh-dau-can-ra-soat`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   bulkArchive: (projectId, payload) =>
-    qaRequest(`/projects/${projectId}/bulk/archive`, {
+    qaRequest(`/du-an/${projectId}/hang-loat/luu-tru`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   bulkGenerateProposals: (projectId, payload) =>
-    qaRequest(`/projects/${projectId}/bulk/impact-proposals`, {
+    qaRequest(`/du-an/${projectId}/hang-loat/de-xuat-anh-huong`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   bulkApproveProposals: (projectId, payload) =>
-    qaRequest(`/projects/${projectId}/bulk/approve-proposals`, {
+    qaRequest(`/du-an/${projectId}/hang-loat/phe-duyet-de-xuat`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  regression: (id) => qaRequest(`/change-sets/${id}/regression-recommendation`, { method: "POST" }),
-  getChangeSetRegression: (id) => qaRequest(`/change-sets/${id}/regression-recommendation`),
+  regression: (id) => qaRequest(`/bo-thay-doi/${id}/de-xuat-hoi-quy`, { method: "POST" }),
+  getChangeSetRegression: (id) => qaRequest(`/bo-thay-doi/${id}/de-xuat-hoi-quy`),
   approveRegression: (id, payload) =>
-    qaRequest(`/regression-recommendations/${id}/approve`, {
+    qaRequest(`/de-xuat-hoi-quy/${id}/phe-duyet`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   listPlans: (id, query = "") => {
     const value = listQuery(query);
-    return qaRequest(`/projects/${id}/test-plans${value ? `?${value}` : ""}`);
+    return qaRequest(`/du-an/${id}/ke-hoach-kiem-thu${value ? `?${value}` : ""}`);
   },
   createPlan: (payload) =>
-    qaRequest("/test-plans", { method: "POST", body: JSON.stringify(payload) }),
+    qaRequest("/ke-hoach-kiem-thu", { method: "POST", body: JSON.stringify(payload) }),
   updatePlan: (id, payload) =>
-    qaRequest(`/test-plans/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
+    qaRequest(`/ke-hoach-kiem-thu/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
   submitPlan: (id, payload) =>
-    qaRequest(`/test-plans/${id}/submit-review`, { method: "POST", body: JSON.stringify(payload) }),
+    qaRequest(`/ke-hoach-kiem-thu/${id}/gui-ra-soat`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   approvePlan: (id, payload) =>
-    qaRequest(`/test-plans/${id}/approve`, { method: "POST", body: JSON.stringify(payload) }),
+    qaRequest(`/ke-hoach-kiem-thu/${id}/phe-duyet`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   archivePlan: (id, payload) =>
-    qaRequest(`/test-plans/${id}/archive`, { method: "POST", body: JSON.stringify(payload) }),
-  clonePlan: (id) => qaRequest(`/test-plans/${id}/clone`, { method: "POST" }),
+    qaRequest(`/ke-hoach-kiem-thu/${id}/luu-tru`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  clonePlan: (id) => qaRequest(`/ke-hoach-kiem-thu/${id}/nhan-ban`, { method: "POST" }),
   listSuites: (id, query = "") => {
     const value = listQuery(query);
-    return qaRequest(`/projects/${id}/test-suites${value ? `?${value}` : ""}`);
+    return qaRequest(`/du-an/${id}/bo-kiem-thu${value ? `?${value}` : ""}`);
   },
   createSuite: (payload) =>
-    qaRequest("/test-suites", { method: "POST", body: JSON.stringify(payload) }),
+    qaRequest("/bo-kiem-thu", { method: "POST", body: JSON.stringify(payload) }),
   updateSuite: (id, payload) =>
-    qaRequest(`/test-suites/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
-  cloneSuite: (id) => qaRequest(`/test-suites/${id}/clone`, { method: "POST" }),
+    qaRequest(`/bo-kiem-thu/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  cloneSuite: (id) => qaRequest(`/bo-kiem-thu/${id}/nhan-ban`, { method: "POST" }),
   archiveSuite: (id, payload) =>
-    qaRequest(`/test-suites/${id}/archive`, { method: "POST", body: JSON.stringify(payload) }),
-  listRunPage: (id, query = "") => listPage(`/projects/${id}/test-runs`, query),
+    qaRequest(`/bo-kiem-thu/${id}/luu-tru`, { method: "POST", body: JSON.stringify(payload) }),
+  listRunPage: (id, query = "") => listPage(`/du-an/${id}/lan-chay-kiem-thu`, query),
   listRuns: (id, query = "") =>
-    listPage(`/projects/${id}/test-runs`, query).then((result) => result.items),
+    listPage(`/du-an/${id}/lan-chay-kiem-thu`, query).then((result) => result.items),
   listResults: (id, status = "") =>
     qaRequest(
-      `/projects/${id}/test-results${status ? `?status=${encodeURIComponent(status)}` : ""}`,
+      `/du-an/${id}/ket-qua-kiem-thu${status ? `?status=${encodeURIComponent(status)}` : ""}`,
     ),
   createRun: (payload) =>
-    qaRequest("/test-runs", { method: "POST", body: JSON.stringify(payload) }),
-  getRun: (id) => qaRequest(`/test-runs/${id}`),
-  startRun: (id) => qaRequest(`/test-runs/${id}/start`, { method: "POST" }),
+    qaRequest("/lan-chay-kiem-thu", { method: "POST", body: JSON.stringify(payload) }),
+  getRun: (id) => qaRequest(`/lan-chay-kiem-thu/${id}`),
+  startRun: (id) => qaRequest(`/lan-chay-kiem-thu/${id}/bat-dau`, { method: "POST" }),
   recordResult: (runId, versionId, payload) =>
-    qaRequest(`/test-runs/${runId}/results/${versionId}`, {
+    qaRequest(`/lan-chay-kiem-thu/${runId}/ket-qua/${versionId}`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   updateExecution: (projectId, executionId, payload) =>
-    qaRequest(`/projects/${projectId}/test-executions/${executionId}`, {
+    qaRequest(`/du-an/${projectId}/thuc-thi-kiem-thu/${executionId}`, {
       method: "PATCH",
       body: JSON.stringify(payload),
     }),
-  completeRun: (id) => qaRequest(`/test-runs/${id}/complete`, { method: "POST" }),
+  completeRun: (id) => qaRequest(`/lan-chay-kiem-thu/${id}/hoan-tat`, { method: "POST" }),
   abortRun: (id, reason) =>
-    qaRequest(`/test-runs/${id}/abort`, {
+    qaRequest(`/lan-chay-kiem-thu/${id}/huy`, {
       method: "POST",
       body: JSON.stringify({ reason }),
     }),
-  exportRunReport: (id) => downloadQaFile(`/test-runs/${id}/report`, `test-run-${id}.csv`),
-  listDefectPage: (id, query = "") => listPage(`/projects/${id}/defects`, query),
+  exportRunReport: (id) => downloadQaFile(`/lan-chay-kiem-thu/${id}/bao-cao`, `test-run-${id}.csv`),
+  listDefectPage: (id, query = "") => listPage(`/du-an/${id}/loi`, query),
   listDefects: (id, query = "") =>
-    listPage(`/projects/${id}/defects`, query).then((result) => result.items),
-  findDuplicateDefects: (id) => qaRequest(`/projects/${id}/defects/duplicates`),
-  findDefectTraceCandidates: (id) => qaRequest(`/defects/${id}/trace-candidates`),
-  exportDefects: (id) => downloadQaFile(`/projects/${id}/defects/export`, `defects-${id}.csv`),
+    listPage(`/du-an/${id}/loi`, query).then((result) => result.items),
+  findDuplicateDefects: (id) => qaRequest(`/du-an/${id}/loi/trung-lap`),
+  findDefectTraceCandidates: (id) => qaRequest(`/loi/${id}/ung-vien-truy-vet`),
+  exportDefects: (id) => downloadQaFile(`/du-an/${id}/loi/xuat`, `defects-${id}.csv`),
   createDefect: (id, payload) =>
-    qaRequest(`/projects/${id}/defects`, { method: "POST", body: JSON.stringify(payload) }),
+    qaRequest(`/du-an/${id}/loi`, { method: "POST", body: JSON.stringify(payload) }),
   updateDefect: (id, payload) =>
-    qaRequest(`/defects/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
+    qaRequest(`/loi/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
   transitionDefect: (id, payload) =>
-    qaRequest(`/defects/${id}/transition`, { method: "POST", body: JSON.stringify(payload) }),
+    qaRequest(`/loi/${id}/chuyen-trang-thai`, { method: "POST", body: JSON.stringify(payload) }),
   retestDefect: (projectId, defectId, payload) =>
-    qaRequest(`/projects/${projectId}/defects/${defectId}/retest`, {
+    qaRequest(`/du-an/${projectId}/loi/${defectId}/kiem-thu-lai`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   searchKnowledge: (id, payload) =>
-    qaRequest(`/projects/${id}/knowledge/search`, {
+    qaRequest(`/du-an/${id}/tri-thuc/tim-kiem`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   askProject: (id, payload) =>
-    qaRequest(`/projects/${id}/ai/ask`, {
+    qaRequest(`/du-an/${id}/ai/hoi-dap`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  audit: (id) => qaRequest(`/projects/${id}/audit`),
-  maintenanceAnalytics: (id) => qaRequest(`/projects/${id}/maintenance-analytics`),
-  aiAnalytics: (id) => qaRequest(`/projects/${id}/ai-analytics`),
+  audit: (id) => qaRequest(`/du-an/${id}/nhat-ky`),
+  maintenanceAnalytics: (id) => qaRequest(`/du-an/${id}/phan-tich-bao-tri`),
+  aiAnalytics: (id) => qaRequest(`/du-an/${id}/phan-tich-ai`),
   executionReport: (id, scope = {}) =>
-    qaRequest(`/projects/${id}/reports/execution?${listQuery(scope)}`),
-  defectReport: (id, scope = {}) =>
-    qaRequest(`/projects/${id}/reports/defects?${listQuery(scope)}`),
-  projectActivity: (id) => qaRequest(`/projects/${id}/activity`),
-  operations: (query = "") => qaRequest(`/operations${query ? `?${query}` : ""}`),
-  retryOperationJob: (jobId) => qaRequest(`/operations/jobs/${jobId}/retry`, { method: "POST" }),
+    qaRequest(`/du-an/${id}/bao-cao/thuc-thi?${listQuery(scope)}`),
+  defectReport: (id, scope = {}) => qaRequest(`/du-an/${id}/bao-cao/loi?${listQuery(scope)}`),
+  projectActivity: (id) => qaRequest(`/du-an/${id}/hoat-dong`),
+  operations: (query = "") => qaRequest(`/van-hanh${query ? `?${query}` : ""}`),
+  retryOperationJob: (jobId) => qaRequest(`/van-hanh/tac-vu/${jobId}/thu-lai`, { method: "POST" }),
 };

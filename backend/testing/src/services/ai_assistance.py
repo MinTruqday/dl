@@ -36,7 +36,7 @@ async def request_impact_classification(project_id, change_set, candidates):
     try:
         async with httpx.AsyncClient(timeout=15) as client:
             response = await client.post(
-                f"{settings.AI_URL.rstrip('/')}/suy-luan/noi-bo/qa/ho-tro",
+                f"{settings.AI_URL.rstrip('/')}/suy-luan/noi-bo/kiem-thu/ho-tro",
                 headers={"X-Internal-Token": settings.SECRET_KEY},
                 json=request,
             )

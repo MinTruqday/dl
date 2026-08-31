@@ -22,18 +22,18 @@ def p95(values):
 
 
 with httpx.Client(base_url=BASE_URL, headers=HEADERS, timeout=20) as client:
-    projects = client.get("/api/qa/projects")
+    projects = client.get("/kiem-thu/du-an")
     projects.raise_for_status()
     project_id = projects.json()["data"][0]["_id"]
     list_latencies = []
     search_latencies = []
     for _ in range(30):
         started = time.perf_counter()
-        response = client.get(f"/api/qa/projects/{project_id}/requirements")
+        response = client.get(f"/kiem-thu/du-an/{project_id}/yeu-cau")
         response.raise_for_status()
         list_latencies.append(time.perf_counter() - started)
         started = time.perf_counter()
-        response = client.post(f"/api/qa/projects/{project_id}/knowledge/search", json={"query": "phone validation", "artifact_types": [], "limit": 20})
+        response = client.post(f"/kiem-thu/du-an/{project_id}/tri-thuc/tim-kiem", json={"query": "phone validation", "artifact_types": [], "limit": 20})
         response.raise_for_status()
         search_latencies.append(time.perf_counter() - started)
     list_p95 = p95(list_latencies)

@@ -66,7 +66,7 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
         self.service_name = service_name
 
     async def dispatch(self, request: Request, call_next):
-        if request.url.path == "/metrics":
+        if request.url.path == "/so-lieu":
             return await call_next(request)
         start = time.perf_counter()
         try:

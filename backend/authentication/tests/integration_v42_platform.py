@@ -50,14 +50,14 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
 
     admin_headers = login(client, admin_email)
     legacy_headers = login(client, legacy_email)
-    assert client.get("/api/admin/users", headers=legacy_headers).status_code == 403
+    assert client.get("/quan-tri/tai-khoan", headers=legacy_headers).status_code == 403
 
-    users = client.get("/api/admin/users", headers=admin_headers)
+    users = client.get("/quan-tri/tai-khoan", headers=admin_headers)
     assert users.status_code == 200, users.text
     assert user_id in {item["_id"] for item in users.json()["data"]}
 
     invited = client.post(
-        "/api/admin/users",
+        "/quan-tri/tai-khoan",
         headers=admin_headers,
         json={
             "email": f"invited-{run_id}@example.com",
@@ -69,19 +69,19 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     assert invited.status_code == 201, invited.text
     assert "password" not in invited.text.lower()
 
-    detail = client.get(f"/api/admin/users/{user_id}", headers=admin_headers)
+    detail = client.get(f"/quan-tri/tai-khoan/{user_id}", headers=admin_headers)
     assert detail.status_code == 200, detail.text
     assert "password_hash" not in detail.text
     assert "refresh_token_hash" not in detail.text
 
     user_headers = login(client, user_email)
-    sessions = client.get(f"/api/admin/users/{user_id}/sessions", headers=admin_headers)
+    sessions = client.get(f"/quan-tri/tai-khoan/{user_id}/phien", headers=admin_headers)
     assert sessions.status_code == 200, sessions.text
     assert "refresh_token_hash" not in sessions.text
     assert sessions.json()["data"]
 
     locked = client.post(
-        f"/api/admin/users/{user_id}/lock",
+        f"/quan-tri/tai-khoan/{user_id}/khoa",
         headers=admin_headers,
         json={"reason": "Kiểm tra khóa tài khoản V4.2"},
     )
@@ -95,7 +95,7 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     )
 
     unlocked = client.post(
-        f"/api/admin/users/{user_id}/unlock",
+        f"/quan-tri/tai-khoan/{user_id}/mo-khoa",
         headers=admin_headers,
         json={"reason": "Kiểm tra mở khóa tài khoản V4.2"},
     )
@@ -103,7 +103,7 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     user_headers = login(client, user_email)
 
     promoted = client.patch(
-        f"/api/admin/users/{user_id}/system-role",
+        f"/quan-tri/tai-khoan/{user_id}/vai-tro-he-thong",
         headers=admin_headers,
         json={"system_role": "ADMIN", "reason": "Kiểm tra cấp quyền quản trị V4.2"},
     )
@@ -112,7 +112,7 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     assert client.get("/xac-thuc/ca-nhan", headers=user_headers).status_code == 401
 
     demoted = client.patch(
-        f"/api/admin/users/{user_id}/system-role",
+        f"/quan-tri/tai-khoan/{user_id}/vai-tro-he-thong",
         headers=admin_headers,
         json={"system_role": "USER", "reason": "Kiểm tra hạ quyền quản trị V4.2"},
     )
@@ -120,18 +120,18 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     assert demoted.json()["data"]["system_role"] == "USER"
 
     memberships = client.get(
-        f"/api/admin/users/{user_id}/memberships", headers=admin_headers
+        f"/quan-tri/tai-khoan/{user_id}/vai-tro-du-an", headers=admin_headers
     )
     assert memberships.status_code == 200, memberships.text
     assert "plain_text_projection" not in memberships.text
 
-    audit = client.get(f"/api/admin/users/{user_id}/audit", headers=admin_headers)
+    audit = client.get(f"/quan-tri/tai-khoan/{user_id}/nhat-ky", headers=admin_headers)
     assert audit.status_code == 200, audit.text
     actions = {event["action"] for event in audit.json()["data"]}
     assert "ADMIN_USER_LOCKED" in actions
     assert "ADMIN_SYSTEM_ROLE_UPDATED" in actions
 
-    health = client.get("/api/admin/health", headers=admin_headers)
+    health = client.get("/quan-tri/suc-khoe", headers=admin_headers)
     assert health.status_code == 200, health.text
     assert {item["service"] for item in health.json()["data"]["services"]} >= {
         "authentication",
@@ -141,46 +141,46 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         "mongodb",
     }
 
-    jobs = client.get("/api/admin/operations/jobs", headers=admin_headers)
+    jobs = client.get("/quan-tri/van-hanh/tac-vu", headers=admin_headers)
     assert jobs.status_code == 200, jobs.text
 
     auth_policy = client.patch(
-        "/api/admin/security/auth-policy",
+        "/quan-tri/bao-mat/chinh-sach-xac-thuc",
         headers=admin_headers,
         json={"values": {"registration_mode": "AUTHENTICATED", "refresh_ttl_days": 7}, "reason": "Kiểm tra chính sách bảo mật V4.2"},
     )
     assert auth_policy.status_code == 200, auth_policy.text
     assert auth_policy.json()["data"]["registration_mode"] == "AUTHENTICATED"
     integrations = client.patch(
-        "/api/admin/integrations",
+        "/quan-tri/tich-hop",
         headers=admin_headers,
         json={"values": {"webhook_enabled": False}, "reason": "Kiểm tra cấu hình tích hợp V4.2"},
     )
     assert integrations.status_code == 200, integrations.text
     storage = client.patch(
-        "/api/admin/storage",
+        "/quan-tri/luu-tru",
         headers=admin_headers,
         json={"values": {"provider": "r2", "secret_token": "must-not-leak"}, "reason": "Kiểm tra cấu hình lưu trữ V4.2"},
     )
     assert storage.status_code == 200, storage.text
     assert storage.json()["data"]["secret_token"] == "Đã cấu hình"
     registered_model = client.post(
-        "/api/admin/ai/models",
+        "/quan-tri/ai/mo-hinh",
         headers=admin_headers,
         json={"provider_id": "ollama", "model": f"integration-{run_id}", "version": "1", "capabilities": ["chat"], "reason": "Kiểm tra đăng ký mô hình AI V4.2"},
     )
     assert registered_model.status_code == 201, registered_model.text
     model_id = registered_model.json()["data"]["_id"]
-    assert client.get("/api/admin/ai/models", headers=admin_headers).status_code == 200
+    assert client.get("/quan-tri/ai/mo-hinh", headers=admin_headers).status_code == 200
     defaults = client.patch(
-        "/api/admin/ai/defaults",
+        "/quan-tri/ai/mac-dinh",
         headers=admin_headers,
         json={"values": {"chat_model_id": model_id, "structured_model_id": model_id, "fallback_model_ids": []}, "reason": "Kiểm tra mô hình mặc định V4.3"},
     )
     assert defaults.status_code == 200, defaults.text
-    assert client.get("/api/admin/ai/versions", headers=admin_headers).status_code == 200
+    assert client.get("/quan-tri/ai/phien-ban", headers=admin_headers).status_code == 200
     updated_model = client.patch(
-        f"/api/admin/ai/models/{model_id}",
+        f"/quan-tri/ai/mo-hinh/{model_id}",
         headers=admin_headers,
         json={"values": {"enabled": False}, "reason": "Kiểm tra vô hiệu hóa mô hình AI V4.2"},
     )
@@ -188,7 +188,7 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     assert updated_model.json()["data"]["enabled"] is False
 
     policy = client.patch(
-        "/api/admin/platform/project-policy",
+        "/quan-tri/nen-tang/chinh-sach-du-an",
         headers=admin_headers,
         json={
             "project_creation_policy": "ADMIN_ONLY",
@@ -205,42 +205,42 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
             "settings": {},
         }
         denied_project = testing.post(
-            "/api/qa/projects",
+            "/kiem-thu/du-an",
             headers=legacy_headers,
             json=project_payload,
         )
         assert denied_project.status_code == 403, denied_project.text
         admin_project = testing.post(
-            "/api/qa/projects",
+            "/kiem-thu/du-an",
             headers=admin_headers,
             json=project_payload,
         )
         assert admin_project.status_code == 201, admin_project.text
         project_id = admin_project.json()["data"]["_id"]
-        metadata = client.get(f"/api/admin/projects/{project_id}", headers=admin_headers)
+        metadata = client.get(f"/quan-tri/du-an/{project_id}", headers=admin_headers)
         assert metadata.status_code == 200, metadata.text
         quota = client.patch(
-            f"/api/admin/projects/{project_id}/quota",
+            f"/quan-tri/du-an/{project_id}/han-muc",
             headers=admin_headers,
             json={"storage_bytes": 1048576, "ai_requests_per_day": 100, "concurrent_jobs": 2, "reason": "Kiểm tra hạn mức V4.3"},
         )
         assert quota.status_code == 200, quota.text
         suspended = client.patch(
-            f"/api/admin/projects/{project_id}/status",
+            f"/quan-tri/du-an/{project_id}/trang-thai",
             headers=admin_headers,
             json={"status": "SUSPENDED", "reason": "Kiểm tra tạm dừng quản trị V4.3"},
         )
         assert suspended.status_code == 200, suspended.text
-        assert testing.get(f"/api/qa/projects/{project_id}", headers=admin_headers).status_code == 423
+        assert testing.get(f"/kiem-thu/du-an/{project_id}", headers=admin_headers).status_code == 423
         reactivated = client.patch(
-            f"/api/admin/projects/{project_id}/status",
+            f"/quan-tri/du-an/{project_id}/trang-thai",
             headers=admin_headers,
             json={"status": "ACTIVE", "reason": "Khôi phục dự án sau kiểm thử V4.3"},
         )
         assert reactivated.status_code == 200, reactivated.text
-        assert testing.get(f"/api/qa/projects/{project_id}", headers=admin_headers).status_code == 200
+        assert testing.get(f"/kiem-thu/du-an/{project_id}", headers=admin_headers).status_code == 200
     restored_policy = client.patch(
-        "/api/admin/platform/project-policy",
+        "/quan-tri/nen-tang/chinh-sach-du-an",
         headers=admin_headers,
         json={
             "project_creation_policy": "AUTHENTICATED",
@@ -249,15 +249,15 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     )
     assert restored_policy.status_code == 200, restored_policy.text
 
-    assert client.post("/api/admin/storage/test", headers=admin_headers).status_code == 200
-    assert client.get("/api/admin/integrations/health", headers=admin_headers).status_code == 200
-    assert client.get("/api/admin/operations/metrics", headers=admin_headers).status_code == 200
-    audit_export = client.get("/api/admin/audit/export", headers=admin_headers)
+    assert client.post("/quan-tri/luu-tru/kiem-tra", headers=admin_headers).status_code == 200
+    assert client.get("/quan-tri/tich-hop/suc-khoe", headers=admin_headers).status_code == 200
+    assert client.get("/quan-tri/van-hanh/so-lieu", headers=admin_headers).status_code == 200
+    audit_export = client.get("/quan-tri/nhat-ky/xuat", headers=admin_headers)
     assert audit_export.status_code == 200, audit_export.text
     assert "text/csv" in audit_export.headers["content-type"]
 
     self_demote = client.patch(
-        f"/api/admin/users/{admin_id}/system-role",
+        f"/quan-tri/tai-khoan/{admin_id}/vai-tro-he-thong",
         headers=admin_headers,
         json={"system_role": "USER", "reason": "Kiểm tra bảo vệ quản trị viên hiện tại"},
     )

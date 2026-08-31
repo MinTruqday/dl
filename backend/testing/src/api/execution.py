@@ -31,11 +31,11 @@ from src.domain.schemas import (
 from src.services.project_knowledge import index_artifact
 
 
-router = APIRouter(prefix="/api/qa", tags=["QA Execution"])
+router = APIRouter(prefix="/kiem-thu", tags=["QA Execution"])
 
 
-@router.post("/test-plans", status_code=201)
-@router.post("/projects/{project_id}/test-plans", status_code=201)
+@router.post("/ke-hoach-kiem-thu", status_code=201)
+@router.post("/du-an/{project_id}/ke-hoach-kiem-thu", status_code=201)
 async def create_test_plan(payload: TestPlanCreate, project_id: str | None = None, user: CurrentUser = Depends(get_current_user)):
     if project_id and project_id != payload.project_id:
         raise HTTPException(status_code=422, detail={"code": "PROJECT_SCOPE_MISMATCH"})
@@ -51,7 +51,7 @@ async def create_test_plan(payload: TestPlanCreate, project_id: str | None = Non
     return envelope(plan, revision=1)
 
 
-@router.get("/projects/{project_id}/test-plans")
+@router.get("/du-an/{project_id}/ke-hoach-kiem-thu")
 async def list_test_plans(
     project_id: str,
     q: str = Query(default="", max_length=300),
@@ -76,12 +76,12 @@ async def list_test_plans(
     return envelope(await database.value.test_plans.find(query).sort(sort_field, direction).to_list(500))
 
 
-@router.get("/test-plans/{plan_id}")
+@router.get("/ke-hoach-kiem-thu/{plan_id}")
 async def get_test_plan(plan_id: str, user: CurrentUser = Depends(get_current_user)):
     return envelope(await get_project_entity("test_plans", plan_id, user, "testplan.read"))
 
 
-@router.patch("/test-plans/{plan_id}")
+@router.patch("/ke-hoach-kiem-thu/{plan_id}")
 async def update_test_plan(plan_id: str, payload: TestPlanPatch, user: CurrentUser = Depends(get_current_user)):
     plan = await get_project_entity("test_plans", plan_id, user, "testplan.update")
     if plan.get("status") != "DRAFT":
@@ -95,7 +95,7 @@ async def update_test_plan(plan_id: str, payload: TestPlanPatch, user: CurrentUs
     return envelope(updated, revision=updated["revision"])
 
 
-@router.post("/test-plans/{plan_id}/submit-review")
+@router.post("/ke-hoach-kiem-thu/{plan_id}/gui-ra-soat")
 async def submit_test_plan(plan_id: str, payload: ReviewTransitionInput, user: CurrentUser = Depends(get_current_user)):
     plan = await get_project_entity("test_plans", plan_id, user, "testplan.submit_review")
     if plan.get("status") != "DRAFT":
@@ -105,7 +105,7 @@ async def submit_test_plan(plan_id: str, payload: ReviewTransitionInput, user: C
     return envelope(updated, revision=updated["revision"])
 
 
-@router.post("/test-plans/{plan_id}/approve")
+@router.post("/ke-hoach-kiem-thu/{plan_id}/phe-duyet")
 async def approve_test_plan(plan_id: str, payload: ReviewTransitionInput, user: CurrentUser = Depends(get_current_user)):
     plan = await get_project_entity("test_plans", plan_id, user, "testplan.approve")
     if plan.get("status") not in {"DRAFT", "IN_REVIEW"}:
@@ -115,7 +115,7 @@ async def approve_test_plan(plan_id: str, payload: ReviewTransitionInput, user: 
     return envelope(updated, revision=updated["revision"])
 
 
-@router.post("/test-plans/{plan_id}/archive")
+@router.post("/ke-hoach-kiem-thu/{plan_id}/luu-tru")
 async def archive_test_plan(plan_id: str, payload: ProjectArchiveInput, user: CurrentUser = Depends(get_current_user)):
     plan = await get_project_entity("test_plans", plan_id, user, "testplan.archive")
     updated = await optimistic_patch("test_plans", plan_id, plan["project_id"], payload.expected_revision, {"status": "ARCHIVED", "archive_reason": payload.reason, "archived_by": user.id, "archived_at": now()})
@@ -123,7 +123,7 @@ async def archive_test_plan(plan_id: str, payload: ProjectArchiveInput, user: Cu
     return envelope(updated, revision=updated["revision"])
 
 
-@router.post("/test-plans/{plan_id}/clone", status_code=201)
+@router.post("/ke-hoach-kiem-thu/{plan_id}/nhan-ban", status_code=201)
 async def clone_test_plan(plan_id: str, user: CurrentUser = Depends(get_current_user)):
     plan = await get_project_entity("test_plans", plan_id, user, "testplan.create")
     timestamp = now()
@@ -135,8 +135,8 @@ async def clone_test_plan(plan_id: str, user: CurrentUser = Depends(get_current_
     return envelope(cloned, revision=1)
 
 
-@router.post("/test-suites", status_code=201)
-@router.post("/projects/{project_id}/test-suites", status_code=201)
+@router.post("/bo-kiem-thu", status_code=201)
+@router.post("/du-an/{project_id}/bo-kiem-thu", status_code=201)
 async def create_test_suite(payload: TestSuiteCreate, project_id: str | None = None, user: CurrentUser = Depends(get_current_user)):
     if project_id and project_id != payload.project_id:
         raise HTTPException(status_code=422, detail={"code": "PROJECT_SCOPE_MISMATCH"})
@@ -149,7 +149,7 @@ async def create_test_suite(payload: TestSuiteCreate, project_id: str | None = N
     return envelope(suite, revision=1)
 
 
-@router.get("/projects/{project_id}/test-suites")
+@router.get("/du-an/{project_id}/bo-kiem-thu")
 async def list_test_suites(
     project_id: str,
     q: str = Query(default="", max_length=300),
@@ -171,12 +171,12 @@ async def list_test_suites(
     return envelope(await database.value.test_suites.find(query).sort(sort_field, direction).to_list(500))
 
 
-@router.get("/test-suites/{suite_id}")
+@router.get("/bo-kiem-thu/{suite_id}")
 async def get_test_suite(suite_id: str, user: CurrentUser = Depends(get_current_user)):
     return envelope(await get_project_entity("test_suites", suite_id, user, "testsuite.read"))
 
 
-@router.patch("/test-suites/{suite_id}")
+@router.patch("/bo-kiem-thu/{suite_id}")
 async def update_test_suite(suite_id: str, payload: TestSuitePatch, user: CurrentUser = Depends(get_current_user)):
     suite = await get_project_entity("test_suites", suite_id, user, "testsuite.update")
     if suite.get("status", "ACTIVE") == "ARCHIVED":
@@ -188,7 +188,7 @@ async def update_test_suite(suite_id: str, payload: TestSuitePatch, user: Curren
     return envelope(updated, revision=updated["revision"])
 
 
-@router.post("/test-suites/{suite_id}/clone", status_code=201)
+@router.post("/bo-kiem-thu/{suite_id}/nhan-ban", status_code=201)
 async def clone_test_suite(suite_id: str, user: CurrentUser = Depends(get_current_user)):
     suite = await get_project_entity("test_suites", suite_id, user, "testsuite.clone")
     timestamp = now()
@@ -200,7 +200,7 @@ async def clone_test_suite(suite_id: str, user: CurrentUser = Depends(get_curren
     return envelope(cloned, revision=1)
 
 
-@router.post("/test-suites/{suite_id}/archive")
+@router.post("/bo-kiem-thu/{suite_id}/luu-tru")
 async def archive_test_suite(suite_id: str, payload: ProjectArchiveInput, user: CurrentUser = Depends(get_current_user)):
     suite = await get_project_entity("test_suites", suite_id, user, "testsuite.archive")
     updated = await optimistic_patch("test_suites", suite_id, suite["project_id"], payload.expected_revision, {"status": "ARCHIVED", "archive_reason": payload.reason, "archived_by": user.id, "archived_at": now()})
@@ -208,8 +208,8 @@ async def archive_test_suite(suite_id: str, payload: ProjectArchiveInput, user: 
     return envelope(updated, revision=updated["revision"])
 
 
-@router.post("/test-runs", status_code=201)
-@router.post("/projects/{project_id}/test-runs", status_code=201)
+@router.post("/lan-chay-kiem-thu", status_code=201)
+@router.post("/du-an/{project_id}/lan-chay-kiem-thu", status_code=201)
 async def create_test_run(payload: TestRunCreate, project_id: str | None = None, user: CurrentUser = Depends(get_current_user)):
     if project_id is not None and payload.project_id != project_id:
         raise HTTPException(status_code=422, detail={"code": "PROJECT_MISMATCH"})
@@ -261,7 +261,7 @@ async def create_test_run(payload: TestRunCreate, project_id: str | None = None,
     return envelope(run, revision=1)
 
 
-@router.patch("/projects/{project_id}/test-runs/{run_id}")
+@router.patch("/du-an/{project_id}/lan-chay-kiem-thu/{run_id}")
 async def update_test_run(
     project_id: str,
     run_id: str,
@@ -289,7 +289,7 @@ async def update_test_run(
     return envelope(updated, revision=updated["revision"])
 
 
-@router.post("/projects/{project_id}/test-runs/{run_id}/assign")
+@router.post("/du-an/{project_id}/lan-chay-kiem-thu/{run_id}/phan-cong")
 async def assign_test_run(
     project_id: str,
     run_id: str,
@@ -336,7 +336,7 @@ async def assign_test_run(
     return envelope(updated, revision=updated["revision"])
 
 
-@router.get("/projects/{project_id}/test-runs")
+@router.get("/du-an/{project_id}/lan-chay-kiem-thu")
 async def list_test_runs(
     project_id: str,
     name: str = Query(default="", max_length=300),
@@ -375,7 +375,7 @@ async def list_test_runs(
     return envelope(page_payload(items, page, page_size, total))
 
 
-@router.get("/projects/{project_id}/test-results")
+@router.get("/du-an/{project_id}/ket-qua-kiem-thu")
 async def list_test_results(
     project_id: str,
     status: str = Query(default="", max_length=100),
@@ -392,7 +392,7 @@ async def list_test_results(
     return envelope(await database.value.test_results.find(query).sort("updated_at", -1).to_list(5000))
 
 
-@router.get("/test-runs/{run_id}")
+@router.get("/lan-chay-kiem-thu/{run_id}")
 async def get_test_run(run_id: str, user: CurrentUser = Depends(get_current_user)):
     run = await get_project_entity("test_runs", run_id, user, "testrun.read")
     versions = await database.value.test_case_versions.find({"_id": {"$in": run["test_case_version_ids"]}}).to_list(10000)
@@ -401,7 +401,7 @@ async def get_test_run(run_id: str, user: CurrentUser = Depends(get_current_user
     return envelope({**run, "test_case_versions": versions, "results": results, "defects": defects})
 
 
-@router.get("/test-runs/{run_id}/report")
+@router.get("/lan-chay-kiem-thu/{run_id}/bao-cao")
 async def export_test_run_report(run_id: str, user: CurrentUser = Depends(get_current_user)):
     run = await get_project_entity("test_runs", run_id, user, "report.export")
     versions = await database.value.test_case_versions.find({"_id": {"$in": run["test_case_version_ids"]}}).to_list(10000)
@@ -417,7 +417,7 @@ async def export_test_run_report(run_id: str, user: CurrentUser = Depends(get_cu
     return StreamingResponse(iter([stream.getvalue()]), media_type="text/csv", headers={"Content-Disposition": f'attachment; filename="test-run-{run_id}.csv"'})
 
 
-@router.post("/test-runs/{run_id}/start")
+@router.post("/lan-chay-kiem-thu/{run_id}/bat-dau")
 async def start_test_run(run_id: str, user: CurrentUser = Depends(get_current_user)):
     run = await get_project_entity("test_runs", run_id, user, "testrun.start")
     if run["status"] == "IN_PROGRESS":
@@ -429,7 +429,7 @@ async def start_test_run(run_id: str, user: CurrentUser = Depends(get_current_us
     return envelope(await database.value.test_runs.find_one({"_id": run_id}))
 
 
-@router.post("/test-runs/{run_id}/results/{test_case_version_id}")
+@router.post("/lan-chay-kiem-thu/{run_id}/ket-qua/{test_case_version_id}")
 async def record_test_result(
     run_id: str,
     test_case_version_id: str,
@@ -474,7 +474,7 @@ async def record_test_result(
     return envelope(result)
 
 
-@router.patch("/projects/{project_id}/test-executions/{execution_id}")
+@router.patch("/du-an/{project_id}/thuc-thi-kiem-thu/{execution_id}")
 async def patch_test_execution(
     project_id: str,
     execution_id: str,
@@ -544,7 +544,7 @@ async def patch_test_execution(
     return envelope({"execution": updated, "update": event}, revision=updated["revision"])
 
 
-@router.post("/test-results/{result_id}/corrections")
+@router.post("/ket-qua-kiem-thu/{result_id}/hieu-chinh")
 async def correct_test_result(result_id: str, payload: TestResultCorrectionInput, user: CurrentUser = Depends(get_current_user)):
     result = await get_project_entity(
         "test_results", result_id, user, "testresult.correct"
@@ -563,7 +563,7 @@ async def correct_test_result(result_id: str, payload: TestResultCorrectionInput
     return envelope({"result": await database.value.test_results.find_one({"_id": result_id}), "correction": event})
 
 
-@router.post("/test-runs/{run_id}/complete")
+@router.post("/lan-chay-kiem-thu/{run_id}/hoan-tat")
 async def complete_test_run(run_id: str, user: CurrentUser = Depends(get_current_user)):
     run = await get_project_entity("test_runs", run_id, user, "testrun.complete")
     if run["status"] == "COMPLETED":
@@ -586,7 +586,7 @@ async def complete_test_run(run_id: str, user: CurrentUser = Depends(get_current
     return envelope(await database.value.test_runs.find_one({"_id": run_id}))
 
 
-@router.post("/test-runs/{run_id}/abort")
+@router.post("/lan-chay-kiem-thu/{run_id}/huy")
 async def abort_test_run(run_id: str, reason: str = Body(embed=True, min_length=2, max_length=2000), user: CurrentUser = Depends(get_current_user)):
     run = await get_project_entity("test_runs", run_id, user, "testrun.abort")
     if run["status"] not in {"DRAFT", "READY", "IN_PROGRESS"}:
@@ -596,7 +596,7 @@ async def abort_test_run(run_id: str, reason: str = Body(embed=True, min_length=
     return envelope(await database.value.test_runs.find_one({"_id": run_id}))
 
 
-@router.post("/projects/{project_id}/defects", status_code=201)
+@router.post("/du-an/{project_id}/loi", status_code=201)
 async def create_defect(project_id: str, payload: DefectCreate, user: CurrentUser = Depends(get_current_user)):
     if project_id != payload.project_id:
         raise HTTPException(status_code=422, detail={"code": "PROJECT_MISMATCH"})
@@ -613,7 +613,7 @@ async def create_defect(project_id: str, payload: DefectCreate, user: CurrentUse
     return envelope(defect, revision=1)
 
 
-@router.get("/projects/{project_id}/defects")
+@router.get("/du-an/{project_id}/loi")
 async def list_defects(
     project_id: str,
     q: str = Query(default="", max_length=300),
@@ -686,7 +686,7 @@ async def list_defects(
     return envelope(page_payload(items, page, page_size, total))
 
 
-@router.get("/projects/{project_id}/defects/duplicates")
+@router.get("/du-an/{project_id}/loi/trung-lap")
 async def find_duplicate_defects(
     project_id: str,
     user: CurrentUser = Depends(get_current_user),
@@ -719,7 +719,7 @@ async def find_duplicate_defects(
     return envelope(pairs[:100])
 
 
-@router.get("/defects/{defect_id}/trace-candidates")
+@router.get("/loi/{defect_id}/ung-vien-truy-vet")
 async def find_defect_trace_candidates(
     defect_id: str,
     user: CurrentUser = Depends(get_current_user),
@@ -780,8 +780,8 @@ async def find_defect_trace_candidates(
     return envelope(candidates[:50])
 
 
-@router.patch("/defects/{defect_id}")
-@router.patch("/projects/{project_id}/defects/{defect_id}")
+@router.patch("/loi/{defect_id}")
+@router.patch("/du-an/{project_id}/loi/{defect_id}")
 async def update_defect(defect_id: str, payload: dict = Body(), project_id: str | None = None, user: CurrentUser = Depends(get_current_user)):
     defect = await get_project_entity(
         "defects",
@@ -827,7 +827,7 @@ async def update_defect(defect_id: str, payload: dict = Body(), project_id: str 
     return envelope(updated, revision=updated["revision"])
 
 
-@router.post("/defects/{defect_id}/transition")
+@router.post("/loi/{defect_id}/chuyen-trang-thai")
 async def transition_defect(defect_id: str, payload: DefectTransition, user: CurrentUser = Depends(get_current_user)):
     if payload.to_status in {"CONFIRMED", "REJECTED", "DUPLICATE"}:
         permission = "defect.triage"
@@ -863,7 +863,7 @@ async def transition_defect(defect_id: str, payload: DefectTransition, user: Cur
     return envelope(updated, revision=updated["revision"])
 
 
-@router.post("/projects/{project_id}/defects/{defect_id}/retest")
+@router.post("/du-an/{project_id}/loi/{defect_id}/kiem-thu-lai")
 async def retest_defect(
     project_id: str,
     defect_id: str,
@@ -976,7 +976,7 @@ async def retest_defect(
     return envelope({"defect": updated, "retest": event}, revision=updated["revision"])
 
 
-@router.get("/projects/{project_id}/defects/export")
+@router.get("/du-an/{project_id}/loi/xuat")
 async def export_defects(project_id: str, user: CurrentUser = Depends(get_current_user)):
     await get_project(project_id, user, "report.export")
     defects = await database.value.defects.find({"project_id": project_id}).to_list(10000)

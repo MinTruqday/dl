@@ -43,8 +43,8 @@ def integration_operations():
             ):
                 method = node.func.attr.upper()
                 request_path = string_value(node.args[0])
-            if method and request_path and "/api/qa/" in request_path:
-                normalized = request_path[request_path.index("/api/qa/") :].split("?", 1)[0]
+            if method and request_path and "/kiem-thu/" in request_path:
+                normalized = request_path[request_path.index("/kiem-thu/") :].split("?", 1)[0]
                 operations.append((method.upper(), normalized, path.name))
     return operations
 
@@ -63,7 +63,7 @@ def test_every_runtime_operation_has_functional_integration_evidence():
     runtime = [
         (method, route.path)
         for route in app.routes
-        if route.path.startswith("/api/qa/")
+        if route.path.startswith("/kiem-thu/")
         for method in route.methods or set()
         if method not in {"HEAD", "OPTIONS"}
     ]

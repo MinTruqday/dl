@@ -16,7 +16,7 @@ from src.domain.schemas import (
 )
 
 
-router = APIRouter(prefix="/api/qa", tags=["QA Bulk Operations"])
+router = APIRouter(prefix="/kiem-thu", tags=["QA Bulk Operations"])
 
 
 async def finish_operation(project_id, operation_type, succeeded, failed, user):
@@ -48,7 +48,7 @@ async def finish_operation(project_id, operation_type, succeeded, failed, user):
     )
 
 
-@router.post("/projects/{project_id}/bulk/tags")
+@router.post("/du-an/{project_id}/hang-loat/nhan")
 async def bulk_tags(
     project_id: str,
     payload: BulkTagInput,
@@ -84,7 +84,7 @@ async def bulk_tags(
     return await finish_operation(project_id, "BULK_TAGS", succeeded, failed, user)
 
 
-@router.post("/projects/{project_id}/bulk/test-cases/add-to-suite")
+@router.post("/du-an/{project_id}/hang-loat/ca-kiem-thu/them-vao-bo-kiem-thu")
 async def bulk_add_to_suite(
     project_id: str,
     payload: BulkSuiteInput,
@@ -123,7 +123,7 @@ async def bulk_add_to_suite(
     return await finish_operation(project_id, "BULK_ADD_TO_SUITE", succeeded, failed, user)
 
 
-@router.post("/projects/{project_id}/bulk/test-cases/mark-review-required")
+@router.post("/du-an/{project_id}/hang-loat/ca-kiem-thu/danh-dau-can-ra-soat")
 async def bulk_mark_review_required(
     project_id: str,
     payload: BulkReviewRequiredInput,
@@ -151,7 +151,7 @@ async def bulk_mark_review_required(
     return await finish_operation(project_id, "BULK_MARK_REVIEW_REQUIRED", succeeded, failed, user)
 
 
-@router.post("/projects/{project_id}/bulk/archive")
+@router.post("/du-an/{project_id}/hang-loat/luu-tru")
 async def bulk_archive(
     project_id: str,
     payload: BulkArchiveInput,
@@ -200,7 +200,7 @@ async def bulk_archive(
     return await finish_operation(project_id, "BULK_ARCHIVE", succeeded, failed, user)
 
 
-@router.post("/projects/{project_id}/bulk/impact-proposals")
+@router.post("/du-an/{project_id}/hang-loat/de-xuat-anh-huong")
 async def bulk_generate_proposals(
     project_id: str,
     payload: BulkProposalGenerateInput,
@@ -225,7 +225,7 @@ async def bulk_generate_proposals(
     return await finish_operation(project_id, "BULK_GENERATE_PROPOSALS", succeeded, failed, user)
 
 
-@router.post("/projects/{project_id}/bulk/approve-proposals")
+@router.post("/du-an/{project_id}/hang-loat/phe-duyet-de-xuat")
 async def bulk_approve_proposals(
     project_id: str,
     payload: BulkProposalApproveInput,

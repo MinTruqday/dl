@@ -4,6 +4,7 @@ set -eu
 PROJECT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$PROJECT_DIR"
 
+"$PROJECT_DIR/scripts/audit_route_language.sh"
 docker compose up -d
 docker compose exec -T testing python -m pytest -q
 docker compose exec -T testing sh -lc 'for f in tests/integration_contracts.py tests/integration_api_artifacts.py tests/integration_test_planning_v42.py tests/integration_project_restore.py tests/integration_vertical.py tests/integration_v43_catalog.py tests/integration_worker.py; do python "$f" || exit $?; done'

@@ -15,7 +15,7 @@ async def google_login():
     )
 
 
-@router.get("/callback", response_model=APIResponse[Any])
+@router.get("/chuyen-huong", response_model=APIResponse[Any])
 async def google_callback(code: str, state: str, request: Request, response: Response):
     client_ip = request.client.host if request.client else "unknown"
     token_data = await GoogleService.handle_google_callback(code, state, client_ip)

@@ -40,7 +40,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Veriq Cloud", version=settings.VERSION, lifespan=lifespan)
 app.add_middleware(PrometheusMiddleware, service_name="cloud")
-app.add_route("/metrics", metrics_endpoint("cloud"))
+app.add_route("/so-lieu", metrics_endpoint("cloud"))
 
 from fastapi.responses import JSONResponse
 
@@ -68,12 +68,12 @@ app.include_router(file_request)
 app.include_router(internal)
 
 
-@app.get("/health", include_in_schema=False)
+@app.get("/suc-khoe", include_in_schema=False)
 async def health_check():
     return {"status": "healthy", "service": "cloud"}
 
 
-@app.get("/ready", include_in_schema=False)
+@app.get("/san-sang", include_in_schema=False)
 async def readiness_check():
     if database.mongodb is None:
         return JSONResponse(status_code=503, content={"status": "not_ready"})

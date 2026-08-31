@@ -7,10 +7,10 @@ from src.core.database import database
 from src.domain.schemas import AttachmentCreate, AttachmentModeration
 
 
-router = APIRouter(prefix="/api/qa", tags=["QA Attachments"])
+router = APIRouter(prefix="/kiem-thu", tags=["QA Attachments"])
 
 
-@router.post("/projects/{project_id}/attachments", status_code=201)
+@router.post("/du-an/{project_id}/tep-dinh-kem", status_code=201)
 async def register_attachment(
     project_id: str,
     payload: AttachmentCreate,
@@ -57,7 +57,7 @@ async def register_attachment(
     return envelope(attachment, revision=1)
 
 
-@router.get("/projects/{project_id}/attachments")
+@router.get("/du-an/{project_id}/tep-dinh-kem")
 async def list_attachments(
     project_id: str,
     artifact_type: str | None = Query(default=None, max_length=80),
@@ -73,7 +73,7 @@ async def list_attachments(
     return envelope(await database.value.attachments.find(query).sort("created_at", -1).to_list(5000))
 
 
-@router.delete("/attachments/{attachment_id}")
+@router.delete("/tep-dinh-kem/{attachment_id}")
 async def delete_attachment(
     attachment_id: str,
     user: CurrentUser = Depends(get_current_user),
@@ -98,7 +98,7 @@ async def delete_attachment(
     return envelope({"deleted": True, "attachment_id": attachment_id}, revision=updated["revision"])
 
 
-@router.post("/attachments/{attachment_id}/moderate")
+@router.post("/tep-dinh-kem/{attachment_id}/kiem-duyet")
 async def moderate_attachment(
     attachment_id: str,
     payload: AttachmentModeration,

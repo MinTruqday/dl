@@ -50,14 +50,14 @@ retrieval_ready = False
 
 app = FastAPI(title="Veriq AI", version=settings.VERSION)
 app.add_middleware(PrometheusMiddleware, service_name="ai")
-app.add_route("/metrics", metrics_endpoint("ai"))
+app.add_route("/so-lieu", metrics_endpoint("ai"))
 
 from fastapi.responses import JSONResponse
 
 
 @app.middleware("http")
 async def internal_token_middleware(request: Request, call_next):
-    if "/internal/" in request.url.path:
+    if "/noi-bo/" in request.url.path:
         token = request.headers.get("X-Internal-Token")
         if (
             not token
@@ -88,20 +88,20 @@ app.include_router(feedback)
 app.include_router(history)
 app.include_router(events)
 app.include_router(interrupt_router)
-app.include_router(retrieval_router, prefix="/knowledge")
-app.include_router(embedding_router, prefix="/knowledge/embedding")
-app.include_router(indexing_router, prefix="/knowledge")
-app.include_router(cache_router, prefix="/knowledge/cache")
-app.include_router(projects_router, prefix="/knowledge")
+app.include_router(retrieval_router, prefix="/tri-thuc")
+app.include_router(embedding_router, prefix="/tri-thuc/bieu-dien-vector")
+app.include_router(indexing_router, prefix="/tri-thuc")
+app.include_router(cache_router, prefix="/tri-thuc/bo-nho-dem")
+app.include_router(projects_router, prefix="/tri-thuc")
 
 
-@app.get("/health")
+@app.get("/suc-khoe")
 async def health_check():
     """Report process liveness for container health monitoring"""
     return {"status": "healthy"}
 
 
-@app.get("/ready")
+@app.get("/san-sang")
 async def readiness_check():
     """Report readiness of every infrastructure dependency required for requests"""
     checks = {}
@@ -155,7 +155,7 @@ async def readiness_check():
     )
 
 
-@app.get("/evaluate/metrics")
+@app.get("/danh-gia/so-lieu")
 async def harness_metrics():
     """Expose agent harness telemetry in Prometheus text format"""
     from fastapi.responses import PlainTextResponse
@@ -165,7 +165,7 @@ async def harness_metrics():
     )
 
 
-@app.get("/evaluate/status", dependencies=[Depends(require_role([Role.ADMIN]))])
+@app.get("/danh-gia/trang-thai", dependencies=[Depends(require_role([Role.ADMIN]))])
 async def harness_status():
     """Return orchestration circuit and evaluation status for administrators"""
     return {

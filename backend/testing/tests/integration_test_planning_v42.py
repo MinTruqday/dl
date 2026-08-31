@@ -19,7 +19,7 @@ lead = {
 with httpx.Client(base_url=base_url, timeout=30) as client:
     stamp = int(time.time() * 1000)
     created = client.post(
-        "/api/qa/projects",
+        "/kiem-thu/du-an",
         headers=lead,
         json={
             "key": f"PLN{stamp}",
@@ -33,7 +33,7 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     project_id = created.json()["data"]["_id"]
 
     scenario = client.post(
-        f"/api/qa/projects/{project_id}/test-scenarios",
+        f"/kiem-thu/du-an/{project_id}/kich-ban-kiem-thu",
         headers=lead,
         json={
             "title": "Đăng nhập thành công",
@@ -45,13 +45,13 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     scenario_value = scenario.json()["data"]
     scenario_id = scenario_value["_id"]
     scenario_clone = client.post(
-        f"/api/qa/test-scenarios/{scenario_id}/clone",
+        f"/kiem-thu/kich-ban-kiem-thu/{scenario_id}/nhan-ban",
         headers=lead,
     )
     assert scenario_clone.status_code == 201, scenario_clone.text
     assert scenario_clone.json()["data"]["_id"] != scenario_id
     scenario_archive = client.post(
-        f"/api/qa/test-scenarios/{scenario_id}/archive",
+        f"/kiem-thu/kich-ban-kiem-thu/{scenario_id}/luu-tru",
         headers=lead,
         json={"expected_revision": 1, "reason": "Thay thế bằng kịch bản mới"},
     )
@@ -59,7 +59,7 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     assert scenario_archive.json()["data"]["status"] == "archived"
 
     plan = client.post(
-        f"/api/qa/projects/{project_id}/test-plans",
+        f"/kiem-thu/du-an/{project_id}/ke-hoach-kiem-thu",
         headers=lead,
         json={
             "project_id": project_id,
@@ -73,7 +73,7 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     plan_value = plan.json()["data"]
     plan_id = plan_value["_id"]
     updated = client.patch(
-        f"/api/qa/test-plans/{plan_id}",
+        f"/kiem-thu/ke-hoach-kiem-thu/{plan_id}",
         headers=lead,
         json={
             "expected_revision": 1,
@@ -84,20 +84,20 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     )
     assert updated.status_code == 200, updated.text
     submitted = client.post(
-        f"/api/qa/test-plans/{plan_id}/submit-review",
+        f"/kiem-thu/ke-hoach-kiem-thu/{plan_id}/gui-ra-soat",
         headers=lead,
         json={"expected_revision": 2, "review_note": "Sẵn sàng rà soát"},
     )
     assert submitted.status_code == 200, submitted.text
     approved = client.post(
-        f"/api/qa/test-plans/{plan_id}/approve",
+        f"/kiem-thu/ke-hoach-kiem-thu/{plan_id}/phe-duyet",
         headers=lead,
         json={"expected_revision": 3, "review_note": "Đã phê duyệt phạm vi"},
     )
     assert approved.status_code == 200, approved.text
     assert approved.json()["data"]["status"] == "APPROVED"
     archived = client.post(
-        f"/api/qa/test-plans/{plan_id}/archive",
+        f"/kiem-thu/ke-hoach-kiem-thu/{plan_id}/luu-tru",
         headers=lead,
         json={"expected_revision": 4, "reason": "Kết thúc bản phát hành"},
     )
@@ -105,7 +105,7 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     assert archived.json()["data"]["status"] == "ARCHIVED"
 
     suite = client.post(
-        f"/api/qa/projects/{project_id}/test-suites",
+        f"/kiem-thu/du-an/{project_id}/bo-kiem-thu",
         headers=lead,
         json={
             "project_id": project_id,
@@ -119,17 +119,17 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     suite_id = suite_value["_id"]
     assert suite_value["status"] == "ACTIVE"
     suite_update = client.patch(
-        f"/api/qa/test-suites/{suite_id}",
+        f"/kiem-thu/bo-kiem-thu/{suite_id}",
         headers=lead,
         json={"expected_revision": 1, "name": "Bộ kiểm thử smoke chuẩn"},
     )
     assert suite_update.status_code == 200, suite_update.text
-    cloned = client.post(f"/api/qa/test-suites/{suite_id}/clone", headers=lead)
+    cloned = client.post(f"/kiem-thu/bo-kiem-thu/{suite_id}/nhan-ban", headers=lead)
     assert cloned.status_code == 201, cloned.text
     assert cloned.json()["data"]["_id"] != suite_id
     assert cloned.json()["data"]["status"] == "ACTIVE"
     suite_archive = client.post(
-        f"/api/qa/test-suites/{suite_id}/archive",
+        f"/kiem-thu/bo-kiem-thu/{suite_id}/luu-tru",
         headers=lead,
         json={"expected_revision": 2, "reason": "Thay bằng bộ kiểm thử mới"},
     )

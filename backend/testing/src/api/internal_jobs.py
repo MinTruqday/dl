@@ -14,7 +14,7 @@ from src.domain.schemas import GenerateInput, RequirementCompareInput
 from src.services.project_knowledge import index_artifact
 
 
-router = APIRouter(prefix="/api/qa/internal/jobs", tags=["QA Internal Jobs"])
+router = APIRouter(prefix="/kiem-thu/noi-bo/tac-vu", tags=["QA Internal Jobs"])
 
 
 @router.post("/{event}")

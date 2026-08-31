@@ -26,10 +26,10 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
             try:
                 response = await call_next(request)
             except Exception:
-                if path.endswith("/impact-analysis"):
+                if path.endswith("/phan-tich-anh-huong"):
                     IMPACT_FAILED.inc()
                 raise
-        if path.endswith("/impact-analysis"):
+        if path.endswith("/phan-tich-anh-huong"):
             IMPACT_LATENCY.observe(time.perf_counter() - started_at)
             if response.status_code >= 400:
                 IMPACT_FAILED.inc()

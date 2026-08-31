@@ -124,7 +124,7 @@ async def upload_asset(
     )
 
 
-@router.post("/presigned-url", response_model=APIResponse[Any])
+@router.post("/duong-dan-ky-truoc", response_model=APIResponse[Any])
 async def get_presigned_url_for_upload(
     req: PresignedUrlRequest,
     current_user: CurrentUser = Depends(require_role([Role.READER, Role.AUTHOR, Role.ADMIN])),

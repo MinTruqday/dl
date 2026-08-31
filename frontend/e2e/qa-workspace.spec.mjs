@@ -13,7 +13,7 @@ const doc = (text) => ({
 });
 
 async function qa(request, token, method, path, data, expected = 200) {
-  const response = await request.fetch(`http://localhost:8000/api/qa${path}`, {
+  const response = await request.fetch(`http://localhost:8000/kiem-thu${path}`, {
     method,
     headers: { Authorization: `Bearer ${token}` },
     data,
@@ -31,7 +31,7 @@ async function createBoundaryTest(request, token, projectId, requirementVersion,
     request,
     token,
     "POST",
-    `/projects/${projectId}/test-case-drafts`,
+    `/du-an/${projectId}/ban-nhap-ca-kiem-thu`,
     {
       test_case_key: key,
       title: `Số điện thoại ${value} chữ số ${accepted ? "được chấp nhận" : "bị từ chối"}`,
@@ -57,7 +57,7 @@ async function createBoundaryTest(request, token, projectId, requirementVersion,
     },
     201,
   );
-  await qa(request, token, "POST", `/projects/${projectId}/test-cases/${draft._id}/submit-review`, {
+  await qa(request, token, "POST", `/du-an/${projectId}/ca-kiem-thu/${draft._id}/gui-ra-soat`, {
     expected_revision: 1,
     review_note: "Đã rà soát kịch bản",
   });
@@ -65,7 +65,7 @@ async function createBoundaryTest(request, token, projectId, requirementVersion,
     request,
     token,
     "POST",
-    `/test-case-drafts/${draft._id}/freeze`,
+    `/ban-nhap-ca-kiem-thu/${draft._id}/freeze`,
     { expected_revision: 2, change_reason: "Phê duyệt kịch bản biên" },
     201,
   );
@@ -85,7 +85,7 @@ test("luồng chữ ký Requirement đến Regression bảo toàn phiên bản v
     request,
     token,
     "POST",
-    "/projects",
+    "/du-an",
     {
       key: `SIG${stamp}`,
       name: `Phone Signature ${stamp}`,
@@ -99,7 +99,7 @@ test("luồng chữ ký Requirement đến Regression bảo toàn phiên bản v
     request,
     token,
     "POST",
-    `/projects/${project._id}/requirements`,
+    `/du-an/${project._id}/yeu-cau`,
     {
       requirement_key: "REQ-PROFILE-004",
       title: "Giới hạn số điện thoại",
@@ -117,18 +117,15 @@ test("luồng chữ ký Requirement đến Regression bảo toàn phiên bản v
     },
     201,
   );
-  await qa(
-    request,
-    token,
-    "POST",
-    `/projects/${project._id}/requirements/${requirement._id}/submit-review`,
-    { expected_revision: 1, review_note: "Đã rà soát" },
-  );
+  await qa(request, token, "POST", `/du-an/${project._id}/yeu-cau/${requirement._id}/gui-ra-soat`, {
+    expected_revision: 1,
+    review_note: "Đã rà soát",
+  });
   const v1 = await qa(
     request,
     token,
     "POST",
-    `/requirement-versions/${requirement.current_version._id}/baseline`,
+    `/phien-ban-yeu-cau/${requirement.current_version._id}/chot-chuan`,
     { expected_revision: 2 },
   );
   const tc41 = await createBoundaryTest(request, token, project._id, v1, 9, false);
@@ -138,7 +135,7 @@ test("luồng chữ ký Requirement đến Regression bảo toàn phiên bản v
     request,
     token,
     "POST",
-    "/test-plans",
+    "/ke-hoach-kiem-thu",
     {
       project_id: project._id,
       name: "Phone Plan",
@@ -160,7 +157,7 @@ test("luồng chữ ký Requirement đến Regression bảo toàn phiên bản v
     request,
     token,
     "POST",
-    "/test-runs",
+    "/lan-chay-kiem-thu",
     {
       project_id: project._id,
       name: "Phone Run v1",
@@ -172,9 +169,9 @@ test("luồng chữ ký Requirement đến Regression bảo toàn phiên bản v
     },
     201,
   );
-  await qa(request, token, "POST", `/test-runs/${run._id}/start`);
+  await qa(request, token, "POST", `/lan-chay-kiem-thu/${run._id}/bat-dau`);
   for (const version of [tc41.version, tc42.version, tc43.version])
-    await qa(request, token, "POST", `/test-runs/${run._id}/results/${version._id}`, {
+    await qa(request, token, "POST", `/lan-chay-kiem-thu/${run._id}/ket-qua/${version._id}`, {
       status: "PASS",
       step_results: (version.steps || []).map((step) => ({
         step_id: step.id,
@@ -187,12 +184,12 @@ test("luồng chữ ký Requirement đến Regression bảo toàn phiên bản v
       note: "Manual execution",
       idempotency_key: crypto.randomUUID(),
     });
-  await qa(request, token, "POST", `/test-runs/${run._id}/complete`);
+  await qa(request, token, "POST", `/lan-chay-kiem-thu/${run._id}/hoan-tat`);
   const v2Draft = await qa(
     request,
     token,
     "POST",
-    `/requirements/${requirement._id}/versions`,
+    `/yeu-cau/${requirement._id}/phien-ban`,
     {
       requirement_key: "REQ-PROFILE-004",
       title: "Giới hạn số điện thoại",
@@ -212,24 +209,18 @@ test("luồng chữ ký Requirement đến Regression bảo toàn phiên bản v
     },
     201,
   );
-  await qa(
-    request,
-    token,
-    "POST",
-    `/projects/${project._id}/requirements/${requirement._id}/submit-review`,
-    {
-      expected_revision: 1,
-      review_note: "Đã rà soát thay đổi",
-    },
-  );
-  const v2 = await qa(request, token, "POST", `/requirement-versions/${v2Draft._id}/baseline`, {
+  await qa(request, token, "POST", `/du-an/${project._id}/yeu-cau/${requirement._id}/gui-ra-soat`, {
+    expected_revision: 1,
+    review_note: "Đã rà soát thay đổi",
+  });
+  const v2 = await qa(request, token, "POST", `/phien-ban-yeu-cau/${v2Draft._id}/chot-chuan`, {
     expected_revision: 2,
   });
   const change = await qa(
     request,
     token,
     "POST",
-    `/requirements/${requirement._id}/change-sets`,
+    `/yeu-cau/${requirement._id}/bo-thay-doi`,
     { from_version_id: v1._id, to_version_id: v2._id },
     201,
   );
@@ -238,7 +229,7 @@ test("luồng chữ ký Requirement đến Regression bảo toàn phiên bản v
     before: { values: [10] },
     after: { values: [10, 11] },
   });
-  await qa(request, token, "POST", `/change-sets/${change._id}/review`, {
+  await qa(request, token, "POST", `/bo-thay-doi/${change._id}/ra-soat`, {
     expected_revision: 1,
     changes: change.changes,
     review_note: "Đã xác nhận ChangeFact",
@@ -247,7 +238,7 @@ test("luồng chữ ký Requirement đến Regression bảo toàn phiên bản v
     request,
     token,
     "POST",
-    `/change-sets/${change._id}/impact-analysis`,
+    `/bo-thay-doi/${change._id}/phan-tich-anh-huong`,
     undefined,
     201,
   );
@@ -259,7 +250,7 @@ test("luồng chữ ký Requirement đến Regression bảo toàn phiên bản v
     "TC-PROFILE-042": "STILL_VALID",
     "TC-PROFILE-043": "NEEDS_UPDATE",
   });
-  await qa(request, token, "POST", `/impact-analyses/${impact._id}/review`, {
+  await qa(request, token, "POST", `/phan-tich-anh-huong/${impact._id}/ra-soat`, {
     expected_revision: impact.revision,
     overrides: [],
     review_note: "Đã duyệt phân tích tác động",
@@ -268,7 +259,7 @@ test("luồng chữ ký Requirement đến Regression bảo toàn phiên bản v
     request,
     token,
     "POST",
-    `/impact-analyses/${impact._id}/maintenance-proposals`,
+    `/phan-tich-anh-huong/${impact._id}/de-xuat-bao-tri`,
     undefined,
     201,
   );
@@ -277,7 +268,7 @@ test("luồng chữ ký Requirement đến Regression bảo toàn phiên bản v
     request,
     token,
     "POST",
-    `/maintenance-proposals/${proposal._id}/accept-with-edit`,
+    `/de-xuat-bao-tri/${proposal._id}/chap-nhan-co-chinh-sua`,
     {
       expected_revision: proposal.revision,
       patch: { expected_result_doc: doc("Hệ thống chấp nhận số điện thoại 11 chữ số") },
@@ -286,16 +277,16 @@ test("luồng chữ ký Requirement đến Regression bảo toàn phiên bản v
     201,
   );
   expect(applied.result.version).toBe(2);
-  const history = await qa(request, token, "GET", `/test-cases/${tc43.test_case._id}/versions`);
+  const history = await qa(request, token, "GET", `/ca-kiem-thu/${tc43.test_case._id}/phien-ban`);
   expect(history.map((item) => item.version)).toEqual([2, 1]);
-  const runSnapshot = await qa(request, token, "GET", `/test-runs/${run._id}`);
+  const runSnapshot = await qa(request, token, "GET", `/lan-chay-kiem-thu/${run._id}`);
   expect(runSnapshot.test_case_version_ids).toContain(tc43.version._id);
   expect(runSnapshot.test_case_version_ids).not.toContain(applied.result._id);
   const regression = await qa(
     request,
     token,
     "POST",
-    `/change-sets/${change._id}/regression-recommendation`,
+    `/bo-thay-doi/${change._id}/de-xuat-hoi-quy`,
     undefined,
     201,
   );
@@ -397,7 +388,7 @@ test("các nút thao tác chính tạo thay đổi thật qua backend", async ({
     request,
     token,
     "POST",
-    "/projects",
+    "/du-an",
     {
       key: `BTN${stamp}`,
       name: `Button Integration ${stamp}`,
@@ -416,7 +407,7 @@ test("các nút thao tác chính tạo thay đổi thật qua backend", async ({
     .fill("Yêu cầu được lưu và xuất hiện trong danh sách");
   const requirementResponse = page.waitForResponse(
     (response) =>
-      response.url().endsWith(`/api/qa/projects/${project._id}/requirements`) &&
+      response.url().endsWith(`/kiem-thu/du-an/${project._id}/yeu-cau`) &&
       response.request().method() === "POST",
   );
   await page.getByRole("button", { name: "Lưu yêu cầu" }).click();
@@ -434,7 +425,7 @@ test("các nút thao tác chính tạo thay đổi thật qua backend", async ({
     .fill("Phương pháp giải và cách trình bày của giáo viên");
   const sourceResponse = page.waitForResponse(
     (response) =>
-      response.url().endsWith(`/api/qa/projects/${project._id}/knowledge-sources`) &&
+      response.url().endsWith(`/kiem-thu/du-an/${project._id}/nguon-tri-thuc`) &&
       response.request().method() === "POST",
   );
   await page.getByRole("button", { name: "Thêm nguồn tri thức" }).click();
@@ -443,7 +434,7 @@ test("các nút thao tác chính tạo thay đổi thật qua backend", async ({
   await expect(sourceRow).toBeVisible();
   const reindexResponse = page.waitForResponse(
     (response) =>
-      /\/api\/qa\/requirement-documents\/[^/]+\/reindex$/.test(response.url()) &&
+      /\/kiem-thu\/tai-lieu-yeu-cau\/[^/]+\/lap-chi-muc-lai$/.test(response.url()) &&
       response.request().method() === "POST",
   );
   await sourceRow.getByRole("button", { name: "Lập chỉ mục lại" }).click();
@@ -456,7 +447,8 @@ test("các nút thao tác chính tạo thay đổi thật qua backend", async ({
   await page.getByLabel("Mục tiêu kế hoạch kiểm thử").fill("Xác minh nút lưu kế hoạch");
   const planResponse = page.waitForResponse(
     (response) =>
-      response.url().endsWith("/api/qa/test-plans") && response.request().method() === "POST",
+      response.url().endsWith("/kiem-thu/ke-hoach-kiem-thu") &&
+      response.request().method() === "POST",
   );
   await page.getByRole("button", { name: "Lưu kế hoạch" }).click();
   expect((await planResponse).status()).toBe(201);
@@ -465,7 +457,7 @@ test("các nút thao tác chính tạo thay đổi thật qua backend", async ({
   await page.getByLabel("Tên bộ kiểm thử").fill(suiteName);
   const suiteResponse = page.waitForResponse(
     (response) =>
-      response.url().endsWith("/api/qa/test-suites") && response.request().method() === "POST",
+      response.url().endsWith("/kiem-thu/bo-kiem-thu") && response.request().method() === "POST",
   );
   await page.getByRole("button", { name: "Lưu bộ kiểm thử" }).click();
   expect((await suiteResponse).status()).toBe(201);
@@ -476,12 +468,12 @@ test("các nút thao tác chính tạo thay đổi thật qua backend", async ({
   await page.getByLabel("Tên", { exact: true }).fill(updatedName);
   const settingsResponse = page.waitForResponse(
     (response) =>
-      response.url().endsWith(`/api/qa/projects/${project._id}`) &&
+      response.url().endsWith(`/kiem-thu/du-an/${project._id}`) &&
       response.request().method() === "PATCH",
   );
   await page.getByRole("button", { name: /Lưu với phiên bản/ }).click();
   expect((await settingsResponse).status()).toBe(200);
-  const updatedProject = await qa(request, token, "GET", `/projects/${project._id}`);
+  const updatedProject = await qa(request, token, "GET", `/du-an/${project._id}`);
   expect(updatedProject.name).toBe(updatedName);
 
   await page.goto("/qa/projects");

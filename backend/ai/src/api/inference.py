@@ -25,12 +25,12 @@ async def decompose_cross_document_query(req: CrossDocumentExpansionRequest):
     return {"queries": queries}
 
 
-@router.post("/noi-bo/kiem-tra-doan-knowledge", dependencies=[Depends(verify_internal_token)], description="Kiểm tra prompt injection và độ an toàn của các đoạn knowledge")
+@router.post("/noi-bo/kiem-tra-doan-tri-thuc", dependencies=[Depends(verify_internal_token)], description="Kiểm tra prompt injection và độ an toàn của các đoạn knowledge")
 async def inspect_knowledge_chunks(req: KnowledgeChunkSafetyRequest):
     return {"safe_indices": sorted(await inspect_chunks(req.texts))}
 
 
-@router.post("/noi-bo/tom-tat-tai-lieu-knowledge", dependencies=[Depends(verify_internal_token)], description="Tóm tắt tài liệu knowledge sau khi kiểm tra an toàn")
+@router.post("/noi-bo/tom-tat-tai-lieu-tri-thuc", dependencies=[Depends(verify_internal_token)], description="Tóm tắt tài liệu knowledge sau khi kiểm tra an toàn")
 async def summarize_knowledge_document(req: KnowledgeDocumentSummaryRequest):
     try:
         summary = await summarize_document(req.text)
@@ -39,7 +39,7 @@ async def summarize_knowledge_document(req: KnowledgeDocumentSummaryRequest):
     return {"summary": summary}
 
 
-@router.post("/noi-bo/qa/ho-tro", dependencies=[Depends(verify_internal_token)], response_model=QAAssistanceResult, description="Sinh đề xuất QA có evidence và không tự thực hiện quyết định chỉ dành cho con người")
+@router.post("/noi-bo/kiem-thu/ho-tro", dependencies=[Depends(verify_internal_token)], response_model=QAAssistanceResult, description="Sinh đề xuất QA có evidence và không tự thực hiện quyết định chỉ dành cho con người")
 async def qa_assistance(req: QAAssistanceRequest):
     from src.core.security.guardrails import guardrails_engine
 

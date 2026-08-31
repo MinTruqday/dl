@@ -72,7 +72,7 @@ export default function AppShell({ children, requireAuth }) {
       return;
     }
     let active = true;
-    authenticatedFetch(`${API_URL}/api/qa/projects/${projectId}`)
+    authenticatedFetch(`${API_URL}/kiem-thu/du-an/${projectId}`)
       .then(async (response) => {
         if (!response.ok) return [];
         const body = await response.json();

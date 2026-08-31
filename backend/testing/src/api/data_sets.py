@@ -7,10 +7,10 @@ from src.core.database import database
 from src.domain.schemas import DataSetCreate, DataSetVersionCreate
 
 
-router = APIRouter(prefix="/api/qa", tags=["QA Test Data"])
+router = APIRouter(prefix="/kiem-thu", tags=["QA Test Data"])
 
 
-@router.post("/projects/{project_id}/data-sets", status_code=201)
+@router.post("/du-an/{project_id}/bo-du-lieu", status_code=201)
 async def create_data_set(
     project_id: str,
     payload: DataSetCreate,
@@ -52,7 +52,7 @@ async def create_data_set(
     return envelope({**data_set, "current_version": version}, revision=1)
 
 
-@router.get("/projects/{project_id}/data-sets")
+@router.get("/du-an/{project_id}/bo-du-lieu")
 async def list_data_sets(
     project_id: str,
     q: str = Query(default="", max_length=300),
@@ -74,7 +74,7 @@ async def list_data_sets(
     )
 
 
-@router.get("/data-sets/{data_set_id}")
+@router.get("/bo-du-lieu/{data_set_id}")
 async def get_data_set(
     data_set_id: str,
     user: CurrentUser = Depends(get_current_user),
@@ -90,7 +90,7 @@ async def get_data_set(
     return envelope({**data_set, "current_version": version}, revision=data_set["revision"])
 
 
-@router.get("/data-sets/{data_set_id}/versions")
+@router.get("/bo-du-lieu/{data_set_id}/phien-ban")
 async def list_data_set_versions(
     data_set_id: str,
     user: CurrentUser = Depends(get_current_user),
@@ -102,7 +102,7 @@ async def list_data_set_versions(
     return envelope(versions)
 
 
-@router.post("/data-sets/{data_set_id}/versions", status_code=201)
+@router.post("/bo-du-lieu/{data_set_id}/phien-ban", status_code=201)
 async def create_data_set_version(
     data_set_id: str,
     payload: DataSetVersionCreate,

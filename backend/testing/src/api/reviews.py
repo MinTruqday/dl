@@ -6,10 +6,10 @@ from src.core.database import database
 from src.domain.schemas import ReviewCommentAction, ReviewCommentCreate, ReviewCommentPatch
 
 
-router = APIRouter(prefix="/api/qa", tags=["QA Review"])
+router = APIRouter(prefix="/kiem-thu", tags=["QA Review"])
 
 
-@router.post("/projects/{project_id}/review-comments", status_code=201)
+@router.post("/du-an/{project_id}/nhan-xet-ra-soat", status_code=201)
 async def create_review_comment(
     project_id: str,
     payload: ReviewCommentCreate,
@@ -43,7 +43,7 @@ async def create_review_comment(
     return envelope(comment)
 
 
-@router.get("/projects/{project_id}/review-comments")
+@router.get("/du-an/{project_id}/nhan-xet-ra-soat")
 async def list_review_comments(
     project_id: str,
     artifact_type: str | None = Query(default=None, max_length=80),
@@ -68,7 +68,7 @@ async def authorize_comment_change(comment: dict, user: CurrentUser):
     await get_project(comment["project_id"], user, permission)
 
 
-@router.patch("/review-comments/{comment_id}")
+@router.patch("/nhan-xet-ra-soat/{comment_id}")
 async def update_review_comment(
     comment_id: str,
     payload: ReviewCommentPatch,
@@ -92,7 +92,7 @@ async def update_review_comment(
     return envelope(await database.value.review_comments.find_one({"_id": comment_id}))
 
 
-@router.delete("/review-comments/{comment_id}")
+@router.delete("/nhan-xet-ra-soat/{comment_id}")
 async def delete_review_comment(
     comment_id: str,
     user: CurrentUser = Depends(get_current_user),
@@ -122,7 +122,7 @@ async def delete_review_comment(
     return envelope({"deleted": True, "comment_id": comment_id})
 
 
-@router.post("/review-comments/{comment_id}/resolve")
+@router.post("/nhan-xet-ra-soat/{comment_id}/giai-quyet")
 async def resolve_review_comment(
     comment_id: str,
     payload: ReviewCommentAction,
@@ -143,7 +143,7 @@ async def resolve_review_comment(
     return envelope(updated)
 
 
-@router.post("/review-comments/{comment_id}/reopen")
+@router.post("/nhan-xet-ra-soat/{comment_id}/mo-lai")
 async def reopen_review_comment(
     comment_id: str,
     payload: ReviewCommentAction,

@@ -16,10 +16,10 @@ from src.domain.schemas import (
 )
 
 
-router = APIRouter(prefix="/api/qa", tags=["QA Projects"])
+router = APIRouter(prefix="/kiem-thu", tags=["QA Projects"])
 
 
-@router.post("/projects", status_code=201)
+@router.post("/du-an", status_code=201)
 async def create_project(payload: ProjectCreate, user: CurrentUser = Depends(get_current_user)):
     policy = settings.PROJECT_CREATION_POLICY
     authentication_db = os.environ.get("AUTHENTICATION_DB_NAME")
@@ -79,7 +79,7 @@ async def create_project(payload: ProjectCreate, user: CurrentUser = Depends(get
     )
 
 
-@router.get("/projects")
+@router.get("/du-an")
 async def list_projects(
     q: str = Query(default="", max_length=200),
     status: str = Query(default="active", max_length=30),
@@ -137,7 +137,7 @@ async def list_projects(
     return envelope(items)
 
 
-@router.get("/projects/{project_id}")
+@router.get("/du-an/{project_id}")
 async def project_detail(project_id: str, user: CurrentUser = Depends(get_current_user)):
     project = await get_project(project_id, user, "project.read")
     membership = await database.value.project_members.find_one(
@@ -180,7 +180,7 @@ async def project_detail(project_id: str, user: CurrentUser = Depends(get_curren
     )
 
 
-@router.patch("/projects/{project_id}")
+@router.patch("/du-an/{project_id}")
 async def update_project(
     project_id: str, payload: ProjectPatch, user: CurrentUser = Depends(get_current_user)
 ):
@@ -194,7 +194,7 @@ async def update_project(
     return envelope(updated, revision=updated["revision"])
 
 
-@router.post("/projects/{project_id}/archive")
+@router.post("/du-an/{project_id}/luu-tru")
 async def archive_project(
     project_id: str, payload: ProjectArchiveInput, user: CurrentUser = Depends(get_current_user)
 ):
@@ -217,7 +217,7 @@ async def archive_project(
     return envelope(updated, revision=updated["revision"])
 
 
-@router.post("/projects/{project_id}/restore")
+@router.post("/du-an/{project_id}/khoi-phuc")
 async def restore_project(
     project_id: str, payload: ProjectArchiveInput, user: CurrentUser = Depends(get_current_user)
 ):
@@ -243,7 +243,7 @@ async def restore_project(
     return envelope(updated, revision=updated["revision"])
 
 
-@router.get("/projects/{project_id}/members")
+@router.get("/du-an/{project_id}/thanh-vien")
 async def list_project_members(project_id: str, user: CurrentUser = Depends(get_current_user)):
     await get_project(project_id, user, "project.members.read")
     members = (
@@ -254,7 +254,7 @@ async def list_project_members(project_id: str, user: CurrentUser = Depends(get_
     return envelope(members)
 
 
-@router.post("/projects/{project_id}/members", status_code=201)
+@router.post("/du-an/{project_id}/thanh-vien", status_code=201)
 async def add_project_member(
     project_id: str, payload: ProjectMemberCreate, user: CurrentUser = Depends(get_current_user)
 ):
@@ -286,7 +286,7 @@ async def add_project_member(
     return envelope(membership, revision=1)
 
 
-@router.post("/projects/{project_id}/invitations", status_code=201)
+@router.post("/du-an/{project_id}/loi-moi", status_code=201)
 async def invite_project_member(
     project_id: str, payload: ProjectMemberCreate, user: CurrentUser = Depends(get_current_user)
 ):
@@ -320,7 +320,7 @@ async def invite_project_member(
     return envelope(membership, revision=1)
 
 
-@router.post("/projects/{project_id}/members/{member_user_id}/accept")
+@router.post("/du-an/{project_id}/thanh-vien/{member_user_id}/chap-nhan")
 async def accept_project_invitation(
     project_id: str, member_user_id: str, user: CurrentUser = Depends(get_current_user)
 ):
@@ -342,7 +342,7 @@ async def accept_project_invitation(
     return envelope(membership, revision=membership["membership_revision"])
 
 
-@router.post("/projects/{project_id}/members/{member_user_id}/resend-invite")
+@router.post("/du-an/{project_id}/thanh-vien/{member_user_id}/gui-lai-loi-moi")
 async def resend_project_invitation(
     project_id: str, member_user_id: str, user: CurrentUser = Depends(get_current_user)
 ):
@@ -363,7 +363,7 @@ async def resend_project_invitation(
     return envelope(membership, revision=membership["membership_revision"])
 
 
-@router.post("/projects/{project_id}/members/{member_user_id}/cancel-invite")
+@router.post("/du-an/{project_id}/thanh-vien/{member_user_id}/huy-loi-moi")
 async def cancel_project_invitation(
     project_id: str, member_user_id: str, user: CurrentUser = Depends(get_current_user)
 ):
@@ -389,7 +389,7 @@ async def cancel_project_invitation(
     return envelope(membership, revision=membership["membership_revision"])
 
 
-@router.patch("/projects/{project_id}/members/{member_user_id}")
+@router.patch("/du-an/{project_id}/thanh-vien/{member_user_id}")
 async def update_project_member(
     project_id: str,
     member_user_id: str,
@@ -485,7 +485,7 @@ async def update_project_member(
     return envelope(membership, revision=membership["membership_revision"])
 
 
-@router.delete("/projects/{project_id}/members/{member_user_id}")
+@router.delete("/du-an/{project_id}/thanh-vien/{member_user_id}")
 async def remove_project_member(
     project_id: str, member_user_id: str, user: CurrentUser = Depends(get_current_user)
 ):

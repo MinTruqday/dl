@@ -37,10 +37,10 @@ from src.services.linters import duplicate_score, lint_test_case
 from src.services.project_knowledge import index_artifact
 
 
-router = APIRouter(prefix="/api/qa", tags=["QA Test Design"])
+router = APIRouter(prefix="/kiem-thu", tags=["QA Test Design"])
 
 
-@router.post("/projects/{project_id}/test-scenarios", status_code=201)
+@router.post("/du-an/{project_id}/kich-ban-kiem-thu", status_code=201)
 async def create_scenario(
     project_id: str,
     payload: ScenarioCreate,
@@ -70,7 +70,7 @@ async def create_scenario(
     return envelope(scenario, revision=1)
 
 
-@router.get("/projects/{project_id}/test-scenarios")
+@router.get("/du-an/{project_id}/kich-ban-kiem-thu")
 async def list_scenarios(
     project_id: str,
     q: str = Query(default="", max_length=300),
@@ -98,14 +98,14 @@ async def list_scenarios(
     return envelope(items)
 
 
-@router.get("/test-scenarios/{scenario_id}")
+@router.get("/kich-ban-kiem-thu/{scenario_id}")
 async def get_test_scenario(scenario_id: str, user: CurrentUser = Depends(get_current_user)):
     scenario = await get_project_entity("test_scenarios", scenario_id, user, "testscenario.read")
     cases = await database.value.test_cases.find({"project_id": scenario["project_id"], "scenario_id": scenario_id}).sort("test_case_key", 1).to_list(5000)
     return envelope({**scenario, "test_cases": cases})
 
 
-@router.patch("/test-scenarios/{scenario_id}")
+@router.patch("/kich-ban-kiem-thu/{scenario_id}")
 async def update_scenario(
     scenario_id: str,
     payload: ScenarioPatch,
@@ -126,7 +126,7 @@ async def update_scenario(
     return envelope(updated, revision=updated["revision"])
 
 
-@router.post("/test-scenarios/{scenario_id}/clone", status_code=201)
+@router.post("/kich-ban-kiem-thu/{scenario_id}/nhan-ban", status_code=201)
 async def clone_scenario(
     scenario_id: str,
     user: CurrentUser = Depends(get_current_user),
@@ -159,7 +159,7 @@ async def clone_scenario(
     return envelope(cloned, revision=1)
 
 
-@router.post("/test-scenarios/{scenario_id}/archive")
+@router.post("/kich-ban-kiem-thu/{scenario_id}/luu-tru")
 async def archive_scenario(
     scenario_id: str,
     payload: ProjectArchiveInput,
@@ -190,7 +190,7 @@ async def archive_scenario(
     return envelope(updated, revision=updated["revision"])
 
 
-@router.post("/requirement-versions/{version_id}/ai/generate-scenarios", status_code=201)
+@router.post("/phien-ban-yeu-cau/{version_id}/ai/sinh-kich-ban", status_code=201)
 async def generate_scenarios(
     version_id: str,
     payload: GenerateInput,
@@ -222,8 +222,8 @@ async def generate_scenarios(
     return envelope({"items": created, "evidence": criteria, "model": model_metadata("scenario-generator-v1")})
 
 
-@router.post("/projects/{project_id}/test-cases", status_code=201)
-@router.post("/projects/{project_id}/test-case-drafts", status_code=201)
+@router.post("/du-an/{project_id}/ca-kiem-thu", status_code=201)
+@router.post("/du-an/{project_id}/ban-nhap-ca-kiem-thu", status_code=201)
 async def create_test_case_draft(
     project_id: str,
     payload: CaseDraftCreate,
@@ -253,7 +253,7 @@ async def create_test_case_draft(
     return envelope(draft, revision=1)
 
 
-@router.get("/projects/{project_id}/test-case-drafts")
+@router.get("/du-an/{project_id}/ban-nhap-ca-kiem-thu")
 async def list_test_case_drafts(
     project_id: str,
     limit: int = Query(default=100, ge=1, le=500),
@@ -263,23 +263,23 @@ async def list_test_case_drafts(
     return envelope(await database.value.test_case_drafts.find({"project_id": project_id}).sort("updated_at", -1).to_list(limit))
 
 
-@router.get("/test-case-drafts/{draft_id}")
+@router.get("/ban-nhap-ca-kiem-thu/{draft_id}")
 async def get_test_case_draft(draft_id: str, user: CurrentUser = Depends(get_current_user)):
     return envelope(
         await get_project_entity("test_case_drafts", draft_id, user, "testcase.read")
     )
 
 
-@router.get("/test-cases/{test_case_id}")
+@router.get("/ca-kiem-thu/{test_case_id}")
 async def get_test_case(test_case_id: str, user: CurrentUser = Depends(get_current_user)):
     test_case = await get_project_entity("test_cases", test_case_id, user, "testcase.read")
     version = await database.value.test_case_versions.find_one({"_id": test_case.get("current_version_id"), "project_id": test_case["project_id"]})
     return envelope({**test_case, "current_version": version})
 
 
-@router.patch("/projects/{project_id}/test-cases/{draft_id}")
-@router.patch("/test-cases/{draft_id}/draft")
-@router.patch("/test-case-drafts/{draft_id}")
+@router.patch("/du-an/{project_id}/ca-kiem-thu/{draft_id}")
+@router.patch("/ca-kiem-thu/{draft_id}/ban-nhap")
+@router.patch("/ban-nhap-ca-kiem-thu/{draft_id}")
 async def update_test_case_draft(
     draft_id: str,
     payload: CaseDraftPatch,
@@ -318,9 +318,9 @@ async def update_test_case_draft(
     return envelope(updated, revision=updated["revision"])
 
 
-@router.post("/projects/{project_id}/test-cases/{draft_id}/lint")
-@router.post("/test-cases/{draft_id}/lint")
-@router.post("/test-case-drafts/{draft_id}/lint")
+@router.post("/du-an/{project_id}/ca-kiem-thu/{draft_id}/kiem-tra")
+@router.post("/ca-kiem-thu/{draft_id}/kiem-tra")
+@router.post("/ban-nhap-ca-kiem-thu/{draft_id}/kiem-tra")
 async def lint_test_case_draft(draft_id: str, project_id: str | None = None, user: CurrentUser = Depends(get_current_user)):
     draft = await get_project_entity(
         "test_case_drafts", draft_id, user, "testcase.lint"
@@ -339,7 +339,7 @@ async def lint_test_case_draft(draft_id: str, project_id: str | None = None, use
     return envelope(result)
 
 
-@router.post("/projects/{project_id}/test-cases/{draft_id}/submit-review")
+@router.post("/du-an/{project_id}/ca-kiem-thu/{draft_id}/gui-ra-soat")
 async def submit_test_case_review(
     project_id: str,
     draft_id: str,
@@ -381,7 +381,7 @@ async def submit_test_case_review(
     return envelope(draft, revision=draft["revision"])
 
 
-@router.post("/test-cases/{draft_id}/review")
+@router.post("/ca-kiem-thu/{draft_id}/ra-soat")
 async def submit_test_case_review_alias(
     draft_id: str,
     payload: ReviewTransitionInput,
@@ -391,7 +391,7 @@ async def submit_test_case_review_alias(
     return await submit_test_case_review(draft["project_id"], draft_id, payload, user)
 
 
-@router.post("/projects/{project_id}/test-cases/{draft_id}/request-changes")
+@router.post("/du-an/{project_id}/ca-kiem-thu/{draft_id}/yeu-cau-chinh-sua")
 async def request_test_case_changes(
     project_id: str,
     draft_id: str,
@@ -429,7 +429,7 @@ async def request_test_case_changes(
     return envelope(draft, revision=draft["revision"])
 
 
-@router.post("/test-case-drafts/{draft_id}/freeze", status_code=201)
+@router.post("/ban-nhap-ca-kiem-thu/{draft_id}/dong-bang", status_code=201)
 async def freeze_test_case_draft(
     draft_id: str,
     payload: CaseFreezeInput,
@@ -565,7 +565,7 @@ async def freeze_test_case_draft(
     return envelope({"test_case": {**test_case, "current_version_id": version["_id"]}, "version": version}, status="SUCCESS" if ready else "DEGRADED", degraded_mode=None if ready else "DEGRADED_DERIVED_DATA")
 
 
-@router.post("/projects/{project_id}/test-cases/{draft_id}/approve", status_code=201)
+@router.post("/du-an/{project_id}/ca-kiem-thu/{draft_id}/phe-duyet", status_code=201)
 async def approve_test_case(
     project_id: str,
     draft_id: str,
@@ -580,7 +580,7 @@ async def approve_test_case(
     return await freeze_test_case_draft(draft_id, payload, user)
 
 
-@router.post("/test-cases/{draft_id}/approve", status_code=201)
+@router.post("/ca-kiem-thu/{draft_id}/phe-duyet", status_code=201)
 async def approve_test_case_alias(
     draft_id: str,
     payload: CaseFreezeInput,
@@ -590,7 +590,7 @@ async def approve_test_case_alias(
     return await freeze_test_case_draft(draft_id, payload, user)
 
 
-@router.get("/projects/{project_id}/test-cases")
+@router.get("/du-an/{project_id}/ca-kiem-thu")
 async def list_test_cases(
     project_id: str,
     q: str = Query(default="", max_length=300),
@@ -726,7 +726,7 @@ async def list_test_cases(
     return envelope(page_payload(items[start : start + page_size], page, page_size, total))
 
 
-@router.post("/test-cases/{test_case_id}/clone", status_code=201)
+@router.post("/ca-kiem-thu/{test_case_id}/nhan-ban", status_code=201)
 async def clone_test_case(
     test_case_id: str,
     payload: TestCaseCloneInput,
@@ -796,7 +796,7 @@ async def clone_test_case(
     return result
 
 
-@router.get("/test-cases/{test_case_id}/versions")
+@router.get("/ca-kiem-thu/{test_case_id}/phien-ban")
 async def list_test_case_versions(test_case_id: str, user: CurrentUser = Depends(get_current_user)):
     test_case = await get_project_entity(
         "test_cases", test_case_id, user, "testcase.version.read"
@@ -805,7 +805,7 @@ async def list_test_case_versions(test_case_id: str, user: CurrentUser = Depends
     return envelope(versions)
 
 
-@router.post("/test-cases/{test_case_id}/versions/draft", status_code=201)
+@router.post("/ca-kiem-thu/{test_case_id}/phien-ban/ban-nhap", status_code=201)
 async def create_test_case_version_draft(
     test_case_id: str,
     payload: dict = Body(),
@@ -879,7 +879,7 @@ async def create_test_case_version_draft(
     return result
 
 
-@router.get("/test-cases/{test_case_id}/diff")
+@router.get("/ca-kiem-thu/{test_case_id}/khac-biet")
 async def diff_test_case_versions(
     test_case_id: str,
     from_version: str = Query(alias="from", min_length=1, max_length=200),
@@ -933,7 +933,7 @@ async def diff_test_case_versions(
     )
 
 
-@router.post("/test-cases/{test_case_id}/obsolete")
+@router.post("/ca-kiem-thu/{test_case_id}/ngung-hieu-luc")
 async def mark_test_case_obsolete(
     test_case_id: str,
     payload: dict = Body(),
@@ -956,7 +956,7 @@ async def mark_test_case_obsolete(
     return envelope(await database.value.test_cases.find_one({"_id": test_case_id}))
 
 
-@router.post("/test-cases/{test_case_id}/restore")
+@router.post("/ca-kiem-thu/{test_case_id}/khoi-phuc")
 async def restore_test_case(
     test_case_id: str,
     payload: dict = Body(),
@@ -995,7 +995,7 @@ async def restore_test_case(
     return envelope(await database.value.test_cases.find_one({"_id": test_case_id}))
 
 
-@router.post("/requirement-versions/{version_id}/ai/generate-test-cases", status_code=201)
+@router.post("/phien-ban-yeu-cau/{version_id}/ai/sinh-ca-kiem-thu", status_code=201)
 async def generate_test_cases(
     version_id: str,
     payload: GenerateInput,
@@ -1036,7 +1036,7 @@ async def generate_test_cases(
     return envelope({"items": created, "evidence": criteria, "model": model_metadata("test-generator-v1")})
 
 
-@router.post("/projects/{project_id}/test-cases/generate", status_code=201)
+@router.post("/du-an/{project_id}/ca-kiem-thu/sinh", status_code=201)
 async def generate_project_test_cases(
     project_id: str,
     payload: TestCaseGenerateInput,
@@ -1048,7 +1048,7 @@ async def generate_project_test_cases(
     return await generate_test_cases(payload.requirement_version_id, GenerateInput(categories=payload.categories, count_per_category=payload.count_per_category, instruction=payload.instruction), user)
 
 
-@router.get("/projects/{project_id}/test-cases/duplicates")
+@router.get("/du-an/{project_id}/ca-kiem-thu/trung-lap")
 async def find_duplicates(project_id: str, user: CurrentUser = Depends(get_current_user)):
     await get_project(project_id, user, "testcase.duplicate_check")
     await get_project(project_id, user, "ai.run_duplicate_check")

@@ -6,7 +6,7 @@ import pytest
 def _api_operations():
     operations = []
     for route in app.routes:
-        if not route.path.startswith("/api/"):
+        if not route.path.startswith("/kiem-thu/"):
             continue
         for method in route.methods or set():
             if method in {"HEAD", "OPTIONS"}:
@@ -27,7 +27,7 @@ def test_api_routes_require_identity_or_internal_authentication():
     unprotected = []
     for method, path, _ in _api_operations():
         operation = spec["paths"][path][method.lower()]
-        if not operation.get("security") and path != "/api/qa/internal/jobs/{event}":
+        if not operation.get("security") and path != "/kiem-thu/noi-bo/tac-vu/{event}":
             unprotected.append(f"{method} {path}")
     assert unprotected == []
 
@@ -42,7 +42,7 @@ def test_api_operations_have_unique_ids_and_success_error_responses():
         responses = operation.get("responses", {})
         has_success = any(code.startswith("2") for code in responses)
         has_client_error = any(code in responses for code in ("401", "403", "422"))
-        if not has_success or (path != "/api/qa/internal/jobs/{event}" and not has_client_error):
+        if not has_success or (path != "/kiem-thu/noi-bo/tac-vu/{event}" and not has_client_error):
             incomplete.append(f"{method} {path}")
     assert None not in operation_ids
     assert len(operation_ids) == len(set(operation_ids))
@@ -52,17 +52,17 @@ def test_api_operations_have_unique_ids_and_success_error_responses():
 def test_v43_route_groups_are_registered():
     paths = {path for _, path, _ in _api_operations()}
     required_prefixes = {
-        "/api/qa/projects/{project_id}/requirements",
-        "/api/qa/projects/{project_id}/test-cases",
-        "/api/qa/projects/{project_id}/test-plans",
-        "/api/qa/projects/{project_id}/test-suites",
-        "/api/qa/projects/{project_id}/test-runs",
-        "/api/qa/projects/{project_id}/defects",
-        "/api/qa/projects/{project_id}/traceability",
-        "/api/qa/projects/{project_id}/change-sets",
-        "/api/qa/projects/{project_id}/knowledge/search",
-        "/api/qa/projects/{project_id}/reports/execution",
-        "/api/qa/projects/{project_id}/reports/defects",
+        "/kiem-thu/du-an/{project_id}/yeu-cau",
+        "/kiem-thu/du-an/{project_id}/ca-kiem-thu",
+        "/kiem-thu/du-an/{project_id}/ke-hoach-kiem-thu",
+        "/kiem-thu/du-an/{project_id}/bo-kiem-thu",
+        "/kiem-thu/du-an/{project_id}/lan-chay-kiem-thu",
+        "/kiem-thu/du-an/{project_id}/loi",
+        "/kiem-thu/du-an/{project_id}/truy-vet",
+        "/kiem-thu/du-an/{project_id}/bo-thay-doi",
+        "/kiem-thu/du-an/{project_id}/tri-thuc/tim-kiem",
+        "/kiem-thu/du-an/{project_id}/bao-cao/thuc-thi",
+        "/kiem-thu/du-an/{project_id}/bao-cao/loi",
     }
     assert required_prefixes <= paths
 

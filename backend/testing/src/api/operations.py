@@ -8,7 +8,7 @@ from src.core.configuration import settings
 from src.core.database import database
 
 
-router = APIRouter(prefix="/api/qa", tags=["QA Operations"])
+router = APIRouter(prefix="/kiem-thu", tags=["QA Operations"])
 
 
 async def require_system_admin(user: CurrentUser):
@@ -88,7 +88,7 @@ async def ai_request_metrics():
     }
 
 
-@router.get("/operations")
+@router.get("/van-hanh")
 async def operations(
     limit: int = Query(default=100, ge=1, le=500),
     audit_q: str = Query(default="", max_length=200),
@@ -148,13 +148,13 @@ async def operations(
     )
 
 
-@router.post("/operations/jobs/{job_id}/retry", status_code=202)
+@router.post("/van-hanh/tac-vu/{job_id}/thu-lai", status_code=202)
 async def retry_failed_job(job_id: str, user: CurrentUser = Depends(get_current_user)):
     await require_system_admin(user)
     try:
         async with httpx.AsyncClient(timeout=10) as client:
             response = await client.post(
-                f"{settings.WORKER_URL}/worker/internal/jobs/{job_id}/retry",
+                f"{settings.WORKER_URL}/xu-ly-nen/noi-bo/tac-vu/{job_id}/thu-lai",
                 headers={"X-Internal-Token": settings.SECRET_KEY},
             )
             response.raise_for_status()

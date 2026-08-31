@@ -119,7 +119,7 @@ class MaintenanceModeRequest(BaseModel):
 
 
 router = APIRouter(
-    prefix="/api/admin",
+    prefix="/quan-tri",
     tags=["Platform Administration"],
     dependencies=[Depends(require_system_admin)],
 )
@@ -135,7 +135,7 @@ def masked_reference(value: dict):
     }
 
 
-@router.post("/users/{user_id}/resend-verification", response_model=APIResponse[Any])
+@router.post("/tai-khoan/{user_id}/gui-lai-xac-minh", response_model=APIResponse[Any])
 async def resend_account_activation(
     user_id: str,
     payload: ActionReason,
@@ -153,7 +153,7 @@ async def resend_account_activation(
     )
 
 
-@router.delete("/users/{user_id}", response_model=APIResponse[Any])
+@router.delete("/tai-khoan/{user_id}", response_model=APIResponse[Any])
 async def anonymize_user(
     user_id: str, payload: UserDeleteRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
@@ -199,7 +199,7 @@ async def anonymize_user(
     )
 
 
-@router.post("/users/bulk/preview", response_model=APIResponse[Any], status_code=201)
+@router.post("/tai-khoan/hang-loat/xem-truoc", response_model=APIResponse[Any], status_code=201)
 async def preview_bulk_user_action(
     payload: BulkUserPreviewRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
@@ -232,7 +232,7 @@ async def preview_bulk_user_action(
     )
 
 
-@router.post("/users/bulk/{operation_id}/confirm", response_model=APIResponse[Any])
+@router.post("/tai-khoan/hang-loat/{operation_id}/xac-nhan", response_model=APIResponse[Any])
 async def confirm_bulk_user_action(
     operation_id: str,
     payload: BulkUserConfirmRequest,
@@ -316,7 +316,7 @@ async def confirm_bulk_user_action(
     )
 
 
-@router.get("/projects/{project_id}/memberships", response_model=APIResponse[Any])
+@router.get("/du-an/{project_id}/vai-tro-du-an", response_model=APIResponse[Any])
 async def project_membership_diagnostics(
     project_id: str, current_user: CurrentUser = Depends(get_current_user)
 ):
@@ -344,7 +344,7 @@ async def project_membership_diagnostics(
     return APIResponse(data=memberships, message="Tải chẩn đoán thành viên dự án hoàn tất")
 
 
-@router.delete("/projects/{project_id}", response_model=APIResponse[Any])
+@router.delete("/du-an/{project_id}", response_model=APIResponse[Any])
 async def hard_delete_project(
     project_id: str,
     payload: ProjectDeleteRequest,
@@ -381,7 +381,7 @@ async def hard_delete_project(
     )
 
 
-@router.get("/security/break-glass", response_model=APIResponse[Any])
+@router.get("/bao-mat/truy-cap-khan-cap", response_model=APIResponse[Any])
 async def list_break_glass_grants(
     active_only: bool = True, current_user: CurrentUser = Depends(get_current_user)
 ):
@@ -395,7 +395,7 @@ async def list_break_glass_grants(
     return APIResponse(data=values, message="Tải quyền truy cập khẩn cấp hoàn tất")
 
 
-@router.post("/security/break-glass", response_model=APIResponse[Any], status_code=201)
+@router.post("/bao-mat/truy-cap-khan-cap", response_model=APIResponse[Any], status_code=201)
 async def create_break_glass_grant(
     payload: BreakGlassCreateRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
@@ -429,7 +429,7 @@ async def create_break_glass_grant(
     return APIResponse(data=grant, message="Cấp quyền truy cập khẩn cấp hoàn tất", status=201)
 
 
-@router.post("/security/break-glass/{grant_id}/revoke", response_model=APIResponse[Any])
+@router.post("/bao-mat/truy-cap-khan-cap/{grant_id}/thu-hoi", response_model=APIResponse[Any])
 async def revoke_break_glass_grant(
     grant_id: str, payload: ActionReason, current_user: CurrentUser = Depends(get_current_user)
 ):
@@ -452,19 +452,19 @@ async def revoke_break_glass_grant(
     return APIResponse(data=grant, message="Thu hồi quyền truy cập khẩn cấp hoàn tất")
 
 
-@router.get("/security/rate-limits", response_model=APIResponse[Any])
+@router.get("/bao-mat/gioi-han-tan-suat", response_model=APIResponse[Any])
 async def get_rate_limits(current_user: CurrentUser = Depends(get_current_user)):
     return await get_platform_config("rate_limits", current_user)
 
 
-@router.patch("/security/rate-limits", response_model=APIResponse[Any])
+@router.patch("/bao-mat/gioi-han-tan-suat", response_model=APIResponse[Any])
 async def update_rate_limits(
     payload: ConfigUpdate, current_user: CurrentUser = Depends(get_current_user)
 ):
     return await update_platform_config("rate_limits", payload, current_user)
 
 
-@router.get("/security/service-identities", response_model=APIResponse[Any])
+@router.get("/bao-mat/danh-tinh-dich-vu", response_model=APIResponse[Any])
 async def list_service_identities(current_user: CurrentUser = Depends(get_current_user)):
     values = (
         await database.mongodb[settings.AUTHENTICATION_DB_NAME]
@@ -477,7 +477,7 @@ async def list_service_identities(current_user: CurrentUser = Depends(get_curren
     )
 
 
-@router.post("/security/service-identities", response_model=APIResponse[Any], status_code=201)
+@router.post("/bao-mat/danh-tinh-dich-vu", response_model=APIResponse[Any], status_code=201)
 async def create_service_identity(
     payload: ServiceIdentityRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
@@ -506,7 +506,7 @@ async def create_service_identity(
     )
 
 
-@router.post("/security/service-identities/{identity_id}/rotate", response_model=APIResponse[Any])
+@router.post("/bao-mat/danh-tinh-dich-vu/{identity_id}/xoay-vong", response_model=APIResponse[Any])
 async def rotate_service_identity(
     identity_id: str,
     payload: ServiceIdentityRotateRequest,
@@ -534,7 +534,7 @@ async def rotate_service_identity(
     )
 
 
-@router.post("/security/emergency-revoke", response_model=APIResponse[Any])
+@router.post("/bao-mat/thu-hoi-khan-cap", response_model=APIResponse[Any])
 async def emergency_revoke(
     payload: EmergencyRevokeRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
@@ -587,7 +587,7 @@ async def emergency_revoke(
     )
 
 
-@router.get("/security/audit", response_model=APIResponse[Any])
+@router.get("/bao-mat/nhat-ky", response_model=APIResponse[Any])
 async def security_audit(
     action: str = Query(default="", max_length=100),
     actor: str = Query(default="", max_length=320),
@@ -612,7 +612,7 @@ async def security_audit(
     )
 
 
-@router.get("/secrets", response_model=APIResponse[Any])
+@router.get("/bi-mat", response_model=APIResponse[Any])
 async def list_secret_references(current_user: CurrentUser = Depends(get_current_user)):
     values = (
         await database.mongodb[settings.AUTHENTICATION_DB_NAME]
@@ -625,7 +625,7 @@ async def list_secret_references(current_user: CurrentUser = Depends(get_current
     )
 
 
-@router.post("/secrets", response_model=APIResponse[Any], status_code=201)
+@router.post("/bi-mat", response_model=APIResponse[Any], status_code=201)
 async def create_secret_reference(
     payload: SecretReferenceRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
@@ -653,7 +653,7 @@ async def create_secret_reference(
     )
 
 
-@router.post("/secrets/{reference_id}/rotate", response_model=APIResponse[Any])
+@router.post("/bi-mat/{reference_id}/xoay-vong", response_model=APIResponse[Any])
 async def rotate_secret_reference(
     reference_id: str,
     payload: SecretReferenceRotateRequest,
@@ -681,7 +681,7 @@ async def rotate_secret_reference(
     )
 
 
-@router.delete("/secrets/{reference_id}", response_model=APIResponse[Any])
+@router.delete("/bi-mat/{reference_id}", response_model=APIResponse[Any])
 async def delete_secret_reference(
     reference_id: str, payload: ActionReason, current_user: CurrentUser = Depends(get_current_user)
 ):
@@ -702,7 +702,7 @@ async def delete_secret_reference(
     )
 
 
-@router.post("/integrations/smtp/test", response_model=APIResponse[Any])
+@router.post("/tich-hop/smtp/kiem-tra", response_model=APIResponse[Any])
 async def test_smtp(
     payload: SmtpTestRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
@@ -720,7 +720,7 @@ async def test_smtp(
     )
 
 
-@router.get("/operations/queue", response_model=APIResponse[Any])
+@router.get("/van-hanh/hang-doi", response_model=APIResponse[Any])
 async def queue_overview(current_user: CurrentUser = Depends(get_current_user)):
     worker_db = database.mongodb[os.environ.get("WORKER_DB_NAME", "veriq_worker")]
     rows = await worker_db.worker_jobs.aggregate(
@@ -728,7 +728,7 @@ async def queue_overview(current_user: CurrentUser = Depends(get_current_user)):
     ).to_list(100)
     try:
         async with httpx.AsyncClient(timeout=5) as client:
-            response = await client.get("http://worker:8000/ready")
+            response = await client.get("http://worker:8000/san-sang")
             worker = response.json()
     except (httpx.HTTPError, ValueError):
         worker = {"status": "unavailable", "checks": {"consumers": "unavailable"}}
@@ -742,14 +742,14 @@ async def queue_overview(current_user: CurrentUser = Depends(get_current_user)):
     )
 
 
-@router.post("/operations/dlq/{job_id}/requeue", response_model=APIResponse[Any], status_code=202)
+@router.post("/van-hanh/dlq/{job_id}/dua-lai-hang-doi", response_model=APIResponse[Any], status_code=202)
 async def requeue_dead_letter_job(
     job_id: str, payload: ActionReason, current_user: CurrentUser = Depends(get_current_user)
 ):
     try:
         async with httpx.AsyncClient(timeout=15) as client:
             response = await client.post(
-                f"http://worker:8000/worker/internal/jobs/{job_id}/retry",
+                f"http://worker:8000/xu-ly-nen/noi-bo/tac-vu/{job_id}/thu-lai",
                 headers={"X-Internal-Token": settings.SECRET_KEY},
             )
             response.raise_for_status()
@@ -765,7 +765,7 @@ async def requeue_dead_letter_job(
     return APIResponse(data=result, message="Đưa tác vụ lỗi trở lại hàng đợi hoàn tất", status=202)
 
 
-@router.get("/operations/rag", response_model=APIResponse[Any])
+@router.get("/van-hanh/rag", response_model=APIResponse[Any])
 async def rag_operations(current_user: CurrentUser = Depends(get_current_user)):
     testing_db = database.mongodb[os.environ.get("TESTING_DB_NAME", "veriq_testing")]
     values = {}
@@ -779,7 +779,7 @@ async def rag_operations(current_user: CurrentUser = Depends(get_current_user)):
     return APIResponse(data=values, message="Tải trạng thái lập chỉ mục tri thức hoàn tất")
 
 
-@router.post("/operations/rag/reindex", response_model=APIResponse[Any], status_code=202)
+@router.post("/van-hanh/rag/lap-chi-muc-lai", response_model=APIResponse[Any], status_code=202)
 async def request_rag_reindex(
     payload: RagReindexRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
@@ -809,7 +809,7 @@ async def request_rag_reindex(
             }
             try:
                 response = await client.post(
-                    "http://worker:8000/worker/internal/qa/jobs",
+                    "http://worker:8000/xu-ly-nen/noi-bo/kiem-thu/tac-vu",
                     headers={"X-Internal-Token": settings.SECRET_KEY},
                     json=request_body,
                 )
@@ -833,7 +833,7 @@ async def request_rag_reindex(
     )
 
 
-@router.get("/operations/cache", response_model=APIResponse[Any])
+@router.get("/van-hanh/bo-nho-dem", response_model=APIResponse[Any])
 async def inspect_safe_caches(current_user: CurrentUser = Depends(get_current_user)):
     patterns = {
         "RATE_LIMITS": "rate_limit:*",
@@ -847,7 +847,7 @@ async def inspect_safe_caches(current_user: CurrentUser = Depends(get_current_us
     return APIResponse(data=counts, message="Tải trạng thái bộ đệm an toàn hoàn tất")
 
 
-@router.post("/operations/cache/clear", response_model=APIResponse[Any])
+@router.post("/van-hanh/bo-nho-dem/don-sach", response_model=APIResponse[Any])
 async def clear_safe_caches(
     payload: CacheClearRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
@@ -889,7 +889,7 @@ def attachment_size(value):
     return 0
 
 
-@router.get("/operations/storage-usage", response_model=APIResponse[Any])
+@router.get("/van-hanh/dung-luong-luu-tru", response_model=APIResponse[Any])
 async def storage_usage(current_user: CurrentUser = Depends(get_current_user)):
     testing_db = database.mongodb[os.environ.get("TESTING_DB_NAME", "veriq_testing")]
     projects = await testing_db.projects.find({}, {"key": 1, "name": 1}).to_list(10000)
@@ -934,14 +934,14 @@ async def storage_usage(current_user: CurrentUser = Depends(get_current_user)):
     )
 
 
-@router.get("/operations/runtime-versions", response_model=APIResponse[Any])
+@router.get("/van-hanh/phien-ban-van-hanh", response_model=APIResponse[Any])
 async def runtime_versions(current_user: CurrentUser = Depends(get_current_user)):
     targets = {
-        "authentication": "http://authentication:8000/ready",
-        "testing": "http://testing:8000/ready",
-        "worker": "http://worker:8000/ready",
-        "ai": "http://ai:8000/ready",
-        "cloud": "http://cloud:8000/ready",
+        "authentication": "http://authentication:8000/san-sang",
+        "testing": "http://testing:8000/san-sang",
+        "worker": "http://worker:8000/san-sang",
+        "ai": "http://ai:8000/san-sang",
+        "cloud": "http://cloud:8000/san-sang",
     }
     results = []
     async with httpx.AsyncClient(timeout=5) as client:
@@ -975,12 +975,12 @@ async def runtime_versions(current_user: CurrentUser = Depends(get_current_user)
     )
 
 
-@router.get("/config/maintenance", response_model=APIResponse[Any])
+@router.get("/cau-hinh/bao-tri", response_model=APIResponse[Any])
 async def get_maintenance_mode(current_user: CurrentUser = Depends(get_current_user)):
     return await get_platform_config("maintenance", current_user)
 
 
-@router.patch("/config/maintenance", response_model=APIResponse[Any])
+@router.patch("/cau-hinh/bao-tri", response_model=APIResponse[Any])
 async def update_maintenance_mode(
     payload: MaintenanceModeRequest, current_user: CurrentUser = Depends(get_current_user)
 ):
@@ -1006,14 +1006,14 @@ def config_routes(config_type: str):
 
 
 for route_path, config_type in [
-    ("/config/feature-flags", "feature_flags"),
-    ("/config/localization", "localization"),
-    ("/config/retention", "retention"),
-    ("/config/default-quotas", "default_quotas"),
-    ("/config/import-export", "import_export"),
-    ("/security/break-glass-policy", "break_glass_policy"),
-    ("/ai/limits", "ai_limits"),
-    ("/ai/retrieval", "ai_retrieval"),
+    ("/cau-hinh/co-tinh-nang", "feature_flags"),
+    ("/cau-hinh/dia-phuong-hoa", "localization"),
+    ("/cau-hinh/luu-giu", "retention"),
+    ("/cau-hinh/han-muc-mac-dinh", "default_quotas"),
+    ("/cau-hinh/nhap-xuat", "import_export"),
+    ("/bao-mat/chinh-sach-truy-cap-khan-cap", "break_glass_policy"),
+    ("/ai/gioi-han", "ai_limits"),
+    ("/ai/truy-xuat", "ai_retrieval"),
 ]:
     get_handler, update_handler = config_routes(config_type)
     router.add_api_route(

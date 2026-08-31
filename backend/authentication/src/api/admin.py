@@ -27,7 +27,7 @@ class AdminAccountUpdate(BaseModel):
         return self
 
 
-router = APIRouter(prefix="/xac-thuc/quan-tri", dependencies=[Depends(require_role([Role.ADMIN]))])
+router = APIRouter(prefix="/quan-tri", dependencies=[Depends(require_role([Role.ADMIN]))])
 
 
 @router.get("/tai-khoan", response_model=APIResponse[Any])

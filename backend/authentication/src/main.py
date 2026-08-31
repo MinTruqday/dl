@@ -31,7 +31,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Veriq Authentication", version=settings.VERSION, lifespan=lifespan)
 app.add_middleware(PrometheusMiddleware, service_name="authentication")
-app.add_route("/metrics", metrics_endpoint("authentication"))
+app.add_route("/so-lieu", metrics_endpoint("authentication"))
 origins = [origin.strip() for origin in settings.CORS_ALLOWED_ORIGINS.split(",") if origin.strip()]
 app.add_middleware(
     CORSMiddleware,
@@ -48,12 +48,12 @@ app.include_router(platform_router)
 app.include_router(platform_controls_router)
 
 
-@app.get("/health")
+@app.get("/suc-khoe")
 async def health_check():
     return {"status": "healthy"}
 
 
-@app.get("/ready")
+@app.get("/san-sang")
 async def readiness_check():
     checks = {}
     try:

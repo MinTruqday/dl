@@ -21,7 +21,7 @@ x-minio-environment: &minio-environment
   MINIO_REGION: us-east-1
 
 x-app-healthcheck: &app-healthcheck
-  test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ready', timeout=15)"]
+  test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/san-sang', timeout=15)"]
   interval: 30s
   timeout: 20s
   start_period: 30s
@@ -202,7 +202,7 @@ services:
 
   ai:
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=15)"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/suc-khoe', timeout=15)"]
       interval: 30s
       timeout: 20s
       start_period: 30s
@@ -217,7 +217,7 @@ services:
       - 38470-38479:38470-38479
     labels:
       - traefik.enable=true
-      - traefik.http.routers.ai.rule=PathPrefix(`/lich-su`) || PathPrefix(`/phan-hoi`) || PathPrefix(`/suy-luan`) || PathPrefix(`/tro-chuyen`) || PathPrefix(`/su-kien`) || PathPrefix(`/tiep-nap`) || PathPrefix(`/ngat-qua-trinh`) || PathPrefix(`/knowledge`)
+      - traefik.http.routers.ai.rule=PathPrefix(`/lich-su`) || PathPrefix(`/phan-hoi`) || PathPrefix(`/suy-luan`) || PathPrefix(`/tro-chuyen`) || PathPrefix(`/su-kien`) || PathPrefix(`/tiep-nap`) || PathPrefix(`/ngat-qua-trinh`) || PathPrefix(`/tri-thuc`) || PathPrefix(`/danh-gia`)
       - traefik.http.services.ai.loadbalancer.server.port=8000
     environment:
       <<: [*service-environment, *minio-environment]
@@ -282,7 +282,7 @@ services:
       - 8017:8000
     labels:
       - traefik.enable=true
-      - traefik.http.routers.testing.rule=PathPrefix(`/api/qa`)
+      - traefik.http.routers.testing.rule=PathPrefix(`/kiem-thu`)
       - traefik.http.routers.testing.priority=110
       - traefik.http.services.testing.loadbalancer.server.port=8000
     environment:
@@ -413,7 +413,7 @@ services:
       - 8007:8000
     labels:
       - traefik.enable=true
-      - traefik.http.routers.authentication.rule=PathPrefix(`/xac-thuc/`) || PathPrefix(`/google`) || PathPrefix(`/api/admin`)
+      - traefik.http.routers.authentication.rule=PathPrefix(`/xac-thuc/`) || PathPrefix(`/google`) || PathPrefix(`/quan-tri`)
       - traefik.http.routers.authentication.priority=120
       - traefik.http.services.authentication.loadbalancer.server.port=8000
     environment:
@@ -521,7 +521,7 @@ services:
       - 8009:8000
     labels:
       - traefik.enable=true
-      - traefik.http.routers.worker.rule=PathPrefix(`/worker`)
+      - traefik.http.routers.worker.rule=PathPrefix(`/xu-ly-nen`)
       - traefik.http.services.worker.loadbalancer.server.port=8000
     environment:
       PROJECT_NAME: ${PROJECT_NAME:?PROJECT_NAME is required}

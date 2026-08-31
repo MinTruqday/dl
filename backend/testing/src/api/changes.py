@@ -23,10 +23,10 @@ from src.services.ai_assistance import apply_ai_impact_suggestions, request_impa
 from src.services.project_knowledge import index_artifact
 
 
-router = APIRouter(prefix="/api/qa", tags=["QA Change Maintenance"])
+router = APIRouter(prefix="/kiem-thu", tags=["QA Change Maintenance"])
 
 
-@router.post("/requirements/{requirement_id}/change-sets", status_code=201)
+@router.post("/yeu-cau/{requirement_id}/bo-thay-doi", status_code=201)
 async def create_change_set(
     requirement_id: str,
     payload: RequirementCompareInput,
@@ -64,7 +64,7 @@ async def create_change_set(
     return envelope(change_set)
 
 
-@router.get("/projects/{project_id}/change-sets")
+@router.get("/du-an/{project_id}/bo-thay-doi")
 async def list_change_sets(
     project_id: str,
     requirement_id: str = Query(default="", max_length=200),
@@ -84,7 +84,7 @@ async def list_change_sets(
     return envelope(await database.value.requirement_change_sets.find(query).sort(sort_field, direction).to_list(limit))
 
 
-@router.get("/change-sets/{change_set_id}")
+@router.get("/bo-thay-doi/{change_set_id}")
 async def get_change_set(change_set_id: str, user: CurrentUser = Depends(get_current_user)):
     return envelope(
         await get_project_entity(
@@ -93,7 +93,7 @@ async def get_change_set(change_set_id: str, user: CurrentUser = Depends(get_cur
     )
 
 
-@router.post("/change-sets/{change_set_id}/review")
+@router.post("/bo-thay-doi/{change_set_id}/ra-soat")
 async def review_change_set(
     change_set_id: str,
     payload: ChangeSetReviewInput,
@@ -139,8 +139,8 @@ async def review_change_set(
     return envelope(updated, revision=updated["revision"])
 
 
-@router.post("/change-sets/{change_set_id}/impact-analysis", status_code=201)
-@router.post("/projects/{project_id}/changesets/{change_set_id}/analyze-impact", status_code=201)
+@router.post("/bo-thay-doi/{change_set_id}/phan-tich-anh-huong", status_code=201)
+@router.post("/du-an/{project_id}/bo-thay-doi/{change_set_id}/phan-tich-anh-huong", status_code=201)
 async def analyze_impact(change_set_id: str, project_id: str | None = None, user: CurrentUser = Depends(get_current_user)):
     change_set = await get_project_entity(
         "requirement_change_sets", change_set_id, user, "impact.execute"
@@ -236,7 +236,7 @@ async def analyze_impact(change_set_id: str, project_id: str | None = None, user
     return envelope(analysis)
 
 
-@router.get("/change-sets/{change_set_id}/impact-analysis")
+@router.get("/bo-thay-doi/{change_set_id}/phan-tich-anh-huong")
 async def get_change_set_impact_analysis(
     change_set_id: str,
     user: CurrentUser = Depends(get_current_user),
@@ -253,14 +253,14 @@ async def get_change_set_impact_analysis(
     return envelope(analysis)
 
 
-@router.get("/impact-analyses/{analysis_id}")
+@router.get("/phan-tich-anh-huong/{analysis_id}")
 async def get_impact_analysis(analysis_id: str, user: CurrentUser = Depends(get_current_user)):
     return envelope(
         await get_project_entity("impact_analyses", analysis_id, user, "impact.read")
     )
 
 
-@router.post("/impact-analyses/{analysis_id}/review")
+@router.post("/phan-tich-anh-huong/{analysis_id}/ra-soat")
 async def review_impact_analysis(
     analysis_id: str,
     payload: ImpactReviewInput,
@@ -332,7 +332,7 @@ async def review_impact_analysis(
     return envelope(analysis, revision=analysis["revision"])
 
 
-@router.post("/impact-analyses/{analysis_id}/perspectives", status_code=201)
+@router.post("/phan-tich-anh-huong/{analysis_id}/goc-nhin", status_code=201)
 async def add_impact_review_perspective(
     analysis_id: str,
     payload: dict,
@@ -348,7 +348,7 @@ async def add_impact_review_perspective(
     return envelope(perspective)
 
 
-@router.post("/impact-analyses/{analysis_id}/maintenance-proposals", status_code=201)
+@router.post("/phan-tich-anh-huong/{analysis_id}/de-xuat-bao-tri", status_code=201)
 async def create_maintenance_proposals(analysis_id: str, user: CurrentUser = Depends(get_current_user)):
     analysis = await get_project_entity(
         "impact_analyses", analysis_id, user, "ai.create_proposal"
@@ -393,7 +393,7 @@ async def create_maintenance_proposals(analysis_id: str, user: CurrentUser = Dep
     return envelope(proposals)
 
 
-@router.get("/projects/{project_id}/maintenance-proposals")
+@router.get("/du-an/{project_id}/de-xuat-bao-tri")
 async def list_proposals(
     project_id: str,
     status: str = Query(default="", max_length=30),
@@ -429,12 +429,12 @@ async def list_proposals(
     )
 
 
-@router.get("/maintenance-proposals/{proposal_id}")
+@router.get("/de-xuat-bao-tri/{proposal_id}")
 async def get_maintenance_proposal(proposal_id: str, user: CurrentUser = Depends(get_current_user)):
     return envelope(await get_project_entity("maintenance_proposals", proposal_id, user, "proposal.read"))
 
 
-@router.post("/projects/{project_id}/ai-proposals/{proposal_id}/review")
+@router.post("/du-an/{project_id}/de-xuat-ai/{proposal_id}/ra-soat")
 async def review_project_proposal(
     project_id: str,
     proposal_id: str,
@@ -462,12 +462,12 @@ async def review_project_proposal(
     return envelope(updated, revision=updated["revision"])
 
 
-@router.post("/maintenance-proposals/{proposal_id}/accept", status_code=201)
+@router.post("/de-xuat-bao-tri/{proposal_id}/chap-nhan", status_code=201)
 async def accept_proposal(proposal_id: str, payload: ProposalAction, user: CurrentUser = Depends(get_current_user)):
     return await apply_proposal(proposal_id, payload, user, "ACCEPTED")
 
 
-@router.post("/projects/{project_id}/ai-proposals/{proposal_id}/approve", status_code=201)
+@router.post("/du-an/{project_id}/de-xuat-ai/{proposal_id}/phe-duyet", status_code=201)
 async def approve_project_proposal(
     project_id: str,
     proposal_id: str,
@@ -480,12 +480,12 @@ async def approve_project_proposal(
     return await apply_proposal(proposal_id, payload, user, "EDITED_ACCEPTED" if payload.patch is not None else "ACCEPTED")
 
 
-@router.post("/maintenance-proposals/{proposal_id}/accept-with-edit", status_code=201)
+@router.post("/de-xuat-bao-tri/{proposal_id}/chap-nhan-co-chinh-sua", status_code=201)
 async def accept_proposal_with_edit(proposal_id: str, payload: ProposalAction, user: CurrentUser = Depends(get_current_user)):
     return await apply_proposal(proposal_id, payload, user, "EDITED_ACCEPTED")
 
 
-@router.post("/maintenance-proposals/{proposal_id}/reject")
+@router.post("/de-xuat-bao-tri/{proposal_id}/tu-choi")
 async def reject_proposal(proposal_id: str, payload: ProposalAction, user: CurrentUser = Depends(get_current_user)):
     proposal = await get_project_entity(
         "maintenance_proposals", proposal_id, user, "proposal.reject"
@@ -505,7 +505,7 @@ async def reject_proposal(proposal_id: str, payload: ProposalAction, user: Curre
     return envelope(proposal)
 
 
-@router.post("/projects/{project_id}/ai-proposals/{proposal_id}/reject")
+@router.post("/du-an/{project_id}/de-xuat-ai/{proposal_id}/tu-choi")
 async def reject_project_proposal(
     project_id: str,
     proposal_id: str,
@@ -518,7 +518,7 @@ async def reject_project_proposal(
     return await reject_proposal(proposal_id, payload, user)
 
 
-@router.post("/maintenance-proposals/{proposal_id}/regenerate", status_code=201)
+@router.post("/de-xuat-bao-tri/{proposal_id}/sinh-lai", status_code=201)
 async def regenerate_proposal(
     proposal_id: str,
     payload: ProposalRegenerateInput,
@@ -755,7 +755,7 @@ async def mark_test_obsolete(proposal, user):
     return await database.value.test_cases.find_one({"_id": test_case["_id"]})
 
 
-@router.post("/change-sets/{change_set_id}/regression-recommendation", status_code=201)
+@router.post("/bo-thay-doi/{change_set_id}/de-xuat-hoi-quy", status_code=201)
 async def regression_recommendation(change_set_id: str, user: CurrentUser = Depends(get_current_user)):
     change_set = await get_project_entity(
         "requirement_change_sets", change_set_id, user, "regression.generate"
@@ -786,7 +786,7 @@ async def regression_recommendation(change_set_id: str, user: CurrentUser = Depe
     return envelope(recommendation)
 
 
-@router.get("/change-sets/{change_set_id}/regression-recommendation")
+@router.get("/bo-thay-doi/{change_set_id}/de-xuat-hoi-quy")
 async def get_change_set_regression_recommendation(
     change_set_id: str,
     user: CurrentUser = Depends(get_current_user),
@@ -803,7 +803,7 @@ async def get_change_set_regression_recommendation(
     return envelope(recommendation)
 
 
-@router.post("/projects/{project_id}/regression/generate", status_code=201)
+@router.post("/du-an/{project_id}/hoi-quy/sinh", status_code=201)
 async def generate_project_regression(
     project_id: str,
     payload: dict,
@@ -816,7 +816,7 @@ async def generate_project_regression(
     return await regression_recommendation(change_set_id, user)
 
 
-@router.get("/regression-recommendations/{recommendation_id}")
+@router.get("/de-xuat-hoi-quy/{recommendation_id}")
 async def get_regression_recommendation(
     recommendation_id: str,
     user: CurrentUser = Depends(get_current_user),
@@ -831,7 +831,7 @@ async def get_regression_recommendation(
     )
 
 
-@router.patch("/regression-recommendations/{recommendation_id}")
+@router.patch("/de-xuat-hoi-quy/{recommendation_id}")
 async def edit_regression_recommendation(
     recommendation_id: str,
     payload: RegressionApprovalInput,
@@ -859,7 +859,7 @@ async def edit_regression_recommendation(
     return envelope(updated, revision=updated["revision"])
 
 
-@router.post("/regression-recommendations/{recommendation_id}/approve", status_code=201)
+@router.post("/de-xuat-hoi-quy/{recommendation_id}/phe-duyet", status_code=201)
 async def approve_regression_recommendation(
     recommendation_id: str,
     payload: RegressionApprovalInput,
@@ -941,7 +941,7 @@ async def approve_regression_recommendation(
     return envelope({"recommendation": recommendation, "test_suite": suite})
 
 
-@router.post("/projects/{project_id}/regression/{recommendation_id}/approve", status_code=201)
+@router.post("/du-an/{project_id}/hoi-quy/{recommendation_id}/phe-duyet", status_code=201)
 async def approve_project_regression(
     project_id: str,
     recommendation_id: str,

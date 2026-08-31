@@ -15,18 +15,18 @@ SERVICES = {
 
 for name, base_url in SERVICES.items():
     with httpx.Client(base_url=base_url, timeout=20) as client:
-        health = client.get("/health")
+        health = client.get("/suc-khoe")
         assert health.status_code == 200, f"{name} health contract failed {health.text}"
         schema = client.get("/openapi.json")
         assert schema.status_code == 200, f"{name} schema contract failed {schema.text}"
         assert schema.json().get("paths"), f"{name} exposes no API paths"
 
 with httpx.Client(base_url=SERVICES["testing"], timeout=20) as client:
-    unauthenticated = client.get("/api/qa/projects")
+    unauthenticated = client.get("/kiem-thu/du-an")
     assert unauthenticated.status_code == 401
     assert unauthenticated.json()["error"]["code"] == "AUTH_REQUIRED"
     malformed = client.post(
-        "/api/qa/projects",
+        "/kiem-thu/du-an",
         headers={
             "Authorization": "Bearer "
             + jwt.encode(
@@ -41,60 +41,60 @@ with httpx.Client(base_url=SERVICES["testing"], timeout=20) as client:
     assert malformed.json()["error"]["code"] == "VALIDATION_ERROR"
     paths = client.get("/openapi.json").json()["paths"]
     required = {
-        "/api/qa/projects",
-        "/api/qa/projects/{project_id}/requirements",
-        "/api/qa/projects/{project_id}/test-case-drafts",
-        "/api/qa/projects/{project_id}/traceability",
-        "/api/qa/change-sets/{change_set_id}/impact-analysis",
-        "/api/qa/test-runs/{run_id}/report",
-        "/api/qa/projects/{project_id}/requirements/{requirement_id}",
-        "/api/qa/projects/{project_id}/test-cases/{draft_id}",
-        "/api/qa/projects/{project_id}/test-executions/{execution_id}",
-        "/api/qa/projects/{project_id}/test-results",
-        "/api/qa/projects/{project_id}/coverage-snapshots",
-        "/api/qa/requirements/{requirement_id}/diff",
-        "/api/qa/test-cases/{test_case_id}/trace",
-        "/api/qa/requirements/{requirement_id}/obsolete",
-        "/api/qa/test-cases/{test_case_id}/clone",
-        "/api/qa/test-cases/{test_case_id}/obsolete",
-        "/api/qa/requirement-imports/{job_id}",
-        "/api/qa/requirement-documents/{document_id}/retry-parse",
-        "/api/qa/change-sets/{change_set_id}/review",
-        "/api/qa/projects/{project_id}/data-sets",
-        "/api/qa/data-sets/{data_set_id}/versions",
-        "/api/qa/defects/{defect_id}/trace-candidates",
-        "/api/qa/maintenance-proposals/{proposal_id}/regenerate",
-        "/api/qa/projects/{project_id}/bulk/tags",
-        "/api/qa/projects/{project_id}/bulk/test-cases/add-to-suite",
-        "/api/qa/projects/{project_id}/bulk/test-cases/mark-review-required",
-        "/api/qa/projects/{project_id}/bulk/archive",
-        "/api/qa/projects/{project_id}/bulk/impact-proposals",
-        "/api/qa/projects/{project_id}/bulk/approve-proposals",
-        "/api/qa/operations",
-        "/api/qa/operations/jobs/{job_id}/retry",
-        "/api/qa/projects/{project_id}/trace-links",
-        "/api/qa/projects/{project_id}/trace-links/{link_id}/confirm",
-        "/api/qa/projects/{project_id}/changesets/{change_set_id}/analyze-impact",
-        "/api/qa/projects/{project_id}/ai-proposals/{proposal_id}/review",
-        "/api/qa/projects/{project_id}/ai-proposals/{proposal_id}/approve",
-        "/api/qa/projects/{project_id}/regression/generate",
-        "/api/qa/projects/{project_id}/regression/{recommendation_id}/approve",
-        "/api/qa/projects/{project_id}/test-runs",
-        "/api/qa/projects/{project_id}/test-runs/{run_id}",
-        "/api/qa/projects/{project_id}/test-runs/{run_id}/assign",
-        "/api/qa/projects/{project_id}/defects/{defect_id}",
-        "/api/qa/requirements/{requirement_id}/restore",
-        "/api/qa/projects/{project_id}/reports/execution",
-        "/api/qa/projects/{project_id}/reports/defects",
-        "/api/qa/projects/{project_id}/activity",
-        "/api/qa/projects/{project_id}/ai/ask",
-        "/api/qa/requirements/{requirement_id}/dependencies",
-        "/api/qa/requirements/{requirement_id}/dependencies/{dependency_requirement_id}",
-        "/api/qa/test-plans/{plan_id}/clone",
-        "/api/qa/test-scenarios/{scenario_id}",
-        "/api/qa/maintenance-proposals/{proposal_id}",
-        "/api/qa/regression-recommendations/{recommendation_id}",
-        "/api/qa/requirement-documents/{document_id}/reindex",
+        "/kiem-thu/du-an",
+        "/kiem-thu/du-an/{project_id}/yeu-cau",
+        "/kiem-thu/du-an/{project_id}/ban-nhap-ca-kiem-thu",
+        "/kiem-thu/du-an/{project_id}/truy-vet",
+        "/kiem-thu/bo-thay-doi/{change_set_id}/phan-tich-anh-huong",
+        "/kiem-thu/lan-chay-kiem-thu/{run_id}/bao-cao",
+        "/kiem-thu/du-an/{project_id}/yeu-cau/{requirement_id}",
+        "/kiem-thu/du-an/{project_id}/ca-kiem-thu/{draft_id}",
+        "/kiem-thu/du-an/{project_id}/thuc-thi-kiem-thu/{execution_id}",
+        "/kiem-thu/du-an/{project_id}/ket-qua-kiem-thu",
+        "/kiem-thu/du-an/{project_id}/anh-chup-do-phu",
+        "/kiem-thu/yeu-cau/{requirement_id}/khac-biet",
+        "/kiem-thu/ca-kiem-thu/{test_case_id}/truy-vet",
+        "/kiem-thu/yeu-cau/{requirement_id}/ngung-hieu-luc",
+        "/kiem-thu/ca-kiem-thu/{test_case_id}/nhan-ban",
+        "/kiem-thu/ca-kiem-thu/{test_case_id}/ngung-hieu-luc",
+        "/kiem-thu/nhap-yeu-cau/{job_id}",
+        "/kiem-thu/tai-lieu-yeu-cau/{document_id}/thu-lai-phan-tich",
+        "/kiem-thu/bo-thay-doi/{change_set_id}/ra-soat",
+        "/kiem-thu/du-an/{project_id}/bo-du-lieu",
+        "/kiem-thu/bo-du-lieu/{data_set_id}/phien-ban",
+        "/kiem-thu/loi/{defect_id}/ung-vien-truy-vet",
+        "/kiem-thu/de-xuat-bao-tri/{proposal_id}/sinh-lai",
+        "/kiem-thu/du-an/{project_id}/hang-loat/nhan",
+        "/kiem-thu/du-an/{project_id}/hang-loat/ca-kiem-thu/them-vao-bo-kiem-thu",
+        "/kiem-thu/du-an/{project_id}/hang-loat/ca-kiem-thu/danh-dau-can-ra-soat",
+        "/kiem-thu/du-an/{project_id}/hang-loat/luu-tru",
+        "/kiem-thu/du-an/{project_id}/hang-loat/de-xuat-anh-huong",
+        "/kiem-thu/du-an/{project_id}/hang-loat/phe-duyet-de-xuat",
+        "/kiem-thu/van-hanh",
+        "/kiem-thu/van-hanh/tac-vu/{job_id}/thu-lai",
+        "/kiem-thu/du-an/{project_id}/lien-ket-truy-vet",
+        "/kiem-thu/du-an/{project_id}/lien-ket-truy-vet/{link_id}/xac-nhan",
+        "/kiem-thu/du-an/{project_id}/bo-thay-doi/{change_set_id}/phan-tich-anh-huong",
+        "/kiem-thu/du-an/{project_id}/de-xuat-ai/{proposal_id}/ra-soat",
+        "/kiem-thu/du-an/{project_id}/de-xuat-ai/{proposal_id}/phe-duyet",
+        "/kiem-thu/du-an/{project_id}/hoi-quy/sinh",
+        "/kiem-thu/du-an/{project_id}/hoi-quy/{recommendation_id}/phe-duyet",
+        "/kiem-thu/du-an/{project_id}/lan-chay-kiem-thu",
+        "/kiem-thu/du-an/{project_id}/lan-chay-kiem-thu/{run_id}",
+        "/kiem-thu/du-an/{project_id}/lan-chay-kiem-thu/{run_id}/phan-cong",
+        "/kiem-thu/du-an/{project_id}/loi/{defect_id}",
+        "/kiem-thu/yeu-cau/{requirement_id}/khoi-phuc",
+        "/kiem-thu/du-an/{project_id}/bao-cao/thuc-thi",
+        "/kiem-thu/du-an/{project_id}/bao-cao/loi",
+        "/kiem-thu/du-an/{project_id}/hoat-dong",
+        "/kiem-thu/du-an/{project_id}/ai/hoi-dap",
+        "/kiem-thu/yeu-cau/{requirement_id}/phu-thuoc",
+        "/kiem-thu/yeu-cau/{requirement_id}/phu-thuoc/{dependency_requirement_id}",
+        "/kiem-thu/ke-hoach-kiem-thu/{plan_id}/nhan-ban",
+        "/kiem-thu/kich-ban-kiem-thu/{scenario_id}",
+        "/kiem-thu/de-xuat-bao-tri/{proposal_id}",
+        "/kiem-thu/de-xuat-hoi-quy/{recommendation_id}",
+        "/kiem-thu/tai-lieu-yeu-cau/{document_id}/lap-chi-muc-lai",
     }
     assert required <= set(paths)
 

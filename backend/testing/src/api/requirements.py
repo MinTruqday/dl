@@ -54,7 +54,7 @@ from src.services.linters import requirement_findings
 from src.services.project_knowledge import index_artifact
 
 
-router = APIRouter(prefix="/api/qa", tags=["QA Requirements"])
+router = APIRouter(prefix="/kiem-thu", tags=["QA Requirements"])
 
 
 def serialized_content(content):
@@ -126,7 +126,7 @@ async def create_requirement_document_record(project_id, payload, user):
 async def store_raw_requirement_source(project_id, document_id, filename, content_type, data):
     async with httpx.AsyncClient(timeout=60) as client:
         response = await client.post(
-            f"{settings.CLOUD_URL.rstrip('/')}/noi-bo/qa/requirement-source",
+            f"{settings.CLOUD_URL.rstrip('/')}/noi-bo/kiem-thu/nguon-yeu-cau",
             headers={"X-Internal-Token": settings.SECRET_KEY},
             data={"project_id": project_id, "document_id": document_id},
             files={"file": (filename, data, content_type or "application/octet-stream")},
@@ -145,7 +145,7 @@ async def read_raw_requirement_source(document):
         raise HTTPException(status_code=409, detail={"code": "RAW_SOURCE_UNAVAILABLE"})
     async with httpx.AsyncClient(timeout=60) as client:
         response = await client.get(
-            f"{settings.CLOUD_URL.rstrip('/')}/noi-bo/qa/requirement-source",
+            f"{settings.CLOUD_URL.rstrip('/')}/noi-bo/kiem-thu/nguon-yeu-cau",
             headers={"X-Internal-Token": settings.SECRET_KEY},
             params={
                 "project_id": document["project_id"],
@@ -251,7 +251,7 @@ async def create_requirement_record(project_id, payload, user, origin="manual"):
     return {**requirement, "current_version": version}
 
 
-@router.post("/projects/{project_id}/requirements", status_code=201)
+@router.post("/du-an/{project_id}/yeu-cau", status_code=201)
 async def create_requirement(
     project_id: str,
     payload: RequirementCreate,
@@ -260,7 +260,7 @@ async def create_requirement(
     return envelope(await create_requirement_record(project_id, payload, user))
 
 
-@router.get("/projects/{project_id}/requirements")
+@router.get("/du-an/{project_id}/yeu-cau")
 async def list_requirements(
     project_id: str,
     q: str = Query(default="", max_length=300),
@@ -354,7 +354,7 @@ async def list_requirements(
     return envelope(page_payload(items[start : start + page_size], page, page_size, total))
 
 
-@router.get("/requirements/{requirement_id}")
+@router.get("/yeu-cau/{requirement_id}")
 async def requirement_detail(requirement_id: str, user: CurrentUser = Depends(get_current_user)):
     requirement = await get_project_entity(
         "requirements", requirement_id, user, "requirement.read"
@@ -364,7 +364,7 @@ async def requirement_detail(requirement_id: str, user: CurrentUser = Depends(ge
     return envelope({**requirement, "current_version": {**version, "acceptance_criteria": criteria}})
 
 
-@router.patch("/projects/{project_id}/requirements/{requirement_id}")
+@router.patch("/du-an/{project_id}/yeu-cau/{requirement_id}")
 async def update_requirement_draft(
     project_id: str,
     requirement_id: str,
@@ -447,7 +447,7 @@ async def update_requirement_draft(
     return envelope({**requirement, **parent_changes, "current_version": updated_version}, revision=updated_version["revision"])
 
 
-@router.post("/requirements/{requirement_id}/dependencies")
+@router.post("/yeu-cau/{requirement_id}/phu-thuoc")
 async def add_requirement_dependency(
     requirement_id: str,
     payload: RequirementDependencyInput,
@@ -482,7 +482,7 @@ async def add_requirement_dependency(
     return envelope(updated, revision=updated["revision"])
 
 
-@router.delete("/requirements/{requirement_id}/dependencies/{dependency_requirement_id}")
+@router.delete("/yeu-cau/{requirement_id}/phu-thuoc/{dependency_requirement_id}")
 async def remove_requirement_dependency(
     requirement_id: str,
     dependency_requirement_id: str,
@@ -525,7 +525,7 @@ async def requirement_dependency_reaches(start_id: str, target_id: str, project_
     return False
 
 
-@router.post("/requirements/{requirement_id}/versions", status_code=201)
+@router.post("/yeu-cau/{requirement_id}/phien-ban", status_code=201)
 async def create_requirement_version(
     requirement_id: str,
     payload: RequirementVersionCreate,
@@ -588,7 +588,7 @@ async def create_requirement_version(
     return envelope(version, revision=1)
 
 
-@router.get("/requirements/{requirement_id}/versions")
+@router.get("/yeu-cau/{requirement_id}/phien-ban")
 async def list_requirement_versions(requirement_id: str, user: CurrentUser = Depends(get_current_user)):
     requirement = await get_project_entity(
         "requirements", requirement_id, user, "requirement.version.read"
@@ -597,7 +597,7 @@ async def list_requirement_versions(requirement_id: str, user: CurrentUser = Dep
     return envelope(versions)
 
 
-@router.post("/projects/{project_id}/requirements/{requirement_id}/submit-review")
+@router.post("/du-an/{project_id}/yeu-cau/{requirement_id}/gui-ra-soat")
 async def submit_requirement_review(
     project_id: str,
     requirement_id: str,
@@ -652,7 +652,7 @@ async def submit_requirement_review(
     return envelope(version, revision=version["revision"])
 
 
-@router.post("/requirements/{requirement_id}/review")
+@router.post("/yeu-cau/{requirement_id}/ra-soat")
 async def submit_requirement_review_alias(
     requirement_id: str,
     payload: ReviewTransitionInput,
@@ -662,7 +662,7 @@ async def submit_requirement_review_alias(
     return await submit_requirement_review(requirement["project_id"], requirement_id, payload, user)
 
 
-@router.post("/projects/{project_id}/requirements/{requirement_id}/request-changes")
+@router.post("/du-an/{project_id}/yeu-cau/{requirement_id}/yeu-cau-chinh-sua")
 async def request_requirement_changes(
     project_id: str,
     requirement_id: str,
@@ -706,7 +706,7 @@ async def request_requirement_changes(
     return envelope(version, revision=version["revision"])
 
 
-@router.post("/requirement-versions/{version_id}/baseline")
+@router.post("/phien-ban-yeu-cau/{version_id}/chot-chuan")
 async def baseline_requirement_version(
     version_id: str,
     payload: RequirementBaselineInput,
@@ -749,7 +749,7 @@ async def baseline_requirement_version(
     return envelope(version, revision=version["revision"], status="DEGRADED" if not indexed else "SUCCESS", degraded_mode="DEGRADED_VECTOR" if not indexed else None)
 
 
-@router.post("/projects/{project_id}/requirements/{requirement_id}/approve")
+@router.post("/du-an/{project_id}/yeu-cau/{requirement_id}/phe-duyet")
 async def approve_requirement(
     project_id: str,
     requirement_id: str,
@@ -768,7 +768,7 @@ async def approve_requirement(
     )
 
 
-@router.post("/requirements/{requirement_id}/approve")
+@router.post("/yeu-cau/{requirement_id}/phe-duyet")
 async def approve_requirement_alias(
     requirement_id: str,
     payload: RequirementBaselineInput,
@@ -778,7 +778,7 @@ async def approve_requirement_alias(
     return await baseline_requirement_version(requirement["current_version_id"], payload, user)
 
 
-@router.post("/requirements/{requirement_id}/obsolete")
+@router.post("/yeu-cau/{requirement_id}/ngung-hieu-luc")
 async def mark_requirement_obsolete(
     requirement_id: str,
     payload: RequirementObsoleteInput,
@@ -885,7 +885,7 @@ async def mark_requirement_obsolete(
     return envelope({**updated, "current_version": current_version})
 
 
-@router.post("/requirements/{requirement_id}/restore")
+@router.post("/yeu-cau/{requirement_id}/khoi-phuc")
 async def restore_requirement(
     requirement_id: str,
     payload: RequirementRestoreInput,
@@ -1002,7 +1002,7 @@ async def restore_requirement(
     return envelope({**updated, "current_version": restored_version})
 
 
-@router.post("/requirement-versions/{version_id}/ai/lint")
+@router.post("/phien-ban-yeu-cau/{version_id}/ai/kiem-tra")
 async def lint_requirement(version_id: str, user: CurrentUser = Depends(get_current_user)):
     version = await get_project_entity(
         "requirement_versions", version_id, user, "ai.run_lint"
@@ -1018,7 +1018,7 @@ async def lint_requirement(version_id: str, user: CurrentUser = Depends(get_curr
     return envelope(result)
 
 
-@router.post("/projects/{project_id}/requirements/{requirement_id}/lint")
+@router.post("/du-an/{project_id}/yeu-cau/{requirement_id}/kiem-tra")
 async def lint_requirement_draft(project_id: str, requirement_id: str, user: CurrentUser = Depends(get_current_user)):
     requirement = await get_project_entity("requirements", requirement_id, user, "ai.run_lint")
     if requirement["project_id"] != project_id:
@@ -1026,13 +1026,13 @@ async def lint_requirement_draft(project_id: str, requirement_id: str, user: Cur
     return await lint_requirement(requirement["current_version_id"], user)
 
 
-@router.post("/requirements/{requirement_id}/lint")
+@router.post("/yeu-cau/{requirement_id}/kiem-tra")
 async def lint_requirement_alias(requirement_id: str, user: CurrentUser = Depends(get_current_user)):
     requirement = await get_project_entity("requirements", requirement_id, user, "ai.run_lint")
     return await lint_requirement(requirement["current_version_id"], user)
 
 
-@router.post("/requirements/{requirement_id}/compare")
+@router.post("/yeu-cau/{requirement_id}/so-sanh")
 async def compare_requirement(
     requirement_id: str,
     payload: RequirementCompareInput,
@@ -1051,7 +1051,7 @@ async def compare_requirement(
     return envelope({"from_version": by_id[payload.from_version_id], "to_version": by_id[payload.to_version_id], "changes": changes, "comparison_algorithm_version": "semantic-diff-v1"})
 
 
-@router.get("/requirements/{requirement_id}/diff")
+@router.get("/yeu-cau/{requirement_id}/khac-biet")
 async def diff_requirement(
     requirement_id: str,
     from_version: str = Query(alias="from", min_length=1, max_length=200),
@@ -1065,7 +1065,7 @@ async def diff_requirement(
     )
 
 
-@router.post("/projects/{project_id}/requirement-documents", status_code=201)
+@router.post("/du-an/{project_id}/tai-lieu-yeu-cau", status_code=201)
 async def create_requirement_document(
     project_id: str,
     payload: ImportCreate,
@@ -1075,7 +1075,7 @@ async def create_requirement_document(
     return envelope(document, revision=document["revision"])
 
 
-@router.post("/projects/{project_id}/requirement-documents/upload", status_code=201)
+@router.post("/du-an/{project_id}/tai-lieu-yeu-cau/tai-len", status_code=201)
 async def upload_requirement_document(
     project_id: str,
     format: str = Form(),
@@ -1150,7 +1150,7 @@ async def upload_requirement_document(
     return envelope(document, revision=document["revision"], status="SUCCESS" if indexed else "DEGRADED", degraded_mode=None if indexed else "DEGRADED_VECTOR")
 
 
-@router.get("/projects/{project_id}/requirement-documents")
+@router.get("/du-an/{project_id}/tai-lieu-yeu-cau")
 async def list_requirement_documents(
     project_id: str,
     status: str = Query(default="", max_length=30),
@@ -1173,7 +1173,7 @@ async def list_requirement_documents(
     return envelope(documents)
 
 
-@router.post("/projects/{project_id}/knowledge-sources", status_code=201)
+@router.post("/du-an/{project_id}/nguon-tri-thuc", status_code=201)
 async def create_knowledge_source(
     project_id: str,
     payload: KnowledgeSourceCreate,
@@ -1253,7 +1253,7 @@ async def create_knowledge_source(
     )
 
 
-@router.get("/projects/{project_id}/knowledge-sources")
+@router.get("/du-an/{project_id}/nguon-tri-thuc")
 async def list_knowledge_sources(
     project_id: str,
     include_archived: bool = Query(default=False),
@@ -1273,7 +1273,7 @@ async def list_knowledge_sources(
     return envelope(documents)
 
 
-@router.post("/knowledge-sources/{document_id}/archive")
+@router.post("/nguon-tri-thuc/{document_id}/luu-tru")
 async def archive_knowledge_source(
     document_id: str,
     payload: ProjectArchiveInput,
@@ -1319,7 +1319,7 @@ async def archive_knowledge_source(
     return envelope(updated, revision=updated["revision"])
 
 
-@router.get("/requirement-documents/{document_id}")
+@router.get("/tai-lieu-yeu-cau/{document_id}")
 async def get_requirement_document(
     document_id: str,
     user: CurrentUser = Depends(get_current_user),
@@ -1330,7 +1330,7 @@ async def get_requirement_document(
     return envelope(document, revision=document["revision"])
 
 
-@router.patch("/requirement-documents/{document_id}")
+@router.patch("/tai-lieu-yeu-cau/{document_id}")
 async def update_requirement_document_metadata(
     document_id: str,
     payload: RequirementDocumentPatch,
@@ -1350,7 +1350,7 @@ async def update_requirement_document_metadata(
     return envelope(updated, revision=updated["revision"])
 
 
-@router.post("/requirement-documents/{document_id}/reindex", status_code=202)
+@router.post("/tai-lieu-yeu-cau/{document_id}/lap-chi-muc-lai", status_code=202)
 async def reindex_requirement_document(
     document_id: str,
     user: CurrentUser = Depends(get_current_user),
@@ -1379,7 +1379,7 @@ async def reindex_requirement_document(
     return envelope(updated, revision=updated["revision"], status="SUCCESS" if indexed else "DEGRADED", degraded_mode=None if indexed else "DEGRADED_VECTOR")
 
 
-@router.get("/requirement-documents/{document_id}/download")
+@router.get("/tai-lieu-yeu-cau/{document_id}/tai-xuong")
 async def download_requirement_document(
     document_id: str,
     user: CurrentUser = Depends(get_current_user),
@@ -1399,7 +1399,7 @@ async def download_requirement_document(
     )
 
 
-@router.post("/requirement-documents/{document_id}/archive")
+@router.post("/tai-lieu-yeu-cau/{document_id}/luu-tru")
 async def archive_requirement_document(
     document_id: str,
     payload: ProjectArchiveInput,
@@ -1445,7 +1445,7 @@ async def archive_requirement_document(
     return envelope(updated, revision=updated["revision"])
 
 
-@router.post("/requirement-documents/{document_id}/restore")
+@router.post("/tai-lieu-yeu-cau/{document_id}/khoi-phuc")
 async def restore_requirement_document(
     document_id: str,
     payload: ProjectArchiveInput,
@@ -1491,7 +1491,7 @@ async def restore_requirement_document(
     return envelope(updated, revision=updated["revision"])
 
 
-@router.post("/requirement-documents/{document_id}/retry-parse")
+@router.post("/tai-lieu-yeu-cau/{document_id}/thu-lai-phan-tich")
 async def retry_requirement_document_parse(
     document_id: str,
     payload: RequirementParseRetry,
@@ -1580,7 +1580,7 @@ async def retry_requirement_document_parse(
     return envelope(updated, revision=updated["revision"])
 
 
-@router.post("/requirement-documents/{document_id}/extract", status_code=201)
+@router.post("/tai-lieu-yeu-cau/{document_id}/trich-xuat", status_code=201)
 async def extract_requirement_document(
     document_id: str,
     payload: RequirementExtractionInput,
@@ -1647,7 +1647,7 @@ async def extract_requirement_document(
     return envelope(job, revision=1)
 
 
-@router.post("/projects/{project_id}/requirement-imports", status_code=201)
+@router.post("/du-an/{project_id}/nhap-yeu-cau", status_code=201)
 async def create_requirement_import(
     project_id: str,
     payload: ImportCreate,
@@ -1672,7 +1672,7 @@ async def create_requirement_import(
     return envelope(job, revision=1)
 
 
-@router.post("/projects/{project_id}/requirement-imports/upload", status_code=201)
+@router.post("/du-an/{project_id}/nhap-yeu-cau/tai-len", status_code=201)
 async def upload_requirement_import(
     project_id: str,
     format: str = Form(),
@@ -1694,13 +1694,13 @@ async def upload_requirement_import(
     )
 
 
-@router.get("/requirement-imports/{job_id}")
+@router.get("/nhap-yeu-cau/{job_id}")
 async def get_requirement_import(job_id: str, user: CurrentUser = Depends(get_current_user)):
     job = await get_project_entity("import_jobs", job_id, user, "requirement_document.review_extraction")
     return envelope(job, revision=job.get("revision", 1))
 
 
-@router.patch("/requirement-imports/{job_id}")
+@router.patch("/nhap-yeu-cau/{job_id}")
 async def review_requirement_import(
     job_id: str,
     payload: RequirementImportReview,
@@ -1750,7 +1750,7 @@ async def review_requirement_import(
     return envelope(updated, revision=updated["revision"])
 
 
-@router.post("/requirement-imports/{job_id}/confirm")
+@router.post("/nhap-yeu-cau/{job_id}/xac-nhan")
 async def confirm_requirement_import(
     job_id: str,
     payload: ImportConfirm,

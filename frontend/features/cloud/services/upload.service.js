@@ -1,6 +1,6 @@
 import { API_URL, authenticatedFetch, getAuthHeaders } from "@/shared/services/api-client";
 async function doDirectUpload(file, isSystem, isMessageAttachment) {
-  const reqRes = await authenticatedFetch(`${API_URL}/tai-len/presigned-url`, {
+  const reqRes = await authenticatedFetch(`${API_URL}/tai-len/duong-dan-ky-truoc`, {
     method: "POST",
     headers: {
       ...getAuthHeaders(),

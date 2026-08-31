@@ -12,7 +12,7 @@ from src.core.storage import download_file, generate_presigned_url, upload_file
 router = APIRouter(prefix="/noi-bo")
 
 
-@router.post("/qa/requirement-source", dependencies=[Depends(verify_internal_token)], include_in_schema=False)
+@router.post("/kiem-thu/nguon-yeu-cau", dependencies=[Depends(verify_internal_token)], include_in_schema=False)
 async def store_qa_requirement_source(
     project_id: str = Form(),
     document_id: str = Form(),
@@ -29,7 +29,7 @@ async def store_qa_requirement_source(
     return {"data": {"object_key": object_key, "sha256": hashlib.sha256(data).hexdigest(), "size": len(data), "content_type": file.content_type or "application/octet-stream"}}
 
 
-@router.get("/qa/requirement-source", dependencies=[Depends(verify_internal_token)], include_in_schema=False)
+@router.get("/kiem-thu/nguon-yeu-cau", dependencies=[Depends(verify_internal_token)], include_in_schema=False)
 async def read_qa_requirement_source(
     project_id: str,
     document_id: str,

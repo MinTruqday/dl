@@ -37,7 +37,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Veriq Notification", version=settings.VERSION, lifespan=lifespan)
 app.add_middleware(PrometheusMiddleware, service_name="notification")
-app.add_route("/metrics", metrics_endpoint("notification"))
+app.add_route("/so-lieu", metrics_endpoint("notification"))
 app.middleware("http")(add_trace_id_header)
 origins = [origin.strip() for origin in settings.CORS_ALLOWED_ORIGINS.split(",") if origin.strip()]
 app.add_middleware(
@@ -50,12 +50,12 @@ app.add_middleware(
 app.include_router(announcement_router)
 
 
-@app.get("/health")
+@app.get("/suc-khoe")
 async def health_check():
     return {"status": "healthy"}
 
 
-@app.get("/ready")
+@app.get("/san-sang")
 async def readiness_check():
     checks = {}
     try:

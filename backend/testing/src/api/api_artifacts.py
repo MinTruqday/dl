@@ -17,11 +17,11 @@ from src.domain.schemas import ImportConfirm, ImportCreate, TestCaseDraftCreate
 from src.services.linters import duplicate_score
 
 
-router = APIRouter(prefix="/api/qa", tags=["QA API Artifacts and Recovery"])
+router = APIRouter(prefix="/kiem-thu", tags=["QA API Artifacts and Recovery"])
 SECRET_PATTERN = re.compile(r"token|secret|password|authorization|cookie|api[-_]?key", re.I)
 
 
-@router.post("/projects/{project_id}/api-imports", status_code=201)
+@router.post("/du-an/{project_id}/nhap-dac-ta", status_code=201)
 async def import_api_artifact(
     project_id: str,
     payload: ImportCreate,
@@ -42,13 +42,13 @@ async def import_api_artifact(
     return envelope({**job, "operations": documents})
 
 
-@router.get("/projects/{project_id}/api-operations")
+@router.get("/du-an/{project_id}/thao-tac-dac-ta")
 async def list_api_operations(project_id: str, user: CurrentUser = Depends(get_current_user)):
     await get_project(project_id, user, "knowledge.read")
     return envelope(await database.value.api_operations.find({"project_id": project_id}).sort("path", 1).to_list(5000))
 
 
-@router.post("/api-operations/{operation_id}/generate-tests", status_code=201)
+@router.post("/thao-tac-dac-ta/{operation_id}/sinh-kiem-thu", status_code=201)
 async def generate_api_tests(operation_id: str, user: CurrentUser = Depends(get_current_user)):
     operation = await get_project_entity(
         "api_operations", operation_id, user, "ai.generate_testcase"
@@ -80,7 +80,7 @@ async def generate_api_tests(operation_id: str, user: CurrentUser = Depends(get_
     return envelope({"items": created, "model": model_metadata("api-test-generator-v1"), "evidence": operation})
 
 
-@router.post("/projects/{project_id}/trace-recovery", status_code=201)
+@router.post("/du-an/{project_id}/khoi-phuc-truy-vet", status_code=201)
 async def recover_trace_links(project_id: str, user: CurrentUser = Depends(get_current_user)):
     await get_project(project_id, user, "trace.recover")
     requirements = await database.value.requirement_versions.find({"project_id": project_id, "status": "BASELINED"}).to_list(5000)
@@ -101,7 +101,7 @@ async def recover_trace_links(project_id: str, user: CurrentUser = Depends(get_c
     return envelope({"items": suggestions, "model": model_metadata("trace-recovery-v1")})
 
 
-@router.post("/projects/{project_id}/test-case-imports", status_code=201)
+@router.post("/du-an/{project_id}/nhap-ca-kiem-thu", status_code=201)
 async def preview_test_import(project_id: str, payload: ImportCreate, user: CurrentUser = Depends(get_current_user)):
     await get_project(project_id, user, "testcase.import")
     if payload.format not in {"csv", "xlsx"}:
@@ -114,7 +114,7 @@ async def preview_test_import(project_id: str, payload: ImportCreate, user: Curr
     return envelope(job)
 
 
-@router.post("/projects/{project_id}/test-case-imports/upload", status_code=201)
+@router.post("/du-an/{project_id}/nhap-ca-kiem-thu/tai-len", status_code=201)
 async def upload_test_import(
     project_id: str,
     format: str = Form(),
@@ -134,7 +134,7 @@ async def upload_test_import(
     )
 
 
-@router.post("/test-case-imports/{job_id}/confirm")
+@router.post("/nhap-ca-kiem-thu/{job_id}/xac-nhan")
 async def confirm_test_import(job_id: str, payload: ImportConfirm, user: CurrentUser = Depends(get_current_user)):
     job = await get_project_entity(
         "test_imports", job_id, user, "testcase.import"
@@ -153,7 +153,7 @@ async def confirm_test_import(job_id: str, payload: ImportConfirm, user: Current
     return envelope({"job_id": job_id, "drafts": created})
 
 
-@router.get("/projects/{project_id}/test-cases/export")
+@router.get("/du-an/{project_id}/ca-kiem-thu/xuat")
 async def export_test_cases(
     project_id: str,
     format: str = Query("csv", pattern="^(csv|xlsx)$"),

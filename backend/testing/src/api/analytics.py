@@ -11,10 +11,10 @@ from src.domain.schemas import ProjectQuestionInput, SearchInput
 from src.services.project_knowledge import search_project_with_status
 
 
-router = APIRouter(prefix="/api/qa", tags=["QA Analytics"])
+router = APIRouter(prefix="/kiem-thu", tags=["QA Analytics"])
 
 
-@router.get("/projects/{project_id}/dashboard")
+@router.get("/du-an/{project_id}/tong-quan")
 async def dashboard(project_id: str, user: CurrentUser = Depends(get_current_user)):
     await get_project(project_id, user, "analytics.read")
     requirements = await database.value.requirements.count_documents({"project_id": project_id, "status": "BASELINED"})
@@ -72,7 +72,7 @@ async def dashboard(project_id: str, user: CurrentUser = Depends(get_current_use
     return envelope({"requirements": requirements, "active_tests": active_tests, "tests_needing_update": stale_tests, "pending_proposals": pending_proposals, "current_runs": current_runs, "open_defects": open_defects, "open_defects_by_severity": open_defects_by_severity, "latest_run": latest_run_summary, "changes_waiting_impact": changes_waiting_impact, **coverage, "recent_changes": recent_changes})
 
 
-@router.post("/projects/{project_id}/knowledge/search")
+@router.post("/du-an/{project_id}/tri-thuc/tim-kiem")
 async def search_knowledge(
     project_id: str,
     payload: SearchInput,
@@ -132,7 +132,7 @@ async def search_knowledge(
     return envelope({"items": results[: payload.limit], "filters": {"project_id": project_id, "artifact_types": list(requested)}, "retrieval_version": "project-hybrid-knowledge-v1", "degraded_mode": dense_result["degraded_mode"], "fallback": dense_result["degraded_mode"] != "NORMAL", "error_code": dense_result["error_code"]}, degraded_mode=dense_result["degraded_mode"] if dense_result["degraded_mode"] != "NORMAL" else None)
 
 
-@router.post("/projects/{project_id}/ai/ask")
+@router.post("/du-an/{project_id}/ai/hoi-dap")
 async def ask_project(
     project_id: str,
     payload: ProjectQuestionInput,
@@ -152,7 +152,7 @@ async def ask_project(
     }
     try:
         async with httpx.AsyncClient(timeout=120) as client:
-            response = await client.post(f"{settings.AI_URL.rstrip('/')}/suy-luan/noi-bo/qa/ho-tro", headers={"X-Internal-Token": settings.SECRET_KEY}, json=request)
+            response = await client.post(f"{settings.AI_URL.rstrip('/')}/suy-luan/noi-bo/kiem-thu/ho-tro", headers={"X-Internal-Token": settings.SECRET_KEY}, json=request)
             response.raise_for_status()
             result = response.json()
     except httpx.HTTPError as error:
@@ -161,7 +161,7 @@ async def ask_project(
     return envelope({"answer": result.get("answer") or "Không có câu trả lời có căn cứ", "evidence": evidence, "confidence": result.get("confidence", 0), "warnings": result.get("warnings", []), "model": result.get("model", {}), "reason_codes": result.get("reason_codes", [])}, status=result.get("status", "SUCCESS"), degraded_mode=result.get("degraded_mode"))
 
 
-@router.get("/projects/{project_id}/audit")
+@router.get("/du-an/{project_id}/nhat-ky")
 async def project_audit(
     project_id: str,
     limit: int = Query(default=100, ge=1, le=500),
@@ -171,7 +171,7 @@ async def project_audit(
     return envelope(await database.value.audit_events.find({"project_id": project_id}).sort("created_at", -1).to_list(limit))
 
 
-@router.get("/projects/{project_id}/maintenance-analytics")
+@router.get("/du-an/{project_id}/phan-tich-bao-tri")
 async def maintenance_analytics(project_id: str, user: CurrentUser = Depends(get_current_user)):
     await get_project(project_id, user, "analytics.read")
     impact_count = await database.value.impact_analyses.count_documents({"project_id": project_id})
@@ -179,7 +179,7 @@ async def maintenance_analytics(project_id: str, user: CurrentUser = Depends(get
     return envelope({"impact_analysis_count": impact_count, "tests_stale": stale_count})
 
 
-@router.get("/projects/{project_id}/ai-analytics")
+@router.get("/du-an/{project_id}/phan-tich-ai")
 async def ai_analytics(project_id: str, user: CurrentUser = Depends(get_current_user)):
     await get_project(project_id, user, "analytics.ai.read")
     pipeline = [
@@ -224,7 +224,7 @@ async def ai_analytics(project_id: str, user: CurrentUser = Depends(get_current_
     )
 
 
-@router.get("/projects/{project_id}/reports/execution")
+@router.get("/du-an/{project_id}/bao-cao/thuc-thi")
 async def execution_report(
     project_id: str,
     release: str = Query(default="", max_length=200),
@@ -275,7 +275,7 @@ async def execution_report(
     )
 
 
-@router.get("/projects/{project_id}/reports/defects")
+@router.get("/du-an/{project_id}/bao-cao/loi")
 async def defect_report(
     project_id: str,
     release: str = Query(default="", max_length=200),
@@ -325,7 +325,7 @@ async def defect_report(
     )
 
 
-@router.get("/projects/{project_id}/activity")
+@router.get("/du-an/{project_id}/hoat-dong")
 async def project_activity(
     project_id: str,
     limit: int = Query(default=50, ge=1, le=200),

@@ -12,7 +12,7 @@ from src.core.dependency import Role, require_role, verify_internal_token
 router = APIRouter(prefix="/su-kien")
 
 
-@router.post("/webhook", dependencies=[Depends(verify_internal_token)])
+@router.post("/moc-goi", dependencies=[Depends(verify_internal_token)])
 async def receive_webhook(body: WebhookPayload):
     """Validate and enqueue an internal agent event webhook"""
     try:
@@ -48,7 +48,7 @@ async def receive_webhook(body: WebhookPayload):
         raise HTTPException(status_code=500, detail={"code": "webhook_processing_failed"})
 
 
-@router.post("/webhook/tai-lieu-dang-tai", dependencies=[Depends(verify_internal_token)])
+@router.post("/moc-goi/tai-lieu-dang-tai", dependencies=[Depends(verify_internal_token)])
 async def document_uploaded_webhook(
     document_id: str, user_id: str = "", superseded_document_id: str = ""
 ):

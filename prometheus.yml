@@ -4,7 +4,7 @@ global:
 
 scrape_configs:
   - job_name: veriq-services
-    metrics_path: /metrics
+    metrics_path: /so-lieu
     static_configs:
       - targets:
           - ai:8000
@@ -15,7 +15,7 @@ scrape_configs:
           - worker:8000
 
   - job_name: ai-harness
-    metrics_path: /evaluate/metrics
+    metrics_path: /danh-gia/so-lieu
     static_configs:
       - targets:
           - ai:8000

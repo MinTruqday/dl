@@ -47,27 +47,27 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     admin_headers = login(client, admin_email)
     user_headers = login(client, user_email)
 
-    assert client.get("/api/admin/operations/queue", headers=user_headers).status_code == 403
-    assert client.get("/api/admin/operations/queue", headers=admin_headers).status_code == 200
-    assert client.get("/api/admin/operations/rag", headers=admin_headers).status_code == 200
-    assert client.get("/api/admin/operations/cache", headers=admin_headers).status_code == 200
+    assert client.get("/quan-tri/van-hanh/hang-doi", headers=user_headers).status_code == 403
+    assert client.get("/quan-tri/van-hanh/hang-doi", headers=admin_headers).status_code == 200
+    assert client.get("/quan-tri/van-hanh/rag", headers=admin_headers).status_code == 200
+    assert client.get("/quan-tri/van-hanh/bo-nho-dem", headers=admin_headers).status_code == 200
     assert (
-        client.get("/api/admin/operations/storage-usage", headers=admin_headers).status_code == 200
+        client.get("/quan-tri/van-hanh/dung-luong-luu-tru", headers=admin_headers).status_code == 200
     )
-    versions = client.get("/api/admin/operations/runtime-versions", headers=admin_headers)
+    versions = client.get("/quan-tri/van-hanh/phien-ban-van-hanh", headers=admin_headers)
     assert versions.status_code == 200, versions.text
     assert versions.json()["data"]["schema_version"] == "v4.3"
 
     config_paths = [
-        "/api/admin/security/rate-limits",
-        "/api/admin/security/break-glass-policy",
-        "/api/admin/ai/limits",
-        "/api/admin/ai/retrieval",
-        "/api/admin/config/feature-flags",
-        "/api/admin/config/localization",
-        "/api/admin/config/retention",
-        "/api/admin/config/default-quotas",
-        "/api/admin/config/import-export",
+        "/quan-tri/bao-mat/gioi-han-tan-suat",
+        "/quan-tri/bao-mat/chinh-sach-truy-cap-khan-cap",
+        "/quan-tri/ai/gioi-han",
+        "/quan-tri/ai/truy-xuat",
+        "/quan-tri/cau-hinh/co-tinh-nang",
+        "/quan-tri/cau-hinh/dia-phuong-hoa",
+        "/quan-tri/cau-hinh/luu-giu",
+        "/quan-tri/cau-hinh/han-muc-mac-dinh",
+        "/quan-tri/cau-hinh/nhap-xuat",
     ]
     for path in config_paths:
         updated = client.patch(
@@ -80,21 +80,21 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         assert client.get(path, headers=admin_headers).status_code == 200
 
     maintenance = client.patch(
-        "/api/admin/config/maintenance",
+        "/quan-tri/cau-hinh/bao-tri",
         headers=admin_headers,
         json={"enabled": True, "banner": "Bảo trì kiểm thử", "reason": "Kiểm tra V4.3"},
     )
     assert maintenance.status_code == 200, maintenance.text
     assert maintenance.json()["data"]["enabled"] is True
     maintenance = client.patch(
-        "/api/admin/config/maintenance",
+        "/quan-tri/cau-hinh/bao-tri",
         headers=admin_headers,
         json={"enabled": False, "banner": "", "reason": "Hoàn tất kiểm tra V4.3"},
     )
     assert maintenance.status_code == 200, maintenance.text
 
     secret = client.post(
-        "/api/admin/secrets",
+        "/quan-tri/bi-mat",
         headers=admin_headers,
         json={
             "name": f"secret-{run_id}",
@@ -107,7 +107,7 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     secret_id = secret.json()["data"]["_id"]
     assert secret.json()["data"]["reference"] == "Đã cấu hình"
     identity = client.post(
-        "/api/admin/security/service-identities",
+        "/quan-tri/bao-mat/danh-tinh-dich-vu",
         headers=admin_headers,
         json={
             "name": f"worker-{run_id}",
@@ -120,27 +120,27 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     identity_id = identity.json()["data"]["_id"]
     assert identity.json()["data"]["secret_reference"] == "Đã cấu hình"
     rotated = client.post(
-        f"/api/admin/security/service-identities/{identity_id}/rotate",
+        f"/quan-tri/bao-mat/danh-tinh-dich-vu/{identity_id}/xoay-vong",
         headers=admin_headers,
         json={"secret_reference": f"secret-next-{run_id}", "reason": "Luân chuyển V4.3"},
     )
     assert rotated.status_code == 200, rotated.text
     rotated_secret = client.post(
-        f"/api/admin/secrets/{secret_id}/rotate",
+        f"/quan-tri/bi-mat/{secret_id}/xoay-vong",
         headers=admin_headers,
         json={"reference": f"vault://next-{run_id}", "reason": "Luân chuyển V4.3"},
     )
     assert rotated_secret.status_code == 200, rotated_secret.text
     removed_secret = client.request(
         "DELETE",
-        f"/api/admin/secrets/{secret_id}",
+        f"/quan-tri/bi-mat/{secret_id}",
         headers=admin_headers,
         json={"reason": "Dọn dữ liệu kiểm thử V4.3"},
     )
     assert removed_secret.status_code == 200, removed_secret.text
 
     bulk_preview = client.post(
-        "/api/admin/users/bulk/preview",
+        "/quan-tri/tai-khoan/hang-loat/xem-truoc",
         headers=admin_headers,
         json={
             "action": "REVOKE_SESSIONS",
@@ -153,7 +153,7 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     assert preview["user_ids"] == [user_id]
     assert preview["missing_user_ids"] == ["missing-user"]
     bulk_confirm = client.post(
-        f"/api/admin/users/bulk/{preview['_id']}/confirm",
+        f"/quan-tri/tai-khoan/hang-loat/{preview['_id']}/xac-nhan",
         headers=admin_headers,
         json={"confirmation": "CONFIRM"},
     )
@@ -162,7 +162,7 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     user_headers = login(client, user_email)
 
     project_response = httpx.post(
-        f"{testing_url}/api/qa/projects",
+        f"{testing_url}/kiem-thu/du-an",
         headers=user_headers,
         json={
             "key": f"V43-{run_id[:10].upper()}",
@@ -176,12 +176,12 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     assert project_response.status_code == 201, project_response.text
     project = project_response.json()["data"]
     project_id = project["_id"]
-    diagnostics = client.get(f"/api/admin/projects/{project_id}/memberships", headers=admin_headers)
+    diagnostics = client.get(f"/quan-tri/du-an/{project_id}/vai-tro-du-an", headers=admin_headers)
     assert diagnostics.status_code == 200, diagnostics.text
     assert diagnostics.json()["data"][0]["user_id"] == user_id
 
     grant = client.post(
-        "/api/admin/security/break-glass",
+        "/quan-tri/bao-mat/truy-cap-khan-cap",
         headers=admin_headers,
         json={
             "project_id": project_id,
@@ -194,26 +194,26 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     assert grant.status_code == 201, grant.text
     grant_id = grant.json()["data"]["_id"]
     break_glass_project = httpx.get(
-        f"{testing_url}/api/qa/projects/{project_id}", headers=admin_headers, timeout=30
+        f"{testing_url}/kiem-thu/du-an/{project_id}", headers=admin_headers, timeout=30
     )
     assert break_glass_project.status_code == 200, break_glass_project.text
     assert break_glass_project.json()["data"]["access_context"]["mode"] == "BREAK_GLASS"
     assert "requirement.read" in break_glass_project.json()["data"]["current_permissions"]
     revoked = client.post(
-        f"/api/admin/security/break-glass/{grant_id}/revoke",
+        f"/quan-tri/bao-mat/truy-cap-khan-cap/{grant_id}/thu-hoi",
         headers=admin_headers,
         json={"reason": "Hoàn tất kiểm tra quyền khẩn cấp V4.3"},
     )
     assert revoked.status_code == 200, revoked.text
     assert (
         httpx.get(
-            f"{testing_url}/api/qa/projects/{project_id}", headers=admin_headers, timeout=30
+            f"{testing_url}/kiem-thu/du-an/{project_id}", headers=admin_headers, timeout=30
         ).status_code
         == 403
     )
 
     reindex = client.post(
-        "/api/admin/operations/rag/reindex",
+        "/quan-tri/van-hanh/rag/lap-chi-muc-lai",
         headers=admin_headers,
         json={"project_id": project_id, "artifact_version_ids": [], "reason": "Kiểm tra RAG V4.3"},
     )
@@ -223,7 +223,7 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     cache = Redis.from_url(os.environ["REDIS_URI"], decode_responses=True)
     cache.set(f"project_metadata:{run_id}", "test")
     cleared = client.post(
-        "/api/admin/operations/cache/clear",
+        "/quan-tri/van-hanh/bo-nho-dem/don-sach",
         headers=admin_headers,
         json={
             "scope": "PROJECT_METADATA",
@@ -237,7 +237,7 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     cache.close()
 
     emergency = client.post(
-        "/api/admin/security/emergency-revoke",
+        "/quan-tri/bao-mat/thu-hoi-khan-cap",
         headers=admin_headers,
         json={
             "scope": "USER",
@@ -250,7 +250,7 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
 
     deleted = client.request(
         "DELETE",
-        f"/api/admin/users/{deleted_id}",
+        f"/quan-tri/tai-khoan/{deleted_id}",
         headers=admin_headers,
         json={"confirmation": deleted_email, "reason": "Dọn tài khoản kiểm thử V4.3"},
     )
@@ -261,7 +261,7 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
 
     removed_project = client.request(
         "DELETE",
-        f"/api/admin/projects/{project_id}",
+        f"/quan-tri/du-an/{project_id}",
         headers=admin_headers,
         json={"confirmation": project["key"], "reason": "Dọn dự án kiểm thử V4.3"},
     )

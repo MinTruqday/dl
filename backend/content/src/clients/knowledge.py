@@ -9,7 +9,7 @@ class KnowledgeClient:
         try:
             async with httpx.AsyncClient(timeout=20) as client:
                 response = await client.delete(
-                    f"{settings.AI_URL}/knowledge/document/{document_id}",
+                    f"{settings.AI_URL}/tri-thuc/tai-lieu/{document_id}",
                     headers={"X-Internal-Token": settings.SECRET_KEY},
                     params={"requester_id": requester_id, "is_admin": str(is_admin).lower()},
                 )

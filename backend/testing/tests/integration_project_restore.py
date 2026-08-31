@@ -24,7 +24,7 @@ viewer = identity("restore-viewer-v42")
 with httpx.Client(base_url=base_url, timeout=30) as client:
     stamp = int(time.time() * 1000)
     created = client.post(
-        "/api/qa/projects",
+        "/kiem-thu/du-an",
         headers=lead,
         json={
             "key": f"RST{stamp}",
@@ -43,45 +43,45 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     project_id = project["_id"]
 
     member = client.post(
-        f"/api/qa/projects/{project_id}/members",
+        f"/kiem-thu/du-an/{project_id}/thanh-vien",
         headers=lead,
         json={"user_id": "restore-viewer-v42", "project_role": "VIEWER"},
     )
     assert member.status_code == 201, member.text
 
     invitation = client.post(
-        f"/api/qa/projects/{project_id}/invitations",
+        f"/kiem-thu/du-an/{project_id}/loi-moi",
         headers=lead,
         json={"user_id": "restore-invited-v42", "project_role": "TESTER"},
     )
     assert invitation.status_code == 201, invitation.text
     resent = client.post(
-        f"/api/qa/projects/{project_id}/members/restore-invited-v42/resend-invite",
+        f"/kiem-thu/du-an/{project_id}/thanh-vien/khoi-phuc-invited-v42/gui-lai-loi-moi",
         headers=lead,
     )
     assert resent.status_code == 200, resent.text
     cancelled = client.post(
-        f"/api/qa/projects/{project_id}/members/restore-invited-v42/cancel-invite",
+        f"/kiem-thu/du-an/{project_id}/thanh-vien/khoi-phuc-invited-v42/huy-loi-moi",
         headers=lead,
     )
     assert cancelled.status_code == 200, cancelled.text
     assert cancelled.json()["data"]["status"] == "CANCELLED"
 
     accepted_invitation = client.post(
-        f"/api/qa/projects/{project_id}/invitations",
+        f"/kiem-thu/du-an/{project_id}/loi-moi",
         headers=lead,
         json={"user_id": "restore-accept-v42", "project_role": "BA"},
     )
     assert accepted_invitation.status_code == 201, accepted_invitation.text
     accepted = client.post(
-        f"/api/qa/projects/{project_id}/members/restore-accept-v42/accept",
+        f"/kiem-thu/du-an/{project_id}/thanh-vien/khoi-phuc-accept-v42/chap-nhan",
         headers=identity("restore-accept-v42"),
     )
     assert accepted.status_code == 200, accepted.text
     assert accepted.json()["data"]["status"] == "ACTIVE"
 
     source = client.post(
-        f"/api/qa/projects/{project_id}/requirement-documents",
+        f"/kiem-thu/du-an/{project_id}/tai-lieu-yeu-cau",
         headers=lead,
         json={
             "filename": "v42-source.md",
@@ -92,30 +92,30 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     assert source.status_code == 201, source.text
     source_id = source.json()["data"]["_id"]
     sources = client.get(
-        f"/api/qa/projects/{project_id}/requirement-documents",
+        f"/kiem-thu/du-an/{project_id}/tai-lieu-yeu-cau",
         headers=lead,
     )
     assert sources.status_code == 200, sources.text
     assert source_id in {item["_id"] for item in sources.json()["data"]}
     downloaded = client.get(
-        f"/api/qa/requirement-documents/{source_id}/download",
+        f"/kiem-thu/tai-lieu-yeu-cau/{source_id}/tai-xuong",
         headers=lead,
     )
     assert downloaded.status_code == 200, downloaded.text
     assert downloaded.content == "Nguồn yêu cầu V4.2".encode()
     viewer_download = client.get(
-        f"/api/qa/requirement-documents/{source_id}/download",
+        f"/kiem-thu/tai-lieu-yeu-cau/{source_id}/tai-xuong",
         headers=viewer,
     )
     assert viewer_download.status_code == 403, viewer_download.text
     archived_source = client.post(
-        f"/api/qa/requirement-documents/{source_id}/archive",
+        f"/kiem-thu/tai-lieu-yeu-cau/{source_id}/luu-tru",
         headers=lead,
         json={"expected_revision": 1, "reason": "Kiểm tra lưu trữ nguồn"},
     )
     assert archived_source.status_code == 200, archived_source.text
     restored_source = client.post(
-        f"/api/qa/requirement-documents/{source_id}/restore",
+        f"/kiem-thu/tai-lieu-yeu-cau/{source_id}/khoi-phuc",
         headers=lead,
         json={"expected_revision": 2, "reason": "Kiểm tra khôi phục nguồn"},
     )
@@ -123,7 +123,7 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     assert restored_source.json()["data"]["status"] == "READY"
 
     archived = client.post(
-        f"/api/qa/projects/{project_id}/archive",
+        f"/kiem-thu/du-an/{project_id}/luu-tru",
         headers=lead,
         json={"expected_revision": 1, "reason": "Kiểm tra lưu trữ dự án V4.2"},
     )
@@ -131,7 +131,7 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     assert archived.json()["data"]["status"] == "archived"
 
     denied_archived_artifacts = client.get(
-        f"/api/qa/projects/{project_id}/requirements",
+        f"/kiem-thu/du-an/{project_id}/yeu-cau",
         headers=viewer,
     )
     assert denied_archived_artifacts.status_code == 403, denied_archived_artifacts.text
@@ -141,27 +141,27 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     )
 
     archived_project = client.get(
-        f"/api/qa/projects/{project_id}",
+        f"/kiem-thu/du-an/{project_id}",
         headers=viewer,
     )
     assert archived_project.status_code == 200, archived_project.text
 
     mutation = client.post(
-        f"/api/qa/projects/{project_id}/requirements",
+        f"/kiem-thu/du-an/{project_id}/yeu-cau",
         headers=lead,
         json={"title": "Không được tạo khi dự án đã lưu trữ"},
     )
     assert mutation.status_code == 409, mutation.text
 
     viewer_restore = client.post(
-        f"/api/qa/projects/{project_id}/restore",
+        f"/kiem-thu/du-an/{project_id}/khoi-phuc",
         headers=viewer,
         json={"expected_revision": 2, "reason": "Viewer không được khôi phục"},
     )
     assert viewer_restore.status_code == 403, viewer_restore.text
 
     restored = client.post(
-        f"/api/qa/projects/{project_id}/restore",
+        f"/kiem-thu/du-an/{project_id}/khoi-phuc",
         headers=lead,
         json={"expected_revision": 2, "reason": "Khôi phục dự án V4.2"},
     )
@@ -169,7 +169,7 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     assert restored.json()["data"]["status"] == "active"
     assert restored.json()["meta"]["revision"] == 3
 
-    audits = client.get(f"/api/qa/projects/{project_id}/audit", headers=lead)
+    audits = client.get(f"/kiem-thu/du-an/{project_id}/nhat-ky", headers=lead)
     assert audits.status_code == 200, audits.text
     actions = {item["action"] for item in audits.json()["data"]}
     assert {"project_archived", "project_restored"} <= actions

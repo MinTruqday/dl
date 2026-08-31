@@ -22,7 +22,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Veriq Content", version=settings.VERSION, lifespan=lifespan)
 app.add_middleware(PrometheusMiddleware, service_name="content")
-app.add_route("/metrics", metrics_endpoint("content"))
+app.add_route("/so-lieu", metrics_endpoint("content"))
 
 app.add_middleware(
     CORSMiddleware,
@@ -38,12 +38,12 @@ app.include_router(document)
 app.include_router(version)
 
 
-@app.get("/health", include_in_schema=False)
+@app.get("/suc-khoe", include_in_schema=False)
 async def health_check():
     return {"status": "healthy", "service": "content"}
 
 
-@app.get("/ready", include_in_schema=False)
+@app.get("/san-sang", include_in_schema=False)
 async def readiness_check():
     if database.mongodb is None:
         return JSONResponse(status_code=503, content={"status": "not_ready"})

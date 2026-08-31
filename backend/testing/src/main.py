@@ -36,7 +36,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Veriq", version=settings.VERSION, lifespan=lifespan)
 app.add_middleware(PrometheusMiddleware)
-app.add_route("/metrics", metrics_endpoint)
+app.add_route("/so-lieu", metrics_endpoint)
 origins = [origin.strip() for origin in settings.CORS_ALLOWED_ORIGINS.split(",") if origin.strip()]
 app.add_middleware(
     CORSMiddleware,
@@ -92,12 +92,12 @@ async def unhandled_exception_handler(request: Request, error: Exception):
     return JSONResponse(status_code=500, content={"error": {"code": "INTERNAL_SERVER_ERROR", "message": "Thao tác thất bại", "details": {}}, "trace_id": trace_id, **operation})
 
 
-@app.get("/health", include_in_schema=False)
+@app.get("/suc-khoe", include_in_schema=False)
 async def health():
     return {"status": "healthy", "service": "testing"}
 
 
-@app.get("/ready", include_in_schema=False)
+@app.get("/san-sang", include_in_schema=False)
 async def ready():
     try:
         if database.client is None:

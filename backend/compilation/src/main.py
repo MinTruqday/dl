@@ -33,7 +33,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Veriq Compilation", version=settings.VERSION, lifespan=lifespan)
 app.add_middleware(PrometheusMiddleware, service_name="compilation")
-app.add_route("/metrics", metrics_endpoint("compilation"))
+app.add_route("/so-lieu", metrics_endpoint("compilation"))
 app.middleware("http")(add_trace_id_header)
 app.add_middleware(
     CORSMiddleware,
@@ -44,12 +44,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-@app.get("/health", include_in_schema=False)
+@app.get("/suc-khoe", include_in_schema=False)
 async def health_check():
     return {"status": "healthy", "service": "compilation"}
 
 
-@app.get("/ready", include_in_schema=False)
+@app.get("/san-sang", include_in_schema=False)
 async def readiness_check():
     try:
         await redis.ping()

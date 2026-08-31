@@ -13,11 +13,11 @@ from src.core.metrics import STALE, TRACE_ACCEPTANCE_RATE, UNCOVERED
 from src.domain.schemas import TraceLinkCreate
 
 
-router = APIRouter(prefix="/api/qa", tags=["QA Traceability"])
+router = APIRouter(prefix="/kiem-thu", tags=["QA Traceability"])
 
 
-@router.post("/trace-links", status_code=201)
-@router.post("/projects/{project_id}/trace-links", status_code=201)
+@router.post("/lien-ket-truy-vet", status_code=201)
+@router.post("/du-an/{project_id}/lien-ket-truy-vet", status_code=201)
 async def create_trace_link(
     payload: TraceLinkCreate,
     project_id: str | None = None,
@@ -67,8 +67,8 @@ async def create_trace_link(
     return envelope(link)
 
 
-@router.post("/trace-links/{link_id}/confirm")
-@router.post("/projects/{project_id}/trace-links/{link_id}/confirm")
+@router.post("/lien-ket-truy-vet/{link_id}/xac-nhan")
+@router.post("/du-an/{project_id}/lien-ket-truy-vet/{link_id}/xac-nhan")
 async def confirm_trace_link(link_id: str, project_id: str | None = None, user: CurrentUser = Depends(get_current_user)):
     if project_id is not None:
         link = await get_project_entity("trace_links", link_id, user, "trace.confirm")
@@ -77,8 +77,8 @@ async def confirm_trace_link(link_id: str, project_id: str | None = None, user: 
     return await review_link(link_id, "CONFIRMED", user)
 
 
-@router.post("/trace-links/{link_id}/reject")
-@router.post("/projects/{project_id}/trace-links/{link_id}/reject")
+@router.post("/lien-ket-truy-vet/{link_id}/tu-choi")
+@router.post("/du-an/{project_id}/lien-ket-truy-vet/{link_id}/tu-choi")
 async def reject_trace_link(link_id: str, project_id: str | None = None, user: CurrentUser = Depends(get_current_user)):
     if project_id is not None:
         link = await get_project_entity("trace_links", link_id, user, "trace.review")
@@ -87,8 +87,8 @@ async def reject_trace_link(link_id: str, project_id: str | None = None, user: C
     return await review_link(link_id, "REJECTED", user)
 
 
-@router.delete("/trace-links/{link_id}")
-@router.delete("/projects/{project_id}/trace-links/{link_id}")
+@router.delete("/lien-ket-truy-vet/{link_id}")
+@router.delete("/du-an/{project_id}/lien-ket-truy-vet/{link_id}")
 async def revoke_trace_link(link_id: str, project_id: str | None = None, user: CurrentUser = Depends(get_current_user)):
     link = await get_project_entity("trace_links", link_id, user, "trace.revoke")
     if project_id is not None and link["project_id"] != project_id:
@@ -131,7 +131,7 @@ async def review_link(link_id, status, user):
     return envelope(link)
 
 
-@router.get("/projects/{project_id}/traceability")
+@router.get("/du-an/{project_id}/truy-vet")
 async def traceability(project_id: str, user: CurrentUser = Depends(get_current_user)):
     await get_project(project_id, user, "trace.read")
     requirements = await database.value.requirements.find({"project_id": project_id}).sort("requirement_key", 1).to_list(5000)
@@ -176,7 +176,7 @@ async def traceability(project_id: str, user: CurrentUser = Depends(get_current_
     return envelope({"requirements": requirements, "requirement_versions": versions, "acceptance_criteria": criteria, "test_cases": tests, "test_case_versions": test_versions, "trace_links": enriched_links, "defects": defects})
 
 
-@router.get("/projects/{project_id}/coverage")
+@router.get("/du-an/{project_id}/do-phu")
 async def coverage(
     project_id: str,
     build: str = Query(default="", max_length=200),
@@ -234,7 +234,7 @@ async def coverage(
     return envelope({"requirement_coverage": requirement_coverage, "acceptance_criterion_coverage": criterion_coverage, "fresh_coverage": fresh_coverage, "execution_coverage": execution_coverage, "category_coverage": categories, "uncovered_requirements": uncovered, "unlinked_tests": unlinked_tests, "stale_tests": stale_tests, "latest_execution": latest_execution, "scope": {"build": build or None, "release": release or None, "test_case_version_ids": sorted(execution_scope_ids)}})
 
 
-@router.get("/requirements/{requirement_id}/coverage")
+@router.get("/yeu-cau/{requirement_id}/do-phu")
 async def requirement_coverage(requirement_id: str, user: CurrentUser = Depends(get_current_user)):
     requirement = await get_project_entity("requirements", requirement_id, user, "coverage.read")
     versions = await database.value.requirement_versions.find({"requirement_id": requirement_id, "project_id": requirement["project_id"]}).sort("version", 1).to_list(500)
@@ -242,7 +242,7 @@ async def requirement_coverage(requirement_id: str, user: CurrentUser = Depends(
     return envelope({"requirement_id": requirement_id, "versions": versions, "trace_links": links, "covered": any(item.get("status") == "CONFIRMED" for item in links)})
 
 
-@router.get("/projects/{project_id}/coverage-snapshots")
+@router.get("/du-an/{project_id}/anh-chup-do-phu")
 async def list_coverage_snapshots(
     project_id: str,
     limit: int = Query(default=100, ge=1, le=500),
@@ -252,7 +252,7 @@ async def list_coverage_snapshots(
     return envelope(await database.value.coverage_snapshots.find({"project_id": project_id}).sort("created_at", -1).to_list(limit))
 
 
-@router.post("/projects/{project_id}/coverage-snapshots", status_code=201)
+@router.post("/du-an/{project_id}/anh-chup-do-phu", status_code=201)
 async def create_coverage_snapshot(
     project_id: str,
     payload: dict = Body(default={}),
@@ -286,14 +286,14 @@ async def create_coverage_snapshot(
     return envelope(snapshot)
 
 
-@router.get("/test-cases/{test_case_id}/trace")
+@router.get("/ca-kiem-thu/{test_case_id}/truy-vet")
 async def test_case_trace(test_case_id: str, user: CurrentUser = Depends(get_current_user)):
     test_case = await get_project_entity("test_cases", test_case_id, user, "trace.read")
     links = await database.value.trace_links.find({"project_id": test_case["project_id"], "target_type": "test_case_version", "target_id": {"$in": [test_case.get("current_version_id")]}}).to_list(5000)
     return envelope({"test_case": test_case, "trace_links": links})
 
 
-@router.get("/projects/{project_id}/traceability/export")
+@router.get("/du-an/{project_id}/truy-vet/xuat")
 async def export_traceability(project_id: str, user: CurrentUser = Depends(get_current_user)):
     await get_project(project_id, user, "report.export")
     links = await database.value.trace_links.find({"project_id": project_id}).to_list(50000)

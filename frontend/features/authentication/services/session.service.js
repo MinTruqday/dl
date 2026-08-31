@@ -274,7 +274,7 @@ export const getGoogleLoginUrlAPI = async () => {
 };
 export const completeGoogleLoginAPI = async (code, state) => {
   const res = await fetch(
-    `${API_URL}/google/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`,
+    `${API_URL}/google/chuyen-huong?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`,
     { credentials: "include" },
   );
   const data = await res.json();
