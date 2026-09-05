@@ -13,47 +13,47 @@ import {
   useQaActionDialog,
 } from "../../components/TestingUi";
 import { testingApi } from "../../services/testing.service";
-import { formatDate, messageOf } from "../../lib/testing";
+import { formatDate, messageOf, valueLabel } from "../../lib/testing";
 
 const toggleSettings = [
   ["requirement_lint_blocking", "Chặn duyệt yêu cầu khi còn lỗi kiểm tra"],
-  ["trace_before_baseline", "Bắt buộc truy vết trước khi baseline yêu cầu"],
-  ["ba_can_approve_requirements", "Cho phép BA duyệt yêu cầu theo chính sách"],
+  ["trace_before_baseline", "Bắt buộc truy vết trước khi đặt phiên bản chuẩn cho yêu cầu"],
+  ["ba_can_approve_requirements", "Cho phép chuyên viên phân tích duyệt yêu cầu"],
   ["testcase_lint_blocking", "Chặn duyệt ca kiểm thử khi còn lỗi kiểm tra"],
   ["trace_before_testcase_approve", "Bắt buộc truy vết trước khi duyệt ca kiểm thử"],
-  ["tester_can_create_run", "Cho phép Tester tạo Test Run"],
-  ["tester_can_manage_runs", "Cho phép Tester quản lý Test Run"],
-  ["tester_can_assign_runs", "Cho phép Tester gán Test Run và ca kiểm thử"],
-  ["tester_can_start_runs", "Cho phép Tester bắt đầu Test Run"],
-  ["tester_can_complete_runs", "Cho phép Tester hoàn tất Test Run"],
-  ["tester_can_abort_runs", "Cho phép Tester huỷ Test Run"],
-  ["tester_can_correct_results", "Cho phép Tester sửa kết quả bằng sự kiện hiệu chỉnh"],
-  ["tester_can_assign_testplans", "Cho phép Tester phân công thành viên trong Test Plan"],
-  ["partial_complete_allowed", "Cho phép hoàn tất một phần Test Run"],
+  ["tester_can_create_run", "Cho phép kiểm thử viên tạo lần chạy kiểm thử"],
+  ["tester_can_manage_runs", "Cho phép kiểm thử viên quản lý lần chạy kiểm thử"],
+  ["tester_can_assign_runs", "Cho phép kiểm thử viên phân công lần chạy và ca kiểm thử"],
+  ["tester_can_start_runs", "Cho phép kiểm thử viên bắt đầu lần chạy kiểm thử"],
+  ["tester_can_complete_runs", "Cho phép kiểm thử viên hoàn tất lần chạy kiểm thử"],
+  ["tester_can_abort_runs", "Cho phép kiểm thử viên hủy lần chạy kiểm thử"],
+  ["tester_can_correct_results", "Cho phép kiểm thử viên hiệu chỉnh kết quả"],
+  ["tester_can_assign_testplans", "Cho phép kiểm thử viên phân công kế hoạch kiểm thử"],
+  ["partial_complete_allowed", "Cho phép hoàn tất một phần lần chạy kiểm thử"],
   ["allow_not_applicable_results", "Cho phép kết quả Không áp dụng khi có lý do"],
-  ["tester_can_close_defect", "Cho phép Tester đóng Defect"],
-  ["tester_can_reject_defect", "Cho phép Tester từ chối Defect"],
-  ["tester_can_mark_duplicate_defect", "Cho phép Tester đánh dấu Defect trùng"],
-  ["ba_can_create_defect", "Cho phép BA tạo Defect"],
-  ["developer_can_create_defect", "Cho phép Developer tạo Defect"],
-  ["ba_can_update_defect", "Cho phép BA cập nhật Defect"],
-  ["tester_can_confirm_trace", "Cho phép Tester xác nhận Trace"],
-  ["tester_can_revoke_trace", "Cho phép Tester thu hồi Trace"],
-  ["ba_can_confirm_trace", "Cho phép BA xác nhận Trace"],
-  ["ba_can_revoke_trace", "Cho phép BA thu hồi Trace"],
-  ["tester_can_override_impact", "Cho phép Tester override Impact"],
-  ["tester_can_close_impact", "Cho phép Tester đóng Impact"],
-  ["tester_can_manage_knowledge", "Cho phép Tester quản lý Knowledge"],
-  ["tester_can_archive_testcase_templates", "Cho phép Tester lưu trữ mẫu ca kiểm thử"],
-  ["viewer_can_export", "Cho phép Viewer xuất báo cáo"],
-  ["developer_can_export", "Cho phép Developer xuất báo cáo"],
+  ["tester_can_close_defect", "Cho phép kiểm thử viên đóng lỗi"],
+  ["tester_can_reject_defect", "Cho phép kiểm thử viên từ chối lỗi"],
+  ["tester_can_mark_duplicate_defect", "Cho phép kiểm thử viên đánh dấu lỗi trùng"],
+  ["ba_can_create_defect", "Cho phép chuyên viên phân tích tạo lỗi"],
+  ["developer_can_create_defect", "Cho phép lập trình viên tạo lỗi"],
+  ["ba_can_update_defect", "Cho phép chuyên viên phân tích cập nhật lỗi"],
+  ["tester_can_confirm_trace", "Cho phép kiểm thử viên xác nhận liên kết truy vết"],
+  ["tester_can_revoke_trace", "Cho phép kiểm thử viên thu hồi liên kết truy vết"],
+  ["ba_can_confirm_trace", "Cho phép chuyên viên phân tích xác nhận liên kết truy vết"],
+  ["ba_can_revoke_trace", "Cho phép chuyên viên phân tích thu hồi liên kết truy vết"],
+  ["tester_can_override_impact", "Cho phép kiểm thử viên điều chỉnh phân tích ảnh hưởng"],
+  ["tester_can_close_impact", "Cho phép kiểm thử viên đóng phân tích ảnh hưởng"],
+  ["tester_can_manage_knowledge", "Cho phép kiểm thử viên quản lý kho tri thức"],
+  ["tester_can_archive_testcase_templates", "Cho phép kiểm thử viên lưu trữ mẫu ca kiểm thử"],
+  ["viewer_can_export", "Cho phép người xem xuất báo cáo"],
+  ["developer_can_export", "Cho phép lập trình viên xuất báo cáo"],
   ["ai_auto_draft", "Cho phép AI tạo bản nháp"],
 ];
 
 const numberSettings = [
-  ["impact_confidence_threshold", "Ngưỡng tin cậy Impact", 0, 1, 0.01],
+  ["impact_confidence_threshold", "Ngưỡng tin cậy phân tích ảnh hưởng", 0, 1, 0.01],
   ["testcase_duplicate_threshold", "Ngưỡng phát hiện ca kiểm thử trùng", 0, 1, 0.01],
-  ["impact_candidate_limit", "Số ứng viên Impact tối đa", 1, 5000, 1],
+  ["impact_candidate_limit", "Số ứng viên ảnh hưởng tối đa", 1, 5000, 1],
 ];
 
 const selectSettings = [
@@ -61,6 +61,27 @@ const selectSettings = [
   ["read_after_archive_policy", "Quyền đọc sau khi lưu trữ", ["ALLOW_READ", "DENY_READ"]],
   ["default_environment", "Môi trường mặc định", ["development", "staging", "production"]],
 ];
+
+const projectTypeLabels = {
+  web: "Ứng dụng web",
+  mobile: "Ứng dụng di động",
+  api: "API",
+  desktop: "Ứng dụng máy tính",
+  embedded: "Hệ thống nhúng",
+  other: "Loại khác",
+};
+
+const settingValueLabels = {
+  TESTER: "Kiểm thử viên",
+  BA: "Chuyên viên phân tích nghiệp vụ",
+  DEVELOPER: "Lập trình viên",
+  VIEWER: "Người xem",
+  ALLOW_READ: "Cho phép đọc",
+  DENY_READ: "Không cho phép đọc",
+  development: "Phát triển",
+  staging: "Tiền sản xuất",
+  production: "Sản xuất",
+};
 
 export default function SettingsPage({ project, onProjectChange }) {
   const { ask, dialog } = useQaActionDialog();
@@ -110,7 +131,7 @@ export default function SettingsPage({ project, onProjectChange }) {
       .catch((reason) => setError(messageOf(reason)));
   }, [project._id]);
   return (
-    <QaPage title="Cài đặt và kiểm toán" actions={<ProjectCrumb projectId={project._id} />}>
+    <QaPage title="Cài đặt và nhật ký" actions={<ProjectCrumb projectId={project._id} />}>
       {error && <ErrorState message={error} />}
       <div className="grid gap-5 xl:grid-cols-2">
         <Panel title="Thông tin dự án">
@@ -170,7 +191,7 @@ export default function SettingsPage({ project, onProjectChange }) {
                 >
                   {["web", "mobile", "api", "desktop", "embedded", "other"].map((value) => (
                     <option value={value} key={value}>
-                      {value}
+                      {projectTypeLabels[value]}
                     </option>
                   ))}
                 </select>
@@ -192,55 +213,62 @@ export default function SettingsPage({ project, onProjectChange }) {
                 />
               </label>
             </div>
-            <div className="space-y-3 rounded-xl border border-border p-4">
-              <p className="text-[13px] font-semibold">Chính sách dự án</p>
-              {toggleSettings.map(([key, label]) => (
-                <label className="flex items-center gap-3 text-[13px]" key={key}>
-                  <input
-                    type="checkbox"
-                    checked={Boolean(settings[key])}
-                    onChange={(event) =>
-                      setSettings((current) => ({ ...current, [key]: event.target.checked }))
-                    }
-                  />
-                  {label}
-                </label>
-              ))}
-              {numberSettings.map(([key, label, min, max, step]) => (
-                <label className="field-label" key={key}>
-                  {label}
-                  <input
-                    className="apple-input mt-2"
-                    type="number"
-                    min={min}
-                    max={max}
-                    step={step}
-                    value={settings[key]}
-                    onChange={(event) =>
-                      setSettings((current) => ({ ...current, [key]: Number(event.target.value) }))
-                    }
-                  />
-                </label>
-              ))}
-              {selectSettings.map(([key, label, values]) => (
-                <label className="field-label" key={key}>
-                  {label}
-                  <select
-                    className="apple-input mt-2"
-                    value={settings[key]}
-                    onChange={(event) =>
-                      setSettings((current) => ({ ...current, [key]: event.target.value }))
-                    }
-                  >
-                    {values.map((value) => (
-                      <option value={value} key={value}>
-                        {value}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              ))}
-            </div>
+            <details className="rounded-xl border border-border p-4">
+              <summary className="cursor-pointer text-[13px] font-semibold">
+                Chính sách dự án
+              </summary>
+              <div className="mt-4 space-y-3">
+                {toggleSettings.map(([key, label]) => (
+                  <label className="flex items-center gap-3 text-[13px]" key={key}>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(settings[key])}
+                      onChange={(event) =>
+                        setSettings((current) => ({ ...current, [key]: event.target.checked }))
+                      }
+                    />
+                    {label}
+                  </label>
+                ))}
+                {numberSettings.map(([key, label, min, max, step]) => (
+                  <label className="field-label" key={key}>
+                    {label}
+                    <input
+                      className="apple-input mt-2"
+                      type="number"
+                      min={min}
+                      max={max}
+                      step={step}
+                      value={settings[key]}
+                      onChange={(event) =>
+                        setSettings((current) => ({
+                          ...current,
+                          [key]: Number(event.target.value),
+                        }))
+                      }
+                    />
+                  </label>
+                ))}
+                {selectSettings.map(([key, label, values]) => (
+                  <label className="field-label" key={key}>
+                    {label}
+                    <select
+                      className="apple-input mt-2"
+                      value={settings[key]}
+                      onChange={(event) =>
+                        setSettings((current) => ({ ...current, [key]: event.target.value }))
+                      }
+                    >
+                      {values.map((value) => (
+                        <option value={value} key={value}>
+                          {settingValueLabels[value] || valueLabel(value)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ))}
+              </div>
+            </details>
             <label className="field-label">
               Mô tả
               <textarea
@@ -368,7 +396,11 @@ export default function SettingsPage({ project, onProjectChange }) {
                     </select>
                   ),
                 },
-                { key: "status", label: "Trạng thái" },
+                {
+                  key: "status",
+                  label: "Trạng thái",
+                  render: (item) => valueLabel(item.status),
+                },
                 { key: "membership_revision", label: "Lần sửa đổi" },
                 {
                   key: "actions",
@@ -483,8 +515,12 @@ export default function SettingsPage({ project, onProjectChange }) {
           items={audit}
           empty="Chưa có sự kiện"
           columns={[
-            { key: "action", label: "Hành động" },
-            { key: "artifact_type", label: "Loại dữ liệu" },
+            { key: "action", label: "Hành động", render: (item) => valueLabel(item.action) },
+            {
+              key: "artifact_type",
+              label: "Loại dữ liệu",
+              render: (item) => valueLabel(item.artifact_type),
+            },
             { key: "artifact_id", label: "Mã" },
             { key: "actor_id", label: "Người thực hiện" },
             {

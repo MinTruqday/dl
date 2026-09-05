@@ -13,6 +13,7 @@ import {
 } from "../../components/TestingUi";
 import { testingApi } from "../../services/testing.service";
 import { messageOf, textDoc, valueLabel } from "../../lib/testing";
+import { Modal, ModalHeader, ModalTitle } from "@/shared/components/ui/Modal";
 
 const nextStates = {
   NEW: ["CONFIRMED", "REJECTED", "DUPLICATE"],
@@ -55,6 +56,7 @@ export default function DefectsPage({ project }) {
   const [duplicates, setDuplicates] = useState([]);
   const [traceReview, setTraceReview] = useState(null);
   const [error, setError] = useState("");
+  const [creating, setCreating] = useState(false);
   const [form, setForm] = useState({
     title: "",
     severity: "major",
@@ -156,6 +158,7 @@ export default function DefectsPage({ project }) {
         expected: "",
         attachments: [],
       });
+      setCreating(false);
       await load();
     } catch (reason) {
       setError(messageOf(reason));
@@ -257,7 +260,7 @@ export default function DefectsPage({ project }) {
   };
   return (
     <QaPage
-      title="Quản lý lỗi"
+      title="Lỗi"
       actions={
         <div className="flex flex-wrap items-center gap-3">
           {can("report.export") && (
@@ -286,13 +289,26 @@ export default function DefectsPage({ project }) {
               Tìm lỗi có thể trùng
             </button>
           )}
+          {can("defect.create") && (
+            <button className="apple-button" type="button" onClick={() => setCreating(true)}>
+              Tạo lỗi
+            </button>
+          )}
           <ProjectCrumb projectId={project._id} />
         </div>
       }
     >
       {error && <ErrorState message={error} />}
       {can("defect.create") && (
-        <Panel title="Tạo lỗi">
+        <Modal
+          isOpen={creating}
+          onClose={() => setCreating(false)}
+          ariaLabel="Tạo lỗi"
+          className="max-w-3xl max-h-[90dvh] overflow-y-auto"
+        >
+          <ModalHeader>
+            <ModalTitle>Tạo lỗi</ModalTitle>
+          </ModalHeader>
           <form className="grid gap-4 p-5 md:grid-cols-2" onSubmit={create}>
             <label className="field-label md:col-span-2">
               Tên
@@ -456,13 +472,16 @@ export default function DefectsPage({ project }) {
                 </span>
               ))}
             </label>
-            <div>
+            <div className="flex justify-end gap-3 md:col-span-2">
+              <button className="secondary-button" type="button" onClick={() => setCreating(false)}>
+                Hủy
+              </button>
               <button className="apple-button" type="submit">
                 Lưu lỗi
               </button>
             </div>
           </form>
-        </Panel>
+        </Modal>
       )}
       {duplicates.length > 0 && (
         <Panel title="Ứng viên lỗi trùng cần người dùng xác nhận">
@@ -490,10 +509,7 @@ export default function DefectsPage({ project }) {
         </Panel>
       )}
       {traceReview && (
-        <Panel
-          title={`Ứng viên truy vết cho ${traceReview.defect.defect_key}`}
-          description="Mức tin cậy là tín hiệu xếp hạng và phải được người dùng xác nhận"
-        >
+        <Panel title={`Ứng viên truy vết cho ${traceReview.defect.defect_key}`}>
           <div className="border-b border-border px-5 py-3 text-xs text-ink-muted">
             Kết quả {traceReview.result._id} · Mô hình {traceReview.result.model?.model} · Không tự
             động thay đổi lỗi
@@ -565,74 +581,79 @@ export default function DefectsPage({ project }) {
         </Panel>
       )}
       <Panel title="Danh sách lỗi">
-        <div className="grid gap-3 border-b border-border p-4 sm:grid-cols-2 xl:grid-cols-6">
-          <input
-            aria-label="Tìm lỗi"
-            className="apple-input xl:col-span-2"
-            placeholder="Tìm theo mã hoặc tên"
-            value={filters.q}
-            onChange={(event) => {
-              setFilters({ ...filters, q: event.target.value });
-              setPage(1);
-            }}
-          />
-          <select
-            aria-label="Lọc trạng thái lỗi"
-            className="apple-input"
-            value={filters.status}
-            onChange={(event) => {
-              setFilters({ ...filters, status: event.target.value });
-              setPage(1);
-            }}
-          >
-            <option value="">Mọi trạng thái</option>
-            {Object.keys(nextStates).map((value) => (
-              <option key={value} value={value}>
-                {valueLabel(value)}
-              </option>
-            ))}
-          </select>
-          <select
-            aria-label="Lọc mức độ lỗi"
-            className="apple-input"
-            value={filters.severity}
-            onChange={(event) => {
-              setFilters({ ...filters, severity: event.target.value });
-              setPage(1);
-            }}
-          >
-            <option value="">Mọi mức độ</option>
-            {["blocker", "critical", "major", "minor", "trivial"].map((value) => (
-              <option key={value} value={value}>
-                {valueLabel(value)}
-              </option>
-            ))}
-          </select>
-          <input
-            aria-label="Lọc người xử lý lỗi"
-            className="apple-input"
-            placeholder="Mã người xử lý"
-            value={filters.assignee}
-            onChange={(event) => {
-              setFilters({ ...filters, assignee: event.target.value });
-              setPage(1);
-            }}
-          />
-          <select
-            aria-label="Sắp xếp lỗi"
-            className="apple-input"
-            value={filters.sort}
-            onChange={(event) => {
-              setFilters({ ...filters, sort: event.target.value });
-              setPage(1);
-            }}
-          >
-            <option value="-updated_at">Mới cập nhật</option>
-            <option value="updated_at">Cũ cập nhật</option>
-            <option value="severity">Theo mức độ</option>
-            <option value="priority">Theo ưu tiên</option>
-          </select>
-        </div>
+        <details className="border-b border-border p-4">
+          <summary className="cursor-pointer text-sm font-medium">
+            Tìm kiếm bộ lọc và sắp xếp
+          </summary>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+            <input
+              aria-label="Tìm lỗi"
+              className="apple-input xl:col-span-2"
+              placeholder="Tìm theo mã hoặc tên"
+              value={filters.q}
+              onChange={(event) => {
+                setFilters({ ...filters, q: event.target.value });
+                setPage(1);
+              }}
+            />
+            <select
+              aria-label="Lọc trạng thái lỗi"
+              className="apple-input"
+              value={filters.status}
+              onChange={(event) => {
+                setFilters({ ...filters, status: event.target.value });
+                setPage(1);
+              }}
+            >
+              <option value="">Mọi trạng thái</option>
+              {Object.keys(nextStates).map((value) => (
+                <option key={value} value={value}>
+                  {valueLabel(value)}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label="Lọc mức độ lỗi"
+              className="apple-input"
+              value={filters.severity}
+              onChange={(event) => {
+                setFilters({ ...filters, severity: event.target.value });
+                setPage(1);
+              }}
+            >
+              <option value="">Mọi mức độ</option>
+              {["blocker", "critical", "major", "minor", "trivial"].map((value) => (
+                <option key={value} value={value}>
+                  {valueLabel(value)}
+                </option>
+              ))}
+            </select>
+            <input
+              aria-label="Lọc người xử lý lỗi"
+              className="apple-input"
+              placeholder="Mã người xử lý"
+              value={filters.assignee}
+              onChange={(event) => {
+                setFilters({ ...filters, assignee: event.target.value });
+                setPage(1);
+              }}
+            />
+            <select
+              aria-label="Sắp xếp lỗi"
+              className="apple-input"
+              value={filters.sort}
+              onChange={(event) => {
+                setFilters({ ...filters, sort: event.target.value });
+                setPage(1);
+              }}
+            >
+              <option value="-updated_at">Mới cập nhật</option>
+              <option value="updated_at">Cũ cập nhật</option>
+              <option value="severity">Theo mức độ</option>
+              <option value="priority">Theo ưu tiên</option>
+            </select>
+          </div>
+        </details>
         <DataTable
           items={items}
           empty="Chưa có lỗi"

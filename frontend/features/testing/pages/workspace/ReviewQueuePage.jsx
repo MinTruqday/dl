@@ -10,7 +10,7 @@ import {
   StatusPill,
   useQaActionDialog,
 } from "../../components/TestingUi";
-import { messageOf } from "../../lib/testing";
+import { messageOf, valueLabel } from "../../lib/testing";
 import { testingApi } from "../../services/testing.service";
 
 export default function ReviewQueuePage({ project }) {
@@ -116,15 +116,14 @@ export default function ReviewQueuePage({ project }) {
     }
   };
   return (
-    <QaPage title="Hàng đợi rà soát AI" actions={<ProjectCrumb projectId={project._id} />}>
+    <QaPage title="Rà soát đề xuất AI" actions={<ProjectCrumb projectId={project._id} />}>
       {error && <ErrorState message={error} />}
       <Panel
         title="Đề xuất đang chờ"
         actions={
-          can("proposal.approve") ? (
+          can("proposal.approve") && selectedIds.length > 0 ? (
             <button
               className="apple-button"
-              disabled={!selectedIds.length}
               type="button"
               onClick={async () => {
                 const answer = await ask({
@@ -160,51 +159,56 @@ export default function ReviewQueuePage({ project }) {
           ) : null
         }
       >
-        <div className="grid gap-3 border-b border-border p-4 sm:grid-cols-2 lg:grid-cols-4">
-          <select
-            aria-label="Lọc trạng thái đề xuất"
-            className="apple-input"
-            value={filters.status}
-            onChange={(event) => setFilters({ ...filters, status: event.target.value })}
-          >
-            <option value="">Mọi trạng thái</option>
-            {["PENDING", "APPROVED", "REJECTED", "APPLY_PARTIAL", "EXPIRED"].map((value) => (
-              <option value={value} key={value}>
-                {value}
-              </option>
-            ))}
-          </select>
-          <select
-            aria-label="Lọc loại đề xuất"
-            className="apple-input"
-            value={filters.proposal_type}
-            onChange={(event) => setFilters({ ...filters, proposal_type: event.target.value })}
-          >
-            <option value="">Mọi loại</option>
-            {["UPDATE_TEST_CASE", "CREATE_TEST_CASE", "OBSOLETE_TEST_CASE"].map((value) => (
-              <option value={value} key={value}>
-                {value}
-              </option>
-            ))}
-          </select>
-          <input
-            aria-label="Lọc đối tượng đề xuất"
-            className="apple-input"
-            placeholder="Mã đối tượng"
-            value={filters.target_artifact_id}
-            onChange={(event) => setFilters({ ...filters, target_artifact_id: event.target.value })}
-          />
-          <select
-            aria-label="Sắp xếp đề xuất"
-            className="apple-input"
-            value={filters.sort}
-            onChange={(event) => setFilters({ ...filters, sort: event.target.value })}
-          >
-            <option value="-created_at">Mới tạo</option>
-            <option value="created_at">Cũ tạo</option>
-            <option value="-confidence">Tin cậy cao</option>
-          </select>
-        </div>
+        <details className="border-b border-border p-4">
+          <summary className="cursor-pointer text-sm font-medium text-ink">Bộ lọc</summary>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <select
+              aria-label="Lọc trạng thái đề xuất"
+              className="apple-input"
+              value={filters.status}
+              onChange={(event) => setFilters({ ...filters, status: event.target.value })}
+            >
+              <option value="">Mọi trạng thái</option>
+              {["PENDING", "APPROVED", "REJECTED", "APPLY_PARTIAL", "EXPIRED"].map((value) => (
+                <option value={value} key={value}>
+                  {valueLabel(value)}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label="Lọc loại đề xuất"
+              className="apple-input"
+              value={filters.proposal_type}
+              onChange={(event) => setFilters({ ...filters, proposal_type: event.target.value })}
+            >
+              <option value="">Mọi loại</option>
+              {["UPDATE_TEST_CASE", "CREATE_TEST_CASE", "OBSOLETE_TEST_CASE"].map((value) => (
+                <option value={value} key={value}>
+                  {valueLabel(value)}
+                </option>
+              ))}
+            </select>
+            <input
+              aria-label="Lọc đối tượng đề xuất"
+              className="apple-input"
+              placeholder="Mã đối tượng"
+              value={filters.target_artifact_id}
+              onChange={(event) =>
+                setFilters({ ...filters, target_artifact_id: event.target.value })
+              }
+            />
+            <select
+              aria-label="Sắp xếp đề xuất"
+              className="apple-input"
+              value={filters.sort}
+              onChange={(event) => setFilters({ ...filters, sort: event.target.value })}
+            >
+              <option value="-created_at">Mới nhất</option>
+              <option value="created_at">Cũ nhất</option>
+              <option value="-confidence">Tin cậy cao</option>
+            </select>
+          </div>
+        </details>
         <DataTable
           items={items}
           selectedIds={can("proposal.approve") ? selectedIds : undefined}

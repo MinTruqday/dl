@@ -257,32 +257,37 @@ export function ProjectCrumb({ projectId, projectName }) {
   );
 }
 
-export function Pagination({ value, onChange }) {
-  if (!value || value.total_pages <= 1) return null;
+export function Pagination({ value, page, pageSize, total, onChange }) {
+  const pagination = value || {
+    page,
+    total,
+    total_pages: Math.max(1, Math.ceil(total / pageSize)),
+  };
+  if (!pagination || pagination.total_pages <= 1) return null;
   return (
     <nav
       aria-label="Phân trang"
       className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-4"
     >
       <p className="text-[12px] text-ink-muted">
-        Trang {value.page} trên {value.total_pages} với {value.total} kết quả
+        Trang {pagination.page} trên {pagination.total_pages} với {pagination.total} kết quả
       </p>
       <div className="flex gap-2">
         <button
           aria-label="Trang trước"
           className="secondary-button"
-          disabled={value.page <= 1}
+          disabled={pagination.page <= 1}
           type="button"
-          onClick={() => onChange(value.page - 1)}
+          onClick={() => onChange(pagination.page - 1)}
         >
           Trang trước
         </button>
         <button
           aria-label="Trang sau"
           className="secondary-button"
-          disabled={value.page >= value.total_pages}
+          disabled={pagination.page >= pagination.total_pages}
           type="button"
-          onClick={() => onChange(value.page + 1)}
+          onClick={() => onChange(pagination.page + 1)}
         >
           Trang sau
         </button>

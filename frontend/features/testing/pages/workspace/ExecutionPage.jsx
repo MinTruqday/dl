@@ -15,6 +15,7 @@ import {
 } from "../../components/TestingUi";
 import { testingApi } from "../../services/testing.service";
 import { docText, messageOf, textDoc, valueLabel } from "../../lib/testing";
+import { Modal, ModalHeader, ModalTitle } from "@/shared/components/ui/Modal";
 
 export default function ExecutionPage({ project, section }) {
   const { ask, dialog } = useQaActionDialog();
@@ -48,6 +49,9 @@ export default function ExecutionPage({ project, section }) {
   const [tests, setTests] = useState([]);
   const [run, setRun] = useState(null);
   const [error, setError] = useState("");
+  const [creatingPlan, setCreatingPlan] = useState(false);
+  const [creatingSuite, setCreatingSuite] = useState(false);
+  const [creatingRun, setCreatingRun] = useState(false);
   const [runForm, setRunForm] = useState({
     name: "",
     release: "",
@@ -132,6 +136,7 @@ export default function ExecutionPage({ project, section }) {
         suiteIds: [],
         versionIds: [],
       });
+      setCreatingRun(false);
       await load();
     } catch (reason) {
       setError(messageOf(reason));
@@ -657,13 +662,48 @@ export default function ExecutionPage({ project, section }) {
     );
   return (
     <QaPage
-      title="Kế hoạch, bộ kiểm thử và lần chạy"
-      actions={<ProjectCrumb projectId={project._id} />}
+      title="Thực thi kiểm thử"
+      actions={
+        <div className="flex flex-wrap items-center gap-2">
+          <ProjectCrumb projectId={project._id} />
+          {can("testplan.create") && (
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={() => setCreatingPlan(true)}
+            >
+              Tạo kế hoạch
+            </button>
+          )}
+          {can("testsuite.create") && (
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={() => setCreatingSuite(true)}
+            >
+              Tạo bộ kiểm thử
+            </button>
+          )}
+          {can("testrun.create") && (
+            <button className="apple-button" type="button" onClick={() => setCreatingRun(true)}>
+              Tạo lần chạy
+            </button>
+          )}
+        </div>
+      }
     >
       {error && <ErrorState message={error} />}
       <div className="grid gap-5 xl:grid-cols-3">
         {can("testplan.create") && (
-          <Panel title="Tạo kế hoạch kiểm thử">
+          <Modal
+            isOpen={creatingPlan}
+            onClose={() => setCreatingPlan(false)}
+            ariaLabel="Tạo kế hoạch kiểm thử"
+            className="max-w-xl"
+          >
+            <ModalHeader>
+              <ModalTitle>Tạo kế hoạch kiểm thử</ModalTitle>
+            </ModalHeader>
             <form
               className="space-y-3 p-5"
               onSubmit={async (event) => {
@@ -687,6 +727,7 @@ export default function ExecutionPage({ project, section }) {
                     build: "",
                   });
                   form.reset();
+                  setCreatingPlan(false);
                   await load();
                 } catch (reason) {
                   setError(messageOf(reason));
@@ -706,14 +747,31 @@ export default function ExecutionPage({ project, section }) {
                 className="apple-input min-h-20"
                 placeholder="Mục tiêu"
               />
-              <button className="secondary-button" type="submit">
-                Lưu kế hoạch
-              </button>
+              <div className="flex justify-end gap-3">
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() => setCreatingPlan(false)}
+                >
+                  Hủy
+                </button>
+                <button className="apple-button" type="submit">
+                  Lưu kế hoạch
+                </button>
+              </div>
             </form>
-          </Panel>
+          </Modal>
         )}
         {can("testsuite.create") && (
-          <Panel title="Tạo bộ kiểm thử">
+          <Modal
+            isOpen={creatingSuite}
+            onClose={() => setCreatingSuite(false)}
+            ariaLabel="Tạo bộ kiểm thử"
+            className="max-w-xl"
+          >
+            <ModalHeader>
+              <ModalTitle>Tạo bộ kiểm thử</ModalTitle>
+            </ModalHeader>
             <form
               className="space-y-3 p-5"
               onSubmit={async (event) => {
@@ -728,6 +786,7 @@ export default function ExecutionPage({ project, section }) {
                     test_case_version_ids: versions,
                   });
                   form.reset();
+                  setCreatingSuite(false);
                   await load();
                 } catch (reason) {
                   setError(messageOf(reason));
@@ -746,14 +805,31 @@ export default function ExecutionPage({ project, section }) {
                 <option value="regression">{valueLabel("regression")}</option>
                 <option value="feature">{valueLabel("feature")}</option>
               </select>
-              <button className="secondary-button" type="submit">
-                Lưu bộ kiểm thử
-              </button>
+              <div className="flex justify-end gap-3">
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() => setCreatingSuite(false)}
+                >
+                  Hủy
+                </button>
+                <button className="apple-button" type="submit">
+                  Lưu bộ kiểm thử
+                </button>
+              </div>
             </form>
-          </Panel>
+          </Modal>
         )}
         {can("testrun.create") && (
-          <Panel title="Tạo lần chạy">
+          <Modal
+            isOpen={creatingRun}
+            onClose={() => setCreatingRun(false)}
+            ariaLabel="Tạo lần chạy"
+            className="max-w-3xl max-h-[90dvh] overflow-y-auto"
+          >
+            <ModalHeader>
+              <ModalTitle>Tạo lần chạy</ModalTitle>
+            </ModalHeader>
             <form className="space-y-3 p-5" onSubmit={createRun}>
               <input
                 aria-label="Tên lần chạy"
@@ -898,56 +974,72 @@ export default function ExecutionPage({ project, section }) {
                 Snapshot {runForm.versionIds.length} phiên bản được chọn cùng các phiên bản trong bộ
                 kiểm thử
               </p>
-              <button className="apple-button" type="submit">
-                Tạo lần chạy
-              </button>
+              <div className="flex justify-end gap-3">
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() => setCreatingRun(false)}
+                >
+                  Hủy
+                </button>
+                <button className="apple-button" type="submit">
+                  Tạo lần chạy
+                </button>
+              </div>
             </form>
-          </Panel>
+          </Modal>
         )}
       </div>
       <div className="grid gap-5 xl:grid-cols-2">
         <DeviceMatricesPanel project={project} plans={plans} runs={runs} onChanged={load} />
         <AutomationExecutionPanel project={project} />
         <Panel title="Kế hoạch kiểm thử">
-          <div className="grid gap-3 border-b border-border p-4 sm:grid-cols-2 lg:grid-cols-4">
-            <input
-              aria-label="Tìm kế hoạch kiểm thử"
-              className="apple-input"
-              placeholder="Tìm tên hoặc mục tiêu"
-              value={planFilters.q}
-              onChange={(event) => setPlanFilters({ ...planFilters, q: event.target.value })}
-            />
-            <input
-              aria-label="Lọc bản phát hành kế hoạch"
-              className="apple-input"
-              placeholder="Bản phát hành"
-              value={planFilters.release}
-              onChange={(event) => setPlanFilters({ ...planFilters, release: event.target.value })}
-            />
-            <select
-              aria-label="Lọc trạng thái kế hoạch"
-              className="apple-input"
-              value={planFilters.status}
-              onChange={(event) => setPlanFilters({ ...planFilters, status: event.target.value })}
-            >
-              <option value="">Mọi trạng thái</option>
-              {["DRAFT", "IN_REVIEW", "APPROVED", "ARCHIVED"].map((value) => (
-                <option value={value} key={value}>
-                  {valueLabel(value)}
-                </option>
-              ))}
-            </select>
-            <select
-              aria-label="Sắp xếp kế hoạch"
-              className="apple-input"
-              value={planFilters.sort}
-              onChange={(event) => setPlanFilters({ ...planFilters, sort: event.target.value })}
-            >
-              <option value="-updated_at">Mới cập nhật</option>
-              <option value="updated_at">Cũ cập nhật</option>
-              <option value="name">Tên tăng dần</option>
-            </select>
-          </div>
+          <details className="border-b border-border p-4">
+            <summary className="cursor-pointer text-sm font-medium">
+              Tìm kiếm bộ lọc và sắp xếp
+            </summary>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <input
+                aria-label="Tìm kế hoạch kiểm thử"
+                className="apple-input"
+                placeholder="Tìm tên hoặc mục tiêu"
+                value={planFilters.q}
+                onChange={(event) => setPlanFilters({ ...planFilters, q: event.target.value })}
+              />
+              <input
+                aria-label="Lọc bản phát hành kế hoạch"
+                className="apple-input"
+                placeholder="Bản phát hành"
+                value={planFilters.release}
+                onChange={(event) =>
+                  setPlanFilters({ ...planFilters, release: event.target.value })
+                }
+              />
+              <select
+                aria-label="Lọc trạng thái kế hoạch"
+                className="apple-input"
+                value={planFilters.status}
+                onChange={(event) => setPlanFilters({ ...planFilters, status: event.target.value })}
+              >
+                <option value="">Mọi trạng thái</option>
+                {["DRAFT", "IN_REVIEW", "APPROVED", "ARCHIVED"].map((value) => (
+                  <option value={value} key={value}>
+                    {valueLabel(value)}
+                  </option>
+                ))}
+              </select>
+              <select
+                aria-label="Sắp xếp kế hoạch"
+                className="apple-input"
+                value={planFilters.sort}
+                onChange={(event) => setPlanFilters({ ...planFilters, sort: event.target.value })}
+              >
+                <option value="-updated_at">Mới cập nhật</option>
+                <option value="updated_at">Cũ cập nhật</option>
+                <option value="name">Tên tăng dần</option>
+              </select>
+            </div>
+          </details>
           <DataTable
             items={plans}
             empty="Chưa có kế hoạch kiểm thử"
@@ -1024,62 +1116,69 @@ export default function ExecutionPage({ project, section }) {
           />
         </Panel>
         <Panel title="Bộ kiểm thử">
-          <div className="grid gap-3 border-b border-border p-4 sm:grid-cols-2 lg:grid-cols-4">
-            <input
-              aria-label="Tìm bộ kiểm thử"
-              className="apple-input"
-              placeholder="Tìm tên bộ kiểm thử"
-              value={suiteFilters.q}
-              onChange={(event) => setSuiteFilters({ ...suiteFilters, q: event.target.value })}
-            />
-            <select
-              aria-label="Lọc loại bộ kiểm thử"
-              className="apple-input"
-              value={suiteFilters.suite_type}
-              onChange={(event) =>
-                setSuiteFilters({ ...suiteFilters, suite_type: event.target.value })
-              }
-            >
-              <option value="">Mọi loại</option>
-              {[
-                "smoke",
-                "regression",
-                "sanity",
-                "feature",
-                "api",
-                "ui",
-                "integration",
-                "custom",
-              ].map((value) => (
-                <option value={value} key={value}>
-                  {valueLabel(value)}
-                </option>
-              ))}
-            </select>
-            <select
-              aria-label="Lọc trạng thái bộ kiểm thử"
-              className="apple-input"
-              value={suiteFilters.status}
-              onChange={(event) => setSuiteFilters({ ...suiteFilters, status: event.target.value })}
-            >
-              <option value="">Mọi trạng thái</option>
-              {["ACTIVE", "ARCHIVED"].map((value) => (
-                <option value={value} key={value}>
-                  {valueLabel(value)}
-                </option>
-              ))}
-            </select>
-            <select
-              aria-label="Sắp xếp bộ kiểm thử"
-              className="apple-input"
-              value={suiteFilters.sort}
-              onChange={(event) => setSuiteFilters({ ...suiteFilters, sort: event.target.value })}
-            >
-              <option value="-updated_at">Mới cập nhật</option>
-              <option value="updated_at">Cũ cập nhật</option>
-              <option value="name">Tên tăng dần</option>
-            </select>
-          </div>
+          <details className="border-b border-border p-4">
+            <summary className="cursor-pointer text-sm font-medium">
+              Tìm kiếm bộ lọc và sắp xếp
+            </summary>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <input
+                aria-label="Tìm bộ kiểm thử"
+                className="apple-input"
+                placeholder="Tìm tên bộ kiểm thử"
+                value={suiteFilters.q}
+                onChange={(event) => setSuiteFilters({ ...suiteFilters, q: event.target.value })}
+              />
+              <select
+                aria-label="Lọc loại bộ kiểm thử"
+                className="apple-input"
+                value={suiteFilters.suite_type}
+                onChange={(event) =>
+                  setSuiteFilters({ ...suiteFilters, suite_type: event.target.value })
+                }
+              >
+                <option value="">Mọi loại</option>
+                {[
+                  "smoke",
+                  "regression",
+                  "sanity",
+                  "feature",
+                  "api",
+                  "ui",
+                  "integration",
+                  "custom",
+                ].map((value) => (
+                  <option value={value} key={value}>
+                    {valueLabel(value)}
+                  </option>
+                ))}
+              </select>
+              <select
+                aria-label="Lọc trạng thái bộ kiểm thử"
+                className="apple-input"
+                value={suiteFilters.status}
+                onChange={(event) =>
+                  setSuiteFilters({ ...suiteFilters, status: event.target.value })
+                }
+              >
+                <option value="">Mọi trạng thái</option>
+                {["ACTIVE", "ARCHIVED"].map((value) => (
+                  <option value={value} key={value}>
+                    {valueLabel(value)}
+                  </option>
+                ))}
+              </select>
+              <select
+                aria-label="Sắp xếp bộ kiểm thử"
+                className="apple-input"
+                value={suiteFilters.sort}
+                onChange={(event) => setSuiteFilters({ ...suiteFilters, sort: event.target.value })}
+              >
+                <option value="-updated_at">Mới cập nhật</option>
+                <option value="updated_at">Cũ cập nhật</option>
+                <option value="name">Tên tăng dần</option>
+              </select>
+            </div>
+          </details>
           <DataTable
             items={suites}
             empty="Chưa có bộ kiểm thử"
@@ -1138,57 +1237,62 @@ export default function ExecutionPage({ project, section }) {
         </Panel>
       </div>
       <Panel title="Danh sách lần chạy">
-        <div className="grid gap-3 border-b border-border p-4 sm:grid-cols-2 xl:grid-cols-4">
-          <input
-            aria-label="Tìm lần chạy"
-            className="apple-input"
-            placeholder="Tên lần chạy"
-            value={runFilters.name}
-            onChange={(event) => {
-              setRunFilters({ ...runFilters, name: event.target.value });
-              setRunPage(1);
-            }}
-          />
-          <select
-            aria-label="Lọc trạng thái lần chạy"
-            className="apple-input"
-            value={runFilters.status}
-            onChange={(event) => {
-              setRunFilters({ ...runFilters, status: event.target.value });
-              setRunPage(1);
-            }}
-          >
-            <option value="">Mọi trạng thái</option>
-            {["DRAFT", "READY", "IN_PROGRESS", "COMPLETED", "ABORTED"].map((value) => (
-              <option key={value} value={value}>
-                {valueLabel(value)}
-              </option>
-            ))}
-          </select>
-          <input
-            aria-label="Lọc môi trường lần chạy"
-            className="apple-input"
-            placeholder="Môi trường"
-            value={runFilters.environment}
-            onChange={(event) => {
-              setRunFilters({ ...runFilters, environment: event.target.value });
-              setRunPage(1);
-            }}
-          />
-          <select
-            aria-label="Sắp xếp lần chạy"
-            className="apple-input"
-            value={runFilters.sort}
-            onChange={(event) => {
-              setRunFilters({ ...runFilters, sort: event.target.value });
-              setRunPage(1);
-            }}
-          >
-            <option value="-updated_at">Mới cập nhật</option>
-            <option value="updated_at">Cũ cập nhật</option>
-            <option value="name">Tên tăng dần</option>
-          </select>
-        </div>
+        <details className="border-b border-border p-4">
+          <summary className="cursor-pointer text-sm font-medium">
+            Tìm kiếm bộ lọc và sắp xếp
+          </summary>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <input
+              aria-label="Tìm lần chạy"
+              className="apple-input"
+              placeholder="Tên lần chạy"
+              value={runFilters.name}
+              onChange={(event) => {
+                setRunFilters({ ...runFilters, name: event.target.value });
+                setRunPage(1);
+              }}
+            />
+            <select
+              aria-label="Lọc trạng thái lần chạy"
+              className="apple-input"
+              value={runFilters.status}
+              onChange={(event) => {
+                setRunFilters({ ...runFilters, status: event.target.value });
+                setRunPage(1);
+              }}
+            >
+              <option value="">Mọi trạng thái</option>
+              {["DRAFT", "READY", "IN_PROGRESS", "COMPLETED", "ABORTED"].map((value) => (
+                <option key={value} value={value}>
+                  {valueLabel(value)}
+                </option>
+              ))}
+            </select>
+            <input
+              aria-label="Lọc môi trường lần chạy"
+              className="apple-input"
+              placeholder="Môi trường"
+              value={runFilters.environment}
+              onChange={(event) => {
+                setRunFilters({ ...runFilters, environment: event.target.value });
+                setRunPage(1);
+              }}
+            />
+            <select
+              aria-label="Sắp xếp lần chạy"
+              className="apple-input"
+              value={runFilters.sort}
+              onChange={(event) => {
+                setRunFilters({ ...runFilters, sort: event.target.value });
+                setRunPage(1);
+              }}
+            >
+              <option value="-updated_at">Mới cập nhật</option>
+              <option value="updated_at">Cũ cập nhật</option>
+              <option value="name">Tên tăng dần</option>
+            </select>
+          </div>
+        </details>
         <DataTable
           onSelect={(item) => window.location.assign(`/du-an/${project._id}/thuc-thi/${item._id}`)}
           items={runs}

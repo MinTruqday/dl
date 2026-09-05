@@ -11,7 +11,8 @@ import {
   useQaActionDialog,
 } from "../../components/TestingUi";
 import { testingApi } from "../../services/testing.service";
-import { messageOf } from "../../lib/testing";
+import { messageOf, valueLabel } from "../../lib/testing";
+import { Modal, ModalHeader, ModalTitle } from "@/shared/components/ui/Modal";
 
 export default function KnowledgePage({ project, initialQuery = "", useGlobalSearch = false }) {
   const { ask, dialog } = useQaActionDialog();
@@ -21,6 +22,7 @@ export default function KnowledgePage({ project, initialQuery = "", useGlobalSea
   const [answer, setAnswer] = useState(null);
   const [sources, setSources] = useState([]);
   const [error, setError] = useState("");
+  const [creatingSource, setCreatingSource] = useState(false);
   const canAsk = project.current_permissions?.includes("ai.ask_project");
   const canManage = project.current_permissions?.includes("knowledge.manage");
   const loadSources = useCallback(async () => {
@@ -42,8 +44,17 @@ export default function KnowledgePage({ project, initialQuery = "", useGlobalSea
   }, [initialQuery, project._id, useGlobalSearch]);
   return (
     <QaPage
-      title="Tìm kiếm trong tri thức dự án"
-      actions={<ProjectCrumb projectId={project._id} />}
+      title="Kho tri thức"
+      actions={
+        <div className="flex flex-wrap items-center gap-3">
+          <ProjectCrumb projectId={project._id} />
+          {canManage && (
+            <button className="apple-button" type="button" onClick={() => setCreatingSource(true)}>
+              Thêm nguồn tri thức
+            </button>
+          )}
+        </div>
+      }
     >
       {error && <ErrorState message={error} />}
       <DegradedBanner mode={result?.degraded_mode} />
@@ -87,9 +98,17 @@ export default function KnowledgePage({ project, initialQuery = "", useGlobalSea
                 items={answer.evidence || []}
                 empty="Không có bằng chứng"
                 columns={[
-                  { key: "artifact_type", label: "Loại" },
+                  {
+                    key: "artifact_type",
+                    label: "Loại",
+                    render: (item) => valueLabel(item.artifact_type),
+                  },
                   { key: "title", label: "Nguồn" },
-                  { key: "authority", label: "Thẩm quyền" },
+                  {
+                    key: "authority",
+                    label: "Thẩm quyền",
+                    render: (item) => valueLabel(item.authority),
+                  },
                   { key: "score", label: "Điểm" },
                 ]}
               />
@@ -136,14 +155,22 @@ export default function KnowledgePage({ project, initialQuery = "", useGlobalSea
             items={result.items}
             empty="Không tìm thấy dữ liệu phù hợp"
             columns={[
-              { key: "artifact_type", label: "Loại" },
+              {
+                key: "artifact_type",
+                label: "Loại",
+                render: (item) => valueLabel(item.artifact_type),
+              },
               { key: "title", label: "Tên" },
               {
                 key: "status",
                 label: "Trạng thái",
                 render: (item) => <StatusPill value={item.status} />,
               },
-              { key: "authority", label: "Mức thẩm quyền" },
+              {
+                key: "authority",
+                label: "Mức thẩm quyền",
+                render: (item) => valueLabel(item.authority),
+              },
               { key: "score", label: "Điểm" },
               {
                 key: "text",
@@ -156,104 +183,128 @@ export default function KnowledgePage({ project, initialQuery = "", useGlobalSea
       )}
       <Panel title="Nguồn tri thức giáo viên và chương trình học">
         {canManage && (
-          <form
-            className="grid gap-3 border-b border-border p-5 md:grid-cols-2"
-            onSubmit={async (event) => {
-              event.preventDefault();
-              const form = event.currentTarget;
-              const values = new FormData(form);
-              try {
-                await testingApi.createKnowledgeSource(project._id, {
-                  title: values.get("title"),
-                  content: values.get("content"),
-                  source_type: values.get("source_type"),
-                  authority: values.get("authority"),
-                  source_url: values.get("source_url") || null,
-                  teacher_id: values.get("teacher_id") || null,
-                  subject: values.get("subject") || null,
-                  grade: values.get("grade") || null,
-                  tags: String(values.get("tags") || "")
-                    .split(",")
-                    .map((value) => value.trim())
-                    .filter(Boolean),
-                });
-                form.reset();
-                await loadSources();
-              } catch (reason) {
-                setError(messageOf(reason));
-              }
-            }}
+          <Modal
+            isOpen={creatingSource}
+            onClose={() => setCreatingSource(false)}
+            ariaLabel="Thêm nguồn tri thức"
+            className="max-w-3xl max-h-[90dvh] overflow-y-auto"
           >
-            <label className="field-label">
-              Tiêu đề nguồn
-              <input className="apple-input mt-2" name="title" required minLength={2} />
-            </label>
-            <label className="field-label">
-              Loại nguồn
-              <select
-                className="apple-input mt-2"
-                name="source_type"
-                defaultValue="teacher_material"
-              >
-                <option value="teacher_material">Tài liệu giáo viên</option>
-                <option value="official_textbook">Sách giáo khoa chính thức</option>
-                <option value="curriculum">Chương trình học</option>
-                <option value="reference">Tài liệu tham khảo</option>
-                <option value="other">Nguồn khác</option>
-              </select>
-            </label>
-            <label className="field-label">
-              Mức thẩm quyền
-              <select className="apple-input mt-2" name="authority" defaultValue="teacher">
-                <option value="teacher">Giáo viên</option>
-                <option value="official">Chính thức</option>
-                <option value="supplemental">Bổ trợ</option>
-                <option value="reference">Tham khảo</option>
-              </select>
-            </label>
-            <label className="field-label">
-              Mã giáo viên
-              <input className="apple-input mt-2" name="teacher_id" />
-            </label>
-            <label className="field-label">
-              Môn học
-              <input className="apple-input mt-2" name="subject" />
-            </label>
-            <label className="field-label">
-              Khối lớp
-              <input className="apple-input mt-2" name="grade" />
-            </label>
-            <label className="field-label">
-              Liên kết nguồn
-              <input className="apple-input mt-2" name="source_url" type="url" />
-            </label>
-            <label className="field-label">
-              Nhãn phân cách bằng dấu phẩy
-              <input className="apple-input mt-2" name="tags" />
-            </label>
-            <label className="field-label md:col-span-2">
-              Nội dung tài liệu
-              <textarea className="apple-input mt-2 min-h-36" name="content" required />
-            </label>
-            <button className="apple-button w-fit" type="submit">
-              Thêm nguồn tri thức
-            </button>
-          </form>
+            <ModalHeader>
+              <ModalTitle>Thêm nguồn tri thức</ModalTitle>
+            </ModalHeader>
+            <form
+              className="grid gap-3 p-5 md:grid-cols-2"
+              onSubmit={async (event) => {
+                event.preventDefault();
+                const form = event.currentTarget;
+                const values = new FormData(form);
+                try {
+                  await testingApi.createKnowledgeSource(project._id, {
+                    title: values.get("title"),
+                    content: values.get("content"),
+                    source_type: values.get("source_type"),
+                    authority: values.get("authority"),
+                    source_url: values.get("source_url") || null,
+                    teacher_id: values.get("teacher_id") || null,
+                    subject: values.get("subject") || null,
+                    grade: values.get("grade") || null,
+                    tags: String(values.get("tags") || "")
+                      .split(",")
+                      .map((value) => value.trim())
+                      .filter(Boolean),
+                  });
+                  form.reset();
+                  setCreatingSource(false);
+                  await loadSources();
+                } catch (reason) {
+                  setError(messageOf(reason));
+                }
+              }}
+            >
+              <label className="field-label">
+                Tiêu đề nguồn
+                <input className="apple-input mt-2" name="title" required minLength={2} />
+              </label>
+              <label className="field-label">
+                Loại nguồn
+                <select
+                  className="apple-input mt-2"
+                  name="source_type"
+                  defaultValue="teacher_material"
+                >
+                  <option value="teacher_material">Tài liệu giáo viên</option>
+                  <option value="official_textbook">Sách giáo khoa chính thức</option>
+                  <option value="curriculum">Chương trình học</option>
+                  <option value="reference">Tài liệu tham khảo</option>
+                  <option value="other">Nguồn khác</option>
+                </select>
+              </label>
+              <label className="field-label">
+                Mức thẩm quyền
+                <select className="apple-input mt-2" name="authority" defaultValue="teacher">
+                  <option value="teacher">Giáo viên</option>
+                  <option value="official">Chính thức</option>
+                  <option value="supplemental">Bổ trợ</option>
+                  <option value="reference">Tham khảo</option>
+                </select>
+              </label>
+              <label className="field-label">
+                Mã giáo viên
+                <input className="apple-input mt-2" name="teacher_id" />
+              </label>
+              <label className="field-label">
+                Môn học
+                <input className="apple-input mt-2" name="subject" />
+              </label>
+              <label className="field-label">
+                Khối lớp
+                <input className="apple-input mt-2" name="grade" />
+              </label>
+              <label className="field-label">
+                Liên kết nguồn
+                <input className="apple-input mt-2" name="source_url" type="url" />
+              </label>
+              <label className="field-label">
+                Nhãn phân cách bằng dấu phẩy
+                <input className="apple-input mt-2" name="tags" />
+              </label>
+              <label className="field-label md:col-span-2">
+                Nội dung tài liệu
+                <textarea className="apple-input mt-2 min-h-36" name="content" required />
+              </label>
+              <div className="flex justify-end gap-3 md:col-span-2">
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() => setCreatingSource(false)}
+                >
+                  Hủy
+                </button>
+                <button className="apple-button" type="submit">
+                  Thêm nguồn tri thức
+                </button>
+              </div>
+            </form>
+          </Modal>
         )}
         <DataTable
           items={sources}
           empty="Chưa có nguồn tri thức"
           columns={[
             { key: "title", label: "Nguồn" },
-            { key: "source_type", label: "Loại" },
-            { key: "authority", label: "Thẩm quyền" },
+            { key: "source_type", label: "Loại", render: (item) => valueLabel(item.source_type) },
+            { key: "authority", label: "Thẩm quyền", render: (item) => valueLabel(item.authority) },
             {
               key: "subject",
               label: "Môn và khối",
               render: (item) =>
                 [item.subject, item.grade].filter(Boolean).join(" · ") || "Chưa khai báo",
             },
-            { key: "index_status", label: "Lập chỉ mục" },
+            {
+              key: "index_status",
+              label: "Lập chỉ mục",
+              render: (item) => valueLabel(String(item.index_status).toUpperCase()),
+            },
             ...(canManage
               ? [
                   {

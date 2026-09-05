@@ -125,7 +125,7 @@ export default function AppShell({ children, requireAuth }) {
     const focusableSelector =
       'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
     const frame = requestAnimationFrame(() => {
-      drawer?.querySelector(focusableSelector)?.focus();
+      drawer?.querySelector('[data-mobile-nav-close="true"]')?.focus();
     });
     const trapFocus = (event) => {
       if (event.key !== "Tab" || !drawer) return;
@@ -191,7 +191,7 @@ export default function AppShell({ children, requireAuth }) {
             type="button"
             ref={mobileTriggerRef}
             onClick={() => setMobileOpen(true)}
-            className="flex h-11 w-11 items-center justify-center rounded-control text-ink-muted hover:bg-surface-quiet lg:hidden"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control text-ink-muted hover:bg-surface-quiet lg:hidden"
             aria-label="Mở điều hướng"
             aria-controls="mobile-navigation"
             aria-expanded={mobileOpen}
@@ -200,7 +200,7 @@ export default function AppShell({ children, requireAuth }) {
           </button>
           <Link
             href={projectId ? `/du-an/${projectId}` : "/du-an"}
-            className="flex items-center gap-2 lg:hidden"
+            className="flex shrink-0 items-center gap-2 lg:hidden"
           >
             <Image
               src="/brand/veriq-logo.png"
@@ -325,13 +325,13 @@ export default function AppShell({ children, requireAuth }) {
               <>
                 <Link
                   href="/dang-nhap"
-                  className="flex min-h-11 items-center rounded-control px-3 py-2 text-[14px] font-semibold text-ink hover:bg-surface-quiet"
+                  className="hidden min-h-11 items-center whitespace-nowrap rounded-control px-3 py-2 text-[14px] font-semibold text-ink hover:bg-surface-quiet min-[380px]:flex"
                 >
                   Đăng nhập
                 </Link>
                 <Link
                   href="/dang-ky"
-                  className="flex min-h-11 items-center rounded-control bg-brand px-4 py-2 text-[14px] font-semibold text-white hover:bg-brand-hover"
+                  className="flex min-h-11 items-center whitespace-nowrap rounded-control bg-brand px-4 py-2 text-[14px] font-semibold text-white hover:bg-brand-hover"
                 >
                   Đăng ký
                 </Link>
@@ -341,8 +341,8 @@ export default function AppShell({ children, requireAuth }) {
         </div>
       </header>
 
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[260px] border-r border-border bg-surface lg:block">
-        <div className="flex h-[68px] items-center border-b border-border px-5">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[260px] bg-surface shadow-[10px_0_30px_rgba(48,47,42,0.04)] lg:block">
+        <div className="flex h-[68px] items-center px-5">
           <Link
             href="/"
             className="flex items-center gap-3 text-[19px] font-semibold tracking-[-0.035em] text-ink"
@@ -368,11 +368,10 @@ export default function AppShell({ children, requireAuth }) {
 
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <button
-            type="button"
+          <div
+            aria-hidden="true"
             className="absolute inset-0 bg-ink/30"
             onClick={() => setMobileOpen(false)}
-            aria-label="Đóng điều hướng"
           />
           <aside
             id="mobile-navigation"
@@ -400,6 +399,7 @@ export default function AppShell({ children, requireAuth }) {
               </Link>
               <button
                 type="button"
+                data-mobile-nav-close="true"
                 onClick={() => setMobileOpen(false)}
                 className="flex h-11 w-11 items-center justify-center rounded-control hover:bg-surface-quiet"
                 aria-label="Đóng điều hướng"

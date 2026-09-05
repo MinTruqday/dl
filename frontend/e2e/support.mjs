@@ -7,6 +7,18 @@ export const credentials = {
     email: "e2e-qa-lead@example.com",
     password: "Veriq-E2E-Password-2026",
   },
+  tester: {
+    email: "e2e-tester@example.com",
+    password: "Veriq-E2E-Password-2026",
+  },
+  ba: {
+    email: "e2e-ba@example.com",
+    password: "Veriq-E2E-Password-2026",
+  },
+  developer: {
+    email: "e2e-developer@example.com",
+    password: "Veriq-E2E-Password-2026",
+  },
   viewer: {
     email: "e2e-viewer@example.com",
     password: "Veriq-E2E-Password-2026",
@@ -90,6 +102,8 @@ export async function expectUsablePage(page) {
   await expect(page.locator("#main-content, body > main").first()).toBeVisible();
   await expect(page.locator("body")).not.toContainText("Application error");
   await expect(page.locator("body")).not.toContainText("Internal Server Error");
+  await expect(page.locator("body")).not.toContainText("Failed to fetch");
+  await expect(page.getByText("Not Found", { exact: true })).toHaveCount(0);
   const audit = await page.evaluate(() => {
     const duplicateIds = [...document.querySelectorAll("[id]")]
       .map((element) => element.id)
@@ -113,7 +127,16 @@ export async function expectUsablePage(page) {
           !button.getAttribute("aria-labelledby"),
       )
       .map((button) => button.outerHTML.slice(0, 180));
-    return { duplicateIds, unlabeledInputs, unnamedButtons };
+    const horizontalOverflow = Math.max(
+      document.documentElement.scrollWidth - window.innerWidth,
+      document.body.scrollWidth - window.innerWidth,
+    );
+    return { duplicateIds, unlabeledInputs, unnamedButtons, horizontalOverflow };
   });
-  expect(audit).toEqual({ duplicateIds: [], unlabeledInputs: [], unnamedButtons: [] });
+  expect(audit).toEqual({
+    duplicateIds: [],
+    unlabeledInputs: [],
+    unnamedButtons: [],
+    horizontalOverflow: 0,
+  });
 }

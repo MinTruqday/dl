@@ -2,8 +2,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { platformApi } from "@/features/authentication/services/platform.service";
 import DataTable from "./DataTable";
-import { ErrorState, LoadingState, Panel, StatusPill, useQaActionDialog } from "./TestingUi";
-import { formatDate, messageOf } from "../lib/testing";
+import {
+  ErrorState,
+  LoadingState,
+  Pagination,
+  Panel,
+  StatusPill,
+  useQaActionDialog,
+} from "./TestingUi";
+import { formatDate, messageOf, valueLabel } from "../lib/testing";
 
 export default function PlatformUsersPanel() {
   const { ask, dialog } = useQaActionDialog();
@@ -16,10 +23,13 @@ export default function PlatformUsersPanel() {
   const [audit, setAudit] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
 
   const loadUsers = useCallback(async (search = "") => {
     setLoading(true);
     setError("");
+    setPage(1);
     try {
       setUsers(await platformApi.listUsers(search));
     } catch (reason) {
@@ -196,12 +206,16 @@ export default function PlatformUsersPanel() {
           </div>
         ) : (
           <DataTable
-            items={users}
+            items={users.slice((page - 1) * pageSize, page * pageSize)}
             empty="Không có tài khoản phù hợp"
             columns={[
               { key: "email", label: "Email" },
               { key: "full_name", label: "Tên" },
-              { key: "system_role", label: "Vai trò hệ thống" },
+              {
+                key: "system_role",
+                label: "Vai trò hệ thống",
+                render: (item) => valueLabel(item.system_role),
+              },
               {
                 key: "is_active",
                 label: "Trạng thái",
@@ -223,6 +237,9 @@ export default function PlatformUsersPanel() {
             ]}
           />
         )}
+        {!loading && (
+          <Pagination page={page} pageSize={pageSize} total={users.length} onChange={setPage} />
+        )}
       </Panel>
 
       {detail && (
@@ -235,213 +252,218 @@ export default function PlatformUsersPanel() {
               </div>
               <div>
                 <p className="field-label">Vai trò hệ thống</p>
-                <p>{detail.system_role}</p>
+                <p>{valueLabel(detail.system_role)}</p>
               </div>
               <div>
                 <p className="field-label">Trạng thái</p>
-                <p>{detail.account_status}</p>
+                <p>{valueLabel(detail.account_status)}</p>
               </div>
               <div>
                 <p className="field-label">Phiên đang hoạt động</p>
                 <p>{detail.active_session_count}</p>
               </div>
             </div>
-            <div className="flex flex-wrap gap-2 border-t border-border p-5">
-              <button
-                className="secondary-button"
-                type="button"
-                onClick={async () => {
-                  const answer = await ask({
-                    title: "Cập nhật hồ sơ tài khoản",
-                    confirmLabel: "Lưu",
-                    fields: [
-                      {
-                        name: "full_name",
-                        label: "Họ tên",
-                        required: true,
-                        initialValue: detail.full_name,
-                      },
-                      {
-                        name: "slug",
-                        label: "Tên đăng nhập",
-                        required: true,
-                        initialValue: detail.slug,
-                      },
-                      { name: "reason", label: "Lý do", required: true, multiline: true },
-                    ],
-                  });
-                  if (!answer) return;
-                  try {
-                    await platformApi.updateProfile(detail._id, answer);
-                    await Promise.all([loadUsers(query), loadDetail(detail._id)]);
-                  } catch (reason) {
-                    setError(messageOf(reason));
-                  }
-                }}
-              >
-                Sửa hồ sơ
-              </button>
-              {detail.account_status === "ACTIVE" ? (
-                <>
+            <details className="border-t border-border">
+              <summary className="cursor-pointer px-5 py-4 text-[13px] font-semibold text-ink">
+                Thao tác tài khoản
+              </summary>
+              <div className="grid gap-2 border-t border-border p-5 sm:grid-cols-2 xl:grid-cols-3">
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={async () => {
+                    const answer = await ask({
+                      title: "Cập nhật hồ sơ tài khoản",
+                      confirmLabel: "Lưu",
+                      fields: [
+                        {
+                          name: "full_name",
+                          label: "Họ tên",
+                          required: true,
+                          initialValue: detail.full_name,
+                        },
+                        {
+                          name: "slug",
+                          label: "Tên đăng nhập",
+                          required: true,
+                          initialValue: detail.slug,
+                        },
+                        { name: "reason", label: "Lý do", required: true, multiline: true },
+                      ],
+                    });
+                    if (!answer) return;
+                    try {
+                      await platformApi.updateProfile(detail._id, answer);
+                      await Promise.all([loadUsers(query), loadDetail(detail._id)]);
+                    } catch (reason) {
+                      setError(messageOf(reason));
+                    }
+                  }}
+                >
+                  Sửa hồ sơ
+                </button>
+                {detail.account_status === "ACTIVE" ? (
+                  <>
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      onClick={() =>
+                        mutate(
+                          "Khóa tài khoản",
+                          "Tài khoản sẽ mất quyền truy cập ngay lập tức",
+                          "Khóa",
+                          (reason) => platformApi.lockUser(detail._id, reason),
+                        )
+                      }
+                    >
+                      Khóa
+                    </button>
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      onClick={() =>
+                        mutate(
+                          "Vô hiệu hóa tài khoản",
+                          "Toàn bộ phiên đăng nhập sẽ bị thu hồi",
+                          "Vô hiệu hóa",
+                          (reason) => platformApi.disableUser(detail._id, reason),
+                        )
+                      }
+                    >
+                      Vô hiệu hóa
+                    </button>
+                  </>
+                ) : (
                   <button
                     className="secondary-button"
                     type="button"
                     onClick={() =>
                       mutate(
-                        "Khóa tài khoản",
-                        "Tài khoản sẽ mất quyền truy cập ngay lập tức",
-                        "Khóa",
-                        (reason) => platformApi.lockUser(detail._id, reason),
+                        detail.account_status === "LOCKED"
+                          ? "Mở khóa tài khoản"
+                          : "Kích hoạt tài khoản",
+                        "Tài khoản sẽ được phép đăng nhập trở lại",
+                        detail.account_status === "LOCKED" ? "Mở khóa" : "Kích hoạt",
+                        (reason) =>
+                          detail.account_status === "LOCKED"
+                            ? platformApi.unlockUser(detail._id, reason)
+                            : platformApi.enableUser(detail._id, reason),
                       )
                     }
                   >
-                    Khóa
+                    {detail.account_status === "LOCKED" ? "Mở khóa" : "Kích hoạt"}
                   </button>
-                  <button
-                    className="secondary-button"
-                    type="button"
-                    onClick={() =>
-                      mutate(
-                        "Vô hiệu hóa tài khoản",
-                        "Toàn bộ phiên đăng nhập sẽ bị thu hồi",
-                        "Vô hiệu hóa",
-                        (reason) => platformApi.disableUser(detail._id, reason),
-                      )
-                    }
-                  >
-                    Vô hiệu hóa
-                  </button>
-                </>
-              ) : (
+                )}
                 <button
                   className="secondary-button"
                   type="button"
                   onClick={() =>
                     mutate(
-                      detail.account_status === "LOCKED"
-                        ? "Mở khóa tài khoản"
-                        : "Kích hoạt tài khoản",
-                      "Tài khoản sẽ được phép đăng nhập trở lại",
-                      detail.account_status === "LOCKED" ? "Mở khóa" : "Kích hoạt",
-                      (reason) =>
-                        detail.account_status === "LOCKED"
-                          ? platformApi.unlockUser(detail._id, reason)
-                          : platformApi.enableUser(detail._id, reason),
+                      "Buộc đặt lại mật khẩu",
+                      "Toàn bộ phiên cũ sẽ bị thu hồi và quy trình khôi phục sẽ được gửi",
+                      "Khởi tạo",
+                      (reason) => platformApi.forcePasswordReset(detail._id, reason),
                     )
                   }
                 >
-                  {detail.account_status === "LOCKED" ? "Mở khóa" : "Kích hoạt"}
+                  Buộc đặt lại mật khẩu
                 </button>
-              )}
-              <button
-                className="secondary-button"
-                type="button"
-                onClick={() =>
-                  mutate(
-                    "Buộc đặt lại mật khẩu",
-                    "Toàn bộ phiên cũ sẽ bị thu hồi và quy trình khôi phục sẽ được gửi",
-                    "Khởi tạo",
-                    (reason) => platformApi.forcePasswordReset(detail._id, reason),
-                  )
-                }
-              >
-                Buộc đặt lại mật khẩu
-              </button>
-              <button
-                className="secondary-button"
-                type="button"
-                onClick={() =>
-                  mutate(
-                    "Gửi lại quy trình kích hoạt",
-                    "Hệ thống sẽ gửi lại hướng dẫn kích hoạt và đặt mật khẩu",
-                    "Gửi",
-                    (reason) => platformApi.resendVerification(detail._id, reason),
-                  )
-                }
-              >
-                Gửi lại kích hoạt
-              </button>
-              <button
-                className="secondary-button"
-                type="button"
-                onClick={() =>
-                  mutate(
-                    "Đặt lại passkey",
-                    "Toàn bộ passkey và phiên đăng nhập của tài khoản sẽ bị thu hồi",
-                    "Đặt lại",
-                    (reason) => platformApi.resetPasskeys(detail._id, reason),
-                  )
-                }
-              >
-                Đặt lại passkey
-              </button>
-              <button
-                className="secondary-button"
-                type="button"
-                onClick={() =>
-                  mutate(
-                    detail.system_role === "ADMIN" ? "Hạ quyền quản trị" : "Cấp quyền quản trị",
-                    "Thay đổi có hiệu lực sau khi toàn bộ phiên hiện tại bị thu hồi",
-                    "Xác nhận",
-                    (reason) =>
-                      platformApi.updateSystemRole(
-                        detail._id,
-                        detail.system_role === "ADMIN" ? "USER" : "ADMIN",
-                        reason,
-                      ),
-                  )
-                }
-              >
-                {detail.system_role === "ADMIN" ? "Hạ xuống USER" : "Cấp ADMIN"}
-              </button>
-              <button
-                className="secondary-button"
-                type="button"
-                onClick={async () => {
-                  const reason = await reasonFor(
-                    "Thu hồi toàn bộ phiên",
-                    "Tài khoản sẽ phải đăng nhập lại trên mọi thiết bị",
-                    "Thu hồi",
-                  );
-                  if (!reason) return;
-                  try {
-                    await platformApi.revokeAllSessions(detail._id);
-                    await loadDetail(detail._id);
-                  } catch (value) {
-                    setError(messageOf(value));
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() =>
+                    mutate(
+                      "Gửi lại quy trình kích hoạt",
+                      "Hệ thống sẽ gửi lại hướng dẫn kích hoạt và đặt mật khẩu",
+                      "Gửi",
+                      (reason) => platformApi.resendVerification(detail._id, reason),
+                    )
                   }
-                }}
-              >
-                Thu hồi mọi phiên
-              </button>
-              <button
-                className="danger-button"
-                type="button"
-                onClick={async () => {
-                  const answer = await ask({
-                    title: "Ẩn danh và xóa tài khoản",
-                    description: `Nhập chính xác ${detail.email} để xác nhận`,
-                    confirmLabel: "Xóa tài khoản",
-                    danger: true,
-                    fields: [
-                      { name: "confirmation", label: "Email xác nhận", required: true },
-                      { name: "reason", label: "Lý do", required: true, multiline: true },
-                    ],
-                  });
-                  if (!answer) return;
-                  try {
-                    await platformApi.deleteUser(detail._id, answer.confirmation, answer.reason);
-                    setSelectedId("");
-                    setDetail(null);
-                    await loadUsers(query);
-                  } catch (reason) {
-                    setError(messageOf(reason));
+                >
+                  Gửi lại kích hoạt
+                </button>
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() =>
+                    mutate(
+                      "Đặt lại passkey",
+                      "Toàn bộ passkey và phiên đăng nhập của tài khoản sẽ bị thu hồi",
+                      "Đặt lại",
+                      (reason) => platformApi.resetPasskeys(detail._id, reason),
+                    )
                   }
-                }}
-              >
-                Xóa và ẩn danh
-              </button>
-            </div>
+                >
+                  Đặt lại passkey
+                </button>
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() =>
+                    mutate(
+                      detail.system_role === "ADMIN" ? "Hạ quyền quản trị" : "Cấp quyền quản trị",
+                      "Thay đổi có hiệu lực sau khi toàn bộ phiên hiện tại bị thu hồi",
+                      "Xác nhận",
+                      (reason) =>
+                        platformApi.updateSystemRole(
+                          detail._id,
+                          detail.system_role === "ADMIN" ? "USER" : "ADMIN",
+                          reason,
+                        ),
+                    )
+                  }
+                >
+                  {detail.system_role === "ADMIN" ? "Hạ xuống người dùng" : "Cấp quyền quản trị"}
+                </button>
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={async () => {
+                    const reason = await reasonFor(
+                      "Thu hồi toàn bộ phiên",
+                      "Tài khoản sẽ phải đăng nhập lại trên mọi thiết bị",
+                      "Thu hồi",
+                    );
+                    if (!reason) return;
+                    try {
+                      await platformApi.revokeAllSessions(detail._id);
+                      await loadDetail(detail._id);
+                    } catch (value) {
+                      setError(messageOf(value));
+                    }
+                  }}
+                >
+                  Thu hồi mọi phiên
+                </button>
+                <button
+                  className="danger-button"
+                  type="button"
+                  onClick={async () => {
+                    const answer = await ask({
+                      title: "Ẩn danh và xóa tài khoản",
+                      description: `Nhập chính xác ${detail.email} để xác nhận`,
+                      confirmLabel: "Xóa tài khoản",
+                      danger: true,
+                      fields: [
+                        { name: "confirmation", label: "Email xác nhận", required: true },
+                        { name: "reason", label: "Lý do", required: true, multiline: true },
+                      ],
+                    });
+                    if (!answer) return;
+                    try {
+                      await platformApi.deleteUser(detail._id, answer.confirmation, answer.reason);
+                      setSelectedId("");
+                      setDetail(null);
+                      await loadUsers(query);
+                    } catch (reason) {
+                      setError(messageOf(reason));
+                    }
+                  }}
+                >
+                  Xóa và ẩn danh
+                </button>
+              </div>
+            </details>
           </Panel>
 
           <Panel title="Phiên đăng nhập">
@@ -489,8 +511,16 @@ export default function PlatformUsersPanel() {
                 empty="Không có thành viên dự án"
                 columns={[
                   { key: "project_id", label: "Dự án" },
-                  { key: "project_role", label: "Vai trò" },
-                  { key: "status", label: "Trạng thái" },
+                  {
+                    key: "project_role",
+                    label: "Vai trò",
+                    render: (item) => valueLabel(item.project_role),
+                  },
+                  {
+                    key: "status",
+                    label: "Trạng thái",
+                    render: (item) => valueLabel(item.status),
+                  },
                 ]}
               />
             </Panel>
@@ -499,7 +529,11 @@ export default function PlatformUsersPanel() {
                 items={audit}
                 empty="Không có sự kiện"
                 columns={[
-                  { key: "action", label: "Sự kiện" },
+                  {
+                    key: "action",
+                    label: "Sự kiện",
+                    render: (item) => valueLabel(item.action),
+                  },
                   {
                     key: "timestamp",
                     label: "Thời điểm",

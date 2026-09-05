@@ -75,8 +75,11 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
         if email is None or session_id is None:
             logger.warning("Token verification failed due to missing identity claims")
             raise credentials_exception
+    except jwt.ExpiredSignatureError:
+        logger.warning("Authentication token expired")
+        raise credentials_exception
     except jwt.PyJWTError:
-        logger.exception("Authentication token decoding failed due to malformed payload")
+        logger.warning("Authentication token is invalid")
         raise credentials_exception
 
     uid = payload.get("uid")
@@ -143,7 +146,11 @@ class RateLimiting:
     async def __call__(self, request: Request):
         client_ip = request.client.host if request.client else "unknown"
         path = request.url.path
-        key = f"rate_limit:{client_ip}:{path}"
+        identity = ""
+        if path == "/xac-thuc/dang-nhap":
+            form = await request.form()
+            identity = str(form.get("username") or "").strip().lower()
+        key = f"rate_limit:{client_ip}:{path}:{identity}"
         current = await redis.get(key)
         if current is not None and int(current) >= self.calls:
             raise HTTPException(

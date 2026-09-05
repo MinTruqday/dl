@@ -16,6 +16,7 @@ import {
 import { testingApi } from "../../services/testing.service";
 import { docText, emptyDoc, messageOf, textDoc, valueLabel } from "../../lib/testing";
 import QaDocumentEditor from "../../editor/QaDocumentEditor";
+import { Modal, ModalHeader, ModalTitle } from "@/shared/components/ui/Modal";
 
 const initialForm = {
   title: "",
@@ -58,6 +59,9 @@ export default function RequirementsPage({ project, section }) {
   const [selected, setSelected] = useState(null);
   const [versions, setVersions] = useState([]);
   const [form, setForm] = useState(initialForm);
+  const [creating, setCreating] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState({
     status: "",
@@ -237,6 +241,8 @@ export default function RequirementsPage({ project, section }) {
   );
   const create = async (event) => {
     event.preventDefault();
+    if (saving) return;
+    setSaving(true);
     setError("");
     try {
       await testingApi.createRequirement(project._id, {
@@ -266,9 +272,12 @@ export default function RequirementsPage({ project, section }) {
         owner_id: form.ownerId.trim() || null,
       });
       setForm(initialForm);
+      setCreating(false);
       await load();
     } catch (reason) {
       setError(messageOf(reason));
+    } finally {
+      setSaving(false);
     }
   };
   const review = async (action) => {
@@ -379,6 +388,7 @@ export default function RequirementsPage({ project, section }) {
       await testingApi.confirmRequirementImport(preview._id, selectedIndexes, preview.revision);
       setPreview(null);
       setSelectedIndexes([]);
+      setImporting(false);
       await load();
     } catch (reason) {
       setError(messageOf(reason));
@@ -788,12 +798,36 @@ export default function RequirementsPage({ project, section }) {
   };
   return (
     <QaPage
-      title={
-        selected
-          ? `${selected.requirement_key} ${current?.title || ""}`
-          : "Yêu cầu và phiên bản chuẩn"
+      title={selected ? `${selected.requirement_key} ${current?.title || ""}` : "Yêu cầu"}
+      actions={
+        <div className="flex flex-wrap items-center gap-3">
+          <ProjectCrumb projectId={project._id} />
+          {!selected && can("requirement_document.upload") && (
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => {
+                setError("");
+                setImporting(true);
+              }}
+            >
+              Nhập tài liệu
+            </button>
+          )}
+          {!selected && can("requirement.create") && (
+            <button
+              type="button"
+              className="apple-button"
+              onClick={() => {
+                setError("");
+                setCreating(true);
+              }}
+            >
+              Tạo yêu cầu
+            </button>
+          )}
+        </div>
       }
-      actions={<ProjectCrumb projectId={project._id} />}
     >
       {error && <ErrorState message={error} />}
       {selected ? (
@@ -1189,7 +1223,11 @@ export default function RequirementsPage({ project, section }) {
                 items={comparison.changes.map((item, index) => ({ ...item, _id: index }))}
                 empty="Hai phiên bản không có khác biệt ngữ nghĩa"
                 columns={[
-                  { key: "type", label: "Loại thay đổi" },
+                  {
+                    key: "type",
+                    label: "Loại thay đổi",
+                    render: (item) => valueLabel(item.type),
+                  },
                   { key: "field", label: "Trường" },
                   { key: "before", label: "Trước", render: (item) => JSON.stringify(item.before) },
                   { key: "after", label: "Sau", render: (item) => JSON.stringify(item.after) },
@@ -1228,10 +1266,9 @@ export default function RequirementsPage({ project, section }) {
                     }}
                     placeholder="Tìm yêu cầu"
                   />
-                  {can("requirement.update") && (
+                  {selectedIds.length > 0 && can("requirement.update") && (
                     <button
                       className="secondary-button"
-                      disabled={!selectedIds.length}
                       type="button"
                       onClick={async () => {
                         const answer = await ask({
@@ -1276,7 +1313,7 @@ export default function RequirementsPage({ project, section }) {
                       {selectedIds.length ? "Kiểm tra các mục đã chọn" : "Kiểm tra trùng lặp"}
                     </button>
                   )}
-                  {can("requirement.merge") && (
+                  {selectedIds.length > 0 && can("requirement.merge") && (
                     <button
                       className="secondary-button"
                       disabled={selectedIds.length < 2}
@@ -1286,10 +1323,9 @@ export default function RequirementsPage({ project, section }) {
                       Gộp yêu cầu
                     </button>
                   )}
-                  {can("requirement.archive") && (
+                  {selectedIds.length > 0 && can("requirement.archive") && (
                     <button
                       className="danger-button"
-                      disabled={!selectedIds.length}
                       type="button"
                       onClick={async () => {
                         const answer = await ask({
@@ -1328,71 +1364,87 @@ export default function RequirementsPage({ project, section }) {
                 </div>
               }
             >
-              <div className="grid gap-3 border-b border-border p-4 sm:grid-cols-2 xl:grid-cols-5">
-                <select
-                  aria-label="Lọc trạng thái yêu cầu"
-                  className="apple-input"
-                  value={filters.status}
-                  onChange={(event) => {
-                    setFilters({ ...filters, status: event.target.value });
-                    setPage(1);
-                  }}
-                >
-                  <option value="">Mọi trạng thái</option>
-                  <option value="DRAFT">Bản nháp</option>
-                  <option value="IN_REVIEW">Đang rà soát</option>
-                  <option value="BASELINED">Đã phê duyệt</option>
-                  <option value="SUPERSEDED">Đã được thay thế</option>
-                  <option value="OBSOLETE">Không còn hiệu lực</option>
-                </select>
-                <select
-                  aria-label="Lọc độ phủ yêu cầu"
-                  className="apple-input"
-                  value={filters.coverage}
-                  onChange={(event) => {
-                    setFilters({ ...filters, coverage: event.target.value });
-                    setPage(1);
-                  }}
-                >
-                  <option value="">Mọi độ phủ</option>
-                  <option value="covered">Đã phủ</option>
-                  <option value="uncovered">Chưa phủ</option>
-                </select>
-                <input
-                  aria-label="Lọc nhãn yêu cầu"
-                  className="apple-input"
-                  placeholder="Nhãn"
-                  value={filters.tag}
-                  onChange={(event) => {
-                    setFilters({ ...filters, tag: event.target.value });
-                    setPage(1);
-                  }}
-                />
-                <input
-                  aria-label="Lọc người phụ trách yêu cầu"
-                  className="apple-input"
-                  placeholder="Mã người phụ trách"
-                  value={filters.owner}
-                  onChange={(event) => {
-                    setFilters({ ...filters, owner: event.target.value });
-                    setPage(1);
-                  }}
-                />
-                <select
-                  aria-label="Sắp xếp yêu cầu"
-                  className="apple-input"
-                  value={filters.sort}
-                  onChange={(event) => {
-                    setFilters({ ...filters, sort: event.target.value });
-                    setPage(1);
-                  }}
-                >
-                  <option value="-updated_at">Mới cập nhật</option>
-                  <option value="updated_at">Cũ cập nhật</option>
-                  <option value="requirement_key">Mã tăng dần</option>
-                  <option value="title">Tên tăng dần</option>
-                </select>
-              </div>
+              <details className="border-b border-border p-4">
+                <summary className="cursor-pointer text-sm font-medium">
+                  Bộ lọc và sắp xếp
+                  {[filters.status, filters.coverage, filters.tag, filters.owner].filter(Boolean)
+                    .length > 0 && (
+                    <span className="ml-2 text-ink-muted">
+                      {
+                        [filters.status, filters.coverage, filters.tag, filters.owner].filter(
+                          Boolean,
+                        ).length
+                      }{" "}
+                      bộ lọc đang dùng
+                    </span>
+                  )}
+                </summary>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                  <select
+                    aria-label="Lọc trạng thái yêu cầu"
+                    className="apple-input"
+                    value={filters.status}
+                    onChange={(event) => {
+                      setFilters({ ...filters, status: event.target.value });
+                      setPage(1);
+                    }}
+                  >
+                    <option value="">Mọi trạng thái</option>
+                    <option value="DRAFT">Bản nháp</option>
+                    <option value="IN_REVIEW">Đang rà soát</option>
+                    <option value="BASELINED">Đã phê duyệt</option>
+                    <option value="SUPERSEDED">Đã được thay thế</option>
+                    <option value="OBSOLETE">Không còn hiệu lực</option>
+                  </select>
+                  <select
+                    aria-label="Lọc độ phủ yêu cầu"
+                    className="apple-input"
+                    value={filters.coverage}
+                    onChange={(event) => {
+                      setFilters({ ...filters, coverage: event.target.value });
+                      setPage(1);
+                    }}
+                  >
+                    <option value="">Mọi độ phủ</option>
+                    <option value="covered">Đã phủ</option>
+                    <option value="uncovered">Chưa phủ</option>
+                  </select>
+                  <input
+                    aria-label="Lọc nhãn yêu cầu"
+                    className="apple-input"
+                    placeholder="Nhãn"
+                    value={filters.tag}
+                    onChange={(event) => {
+                      setFilters({ ...filters, tag: event.target.value });
+                      setPage(1);
+                    }}
+                  />
+                  <input
+                    aria-label="Lọc người phụ trách yêu cầu"
+                    className="apple-input"
+                    placeholder="Mã người phụ trách"
+                    value={filters.owner}
+                    onChange={(event) => {
+                      setFilters({ ...filters, owner: event.target.value });
+                      setPage(1);
+                    }}
+                  />
+                  <select
+                    aria-label="Sắp xếp yêu cầu"
+                    className="apple-input"
+                    value={filters.sort}
+                    onChange={(event) => {
+                      setFilters({ ...filters, sort: event.target.value });
+                      setPage(1);
+                    }}
+                  >
+                    <option value="-updated_at">Mới cập nhật</option>
+                    <option value="updated_at">Cũ cập nhật</option>
+                    <option value="requirement_key">Mã tăng dần</option>
+                    <option value="title">Tên tăng dần</option>
+                  </select>
+                </div>
+              </details>
               <DataTable
                 onSelect={(item) =>
                   window.location.assign(`/du-an/${project._id}/yeu-cau/${item._id}`)
@@ -1693,7 +1745,22 @@ export default function RequirementsPage({ project, section }) {
           )}
           <div className="grid gap-5 xl:grid-cols-2">
             {can("requirement.create") && (
-              <Panel title="Tạo yêu cầu thủ công">
+              <Modal
+                isOpen={creating}
+                onClose={() => {
+                  if (!saving) setCreating(false);
+                }}
+                ariaLabel="Tạo yêu cầu"
+                className="max-w-3xl max-h-[90dvh] overflow-y-auto"
+              >
+                <ModalHeader>
+                  <ModalTitle>Tạo yêu cầu</ModalTitle>
+                </ModalHeader>
+                {error && (
+                  <div className="px-5 pt-4">
+                    <ErrorState message={error} />
+                  </div>
+                )}
                 <form className="space-y-4 p-5" onSubmit={create}>
                   <label className="field-label">
                     Tên
@@ -1804,14 +1871,33 @@ export default function RequirementsPage({ project, section }) {
                       />
                     </label>
                   </div>
-                  <button className="apple-button" type="submit">
-                    Lưu yêu cầu
-                  </button>
+                  <div className="flex justify-end gap-3">
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      disabled={saving}
+                      onClick={() => setCreating(false)}
+                    >
+                      Hủy
+                    </button>
+                    <button className="apple-button" type="submit" disabled={saving}>
+                      {saving ? "Đang lưu" : "Lưu yêu cầu"}
+                    </button>
+                  </div>
                 </form>
-              </Panel>
+              </Modal>
             )}
             {can("requirement_document.upload") && (
-              <Panel title="Nhập tài liệu">
+              <Modal
+                isOpen={importing}
+                onClose={() => setImporting(false)}
+                ariaLabel="Nhập tài liệu"
+                className="max-w-5xl max-h-[90dvh] overflow-y-auto"
+              >
+                <ModalHeader>
+                  <ModalTitle>Nhập tài liệu</ModalTitle>
+                </ModalHeader>
+                {error && <ErrorState message={error} />}
                 <form onSubmit={uploadPreview} className="space-y-4 border-b border-border p-5">
                   <label className="field-label">
                     Tệp SRS BRD hoặc bảng yêu cầu
@@ -1975,7 +2061,11 @@ export default function RequirementsPage({ project, section }) {
                             />
                           ),
                         },
-                        { key: "type", label: "Loại" },
+                        {
+                          key: "type",
+                          label: "Loại",
+                          render: (item) => valueLabel(item.type),
+                        },
                         {
                           key: "candidate_relation",
                           label: "Quan hệ ứng viên",
@@ -2055,7 +2145,7 @@ export default function RequirementsPage({ project, section }) {
                     )}
                   </div>
                 )}
-              </Panel>
+              </Modal>
             )}
           </div>
         </>

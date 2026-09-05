@@ -7,11 +7,12 @@ import {
   ErrorState,
   LoadingState,
   Metric,
+  Pagination,
   Panel,
   QaPage,
   StatusPill,
 } from "../components/TestingUi";
-import { formatDate, messageOf } from "../lib/testing";
+import { formatDate, messageOf, valueLabel } from "../lib/testing";
 import { testingApi } from "../services/testing.service";
 
 const taskLabels = {
@@ -31,6 +32,10 @@ export default function OperationsPage() {
   const [value, setValue] = useState(null);
   const [error, setError] = useState("");
   const [auditQuery, setAuditQuery] = useState("");
+  const [storagePage, setStoragePage] = useState(1);
+  const [auditPage, setAuditPage] = useState(1);
+  const storagePageSize = 10;
+  const auditPageSize = 20;
   const load = useCallback(async () => {
     try {
       setValue(await testingApi.operations());
@@ -61,6 +66,15 @@ export default function OperationsPage() {
     );
   });
   const impactMetrics = value?.ai_request_metrics?.impact_classification || {};
+  const storageUsage = value?.storage_usage || [];
+  const visibleStorageUsage = storageUsage.slice(
+    (storagePage - 1) * storagePageSize,
+    storagePage * storagePageSize,
+  );
+  const visibleAuditEvents = auditEvents.slice(
+    (auditPage - 1) * auditPageSize,
+    auditPage * auditPageSize,
+  );
   const aiMetrics = [
     { _id: "impact_total", name: "Lượt phân loại ảnh hưởng", count: impactMetrics.total || 0 },
     { _id: "impact_success", name: "Lượt phân loại thành công", count: impactMetrics.success || 0 },
@@ -82,27 +96,29 @@ export default function OperationsPage() {
     },
   ];
   return (
-    <QaPage
-      title="Quản trị nền tảng"
-      actions={
-        <div className="flex flex-wrap gap-2">
-          {[
-            ["overview", "Tổng quan vận hành"],
-            ["users", "Tài khoản"],
-            ["platform", "Dự án và AI"],
-          ].map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              className={section === value ? "apple-button" : "secondary-button"}
-              onClick={() => setSection(value)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      }
-    >
+    <QaPage title="Vận hành nền tảng">
+      <nav
+        aria-label="Khu vực quản trị"
+        className="flex max-w-full gap-1 overflow-x-auto rounded-xl bg-surface-quiet p-1"
+      >
+        {[
+          ["overview", "Tổng quan"],
+          ["users", "Tài khoản"],
+          ["platform", "Cấu hình nền tảng"],
+        ].map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            aria-current={section === value ? "page" : undefined}
+            className={`min-h-10 shrink-0 rounded-lg px-4 text-[13px] font-semibold transition ${
+              section === value ? "bg-surface text-ink shadow-sm" : "text-ink-muted hover:text-ink"
+            }`}
+            onClick={() => setSection(value)}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
       {error && <ErrorState message={error} />}
       {section === "users" ? (
         <PlatformUsersPanel />
@@ -201,13 +217,19 @@ export default function OperationsPage() {
           </Panel>
           <Panel title="Dung lượng theo dự án">
             <DataTable
-              items={value.storage_usage || []}
+              items={visibleStorageUsage}
               empty="Chưa có dữ liệu dung lượng"
               columns={[
                 { key: "project_key", label: "Dự án" },
                 { key: "files", label: "Tệp" },
                 { key: "bytes", label: "Dung lượng theo byte" },
               ]}
+            />
+            <Pagination
+              page={storagePage}
+              pageSize={storagePageSize}
+              total={storageUsage.length}
+              onChange={setStoragePage}
             />
           </Panel>
           <Panel
@@ -218,17 +240,28 @@ export default function OperationsPage() {
                 id="operations-audit-query"
                 className="apple-input w-full sm:w-80"
                 value={auditQuery}
-                onChange={(event) => setAuditQuery(event.target.value)}
+                onChange={(event) => {
+                  setAuditQuery(event.target.value);
+                  setAuditPage(1);
+                }}
                 placeholder="Sự kiện mã đối tượng hoặc người thực hiện"
               />
             }
           >
             <DataTable
-              items={auditEvents}
+              items={visibleAuditEvents}
               empty="Không có sự kiện phù hợp"
               columns={[
-                { key: "action", label: "Sự kiện" },
-                { key: "entity_type", label: "Loại" },
+                {
+                  key: "action",
+                  label: "Sự kiện",
+                  render: (item) => valueLabel(item.action),
+                },
+                {
+                  key: "entity_type",
+                  label: "Loại",
+                  render: (item) => valueLabel(item.entity_type),
+                },
                 { key: "entity_id", label: "Mã" },
                 { key: "actor_id", label: "Người thực hiện" },
                 {
@@ -237,6 +270,12 @@ export default function OperationsPage() {
                   render: (item) => formatDate(item.created_at),
                 },
               ]}
+            />
+            <Pagination
+              page={auditPage}
+              pageSize={auditPageSize}
+              total={auditEvents.length}
+              onChange={setAuditPage}
             />
           </Panel>
         </>

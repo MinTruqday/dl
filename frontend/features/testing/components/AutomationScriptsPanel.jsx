@@ -147,10 +147,7 @@ export default function AutomationScriptsPanel({ project, tests }) {
   if (!canGenerate && !canExport) return null;
 
   return (
-    <Panel
-      title="Kịch bản kiểm thử tự động hóa"
-      description="Tạo bản nháp từ phiên bản ca kiểm thử đã duyệt và không tự ghi vào kho mã nguồn"
-    >
+    <Panel title="Kịch bản kiểm thử tự động hóa">
       <div className="space-y-5 p-5">
         {error && <ErrorState message={error} />}
         {canGenerate && (

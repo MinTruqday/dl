@@ -101,15 +101,9 @@ export default function AutomationExecutionPanel({ project }) {
   return (
     <Panel
       title="Thực thi Newman"
-      description="Runner hoạt động tách biệt và kết quả được chuẩn hóa về dự án"
       actions={
-        can("automation.create") ? (
-          <button
-            className="apple-button"
-            type="button"
-            disabled={!artifacts.length}
-            onClick={create}
-          >
+        can("automation.create") && artifacts.length > 0 ? (
+          <button className="apple-button" type="button" onClick={create}>
             Tạo lần chạy Newman
           </button>
         ) : null
@@ -156,7 +150,7 @@ export default function AutomationExecutionPanel({ project }) {
                   </button>
                 )}
                 <button className="secondary-button" type="button" onClick={() => open(selected)}>
-                  Tải evidence
+                  Tải bằng chứng
                 </button>
               </div>
             </div>

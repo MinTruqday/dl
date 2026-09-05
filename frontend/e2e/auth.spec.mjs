@@ -15,6 +15,27 @@ test("trang chủ giới thiệu sản phẩm rõ ràng và không tràn trên t
   await expectRuntimeClean(errors);
 });
 
+test("điều hướng mobile hẹp không vỡ dòng và quản lý focus đúng", async ({ page }) => {
+  const errors = observeRuntime(page);
+  await page.setViewportSize({ width: 320, height: 720 });
+  await page.goto("/dieu-khoan");
+  await expect(page.getByRole("link", { name: "Đăng nhập" })).toBeHidden();
+  await expect(page.getByRole("link", { name: "Đăng ký" })).toBeVisible();
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth),
+  ).toBeLessThanOrEqual(1);
+  const trigger = page.getByRole("button", { name: "Mở điều hướng" });
+  await trigger.click();
+  await expect(page.getByRole("dialog", { name: "Điều hướng chính" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Đóng điều hướng" })).toHaveCount(1);
+  await expect(page.getByRole("button", { name: "Đóng điều hướng" })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog", { name: "Điều hướng chính" })).toBeHidden();
+  await expect(trigger).toBeFocused();
+  expect(await page.evaluate(() => document.body.style.overflow)).toBe("");
+  await expectRuntimeClean(errors);
+});
+
 test("đăng nhập báo đúng lỗi và đăng nhập người dùng thành công", async ({ page }) => {
   const errors = observeRuntime(page);
   await page.goto("/dang-nhap");
@@ -26,7 +47,7 @@ test("đăng nhập báo đúng lỗi và đăng nhập người dùng thành c�
   await page.locator("#login-password").fill(credentials.lead.password);
   await page.getByRole("button", { name: "Đăng nhập" }).click();
   await expect(page).toHaveURL(/\/du-an$/);
-  await expect(page.getByRole("heading", { name: "Dự án kiểm thử" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Dự án", exact: true })).toBeVisible();
   await expectRuntimeClean(errors);
 });
 

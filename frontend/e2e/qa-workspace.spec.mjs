@@ -299,18 +299,20 @@ test("luồng chữ ký Requirement đến Regression bảo toàn phiên bản v
   await expect(page.getByRole("heading", { level: 1, name: project.name })).toBeVisible();
   await expect(page.getByText("100%", { exact: true }).first()).toBeVisible();
   for (const [path, heading] of [
-    ["yeu-cau", "Yêu cầu và phiên bản chuẩn"],
-    ["thiet-ke-kiem-thu", "Kịch bản và ca kiểm thử"],
-    ["truy-vet", "Ma trận truy vết và độ phủ"],
-    ["thay-doi", "Ảnh hưởng thay đổi và bảo trì"],
-    ["thuc-thi", "Kế hoạch, bộ kiểm thử và lần chạy"],
-    ["loi", "Quản lý lỗi"],
-    ["tri-thuc", "Tìm kiếm trong tri thức dự án"],
-    ["cai-dat", "Cài đặt và kiểm toán"],
+    ["yeu-cau", "Yêu cầu"],
+    ["thiet-ke-kiem-thu", "Thiết kế kiểm thử"],
+    ["truy-vet", "Truy vết"],
+    ["thay-doi", "Phân tích thay đổi"],
+    ["thuc-thi", "Thực thi kiểm thử"],
+    ["loi", "Lỗi"],
+    ["tri-thuc", "Kho tri thức"],
+    ["cai-dat", "Cài đặt và nhật ký"],
   ]) {
     await page.goto(`/du-an/${project._id}/${path}`);
     await expect(page.getByRole("heading", { level: 1, name: heading })).toBeVisible();
     if (path === "thiet-ke-kiem-thu") {
+      await page.getByRole("button", { name: "Tạo ca kiểm thử", exact: true }).click();
+      await expect(page.getByRole("dialog", { name: "Tạo ca kiểm thử" })).toBeVisible();
       const toolbar = page.getByRole("toolbar", { name: "Công cụ soạn thảo QA" }).first();
       await expect(toolbar).toBeVisible();
       for (const name of [
@@ -366,7 +368,20 @@ test("người dùng tạo dự án bằng frontend thật và giao diện di đ
   await page.setViewportSize({ width: 390, height: 844 });
   await authenticatePage(page, request, "lead");
   await page.goto("/du-an");
+  await expect(page.getByRole("heading", { level: 1, name: "Dự án", exact: true })).toBeVisible();
+  await expect(page.getByText("Dự án kiểm thử", { exact: true })).toHaveCount(0);
+  const searchInput = page.getByRole("textbox", { name: "Tìm dự án" });
+  const searchIcon = searchInput.locator("xpath=preceding-sibling::*[name()='svg']");
+  const alignment = await Promise.all([searchInput.boundingBox(), searchIcon.boundingBox()]);
+  expect(alignment[0]).not.toBeNull();
+  expect(alignment[1]).not.toBeNull();
+  expect(
+    Math.abs(alignment[0].y + alignment[0].height / 2 - (alignment[1].y + alignment[1].height / 2)),
+  ).toBeLessThanOrEqual(1);
   await page.getByRole("button", { name: "Tạo dự án" }).click();
+  const createDialog = page.getByRole("dialog", { name: "Tạo dự án" });
+  await expect(createDialog).toBeVisible();
+  await expect(createDialog).toBeFocused();
   const stamp = Date.now();
   await page.getByLabel("Mã dự án").fill(`UI${stamp}`);
   await page.getByLabel("Tên dự án").fill(`Dự án giao diện ${stamp}`);
@@ -400,6 +415,8 @@ test("các nút thao tác chính tạo thay đổi thật qua backend", async ({
   );
 
   await page.goto(`/du-an/${project._id}/yeu-cau`);
+  await page.getByRole("button", { name: "Tạo yêu cầu", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Tạo yêu cầu" })).toBeVisible();
   await page.getByLabel("Tên", { exact: true }).fill(`Yêu cầu giao diện ${stamp}`);
   await page.getByRole("textbox", { name: "Nội dung yêu cầu" }).fill("Nút lưu phải gọi backend");
   await page
@@ -417,10 +434,13 @@ test("các nút thao tác chính tạo thay đổi thật qua backend", async ({
   ).toBeVisible();
 
   await page.goto(`/du-an/${project._id}/tri-thuc`);
-  await page.getByLabel("Tiêu đề nguồn").fill(`Nguồn giáo viên ${stamp}`);
-  await page.getByLabel("Môn học").fill("Toán");
-  await page.getByLabel("Khối lớp").fill("12");
-  await page
+  await page.getByRole("button", { name: "Thêm nguồn tri thức", exact: true }).click();
+  const sourceDialog = page.getByRole("dialog", { name: "Thêm nguồn tri thức" });
+  await expect(sourceDialog).toBeVisible();
+  await sourceDialog.getByLabel("Tiêu đề nguồn").fill(`Nguồn giáo viên ${stamp}`);
+  await sourceDialog.getByLabel("Môn học").fill("Toán");
+  await sourceDialog.getByLabel("Khối lớp").fill("12");
+  await sourceDialog
     .getByLabel("Nội dung tài liệu")
     .fill("Phương pháp giải và cách trình bày của giáo viên");
   const sourceResponse = page.waitForResponse(
@@ -428,7 +448,7 @@ test("các nút thao tác chính tạo thay đổi thật qua backend", async ({
       response.url().endsWith(`/kiem-thu/du-an/${project._id}/nguon-tri-thuc`) &&
       response.request().method() === "POST",
   );
-  await page.getByRole("button", { name: "Thêm nguồn tri thức" }).click();
+  await sourceDialog.getByRole("button", { name: "Thêm nguồn tri thức" }).click();
   expect((await sourceResponse).status()).toBe(201);
   const sourceRow = page.getByRole("row").filter({ hasText: `Nguồn giáo viên ${stamp}` });
   await expect(sourceRow).toBeVisible();
@@ -439,10 +459,12 @@ test("các nút thao tác chính tạo thay đổi thật qua backend", async ({
   );
   await sourceRow.getByRole("button", { name: "Lập chỉ mục lại" }).click();
   expect((await reindexResponse).status()).toBe(202);
-  await expect(sourceRow).toContainText(/INDEXED|FAILED/);
+  await expect(sourceRow).toContainText(/Đã lập chỉ mục|Không thành công/);
 
   await page.goto(`/du-an/${project._id}/thuc-thi`);
   const planName = `Kế hoạch giao diện ${stamp}`;
+  await page.getByRole("button", { name: "Tạo kế hoạch", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Tạo kế hoạch kiểm thử" })).toBeVisible();
   await page.getByLabel("Tên kế hoạch kiểm thử").fill(planName);
   await page.getByLabel("Mục tiêu kế hoạch kiểm thử").fill("Xác minh nút lưu kế hoạch");
   const planResponse = page.waitForResponse(
@@ -454,6 +476,8 @@ test("các nút thao tác chính tạo thay đổi thật qua backend", async ({
   expect((await planResponse).status()).toBe(201);
   await expect(page.getByRole("cell", { name: planName, exact: true })).toBeVisible();
   const suiteName = `Bộ kiểm thử giao diện ${stamp}`;
+  await page.getByRole("button", { name: "Tạo bộ kiểm thử", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Tạo bộ kiểm thử" })).toBeVisible();
   await page.getByLabel("Tên bộ kiểm thử").fill(suiteName);
   const suiteResponse = page.waitForResponse(
     (response) =>
@@ -480,8 +504,8 @@ test("các nút thao tác chính tạo thay đổi thật qua backend", async ({
   const missingProject = `Không tồn tại ${stamp}`;
   await page.getByLabel("Tìm dự án").fill(missingProject);
   await page.getByLabel("Tìm dự án").press("Enter");
-  await expect(page.getByText("Chưa có dự án kiểm thử")).toBeVisible();
-  await page.getByRole("button", { name: "Tạo dự án đầu tiên" }).click();
-  await expect(page.getByRole("heading", { name: "Tạo dự án mới" })).toBeVisible();
+  await expect(page.getByText("Không tìm thấy dự án phù hợp")).toBeVisible();
+  await page.getByRole("button", { name: "Tạo dự án", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Tạo dự án" })).toBeVisible();
   await expectRuntimeClean(errors);
 });

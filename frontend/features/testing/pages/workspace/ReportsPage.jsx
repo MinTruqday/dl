@@ -65,7 +65,7 @@ export default function ReportsPage({ project }) {
     void load();
   }, [load]);
   return (
-    <QaPage title="Báo cáo chất lượng" actions={<ProjectCrumb projectId={project._id} />}>
+    <QaPage title="Báo cáo" actions={<ProjectCrumb projectId={project._id} />}>
       {error && <ErrorState message={error} />}
       <Panel
         title="Phạm vi báo cáo"
@@ -227,7 +227,7 @@ export default function ReportsPage({ project }) {
             {value.ai && (
               <Metric
                 label="Độ trễ AI trung bình"
-                value={`${Math.round(value.ai.average_latency_ms)} ms`}
+                value={`${Math.round(value.ai.average_latency_ms)} mili giây`}
               />
             )}
           </div>

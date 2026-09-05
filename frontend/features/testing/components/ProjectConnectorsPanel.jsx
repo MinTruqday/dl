@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import DataTable from "./DataTable";
 import { ErrorState, Panel, StatusPill, useQaActionDialog } from "./TestingUi";
 import { testingApi } from "../services/testing.service";
-import { formatDate, messageOf } from "../lib/testing";
+import { formatDate, messageOf, valueLabel } from "../lib/testing";
 
 const providers = [
   ["jira", "Jira"],
@@ -209,7 +209,6 @@ export default function ProjectConnectorsPanel({ project }) {
   return (
     <Panel
       title="Kết nối dự án"
-      description="Liên kết Jira GitHub GitLab hoặc Azure DevOps bằng cấu hình cấp nền tảng"
       actions={
         canManage ? (
           <button className="apple-button" type="button" onClick={bind}>
@@ -271,9 +270,17 @@ export default function ProjectConnectorsPanel({ project }) {
             items={conflicts}
             empty="Không có xung đột"
             columns={[
-              { key: "artifact_type", label: "Loại dữ liệu" },
+              {
+                key: "artifact_type",
+                label: "Loại dữ liệu",
+                render: (item) => valueLabel(item.artifact_type),
+              },
               { key: "artifact_id", label: "Mã dữ liệu" },
-              { key: "status", label: "Trạng thái" },
+              {
+                key: "status",
+                label: "Trạng thái",
+                render: (item) => valueLabel(item.status),
+              },
               {
                 key: "action",
                 label: "Thao tác",

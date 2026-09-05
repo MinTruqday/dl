@@ -9,12 +9,6 @@ export default function WebhookPanel({ project }) {
   const { ask, dialog } = useQaActionDialog();
   const [subscriptions, setSubscriptions] = useState([]);
   const [deliveries, setDeliveries] = useState([]);
-  const [form, setForm] = useState({
-    name: "",
-    endpointReference: "",
-    secretReference: "",
-    events: "DEFECT_CREATED",
-  });
   const [error, setError] = useState("");
   const canRead = project.current_permissions?.includes("webhook.project.read");
   const canManage = project.current_permissions?.includes("webhook.project.manage");
@@ -35,77 +29,63 @@ export default function WebhookPanel({ project }) {
   useEffect(() => {
     void load();
   }, [load]);
+  const create = async () => {
+    const answer = await ask({
+      title: "Tạo đăng ký móc gọi",
+      confirmLabel: "Tạo đăng ký",
+      fields: [
+        { name: "name", label: "Tên móc gọi", required: true, autoFocus: true },
+        {
+          name: "endpointReference",
+          label: "Tham chiếu điểm cuối",
+          required: true,
+          initialValue: "endpoint://nen-tang/",
+        },
+        {
+          name: "secretReference",
+          label: "Tham chiếu bí mật",
+          required: true,
+          initialValue: "secret://nen-tang/",
+        },
+        {
+          name: "events",
+          label: "Mã sự kiện mỗi dòng một giá trị",
+          required: true,
+          multiline: true,
+          initialValue: "DEFECT_CREATED",
+        },
+      ],
+    });
+    if (!answer) return;
+    try {
+      await testingApi.createWebhookSubscription(project._id, {
+        name: answer.name.trim(),
+        endpoint_reference: answer.endpointReference.trim(),
+        secret_reference: answer.secretReference.trim(),
+        events: answer.events
+          .split("\n")
+          .map((value) => value.trim())
+          .filter(Boolean),
+        enabled: true,
+      });
+      await load();
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
+  };
   if (!canRead) return null;
   return (
-    <Panel title="Móc gọi dự án">
-      {error && <ErrorState message={error} />}
-      {canManage && (
-        <form
-          className="grid gap-3 border-b border-border p-5 lg:grid-cols-2"
-          onSubmit={async (event) => {
-            event.preventDefault();
-            try {
-              await testingApi.createWebhookSubscription(project._id, {
-                name: form.name,
-                endpoint_reference: form.endpointReference,
-                secret_reference: form.secretReference,
-                events: form.events
-                  .split("\n")
-                  .map((value) => value.trim())
-                  .filter(Boolean),
-                enabled: true,
-              });
-              setForm({
-                name: "",
-                endpointReference: "",
-                secretReference: "",
-                events: "DEFECT_CREATED",
-              });
-              await load();
-            } catch (reason) {
-              setError(messageOf(reason));
-            }
-          }}
-        >
-          <input
-            aria-label="Tên móc gọi"
-            className="apple-input"
-            required
-            placeholder="Tên móc gọi"
-            value={form.name}
-            onChange={(event) => setForm({ ...form, name: event.target.value })}
-          />
-          <input
-            aria-label="Tham chiếu điểm cuối móc gọi"
-            className="apple-input"
-            pattern="endpoint://.*"
-            required
-            placeholder="endpoint://nen-tang/ten-diem-cuoi"
-            value={form.endpointReference}
-            onChange={(event) => setForm({ ...form, endpointReference: event.target.value })}
-          />
-          <input
-            aria-label="Tham chiếu bí mật móc gọi"
-            className="apple-input"
-            pattern="secret://.*"
-            required
-            placeholder="secret://nen-tang/ten-bi-mat"
-            value={form.secretReference}
-            onChange={(event) => setForm({ ...form, secretReference: event.target.value })}
-          />
-          <textarea
-            aria-label="Sự kiện móc gọi"
-            className="apple-input min-h-20"
-            required
-            placeholder="Mỗi dòng là một mã sự kiện"
-            value={form.events}
-            onChange={(event) => setForm({ ...form, events: event.target.value })}
-          />
-          <button className="apple-button lg:col-span-2" type="submit">
-            Tạo đăng ký móc gọi
+    <Panel
+      title="Móc gọi dự án"
+      actions={
+        canManage ? (
+          <button className="apple-button" type="button" onClick={create}>
+            Tạo đăng ký
           </button>
-        </form>
-      )}
+        ) : null
+      }
+    >
+      {error && <ErrorState message={error} />}
       <div className="space-y-5 p-5">
         <DataTable
           items={subscriptions}

@@ -12,6 +12,7 @@ import {
 } from "../../components/TestingUi";
 import { testingApi } from "../../services/testing.service";
 import { formatDate, messageOf } from "../../lib/testing";
+import { Modal, ModalHeader, ModalTitle } from "@/shared/components/ui/Modal";
 
 export default function TraceabilityPage({ project }) {
   const { ask, dialog } = useQaActionDialog();
@@ -20,6 +21,7 @@ export default function TraceabilityPage({ project }) {
   const [snapshots, setSnapshots] = useState([]);
   const [linkForm, setLinkForm] = useState({ source_id: "", target_id: "" });
   const [error, setError] = useState("");
+  const [creating, setCreating] = useState(false);
   const can = (permission) => project.current_permissions?.includes(permission);
   const load = useCallback(async () => {
     try {
@@ -48,7 +50,7 @@ export default function TraceabilityPage({ project }) {
   };
   return (
     <QaPage
-      title="Ma trận truy vết và độ phủ"
+      title="Truy vết"
       actions={
         <div className="flex flex-wrap items-center gap-3">
           {can("report.export") && (
@@ -115,6 +117,11 @@ export default function TraceabilityPage({ project }) {
               Lưu ảnh chụp độ phủ
             </button>
           )}
+          {can("trace.create") && (
+            <button className="apple-button" type="button" onClick={() => setCreating(true)}>
+              Tạo liên kết
+            </button>
+          )}
           <ProjectCrumb projectId={project._id} />
         </div>
       }
@@ -131,7 +138,15 @@ export default function TraceabilityPage({ project }) {
         <Metric label="Ca kiểm thử chưa liên kết" value={coverage.unlinked_tests?.length || 0} />
       </div>
       {can("trace.create") && (
-        <Panel title="Tạo liên kết thủ công">
+        <Modal
+          isOpen={creating}
+          onClose={() => setCreating(false)}
+          ariaLabel="Tạo liên kết truy vết"
+          className="max-w-2xl"
+        >
+          <ModalHeader>
+            <ModalTitle>Tạo liên kết truy vết</ModalTitle>
+          </ModalHeader>
           <form
             className="grid gap-3 p-5 md:grid-cols-[1fr_1fr_auto]"
             onSubmit={async (event) => {
@@ -149,6 +164,7 @@ export default function TraceabilityPage({ project }) {
                   evidence: [],
                 });
                 setLinkForm({ source_id: "", target_id: "" });
+                setCreating(false);
                 await load();
               } catch (reason) {
                 setError(messageOf(reason));
@@ -183,11 +199,16 @@ export default function TraceabilityPage({ project }) {
                 </option>
               ))}
             </select>
-            <button className="apple-button" type="submit">
-              Tạo liên kết
-            </button>
+            <div className="flex justify-end gap-3 md:col-span-3">
+              <button className="secondary-button" type="button" onClick={() => setCreating(false)}>
+                Hủy
+              </button>
+              <button className="apple-button" type="submit">
+                Tạo liên kết
+              </button>
+            </div>
           </form>
-        </Panel>
+        </Modal>
       )}
       <Panel title="Liên kết truy vết">
         <DataTable

@@ -150,7 +150,7 @@ services:
     ports:
       - 3000:3000
     working_dir: /app
-    command: pnpm dev --turbo --hostname 0.0.0.0 -p 3000
+    command: pnpm dev --hostname 0.0.0.0 -p 3000
     volumes:
       - ./frontend:/app
       - frontend_node_modules:/app/node_modules
@@ -162,6 +162,7 @@ services:
       NEXT_TELEMETRY_DISABLED: "1"
       NEXT_DIST_DIR: .next-dev
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_NOTIFICATION_ENABLED: "true"
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
       interval: 30s
@@ -174,7 +175,6 @@ services:
       - veriq_network
 
   notification:
-    profiles: ["optional"]
     healthcheck: *app-healthcheck
     build:
       context: ./backend

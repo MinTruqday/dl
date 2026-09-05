@@ -775,11 +775,11 @@ async def update_requirement_draft(
         await get_project(project_id, user, "attachment.manage")
     criteria = changes.pop("acceptance_criteria", None)
     if criteria is not None:
-        keys = [item.key for item in criteria]
+        keys = [item.get("key") for item in criteria]
         if len(keys) != len(set(keys)):
             raise HTTPException(status_code=422, detail={"code": "DUPLICATE_ACCEPTANCE_CRITERION_KEY"})
         for item in criteria:
-            validate_doc(item.content_doc)
+            validate_doc(item["content_doc"])
     if "source_refs" in changes:
         await validate_requirement_sources(project_id, changes["source_refs"])
     content_doc = changes.get("content_doc")

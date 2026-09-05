@@ -19,6 +19,7 @@ import {
 import { testingApi } from "../../services/testing.service";
 import { docText, emptyDoc, messageOf, textDoc, valueLabel } from "../../lib/testing";
 import QaDocumentEditor from "../../editor/QaDocumentEditor";
+import { Modal, ModalHeader, ModalTitle } from "@/shared/components/ui/Modal";
 
 export default function TestDesignPage({ project }) {
   const { ask, dialog } = useQaActionDialog();
@@ -88,7 +89,11 @@ export default function TestDesignPage({ project }) {
     dataSetVersionIds: [],
   });
   const [error, setError] = useState("");
+  const [creatingTest, setCreatingTest] = useState(false);
+  const [creatingScenario, setCreatingScenario] = useState(false);
+  const [creatingDataSet, setCreatingDataSet] = useState(false);
   const can = (permission) => project.current_permissions?.includes(permission);
+  const canReadTestData = project.current_permissions?.includes("testdata.read");
   const load = useCallback(async () => {
     try {
       const [
@@ -101,9 +106,9 @@ export default function TestDesignPage({ project }) {
         apiArtifactValues,
         operationValues,
       ] = await Promise.all([
-        testingApi.listRequirements(project._id, { page_size: 500 }),
+        testingApi.listRequirements(project._id, { page_size: 500, status: "BASELINED" }),
         testingApi.listScenarios(project._id, scenarioFilters),
-        testingApi.listDataSets(project._id),
+        canReadTestData ? testingApi.listDataSets(project._id) : Promise.resolve([]),
         testingApi.listTestDrafts(project._id),
         testingApi.listTestCasePage(project._id, {
           ...testFilters,
@@ -140,7 +145,7 @@ export default function TestDesignPage({ project }) {
     } catch (reason) {
       setError(messageOf(reason));
     }
-  }, [project._id, scenarioFilters, testFilters, testPage]);
+  }, [canReadTestData, project._id, scenarioFilters, testFilters, testPage]);
   useEffect(() => {
     void load();
   }, [load]);
@@ -228,6 +233,7 @@ export default function TestDesignPage({ project }) {
         expected: emptyDoc(),
         dataSetVersionIds: [],
       });
+      setCreatingTest(false);
       await load();
     } catch (reason) {
       setError(messageOf(reason));
@@ -248,6 +254,7 @@ export default function TestDesignPage({ project }) {
         origin: "manual",
       });
       setScenarioForm({ title: "", objective: "", category: "happy_path" });
+      setCreatingScenario(false);
       await load();
     } catch (reason) {
       setError(messageOf(reason));
@@ -262,6 +269,7 @@ export default function TestDesignPage({ project }) {
         secret_refs: JSON.parse(dataSetForm.secretRefs || "{}"),
       });
       setDataSetForm({ name: "", variables: "{}", secretRefs: "{}" });
+      setCreatingDataSet(false);
       await load();
     } catch (reason) {
       setError(
@@ -410,15 +418,24 @@ export default function TestDesignPage({ project }) {
     return () => window.clearTimeout(timer);
   }, [draftDirty, draftEdit, persistDraft, project.current_permissions, selectedDraft?.status]);
   return (
-    <QaPage title="Kịch bản và ca kiểm thử" actions={<ProjectCrumb projectId={project._id} />}>
+    <QaPage
+      title="Thiết kế kiểm thử"
+      actions={
+        <div className="flex flex-wrap items-center gap-3">
+          <ProjectCrumb projectId={project._id} />
+          {can("testcase.create") && (
+            <button className="apple-button" type="button" onClick={() => setCreatingTest(true)}>
+              Tạo ca kiểm thử
+            </button>
+          )}
+        </div>
+      }
+    >
       {error && <ErrorState message={error} />}
       {(can("ai.generate_testcase") ||
         can("ai.generate_scenario") ||
         can("testcase.duplicate_check")) && (
-        <Panel
-          title="Tạo bằng AI"
-          description="Kết quả chỉ là bản nháp và không tự động trở thành phiên bản hoạt động"
-        >
+        <Panel title="Tạo bằng AI">
           <div className="flex flex-wrap gap-3 p-5">
             <select
               aria-label="Yêu cầu nguồn"
@@ -488,7 +505,7 @@ export default function TestDesignPage({ project }) {
             columns={[
               { key: "test_case_key", label: "Mã" },
               { key: "title", label: "Tên" },
-              { key: "type", label: "Loại" },
+              { key: "type", label: "Loại", render: (item) => valueLabel(item.type) },
               {
                 key: "status",
                 label: "Trạng thái",
@@ -545,10 +562,9 @@ export default function TestDesignPage({ project }) {
           title="Phiên bản ca kiểm thử"
           actions={
             <div className="flex flex-wrap gap-2">
-              {can("testcase.bulk.update") && (
+              {selectedTestIds.length > 0 && can("testcase.bulk.update") && (
                 <button
                   className="secondary-button"
-                  disabled={!selectedTestIds.length}
                   type="button"
                   onClick={async () => {
                     const answer = await ask({
@@ -588,10 +604,10 @@ export default function TestDesignPage({ project }) {
                   Cập nhật nhãn
                 </button>
               )}
-              {can("testcase.bulk.update") && (
+              {selectedTestIds.length > 0 && can("testcase.bulk.update") && (
                 <button
                   className="secondary-button"
-                  disabled={!selectedTestIds.length || !suites.length}
+                  disabled={!suites.length}
                   type="button"
                   onClick={async () => {
                     const answer = await ask({
@@ -628,10 +644,9 @@ export default function TestDesignPage({ project }) {
                   Thêm vào bộ
                 </button>
               )}
-              {can("testcase.bulk.update") && (
+              {selectedTestIds.length > 0 && can("testcase.bulk.update") && (
                 <button
                   className="secondary-button"
-                  disabled={!selectedTestIds.length}
                   type="button"
                   onClick={async () => {
                     const answer = await ask({
@@ -665,10 +680,9 @@ export default function TestDesignPage({ project }) {
                   Cần rà soát
                 </button>
               )}
-              {can("testcase.bulk.archive") && (
+              {selectedTestIds.length > 0 && can("testcase.bulk.archive") && (
                 <button
                   className="danger-button"
-                  disabled={!selectedTestIds.length}
                   type="button"
                   onClick={async () => {
                     const answer = await ask({
@@ -708,74 +722,79 @@ export default function TestDesignPage({ project }) {
             </div>
           }
         >
-          <div className="grid gap-3 border-b border-border p-4 sm:grid-cols-2 xl:grid-cols-6">
-            <input
-              aria-label="Tìm ca kiểm thử"
-              className="apple-input xl:col-span-2"
-              placeholder="Tìm theo mã hoặc tên"
-              value={testFilters.q}
-              onChange={(event) => {
-                setTestFilters({ ...testFilters, q: event.target.value });
-                setTestPage(1);
-              }}
-            />
-            <select
-              aria-label="Lọc trạng thái ca kiểm thử"
-              className="apple-input"
-              value={testFilters.status}
-              onChange={(event) => {
-                setTestFilters({ ...testFilters, status: event.target.value });
-                setTestPage(1);
-              }}
-            >
-              <option value="">Mọi trạng thái</option>
-              <option value="ACTIVE">Đang hoạt động</option>
-              <option value="NEEDS_UPDATE">Cần cập nhật</option>
-              <option value="OBSOLETE">Không còn hiệu lực</option>
-            </select>
-            <select
-              aria-label="Lọc ưu tiên ca kiểm thử"
-              className="apple-input"
-              value={testFilters.priority}
-              onChange={(event) => {
-                setTestFilters({ ...testFilters, priority: event.target.value });
-                setTestPage(1);
-              }}
-            >
-              <option value="">Mọi ưu tiên</option>
-              <option value="critical">Nghiêm trọng</option>
-              <option value="high">Cao</option>
-              <option value="medium">Trung bình</option>
-              <option value="low">Thấp</option>
-            </select>
-            <select
-              aria-label="Lọc độ mới ca kiểm thử"
-              className="apple-input"
-              value={testFilters.stale_status}
-              onChange={(event) => {
-                setTestFilters({ ...testFilters, stale_status: event.target.value });
-                setTestPage(1);
-              }}
-            >
-              <option value="">Mọi độ mới</option>
-              <option value="FRESH">Còn phù hợp</option>
-              <option value="STALE">Đã lỗi thời</option>
-            </select>
-            <select
-              aria-label="Sắp xếp ca kiểm thử"
-              className="apple-input"
-              value={testFilters.sort}
-              onChange={(event) => {
-                setTestFilters({ ...testFilters, sort: event.target.value });
-                setTestPage(1);
-              }}
-            >
-              <option value="-updated_at">Mới cập nhật</option>
-              <option value="updated_at">Cũ cập nhật</option>
-              <option value="test_case_key">Mã tăng dần</option>
-              <option value="title">Tên tăng dần</option>
-            </select>
-          </div>
+          <details className="border-b border-border p-4">
+            <summary className="cursor-pointer text-sm font-medium">
+              Tìm kiếm bộ lọc và sắp xếp
+            </summary>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+              <input
+                aria-label="Tìm ca kiểm thử"
+                className="apple-input xl:col-span-2"
+                placeholder="Tìm theo mã hoặc tên"
+                value={testFilters.q}
+                onChange={(event) => {
+                  setTestFilters({ ...testFilters, q: event.target.value });
+                  setTestPage(1);
+                }}
+              />
+              <select
+                aria-label="Lọc trạng thái ca kiểm thử"
+                className="apple-input"
+                value={testFilters.status}
+                onChange={(event) => {
+                  setTestFilters({ ...testFilters, status: event.target.value });
+                  setTestPage(1);
+                }}
+              >
+                <option value="">Mọi trạng thái</option>
+                <option value="ACTIVE">Đang hoạt động</option>
+                <option value="NEEDS_UPDATE">Cần cập nhật</option>
+                <option value="OBSOLETE">Không còn hiệu lực</option>
+              </select>
+              <select
+                aria-label="Lọc ưu tiên ca kiểm thử"
+                className="apple-input"
+                value={testFilters.priority}
+                onChange={(event) => {
+                  setTestFilters({ ...testFilters, priority: event.target.value });
+                  setTestPage(1);
+                }}
+              >
+                <option value="">Mọi ưu tiên</option>
+                <option value="critical">Nghiêm trọng</option>
+                <option value="high">Cao</option>
+                <option value="medium">Trung bình</option>
+                <option value="low">Thấp</option>
+              </select>
+              <select
+                aria-label="Lọc độ mới ca kiểm thử"
+                className="apple-input"
+                value={testFilters.stale_status}
+                onChange={(event) => {
+                  setTestFilters({ ...testFilters, stale_status: event.target.value });
+                  setTestPage(1);
+                }}
+              >
+                <option value="">Mọi độ mới</option>
+                <option value="FRESH">Còn phù hợp</option>
+                <option value="STALE">Đã lỗi thời</option>
+              </select>
+              <select
+                aria-label="Sắp xếp ca kiểm thử"
+                className="apple-input"
+                value={testFilters.sort}
+                onChange={(event) => {
+                  setTestFilters({ ...testFilters, sort: event.target.value });
+                  setTestPage(1);
+                }}
+              >
+                <option value="-updated_at">Mới cập nhật</option>
+                <option value="updated_at">Cũ cập nhật</option>
+                <option value="test_case_key">Mã tăng dần</option>
+                <option value="title">Tên tăng dần</option>
+              </select>
+            </div>
+          </details>
           <DataTable
             onSelect={async (item) => {
               setSelectedTestId(item._id);
@@ -943,7 +962,6 @@ export default function TestDesignPage({ project }) {
         <>
           <Panel
             title={`Biên tập ${selectedDraft.test_case_key}`}
-            description="Các bước và dữ liệu chỉ sửa được khi còn ở trạng thái bản nháp"
             actions={
               can("testcase.lint") && can("ai.run_lint") ? (
                 <button
@@ -1297,7 +1315,15 @@ export default function TestDesignPage({ project }) {
       )}
       <div className="grid gap-5 xl:grid-cols-2">
         {can("testcase.create") && (
-          <Panel title="Tạo ca kiểm thử thủ công">
+          <Modal
+            isOpen={creatingTest}
+            onClose={() => setCreatingTest(false)}
+            ariaLabel="Tạo ca kiểm thử"
+            className="max-w-3xl max-h-[90dvh] overflow-y-auto"
+          >
+            <ModalHeader>
+              <ModalTitle>Tạo ca kiểm thử</ModalTitle>
+            </ModalHeader>
             <form onSubmit={create} className="space-y-4 p-5">
               <label className="field-label">
                 Tên
@@ -1402,42 +1428,128 @@ export default function TestDesignPage({ project }) {
                   ))}
                 </select>
               </label>
-              <button className="apple-button" type="submit">
-                Lưu bản nháp
-              </button>
+              <div className="flex justify-end gap-3">
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() => setCreatingTest(false)}
+                >
+                  Hủy
+                </button>
+                <button className="apple-button" type="submit">
+                  Lưu bản nháp
+                </button>
+              </div>
             </form>
-          </Panel>
+          </Modal>
         )}
-        <Panel title="Kịch bản">
+        <Panel
+          title="Kịch bản"
+          actions={
+            can("testscenario.create") ? (
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={() => setCreatingScenario(true)}
+              >
+                Tạo kịch bản
+              </button>
+            ) : null
+          }
+        >
           {can("testscenario.create") && (
-            <form className="space-y-3 border-b border-border p-5" onSubmit={createScenario}>
+            <Modal
+              isOpen={creatingScenario}
+              onClose={() => setCreatingScenario(false)}
+              ariaLabel="Tạo kịch bản"
+              className="max-w-xl"
+            >
+              <ModalHeader>
+                <ModalTitle>Tạo kịch bản</ModalTitle>
+              </ModalHeader>
+              <form className="space-y-3 p-5" onSubmit={createScenario}>
+                <input
+                  aria-label="Tên kịch bản"
+                  className="apple-input"
+                  required
+                  value={scenarioForm.title}
+                  onChange={(event) =>
+                    setScenarioForm({ ...scenarioForm, title: event.target.value })
+                  }
+                  placeholder="Tên kịch bản"
+                />
+                <textarea
+                  aria-label="Mục tiêu kịch bản"
+                  className="apple-input min-h-20"
+                  value={scenarioForm.objective}
+                  onChange={(event) =>
+                    setScenarioForm({ ...scenarioForm, objective: event.target.value })
+                  }
+                  placeholder="Mục tiêu và phạm vi"
+                />
+                <select
+                  aria-label="Nhóm kịch bản"
+                  className="apple-input"
+                  value={scenarioForm.category}
+                  onChange={(event) =>
+                    setScenarioForm({ ...scenarioForm, category: event.target.value })
+                  }
+                >
+                  {[
+                    "happy_path",
+                    "negative",
+                    "boundary",
+                    "validation",
+                    "permission",
+                    "state_transition",
+                    "integration",
+                    "error_handling",
+                    "data_persistence",
+                    "concurrency",
+                  ].map((value) => (
+                    <option key={value} value={value}>
+                      {valueLabel(value)}
+                    </option>
+                  ))}
+                </select>
+                <div className="flex justify-end gap-3">
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={() => setCreatingScenario(false)}
+                  >
+                    Hủy
+                  </button>
+                  <button className="apple-button" type="submit">
+                    Lưu kịch bản
+                  </button>
+                </div>
+              </form>
+            </Modal>
+          )}
+          <details className="border-b border-border p-4">
+            <summary className="cursor-pointer text-sm font-medium">
+              Tìm kiếm bộ lọc và sắp xếp
+            </summary>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
               <input
-                aria-label="Tên kịch bản"
+                aria-label="Tìm kịch bản"
                 className="apple-input"
-                required
-                value={scenarioForm.title}
+                placeholder="Tìm mã hoặc tên"
+                value={scenarioFilters.q}
                 onChange={(event) =>
-                  setScenarioForm({ ...scenarioForm, title: event.target.value })
+                  setScenarioFilters({ ...scenarioFilters, q: event.target.value })
                 }
-                placeholder="Tên kịch bản"
-              />
-              <textarea
-                aria-label="Mục tiêu kịch bản"
-                className="apple-input min-h-20"
-                value={scenarioForm.objective}
-                onChange={(event) =>
-                  setScenarioForm({ ...scenarioForm, objective: event.target.value })
-                }
-                placeholder="Mục tiêu và phạm vi"
               />
               <select
-                aria-label="Nhóm kịch bản"
+                aria-label="Lọc nhóm kịch bản"
                 className="apple-input"
-                value={scenarioForm.category}
+                value={scenarioFilters.category}
                 onChange={(event) =>
-                  setScenarioForm({ ...scenarioForm, category: event.target.value })
+                  setScenarioFilters({ ...scenarioFilters, category: event.target.value })
                 }
               >
+                <option value="">Mọi nhóm</option>
                 {[
                   "happy_path",
                   "negative",
@@ -1450,96 +1562,56 @@ export default function TestDesignPage({ project }) {
                   "data_persistence",
                   "concurrency",
                 ].map((value) => (
-                  <option key={value} value={value}>
+                  <option value={value} key={value}>
                     {valueLabel(value)}
                   </option>
                 ))}
               </select>
-              <button className="secondary-button" type="submit">
-                Lưu kịch bản
-              </button>
-            </form>
-          )}
-          <div className="grid gap-3 border-b border-border p-5 sm:grid-cols-2 lg:grid-cols-5">
-            <input
-              aria-label="Tìm kịch bản"
-              className="apple-input"
-              placeholder="Tìm mã hoặc tên"
-              value={scenarioFilters.q}
-              onChange={(event) =>
-                setScenarioFilters({ ...scenarioFilters, q: event.target.value })
-              }
-            />
-            <select
-              aria-label="Lọc nhóm kịch bản"
-              className="apple-input"
-              value={scenarioFilters.category}
-              onChange={(event) =>
-                setScenarioFilters({ ...scenarioFilters, category: event.target.value })
-              }
-            >
-              <option value="">Mọi nhóm</option>
-              {[
-                "happy_path",
-                "negative",
-                "boundary",
-                "validation",
-                "permission",
-                "state_transition",
-                "integration",
-                "error_handling",
-                "data_persistence",
-                "concurrency",
-              ].map((value) => (
-                <option value={value} key={value}>
-                  {valueLabel(value)}
-                </option>
-              ))}
-            </select>
-            <select
-              aria-label="Lọc rủi ro kịch bản"
-              className="apple-input"
-              value={scenarioFilters.risk}
-              onChange={(event) =>
-                setScenarioFilters({ ...scenarioFilters, risk: event.target.value })
-              }
-            >
-              <option value="">Mọi rủi ro</option>
-              {["critical", "high", "medium", "low"].map((value) => (
-                <option value={value} key={value}>
-                  {valueLabel(value)}
-                </option>
-              ))}
-            </select>
-            <select
-              aria-label="Lọc trạng thái kịch bản"
-              className="apple-input"
-              value={scenarioFilters.status}
-              onChange={(event) =>
-                setScenarioFilters({ ...scenarioFilters, status: event.target.value })
-              }
-            >
-              <option value="">Mọi trạng thái</option>
-              {["draft", "in_review", "approved", "archived"].map((value) => (
-                <option value={value} key={value}>
-                  {valueLabel(value)}
-                </option>
-              ))}
-            </select>
-            <select
-              aria-label="Sắp xếp kịch bản"
-              className="apple-input"
-              value={scenarioFilters.sort}
-              onChange={(event) =>
-                setScenarioFilters({ ...scenarioFilters, sort: event.target.value })
-              }
-            >
-              <option value="-updated_at">Mới cập nhật</option>
-              <option value="updated_at">Cũ cập nhật</option>
-              <option value="scenario_key">Mã tăng dần</option>
-              <option value="title">Tên tăng dần</option>
-            </select>
-          </div>
+              <select
+                aria-label="Lọc rủi ro kịch bản"
+                className="apple-input"
+                value={scenarioFilters.risk}
+                onChange={(event) =>
+                  setScenarioFilters({ ...scenarioFilters, risk: event.target.value })
+                }
+              >
+                <option value="">Mọi rủi ro</option>
+                {["critical", "high", "medium", "low"].map((value) => (
+                  <option value={value} key={value}>
+                    {valueLabel(value)}
+                  </option>
+                ))}
+              </select>
+              <select
+                aria-label="Lọc trạng thái kịch bản"
+                className="apple-input"
+                value={scenarioFilters.status}
+                onChange={(event) =>
+                  setScenarioFilters({ ...scenarioFilters, status: event.target.value })
+                }
+              >
+                <option value="">Mọi trạng thái</option>
+                {["draft", "in_review", "approved", "archived"].map((value) => (
+                  <option value={value} key={value}>
+                    {valueLabel(value)}
+                  </option>
+                ))}
+              </select>
+              <select
+                aria-label="Sắp xếp kịch bản"
+                className="apple-input"
+                value={scenarioFilters.sort}
+                onChange={(event) =>
+                  setScenarioFilters({ ...scenarioFilters, sort: event.target.value })
+                }
+              >
+                <option value="-updated_at">Mới cập nhật</option>
+                <option value="updated_at">Cũ cập nhật</option>
+                <option value="scenario_key">Mã tăng dần</option>
+                <option value="title">Tên tăng dần</option>
+              </select>
+            </div>
+          </details>
           <DataTable
             onSelect={async (item) => {
               if (item.status !== "draft" || !can("testscenario.update")) return;
@@ -1640,129 +1712,159 @@ export default function TestDesignPage({ project }) {
           />
         </Panel>
       </div>
-      <Panel
-        title="Bộ dữ liệu kiểm thử có phiên bản"
-        description="Dữ liệu bí mật chỉ được tham chiếu bằng địa chỉ bí mật và không lưu giá trị thật"
-      >
-        {can("testcase.create") && (
-          <form
-            className="grid gap-3 border-b border-border p-5 lg:grid-cols-3"
-            onSubmit={createDataSet}
-          >
-            <label className="field-label">
-              Tên bộ dữ liệu
-              <input
-                className="apple-input mt-2"
-                required
-                value={dataSetForm.name}
-                onChange={(event) => setDataSetForm({ ...dataSetForm, name: event.target.value })}
-              />
-            </label>
-            <label className="field-label">
-              Biến JSON
-              <textarea
-                className="apple-input mt-2 min-h-28 font-mono"
-                required
-                value={dataSetForm.variables}
-                onChange={(event) =>
-                  setDataSetForm({ ...dataSetForm, variables: event.target.value })
-                }
-              />
-            </label>
-            <label className="field-label">
-              Secret refs JSON
-              <textarea
-                className="apple-input mt-2 min-h-28 font-mono"
-                required
-                value={dataSetForm.secretRefs}
-                onChange={(event) =>
-                  setDataSetForm({ ...dataSetForm, secretRefs: event.target.value })
-                }
-              />
-            </label>
-            <button className="secondary-button w-fit" type="submit">
-              Tạo bộ dữ liệu
-            </button>
-          </form>
-        )}
-        <DataTable
-          items={dataSets}
-          empty="Chưa có bộ dữ liệu tham số"
-          onSelect={async (item) => {
-            if (!can("testcase.update")) return;
-            const answer = await ask({
-              title: "Tạo phiên bản bộ dữ liệu mới",
-              description: `${item.name} v${item.current_version?.version}`,
-              confirmLabel: "Tạo phiên bản",
-              fields: [
-                {
-                  name: "name",
-                  label: "Tên bộ dữ liệu",
-                  initialValue: item.name,
-                  required: true,
-                  autoFocus: true,
-                },
-                {
-                  name: "variables",
-                  label: "Biến JSON",
-                  initialValue: JSON.stringify(item.current_version?.variables || {}, null, 2),
-                  required: true,
-                  multiline: true,
-                },
-                {
-                  name: "secretRefs",
-                  label: "Danh sách tham chiếu bí mật dạng JSON",
-                  initialValue: JSON.stringify(item.current_version?.secret_refs || {}, null, 2),
-                  required: true,
-                  multiline: true,
-                },
-                {
-                  name: "reason",
-                  label: "Lý do thay đổi",
-                  initialValue: "Cập nhật dữ liệu kiểm thử",
-                  required: true,
-                  multiline: true,
-                },
-              ],
-            });
-            if (!answer) return;
-            try {
-              await testingApi.createDataSetVersion(item._id, {
-                expected_current_version_id: item.current_version_id,
-                name: answer.name,
-                variables: JSON.parse(answer.variables),
-                secret_refs: JSON.parse(answer.secretRefs),
-                change_reason: answer.reason,
+      {canReadTestData && (
+        <Panel
+          title="Bộ dữ liệu kiểm thử có phiên bản"
+          actions={
+            can("testcase.create") ? (
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={() => setCreatingDataSet(true)}
+              >
+                Tạo bộ dữ liệu
+              </button>
+            ) : null
+          }
+        >
+          {can("testcase.create") && (
+            <Modal
+              isOpen={creatingDataSet}
+              onClose={() => setCreatingDataSet(false)}
+              ariaLabel="Tạo bộ dữ liệu"
+              className="max-w-2xl max-h-[90dvh] overflow-y-auto"
+            >
+              <ModalHeader>
+                <ModalTitle>Tạo bộ dữ liệu</ModalTitle>
+              </ModalHeader>
+              <form className="grid gap-3 p-5" onSubmit={createDataSet}>
+                <label className="field-label">
+                  Tên bộ dữ liệu
+                  <input
+                    className="apple-input mt-2"
+                    required
+                    value={dataSetForm.name}
+                    onChange={(event) =>
+                      setDataSetForm({ ...dataSetForm, name: event.target.value })
+                    }
+                  />
+                </label>
+                <label className="field-label">
+                  Biến JSON
+                  <textarea
+                    className="apple-input mt-2 min-h-28 font-mono"
+                    required
+                    value={dataSetForm.variables}
+                    onChange={(event) =>
+                      setDataSetForm({ ...dataSetForm, variables: event.target.value })
+                    }
+                  />
+                </label>
+                <label className="field-label">
+                  Secret refs JSON
+                  <textarea
+                    className="apple-input mt-2 min-h-28 font-mono"
+                    required
+                    value={dataSetForm.secretRefs}
+                    onChange={(event) =>
+                      setDataSetForm({ ...dataSetForm, secretRefs: event.target.value })
+                    }
+                  />
+                </label>
+                <div className="flex justify-end gap-3">
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={() => setCreatingDataSet(false)}
+                  >
+                    Hủy
+                  </button>
+                  <button className="apple-button" type="submit">
+                    Tạo bộ dữ liệu
+                  </button>
+                </div>
+              </form>
+            </Modal>
+          )}
+          <DataTable
+            items={dataSets}
+            empty="Chưa có bộ dữ liệu tham số"
+            onSelect={async (item) => {
+              if (!can("testcase.update")) return;
+              const answer = await ask({
+                title: "Tạo phiên bản bộ dữ liệu mới",
+                description: `${item.name} v${item.current_version?.version}`,
+                confirmLabel: "Tạo phiên bản",
+                fields: [
+                  {
+                    name: "name",
+                    label: "Tên bộ dữ liệu",
+                    initialValue: item.name,
+                    required: true,
+                    autoFocus: true,
+                  },
+                  {
+                    name: "variables",
+                    label: "Biến JSON",
+                    initialValue: JSON.stringify(item.current_version?.variables || {}, null, 2),
+                    required: true,
+                    multiline: true,
+                  },
+                  {
+                    name: "secretRefs",
+                    label: "Danh sách tham chiếu bí mật dạng JSON",
+                    initialValue: JSON.stringify(item.current_version?.secret_refs || {}, null, 2),
+                    required: true,
+                    multiline: true,
+                  },
+                  {
+                    name: "reason",
+                    label: "Lý do thay đổi",
+                    initialValue: "Cập nhật dữ liệu kiểm thử",
+                    required: true,
+                    multiline: true,
+                  },
+                ],
               });
-              await load();
-            } catch (reason) {
-              setError(
-                reason instanceof SyntaxError
-                  ? "Bộ dữ liệu phải là JSON hợp lệ"
-                  : messageOf(reason),
-              );
-            }
-          }}
-          columns={[
-            { key: "name", label: "Tên" },
-            {
-              key: "version",
-              label: "Phiên bản",
-              render: (item) => `v${item.current_version?.version || 1}`,
-            },
-            {
-              key: "variables",
-              label: "Biến",
-              render: (item) => Object.keys(item.current_version?.variables || {}).join(", "),
-            },
-            {
-              key: "secret_refs",
-              label: "Tham chiếu bí mật",
-              render: (item) => Object.keys(item.current_version?.secret_refs || {}).join(", "),
-            },
-          ]}
-        />
-      </Panel>
+              if (!answer) return;
+              try {
+                await testingApi.createDataSetVersion(item._id, {
+                  expected_current_version_id: item.current_version_id,
+                  name: answer.name,
+                  variables: JSON.parse(answer.variables),
+                  secret_refs: JSON.parse(answer.secretRefs),
+                  change_reason: answer.reason,
+                });
+                await load();
+              } catch (reason) {
+                setError(
+                  reason instanceof SyntaxError
+                    ? "Bộ dữ liệu phải là JSON hợp lệ"
+                    : messageOf(reason),
+                );
+              }
+            }}
+            columns={[
+              { key: "name", label: "Tên" },
+              {
+                key: "version",
+                label: "Phiên bản",
+                render: (item) => `v${item.current_version?.version || 1}`,
+              },
+              {
+                key: "variables",
+                label: "Biến",
+                render: (item) => Object.keys(item.current_version?.variables || {}).join(", "),
+              },
+              {
+                key: "secret_refs",
+                label: "Tham chiếu bí mật",
+                render: (item) => Object.keys(item.current_version?.secret_refs || {}).join(", "),
+              },
+            ]}
+          />
+        </Panel>
+      )}
       {duplicates.length > 0 && (
         <Panel title="Các ca kiểm thử có khả năng trùng">
           <DataTable
@@ -1786,7 +1888,6 @@ export default function TestDesignPage({ project }) {
       )}
       <Panel
         title="Nhập và xuất ca kiểm thử"
-        description="CSV và XLSX luôn tạo bản xem trước trước khi người dùng xác nhận"
         actions={
           <div className="flex flex-wrap gap-2">
             {can("testcase.export") && (
@@ -1842,8 +1943,12 @@ export default function TestDesignPage({ project }) {
                   empty="Tệp không có ca kiểm thử hợp lệ"
                   columns={[
                     { key: "title", label: "Tên" },
-                    { key: "type", label: "Loại" },
-                    { key: "priority", label: "Ưu tiên" },
+                    { key: "type", label: "Loại", render: (item) => valueLabel(item.type) },
+                    {
+                      key: "priority",
+                      label: "Ưu tiên",
+                      render: (item) => valueLabel(item.priority),
+                    },
                     { key: "expected", label: "Kết quả mong đợi" },
                   ]}
                 />
@@ -1870,10 +1975,7 @@ export default function TestDesignPage({ project }) {
           </div>
         )}
       </Panel>
-      <Panel
-        title="OpenAPI và Postman"
-        description="Nhập dữ liệu đã lọc thông tin nhạy cảm rồi tạo ca kiểm thử chỉ từ phản hồi có trong đặc tả"
-      >
+      <Panel title="OpenAPI và Postman">
         <div className="grid gap-5 p-5 xl:grid-cols-2">
           {can("apiartifact.import") && (
             <form
@@ -1960,7 +2062,7 @@ export default function TestDesignPage({ project }) {
                       )}
                       {item.status === "REVIEWED" && can("apiartifact.confirm") && (
                         <button
-                          className="primary-button"
+                          className="apple-button"
                           type="button"
                           onClick={async () => {
                             try {

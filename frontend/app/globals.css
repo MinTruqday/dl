@@ -196,7 +196,11 @@
   }
 
   .tiptap-drag-handle {
-    @apply cursor-grab rounded-control border border-border bg-surface px-1.5 py-0.5 text-xs text-ink-muted shadow-lg hover:bg-surface-quiet active:cursor-grabbing;
+    @apply cursor-grab rounded-control border border-border bg-surface px-1.5 py-0.5 text-xs text-ink-muted opacity-0 shadow-lg hover:bg-surface-quiet active:cursor-grabbing;
+  }
+
+  .tippy-box[data-state="visible"] .tiptap-drag-handle {
+    @apply opacity-100;
   }
 
   .tiptap-mention {

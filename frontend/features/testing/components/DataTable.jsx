@@ -44,7 +44,7 @@ export default function DataTable({
   };
   return (
     <>
-      <div className="hidden overflow-x-auto md:block">
+      <div className="hidden overflow-x-auto xl:block">
         <table
           className="w-full text-left text-[13px]"
           style={{ minWidth: `${Math.max(640, columns.length * 150 + (selectable ? 48 : 0))}px` }}
@@ -100,7 +100,7 @@ export default function DataTable({
           </tbody>
         </table>
       </div>
-      <div className="space-y-3 p-4 md:hidden">
+      <div className="space-y-3 p-4 xl:hidden">
         {selectable && (
           <label
             className="flex min-h-11 items-center gap-3 rounded-control border border-border bg-surface-raised px-3 text-[12px] font-semibold"
@@ -141,16 +141,18 @@ export default function DataTable({
               </label>
             )}
             <dl className="space-y-3">
-              {columns.map((column) => (
-                <div className="grid grid-cols-[minmax(0,40%)_1fr] gap-3" key={column.key}>
-                  <dt className="text-[11px] font-semibold uppercase tracking-wide text-ink-faint">
-                    {column.label}
-                  </dt>
-                  <dd className="min-w-0 break-words text-[13px] text-ink">
-                    {renderMobileValue(column, item)}
-                  </dd>
-                </div>
-              ))}
+              {columns.map((column) => {
+                const value = renderMobileValue(column, item);
+                if (value === null || value === undefined || value === "") return null;
+                return (
+                  <div className="grid grid-cols-[minmax(0,40%)_1fr] gap-3" key={column.key}>
+                    <dt className="text-[12px] font-semibold leading-5 text-ink-muted">
+                      {column.label}
+                    </dt>
+                    <dd className="min-w-0 break-words text-[13px] text-ink">{value}</dd>
+                  </div>
+                );
+              })}
             </dl>
           </article>
         ))}

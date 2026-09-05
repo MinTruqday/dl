@@ -249,7 +249,11 @@ async def list_my_sessions(current_user: CurrentUser = Depends(get_current_user)
     sessions = (
         await database.mongodb[settings.AUTHENTICATION_DB_NAME]
         .sessions.find(
-            {"user_id": current_user.id},
+            {
+                "user_id": current_user.id,
+                "revoked_at": None,
+                "expires_at": {"$gt": datetime.now(timezone.utc)},
+            },
             {"refresh_token_hash": 0},
         )
         .sort("created_at", -1)

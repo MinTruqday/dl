@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ErrorState, Panel, StatusPill, useQaActionDialog } from "./TestingUi";
 import { messageOf } from "../lib/testing";
 import { testingApi } from "../services/testing.service";
+import { Modal, ModalHeader, ModalTitle } from "@/shared/components/ui/Modal";
 
 const EMPTY_FORM = {
   name: "",
@@ -25,6 +26,7 @@ export default function DeviceMatricesPanel({ project, plans, runs, onChanged })
   const [targetId, setTargetId] = useState("");
   const [profileKeys, setProfileKeys] = useState([]);
   const [error, setError] = useState("");
+  const [creating, setCreating] = useState(false);
   const can = (permission) => project.current_permissions?.includes(permission);
   const targets = useMemo(
     () => (targetType === "test_plan" ? plans : runs).filter((item) => item.status === "DRAFT"),
@@ -71,6 +73,7 @@ export default function DeviceMatricesPanel({ project, plans, runs, onChanged })
         ],
       });
       setForm(EMPTY_FORM);
+      setCreating(false);
       await load();
     } catch (reason) {
       setError(messageOf(reason));
@@ -138,88 +141,109 @@ export default function DeviceMatricesPanel({ project, plans, runs, onChanged })
     }
   };
   return (
-    <Panel title="Ma trận thiết bị">
-      {error && <ErrorState message={error} />}
-      {can("device_matrix.manage") && (
-        <form
-          className="grid gap-3 border-b border-border p-4 lg:grid-cols-4"
-          onSubmit={createMatrix}
-        >
-          <input
-            aria-label="Tên ma trận thiết bị"
-            className="apple-input"
-            required
-            placeholder="Tên ma trận"
-            value={form.name}
-            onChange={(event) => setForm({ ...form, name: event.target.value })}
-          />
-          <input
-            aria-label="Mã hồ sơ thiết bị"
-            className="apple-input"
-            required
-            placeholder="Mã hồ sơ"
-            value={form.profileKey}
-            onChange={(event) => setForm({ ...form, profileKey: event.target.value })}
-          />
-          <input
-            aria-label="Tên hồ sơ thiết bị"
-            className="apple-input"
-            required
-            placeholder="Tên hồ sơ"
-            value={form.profileName}
-            onChange={(event) => setForm({ ...form, profileName: event.target.value })}
-          />
-          <select
-            aria-label="Loại thiết bị"
-            className="apple-input"
-            value={form.deviceType}
-            onChange={(event) => setForm({ ...form, deviceType: event.target.value })}
-          >
-            <option value="desktop">Máy tính để bàn</option>
-            <option value="laptop">Máy tính xách tay</option>
-            <option value="tablet">Máy tính bảng</option>
-            <option value="mobile">Điện thoại</option>
-            <option value="other">Khác</option>
-          </select>
-          <input
-            aria-label="Hệ điều hành"
-            className="apple-input"
-            required
-            placeholder="Hệ điều hành"
-            value={form.operatingSystem}
-            onChange={(event) => setForm({ ...form, operatingSystem: event.target.value })}
-          />
-          <input
-            aria-label="Trình duyệt"
-            className="apple-input"
-            placeholder="Trình duyệt"
-            value={form.browser}
-            onChange={(event) => setForm({ ...form, browser: event.target.value })}
-          />
-          <div className="grid grid-cols-2 gap-2">
-            <input
-              aria-label="Chiều rộng khung nhìn"
-              className="apple-input"
-              min="1"
-              type="number"
-              placeholder="Rộng"
-              value={form.viewportWidth}
-              onChange={(event) => setForm({ ...form, viewportWidth: event.target.value })}
-            />
-            <input
-              aria-label="Chiều cao khung nhìn"
-              className="apple-input"
-              min="1"
-              type="number"
-              placeholder="Cao"
-              value={form.viewportHeight}
-              onChange={(event) => setForm({ ...form, viewportHeight: event.target.value })}
-            />
-          </div>
-          <button className="secondary-button" type="submit">
+    <Panel
+      title="Ma trận thiết bị"
+      actions={
+        can("device_matrix.manage") ? (
+          <button className="secondary-button" type="button" onClick={() => setCreating(true)}>
             Tạo ma trận
           </button>
-        </form>
+        ) : null
+      }
+    >
+      {error && <ErrorState message={error} />}
+      {can("device_matrix.manage") && (
+        <Modal
+          isOpen={creating}
+          onClose={() => setCreating(false)}
+          ariaLabel="Tạo ma trận thiết bị"
+          className="max-w-2xl max-h-[90dvh] overflow-y-auto"
+        >
+          <ModalHeader>
+            <ModalTitle>Tạo ma trận thiết bị</ModalTitle>
+          </ModalHeader>
+          <form className="grid gap-3 p-5 sm:grid-cols-2" onSubmit={createMatrix}>
+            <input
+              aria-label="Tên ma trận thiết bị"
+              className="apple-input"
+              required
+              placeholder="Tên ma trận"
+              value={form.name}
+              onChange={(event) => setForm({ ...form, name: event.target.value })}
+            />
+            <input
+              aria-label="Mã hồ sơ thiết bị"
+              className="apple-input"
+              required
+              placeholder="Mã hồ sơ"
+              value={form.profileKey}
+              onChange={(event) => setForm({ ...form, profileKey: event.target.value })}
+            />
+            <input
+              aria-label="Tên hồ sơ thiết bị"
+              className="apple-input"
+              required
+              placeholder="Tên hồ sơ"
+              value={form.profileName}
+              onChange={(event) => setForm({ ...form, profileName: event.target.value })}
+            />
+            <select
+              aria-label="Loại thiết bị"
+              className="apple-input"
+              value={form.deviceType}
+              onChange={(event) => setForm({ ...form, deviceType: event.target.value })}
+            >
+              <option value="desktop">Máy tính để bàn</option>
+              <option value="laptop">Máy tính xách tay</option>
+              <option value="tablet">Máy tính bảng</option>
+              <option value="mobile">Điện thoại</option>
+              <option value="other">Khác</option>
+            </select>
+            <input
+              aria-label="Hệ điều hành"
+              className="apple-input"
+              required
+              placeholder="Hệ điều hành"
+              value={form.operatingSystem}
+              onChange={(event) => setForm({ ...form, operatingSystem: event.target.value })}
+            />
+            <input
+              aria-label="Trình duyệt"
+              className="apple-input"
+              placeholder="Trình duyệt"
+              value={form.browser}
+              onChange={(event) => setForm({ ...form, browser: event.target.value })}
+            />
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                aria-label="Chiều rộng khung nhìn"
+                className="apple-input"
+                min="1"
+                type="number"
+                placeholder="Rộng"
+                value={form.viewportWidth}
+                onChange={(event) => setForm({ ...form, viewportWidth: event.target.value })}
+              />
+              <input
+                aria-label="Chiều cao khung nhìn"
+                className="apple-input"
+                min="1"
+                type="number"
+                placeholder="Cao"
+                value={form.viewportHeight}
+                onChange={(event) => setForm({ ...form, viewportHeight: event.target.value })}
+              />
+            </div>
+            <div className="flex justify-end gap-3 sm:col-span-2">
+              <button className="secondary-button" type="button" onClick={() => setCreating(false)}>
+                Hủy
+              </button>
+              <button className="apple-button" type="submit">
+                Tạo ma trận
+              </button>
+            </div>
+          </form>
+        </Modal>
       )}
       <div className="grid gap-4 p-4 lg:grid-cols-2">
         <div className="space-y-2">

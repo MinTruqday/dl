@@ -12,7 +12,7 @@ import {
   useQaActionDialog,
 } from "../../components/TestingUi";
 import { testingApi } from "../../services/testing.service";
-import { messageOf } from "../../lib/testing";
+import { messageOf, valueLabel } from "../../lib/testing";
 
 export default function ChangesPage({ project }) {
   const { ask, dialog } = useQaActionDialog();
@@ -226,44 +226,44 @@ export default function ChangesPage({ project }) {
     }
   };
   return (
-    <QaPage
-      title="Ảnh hưởng thay đổi và bảo trì"
-      actions={<ProjectCrumb projectId={project._id} />}
-    >
+    <QaPage title="Phân tích thay đổi" actions={<ProjectCrumb projectId={project._id} />}>
       {error && <ErrorState message={error} />}
       <Panel title="Bộ thay đổi">
-        <div className="grid gap-3 border-b border-border p-4 sm:grid-cols-3">
-          <input
-            aria-label="Lọc bộ thay đổi theo yêu cầu"
-            className="apple-input"
-            placeholder="Mã Requirement"
-            value={filters.requirement_id}
-            onChange={(event) => setFilters({ ...filters, requirement_id: event.target.value })}
-          />
-          <select
-            aria-label="Lọc trạng thái bộ thay đổi"
-            className="apple-input"
-            value={filters.status}
-            onChange={(event) => setFilters({ ...filters, status: event.target.value })}
-          >
-            <option value="">Mọi trạng thái</option>
-            {["READY", "REVIEWED", "ANALYZED"].map((value) => (
-              <option value={value} key={value}>
-                {value}
-              </option>
-            ))}
-          </select>
-          <select
-            aria-label="Sắp xếp bộ thay đổi"
-            className="apple-input"
-            value={filters.sort}
-            onChange={(event) => setFilters({ ...filters, sort: event.target.value })}
-          >
-            <option value="-created_at">Mới tạo</option>
-            <option value="created_at">Cũ tạo</option>
-            <option value="requirement_id">Theo Requirement</option>
-          </select>
-        </div>
+        <details className="border-b border-border p-4">
+          <summary className="cursor-pointer text-sm font-medium text-ink">Bộ lọc</summary>
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            <input
+              aria-label="Lọc bộ thay đổi theo yêu cầu"
+              className="apple-input"
+              placeholder="Mã yêu cầu"
+              value={filters.requirement_id}
+              onChange={(event) => setFilters({ ...filters, requirement_id: event.target.value })}
+            />
+            <select
+              aria-label="Lọc trạng thái bộ thay đổi"
+              className="apple-input"
+              value={filters.status}
+              onChange={(event) => setFilters({ ...filters, status: event.target.value })}
+            >
+              <option value="">Mọi trạng thái</option>
+              {["READY", "REVIEWED", "ANALYZED"].map((value) => (
+                <option value={value} key={value}>
+                  {valueLabel(value)}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label="Sắp xếp bộ thay đổi"
+              className="apple-input"
+              value={filters.sort}
+              onChange={(event) => setFilters({ ...filters, sort: event.target.value })}
+            >
+              <option value="-created_at">Mới nhất</option>
+              <option value="created_at">Cũ nhất</option>
+              <option value="requirement_id">Theo yêu cầu</option>
+            </select>
+          </div>
+        </details>
         <DataTable
           onSelect={openChangeSet}
           items={sets}
@@ -348,12 +348,12 @@ export default function ChangesPage({ project }) {
                           "REMOVED_BEHAVIOR",
                         ].map((value) => (
                           <option key={value} value={value}>
-                            {value}
+                            {valueLabel(value)}
                           </option>
                         ))}
                       </select>
                     ) : (
-                      item.type
+                      valueLabel(item.type)
                     ),
                 },
                 { key: "subject", label: "Đối tượng" },
@@ -493,7 +493,7 @@ export default function ChangesPage({ project }) {
                       {["STILL_VALID", "POTENTIALLY_AFFECTED", "NEEDS_UPDATE", "OBSOLETE"].map(
                         (value) => (
                           <option key={value} value={value}>
-                            {value}
+                            {valueLabel(value)}
                           </option>
                         ),
                       )}
@@ -511,10 +511,9 @@ export default function ChangesPage({ project }) {
       <Panel
         title="Đề xuất bảo trì chờ duyệt"
         actions={
-          can("proposal.approve") ? (
+          can("proposal.approve") && selectedProposalIds.length ? (
             <button
               className="apple-button"
-              disabled={!selectedProposalIds.length}
               type="button"
               onClick={async () => {
                 const answer = await ask({

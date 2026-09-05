@@ -6,11 +6,12 @@ import {
   ErrorState,
   LoadingState,
   Metric,
+  Pagination,
   Panel,
   StatusPill,
   useQaActionDialog,
 } from "./TestingUi";
-import { formatDate, messageOf } from "../lib/testing";
+import { formatDate, messageOf, valueLabel } from "../lib/testing";
 
 const configGroups = [
   ["authPolicy", "Chính sách xác thực", "auth-policy"],
@@ -21,11 +22,11 @@ const configGroups = [
   ["aiDefaults", "Mô hình AI mặc định và dự phòng", "ai-defaults"],
   ["integrations", "Tích hợp", "integrations"],
   ["storage", "Kho lưu trữ", "storage"],
-  ["featureFlags", "Cờ tính năng", "feature-flags"],
-  ["localization", "Ngôn ngữ và múi giờ", "localization"],
-  ["retention", "Lưu giữ dữ liệu", "retention"],
-  ["defaultQuotas", "Hạn mức mặc định", "default-quotas"],
-  ["importExport", "Nhập và xuất dữ liệu", "import-export"],
+  ["featureFlags", "Cờ tính năng", "co-tinh-nang"],
+  ["localization", "Ngôn ngữ và múi giờ", "dia-phuong-hoa"],
+  ["retention", "Lưu giữ dữ liệu", "luu-giu"],
+  ["defaultQuotas", "Hạn mức mặc định", "han-muc-mac-dinh"],
+  ["importExport", "Nhập và xuất dữ liệu", "nhap-xuat"],
 ];
 
 function configValue(value) {
@@ -42,6 +43,8 @@ export default function PlatformControlsPanel() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [usagePage, setUsagePage] = useState(1);
+  const usagePageSize = 10;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -94,11 +97,11 @@ export default function PlatformControlsPanel() {
         platformApi.getAiRetrieval(),
         platformApi.getIntegrations(),
         platformApi.getStorage(),
-        platformApi.getPlatformConfigGroup("feature-flags"),
-        platformApi.getPlatformConfigGroup("localization"),
-        platformApi.getPlatformConfigGroup("retention"),
-        platformApi.getPlatformConfigGroup("default-quotas"),
-        platformApi.getPlatformConfigGroup("import-export"),
+        platformApi.getPlatformConfigGroup("co-tinh-nang"),
+        platformApi.getPlatformConfigGroup("dia-phuong-hoa"),
+        platformApi.getPlatformConfigGroup("luu-giu"),
+        platformApi.getPlatformConfigGroup("han-muc-mac-dinh"),
+        platformApi.getPlatformConfigGroup("nhap-xuat"),
       ]);
       setData({
         queue,
@@ -267,7 +270,7 @@ export default function PlatformControlsPanel() {
           empty="Không có tác vụ lỗi"
           columns={[
             { key: "_id", label: "Mã" },
-            { key: "kind", label: "Loại" },
+            { key: "kind", label: "Loại", render: (item) => valueLabel(item.kind) },
             { key: "error_code", label: "Mã lỗi" },
             {
               key: "actions",
@@ -354,8 +357,16 @@ export default function PlatformControlsPanel() {
             })),
           )}
           columns={[
-            { key: "collection", label: "Kho dữ liệu" },
-            { key: "status", label: "Trạng thái" },
+            {
+              key: "collection",
+              label: "Kho dữ liệu",
+              render: (item) => valueLabel(item.collection),
+            },
+            {
+              key: "status",
+              label: "Trạng thái",
+              render: (item) => valueLabel(String(item.status).toUpperCase()),
+            },
             { key: "count", label: "Số lượng" },
           ]}
         />
@@ -363,13 +374,22 @@ export default function PlatformControlsPanel() {
 
       <Panel title="Dung lượng theo dự án">
         <DataTable
-          items={data?.usage?.projects || []}
+          items={(data?.usage?.projects || []).slice(
+            (usagePage - 1) * usagePageSize,
+            usagePage * usagePageSize,
+          )}
           empty="Chưa có dữ liệu dung lượng"
           columns={[
             { key: "project_key", label: "Dự án" },
             { key: "files", label: "Tệp" },
             { key: "bytes", label: "Byte" },
           ]}
+        />
+        <Pagination
+          page={usagePage}
+          pageSize={usagePageSize}
+          total={(data?.usage?.projects || []).length}
+          onChange={setUsagePage}
         />
       </Panel>
 
@@ -670,7 +690,11 @@ export default function PlatformControlsPanel() {
           empty="Chưa có danh tính dịch vụ"
           columns={[
             { key: "name", label: "Tên" },
-            { key: "status", label: "Trạng thái" },
+            {
+              key: "status",
+              label: "Trạng thái",
+              render: (item) => valueLabel(String(item.status).toUpperCase()),
+            },
             { key: "secret_reference", label: "Tham chiếu" },
             { key: "scopes", label: "Phạm vi", render: (item) => (item.scopes || []).join(", ") },
             {
@@ -727,7 +751,7 @@ export default function PlatformControlsPanel() {
                   { name: "user_id", label: "Mã tài khoản", required: true },
                   {
                     name: "permissions",
-                    label: "Permission phân tách bằng dấu phẩy",
+                    label: "Quyền hạn phân tách bằng dấu phẩy",
                     required: true,
                   },
                   { name: "ttl_minutes", label: "Số phút", required: true, initialValue: "30" },

@@ -38,6 +38,10 @@ with httpx.Client(base_url=BASE_URL, timeout=60) as client:
     assert conflicts[0]["_id"] == conflict_id
     resolved = request(client, "POST", f"/kiem-thu/du-an/{project_id}/cong-tac/xung-dot/{conflict_id}/giai-quyet", json={"expected_revision": 2, "resolution": "APPLY_INCOMING", "reason": "Chấp nhận nội dung mới sau khi rà soát"})
     assert resolved["conflict"]["status"] == "RESOLVED"
+    requirement = request(client, "POST", f"/kiem-thu/du-an/{project_id}/yeu-cau", 201, json={"requirement_key": "REQ-COL-001", "title": "Yêu cầu cộng tác", "type": "functional", "priority": "high", "risk": "high", "content_doc": doc("Nội dung ban đầu"), "acceptance_criteria": [{"key": "AC-1", "content_doc": doc("Tiêu chí ban đầu")}], "business_rules": [], "actors": [], "dependencies": [], "source_refs": []})
+    requirement_result = request(client, "POST", f"/kiem-thu/du-an/{project_id}/cong-tac/yeu-cau/{requirement['_id']}/thao-tac", raw=True, json={"base_revision": 1, "operation_id": f"requirement-operation-{stamp}", "changes": {"acceptance_criteria": [{"key": "AC-1", "content_doc": doc("Tiêu chí đã sửa")}, {"key": "AC-2", "content_doc": doc("Tiêu chí bổ sung")} ]}})
+    assert requirement_result["meta"]["revision"] == 2
+    assert len(requirement_result["data"]["current_version"]["acceptance_criterion_ids"]) == 2
     missing_requirement = request(client, "POST", f"/kiem-thu/du-an/{project_id}/cong-tac/yeu-cau/khong-ton-tai/thao-tac", 404, json={"base_revision": 1, "operation_id": f"missing-{stamp}", "changes": {"title": "Không áp dụng"}})
     assert missing_requirement["error"]["code"] == "ENTITY_NOT_FOUND"
 

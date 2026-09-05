@@ -2,8 +2,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { platformApi } from "@/features/authentication/services/platform.service";
 import DataTable from "./DataTable";
-import { ErrorState, LoadingState, Panel, StatusPill, useQaActionDialog } from "./TestingUi";
-import { formatDate, messageOf } from "../lib/testing";
+import {
+  ErrorState,
+  LoadingState,
+  Pagination,
+  Panel,
+  StatusPill,
+  useQaActionDialog,
+} from "./TestingUi";
+import { formatDate, messageOf, valueLabel } from "../lib/testing";
 import PlatformControlsPanel from "./PlatformControlsPanel";
 
 export default function PlatformOperationsPanel() {
@@ -18,6 +25,12 @@ export default function PlatformOperationsPanel() {
   const [projectMemberships, setProjectMemberships] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [projectPage, setProjectPage] = useState(1);
+  const [jobPage, setJobPage] = useState(1);
+  const [modelPage, setModelPage] = useState(1);
+  const projectPageSize = 10;
+  const jobPageSize = 20;
+  const modelPageSize = 10;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -59,7 +72,11 @@ export default function PlatformOperationsPanel() {
           items={health?.services || []}
           empty="Chưa có dữ liệu trạng thái"
           columns={[
-            { key: "service", label: "Dịch vụ" },
+            {
+              key: "service",
+              label: "Dịch vụ",
+              render: (item) => valueLabel(item.service),
+            },
             {
               key: "healthy",
               label: "Trạng thái",
@@ -112,12 +129,16 @@ export default function PlatformOperationsPanel() {
 
       <Panel title="Siêu dữ liệu dự án">
         <DataTable
-          items={projects}
+          items={projects.slice((projectPage - 1) * projectPageSize, projectPage * projectPageSize)}
           empty="Chưa có dự án"
           columns={[
             { key: "key", label: "Mã" },
             { key: "name", label: "Tên" },
-            { key: "project_type", label: "Loại" },
+            {
+              key: "project_type",
+              label: "Loại",
+              render: (item) => valueLabel(item.project_type),
+            },
             {
               key: "status",
               label: "Trạng thái",
@@ -263,6 +284,12 @@ export default function PlatformOperationsPanel() {
             },
           ]}
         />
+        <Pagination
+          page={projectPage}
+          pageSize={projectPageSize}
+          total={projects.length}
+          onChange={setProjectPage}
+        />
       </Panel>
 
       {selectedProject && (
@@ -286,9 +313,17 @@ export default function PlatformOperationsPanel() {
             empty="Không có thành viên"
             columns={[
               { key: "user_id", label: "Tài khoản" },
-              { key: "project_role", label: "Vai trò" },
-              { key: "status", label: "Trạng thái" },
-              { key: "membership_revision", label: "Revision" },
+              {
+                key: "project_role",
+                label: "Vai trò",
+                render: (item) => valueLabel(item.project_role),
+              },
+              {
+                key: "status",
+                label: "Trạng thái",
+                render: (item) => valueLabel(String(item.status).toUpperCase()),
+              },
+              { key: "membership_revision", label: "Phiên bản" },
             ]}
           />
         </Panel>
@@ -364,11 +399,15 @@ export default function PlatformOperationsPanel() {
       </Panel>
       <Panel title="Tác vụ nền">
         <DataTable
-          items={jobs}
+          items={jobs.slice((jobPage - 1) * jobPageSize, jobPage * jobPageSize)}
           empty="Chưa có tác vụ nền"
           columns={[
             { key: "_id", label: "Mã tác vụ" },
-            { key: "kind", label: "Loại" },
+            {
+              key: "kind",
+              label: "Loại",
+              render: (item) => valueLabel(item.kind),
+            },
             {
               key: "status",
               label: "Trạng thái",
@@ -417,10 +456,16 @@ export default function PlatformOperationsPanel() {
             },
           ]}
         />
+        <Pagination
+          page={jobPage}
+          pageSize={jobPageSize}
+          total={jobs.length}
+          onChange={setJobPage}
+        />
       </Panel>
       <Panel title="Danh mục mô hình AI">
         <DataTable
-          items={models}
+          items={models.slice((modelPage - 1) * modelPageSize, modelPage * modelPageSize)}
           empty="Chưa có mô hình AI được đăng ký"
           columns={[
             { key: "provider_id", label: "Nhà cung cấp" },
@@ -437,6 +482,12 @@ export default function PlatformOperationsPanel() {
               render: (item) => (item.capabilities || []).join(", "),
             },
           ]}
+        />
+        <Pagination
+          page={modelPage}
+          pageSize={modelPageSize}
+          total={models.length}
+          onChange={setModelPage}
         />
       </Panel>
       <PlatformControlsPanel />

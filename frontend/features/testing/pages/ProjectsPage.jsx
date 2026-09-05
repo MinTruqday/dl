@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Plus, Search } from "lucide-react";
+import { Modal, ModalHeader, ModalTitle } from "@/shared/components/ui/Modal";
 import {
   EmptyState,
   ErrorState,
@@ -21,6 +22,8 @@ export default function ProjectsPage() {
   const [status, setStatus] = useState("active");
   const [form, setForm] = useState({ key: "", name: "", description: "", project_type: "web" });
   const [creating, setCreating] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [createError, setCreateError] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const load = useCallback(async (value = "", statusValue = "active") => {
@@ -39,7 +42,9 @@ export default function ProjectsPage() {
   }, [load, status]);
   const submit = async (event) => {
     event.preventDefault();
-    setError("");
+    if (saving) return;
+    setCreateError("");
+    setSaving(true);
     try {
       await testingApi.createProject({
         ...form,
@@ -48,19 +53,26 @@ export default function ProjectsPage() {
       });
       setForm({ key: "", name: "", description: "", project_type: "web" });
       setCreating(false);
-      await load("", status);
+      setQuery("");
+      setStatus("active");
+      await load("", "active");
     } catch (reason) {
-      setError(messageOf(reason));
+      setCreateError(messageOf(reason));
+    } finally {
+      setSaving(false);
     }
   };
   return (
     <QaPage
-      title="Dự án kiểm thử"
+      title="Dự án"
       actions={
         <button
           type="button"
           className="apple-button"
-          onClick={() => setCreating((value) => !value)}
+          onClick={() => {
+            setCreateError("");
+            setCreating(true);
+          }}
         >
           <Plus size={16} />
           Tạo dự án
@@ -68,63 +80,87 @@ export default function ProjectsPage() {
       }
     >
       {error && <ErrorState message={error} />}
-      {creating && (
-        <Panel title="Tạo dự án mới">
-          <form onSubmit={submit} className="grid gap-5 p-5 md:grid-cols-2">
-            <label className="field-label block min-w-0">
-              Mã dự án
-              <input
-                className="apple-input mt-2 w-full"
-                required
-                minLength={2}
-                pattern="[A-Za-z][A-Za-z0-9_]+"
-                value={form.key}
-                onChange={(event) => setForm({ ...form, key: event.target.value })}
-                placeholder="THANHTOAN"
-              />
-            </label>
-            <label className="field-label block min-w-0">
-              Tên dự án
-              <input
-                className="apple-input mt-2 w-full"
-                required
-                minLength={2}
-                value={form.name}
-                onChange={(event) => setForm({ ...form, name: event.target.value })}
-                placeholder="Nền tảng thanh toán"
-              />
-            </label>
-            <label className="field-label block min-w-0">
-              Loại dự án
-              <select
-                className="apple-input mt-2 w-full"
-                value={form.project_type}
-                onChange={(event) => setForm({ ...form, project_type: event.target.value })}
-              >
-                <option value="web">Web</option>
-                <option value="mobile">Ứng dụng di động</option>
-                <option value="api">API</option>
-                <option value="desktop">Ứng dụng máy tính</option>
-                <option value="embedded">Thiết bị nhúng</option>
-                <option value="other">Khác</option>
-              </select>
-            </label>
-            <label className="field-label block min-w-0 md:col-span-2">
-              Mô tả
-              <textarea
-                className="apple-input mt-2 min-h-24 w-full resize-y"
-                value={form.description}
-                onChange={(event) => setForm({ ...form, description: event.target.value })}
-              />
-            </label>
+      <Modal
+        isOpen={creating}
+        onClose={() => {
+          if (!saving) setCreating(false);
+        }}
+        ariaLabel="Tạo dự án"
+        className="max-w-xl max-h-[90dvh] overflow-y-auto"
+      >
+        <ModalHeader>
+          <ModalTitle>Tạo dự án</ModalTitle>
+        </ModalHeader>
+        <form onSubmit={submit} className="grid gap-5 p-5 md:grid-cols-2">
+          {createError && (
             <div className="md:col-span-2">
-              <button className="apple-button" type="submit">
-                Lưu dự án
-              </button>
+              <ErrorState message={createError} />
             </div>
-          </form>
-        </Panel>
-      )}
+          )}
+          <label className="field-label block min-w-0">
+            Mã dự án
+            <input
+              className="apple-input mt-2 w-full"
+              required
+              minLength={2}
+              maxLength={30}
+              pattern="[A-Za-z][A-Za-z0-9_\-]+"
+              value={form.key}
+              onChange={(event) => setForm({ ...form, key: event.target.value })}
+              placeholder="THANHTOAN"
+            />
+          </label>
+          <label className="field-label block min-w-0">
+            Tên dự án
+            <input
+              className="apple-input mt-2 w-full"
+              required
+              minLength={2}
+              maxLength={200}
+              value={form.name}
+              onChange={(event) => setForm({ ...form, name: event.target.value })}
+              placeholder="Nền tảng thanh toán"
+            />
+          </label>
+          <label className="field-label block min-w-0">
+            Loại dự án
+            <select
+              className="apple-input mt-2 w-full"
+              value={form.project_type}
+              onChange={(event) => setForm({ ...form, project_type: event.target.value })}
+            >
+              <option value="web">Ứng dụng web</option>
+              <option value="mobile">Ứng dụng di động</option>
+              <option value="api">API</option>
+              <option value="desktop">Ứng dụng máy tính</option>
+              <option value="embedded">Thiết bị nhúng</option>
+              <option value="other">Khác</option>
+            </select>
+          </label>
+          <label className="field-label block min-w-0 md:col-span-2">
+            Mô tả
+            <textarea
+              className="apple-input mt-2 min-h-24 w-full resize-y"
+              maxLength={5000}
+              value={form.description}
+              onChange={(event) => setForm({ ...form, description: event.target.value })}
+            />
+          </label>
+          <div className="flex justify-end gap-3 md:col-span-2">
+            <button
+              className="secondary-button"
+              type="button"
+              disabled={saving}
+              onClick={() => setCreating(false)}
+            >
+              Hủy
+            </button>
+            <button className="apple-button" type="submit" disabled={saving}>
+              {saving ? "Đang lưu" : "Lưu dự án"}
+            </button>
+          </div>
+        </form>
+      </Modal>
       <Panel
         title="Danh sách dự án"
         actions={
@@ -136,7 +172,11 @@ export default function ProjectsPage() {
             }}
           >
             <div className="relative">
-              <Search className="absolute left-3 top-2.5 text-ink-faint" size={16} />
+              <Search
+                aria-hidden="true"
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint"
+                size={16}
+              />
               <input
                 aria-label="Tìm dự án"
                 className="apple-input w-64 pl-9"
@@ -163,25 +203,34 @@ export default function ProjectsPage() {
             <LoadingState />
           </div>
         ) : items.length === 0 ? (
-          <EmptyState actionLabel="Tạo dự án đầu tiên" onAction={() => setCreating(true)}>
-            Chưa có dự án kiểm thử
+          <EmptyState>
+            {query.trim()
+              ? "Không tìm thấy dự án phù hợp"
+              : status === "archived"
+                ? "Chưa có dự án đã lưu trữ"
+                : "Chưa có dự án"}
           </EmptyState>
         ) : (
           <div className="divide-y divide-border">
             {items.map((item) => (
-              <div
+              <article
                 key={item._id}
-                className="grid gap-3 p-5 transition hover:bg-surface-quiet md:grid-cols-[120px_1fr_140px_160px_auto] md:items-center"
+                className="grid gap-4 p-5 transition hover:bg-surface-quiet md:grid-cols-[120px_minmax(0,1fr)_140px_180px_auto] md:items-center"
               >
                 <span className="font-mono text-[13px] font-semibold text-brand">{item.key}</span>
                 <Link href={`/du-an/${item._id}`} className="min-w-0">
                   <strong className="block text-[14px]">{item.name}</strong>
-                  <small className="line-clamp-1 text-ink-muted">
-                    {item.description || "Chưa có mô tả"}
-                  </small>
+                  {item.description && (
+                    <small className="line-clamp-1 text-ink-muted">{item.description}</small>
+                  )}
                 </Link>
-                <StatusPill value={String(item.status).toUpperCase()} />
-                <span className="text-[12px] text-ink-muted">{formatDate(item.updated_at)}</span>
+                <div className="flex items-center md:block">
+                  <StatusPill value={String(item.status).toUpperCase()} />
+                </div>
+                <div className="text-[12px] text-ink-muted">
+                  <span className="mr-2 font-semibold text-ink md:hidden">Cập nhật</span>
+                  {formatDate(item.updated_at)}
+                </div>
                 {item.status === "archived" &&
                   item.current_permissions?.includes("project.restore") && (
                     <button
@@ -216,7 +265,7 @@ export default function ProjectsPage() {
                       Khôi phục
                     </button>
                   )}
-              </div>
+              </article>
             ))}
           </div>
         )}

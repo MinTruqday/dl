@@ -30,8 +30,8 @@ export default function CicdPanel({ project }) {
   }, [load]);
   const create = async () => {
     const answer = await ask({
-      title: "Ánh xạ pipeline CI CD",
-      description: "Pipeline phải thuộc một kết nối dự án đang hoạt động",
+      title: "Ánh xạ quy trình CI CD",
+      description: "Quy trình phải thuộc một kết nối dự án đang hoạt động",
       confirmLabel: "Tạo ánh xạ",
       fields: [
         { name: "name", label: "Tên ánh xạ", required: true, autoFocus: true },
@@ -47,7 +47,7 @@ export default function CicdPanel({ project }) {
         },
         {
           name: "pipelineReference",
-          label: "Tham chiếu pipeline nền tảng",
+          label: "Tham chiếu quy trình nền tảng",
           required: true,
           initialValue: "pipeline://platform/",
         },
@@ -102,16 +102,10 @@ export default function CicdPanel({ project }) {
   return (
     <Panel
       title="Tích hợp CI CD"
-      description="Trigger và kết quả từ pipeline chỉ được nhận qua danh tính dịch vụ có chữ ký"
       actions={
-        can("cicd.manage") ? (
-          <button
-            className="apple-button"
-            type="button"
-            disabled={!connectors.length}
-            onClick={create}
-          >
-            Ánh xạ pipeline
+        can("cicd.manage") && connectors.length > 0 ? (
+          <button className="apple-button" type="button" onClick={create}>
+            Ánh xạ quy trình
           </button>
         ) : null
       }
@@ -120,10 +114,10 @@ export default function CicdPanel({ project }) {
         {error && <ErrorState message={error} />}
         <DataTable
           items={state.bindings}
-          empty="Chưa có pipeline được ánh xạ"
+          empty="Chưa có quy trình được ánh xạ"
           columns={[
             { key: "name", label: "Tên" },
-            { key: "pipeline_reference", label: "Pipeline" },
+            { key: "pipeline_reference", label: "Quy trình" },
             {
               key: "enabled",
               label: "Trạng thái",
@@ -146,7 +140,7 @@ export default function CicdPanel({ project }) {
           empty="Chưa nhận lần chạy CI"
           columns={[
             { key: "external_run_id", label: "Mã lần chạy ngoài" },
-            { key: "commit_reference", label: "Commit" },
+            { key: "commit_reference", label: "Phiên bản mã nguồn" },
             {
               key: "status",
               label: "Trạng thái",

@@ -940,7 +940,7 @@ async def runtime_versions(current_user: CurrentUser = Depends(get_current_user)
         "authentication": "http://authentication:8000/san-sang",
         "testing": "http://testing:8000/san-sang",
         "worker": "http://worker:8000/san-sang",
-        "ai": "http://ai:8000/san-sang",
+        "ai": "http://ai:8000/suc-khoe",
         "cloud": "http://cloud:8000/san-sang",
     }
     results = []

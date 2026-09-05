@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { Pagination } from "@/features/testing/components/TestingUi";
 import {
   changeMyPassword,
   listMySessions,
@@ -19,6 +20,8 @@ export default function AccountPage() {
   });
   const [password, setPassword] = useState({ current_password: "", new_password: "" });
   const [sessions, setSessions] = useState([]);
+  const [sessionPage, setSessionPage] = useState(1);
+  const sessionPageSize = 10;
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
@@ -99,22 +102,16 @@ export default function AccountPage() {
     <div className="mx-auto w-full max-w-[980px] space-y-7 p-4 sm:p-6 md:p-9">
       <header className="border-b border-border pb-6">
         <h1 className="text-[32px] font-semibold tracking-[-0.04em]">Tài khoản và bảo mật</h1>
-        <p className="mt-3 max-w-2xl text-[14px] leading-7 text-ink-muted">
-          Quản lý danh tính, quyền truy cập và các phiên đăng nhập của bạn
-        </p>
       </header>
       <section className="overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_8px_24px_rgba(48,47,42,0.04)]">
         <div className="border-b border-border bg-surface-raised px-5 py-4">
           <h2 className="font-semibold">Thông tin cá nhân</h2>
-          <p className="mt-1 text-[12px] text-ink-muted">
-            Thông tin này được dùng chung trong không gian kiểm thử
-          </p>
         </div>
         <form className="grid gap-5 p-5 sm:grid-cols-2" onSubmit={submitProfile}>
           <label className="field-label">
             Tên hiển thị
             <input
-              className="text-input mt-2"
+              className="apple-input mt-2 w-full"
               value={profile.full_name}
               onChange={(event) => setProfile({ ...profile, full_name: event.target.value })}
               required
@@ -127,7 +124,11 @@ export default function AccountPage() {
           <div>
             <span className="field-label">Vai trò hệ thống</span>
             <p className="mt-2 font-semibold">
-              {user?.role === "author" ? "Người đóng góp" : user?.role}
+              {{
+                admin: "Quản trị viên",
+                user: "Người dùng",
+                author: "Người đóng góp",
+              }[String(user?.role || "").toLowerCase()] || user?.role}
             </p>
           </div>
           <div>
@@ -137,7 +138,7 @@ export default function AccountPage() {
           <label className="field-label">
             Ngôn ngữ
             <input
-              className="text-input mt-2"
+              className="apple-input mt-2 w-full"
               value={profile.locale}
               onChange={(event) => setProfile({ ...profile, locale: event.target.value })}
             />
@@ -145,13 +146,13 @@ export default function AccountPage() {
           <label className="field-label">
             Múi giờ
             <input
-              className="text-input mt-2"
+              className="apple-input mt-2 w-full"
               value={profile.timezone}
               onChange={(event) => setProfile({ ...profile, timezone: event.target.value })}
             />
           </label>
           <div className="sm:col-span-2">
-            <button className="primary-button" type="submit" disabled={savingProfile}>
+            <button className="apple-button" type="submit" disabled={savingProfile}>
               {savingProfile ? "Đang lưu" : "Lưu thông tin"}
             </button>
           </div>
@@ -163,7 +164,7 @@ export default function AccountPage() {
           <label className="field-label">
             Mật khẩu hiện tại
             <input
-              className="text-input mt-2"
+              className="apple-input mt-2 w-full"
               type="password"
               value={password.current_password}
               onChange={(event) =>
@@ -175,7 +176,7 @@ export default function AccountPage() {
           <label className="field-label">
             Mật khẩu mới
             <input
-              className="text-input mt-2"
+              className="apple-input mt-2 w-full"
               type="password"
               minLength={12}
               value={password.new_password}
@@ -194,9 +195,6 @@ export default function AccountPage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="font-semibold">Phiên đăng nhập</h2>
-            <p className="mt-1 text-[12px] text-ink-muted">
-              Thu hồi từng phiên hoặc đóng toàn bộ phiên khác
-            </p>
           </div>
           <button className="secondary-button" type="button" onClick={closeOtherSessions}>
             Đóng các phiên khác
@@ -204,36 +202,44 @@ export default function AccountPage() {
         </div>
         <div className="mt-4 divide-y divide-border border-y border-border">
           {sessions.length ? (
-            sessions.map((session) => (
-              <div
-                className="flex flex-wrap items-center justify-between gap-3 py-3"
-                key={session._id}
-              >
-                <div>
-                  <p className="text-sm font-medium">
-                    {session.is_current ? "Phiên hiện tại" : "Thiết bị đã đăng nhập"}
-                  </p>
-                  <p className="text-xs text-ink-muted">
-                    {session.created_at
-                      ? new Date(session.created_at).toLocaleString("vi-VN")
-                      : "Không rõ thời điểm"}
-                  </p>
+            sessions
+              .slice((sessionPage - 1) * sessionPageSize, sessionPage * sessionPageSize)
+              .map((session) => (
+                <div
+                  className="flex flex-wrap items-center justify-between gap-3 py-3"
+                  key={session._id}
+                >
+                  <div>
+                    <p className="text-sm font-medium">
+                      {session.is_current ? "Phiên hiện tại" : "Thiết bị đã đăng nhập"}
+                    </p>
+                    <p className="text-xs text-ink-muted">
+                      {session.created_at
+                        ? new Date(session.created_at).toLocaleString("vi-VN")
+                        : "Không rõ thời điểm"}
+                    </p>
+                  </div>
+                  {!session.is_current && (
+                    <button
+                      className="text-sm text-danger"
+                      type="button"
+                      onClick={() => revokeSession(session._id)}
+                    >
+                      Thu hồi
+                    </button>
+                  )}
                 </div>
-                {!session.is_current && (
-                  <button
-                    className="text-sm text-danger"
-                    type="button"
-                    onClick={() => revokeSession(session._id)}
-                  >
-                    Thu hồi
-                  </button>
-                )}
-              </div>
-            ))
+              ))
           ) : (
             <p className="py-4 text-sm text-ink-muted">Chưa có phiên đăng nhập</p>
           )}
         </div>
+        <Pagination
+          page={sessionPage}
+          pageSize={sessionPageSize}
+          total={sessions.length}
+          onChange={setSessionPage}
+        />
       </section>
       <div className="flex flex-wrap gap-3">
         <Link className="secondary-button" href="/du-an">

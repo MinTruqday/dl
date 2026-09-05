@@ -41,7 +41,14 @@ test("shared navigation and tables remain operable with keyboard and mobile focu
   assert.match(appShellSource, /aria-expanded=\{mobileOpen\}/);
   assert.match(appShellSource, /document\.body\.style\.overflow = "hidden"/);
   assert.match(appShellSource, /drawer\.querySelectorAll\(focusableSelector\)/);
+  assert.match(appShellSource, /data-mobile-nav-close="true"/);
+  assert.match(
+    appShellSource,
+    /<div\s+aria-hidden="true"\s+className="absolute inset-0 bg-ink\/30"/,
+  );
   assert.match(appShellSource, /role="menu"/);
+  assert.match(appShellSource, /min-\[380px\]:flex/);
+  assert.match(appShellSource, /whitespace-nowrap rounded-control bg-brand/);
   assert.match(dataTableSource, /openFromKeyboard/);
   assert.equal(dataTableSource.match(/tabIndex=\{onSelect \? 0 : undefined\}/g)?.length, 2);
   assert.match(dataTableSource, /Chọn tất cả trên trang/);
@@ -406,15 +413,10 @@ test("automated execution CI CD and collaboration services use canonical Vietnam
     "Tạo lần chạy Newman",
     "Bắt đầu Newman",
     "Hủy tác vụ",
-    "Tải evidence",
+    "Tải bằng chứng",
   ])
     assert.ok(automationExecutionSource.includes(label), label);
-  for (const label of [
-    "Tích hợp CI CD",
-    "Ánh xạ pipeline",
-    "Thử đối soát lại",
-    "danh tính dịch vụ có chữ ký",
-  ])
+  for (const label of ["Tích hợp CI CD", "Ánh xạ quy trình", "Thử đối soát lại"])
     assert.ok(cicdSource.includes(label), label);
   for (const label of [
     "Cộng tác trên bản nháp",

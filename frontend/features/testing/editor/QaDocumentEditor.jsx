@@ -179,7 +179,7 @@ export default function QaDocumentEditor({
   );
 
   return (
-    <div className="overflow-hidden rounded-panel border border-border bg-surface">
+    <div className="relative overflow-hidden rounded-panel border border-border bg-surface">
       <div className="qa-editor-toolbar" role="toolbar" aria-label="Công cụ soạn thảo QA">
         <div className="editor-tool-group">
           {tool("In đậm", editor.isActive("bold"), toggleBold, <Bold size={17} />)}
