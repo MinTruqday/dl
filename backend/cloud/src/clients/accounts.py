@@ -13,7 +13,7 @@ class AccountClient:
 
     @staticmethod
     async def get_by_email(email: str) -> Optional[dict]:
-        return await AccountClient._get(f"/xac-thuc/noi-bo/tai-khoan/email/{quote(email, safe='')}")
+        return await AccountClient._get(f"/xac-thuc/noi-bo/tai-khoan/thu-dien-tu/{quote(email, safe='')}")
 
     @staticmethod
     async def _get(path: str) -> Optional[dict]:

@@ -24,7 +24,7 @@ async def store_qa_requirement_source(
     if len(data) > 25 * 1024 * 1024:
         raise HTTPException(status_code=413, detail={"code": "SOURCE_FILE_TOO_LARGE"})
     safe_name = re.sub(r"[^A-Za-z0-9._-]+", "-", file.filename or "requirements.bin").strip("-") or "requirements.bin"
-    object_key = f"system/qa/{project_id}/requirements/{document_id}/{safe_name}"
+    object_key = f"system/qa/{project_id}/yeu-cau/{document_id}/{safe_name}"
     await upload_file(data, object_key, file.content_type or "application/octet-stream")
     return {"data": {"object_key": object_key, "sha256": hashlib.sha256(data).hexdigest(), "size": len(data), "content_type": file.content_type or "application/octet-stream"}}
 
@@ -35,8 +35,11 @@ async def read_qa_requirement_source(
     document_id: str,
     object_key: str,
 ):
-    prefix = f"system/qa/{project_id}/requirements/{document_id}/"
-    if not object_key.startswith(prefix):
+    prefixes = (
+        f"system/qa/{project_id}/yeu-cau/{document_id}/",
+        f"system/qa/{project_id}/requirements/{document_id}/",
+    )
+    if not object_key.startswith(prefixes):
         raise HTTPException(status_code=403, detail={"code": "SOURCE_PATH_FORBIDDEN"})
     data, content_type = await download_file(object_key)
     return Response(content=data, media_type=content_type or "application/octet-stream")

@@ -22,7 +22,7 @@ export default function DashboardPage({ project }) {
       .then(([dashboard, coverage]) => setValue({ ...dashboard, ...coverage }))
       .catch((reason) => setError(messageOf(reason)));
   }, [project._id]);
-  const base = `/qa/projects/${project._id}`;
+  const base = `/du-an/${project._id}`;
   return (
     <QaPage
       title={project.name}
@@ -78,7 +78,7 @@ export default function DashboardPage({ project }) {
                 <p className="text-[13px] leading-6 text-ink-muted">
                   Tìm theo phạm vi dự án với nguồn và phiên bản có thể kiểm chứng
                 </p>
-                <Link className="apple-button w-full" href={`${base}/knowledge`}>
+                <Link className="apple-button w-full" href={`${base}/tri-thuc`}>
                   Mở kho tri thức
                 </Link>
               </div>
@@ -101,7 +101,7 @@ export default function DashboardPage({ project }) {
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <Link
                       className="font-semibold text-brand"
-                      href={`${base}/execution/${value.latest_run._id}`}
+                      href={`${base}/thuc-thi/${value.latest_run._id}`}
                     >
                       {value.latest_run.name}
                     </Link>

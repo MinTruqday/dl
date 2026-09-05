@@ -413,7 +413,7 @@ services:
       - 8007:8000
     labels:
       - traefik.enable=true
-      - traefik.http.routers.authentication.rule=PathPrefix(`/xac-thuc/`) || PathPrefix(`/google`) || PathPrefix(`/quan-tri`)
+      - traefik.http.routers.authentication.rule=PathPrefix(`/xac-thuc/`) || PathPrefix(`/quan-tri`)
       - traefik.http.routers.authentication.priority=120
       - traefik.http.services.authentication.loadbalancer.server.port=8000
     environment:

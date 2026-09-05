@@ -12,8 +12,9 @@ import ReviewQueuePage from "./workspace/ReviewQueuePage";
 import SettingsPage from "./workspace/SettingsPage";
 import TestDesignPage from "./workspace/TestDesignPage";
 import TraceabilityPage from "./workspace/TraceabilityPage";
+import { PROJECT_SECTION_SLUGS } from "../routes";
 
-export default function ProjectWorkspacePage({ projectId, section }) {
+export default function ProjectWorkspacePage({ projectId, section, initialQuery = "" }) {
   const state = useProject(projectId);
   if (state.loading)
     return (
@@ -27,7 +28,20 @@ export default function ProjectWorkspacePage({ projectId, section }) {
         <ErrorState message={state.error || "Không tìm thấy dự án"} />
       </div>
     );
-  const area = section[0] || "dashboard";
+  const areaBySlug = {
+    [PROJECT_SECTION_SLUGS.requirements]: "requirements",
+    [PROJECT_SECTION_SLUGS.testDesign]: "test-design",
+    [PROJECT_SECTION_SLUGS.traceability]: "traceability",
+    [PROJECT_SECTION_SLUGS.changes]: "changes",
+    [PROJECT_SECTION_SLUGS.execution]: "execution",
+    [PROJECT_SECTION_SLUGS.aiReview]: "ai-review",
+    [PROJECT_SECTION_SLUGS.defects]: "defects",
+    [PROJECT_SECTION_SLUGS.reports]: "reports",
+    [PROJECT_SECTION_SLUGS.knowledge]: "knowledge",
+    "tim-kiem": "knowledge",
+    [PROJECT_SECTION_SLUGS.settings]: "settings",
+  };
+  const area = section[0] ? areaBySlug[section[0]] : "dashboard";
   const requiredPermissions = {
     dashboard: "project.read",
     requirements: "requirement.read",
@@ -62,7 +76,13 @@ export default function ProjectWorkspacePage({ projectId, section }) {
     "ai-review": <ReviewQueuePage {...props} />,
     execution: <ExecutionPage {...props} />,
     defects: <DefectsPage {...props} />,
-    knowledge: <KnowledgePage {...props} />,
+    knowledge: (
+      <KnowledgePage
+        {...props}
+        initialQuery={initialQuery}
+        useGlobalSearch={section[0] === "tim-kiem"}
+      />
+    ),
     reports: <ReportsPage {...props} />,
     settings: <SettingsPage {...props} onProjectChange={state.reload} />,
   };

@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import DataTable from "../../components/DataTable";
 import ReviewCommentsPanel from "../../components/ReviewCommentsPanel";
+import CollaborationPanel from "../../components/CollaborationPanel";
 import {
   ErrorState,
   LoadingState,
@@ -29,6 +30,25 @@ const initialForm = {
   tags: "",
   ownerId: "",
 };
+
+function splitBlocks(value) {
+  return value
+    .split(/\n\s*---\s*\n/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function acceptanceCriteria(value) {
+  return value
+    .split("\n")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .map((item, index) => ({
+      key: `AC-${index + 1}`,
+      content_doc: textDoc(item),
+      status: "draft",
+    }));
+}
 
 export default function RequirementsPage({ project, section }) {
   const { ask, dialog } = useQaActionDialog();
@@ -67,6 +87,7 @@ export default function RequirementsPage({ project, section }) {
   const draftSequence = useRef(0);
   const loadedVersion = useRef("");
   const [comparison, setComparison] = useState(null);
+  const [duplicateScan, setDuplicateScan] = useState(null);
   const [compareFrom, setCompareFrom] = useState("");
   const [compareTo, setCompareTo] = useState("");
   const load = useCallback(async () => {
@@ -138,40 +159,47 @@ export default function RequirementsPage({ project, section }) {
       if (!snapshot || !current || !selected) return;
       setSaveState("saving");
       try {
-        const result = await testingApi.updateRequirementDraft(project._id, selected._id, {
-          expected_revision: current.revision,
-          title: snapshot.title,
-          type: snapshot.type,
-          priority: snapshot.priority,
-          risk: snapshot.risk,
-          content_doc: snapshot.content_doc,
-          acceptance_criteria: snapshot.acceptance
-            .split("\n")
-            .map((line) => line.trim())
-            .filter(Boolean)
-            .map((line, index) => ({
-              key: `AC-${index + 1}`,
-              content_doc: textDoc(line),
-              status: "draft",
-            })),
-          business_rules: snapshot.businessRules
-            .split("\n")
-            .map((value) => value.trim())
-            .filter(Boolean),
-          actors: snapshot.actors
-            .split(",")
-            .map((value) => value.trim())
-            .filter(Boolean),
-          dependencies: snapshot.dependencies
-            .split("\n")
-            .map((value) => value.trim())
-            .filter(Boolean),
-          tags: snapshot.tags
-            .split(",")
-            .map((value) => value.trim())
-            .filter(Boolean),
-          owner_id: snapshot.ownerId.trim() || null,
-        });
+        const result = await testingApi.applyRequirementCollaborationOperation(
+          project._id,
+          selected._id,
+          {
+            base_revision: current.revision,
+            operation_id: crypto.randomUUID(),
+            changes: {
+              title: snapshot.title,
+              type: snapshot.type,
+              priority: snapshot.priority,
+              risk: snapshot.risk,
+              content_doc: snapshot.content_doc,
+              acceptance_criteria: snapshot.acceptance
+                .split("\n")
+                .map((line) => line.trim())
+                .filter(Boolean)
+                .map((line, index) => ({
+                  key: `AC-${index + 1}`,
+                  content_doc: textDoc(line),
+                  status: "draft",
+                })),
+              business_rules: snapshot.businessRules
+                .split("\n")
+                .map((value) => value.trim())
+                .filter(Boolean),
+              actors: snapshot.actors
+                .split(",")
+                .map((value) => value.trim())
+                .filter(Boolean),
+              dependencies: snapshot.dependencies
+                .split("\n")
+                .map((value) => value.trim())
+                .filter(Boolean),
+              tags: snapshot.tags
+                .split(",")
+                .map((value) => value.trim())
+                .filter(Boolean),
+              owner_id: snapshot.ownerId.trim() || null,
+            },
+          },
+        );
         setSelected(result);
         if (draftSequence.current === sequence) {
           setDraftDirty(false);
@@ -429,10 +457,18 @@ export default function RequirementsPage({ project, section }) {
       ),
       candidate_relation: "merged",
     };
-    const next = preview.preview
-      .map((candidate, index) => (index === firstIndex ? merged : candidate))
-      .filter((_, index) => index === firstIndex || !indexes.includes(index));
-    await saveImportReview(next, "Gộp các ứng viên yêu cầu", [firstIndex]);
+    try {
+      const result = await testingApi.mergeRequirementCandidates(preview._id, {
+        expected_revision: preview.revision,
+        candidate_ids: candidates.map((candidate) => candidate.candidate_id),
+        merged,
+        reason: "Gộp các ứng viên yêu cầu",
+      });
+      setPreview(result);
+      setSelectedIndexes([firstIndex]);
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
   };
   const splitCandidate = async () => {
     if (selectedIndexes.length !== 1) {
@@ -455,19 +491,300 @@ export default function RequirementsPage({ project, section }) {
       setError("Nội dung cần ít nhất hai dòng hoặc hai câu để tách");
       return;
     }
-    const split = parts.map((part, partIndex) => ({
+    const split = parts.map((part) => ({
       ...candidate,
       title: part.slice(0, 300),
       content_doc: textDoc(part),
-      candidate_relation: `split-${partIndex + 1}`,
     }));
-    const next = [...preview.preview];
-    next.splice(index, 1, ...split);
-    await saveImportReview(
-      next,
-      "Tách ứng viên yêu cầu",
-      split.map((_, offset) => index + offset),
+    try {
+      const result = await testingApi.splitRequirementCandidate(
+        preview._id,
+        candidate.candidate_id,
+        {
+          expected_revision: preview.revision,
+          drafts: split,
+          reason: "Tách ứng viên yêu cầu",
+        },
+      );
+      setPreview(result);
+      setSelectedIndexes(split.map((_, offset) => index + offset));
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
+  };
+  const rejectCandidate = async () => {
+    if (selectedIndexes.length !== 1) {
+      setError("Cần chọn đúng một ứng viên để từ chối");
+      return;
+    }
+    const index = selectedIndexes[0];
+    const candidate = preview.preview[index];
+    const answer = await ask({
+      title: "Từ chối ứng viên yêu cầu",
+      description: candidate.title,
+      confirmLabel: "Từ chối ứng viên",
+      danger: true,
+      fields: [
+        {
+          name: "reason",
+          label: "Lý do",
+          initialValue: "Không thuộc phạm vi hoặc không tạo thành yêu cầu độc lập",
+          multiline: true,
+          autoFocus: true,
+        },
+      ],
+    });
+    if (!answer) return;
+    try {
+      const result = await testingApi.rejectRequirementCandidate(
+        preview._id,
+        candidate.candidate_id,
+        { expected_revision: preview.revision, reason: answer.reason },
+      );
+      setPreview(result);
+      setSelectedIndexes([]);
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
+  };
+  const splitBaseline = async () => {
+    const sourceText = docText(current.content_doc).trim();
+    let defaultParts = sourceText
+      .split(/\n+/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+    if (defaultParts.length < 2) {
+      defaultParts = (sourceText.match(/[^.!?;]+[.!?;]?/g) || [])
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }
+    if (defaultParts.length < 2) {
+      defaultParts = [sourceText, "Nội dung yêu cầu mới cần hoàn thiện"];
+    }
+    const currentCriteria = (current.acceptance_criteria || []).map((item) =>
+      docText(item.content_doc),
     );
+    const answer = await ask({
+      title: "Tách yêu cầu đã phê duyệt",
+      description: `${selected.requirement_key} sẽ chuyển sang trạng thái được thay thế và các phần mới được tạo dưới dạng bản nháp`,
+      confirmLabel: "Xác nhận tách",
+      fields: [
+        {
+          name: "titles",
+          label: "Tên các yêu cầu mới mỗi dòng một tên",
+          initialValue: defaultParts.map((item) => item.slice(0, 120)).join("\n"),
+          required: true,
+          multiline: true,
+          autoFocus: true,
+        },
+        {
+          name: "contents",
+          label: "Nội dung từng yêu cầu phân cách bằng một dòng ---",
+          initialValue: defaultParts.join("\n---\n"),
+          required: true,
+          multiline: true,
+        },
+        {
+          name: "acceptance",
+          label: "Tiêu chí từng yêu cầu phân cách bằng một dòng ---",
+          initialValue: defaultParts
+            .map(
+              (_, index) =>
+                currentCriteria[index] || currentCriteria[0] || "Cần bổ sung tiêu chí chấp nhận",
+            )
+            .join("\n---\n"),
+          required: true,
+          multiline: true,
+        },
+        {
+          name: "reason",
+          label: "Lý do tách",
+          initialValue: "Tách các trách nhiệm nghiệp vụ độc lập để quản lý và truy vết chính xác",
+          required: true,
+          multiline: true,
+        },
+      ],
+    });
+    if (!answer) return;
+    const titles = answer.titles
+      .split("\n")
+      .map((item) => item.trim())
+      .filter(Boolean);
+    const contents = splitBlocks(answer.contents);
+    const criteriaBlocks = splitBlocks(answer.acceptance);
+    if (
+      contents.length < 2 ||
+      titles.length !== contents.length ||
+      criteriaBlocks.length !== contents.length
+    ) {
+      setError("Số tên nội dung và nhóm tiêu chí phải bằng nhau và có ít nhất hai phần");
+      return;
+    }
+    try {
+      const result = await testingApi.splitRequirement(project._id, selected._id, {
+        expected_source_version_id: current._id,
+        idempotency_key: crypto.randomUUID(),
+        reason: answer.reason,
+        drafts: contents.map((content, index) => ({
+          title: titles[index],
+          type: current.type,
+          priority: current.priority,
+          risk: current.risk,
+          content_doc: textDoc(content),
+          acceptance_criteria: acceptanceCriteria(criteriaBlocks[index]),
+          business_rules: current.business_rules || [],
+          actors: current.actors || [],
+          dependencies: current.dependencies || [],
+          source_refs: [],
+          tags: selected.tags || current.tags || [],
+          owner_id: selected.owner_id || current.owner_id || null,
+        })),
+      });
+      const first = result.requirements?.[0];
+      window.location.assign(
+        first ? `/du-an/${project._id}/yeu-cau/${first._id}` : `/du-an/${project._id}/yeu-cau`,
+      );
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
+  };
+  const mergeBaselines = async () => {
+    const sourceSummaries = items.filter((item) => selectedIds.includes(item._id));
+    if (sourceSummaries.length < 2) {
+      setError("Cần chọn ít nhất hai yêu cầu để gộp");
+      return;
+    }
+    if (sourceSummaries.some((item) => item.status !== "BASELINED")) {
+      setError("Chỉ có thể gộp các yêu cầu đã phê duyệt hiện hành");
+      return;
+    }
+    let sources;
+    try {
+      sources = await Promise.all(
+        sourceSummaries.map((item) => testingApi.getRequirement(item._id)),
+      );
+    } catch (reason) {
+      setError(messageOf(reason));
+      return;
+    }
+    if (sources.some((item) => item.current_version?.status !== "BASELINED")) {
+      setError("Một yêu cầu đã thay đổi sau khi danh sách được tải vui lòng tải lại và chọn lại");
+      return;
+    }
+    const answer = await ask({
+      title: "Gộp các yêu cầu đã phê duyệt",
+      description: `${sources.map((item) => item.requirement_key).join(", ")} sẽ được giữ lịch sử và chuyển sang trạng thái được thay thế`,
+      confirmLabel: "Xác nhận gộp",
+      fields: [
+        {
+          name: "title",
+          label: "Tên yêu cầu hợp nhất",
+          initialValue: sources
+            .map((item) => item.current_version.title)
+            .join(" và ")
+            .slice(0, 300),
+          required: true,
+          autoFocus: true,
+        },
+        {
+          name: "content",
+          label: "Nội dung hợp nhất",
+          initialValue: sources
+            .map((item) => docText(item.current_version.content_doc))
+            .join("\n\n"),
+          required: true,
+          multiline: true,
+        },
+        {
+          name: "acceptance",
+          label: "Tiêu chí chấp nhận mỗi dòng một điều kiện",
+          initialValue: sources
+            .flatMap((item) => item.current_version.acceptance_criteria || [])
+            .map((item) => docText(item.content_doc))
+            .join("\n"),
+          required: true,
+          multiline: true,
+        },
+        {
+          name: "type",
+          label: "Loại yêu cầu",
+          initialValue: sources[0].current_version.type,
+          options: [
+            { value: "functional", label: "Chức năng" },
+            { value: "non_functional", label: "Phi chức năng" },
+            { value: "business_rule", label: "Quy tắc nghiệp vụ" },
+            { value: "api", label: "API" },
+            { value: "ui", label: "Giao diện" },
+            { value: "data", label: "Dữ liệu" },
+            { value: "permission", label: "Phân quyền" },
+            { value: "integration", label: "Tích hợp" },
+            { value: "constraint", label: "Ràng buộc" },
+          ],
+        },
+        {
+          name: "reason",
+          label: "Lý do gộp",
+          initialValue: "Hợp nhất các yêu cầu trùng hoặc cùng một trách nhiệm nghiệp vụ",
+          required: true,
+          multiline: true,
+        },
+      ],
+    });
+    if (!answer) return;
+    try {
+      const result = await testingApi.mergeRequirements(project._id, {
+        source_requirement_ids: sources.map((item) => item._id),
+        expected_source_version_ids: Object.fromEntries(
+          sources.map((item) => [item._id, item.current_version_id]),
+        ),
+        idempotency_key: crypto.randomUUID(),
+        reason: answer.reason,
+        draft: {
+          title: answer.title,
+          type: answer.type,
+          priority: sources[0].current_version.priority,
+          risk: sources[0].current_version.risk,
+          content_doc: textDoc(answer.content),
+          acceptance_criteria: acceptanceCriteria(answer.acceptance),
+          business_rules: [
+            ...new Set(sources.flatMap((item) => item.current_version.business_rules || [])),
+          ],
+          actors: [...new Set(sources.flatMap((item) => item.current_version.actors || []))],
+          dependencies: [
+            ...new Set(sources.flatMap((item) => item.current_version.dependencies || [])),
+          ],
+          source_refs: [],
+          tags: [
+            ...new Set(sources.flatMap((item) => item.tags || item.current_version.tags || [])),
+          ],
+          owner_id: sources[0].owner_id || sources[0].current_version.owner_id || null,
+        },
+      });
+      setSelectedIds([]);
+      const merged = result.requirements?.[0];
+      window.location.assign(
+        merged ? `/du-an/${project._id}/yeu-cau/${merged._id}` : `/du-an/${project._id}/yeu-cau`,
+      );
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
+  };
+  const scanDuplicates = async () => {
+    if (selectedIds.length === 1) {
+      setError("Chọn ít nhất hai yêu cầu hoặc bỏ chọn để kiểm tra toàn bộ dự án");
+      return;
+    }
+    try {
+      setDuplicateScan(
+        await testingApi.findDuplicateRequirements(project._id, {
+          requirement_ids: selectedIds,
+          threshold: 0.72,
+          limit: 100,
+        }),
+      );
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
   };
   return (
     <QaPage
@@ -503,6 +820,11 @@ export default function RequirementsPage({ project, section }) {
                 {current.status === "BASELINED" && can("requirement.version.create") && (
                   <button className="secondary-button" type="button" onClick={createVersion}>
                     Tạo phiên bản mới
+                  </button>
+                )}
+                {current.status === "BASELINED" && can("requirement.split") && (
+                  <button className="secondary-button" type="button" onClick={splitBaseline}>
+                    Tách yêu cầu
                   </button>
                 )}
                 {current.status !== "OBSOLETE" && can("requirement.archive") && (
@@ -853,7 +1175,7 @@ export default function RequirementsPage({ project, section }) {
                         from_version_id: compareFrom,
                         to_version_id: compareTo,
                       });
-                      window.location.assign(`/qa/projects/${project._id}/changes`);
+                      window.location.assign(`/du-an/${project._id}/thay-doi`);
                     } catch (reason) {
                       setError(messageOf(reason));
                     }
@@ -879,6 +1201,12 @@ export default function RequirementsPage({ project, section }) {
             projectId={project._id}
             artifactType="requirement_version"
             artifactId={current._id}
+          />
+          <CollaborationPanel
+            project={project}
+            artifactType="requirement"
+            artifactId={selected._id}
+            onResolved={load}
           />
         </>
       ) : (
@@ -931,6 +1259,7 @@ export default function RequirementsPage({ project, section }) {
                             ids: selectedIds,
                             add_tags: splitTags(answer.add),
                             remove_tags: splitTags(answer.remove),
+                            idempotency_key: crypto.randomUUID(),
                           });
                           setSelectedIds([]);
                           await load();
@@ -940,6 +1269,21 @@ export default function RequirementsPage({ project, section }) {
                       }}
                     >
                       Cập nhật nhãn
+                    </button>
+                  )}
+                  {can("requirement.duplicate_check") && (
+                    <button className="secondary-button" type="button" onClick={scanDuplicates}>
+                      {selectedIds.length ? "Kiểm tra các mục đã chọn" : "Kiểm tra trùng lặp"}
+                    </button>
+                  )}
+                  {can("requirement.merge") && (
+                    <button
+                      className="secondary-button"
+                      disabled={selectedIds.length < 2}
+                      type="button"
+                      onClick={mergeBaselines}
+                    >
+                      Gộp yêu cầu
                     </button>
                   )}
                   {can("requirement.archive") && (
@@ -969,6 +1313,7 @@ export default function RequirementsPage({ project, section }) {
                             artifact_type: "requirement",
                             ids: selectedIds,
                             reason: answer.reason,
+                            idempotency_key: crypto.randomUUID(),
                           });
                           setSelectedIds([]);
                           await load();
@@ -997,6 +1342,7 @@ export default function RequirementsPage({ project, section }) {
                   <option value="DRAFT">Bản nháp</option>
                   <option value="IN_REVIEW">Đang rà soát</option>
                   <option value="BASELINED">Đã phê duyệt</option>
+                  <option value="SUPERSEDED">Đã được thay thế</option>
                   <option value="OBSOLETE">Không còn hiệu lực</option>
                 </select>
                 <select
@@ -1049,7 +1395,7 @@ export default function RequirementsPage({ project, section }) {
               </div>
               <DataTable
                 onSelect={(item) =>
-                  window.location.assign(`/qa/projects/${project._id}/requirements/${item._id}`)
+                  window.location.assign(`/du-an/${project._id}/yeu-cau/${item._id}`)
                 }
                 items={items}
                 selectedIds={selectedIds}
@@ -1077,6 +1423,39 @@ export default function RequirementsPage({ project, section }) {
                 ]}
               />
               <Pagination value={pageInfo} onChange={setPage} />
+            </Panel>
+          )}
+          {duplicateScan && (
+            <Panel
+              title="Ứng viên yêu cầu trùng lặp"
+              actions={
+                <span className="text-[12px] text-ink-muted">
+                  {duplicateScan.candidate_count} cặp từ thuật toán {duplicateScan.algorithm?.name}
+                </span>
+              }
+            >
+              <DataTable
+                items={(duplicateScan.candidates || []).map((item, index) => ({
+                  ...item,
+                  _id: `${item.left_requirement_id}-${item.right_requirement_id}-${index}`,
+                }))}
+                empty="Không phát hiện cặp yêu cầu vượt ngưỡng trùng lặp"
+                columns={[
+                  { key: "left_requirement_id", label: "Yêu cầu thứ nhất" },
+                  { key: "right_requirement_id", label: "Yêu cầu thứ hai" },
+                  {
+                    key: "match_type",
+                    label: "Loại khớp",
+                    render: (item) => valueLabel(item.match_type),
+                  },
+                  {
+                    key: "score",
+                    label: "Điểm",
+                    render: (item) => `${Math.round(item.score * 100)}%`,
+                  },
+                  { key: "reasons", label: "Cơ sở", render: (item) => item.reasons.join(" · ") },
+                ]}
+              />
             </Panel>
           )}
           {can("requirement_document.read") && (
@@ -1529,6 +1908,9 @@ export default function RequirementsPage({ project, section }) {
                             onClick={mergeCandidates}
                           >
                             Gộp các mục đã chọn
+                          </button>
+                          <button className="danger-button" type="button" onClick={rejectCandidate}>
+                            Từ chối mục đã chọn
                           </button>
                         </div>
                       )}

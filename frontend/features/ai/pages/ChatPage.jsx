@@ -231,6 +231,7 @@ export default function ChatPage() {
                       </form>
                     ) : (
                       <button
+                        type="button"
                         onClick={() => chat.openSession(id)}
                         className="min-w-0 flex-1 truncate px-3 py-3 text-left text-[13px] font-medium text-ink"
                       >
@@ -238,6 +239,7 @@ export default function ChatPage() {
                       </button>
                     )}
                     <button
+                      type="button"
                       aria-label="Đổi tên cuộc trò chuyện"
                       onClick={() => {
                         setRenamingId(id);
@@ -248,6 +250,7 @@ export default function ChatPage() {
                       <Pencil size={14} />
                     </button>
                     <button
+                      type="button"
                       aria-label={session.is_pinned ? "Bỏ ghim" : "Ghim cuộc trò chuyện"}
                       onClick={() => chat.setSessionState(id, { is_pinned: !session.is_pinned })}
                       className={`p-2 focus:opacity-100 ${session.is_pinned ? "text-brand" : "text-ink-muted opacity-0 group-hover:opacity-100"}`}
@@ -255,6 +258,7 @@ export default function ChatPage() {
                       <Pin size={14} />
                     </button>
                     <button
+                      type="button"
                       aria-label={session.is_archived ? "Khôi phục" : "Lưu trữ cuộc trò chuyện"}
                       onClick={() =>
                         chat.setSessionState(id, { is_archived: !session.is_archived })
@@ -264,6 +268,7 @@ export default function ChatPage() {
                       <Archive size={14} />
                     </button>
                     <button
+                      type="button"
                       aria-label="Xóa cuộc trò chuyện"
                       onClick={() => chat.removeSession(id)}
                       className="mr-2 p-2 text-ink-muted opacity-0 group-hover:opacity-100 focus:opacity-100"
@@ -276,6 +281,7 @@ export default function ChatPage() {
           </ul>
           {(showArchived || chat.sessions.some((session) => session.is_archived)) && (
             <button
+              type="button"
               className="mt-3 w-full rounded-control px-3 py-2 text-left text-[12px] font-medium text-ink-muted hover:bg-surface-quiet"
               onClick={() => setShowArchived((value) => !value)}
             >

@@ -1,4 +1,5 @@
 import csv
+import hashlib
 import io
 import json
 import re
@@ -7,51 +8,307 @@ from xml.sax.saxutils import escape
 
 from fastapi import APIRouter, Body, Depends, File, Form, HTTPException, Query, UploadFile
 from fastapi.responses import StreamingResponse
+from pymongo import ReturnDocument
 
 from src.api.requirements import extract_xlsx_csv
 from src.api.test_design import create_test_case_draft, text_doc
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import audit, envelope, get_project, get_project_entity, new_id, now
 from src.core.database import database
-from src.domain.schemas import ImportConfirm, ImportCreate, TestCaseDraftCreate
+from src.domain.schemas import (
+    APIArtifactArchive,
+    APIArtifactConfirm,
+    APIArtifactImpact,
+    APIArtifactReview,
+    ImportConfirm,
+    ImportCreate,
+    TestCaseDraftCreate,
+)
 from src.services.linters import duplicate_score
 
 
-router = APIRouter(prefix="/kiem-thu", tags=["QA API Artifacts and Recovery"])
+router = APIRouter(prefix="/kiem-thu", tags=["Kiểm thử API và khôi phục"])
 SECRET_PATTERN = re.compile(r"token|secret|password|authorization|cookie|api[-_]?key", re.I)
 
 
-@router.post("/du-an/{project_id}/nhap-dac-ta", status_code=201)
+def public_api_import(value, include_preview=False):
+    result = {
+        key: item
+        for key, item in value.items()
+        if key not in {"raw_content", "preview"}
+    }
+    result["preview_count"] = len(value.get("preview") or [])
+    if include_preview:
+        result["preview"] = value.get("preview") or []
+    return result
+
+
+@router.get(
+    "/du-an/{project_id}/dac-ta-giao-dien",
+    openapi_extra={"x-function-ids": ["API-01"]},
+)
+async def list_api_artifacts(
+    project_id: str,
+    status: str | None = Query(default=None),
+    user: CurrentUser = Depends(get_current_user),
+):
+    await get_project(project_id, user, "apiartifact.read")
+    query = {"project_id": project_id}
+    if status:
+        query["status"] = status
+    items = await database.value.api_imports.find(query).sort("created_at", -1).to_list(500)
+    return envelope([public_api_import(item) for item in items])
+
+
+@router.get(
+    "/dac-ta-giao-dien/{artifact_id}",
+    openapi_extra={"x-function-ids": ["API-01"]},
+)
+async def get_api_artifact(
+    artifact_id: str, user: CurrentUser = Depends(get_current_user)
+):
+    artifact = await get_project_entity(
+        "api_imports", artifact_id, user, "apiartifact.read"
+    )
+    operations = []
+    if artifact.get("status") == "CONFIRMED":
+        operations = await database.value.api_operations.find(
+            {"project_id": artifact["project_id"], "import_id": artifact_id}
+        ).sort("path", 1).to_list(5000)
+    return envelope(
+        {**public_api_import(artifact, include_preview=True), "operations": operations},
+        revision=artifact.get("revision", 1),
+    )
+
+
+@router.post(
+    "/du-an/{project_id}/dac-ta-giao-dien/nhap",
+    status_code=201,
+    openapi_extra={"x-function-ids": ["API-02", "API-03"]},
+)
 async def import_api_artifact(
     project_id: str,
     payload: ImportCreate,
     user: CurrentUser = Depends(get_current_user),
 ):
-    await get_project(project_id, user, "knowledge.manage")
+    await get_project(project_id, user, "apiartifact.import")
     if payload.format not in {"openapi", "postman"}:
         raise HTTPException(status_code=422, detail={"code": "API_ARTIFACT_REQUIRED"})
-    value = json.loads(payload.content) if isinstance(payload.content, str) else payload.content
+    try:
+        value = json.loads(payload.content) if isinstance(payload.content, str) else payload.content
+    except json.JSONDecodeError as error:
+        raise HTTPException(status_code=422, detail={"code": "API_ARTIFACT_JSON_INVALID"}) from error
+    if not isinstance(value, dict):
+        raise HTTPException(status_code=422, detail={"code": "API_ARTIFACT_OBJECT_REQUIRED"})
     operations = parse_openapi(value) if payload.format == "openapi" else parse_postman(value)
+    if not operations:
+        raise HTTPException(status_code=422, detail={"code": "API_ARTIFACT_HAS_NO_OPERATIONS"})
     import_id = new_id("AIMP")
-    documents = [{"_id": new_id("APIOP"), "project_id": project_id, "import_id": import_id, **item, "created_at": now()} for item in operations]
-    if documents:
-        await database.value.api_operations.insert_many(documents)
-    job = {"_id": import_id, "project_id": project_id, "filename": payload.filename, "format": payload.format, "status": "CONFIRMED", "operation_ids": [item["_id"] for item in documents], "created_by": user.id, "created_at": now()}
+    timestamp = now()
+    serialized = json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    job = {
+        "_id": import_id,
+        "project_id": project_id,
+        "filename": payload.filename,
+        "format": payload.format,
+        "content_hash": hashlib.sha256(serialized.encode("utf-8")).hexdigest(),
+        "preview": operations,
+        "raw_content": sanitize_postman(value) if payload.format == "postman" else None,
+        "selected_indexes": list(range(len(operations))),
+        "status": "PREVIEW_READY",
+        "revision": 1,
+        "created_by": user.id,
+        "created_at": timestamp,
+        "updated_at": timestamp,
+    }
     await database.value.api_imports.insert_one(job)
-    await audit(user.id, "api_artifact_imported", "APIImport", import_id, project_id, {"operation_count": len(documents)})
-    return envelope({**job, "operations": documents})
+    await audit(
+        user.id,
+        "api_artifact_preview_created",
+        "APIImport",
+        import_id,
+        project_id,
+        {"operation_count": len(operations), "format": payload.format},
+    )
+    return envelope(public_api_import(job, include_preview=True), revision=1)
 
 
-@router.get("/du-an/{project_id}/thao-tac-dac-ta")
+@router.patch(
+    "/dac-ta-giao-dien/{artifact_id}/ra-soat",
+    openapi_extra={"x-function-ids": ["API-04"]},
+)
+async def review_api_artifact(
+    artifact_id: str,
+    payload: APIArtifactReview,
+    user: CurrentUser = Depends(get_current_user),
+):
+    artifact = await get_project_entity(
+        "api_imports", artifact_id, user, "apiartifact.review"
+    )
+    if artifact.get("status") not in {"PREVIEW_READY", "REVIEWED"}:
+        raise HTTPException(status_code=409, detail={"code": "API_ARTIFACT_NOT_REVIEWABLE"})
+    preview = artifact.get("preview") or []
+    selected = payload.selected_indexes or list(range(len(preview)))
+    if len(set(selected)) != len(selected) or any(index < 0 or index >= len(preview) for index in selected):
+        raise HTTPException(status_code=422, detail={"code": "INVALID_PREVIEW_INDEX"})
+    updated = await database.value.api_imports.find_one_and_update(
+        {
+            "_id": artifact_id,
+            "project_id": artifact["project_id"],
+            "revision": payload.expected_revision,
+            "status": {"$in": ["PREVIEW_READY", "REVIEWED"]},
+        },
+        {
+            "$set": {
+                "selected_indexes": selected,
+                "review_note": payload.review_note,
+                "reviewed_by": user.id,
+                "reviewed_at": now(),
+                "updated_at": now(),
+                "status": "REVIEWED",
+            },
+            "$inc": {"revision": 1},
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+    if not updated:
+        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+    await audit(user.id, "api_artifact_reviewed", "APIImport", artifact_id, artifact["project_id"], {"selected_count": len(selected)})
+    return envelope(public_api_import(updated, include_preview=True), revision=updated["revision"])
+
+
+@router.post(
+    "/dac-ta-giao-dien/{artifact_id}/xac-nhan",
+    openapi_extra={"x-function-ids": ["API-05"]},
+)
+async def confirm_api_artifact(
+    artifact_id: str,
+    payload: APIArtifactConfirm,
+    user: CurrentUser = Depends(get_current_user),
+):
+    artifact = await get_project_entity(
+        "api_imports", artifact_id, user, "apiartifact.confirm"
+    )
+    if artifact.get("status") == "CONFIRMED":
+        if artifact.get("idempotency_key") != payload.idempotency_key:
+            raise HTTPException(status_code=409, detail={"code": "IDEMPOTENCY_KEY_CONFLICT"})
+        operations = await database.value.api_operations.find(
+            {"project_id": artifact["project_id"], "import_id": artifact_id}
+        ).sort("path", 1).to_list(5000)
+        return envelope(
+            {**public_api_import(artifact), "operations": operations},
+            revision=artifact["revision"],
+        )
+    if artifact.get("status") == "CONFIRMING":
+        if artifact.get("idempotency_key") != payload.idempotency_key:
+            raise HTTPException(status_code=409, detail={"code": "IDEMPOTENCY_KEY_CONFLICT"})
+    elif artifact.get("status") != "REVIEWED":
+        raise HTTPException(status_code=409, detail={"code": "API_ARTIFACT_REVIEW_REQUIRED"})
+    if artifact.get("revision") != payload.expected_revision:
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "REVISION_CONFLICT", "current_revision": artifact.get("revision")},
+        )
+    if artifact.get("status") == "REVIEWED":
+        claimed = await database.value.api_imports.find_one_and_update(
+            {
+                "_id": artifact_id,
+                "project_id": artifact["project_id"],
+                "revision": payload.expected_revision,
+                "status": "REVIEWED",
+            },
+            {
+                "$set": {
+                    "status": "CONFIRMING",
+                    "idempotency_key": payload.idempotency_key,
+                    "updated_at": now(),
+                }
+            },
+            return_document=ReturnDocument.AFTER,
+        )
+        if not claimed:
+            raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+        artifact = claimed
+    selected = artifact.get("selected_indexes") or []
+    preview = artifact.get("preview") or []
+    timestamp = now()
+    operations = [
+        {
+            "_id": f"APIOP-{hashlib.sha256(f'{artifact_id}:{index}'.encode()).hexdigest()[:32]}",
+            "project_id": artifact["project_id"],
+            "import_id": artifact_id,
+            "source_index": index,
+            **preview[index],
+            "created_at": timestamp,
+        }
+        for index in selected
+    ]
+    for operation in operations:
+        await database.value.api_operations.update_one(
+            {"_id": operation["_id"]}, {"$setOnInsert": operation}, upsert=True
+        )
+    updated = await database.value.api_imports.find_one_and_update(
+        {
+            "_id": artifact_id,
+            "project_id": artifact["project_id"],
+            "revision": payload.expected_revision,
+            "status": "CONFIRMING",
+            "idempotency_key": payload.idempotency_key,
+        },
+        {
+            "$set": {
+                "status": "CONFIRMED",
+                "operation_ids": [operation["_id"] for operation in operations],
+                "idempotency_key": payload.idempotency_key,
+                "confirmed_by": user.id,
+                "confirmed_at": timestamp,
+                "updated_at": timestamp,
+            },
+            "$inc": {"revision": 1},
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+    if not updated:
+        current = await database.value.api_imports.find_one(
+            {"_id": artifact_id, "project_id": artifact["project_id"]}
+        )
+        if not current or current.get("status") != "CONFIRMED":
+            raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+        updated = current
+    persisted = await database.value.api_operations.find(
+        {"project_id": artifact["project_id"], "import_id": artifact_id}
+    ).sort("path", 1).to_list(5000)
+    await audit(
+        user.id,
+        "api_artifact_confirmed",
+        "APIImport",
+        artifact_id,
+        artifact["project_id"],
+        {"operation_count": len(persisted)},
+    )
+    return envelope(
+        {**public_api_import(updated), "operations": persisted},
+        revision=updated["revision"],
+    )
+
+
+@router.get(
+    "/du-an/{project_id}/dac-ta-giao-dien/thao-tac",
+    openapi_extra={"x-function-ids": ["API-01"]},
+)
 async def list_api_operations(project_id: str, user: CurrentUser = Depends(get_current_user)):
-    await get_project(project_id, user, "knowledge.read")
+    await get_project(project_id, user, "apiartifact.read")
     return envelope(await database.value.api_operations.find({"project_id": project_id}).sort("path", 1).to_list(5000))
 
 
-@router.post("/thao-tac-dac-ta/{operation_id}/sinh-kiem-thu", status_code=201)
+@router.post(
+    "/dac-ta-giao-dien/thao-tac/{operation_id}/sinh-ca-kiem-thu",
+    status_code=201,
+    openapi_extra={"x-function-ids": ["API-06"]},
+)
 async def generate_api_tests(operation_id: str, user: CurrentUser = Depends(get_current_user)):
     operation = await get_project_entity(
-        "api_operations", operation_id, user, "ai.generate_testcase"
+        "api_operations", operation_id, user, "ai.generate_api_testcase"
     )
     cases = api_case_blueprints(operation)
     created = []
@@ -78,6 +335,218 @@ async def generate_api_tests(operation_id: str, user: CurrentUser = Depends(get_
         created.append(response["data"])
     await audit(user.id, "api_tests_generated", "APIOperation", operation_id, operation["project_id"], {"count": len(created)})
     return envelope({"items": created, "model": model_metadata("api-test-generator-v1"), "evidence": operation})
+
+
+def operation_identity(operation):
+    return f"{operation.get('method', '').upper()} {operation.get('path', '')}"
+
+
+def operation_fingerprint(operation):
+    comparable = {
+        key: value
+        for key, value in operation.items()
+        if key not in {"_id", "project_id", "import_id", "created_at"}
+    }
+    return hashlib.sha256(
+        json.dumps(comparable, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode(
+            "utf-8"
+        )
+    ).hexdigest()
+
+
+async def build_api_artifact_diff(project_id, from_artifact_id, to_artifact_id):
+    artifacts = await database.value.api_imports.find(
+        {
+            "_id": {"$in": [from_artifact_id, to_artifact_id]},
+            "project_id": project_id,
+            "status": "CONFIRMED",
+        }
+    ).to_list(2)
+    if len(artifacts) != 2:
+        raise HTTPException(status_code=422, detail={"code": "API_ARTIFACT_VERSION_INVALID"})
+    operations = await database.value.api_operations.find(
+        {
+            "project_id": project_id,
+            "import_id": {"$in": [from_artifact_id, to_artifact_id]},
+        }
+    ).to_list(10000)
+    by_import = {from_artifact_id: {}, to_artifact_id: {}}
+    for operation in operations:
+        by_import[operation["import_id"]][operation_identity(operation)] = operation
+    before = by_import[from_artifact_id]
+    after = by_import[to_artifact_id]
+    before_keys = set(before)
+    after_keys = set(after)
+    return {
+        "from_artifact_id": from_artifact_id,
+        "to_artifact_id": to_artifact_id,
+        "added": [after[identity] for identity in sorted(after_keys - before_keys)],
+        "removed": [before[identity] for identity in sorted(before_keys - after_keys)],
+        "changed": [
+            {
+                "identity": identity,
+                "before": before[identity],
+                "after": after[identity],
+            }
+            for identity in sorted(before_keys & after_keys)
+            if operation_fingerprint(before[identity]) != operation_fingerprint(after[identity])
+        ],
+    }
+
+
+@router.get(
+    "/du-an/{project_id}/dac-ta-giao-dien/khac-biet",
+    openapi_extra={"x-function-ids": ["API-07"]},
+)
+async def diff_api_artifacts(
+    project_id: str,
+    from_artifact_id: str = Query(),
+    to_artifact_id: str = Query(),
+    user: CurrentUser = Depends(get_current_user),
+):
+    await get_project(project_id, user, "apiartifact.diff.read")
+    return envelope(
+        await build_api_artifact_diff(project_id, from_artifact_id, to_artifact_id)
+    )
+
+
+@router.post(
+    "/du-an/{project_id}/dac-ta-giao-dien/phan-tich-anh-huong",
+    status_code=201,
+    openapi_extra={"x-function-ids": ["API-08"]},
+)
+async def analyze_api_artifact_impact(
+    project_id: str,
+    payload: APIArtifactImpact,
+    user: CurrentUser = Depends(get_current_user),
+):
+    await get_project(project_id, user, "impact.execute")
+    existing = await database.value.impact_analyses.find_one(
+        {
+            "project_id": project_id,
+            "source_type": "api_artifact_diff",
+            "from_artifact_id": payload.from_artifact_id,
+            "to_artifact_id": payload.to_artifact_id,
+        }
+    )
+    if existing:
+        return envelope(existing, revision=existing.get("revision", 1))
+    difference = await build_api_artifact_diff(
+        project_id, payload.from_artifact_id, payload.to_artifact_id
+    )
+    affected_operations = {
+        item["_id"] for item in difference["removed"]
+    } | {item["before"]["_id"] for item in difference["changed"]}
+    current_cases = await database.value.test_cases.find(
+        {"project_id": project_id, "status": {"$in": ["ACTIVE", "NEEDS_UPDATE"]}}
+    ).to_list(20000)
+    versions = await database.value.test_case_versions.find(
+        {
+            "project_id": project_id,
+            "_id": {
+                "$in": [
+                    item["current_version_id"]
+                    for item in current_cases
+                    if item.get("current_version_id")
+                ]
+            },
+        }
+    ).to_list(20000)
+    affected = []
+    for version in versions:
+        evidence_ids = {
+            evidence.get("artifact_version_id")
+            for evidence in version.get("source_evidence", [])
+            if evidence.get("artifact_type") == "api_operation"
+        }
+        matched = sorted(affected_operations & evidence_ids)
+        if not matched:
+            continue
+        affected.append(
+            {
+                "test_case_id": version.get("test_case_id"),
+                "test_case_version_id": version["_id"],
+                "classification": "NEEDS_UPDATE",
+                "confidence": 1,
+                "reasons": ["Đặc tả API nguồn đã thay đổi hoặc bị loại bỏ"],
+                "evidence": [{"api_operation_ids": matched}],
+            }
+        )
+    new_test_requirements = [
+        {
+            "classification": "NEW_TEST_REQUIRED",
+            "reason": "Thao tác API mới chưa có ca kiểm thử được xác nhận",
+            "evidence": {"api_operation_id": operation["_id"]},
+        }
+        for operation in difference["added"]
+    ]
+    analysis = {
+        "_id": new_id("IMP"),
+        "project_id": project_id,
+        "source_type": "api_artifact_diff",
+        "from_artifact_id": payload.from_artifact_id,
+        "to_artifact_id": payload.to_artifact_id,
+        "difference": difference,
+        "affected_test_cases": affected,
+        "new_test_requirements": new_test_requirements,
+        "status": "REVIEW_READY",
+        "revision": 1,
+        "mode": "DETERMINISTIC",
+        "created_by": user.id,
+        "created_at": now(),
+    }
+    await database.value.impact_analyses.insert_one(analysis)
+    await audit(
+        user.id,
+        "api_artifact_impact_created",
+        "ImpactAnalysis",
+        analysis["_id"],
+        project_id,
+        {
+            "affected_count": len(affected),
+            "new_test_requirement_count": len(new_test_requirements),
+        },
+    )
+    return envelope(analysis, revision=1)
+
+
+@router.post(
+    "/dac-ta-giao-dien/{artifact_id}/luu-tru",
+    openapi_extra={"x-function-ids": ["API-09"]},
+)
+async def archive_api_artifact(
+    artifact_id: str,
+    payload: APIArtifactArchive,
+    user: CurrentUser = Depends(get_current_user),
+):
+    artifact = await get_project_entity(
+        "api_imports", artifact_id, user, "apiartifact.archive"
+    )
+    if artifact.get("status") == "ARCHIVED":
+        return envelope(public_api_import(artifact), revision=artifact.get("revision", 1))
+    updated = await database.value.api_imports.find_one_and_update(
+        {
+            "_id": artifact_id,
+            "project_id": artifact["project_id"],
+            "revision": payload.expected_revision,
+            "status": {"$ne": "ARCHIVED"},
+        },
+        {
+            "$set": {
+                "status": "ARCHIVED",
+                "archive_reason": payload.reason,
+                "archived_by": user.id,
+                "archived_at": now(),
+                "updated_at": now(),
+            },
+            "$inc": {"revision": 1},
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+    if not updated:
+        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+    await audit(user.id, "api_artifact_archived", "APIImport", artifact_id, artifact["project_id"], {"reason": payload.reason})
+    return envelope(public_api_import(updated), revision=updated["revision"])
 
 
 @router.post("/du-an/{project_id}/khoi-phuc-truy-vet", status_code=201)
@@ -265,6 +734,36 @@ def sanitize(value):
         return {key: sanitize(item) for key, item in value.items() if not SECRET_PATTERN.search(str(key))}
     if isinstance(value, list):
         return [sanitize(item) for item in value]
+    return value
+
+
+def sanitize_postman(value):
+    if isinstance(value, list):
+        return [sanitize_postman(item) for item in value]
+    if isinstance(value, dict):
+        marker = str(value.get("key") or value.get("name") or "")
+        sensitive_entry = bool(SECRET_PATTERN.search(marker))
+        result = {}
+        for key, item in value.items():
+            if sensitive_entry and key in {"value", "current", "initial"}:
+                suffix = re.sub(r"[^A-Za-z0-9]+", "_", marker).upper() or "VALUE"
+                result[key] = f"{{{{VERIQ_SECRET_{suffix}}}}}"
+            elif SECRET_PATTERN.search(str(key)) and key not in {"key", "name"}:
+                result[key] = "{{VERIQ_SECRET_VALUE}}"
+            else:
+                result[key] = sanitize_postman(item)
+        return result
+    if isinstance(value, str):
+        sanitized = re.sub(
+            r"(?i)([?&](?:token|secret|password|api[-_]?key)=)[^&#\s]+",
+            r"\1{{VERIQ_SECRET_VALUE}}",
+            value,
+        )
+        return re.sub(
+            r"(?i)(authorization|token|secret|password|api[-_]?key)\s*[:=]\s*['\"]?[^'\"\s;,]+",
+            r"\1={{VERIQ_SECRET_VALUE}}",
+            sanitized,
+        )
     return value
 
 

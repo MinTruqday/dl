@@ -187,6 +187,44 @@ export default function ChangesPage({ project }) {
       setError(messageOf(reason));
     }
   };
+  const rerunImpact = async () => {
+    const answer = await ask({
+      title: "Chạy lại phân tích ảnh hưởng",
+      description: `Snapshot ${impact.snapshot_number || 1} vẫn được giữ nguyên để đối chiếu`,
+      confirmLabel: "Tạo snapshot mới",
+      fields: [
+        {
+          name: "reason",
+          label: "Lý do chạy lại",
+          initialValue: "Dữ liệu truy vết hoặc chỉ mục tri thức đã thay đổi",
+          required: true,
+          multiline: true,
+          autoFocus: true,
+        },
+        {
+          name: "knowledge_index_version",
+          label: "Phiên bản chỉ mục tri thức nếu có",
+          initialValue: impact.knowledge_index_version || "",
+        },
+      ],
+    });
+    if (!answer) return;
+    try {
+      const result = await testingApi.rerunImpact(impact._id, {
+        expected_revision: impact.revision,
+        reason: answer.reason,
+        knowledge_index_version: answer.knowledge_index_version || null,
+        algorithm_version: "impact-pipeline-v1",
+      });
+      setImpact(result);
+      setOverrides({});
+      setRegression(null);
+      setSelected(await testingApi.getChangeSet(selected._id));
+      await load();
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
+  };
   return (
     <QaPage
       title="Ảnh hưởng thay đổi và bảo trì"
@@ -408,13 +446,22 @@ export default function ChangesPage({ project }) {
       )}
       {impact && (
         <Panel
-          title="Phân tích ảnh hưởng"
+          title={`Phân tích ảnh hưởng snapshot ${impact.snapshot_number || 1}`}
           actions={
-            impact.status === "REVIEW_READY" && can("impact.review") ? (
-              <button className="apple-button" type="button" onClick={reviewImpact}>
-                Duyệt phân tích
-              </button>
-            ) : null
+            <div className="flex flex-wrap gap-2">
+              {impact.status === "REVIEW_READY" && can("impact.review") && (
+                <button className="apple-button" type="button" onClick={reviewImpact}>
+                  Duyệt phân tích
+                </button>
+              )}
+              {["REVIEW_READY", "REVIEWED"].includes(impact.status) &&
+                can("impact.execute") &&
+                can("ai.run_impact") && (
+                  <button className="secondary-button" type="button" onClick={rerunImpact}>
+                    Chạy lại thành snapshot mới
+                  </button>
+                )}
+            </div>
           }
         >
           <div className="p-5 pb-0">
@@ -489,6 +536,7 @@ export default function ChangesPage({ project }) {
                   await testingApi.bulkApproveProposals(project._id, {
                     proposal_ids: selectedProposalIds,
                     review_note: answer.note,
+                    idempotency_key: crypto.randomUUID(),
                   });
                   setSelectedProposalIds([]);
                   await load();

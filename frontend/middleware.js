@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 export function middleware(request) {
   const token = request.cookies.get("token")?.value;
   const { pathname } = request.nextUrl;
-  if (!token && (pathname.startsWith("/qa") || pathname.startsWith("/cai-dat")))
+  if (
+    !token &&
+    (pathname.startsWith("/du-an") ||
+      pathname.startsWith("/van-hanh") ||
+      pathname.startsWith("/cai-dat"))
+  )
     return NextResponse.redirect(new URL("/dang-nhap", request.url));
   return NextResponse.next();
 }

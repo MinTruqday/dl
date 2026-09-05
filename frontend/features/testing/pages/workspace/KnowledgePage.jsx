@@ -13,9 +13,9 @@ import {
 import { testingApi } from "../../services/testing.service";
 import { messageOf } from "../../lib/testing";
 
-export default function KnowledgePage({ project }) {
+export default function KnowledgePage({ project, initialQuery = "", useGlobalSearch = false }) {
   const { ask, dialog } = useQaActionDialog();
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery);
   const [result, setResult] = useState(null);
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState(null);
@@ -33,6 +33,13 @@ export default function KnowledgePage({ project }) {
   useEffect(() => {
     loadSources();
   }, [loadSources]);
+  useEffect(() => {
+    if (!useGlobalSearch || !initialQuery) return;
+    testingApi
+      .searchProject(project._id, initialQuery)
+      .then(setResult)
+      .catch((reason) => setError(messageOf(reason)));
+  }, [initialQuery, project._id, useGlobalSearch]);
   return (
     <QaPage
       title="Tìm kiếm trong tri thức dự án"
@@ -97,11 +104,13 @@ export default function KnowledgePage({ project }) {
             event.preventDefault();
             try {
               setResult(
-                await testingApi.searchKnowledge(project._id, {
-                  query,
-                  artifact_types: [],
-                  limit: 50,
-                }),
+                useGlobalSearch
+                  ? await testingApi.searchProject(project._id, query)
+                  : await testingApi.searchKnowledge(project._id, {
+                      query,
+                      artifact_types: [],
+                      limit: 50,
+                    }),
               );
             } catch (reason) {
               setError(messageOf(reason));

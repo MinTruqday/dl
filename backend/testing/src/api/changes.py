@@ -7,6 +7,7 @@ from src.core.database import database
 from src.core.metrics import PROPOSAL_ACCEPTANCE_RATE
 from src.domain.schemas import (
     ChangeSetReviewInput,
+    ImpactRerunInput,
     ImpactReviewInput,
     ProposalAction,
     ProposalRegenerateInput,
@@ -23,7 +24,7 @@ from src.services.ai_assistance import apply_ai_impact_suggestions, request_impa
 from src.services.project_knowledge import index_artifact
 
 
-router = APIRouter(prefix="/kiem-thu", tags=["QA Change Maintenance"])
+router = APIRouter(prefix="/kiem-thu", tags=["Bảo trì thay đổi kiểm thử"])
 
 
 @router.post("/yeu-cau/{requirement_id}/bo-thay-doi", status_code=201)
@@ -142,6 +143,18 @@ async def review_change_set(
 @router.post("/bo-thay-doi/{change_set_id}/phan-tich-anh-huong", status_code=201)
 @router.post("/du-an/{project_id}/bo-thay-doi/{change_set_id}/phan-tich-anh-huong", status_code=201)
 async def analyze_impact(change_set_id: str, project_id: str | None = None, user: CurrentUser = Depends(get_current_user)):
+    return await create_impact_analysis_snapshot(change_set_id, project_id, user)
+
+
+async def create_impact_analysis_snapshot(
+    change_set_id,
+    project_id,
+    user,
+    model_version="agentic-hybrid-v1",
+    allow_existing=True,
+    supersedes=None,
+    rerun_input=None,
+):
     change_set = await get_project_entity(
         "requirement_change_sets", change_set_id, user, "impact.execute"
     )
@@ -153,8 +166,10 @@ async def analyze_impact(change_set_id: str, project_id: str | None = None, user
             detail={"code": "CHANGE_SET_REVIEW_REQUIRED", "status": change_set.get("status")},
         )
     await get_project(change_set["project_id"], user, "ai.run_impact")
-    existing = await database.value.impact_analyses.find_one({"change_set_id": change_set_id, "model_version": "agentic-hybrid-v1"})
-    if existing:
+    existing = await database.value.impact_analyses.find_one(
+        {"change_set_id": change_set_id, "model_version": model_version}
+    )
+    if existing and allow_existing:
         return envelope(existing)
     criteria = await database.value.acceptance_criteria.find(
         {
@@ -220,7 +235,18 @@ async def analyze_impact(change_set_id: str, project_id: str | None = None, user
         "status": "REVIEW_READY",
         "revision": 1,
         "mode": "AI_ASSISTED" if ai_result.get("status") == "SUCCESS" else "DEGRADED_AI",
-        "model_version": "agentic-hybrid-v1",
+        "model_version": model_version,
+        "algorithm_version": (
+            rerun_input.algorithm_version if rerun_input else "impact-pipeline-v1"
+        ),
+        "knowledge_index_version": (
+            rerun_input.knowledge_index_version if rerun_input else None
+        ),
+        "snapshot_number": int((supersedes or {}).get("snapshot_number", 1)) + 1
+        if supersedes
+        else 1,
+        "supersedes_analysis_id": (supersedes or {}).get("_id"),
+        "rerun_reason": rerun_input.reason if rerun_input else None,
         "pipeline": ["direct_trace", "semantic_candidate", "deterministic_check", "evidence_classification"],
         "ai_result": ai_result,
         "ai_applied_version_ids": ai_applied_version_ids,
@@ -258,6 +284,114 @@ async def get_impact_analysis(analysis_id: str, user: CurrentUser = Depends(get_
     return envelope(
         await get_project_entity("impact_analyses", analysis_id, user, "impact.read")
     )
+
+
+@router.post("/phan-tich-anh-huong/{analysis_id}/chay-lai", status_code=201)
+async def rerun_impact_analysis(
+    analysis_id: str,
+    payload: ImpactRerunInput,
+    user: CurrentUser = Depends(get_current_user),
+):
+    analysis = await get_project_entity(
+        "impact_analyses", analysis_id, user, "impact.execute"
+    )
+    await get_project(analysis["project_id"], user, "ai.run_impact")
+    if analysis.get("status") not in {"REVIEW_READY", "REVIEWED"}:
+        raise HTTPException(status_code=409, detail={"code": "IMPACT_NOT_RERUNNABLE"})
+    previous_status = analysis["status"]
+    claimed = await database.value.impact_analyses.find_one_and_update(
+        {
+            "_id": analysis_id,
+            "project_id": analysis["project_id"],
+            "status": previous_status,
+            "revision": payload.expected_revision,
+        },
+        {
+            "$set": {
+                "status": "RERUNNING",
+                "rerun_requested_by": user.id,
+                "rerun_requested_at": now(),
+                "updated_at": now(),
+            },
+            "$inc": {"revision": 1},
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+    if not claimed:
+        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+    snapshot_number = int(analysis.get("snapshot_number", 1)) + 1
+    try:
+        response = await create_impact_analysis_snapshot(
+            analysis["change_set_id"],
+            analysis["project_id"],
+            user,
+            model_version=f"agentic-hybrid-v1-rerun-{snapshot_number}",
+            allow_existing=False,
+            supersedes=analysis,
+            rerun_input=payload,
+        )
+        replacement = response["data"]
+        superseded = await database.value.impact_analyses.find_one_and_update(
+            {
+                "_id": analysis_id,
+                "project_id": analysis["project_id"],
+                "status": "RERUNNING",
+                "revision": claimed["revision"],
+            },
+            {
+                "$set": {
+                    "status": "SUPERSEDED",
+                    "superseded_by_analysis_id": replacement["_id"],
+                    "superseded_at": now(),
+                    "superseded_by": user.id,
+                    "updated_at": now(),
+                },
+                "$inc": {"revision": 1},
+            },
+            return_document=ReturnDocument.AFTER,
+        )
+        if not superseded:
+            await database.value.impact_analyses.delete_one(
+                {"_id": replacement["_id"], "project_id": analysis["project_id"]}
+            )
+            raise HTTPException(status_code=409, detail={"code": "IMPACT_RERUN_CONFLICT"})
+    except Exception:
+        await database.value.impact_analyses.update_one(
+            {
+                "_id": analysis_id,
+                "project_id": analysis["project_id"],
+                "status": "RERUNNING",
+            },
+            {
+                "$set": {"status": previous_status, "updated_at": now()},
+                "$unset": {"rerun_requested_by": "", "rerun_requested_at": ""},
+                "$inc": {"revision": 1},
+            },
+        )
+        await database.value.requirement_change_sets.update_one(
+            {"_id": analysis["change_set_id"], "project_id": analysis["project_id"]},
+            {
+                "$set": {
+                    "status": "REVIEWED" if previous_status == "REVIEWED" else "ANALYZED",
+                    "updated_at": now(),
+                }
+            },
+        )
+        raise
+    await audit(
+        user.id,
+        "impact_analysis_rerun",
+        "ImpactAnalysis",
+        replacement["_id"],
+        analysis["project_id"],
+        {
+            "supersedes_analysis_id": analysis_id,
+            "reason": payload.reason,
+            "algorithm_version": payload.algorithm_version,
+            "knowledge_index_version": payload.knowledge_index_version,
+        },
+    )
+    return response
 
 
 @router.post("/phan-tich-anh-huong/{analysis_id}/ra-soat")

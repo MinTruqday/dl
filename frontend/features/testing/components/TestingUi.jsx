@@ -154,14 +154,14 @@ export function QaPage({ title, description, actions, children }) {
     <div className="mx-auto w-full max-w-[1480px] space-y-7 p-4 sm:p-6 md:p-9">
       <header className="flex flex-col gap-5 border-b border-border pb-6 md:flex-row md:items-end md:justify-between">
         <div className="min-w-0">
-          <h1 className="text-[30px] font-semibold leading-[1.08] tracking-[-0.045em] md:text-[38px]">
+          <h1 className="break-words text-[30px] font-semibold leading-[1.08] tracking-[-0.045em] md:text-[38px]">
             {title}
           </h1>
           {description && (
             <p className="mt-3 max-w-3xl text-[14px] leading-7 text-ink-muted">{description}</p>
           )}
         </div>
-        {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+        {actions && <div className="flex max-w-full flex-wrap items-center gap-2">{actions}</div>}
       </header>
       {children}
     </div>
@@ -175,9 +175,11 @@ export function Panel({ title, description, actions, children, className = "" })
     >
       {(title || actions) && (
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-surface-raised px-5 py-4">
-          <div>
-            {title && <h2 className="font-semibold">{title}</h2>}
-            {description && <p className="mt-1 text-[12px] text-ink-muted">{description}</p>}
+          <div className="min-w-0 flex-1">
+            {title && <h2 className="break-words font-semibold">{title}</h2>}
+            {description && (
+              <p className="mt-1 break-words text-[12px] leading-5 text-ink-muted">{description}</p>
+            )}
           </div>
           {actions}
         </div>
@@ -249,7 +251,7 @@ export function Metric({ label, value, detail }) {
 
 export function ProjectCrumb({ projectId, projectName }) {
   return (
-    <Link className="text-[13px] font-semibold text-brand" href={`/qa/projects/${projectId}`}>
+    <Link className="text-[13px] font-semibold text-brand" href={`/du-an/${projectId}`}>
       {projectName || "Về dự án"}
     </Link>
   );

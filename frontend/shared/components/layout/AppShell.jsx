@@ -8,7 +8,7 @@ import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import { useAnnouncements } from "@/shared/contexts/AnnouncementContext";
 import { API_URL, authenticatedFetch } from "@/shared/services/api-client";
 import { availableNavigation, navigationGroupsFor, projectIdFromPath } from "./navigation";
-const fullWidthRoutes = [];
+const fullWidthRoutes = ["/du-an", "/van-hanh"];
 function NavigationList({ onNavigate, projectPermissions }) {
   const pathname = usePathname();
   const { user } = useAuth();
@@ -63,9 +63,15 @@ export default function AppShell({ children, requireAuth }) {
   const [searchQuery, setSearchQuery] = useState(routeQuery);
   const [projectPermissions, setProjectPermissions] = useState(null);
   const accountRef = useRef(null);
+  const mobileTriggerRef = useRef(null);
+  const mobileDrawerRef = useRef(null);
   useEffect(() => {
     setSearchQuery(routeQuery);
   }, [routeQuery]);
+  useEffect(() => {
+    setMobileOpen(false);
+    setAccountOpen(false);
+  }, [pathname]);
   useEffect(() => {
     if (!projectId || !user) {
       setProjectPermissions(null);
@@ -110,6 +116,43 @@ export default function AppShell({ children, requireAuth }) {
       document.removeEventListener("keydown", escape);
     };
   }, []);
+  useEffect(() => {
+    if (!mobileOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const drawer = mobileDrawerRef.current;
+    const trigger = mobileTriggerRef.current;
+    const focusableSelector =
+      'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    const frame = requestAnimationFrame(() => {
+      drawer?.querySelector(focusableSelector)?.focus();
+    });
+    const trapFocus = (event) => {
+      if (event.key !== "Tab" || !drawer) return;
+      const focusable = Array.from(drawer.querySelectorAll(focusableSelector));
+      if (!focusable.length) {
+        event.preventDefault();
+        drawer.focus();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", trapFocus);
+    return () => {
+      cancelAnimationFrame(frame);
+      document.removeEventListener("keydown", trapFocus);
+      document.body.style.overflow = previousOverflow;
+      trigger?.focus();
+    };
+  }, [mobileOpen]);
   if (requireAuth && (isLoading || !user)) {
     return (
       <div className="mx-auto flex min-h-[100dvh] w-full max-w-[1280px] gap-8 px-6 py-10">
@@ -146,14 +189,17 @@ export default function AppShell({ children, requireAuth }) {
         <div className="flex h-full items-center gap-3 px-4 md:px-6">
           <button
             type="button"
+            ref={mobileTriggerRef}
             onClick={() => setMobileOpen(true)}
             className="flex h-11 w-11 items-center justify-center rounded-control text-ink-muted hover:bg-surface-quiet lg:hidden"
             aria-label="Mở điều hướng"
+            aria-controls="mobile-navigation"
+            aria-expanded={mobileOpen}
           >
             <Menu size={20} strokeWidth={1.75} />
           </button>
           <Link
-            href={projectId ? `/qa/projects/${projectId}` : "/qa/projects"}
+            href={projectId ? `/du-an/${projectId}` : "/du-an"}
             className="flex items-center gap-2 lg:hidden"
           >
             <Image
@@ -168,7 +214,7 @@ export default function AppShell({ children, requireAuth }) {
           </Link>
           {projectId && (
             <form
-              action={`/qa/projects/${projectId}/knowledge`}
+              action={`/du-an/${projectId}/tim-kiem`}
               className="relative hidden w-full max-w-[520px] md:block"
             >
               <button
@@ -197,7 +243,7 @@ export default function AppShell({ children, requireAuth }) {
               <>
                 {projectId && (
                   <Link
-                    href={`/qa/projects/${projectId}/knowledge`}
+                    href={`/du-an/${projectId}/tim-kiem`}
                     className="flex h-11 w-11 items-center justify-center rounded-control text-ink-muted hover:bg-surface-quiet hover:text-ink md:hidden"
                     aria-label="Tìm kiếm"
                   >
@@ -221,7 +267,9 @@ export default function AppShell({ children, requireAuth }) {
                     type="button"
                     onClick={() => setAccountOpen((value) => !value)}
                     className="flex h-10 items-center gap-2 rounded-control px-1.5 pr-2 text-left hover:bg-surface-quiet"
+                    aria-controls="account-menu"
                     aria-expanded={accountOpen}
+                    aria-haspopup="menu"
                   >
                     <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-brand text-[13px] font-semibold text-white">
                       {user.avatar_url ? (
@@ -242,7 +290,11 @@ export default function AppShell({ children, requireAuth }) {
                     </span>
                   </button>
                   {accountOpen && (
-                    <div className="absolute right-0 top-12 w-60 rounded-panel border border-border bg-surface p-2 shadow-[0_18px_50px_rgba(48,47,42,0.12)]">
+                    <div
+                      id="account-menu"
+                      role="menu"
+                      className="absolute right-0 top-12 w-60 rounded-panel border border-border bg-surface p-2 shadow-[0_18px_50px_rgba(48,47,42,0.12)]"
+                    >
                       <div className="border-b border-border px-3 py-2.5">
                         <p className="truncate text-[14px] font-semibold text-ink">
                           {user.full_name || user.username}
@@ -251,12 +303,15 @@ export default function AppShell({ children, requireAuth }) {
                       </div>
                       <Link
                         href="/cai-dat"
+                        role="menuitem"
+                        onClick={() => setAccountOpen(false)}
                         className="mt-1 block rounded-control px-3 py-2 text-[14px] hover:bg-surface-quiet"
                       >
                         Cài đặt
                       </Link>
                       <button
                         type="button"
+                        role="menuitem"
                         onClick={logoutState}
                         className="block w-full rounded-control px-3 py-2 text-left text-[14px] text-danger hover:bg-danger-soft"
                       >
@@ -319,7 +374,15 @@ export default function AppShell({ children, requireAuth }) {
             onClick={() => setMobileOpen(false)}
             aria-label="Đóng điều hướng"
           />
-          <aside className="relative h-full w-[min(88vw,320px)] overflow-y-auto bg-surface p-4 shadow-[20px_0_60px_rgba(32,32,30,0.16)]">
+          <aside
+            id="mobile-navigation"
+            ref={mobileDrawerRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Điều hướng chính"
+            tabIndex={-1}
+            className="relative h-full w-[min(88vw,320px)] overflow-y-auto bg-surface p-4 shadow-[20px_0_60px_rgba(32,32,30,0.16)] outline-none"
+          >
             <div className="mb-6 flex h-11 items-center justify-between">
               <Link
                 href="/"

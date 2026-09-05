@@ -6,7 +6,7 @@ from src.core.common import envelope, get_project
 from src.core.configuration import settings
 
 
-router = APIRouter(prefix="/kiem-thu", tags=["QA Async Jobs"])
+router = APIRouter(prefix="/kiem-thu", tags=["Tác vụ kiểm thử bất đồng bộ"])
 ALLOWED_EVENTS = {"document.parse.requested", "requirement.extract.requested", "requirement.semantic_diff.requested", "test.generate.requested", "duplicate.scan.requested", "impact.analysis.requested", "knowledge.index.requested"}
 EVENT_PERMISSIONS = {
     "document.parse.requested": ("requirement_document.extract",),

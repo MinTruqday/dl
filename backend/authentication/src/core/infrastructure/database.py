@@ -38,6 +38,13 @@ async def setup_indexes():
         "token_hash", unique=True, partialFilterExpression={"token_hash": {"$type": "string"}}
     )
     await db["password_reset_tokens"].create_index("expires_at", expireAfterSeconds=0)
+    await db["email_verification_tokens"].create_index(
+        "token_hash", unique=True
+    )
+    await db["email_verification_tokens"].create_index(
+        [("user_id", 1), ("used", 1)]
+    )
+    await db["email_verification_tokens"].create_index("expires_at", expireAfterSeconds=0)
     await db["passkey_challenges"].create_index("expires_at", expireAfterSeconds=0)
     await db["audit_logs"].create_index([("actor_email", 1), ("timestamp", -1)])
     logger.info("Authentication database indexes initialized")

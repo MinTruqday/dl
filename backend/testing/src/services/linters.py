@@ -67,6 +67,43 @@ def requirement_findings(version):
     return findings
 
 
+def requirement_duplicate_score(left, right):
+    left_text = _requirement_projection(left)
+    right_text = _requirement_projection(right)
+    if not left_text or not right_text:
+        return 0, []
+    if left_text == right_text:
+        return 1, ["Nội dung Requirement trùng khớp hoàn toàn"]
+    lexical = SequenceMatcher(None, left_text, right_text).ratio()
+    left_terms = set(re.findall(r"[\wÀ-ỹ]+", left_text))
+    right_terms = set(re.findall(r"[\wÀ-ỹ]+", right_text))
+    semantic = len(left_terms & right_terms) / max(1, len(left_terms | right_terms))
+    left_rules = {
+        str(value).strip().lower()
+        for value in left.get("business_rules", [])
+        if str(value).strip()
+    }
+    right_rules = {
+        str(value).strip().lower()
+        for value in right.get("business_rules", [])
+        if str(value).strip()
+    }
+    rule_overlap = (
+        len(left_rules & right_rules) / max(1, len(left_rules | right_rules))
+        if left_rules or right_rules
+        else 0
+    )
+    score = min(1, 0.65 * lexical + 0.25 * semantic + 0.1 * rule_overlap)
+    reasons = []
+    if lexical >= 0.75:
+        reasons.append("Tiêu đề và nội dung gần giống")
+    if semantic >= 0.55:
+        reasons.append("Có nhiều thuật ngữ nghiệp vụ chung")
+    if rule_overlap > 0:
+        reasons.append("Có quy tắc nghiệp vụ trùng nhau")
+    return round(score, 4), reasons
+
+
 def lint_test_case(draft):
     findings = []
     expected = plain_text(draft.get("expected_result_doc", {}))
@@ -135,6 +172,16 @@ def _test_projection(value):
             plain_text(value.get("expected_result_doc", {})),
         ]
     ).lower()
+
+
+def _requirement_projection(value):
+    title = str(value.get("title", ""))
+    content = value.get("plain_text_projection") or plain_text(value.get("content_doc", {}))
+    criteria = " ".join(
+        item.get("plain_text") or plain_text(item.get("content_doc", {}))
+        for item in value.get("acceptance_criteria", [])
+    )
+    return " ".join(f"{title} {content} {criteria}".lower().split())
 
 
 def _finding(rule_id, severity, message):

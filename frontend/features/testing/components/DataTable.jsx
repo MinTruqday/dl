@@ -19,6 +19,12 @@ export default function DataTable({
   const pageIds = items.map(itemId).filter((id) => id !== undefined && id !== null);
   const allSelected =
     selectable && pageIds.length > 0 && pageIds.every((id) => selectedIds.includes(id));
+  const toggleAll = () =>
+    onSelectionChange(
+      allSelected
+        ? selectedIds.filter((id) => !pageIds.includes(id))
+        : Array.from(new Set([...selectedIds, ...pageIds])),
+    );
   const toggle = (id) => {
     if (id === undefined || id === null) return;
     onSelectionChange(
@@ -29,10 +35,20 @@ export default function DataTable({
     column.render ? column.render(item) : String(item[column.key] ?? "");
   const renderMobileValue = (column, item) =>
     column.mobileRender ? column.mobileRender(item) : renderValue(column, item);
+  const openFromKeyboard = (event, item) => {
+    if (!onSelect || event.target !== event.currentTarget) return;
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onSelect(item);
+    }
+  };
   return (
     <>
       <div className="hidden overflow-x-auto md:block">
-        <table className="w-full text-left text-[13px]">
+        <table
+          className="w-full text-left text-[13px]"
+          style={{ minWidth: `${Math.max(640, columns.length * 150 + (selectable ? 48 : 0))}px` }}
+        >
           <thead className="bg-surface-quiet text-[11px] uppercase tracking-wide text-ink-muted">
             <tr>
               {selectable && (
@@ -41,13 +57,7 @@ export default function DataTable({
                     aria-label="Chọn tất cả mục trên trang"
                     checked={allSelected}
                     type="checkbox"
-                    onChange={() =>
-                      onSelectionChange(
-                        allSelected
-                          ? selectedIds.filter((id) => !pageIds.includes(id))
-                          : Array.from(new Set([...selectedIds, ...pageIds])),
-                      )
-                    }
+                    onChange={toggleAll}
                   />
                 </th>
               )}
@@ -64,6 +74,9 @@ export default function DataTable({
                 key={rowKey(item, index)}
                 className={onSelect ? "cursor-pointer hover:bg-surface-quiet" : ""}
                 onClick={() => onSelect?.(item)}
+                onKeyDown={(event) => openFromKeyboard(event, item)}
+                tabIndex={onSelect ? 0 : undefined}
+                aria-label={onSelect ? `Mở ${itemId(item) ?? `dòng ${index + 1}`}` : undefined}
               >
                 {selectable && (
                   <td className="w-12 px-4 py-3 align-top">
@@ -78,7 +91,7 @@ export default function DataTable({
                   </td>
                 )}
                 {columns.map((column) => (
-                  <td className="px-4 py-3 align-top" key={column.key}>
+                  <td className="min-w-0 break-words px-4 py-3 align-top" key={column.key}>
                     {renderValue(column, item)}
                   </td>
                 ))}
@@ -88,14 +101,34 @@ export default function DataTable({
         </table>
       </div>
       <div className="space-y-3 p-4 md:hidden">
+        {selectable && (
+          <label
+            className="flex min-h-11 items-center gap-3 rounded-control border border-border bg-surface-raised px-3 text-[12px] font-semibold"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <input
+              aria-label="Chọn tất cả mục trên trang"
+              checked={allSelected}
+              type="checkbox"
+              onChange={toggleAll}
+            />
+            Chọn tất cả trên trang
+          </label>
+        )}
         {items.map((item, index) => (
           <article
             key={rowKey(item, index)}
-            className={`rounded-xl border border-border bg-surface-raised p-4 ${onSelect ? "cursor-pointer active:border-brand" : ""}`}
+            className={`rounded-xl border bg-surface-raised p-4 ${selectable && selectedIds.includes(itemId(item)) ? "border-brand" : "border-border"} ${onSelect ? "cursor-pointer active:border-brand" : ""}`}
             onClick={() => onSelect?.(item)}
+            onKeyDown={(event) => openFromKeyboard(event, item)}
+            tabIndex={onSelect ? 0 : undefined}
+            aria-label={onSelect ? `Mở ${itemId(item) ?? `dòng ${index + 1}`}` : undefined}
           >
             {selectable && (
-              <label className="mb-3 flex items-center gap-2 text-[12px] font-semibold">
+              <label
+                className="mb-3 flex min-h-11 items-center gap-2 text-[12px] font-semibold"
+                onClick={(event) => event.stopPropagation()}
+              >
                 <input
                   aria-label={`${selectionLabel} ${itemId(item)}`}
                   checked={selectedIds.includes(itemId(item))}

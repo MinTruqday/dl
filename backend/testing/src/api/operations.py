@@ -8,7 +8,7 @@ from src.core.configuration import settings
 from src.core.database import database
 
 
-router = APIRouter(prefix="/kiem-thu", tags=["QA Operations"])
+router = APIRouter(prefix="/kiem-thu", tags=["Vận hành kiểm thử"])
 
 
 async def require_system_admin(user: CurrentUser):

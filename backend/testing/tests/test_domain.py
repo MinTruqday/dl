@@ -1,18 +1,238 @@
 import asyncio
+from datetime import datetime, timezone
 
 import httpx
+import pytest
+from pydantic import ValidationError
 
-from src.api.api_artifacts import api_case_blueprints, create_xlsx, parse_openapi, parse_postman
-from src.api.requirements import atomic_requirement_candidates, extract_xlsx_csv
+from src.api.api_artifacts import (
+    api_case_blueprints,
+    create_xlsx,
+    parse_openapi,
+    parse_postman,
+    sanitize_postman,
+)
+from src.api.execution import frozen_run_scope, frozen_run_scope_hash
+from src.api.requirements import (
+    atomic_requirement_candidates,
+    candidate_fingerprint,
+    extract_xlsx_csv,
+    prepare_requirement_candidates,
+)
 from src.core.common import envelope, failure_metadata
+from src.domain.schemas import (
+    BulkArchiveInput,
+    BulkProposalApproveInput,
+    BulkTagInput,
+    DefectTraceUpdateInput,
+    DeviceMatrixCreate,
+    DeviceMatrixAssignment,
+    ProjectNotificationPreferencePatch,
+    ProjectNotificationRulePatch,
+    PerformancePlanDraftInput,
+    SecurityTestSuggestionInput,
+    WebhookSubscriptionCreate,
+    TestExecutionPatch as ExecutionPatchSchema,
+    TestStepResultInput as StepResultSchema,
+)
 from src.services import project_knowledge
 from src.services.change_analysis import classify_test_impact, semantic_changes
-from src.services.linters import duplicate_score, lint_test_case, requirement_findings
+from src.services.linters import (
+    duplicate_score,
+    lint_test_case,
+    requirement_duplicate_score,
+    requirement_findings,
+)
+from src.api.design_suggestions import performance_scenarios, security_candidates
+from src.api.automation_scripts import script_template, validate_source
 from benchmark.run import evaluate_all
 
 
 def doc(text):
     return {"type": "doc", "content": [{"type": "paragraph", "content": [{"type": "text", "text": text}]}]}
+
+
+def test_not_applicable_result_requires_reason_at_case_and_step_level():
+    with pytest.raises(ValidationError):
+        ExecutionPatchSchema(
+            status="NOT_APPLICABLE",
+            note="",
+            idempotency_key="not-applicable-case",
+        )
+    with pytest.raises(ValidationError):
+        StepResultSchema(step_id="step-1", status="NOT_APPLICABLE", note="")
+    result = ExecutionPatchSchema(
+        status="NOT_APPLICABLE",
+        note="Không thuộc cấu hình của bản dựng này",
+        step_results=[
+            StepResultSchema(
+                step_id="step-1",
+                status="NOT_APPLICABLE",
+                note="Bước chỉ dành cho thiết bị di động",
+            )
+        ],
+        idempotency_key="not-applicable-valid",
+    )
+    assert result.status == "NOT_APPLICABLE"
+
+
+def test_defect_trace_update_requires_an_explicit_human_change():
+    with pytest.raises(ValidationError):
+        DefectTraceUpdateInput(expected_revision=1, reason="Đã kiểm tra")
+    payload = DefectTraceUpdateInput(
+        expected_revision=1,
+        reason="Đã kiểm tra bằng chứng",
+        linked_test_case_version_id=None,
+    )
+    assert "linked_test_case_version_id" in payload.model_fields_set
+
+
+def test_bulk_mutations_support_preview_and_replay_metadata():
+    tag = BulkTagInput(
+        artifact_type="test_case",
+        ids=["TC-1"],
+        add_tags=["smoke"],
+        preview=True,
+        idempotency_key="bulk-tag-preview",
+    )
+    assert tag.preview is True
+    archive = BulkArchiveInput(
+        artifact_type="test_case",
+        ids=["TC-1"],
+        reason="Đã được thay thế",
+        preview=True,
+        idempotency_key="bulk-archive-preview",
+    )
+    assert archive.idempotency_key == "bulk-archive-preview"
+    approval = BulkProposalApproveInput(
+        proposal_ids=["MP-1"],
+        review_note="Đã đối chiếu mục tiêu và phiên bản nền",
+        preview=True,
+        idempotency_key="bulk-approval-preview",
+    )
+    assert approval.preview is True
+
+
+def test_device_matrix_requires_unique_profiles_and_valid_assignment_target():
+    with pytest.raises(ValidationError):
+        DeviceMatrixCreate(
+            name="Thiết bị trình duyệt",
+            profiles=[
+                {
+                    "key": "chrome-desktop",
+                    "name": "Chrome máy tính",
+                    "device_type": "desktop",
+                    "operating_system": "Linux",
+                },
+                {
+                    "key": "chrome-desktop",
+                    "name": "Chrome máy tính khác",
+                    "device_type": "desktop",
+                    "operating_system": "Windows",
+                },
+            ],
+        )
+    assignment = DeviceMatrixAssignment(
+        target_type="test_run",
+        target_id="TRUN-1",
+        expected_target_revision=1,
+        profile_keys=["chrome-desktop"],
+    )
+    assert assignment.target_type == "test_run"
+
+
+def test_project_notification_inputs_validate_channels_and_quiet_hours():
+    rules = ProjectNotificationRulePatch(
+        expected_revision=0,
+        enabled_events=["DEFECT_CREATED"],
+        channels=["in_app", "email"],
+        target_roles=["QA_LEAD", "TESTER"],
+        escalation_minutes=30,
+    )
+    assert rules.escalation_minutes == 30
+    preferences = ProjectNotificationPreferencePatch(
+        expected_revision=0,
+        digest_frequency="daily",
+        channels=["in_app"],
+        quiet_hours_start="22:00",
+        quiet_hours_end="07:00",
+    )
+    assert preferences.digest_frequency == "daily"
+    with pytest.raises(ValidationError):
+        ProjectNotificationPreferencePatch(
+            expected_revision=0,
+            quiet_hours_start="25:00",
+        )
+
+
+def test_specialized_design_drafts_never_claim_execution_or_approval():
+    security_payload = SecurityTestSuggestionInput(
+        categories=["authorization", "session"],
+        idempotency_key="security-design-1",
+    )
+    candidates = security_candidates(security_payload.categories, [])
+    assert [item["status"] for item in candidates] == ["SUGGESTED", "SUGGESTED"]
+    assert all(item["origin"] == "ai_assisted_draft" for item in candidates)
+    performance_payload = PerformancePlanDraftInput(
+        name="Tải đăng nhập",
+        workload_types=["baseline", "spike", "soak"],
+        target_virtual_users=100,
+        duration_minutes=30,
+        idempotency_key="performance-design-1",
+    )
+    scenarios = performance_scenarios(performance_payload)
+    assert scenarios[0]["virtual_users"] == 25
+    assert scenarios[1]["virtual_users"] == 200
+    assert scenarios[2]["duration_minutes"] == 240
+
+
+def test_webhook_subscription_accepts_only_platform_references():
+    value = WebhookSubscriptionCreate(
+        name="Thông báo lỗi mới",
+        endpoint_reference="endpoint://platform/webhook-primary",
+        secret_reference="secret://platform/webhook-primary",
+        events=["DEFECT_CREATED"],
+    )
+    assert value.enabled is True
+    with pytest.raises(ValidationError):
+        WebhookSubscriptionCreate(
+            name="Điểm cuối thô",
+            endpoint_reference="https://example.test/hook",
+            secret_reference="raw-secret",
+            events=["DEFECT_CREATED"],
+        )
+
+
+def test_automation_script_templates_use_environment_placeholders_and_reject_raw_secrets():
+    version = {"title": "Đăng nhập hợp lệ", "test_case_key": "TC-001"}
+    playwright = script_template("playwright", "typescript", version)
+    selenium = script_template("selenium", "python", version)
+    assert "process.env.BASE_URL" in playwright
+    assert "os.environ['BASE_URL']" in selenium
+    assert validate_source(playwright) == playwright
+    with pytest.raises(Exception):
+        validate_source('const password = "plain-password";')
+
+
+def test_frozen_run_scope_fingerprint_ignores_resume_metadata_and_detects_scope_changes():
+    run = {
+        "test_plan_id": "PLAN-1",
+        "test_suite_ids": ["SUITE-1"],
+        "test_case_version_ids": ["TCV-1", "TCV-2"],
+        "environment": "staging",
+        "release": "1.0",
+        "build": "100",
+        "device_matrix_snapshot": {
+            "profile_keys": ["chrome-desktop"],
+            "updated_at": datetime(2026, 9, 2, 8, 30, tzinfo=timezone.utc),
+        },
+        "last_resumed_by": "USER-1",
+    }
+    initial = frozen_run_scope_hash(frozen_run_scope(run))
+    run["last_resumed_by"] = "USER-2"
+    assert frozen_run_scope_hash(frozen_run_scope(run)) == initial
+    run["test_case_version_ids"] = ["TCV-1"]
+    assert frozen_run_scope_hash(frozen_run_scope(run)) != initial
 
 
 def test_requirement_linter_returns_structured_findings():
@@ -47,6 +267,56 @@ def test_requirement_document_extraction_is_atomic_and_preserves_source_spans():
         source = candidate["source_refs"][0]
         assert content[source["source_start"] : source["source_end"]] == candidate["title"]
         assert source["requirement_document_id"] == "RDOC-1"
+
+
+def test_requirement_candidates_receive_stable_identity_and_provenance_fingerprint():
+    candidates = prepare_requirement_candidates(
+        "RIMP-1",
+        [
+            {
+                "title": "Đăng nhập",
+                "content_doc": doc("Người dùng đăng nhập"),
+                "source_refs": [{"requirement_document_id": "RDOC-1", "source_start": 0}],
+            }
+        ],
+    )
+    replayed = prepare_requirement_candidates("RIMP-1", candidates)
+    assert candidates[0]["candidate_id"] == "RIMP-1-CAND-1"
+    assert replayed[0]["candidate_id"] == candidates[0]["candidate_id"]
+    assert candidates[0]["candidate_status"] == "ACTIVE"
+    assert candidate_fingerprint(replayed[0]) == candidate_fingerprint(candidates[0])
+    assert candidate_fingerprint({**candidates[0], "title": "Đăng nhập mới"}) != candidate_fingerprint(candidates[0])
+
+
+def test_requirement_duplicate_score_distinguishes_exact_semantic_and_unrelated_content():
+    baseline = {
+        "title": "Khóa tài khoản sau nhiều lần đăng nhập sai",
+        "content_doc": doc("Khi nhập sai mật khẩu năm lần thì tài khoản phải bị khóa"),
+        "business_rules": ["Khóa sau năm lần sai"],
+        "acceptance_criteria": [{"content_doc": doc("Tài khoản bị khóa ở lần sai thứ năm")}],
+    }
+    exact_score, exact_reasons = requirement_duplicate_score(baseline, {**baseline})
+    semantic_score, semantic_reasons = requirement_duplicate_score(
+        baseline,
+        {
+            **baseline,
+            "title": "Khóa người dùng khi đăng nhập sai nhiều lần",
+            "content_doc": doc("Khi mật khẩu sai năm lần thì hệ thống phải khóa tài khoản"),
+        },
+    )
+    unrelated_score, _ = requirement_duplicate_score(
+        baseline,
+        {
+            "title": "Xuất báo cáo kiểm thử",
+            "content_doc": doc("Người quản lý tải báo cáo CSV theo kỳ"),
+            "business_rules": [],
+            "acceptance_criteria": [],
+        },
+    )
+    assert exact_score == 1
+    assert exact_reasons == ["Nội dung Requirement trùng khớp hoàn toàn"]
+    assert semantic_score > unrelated_score
+    assert semantic_reasons
 
 
 def test_test_case_linter_blocks_missing_expected_and_trace():
@@ -146,6 +416,24 @@ def test_xlsx_export_round_trips_unicode_and_columns():
     assert "TC-001,Kiểm thử đăng nhập" in parsed
 
 
+def test_postman_runner_copy_replaces_raw_secrets_with_placeholders():
+    value = {
+        "variable": [{"key": "api_key", "value": "raw-api-key"}],
+        "item": [
+            {
+                "request": {
+                    "header": [{"key": "Authorization", "value": "Bearer raw-token"}],
+                    "url": {"raw": "https://example.test/path?token=raw-token"},
+                }
+            }
+        ],
+    }
+    serialized = str(sanitize_postman(value))
+    assert "raw-api-key" not in serialized
+    assert "raw-token" not in serialized
+    assert "VERIQ_SECRET" in serialized
+
+
 def test_v2_failure_envelope_preserves_recovery_state():
     metadata = failure_metadata("KNOWLEDGE_UNAVAILABLE", 503)
     result = envelope(None, **metadata)
@@ -154,6 +442,11 @@ def test_v2_failure_envelope_preserves_recovery_state():
     assert result["retryable"] is True
     assert result["state_after_failure"] == "RETRYABLE_FAILURE"
     assert result["meta"]["operation"]["status"] == "FAILED"
+
+
+def test_operation_envelope_exposes_operation_id_in_metadata():
+    result = envelope({"status": "QUEUED"}, operation_id="OP-001")
+    assert result["meta"]["operation_id"] == "OP-001"
 
 
 def test_knowledge_failure_returns_degraded_mode(monkeypatch):

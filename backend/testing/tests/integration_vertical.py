@@ -177,27 +177,50 @@ with httpx.Client(base_url=BASE_URL, timeout=30) as client:
     }
     reviewed_import = request(
         client,
-        "PATCH",
-        f"/kiem-thu/nhap-yeu-cau/{extraction['_id']}",
-        json={"expected_revision": 1, "preview": [merged_candidate], "review_note": "Gộp hai ứng viên"},
+        "POST",
+        f"/kiem-thu/nhap-yeu-cau/{extraction['_id']}/ung-vien/gop",
+        json={
+            "expected_revision": 1,
+            "candidate_ids": [first_candidate["candidate_id"], second_candidate["candidate_id"]],
+            "merged": merged_candidate,
+            "reason": "Gộp hai ứng viên",
+        },
     )
     assert reviewed_import["candidate_count"] == 1
+    assert reviewed_import["candidate_lineage"][-1]["type"] == "MERGE"
+    merged_candidate = reviewed_import["preview"][0]
     split_candidates = [
         {**merged_candidate, "title": "Đăng nhập bằng email", "content_doc": doc("Người dùng đăng nhập bằng email"), "candidate_relation": "split-1"},
         {**merged_candidate, "title": "Khóa tài khoản sau năm lần sai", "content_doc": doc("Tài khoản bị khóa sau 5 lần sai"), "candidate_relation": "split-2"},
     ]
     reviewed_import = request(
         client,
-        "PATCH",
-        f"/kiem-thu/nhap-yeu-cau/{extraction['_id']}",
-        json={"expected_revision": 2, "preview": split_candidates, "review_note": "Tách lại hai ứng viên"},
+        "POST",
+        f"/kiem-thu/nhap-yeu-cau/{extraction['_id']}/ung-vien/{merged_candidate['candidate_id']}/tach",
+        json={
+            "expected_revision": 2,
+            "drafts": split_candidates,
+            "reason": "Tách lại hai ứng viên",
+        },
     )
     assert reviewed_import["candidate_count"] == 2
+    assert reviewed_import["candidate_lineage"][-1]["type"] == "SPLIT"
+    reviewed_import = request(
+        client,
+        "PATCH",
+        f"/kiem-thu/nhap-yeu-cau/{extraction['_id']}",
+        json={
+            "expected_revision": 3,
+            "preview": reviewed_import["preview"],
+            "review_note": "Đã rà soát hai ứng viên sau khi tách",
+        },
+    )
+    assert all(item["source_refs"] for item in reviewed_import["preview"])
     confirmed_import = request(
         client,
         "POST",
         f"/kiem-thu/nhap-yeu-cau/{extraction['_id']}/xac-nhan",
-        json={"selected_indexes": [0], "expected_revision": 3},
+        json={"selected_indexes": [0], "expected_revision": 4},
     )
     assert len(confirmed_import["requirements"]) == 1
     assert confirmed_import["requirements"][0]["current_version"]["title"] == "Đăng nhập bằng email"
@@ -210,6 +233,14 @@ with httpx.Client(base_url=BASE_URL, timeout=30) as client:
     )
     assert direct_import["status"] == "PREVIEW_READY"
     assert request(client, "GET", f"/kiem-thu/nhap-yeu-cau/{direct_import['_id']}")["_id"] == direct_import["_id"]
+    rejected_import = request(
+        client,
+        "POST",
+        f"/kiem-thu/nhap-yeu-cau/{direct_import['_id']}/ung-vien/{direct_import['preview'][0]['candidate_id']}/tu-choi",
+        json={"expected_revision": 1, "reason": "Không thuộc phạm vi dự án"},
+    )
+    assert rejected_import["candidate_count"] == 0
+    assert rejected_import["rejected_candidates"][0]["candidate_status"] == "REJECTED"
     uploaded_import_response = client.post(
         f"/kiem-thu/du-an/{project_id}/nhap-yeu-cau/tai-len",
         headers=HEADERS,
@@ -388,14 +419,14 @@ with httpx.Client(base_url=BASE_URL, timeout=30) as client:
     request(
         client,
         "POST",
-        f"/kiem-thu/du-an/{project_id}/bo-du-lieu",
+        f"/kiem-thu/du-an/{project_id}/du-lieu-kiem-thu",
         422,
         json={"name": "Unsafe data", "variables": {"admin_password": "plain"}},
     )
     data_set = request(
         client,
         "POST",
-        f"/kiem-thu/du-an/{project_id}/bo-du-lieu",
+        f"/kiem-thu/du-an/{project_id}/du-lieu-kiem-thu",
         201,
         json={
             "name": "Profile boundary data",
@@ -403,12 +434,12 @@ with httpx.Client(base_url=BASE_URL, timeout=30) as client:
             "secret_refs": {"admin_password": "secret://vault/project/admin_password"},
         },
     )
-    assert request(client, "GET", f"/kiem-thu/bo-du-lieu/{data_set['_id']}")["_id"] == data_set["_id"]
+    assert request(client, "GET", f"/kiem-thu/du-lieu-kiem-thu/{data_set['_id']}")["_id"] == data_set["_id"]
     data_set_version_1 = data_set["current_version"]
     data_set_version_2 = request(
         client,
         "POST",
-        f"/kiem-thu/bo-du-lieu/{data_set['_id']}/phien-ban",
+        f"/kiem-thu/du-lieu-kiem-thu/{data_set['_id']}/phien-ban",
         201,
         json={
             "expected_current_version_id": data_set_version_1["_id"],
@@ -418,12 +449,12 @@ with httpx.Client(base_url=BASE_URL, timeout=30) as client:
             "change_reason": "Bổ sung dữ liệu ngoài biên",
         },
     )
-    assert request(client, "GET", f"/kiem-thu/du-an/{project_id}/bo-du-lieu")
-    assert len(request(client, "GET", f"/kiem-thu/bo-du-lieu/{data_set['_id']}/phien-ban")) == 2
+    assert request(client, "GET", f"/kiem-thu/du-an/{project_id}/du-lieu-kiem-thu")
+    assert len(request(client, "GET", f"/kiem-thu/du-lieu-kiem-thu/{data_set['_id']}/phien-ban")) == 2
     request(
         client,
         "POST",
-        f"/kiem-thu/bo-du-lieu/{data_set['_id']}/phien-ban",
+        f"/kiem-thu/du-lieu-kiem-thu/{data_set['_id']}/phien-ban",
         409,
         json={
             "expected_current_version_id": data_set_version_1["_id"],
@@ -758,6 +789,8 @@ with httpx.Client(base_url=BASE_URL, timeout=30) as client:
     assert defect["status"] == "NEW"
     assert isinstance(request(client, "GET", f"/kiem-thu/du-an/{project_id}/loi/trung-lap"), list)
     assert isinstance(request(client, "GET", f"/kiem-thu/du-an/{project_id}/ca-kiem-thu/trung-lap"), list)
+    assert request(client, "GET", f"/kiem-thu/du-an/{project_id}/loi/{defect['_id']}")["_id"] == defect["_id"]
+    assert request(client, "GET", f"/kiem-thu/loi/{defect['_id']}")["_id"] == defect["_id"]
     trace_candidates = request(
         client,
         "GET",
@@ -937,13 +970,41 @@ with httpx.Client(base_url=BASE_URL, timeout=30) as client:
     assert perspective["impact_analysis_id"] == impact["_id"]
     impacted = next(item for item in impact["affected_test_cases"] if item["test_case_id"] == test_case["_id"])
     assert impacted["classification"] == "NEEDS_UPDATE"
+    previous_impact = impact
+    impact = request(
+        client,
+        "POST",
+        f"/kiem-thu/phan-tich-anh-huong/{previous_impact['_id']}/chay-lai",
+        201,
+        json={
+            "expected_revision": previous_impact["revision"],
+            "reason": "Chỉ mục tri thức và liên kết truy vết đã được làm mới",
+            "knowledge_index_version": f"integration-{stamp}",
+            "algorithm_version": "impact-pipeline-v1",
+        },
+    )
+    assert impact["snapshot_number"] == 2
+    assert impact["supersedes_analysis_id"] == previous_impact["_id"]
+    assert request(client, "GET", f"/kiem-thu/phan-tich-anh-huong/{previous_impact['_id']}")["status"] == "SUPERSEDED"
+    impacted = next(item for item in impact["affected_test_cases"] if item["test_case_id"] == test_case["_id"])
     impact = request(
         client,
         "POST",
         f"/kiem-thu/phan-tich-anh-huong/{impact['_id']}/ra-soat",
-        json={"expected_revision": 1, "review_note": "Tester xác nhận phân tích tác động"},
+        json={
+            "expected_revision": 1,
+            "overrides": [
+                {
+                    "test_case_version_id": impacted["test_case_version_id"],
+                    "classification": "NEEDS_UPDATE",
+                    "reason": "Xác nhận thủ công rằng thay đổi biên vẫn yêu cầu cập nhật",
+                }
+            ],
+            "review_note": "Tester xác nhận phân tích tác động",
+        },
     )
     assert impact["status"] == "REVIEWED"
+    assert impact["review_overrides"][0]["from_classification"] == "NEEDS_UPDATE"
     proposals = request(client, "POST", f"/kiem-thu/phan-tich-anh-huong/{impact['_id']}/de-xuat-bao-tri", 201)
     proposal = next(item for item in proposals if item["proposal_type"] == "UPDATE_TEST_CASE")
     assert request(client, "GET", f"/kiem-thu/de-xuat-bao-tri/{proposal['_id']}")["_id"] == proposal["_id"]

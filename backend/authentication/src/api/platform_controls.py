@@ -120,7 +120,7 @@ class MaintenanceModeRequest(BaseModel):
 
 router = APIRouter(
     prefix="/quan-tri",
-    tags=["Platform Administration"],
+    tags=["Quản trị nền tảng"],
     dependencies=[Depends(require_system_admin)],
 )
 

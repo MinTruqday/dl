@@ -236,7 +236,7 @@ export default function AccountPage() {
         </div>
       </section>
       <div className="flex flex-wrap gap-3">
-        <Link className="secondary-button" href="/qa/projects">
+        <Link className="secondary-button" href="/du-an">
           Về không gian kiểm thử
         </Link>
         <button className="secondary-button text-danger" type="button" onClick={logoutState}>

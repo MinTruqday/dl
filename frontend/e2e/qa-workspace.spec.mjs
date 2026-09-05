@@ -65,7 +65,7 @@ async function createBoundaryTest(request, token, projectId, requirementVersion,
     request,
     token,
     "POST",
-    `/ban-nhap-ca-kiem-thu/${draft._id}/freeze`,
+    `/ban-nhap-ca-kiem-thu/${draft._id}/dong-bang`,
     { expected_revision: 2, change_reason: "Phê duyệt kịch bản biên" },
     201,
   );
@@ -295,22 +295,22 @@ test("luồng chữ ký Requirement đến Regression bảo toàn phiên bản v
   expect(
     regression.items.find((item) => item.test_case_key === "TC-PROFILE-043").test_case_version_id,
   ).toBe(applied.result._id);
-  await page.goto(`/qa/projects/${project._id}`);
+  await page.goto(`/du-an/${project._id}`);
   await expect(page.getByRole("heading", { level: 1, name: project.name })).toBeVisible();
   await expect(page.getByText("100%", { exact: true }).first()).toBeVisible();
   for (const [path, heading] of [
-    ["requirements", "Yêu cầu và phiên bản chuẩn"],
-    ["test-design", "Kịch bản và ca kiểm thử"],
-    ["traceability", "Ma trận truy vết và độ phủ"],
-    ["changes", "Ảnh hưởng thay đổi và bảo trì"],
-    ["execution", "Kế hoạch, bộ kiểm thử và lần chạy"],
-    ["defects", "Quản lý lỗi"],
-    ["knowledge", "Tìm kiếm trong tri thức dự án"],
-    ["settings", "Cài đặt và kiểm toán"],
+    ["yeu-cau", "Yêu cầu và phiên bản chuẩn"],
+    ["thiet-ke-kiem-thu", "Kịch bản và ca kiểm thử"],
+    ["truy-vet", "Ma trận truy vết và độ phủ"],
+    ["thay-doi", "Ảnh hưởng thay đổi và bảo trì"],
+    ["thuc-thi", "Kế hoạch, bộ kiểm thử và lần chạy"],
+    ["loi", "Quản lý lỗi"],
+    ["tri-thuc", "Tìm kiếm trong tri thức dự án"],
+    ["cai-dat", "Cài đặt và kiểm toán"],
   ]) {
-    await page.goto(`/qa/projects/${project._id}/${path}`);
+    await page.goto(`/du-an/${project._id}/${path}`);
     await expect(page.getByRole("heading", { level: 1, name: heading })).toBeVisible();
-    if (path === "test-design") {
+    if (path === "thiet-ke-kiem-thu") {
       const toolbar = page.getByRole("toolbar", { name: "Công cụ soạn thảo QA" }).first();
       await expect(toolbar).toBeVisible();
       for (const name of [
@@ -336,21 +336,21 @@ test("luồng chữ ký Requirement đến Regression bảo toàn phiên bản v
     }
     await expectUsablePage(page);
   }
-  await page.goto(`/qa/projects/${project._id}/requirements/${requirement._id}`);
+  await page.goto(`/du-an/${project._id}/yeu-cau/${requirement._id}`);
   await expect(page.getByRole("heading", { name: "Nhận xét rà soát" })).toBeVisible();
   await page.getByLabel("Nội dung nhận xét").fill("Đã đối chiếu tiêu chí với nguồn nghiệp vụ");
   await page.getByRole("button", { name: "Thêm nhận xét" }).click();
   await expect(page.getByText("Đã đối chiếu tiêu chí với nguồn nghiệp vụ")).toBeVisible();
-  await page.goto(`/qa/projects/${project._id}/test-design`);
+  await page.goto(`/du-an/${project._id}/thiet-ke-kiem-thu`);
   await page.getByText("TC-PROFILE-041", { exact: true }).first().click();
   await expect(page.getByRole("heading", { name: "Biên tập TC-PROFILE-041" })).toBeVisible();
   await page.getByLabel("Nội dung nhận xét").fill("Các bước và dữ liệu biên đã được rà soát");
   await page.getByRole("button", { name: "Thêm nhận xét" }).click();
   await expect(page.getByText("Các bước và dữ liệu biên đã được rà soát")).toBeVisible();
-  await page.goto(`/qa/projects/${project._id}/traceability`);
+  await page.goto(`/du-an/${project._id}/truy-vet`);
   await expect(page.getByText("Độ phủ còn hiệu lực")).toBeVisible();
   await expect(page.getByText("Độ phủ thực thi")).toBeVisible();
-  await page.goto(`/qa/projects/${project._id}/execution/${run._id}`);
+  await page.goto(`/du-an/${project._id}/thuc-thi/${run._id}`);
   await expect(page.getByText("Đạt", { exact: true })).toHaveCount(3);
   await page.goto("/cai-dat");
   await expect(page.getByRole("heading", { level: 1, name: "Tài khoản và bảo mật" })).toBeVisible();
@@ -365,7 +365,7 @@ test("người dùng tạo dự án bằng frontend thật và giao diện di đ
   const errors = observeRuntime(page);
   await page.setViewportSize({ width: 390, height: 844 });
   await authenticatePage(page, request, "lead");
-  await page.goto("/qa/projects");
+  await page.goto("/du-an");
   await page.getByRole("button", { name: "Tạo dự án" }).click();
   const stamp = Date.now();
   await page.getByLabel("Mã dự án").fill(`UI${stamp}`);
@@ -399,7 +399,7 @@ test("các nút thao tác chính tạo thay đổi thật qua backend", async ({
     201,
   );
 
-  await page.goto(`/qa/projects/${project._id}/requirements`);
+  await page.goto(`/du-an/${project._id}/yeu-cau`);
   await page.getByLabel("Tên", { exact: true }).fill(`Yêu cầu giao diện ${stamp}`);
   await page.getByRole("textbox", { name: "Nội dung yêu cầu" }).fill("Nút lưu phải gọi backend");
   await page
@@ -416,7 +416,7 @@ test("các nút thao tác chính tạo thay đổi thật qua backend", async ({
     page.getByRole("cell", { name: `Yêu cầu giao diện ${stamp}`, exact: true }),
   ).toBeVisible();
 
-  await page.goto(`/qa/projects/${project._id}/knowledge`);
+  await page.goto(`/du-an/${project._id}/tri-thuc`);
   await page.getByLabel("Tiêu đề nguồn").fill(`Nguồn giáo viên ${stamp}`);
   await page.getByLabel("Môn học").fill("Toán");
   await page.getByLabel("Khối lớp").fill("12");
@@ -441,7 +441,7 @@ test("các nút thao tác chính tạo thay đổi thật qua backend", async ({
   expect((await reindexResponse).status()).toBe(202);
   await expect(sourceRow).toContainText(/INDEXED|FAILED/);
 
-  await page.goto(`/qa/projects/${project._id}/execution`);
+  await page.goto(`/du-an/${project._id}/thuc-thi`);
   const planName = `Kế hoạch giao diện ${stamp}`;
   await page.getByLabel("Tên kế hoạch kiểm thử").fill(planName);
   await page.getByLabel("Mục tiêu kế hoạch kiểm thử").fill("Xác minh nút lưu kế hoạch");
@@ -463,12 +463,12 @@ test("các nút thao tác chính tạo thay đổi thật qua backend", async ({
   expect((await suiteResponse).status()).toBe(201);
   await expect(page.getByRole("cell", { name: suiteName, exact: true })).toBeVisible();
 
-  await page.goto(`/qa/projects/${project._id}/settings`);
+  await page.goto(`/du-an/${project._id}/cai-dat`);
   const updatedName = `Button Integration Updated ${stamp}`;
   await page.getByLabel("Tên", { exact: true }).fill(updatedName);
   const settingsResponse = page.waitForResponse(
     (response) =>
-      response.url().endsWith(`/kiem-thu/du-an/${project._id}`) &&
+      response.url().endsWith(`/kiem-thu/du-an/${project._id}/cai-dat`) &&
       response.request().method() === "PATCH",
   );
   await page.getByRole("button", { name: /Lưu với phiên bản/ }).click();
@@ -476,7 +476,7 @@ test("các nút thao tác chính tạo thay đổi thật qua backend", async ({
   const updatedProject = await qa(request, token, "GET", `/du-an/${project._id}`);
   expect(updatedProject.name).toBe(updatedName);
 
-  await page.goto("/qa/projects");
+  await page.goto("/du-an");
   const missingProject = `Không tồn tại ${stamp}`;
   await page.getByLabel("Tìm dự án").fill(missingProject);
   await page.getByLabel("Tìm dự án").press("Enter");

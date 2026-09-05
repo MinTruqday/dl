@@ -16,7 +16,7 @@ from src.domain.schemas import (
 )
 
 
-router = APIRouter(prefix="/kiem-thu", tags=["QA Projects"])
+router = APIRouter(prefix="/kiem-thu", tags=["Dự án kiểm thử"])
 
 
 @router.post("/du-an", status_code=201)
@@ -194,6 +194,56 @@ async def update_project(
     return envelope(updated, revision=updated["revision"])
 
 
+@router.get(
+    "/du-an/{project_id}/cai-dat",
+    openapi_extra={"x-function-ids": [f"PSET-{index:02d}" for index in range(1, 13)]},
+)
+async def read_project_settings(project_id: str, user: CurrentUser = Depends(get_current_user)):
+    project = await get_project(project_id, user, "project.settings.manage")
+    return envelope(
+        {
+            "project_id": project_id,
+            "name": project.get("name"),
+            "description": project.get("description", ""),
+            "project_type": project.get("project_type"),
+            "locale": project.get("locale"),
+            "timezone": project.get("timezone"),
+            "settings": project.get("settings", {}),
+        },
+        revision=project.get("revision", 1),
+    )
+
+
+@router.patch(
+    "/du-an/{project_id}/cai-dat",
+    openapi_extra={"x-function-ids": [f"PSET-{index:02d}" for index in range(1, 13)]},
+)
+async def update_project_settings(
+    project_id: str, payload: ProjectPatch, user: CurrentUser = Depends(get_current_user)
+):
+    await get_project(project_id, user, "project.settings.manage")
+    changes = payload.model_dump(exclude_none=True)
+    changes.pop("expected_revision", None)
+    if not changes:
+        raise HTTPException(status_code=422, detail={"code": "SETTINGS_EMPTY"})
+    updated = await optimistic_patch(
+        "projects", project_id, project_id, payload.expected_revision, changes
+    )
+    await audit(user.id, "project_settings_updated", "ProjectSettings", project_id, project_id)
+    return envelope(
+        {
+            "project_id": project_id,
+            "name": updated.get("name"),
+            "description": updated.get("description", ""),
+            "project_type": updated.get("project_type"),
+            "locale": updated.get("locale"),
+            "timezone": updated.get("timezone"),
+            "settings": updated.get("settings", {}),
+        },
+        revision=updated["revision"],
+    )
+
+
 @router.post("/du-an/{project_id}/luu-tru")
 async def archive_project(
     project_id: str, payload: ProjectArchiveInput, user: CurrentUser = Depends(get_current_user)
@@ -320,14 +370,11 @@ async def invite_project_member(
     return envelope(membership, revision=1)
 
 
-@router.post("/du-an/{project_id}/thanh-vien/{member_user_id}/chap-nhan")
-async def accept_project_invitation(
-    project_id: str, member_user_id: str, user: CurrentUser = Depends(get_current_user)
+async def _accept_project_invitation(
+    invitation_id: str, user: CurrentUser
 ):
-    if user.id != member_user_id:
-        raise HTTPException(status_code=403, detail={"code": "INVITATION_OWNER_REQUIRED"})
     membership = await database.value.project_members.find_one_and_update(
-        {"project_id": project_id, "user_id": user.id, "status": "INVITED"},
+        {"_id": invitation_id, "user_id": user.id, "status": "INVITED"},
         {
             "$set": {"status": "ACTIVE", "accepted_at": now(), "updated_at": now()},
             "$inc": {"membership_revision": 1},
@@ -336,9 +383,77 @@ async def accept_project_invitation(
     )
     if not membership:
         raise HTTPException(status_code=404, detail={"code": "INVITATION_NOT_FOUND"})
+    project_id = membership["project_id"]
     await audit(
         user.id, "project_invitation_accepted", "ProjectMember", membership["_id"], project_id
     )
+    return envelope(membership, revision=membership["membership_revision"])
+
+
+@router.post(
+    "/loi-moi-du-an/{invitation_id}/chap-nhan",
+    openapi_extra={"x-function-ids": ["MEM-SELF-01"]},
+)
+async def accept_project_invitation_by_id(
+    invitation_id: str, user: CurrentUser = Depends(get_current_user)
+):
+    return await _accept_project_invitation(invitation_id, user)
+
+
+@router.post("/du-an/{project_id}/thanh-vien/{member_user_id}/chap-nhan")
+async def accept_project_invitation(
+    project_id: str, member_user_id: str, user: CurrentUser = Depends(get_current_user)
+):
+    if user.id != member_user_id:
+        raise HTTPException(status_code=403, detail={"code": "INVITATION_OWNER_REQUIRED"})
+    membership = await database.value.project_members.find_one(
+        {"project_id": project_id, "user_id": user.id, "status": "INVITED"}, {"_id": 1}
+    )
+    if not membership:
+        raise HTTPException(status_code=404, detail={"code": "INVITATION_NOT_FOUND"})
+    return await _accept_project_invitation(membership["_id"], user)
+
+
+@router.post(
+    "/loi-moi-du-an/{invitation_id}/tu-choi",
+    openapi_extra={"x-function-ids": ["MEM-SELF-02"]},
+)
+async def decline_project_invitation(
+    invitation_id: str, user: CurrentUser = Depends(get_current_user)
+):
+    membership = await database.value.project_members.find_one_and_update(
+        {"_id": invitation_id, "user_id": user.id, "status": "INVITED"},
+        {
+            "$set": {"status": "DECLINED", "declined_at": now(), "updated_at": now()},
+            "$inc": {"membership_revision": 1},
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+    if not membership:
+        raise HTTPException(status_code=404, detail={"code": "INVITATION_NOT_FOUND"})
+    await audit(
+        user.id,
+        "project_invitation_declined",
+        "ProjectMember",
+        membership["_id"],
+        membership["project_id"],
+    )
+    return envelope(membership, revision=membership["membership_revision"])
+
+
+@router.post(
+    "/du-an/{project_id}/roi-du-an",
+    openapi_extra={"x-function-ids": ["MEM-SELF-03"]},
+)
+async def leave_project(project_id: str, user: CurrentUser = Depends(get_current_user)):
+    membership = await database.value.project_members.find_one_and_update(
+        {"project_id": project_id, "user_id": user.id, "status": "ACTIVE"},
+        {"$set": {"status": "LEFT", "left_at": now(), "updated_at": now()}, "$inc": {"membership_revision": 1}},
+        return_document=ReturnDocument.AFTER,
+    )
+    if not membership:
+        raise HTTPException(status_code=404, detail={"code": "PROJECT_MEMBERSHIP_NOT_FOUND"})
+    await audit(user.id, "project_member_left", "ProjectMember", membership["_id"], project_id)
     return envelope(membership, revision=membership["membership_revision"])
 
 

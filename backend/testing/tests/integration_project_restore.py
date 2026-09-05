@@ -56,12 +56,12 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     )
     assert invitation.status_code == 201, invitation.text
     resent = client.post(
-        f"/kiem-thu/du-an/{project_id}/thanh-vien/khoi-phuc-invited-v42/gui-lai-loi-moi",
+        f"/kiem-thu/du-an/{project_id}/thanh-vien/restore-invited-v42/gui-lai-loi-moi",
         headers=lead,
     )
     assert resent.status_code == 200, resent.text
     cancelled = client.post(
-        f"/kiem-thu/du-an/{project_id}/thanh-vien/khoi-phuc-invited-v42/huy-loi-moi",
+        f"/kiem-thu/du-an/{project_id}/thanh-vien/restore-invited-v42/huy-loi-moi",
         headers=lead,
     )
     assert cancelled.status_code == 200, cancelled.text
@@ -74,7 +74,7 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     )
     assert accepted_invitation.status_code == 201, accepted_invitation.text
     accepted = client.post(
-        f"/kiem-thu/du-an/{project_id}/thanh-vien/khoi-phuc-accept-v42/chap-nhan",
+        f"/kiem-thu/du-an/{project_id}/thanh-vien/restore-accept-v42/chap-nhan",
         headers=identity("restore-accept-v42"),
     )
     assert accepted.status_code == 200, accepted.text

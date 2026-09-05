@@ -3,6 +3,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { uploadAssetAPI } from "@/features/cloud/services/upload.service";
 import DataTable from "../../components/DataTable";
 import ReviewCommentsPanel from "../../components/ReviewCommentsPanel";
+import TestCaseTemplatesPanel from "../../components/TestCaseTemplatesPanel";
+import SpecializedDesignPanel from "../../components/SpecializedDesignPanel";
+import AutomationScriptsPanel from "../../components/AutomationScriptsPanel";
+import CollaborationPanel from "../../components/CollaborationPanel";
 import {
   ErrorState,
   Pagination,
@@ -44,6 +48,10 @@ export default function TestDesignPage({ project }) {
   });
   const [duplicates, setDuplicates] = useState([]);
   const [operations, setOperations] = useState([]);
+  const [apiArtifacts, setApiArtifacts] = useState([]);
+  const [apiCompareFrom, setApiCompareFrom] = useState("");
+  const [apiCompareTo, setApiCompareTo] = useState("");
+  const [apiDifference, setApiDifference] = useState(null);
   const [testImport, setTestImport] = useState(null);
   const [apiImport, setApiImport] = useState({
     filename: "openapi.json",
@@ -90,6 +98,7 @@ export default function TestDesignPage({ project }) {
         draftValues,
         testValues,
         suiteValues,
+        apiArtifactValues,
         operationValues,
       ] = await Promise.all([
         testingApi.listRequirements(project._id, { page_size: 500 }),
@@ -102,6 +111,7 @@ export default function TestDesignPage({ project }) {
           page_size: 50,
         }),
         testingApi.listSuites(project._id),
+        testingApi.listApiArtifacts(project._id),
         testingApi.listApiOperations(project._id),
       ]);
       setRequirements(requirementValues);
@@ -111,6 +121,18 @@ export default function TestDesignPage({ project }) {
       setTests(testValues.items);
       setTestPageInfo(testValues);
       setSuites(suiteValues);
+      setApiArtifacts(apiArtifactValues);
+      const confirmedArtifacts = apiArtifactValues.filter((item) => item.status === "CONFIRMED");
+      setApiCompareFrom((current) =>
+        confirmedArtifacts.some((item) => item._id === current)
+          ? current
+          : confirmedArtifacts[1]?._id || "",
+      );
+      setApiCompareTo((current) =>
+        confirmedArtifacts.some((item) => item._id === current)
+          ? current
+          : confirmedArtifacts[0]?._id || "",
+      );
       setOperations(operationValues);
       setSelectedRequirement(
         (current) => current || requirementValues[0]?.current_version_id || "",
@@ -320,31 +342,38 @@ export default function TestDesignPage({ project }) {
           expected_doc: textDoc(step.expected),
         }));
         setDraftSaveState("saving");
-        const result = await testingApi.updateTestDraft(selectedDraft._id, {
-          expected_revision: selectedDraft.revision,
-          title: snapshot.title,
-          type: snapshot.type,
-          priority: snapshot.priority,
-          risk: snapshot.risk,
-          objective_doc: textDoc(snapshot.objective),
-          preconditions_doc: textDoc(snapshot.preconditions),
-          steps,
-          test_data: testData,
-          expected_result_doc: textDoc(snapshot.expected),
-          postconditions_doc: textDoc(snapshot.postconditions),
-          techniques: snapshot.techniques
-            .split(",")
-            .map((value) => value.trim())
-            .filter(Boolean),
-          tags: snapshot.tags
-            .split(",")
-            .map((value) => value.trim())
-            .filter(Boolean),
-          owner_id: snapshot.ownerId.trim() || null,
-          automation_status: snapshot.automationStatus,
-          attachments: snapshot.attachments,
-          data_set_version_ids: snapshot.dataSetVersionIds,
-        });
+        const result = await testingApi.applyTestCaseCollaborationOperation(
+          project._id,
+          selectedDraft._id,
+          {
+            base_revision: selectedDraft.revision,
+            operation_id: crypto.randomUUID(),
+            changes: {
+              title: snapshot.title,
+              type: snapshot.type,
+              priority: snapshot.priority,
+              risk: snapshot.risk,
+              objective_doc: textDoc(snapshot.objective),
+              preconditions_doc: textDoc(snapshot.preconditions),
+              steps,
+              test_data: testData,
+              expected_result_doc: textDoc(snapshot.expected),
+              postconditions_doc: textDoc(snapshot.postconditions),
+              techniques: snapshot.techniques
+                .split(",")
+                .map((value) => value.trim())
+                .filter(Boolean),
+              tags: snapshot.tags
+                .split(",")
+                .map((value) => value.trim())
+                .filter(Boolean),
+              owner_id: snapshot.ownerId.trim() || null,
+              automation_status: snapshot.automationStatus,
+              attachments: snapshot.attachments,
+              data_set_version_ids: snapshot.dataSetVersionIds,
+            },
+          },
+        );
         setDrafts((values) => values.map((item) => (item._id === result._id ? result : item)));
         if (draftSequence.current === sequence) {
           setDraftDirty(false);
@@ -361,7 +390,7 @@ export default function TestDesignPage({ project }) {
         );
       }
     },
-    [selectedDraft],
+    [project._id, selectedDraft],
   );
   const saveDraft = async () => {
     await persistDraft(draftEdit, draftSequence.current);
@@ -447,6 +476,9 @@ export default function TestDesignPage({ project }) {
           </div>
         </Panel>
       )}
+      {can("testcase.template.read") && <TestCaseTemplatesPanel project={project} />}
+      <SpecializedDesignPanel project={project} requirements={requirements} />
+      <AutomationScriptsPanel project={project} tests={tests} />
       <div className="grid gap-5 xl:grid-cols-2">
         <Panel title="Bản nháp ca kiểm thử">
           <DataTable
@@ -513,7 +545,7 @@ export default function TestDesignPage({ project }) {
           title="Phiên bản ca kiểm thử"
           actions={
             <div className="flex flex-wrap gap-2">
-              {can("testcase.update") && (
+              {can("testcase.bulk.update") && (
                 <button
                   className="secondary-button"
                   disabled={!selectedTestIds.length}
@@ -544,6 +576,7 @@ export default function TestDesignPage({ project }) {
                         ids: selectedTestIds,
                         add_tags: splitTags(answer.add),
                         remove_tags: splitTags(answer.remove),
+                        idempotency_key: crypto.randomUUID(),
                       });
                       setSelectedTestIds([]);
                       await load();
@@ -555,7 +588,7 @@ export default function TestDesignPage({ project }) {
                   Cập nhật nhãn
                 </button>
               )}
-              {can("testsuite.update") && (
+              {can("testcase.bulk.update") && (
                 <button
                   className="secondary-button"
                   disabled={!selectedTestIds.length || !suites.length}
@@ -583,6 +616,7 @@ export default function TestDesignPage({ project }) {
                         suite_id: answer.suiteId,
                         test_case_ids: selectedTestIds,
                         expected_revision: suite?.revision || 1,
+                        idempotency_key: crypto.randomUUID(),
                       });
                       setSelectedTestIds([]);
                       await load();
@@ -594,7 +628,7 @@ export default function TestDesignPage({ project }) {
                   Thêm vào bộ
                 </button>
               )}
-              {can("testcase.update") && (
+              {can("testcase.bulk.update") && (
                 <button
                   className="secondary-button"
                   disabled={!selectedTestIds.length}
@@ -619,6 +653,7 @@ export default function TestDesignPage({ project }) {
                       await testingApi.bulkMarkReviewRequired(project._id, {
                         test_case_ids: selectedTestIds,
                         reason: answer.reason,
+                        idempotency_key: crypto.randomUUID(),
                       });
                       setSelectedTestIds([]);
                       await load();
@@ -630,7 +665,7 @@ export default function TestDesignPage({ project }) {
                   Cần rà soát
                 </button>
               )}
-              {can("testcase.archive") && (
+              {can("testcase.bulk.archive") && (
                 <button
                   className="danger-button"
                   disabled={!selectedTestIds.length}
@@ -658,6 +693,7 @@ export default function TestDesignPage({ project }) {
                         artifact_type: "test_case",
                         ids: selectedTestIds,
                         reason: answer.reason,
+                        idempotency_key: crypto.randomUUID(),
                       });
                       setSelectedTestIds([]);
                       await load();
@@ -751,12 +787,12 @@ export default function TestDesignPage({ project }) {
             }}
             items={tests}
             selectedIds={
-              can("testcase.update") || can("testsuite.update") || can("testcase.archive")
+              can("testcase.bulk.update") || can("testcase.bulk.archive")
                 ? selectedTestIds
                 : undefined
             }
             onSelectionChange={
-              can("testcase.update") || can("testsuite.update") || can("testcase.archive")
+              can("testcase.bulk.update") || can("testcase.bulk.archive")
                 ? setSelectedTestIds
                 : undefined
             }
@@ -800,7 +836,7 @@ export default function TestDesignPage({ project }) {
                         Nhân bản
                       </button>
                     )}
-                    {item.status !== "OBSOLETE" && can("testcase.archive") ? (
+                    {item.status !== "OBSOLETE" && can("testcase.bulk.archive") ? (
                       <button
                         className="secondary-button"
                         type="button"
@@ -1250,6 +1286,12 @@ export default function TestDesignPage({ project }) {
             projectId={project._id}
             artifactType="test_case_draft"
             artifactId={selectedDraft._id}
+          />
+          <CollaborationPanel
+            project={project}
+            artifactType="test_case"
+            artifactId={selectedDraft._id}
+            onResolved={load}
           />
         </>
       )}
@@ -1833,7 +1875,7 @@ export default function TestDesignPage({ project }) {
         description="Nhập dữ liệu đã lọc thông tin nhạy cảm rồi tạo ca kiểm thử chỉ từ phản hồi có trong đặc tả"
       >
         <div className="grid gap-5 p-5 xl:grid-cols-2">
-          {can("knowledge.manage") && (
+          {can("apiartifact.import") && (
             <form
               className="space-y-4"
               onSubmit={async (event) => {
@@ -1874,40 +1916,213 @@ export default function TestDesignPage({ project }) {
                 />
               </label>
               <button className="secondary-button" type="submit">
-                Import API metadata
+                Tạo bản xem trước
               </button>
             </form>
           )}
-          <DataTable
-            items={operations}
-            empty="Chưa có thao tác API"
-            columns={[
-              { key: "method", label: "Phương thức" },
-              { key: "path", label: "Đường dẫn" },
-              { key: "title", label: "Tên" },
-              {
-                key: "generate",
-                label: "Tạo ca kiểm thử",
-                render: (item) =>
-                  can("ai.generate_testcase") && can("testcase.create") ? (
+          <div className="space-y-5">
+            <DataTable
+              items={apiArtifacts}
+              empty="Chưa có nguồn đặc tả API"
+              columns={[
+                { key: "filename", label: "Nguồn" },
+                { key: "format", label: "Định dạng" },
+                {
+                  key: "status",
+                  label: "Trạng thái",
+                  render: (item) => <StatusPill value={item.status} />,
+                },
+                { key: "preview_count", label: "Thao tác" },
+                {
+                  key: "actions",
+                  label: "Xử lý",
+                  render: (item) => (
+                    <div className="flex flex-wrap gap-2">
+                      {item.status === "PREVIEW_READY" && can("apiartifact.review") && (
+                        <button
+                          className="secondary-button"
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              await testingApi.reviewApiArtifact(item._id, {
+                                expected_revision: item.revision,
+                                selected_indexes: [],
+                                review_note: "Đã rà soát toàn bộ thao tác",
+                              });
+                              await load();
+                            } catch (reason) {
+                              setError(messageOf(reason));
+                            }
+                          }}
+                        >
+                          Rà soát
+                        </button>
+                      )}
+                      {item.status === "REVIEWED" && can("apiartifact.confirm") && (
+                        <button
+                          className="primary-button"
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              await testingApi.confirmApiArtifact(item._id, {
+                                expected_revision: item.revision,
+                                idempotency_key: crypto.randomUUID(),
+                              });
+                              await load();
+                            } catch (reason) {
+                              setError(messageOf(reason));
+                            }
+                          }}
+                        >
+                          Xác nhận
+                        </button>
+                      )}
+                      {item.status !== "ARCHIVED" && can("apiartifact.archive") && (
+                        <button
+                          className="danger-button"
+                          type="button"
+                          onClick={async () => {
+                            const answer = await ask({
+                              title: "Lưu trữ nguồn đặc tả API",
+                              description: item.filename,
+                              confirmLabel: "Lưu trữ",
+                            });
+                            if (!answer) return;
+                            try {
+                              await testingApi.archiveApiArtifact(item._id, {
+                                expected_revision: item.revision,
+                                reason: "Nguồn đặc tả không còn được sử dụng",
+                              });
+                              await load();
+                            } catch (reason) {
+                              setError(messageOf(reason));
+                            }
+                          }}
+                        >
+                          Lưu trữ
+                        </button>
+                      )}
+                    </div>
+                  ),
+                },
+              ]}
+            />
+            {apiArtifacts.filter((item) => item.status === "CONFIRMED").length >= 2 && (
+              <div className="rounded-2xl border border-[var(--border)] p-4">
+                <div className="grid gap-3 md:grid-cols-2">
+                  <label className="field-label">
+                    Phiên bản trước
+                    <select
+                      className="apple-input mt-2"
+                      value={apiCompareFrom}
+                      onChange={(event) => setApiCompareFrom(event.target.value)}
+                    >
+                      {apiArtifacts
+                        .filter((item) => item.status === "CONFIRMED")
+                        .map((item) => (
+                          <option key={item._id} value={item._id}>
+                            {item.filename}
+                          </option>
+                        ))}
+                    </select>
+                  </label>
+                  <label className="field-label">
+                    Phiên bản sau
+                    <select
+                      className="apple-input mt-2"
+                      value={apiCompareTo}
+                      onChange={(event) => setApiCompareTo(event.target.value)}
+                    >
+                      {apiArtifacts
+                        .filter((item) => item.status === "CONFIRMED")
+                        .map((item) => (
+                          <option key={item._id} value={item._id}>
+                            {item.filename}
+                          </option>
+                        ))}
+                    </select>
+                  </label>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    className="secondary-button"
+                    disabled={!apiCompareFrom || !apiCompareTo || apiCompareFrom === apiCompareTo}
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        setApiDifference(
+                          await testingApi.diffApiArtifacts(
+                            project._id,
+                            apiCompareFrom,
+                            apiCompareTo,
+                          ),
+                        );
+                      } catch (reason) {
+                        setError(messageOf(reason));
+                      }
+                    }}
+                  >
+                    So sánh đặc tả
+                  </button>
+                  {can("impact.execute") && (
                     <button
                       className="secondary-button"
+                      disabled={!apiCompareFrom || !apiCompareTo || apiCompareFrom === apiCompareTo}
                       type="button"
                       onClick={async () => {
                         try {
-                          await testingApi.generateApiTests(item._id);
-                          await load();
+                          await testingApi.analyzeApiArtifactImpact(project._id, {
+                            from_artifact_id: apiCompareFrom,
+                            to_artifact_id: apiCompareTo,
+                          });
                         } catch (reason) {
                           setError(messageOf(reason));
                         }
                       }}
                     >
-                      Tạo ca kiểm thử
+                      Phân tích ảnh hưởng
                     </button>
-                  ) : null,
-              },
-            ]}
-          />
+                  )}
+                </div>
+                {apiDifference && (
+                  <p className="mt-3 text-sm text-[var(--muted)]">
+                    Thêm {apiDifference.added.length} thay đổi {apiDifference.changed.length} loại
+                    bỏ {apiDifference.removed.length}
+                  </p>
+                )}
+              </div>
+            )}
+            <DataTable
+              items={operations}
+              empty="Chưa có thao tác API đã xác nhận"
+              columns={[
+                { key: "method", label: "Phương thức" },
+                { key: "path", label: "Đường dẫn" },
+                { key: "title", label: "Tên" },
+                {
+                  key: "generate",
+                  label: "Tạo ca kiểm thử",
+                  render: (item) =>
+                    can("ai.generate_api_testcase") && can("testcase.create") ? (
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            await testingApi.generateApiTests(item._id);
+                            await load();
+                          } catch (reason) {
+                            setError(messageOf(reason));
+                          }
+                        }}
+                      >
+                        Tạo ca kiểm thử
+                      </button>
+                    ) : null,
+                },
+              ]}
+            />
+          </div>
         </div>
       </Panel>
       {dialog}

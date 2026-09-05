@@ -18,6 +18,7 @@ from src.schemas.identity import (
     ForgotPasswordRequest,
     AccountDeactivate,
     EmailChange,
+    EmailVerificationInput,
     NotificationSettingsUpdate,
     PasswordChange,
     ProfileUpdate,
@@ -28,7 +29,7 @@ from src.schemas.identity import (
     VerifyCodeRequest,
 )
 
-router = APIRouter(prefix="/xac-thuc")
+router = APIRouter(prefix="/xac-thuc", tags=["Xác thực và phiên đăng nhập"])
 
 
 @router.get("/ca-nhan", response_model=APIResponse[UserResponse])
@@ -102,7 +103,7 @@ async def update_users_me(
     return APIResponse(data=account, message="Cập nhật hồ sơ cá nhân hoàn tất")
 
 
-@router.post("/doi-email", response_model=APIResponse[Any])
+@router.post("/doi-thu-dien-tu", response_model=APIResponse[Any])
 async def change_email(payload: EmailChange, current_user: CurrentUser = Depends(get_current_user)):
     account = await IdentityRepository.get_auth_credential_by_id(current_user.id)
     if not account or not verify_password(payload.current_password, account.get("password_hash", "")):
@@ -114,11 +115,51 @@ async def change_email(payload: EmailChange, current_user: CurrentUser = Depends
     if duplicate:
         raise HTTPException(status_code=409, detail="Email mới đã được sử dụng")
     await database.mongodb[settings.AUTHENTICATION_DB_NAME].auth_credentials.update_one(
-        {"_id": current_user.id}, {"$set": {"email": new_email, "email_verified": False, "updated_at": datetime.now(timezone.utc)}}
+        {"_id": current_user.id}, {"$set": {"email": new_email, "is_verified": False, "email_verified": False, "updated_at": datetime.now(timezone.utc)}}
     )
+    await SessionService.issue_email_verification(current_user.id, new_email, "authenticated")
     await IdentityRepository.revoke_all_sessions(current_user.id)
     await IdentityRepository.insert_audit_log({"action": "ACCOUNT_EMAIL_CHANGED", "actor_email": current_user.email, "target_user_id": current_user.id, "new_email": new_email, "timestamp": datetime.now(timezone.utc)})
     return APIResponse(data={"email": new_email, "reauth_required": True}, message="Đổi email hoàn tất, vui lòng đăng nhập lại")
+
+
+@router.post(
+    "/xac-minh-thu-dien-tu/gui-lai",
+    response_model=APIResponse[Any],
+    dependencies=[Depends(RateLimiting(calls=3, period=300))],
+)
+async def resend_email_verification(
+    request: Request,
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    account = await IdentityRepository.get_auth_credential_by_id(current_user.id)
+    if not account:
+        raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản")
+    if account.get("is_verified") or account.get("email_verified"):
+        return APIResponse(
+            data={"verified": True},
+            message="Địa chỉ thư điện tử đã được xác minh",
+        )
+    client_ip = request.client.host if request.client else "unknown"
+    return APIResponse(
+        data=await SessionService.issue_email_verification(
+            current_user.id, account["email"], client_ip
+        ),
+        message="Khởi tạo lại yêu cầu xác minh thư điện tử hoàn tất",
+    )
+
+
+@router.post(
+    "/xac-minh-thu-dien-tu",
+    response_model=APIResponse[Any],
+    dependencies=[Depends(RateLimiting(calls=5, period=300))],
+)
+async def verify_email(payload: EmailVerificationInput, request: Request):
+    client_ip = request.client.host if request.client else "unknown"
+    return APIResponse(
+        data=await SessionService.verify_email(payload.token, client_ip),
+        message="Xác minh địa chỉ thư điện tử hoàn tất",
+    )
 
 
 @router.get("/cai-dat", response_model=APIResponse[Any])

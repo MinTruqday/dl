@@ -23,7 +23,7 @@ export function useLogin() {
       !requested.startsWith("//") &&
       !requested.startsWith("/dang-nhap")
         ? requested
-        : "/qa/projects";
+        : "/du-an";
     sessionStorage.removeItem("veriq_return_path");
     router.replace(destination);
   };

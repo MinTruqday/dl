@@ -16,7 +16,17 @@ import { testingApi } from "../../services/testing.service";
 export default function ReportsPage({ project }) {
   const { ask, dialog } = useQaActionDialog();
   const [value, setValue] = useState(null);
-  const [scope, setScope] = useState({ release: "", environment: "", build: "" });
+  const [releases, setReleases] = useState([]);
+  const [builds, setBuilds] = useState([]);
+  const [environments, setEnvironments] = useState([]);
+  const [scope, setScope] = useState({
+    release: "",
+    release_id: "",
+    environment: "",
+    environment_id: "",
+    build: "",
+    build_id: "",
+  });
   const [error, setError] = useState("");
   const canReadAiAnalytics = project.current_permissions?.includes("analytics.ai.read");
   const canCreateSnapshot = project.current_permissions?.includes("coverage.snapshot.create");
@@ -38,6 +48,19 @@ export default function ReportsPage({ project }) {
       setError(messageOf(reason));
     }
   }, [canReadAiAnalytics, project._id, scope]);
+  useEffect(() => {
+    Promise.all([
+      testingApi.listReleases(project._id),
+      testingApi.listBuilds(project._id),
+      testingApi.listEnvironments(project._id),
+    ])
+      .then(([releaseValues, buildValues, environmentValues]) => {
+        setReleases(releaseValues);
+        setBuilds(buildValues);
+        setEnvironments(environmentValues);
+      })
+      .catch((reason) => setError(messageOf(reason)));
+  }, [project._id]);
   useEffect(() => {
     void load();
   }, [load]);
@@ -65,7 +88,9 @@ export default function ReportsPage({ project }) {
                   await testingApi.createCoverageSnapshot(project._id, {
                     label: answer.label,
                     release: scope.release,
+                    release_id: scope.release_id,
                     build: scope.build,
+                    build_id: scope.build_id,
                     idempotency_key: crypto.randomUUID(),
                   });
                   await load();
@@ -80,27 +105,76 @@ export default function ReportsPage({ project }) {
         }
       >
         <div className="grid gap-3 p-5 sm:grid-cols-3">
-          <input
+          <select
             aria-label="Lọc theo môi trường"
             className="apple-input"
-            placeholder="Môi trường"
-            value={scope.environment}
-            onChange={(event) => setScope({ ...scope, environment: event.target.value })}
-          />
-          <input
+            value={scope.environment_id}
+            onChange={(event) => {
+              const environmentId = event.target.value;
+              const environment = environments.find((item) => item._id === environmentId);
+              setScope({
+                ...scope,
+                environment_id: environmentId,
+                environment: environment?.name || "",
+              });
+            }}
+          >
+            <option value="">Tất cả môi trường</option>
+            {environments.map((item) => (
+              <option key={item._id} value={item._id}>
+                {item.name}
+              </option>
+            ))}
+          </select>
+          <select
             aria-label="Lọc theo bản phát hành"
             className="apple-input"
-            placeholder="Bản phát hành"
-            value={scope.release}
-            onChange={(event) => setScope({ ...scope, release: event.target.value })}
-          />
-          <input
+            value={scope.release_id}
+            onChange={(event) => {
+              const releaseId = event.target.value;
+              const release = releases.find((item) => item._id === releaseId);
+              setScope({
+                ...scope,
+                release_id: releaseId,
+                release: release?.key || "",
+                build_id: "",
+                build: "",
+              });
+            }}
+          >
+            <option value="">Tất cả bản phát hành</option>
+            {releases.map((item) => (
+              <option key={item._id} value={item._id}>
+                {item.key} · {item.name}
+              </option>
+            ))}
+          </select>
+          <select
             aria-label="Lọc theo bản dựng"
             className="apple-input"
-            placeholder="Bản dựng"
-            value={scope.build}
-            onChange={(event) => setScope({ ...scope, build: event.target.value })}
-          />
+            value={scope.build_id}
+            onChange={(event) => {
+              const buildId = event.target.value;
+              const build = builds.find((item) => item._id === buildId);
+              const release = releases.find((item) => item._id === build?.release_id);
+              setScope({
+                ...scope,
+                build_id: buildId,
+                build: build?.identifier || "",
+                release_id: build?.release_id || scope.release_id,
+                release: release?.key || scope.release,
+              });
+            }}
+          >
+            <option value="">Tất cả bản dựng</option>
+            {builds
+              .filter((item) => !scope.release_id || item.release_id === scope.release_id)
+              .map((item) => (
+                <option key={item._id} value={item._id}>
+                  {item.identifier} · {item.version}
+                </option>
+              ))}
+          </select>
         </div>
       </Panel>
       {!value ? (

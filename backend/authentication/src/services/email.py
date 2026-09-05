@@ -77,3 +77,35 @@ class EmailService:
 
         success = await asyncio.to_thread(send_sync)
         logger.info("Password recovery email notification dispatched to upstream server")
+
+    @staticmethod
+    async def send_email_verification(email: str, token: str):
+        if not all(
+            [
+                settings.SMTP_HOST,
+                settings.SMTP_PORT,
+                settings.SMTP_USER,
+                settings.SMTP_PASS,
+                settings.SENDER_EMAIL,
+                settings.SENDER_NAME,
+            ]
+        ):
+            raise Exception("Dịch vụ gửi thư điện tử chưa được cấu hình")
+
+        def send_sync():
+            message = MIMEText(
+                f"Mã xác minh địa chỉ thư điện tử của bạn là {token}",
+                "plain",
+                "utf-8",
+            )
+            message["From"] = f"{settings.SENDER_NAME} <{settings.SENDER_EMAIL}>"
+            message["To"] = email
+            message["Subject"] = "Xác minh địa chỉ thư điện tử Veriq"
+            server = smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10.0)
+            server.starttls()
+            server.login(settings.SMTP_USER, settings.SMTP_PASS)
+            server.send_message(message)
+            server.quit()
+            return True
+
+        return await asyncio.to_thread(send_sync)

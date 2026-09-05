@@ -6,7 +6,14 @@ import { twMerge } from "tailwind-merge";
 function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
-export function Modal({ isOpen, onClose, children, className, showCloseButton = true }) {
+export function Modal({
+  isOpen,
+  onClose,
+  children,
+  className,
+  showCloseButton = true,
+  ariaLabel = "Hộp thoại",
+}) {
   const dialogRef = useRef(null);
   const previousFocusRef = useRef(null);
   const onCloseRef = useRef(onClose);
@@ -58,6 +65,7 @@ export function Modal({ isOpen, onClose, children, className, showCloseButton = 
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
+        aria-label={ariaLabel}
         tabIndex={-1}
         className={cn(
           "relative w-full max-w-md overflow-hidden rounded-panel border border-border bg-surface p-0 shadow-[0_24px_80px_rgba(32,32,30,0.18)] outline-none animate-in zoom-in-95",
@@ -66,6 +74,7 @@ export function Modal({ isOpen, onClose, children, className, showCloseButton = 
       >
         {showCloseButton && (
           <button
+            type="button"
             onClick={onClose}
             className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-control text-ink-muted transition-colors hover:bg-surface-quiet hover:text-ink"
             aria-label="Đóng"

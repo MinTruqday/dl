@@ -5,7 +5,13 @@ from uuid import uuid4
 from fastapi import HTTPException
 from pymongo import ReturnDocument
 
-from src.core.auth import CurrentUser, PROJECT_PERMISSIONS, READ_PERMISSIONS, permissions_for_role
+from src.core.auth import (
+    ARCHIVE_READ_PERMISSIONS,
+    CurrentUser,
+    PROJECT_PERMISSIONS,
+    READ_PERMISSIONS,
+    permissions_for_role,
+)
 from src.core.database import database
 
 
@@ -31,6 +37,7 @@ def envelope(
     data=None,
     revision=None,
     trace_id=None,
+    operation_id=None,
     status="SUCCESS",
     error_code=None,
     retryable=False,
@@ -41,6 +48,8 @@ def envelope(
     meta = {"trace_id": trace_id or new_id("TRC")}
     if revision is not None:
         meta["revision"] = revision
+    if operation_id is not None:
+        meta["operation_id"] = operation_id
     operation = {
         "status": status,
         "error_code": error_code,
@@ -185,13 +194,13 @@ async def get_project(
         )
     if (
         project.get("status", "active").lower() == "archived"
-        and permission not in READ_PERMISSIONS
+        and permission not in ARCHIVE_READ_PERMISSIONS
         and permission != "project.restore"
     ):
         raise HTTPException(status_code=409, detail={"code": "PROJECT_ARCHIVED"})
     if (
         project.get("status", "active").lower() == "archived"
-        and permission in READ_PERMISSIONS
+        and permission in ARCHIVE_READ_PERMISSIONS
         and permission != "project.read"
         and (project.get("settings") or {}).get("read_after_archive_policy", "ALLOW_READ")
         == "DENY_READ"

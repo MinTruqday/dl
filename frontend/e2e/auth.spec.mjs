@@ -25,7 +25,7 @@ test("đăng nhập báo đúng lỗi và đăng nhập người dùng thành c�
   await expect(page.getByText("Không thể đăng nhập")).toBeVisible();
   await page.locator("#login-password").fill(credentials.lead.password);
   await page.getByRole("button", { name: "Đăng nhập" }).click();
-  await expect(page).toHaveURL(/\/qa\/projects$/);
+  await expect(page).toHaveURL(/\/du-an$/);
   await expect(page.getByRole("heading", { name: "Dự án kiểm thử" })).toBeVisible();
   await expectRuntimeClean(errors);
 });

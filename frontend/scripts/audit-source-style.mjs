@@ -12,6 +12,10 @@ const forbiddenPatterns = [
   ["source_comment", /(^|\n)\s*\/[/\*]/],
   ["textual_ellipsis", new RegExp("\\u2026")],
   ["emoji", /\p{Extended_Pictographic}/u],
+  [
+    "promotional_tagline",
+    /giải pháp toàn diện|tất cả trong một|nâng tầm trải nghiệm|đồng hành cùng bạn|bứt phá giới hạn|mạnh mẽ và linh hoạt|thông minh hơn mỗi ngày/i,
+  ],
 ];
 
 async function sourceFiles(directory) {

@@ -26,9 +26,21 @@ const nextStates = {
   DUPLICATE: ["REOPENED"],
 };
 
+const traceReasonLabels = {
+  CURRENT_LINK: "Đang được liên kết với lỗi",
+  SHARED_REQUIREMENT_TRACE: "Có chung yêu cầu được truy vết",
+  SIMILAR_BEHAVIOR_TEXT: "Nội dung hành vi tương đồng",
+  CURRENT_REQUIREMENT_LINK: "Yêu cầu đang được liên kết với lỗi",
+  LINKED_TEST_CASE_TRACE: "Liên quan qua ca kiểm thử đã liên kết",
+  SIMILAR_REQUIREMENT_TEXT: "Nội dung yêu cầu tương đồng",
+};
+
 export default function DefectsPage({ project }) {
   const { ask, dialog } = useQaActionDialog();
   const [items, setItems] = useState([]);
+  const [releases, setReleases] = useState([]);
+  const [builds, setBuilds] = useState([]);
+  const [environments, setEnvironments] = useState([]);
   const [page, setPage] = useState(1);
   const [pageInfo, setPageInfo] = useState(null);
   const [filters, setFilters] = useState({
@@ -48,7 +60,11 @@ export default function DefectsPage({ project }) {
     severity: "major",
     priority: "medium",
     environment: "staging",
+    environmentId: "",
+    releaseId: "",
+    release: "",
     build: "",
+    buildId: "",
     description: "",
     actual: "",
     expected: "",
@@ -83,13 +99,20 @@ export default function DefectsPage({ project }) {
   };
   const load = useCallback(async () => {
     try {
-      const [defectValues, resultValues] = await Promise.all([
-        testingApi.listDefectPage(project._id, { ...filters, page, page_size: 50 }),
-        testingApi.listResults(project._id, "PASS,FAIL"),
-      ]);
+      const [defectValues, resultValues, releaseValues, buildValues, environmentValues] =
+        await Promise.all([
+          testingApi.listDefectPage(project._id, { ...filters, page, page_size: 50 }),
+          testingApi.listResults(project._id, "PASS,FAIL"),
+          testingApi.listReleases(project._id),
+          testingApi.listBuilds(project._id),
+          testingApi.listEnvironments(project._id),
+        ]);
       setItems(defectValues.items);
       setPageInfo(defectValues);
       setResults(resultValues);
+      setReleases(releaseValues);
+      setBuilds(buildValues);
+      setEnvironments(environmentValues);
     } catch (reason) {
       setError(messageOf(reason));
     }
@@ -110,7 +133,11 @@ export default function DefectsPage({ project }) {
         severity: form.severity,
         priority: form.priority,
         environment: form.environment,
+        environment_id: form.environmentId || null,
+        release: form.release,
+        release_id: form.releaseId || null,
         build: form.build,
+        build_id: form.buildId || null,
         attachments: form.attachments,
         linked_requirement_version_ids: [],
       });
@@ -119,7 +146,11 @@ export default function DefectsPage({ project }) {
         severity: "major",
         priority: "medium",
         environment: "staging",
+        environmentId: "",
+        release: "",
+        releaseId: "",
         build: "",
+        buildId: "",
         description: "",
         actual: "",
         expected: "",
@@ -178,6 +209,47 @@ export default function DefectsPage({ project }) {
         expected_revision: item.revision,
         assignee: answer.assignee.trim() || null,
       });
+      await load();
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
+  };
+  const confirmTraceCandidate = async (candidate) => {
+    const answer = await ask({
+      title: "Xác nhận liên kết truy vết",
+      description: `${traceReview.defect.defect_key} với ${candidate.requirement_key || candidate.test_case_key}`,
+      confirmLabel: "Xác nhận liên kết",
+      fields: [
+        {
+          name: "reason",
+          label: "Lý do xác nhận",
+          initialValue: "Đã đối chiếu bằng chứng và xác nhận liên kết phù hợp",
+          required: true,
+          multiline: true,
+          autoFocus: true,
+        },
+      ],
+    });
+    if (!answer) return;
+    const payload = {
+      expected_revision: traceReview.defect.revision,
+      reason: answer.reason,
+      ai_result_id: traceReview.result._id,
+      accepted_candidate_ids: [candidate.candidate_id],
+    };
+    if (candidate.artifact_type === "requirement_version") {
+      payload.linked_requirement_version_ids = [
+        ...new Set([
+          ...(traceReview.defect.linked_requirement_version_ids || []),
+          candidate.artifact_id,
+        ]),
+      ];
+    } else {
+      payload.linked_test_case_version_id = candidate.artifact_id;
+    }
+    try {
+      await testingApi.updateDefectTrace(project._id, traceReview.defect._id, payload);
+      setTraceReview(null);
       await load();
     } catch (reason) {
       setError(messageOf(reason));
@@ -261,19 +333,79 @@ export default function DefectsPage({ project }) {
             </label>
             <label className="field-label">
               Môi trường
-              <input
+              <select
                 className="apple-input mt-2"
-                value={form.environment}
-                onChange={(event) => setForm({ ...form, environment: event.target.value })}
-              />
+                value={form.environmentId}
+                onChange={(event) => {
+                  const environmentId = event.target.value;
+                  const environment = environments.find((item) => item._id === environmentId);
+                  setForm({
+                    ...form,
+                    environmentId,
+                    environment: environment?.name || "staging",
+                  });
+                }}
+              >
+                <option value="">Mặc định staging</option>
+                {environments.map((item) => (
+                  <option key={item._id} value={item._id}>
+                    {item.name} · {item.environment_type}
+                  </option>
+                ))}
+              </select>
             </label>
             <label className="field-label">
               Bản dựng
-              <input
+              <select
                 className="apple-input mt-2"
-                value={form.build}
-                onChange={(event) => setForm({ ...form, build: event.target.value })}
-              />
+                value={form.buildId}
+                onChange={(event) => {
+                  const buildId = event.target.value;
+                  const build = builds.find((item) => item._id === buildId);
+                  setForm({
+                    ...form,
+                    buildId,
+                    build: build?.identifier || "",
+                    releaseId: build?.release_id || form.releaseId,
+                    release:
+                      releases.find((item) => item._id === build?.release_id)?.key || form.release,
+                  });
+                }}
+              >
+                <option value="">Không gắn bản dựng</option>
+                {builds
+                  .filter((item) => !form.releaseId || item.release_id === form.releaseId)
+                  .map((item) => (
+                    <option key={item._id} value={item._id}>
+                      {item.identifier} · {item.version}
+                    </option>
+                  ))}
+              </select>
+            </label>
+            <label className="field-label">
+              Bản phát hành
+              <select
+                className="apple-input mt-2"
+                value={form.releaseId}
+                onChange={(event) => {
+                  const releaseId = event.target.value;
+                  const release = releases.find((item) => item._id === releaseId);
+                  setForm({
+                    ...form,
+                    releaseId,
+                    release: release?.key || "",
+                    buildId: "",
+                    build: "",
+                  });
+                }}
+              >
+                <option value="">Không gắn bản phát hành</option>
+                {releases.map((item) => (
+                  <option key={item._id} value={item._id}>
+                    {item.key} · {item.name}
+                  </option>
+                ))}
+              </select>
             </label>
             <label className="field-label">
               Mô tả
@@ -362,17 +494,25 @@ export default function DefectsPage({ project }) {
           title={`Ứng viên truy vết cho ${traceReview.defect.defect_key}`}
           description="Mức tin cậy là tín hiệu xếp hạng và phải được người dùng xác nhận"
         >
+          <div className="border-b border-border px-5 py-3 text-xs text-ink-muted">
+            Kết quả {traceReview.result._id} · Mô hình {traceReview.result.model?.model} · Không tự
+            động thay đổi lỗi
+          </div>
+          <div className="border-b border-border px-5 py-3 text-sm font-semibold text-ink">
+            Yêu cầu được đề xuất
+          </div>
           <DataTable
-            items={traceReview.candidates}
-            empty="Không tìm thấy ca kiểm thử liên quan trong dự án"
+            items={traceReview.result.requirement_candidates}
+            empty="Không tìm thấy yêu cầu liên quan trong dự án"
             columns={[
-              { key: "test_case_key", label: "Ca kiểm thử" },
+              { key: "requirement_key", label: "Yêu cầu" },
               { key: "title", label: "Tên" },
               { key: "confidence_band", label: "Mức tín hiệu" },
               {
                 key: "reason_codes",
                 label: "Bằng chứng",
-                render: (item) => item.reason_codes.join(", "),
+                render: (item) =>
+                  item.reason_codes.map((code) => traceReasonLabels[code] || code).join(", "),
               },
               {
                 key: "action",
@@ -382,21 +522,41 @@ export default function DefectsPage({ project }) {
                     <button
                       className="secondary-button"
                       type="button"
-                      onClick={async () => {
-                        try {
-                          await testingApi.updateDefect(traceReview.defect._id, {
-                            expected_revision: traceReview.defect.revision,
-                            linked_test_case_version_id: candidate.test_case_version_id,
-                            linked_requirement_version_ids: candidate.requirement_version_ids,
-                          });
-                          setTraceReview(null);
-                          await load();
-                        } catch (reason) {
-                          setError(messageOf(reason));
-                        }
-                      }}
+                      onClick={() => void confirmTraceCandidate(candidate)}
                     >
-                      Liên kết
+                      Xác nhận yêu cầu
+                    </button>
+                  ) : null,
+              },
+            ]}
+          />
+          <div className="border-y border-border px-5 py-3 text-sm font-semibold text-ink">
+            Ca kiểm thử được đề xuất
+          </div>
+          <DataTable
+            items={traceReview.result.test_case_candidates}
+            empty="Không tìm thấy ca kiểm thử liên quan trong dự án"
+            columns={[
+              { key: "test_case_key", label: "Ca kiểm thử" },
+              { key: "title", label: "Tên" },
+              { key: "confidence_band", label: "Mức tín hiệu" },
+              {
+                key: "reason_codes",
+                label: "Bằng chứng",
+                render: (item) =>
+                  item.reason_codes.map((code) => traceReasonLabels[code] || code).join(", "),
+              },
+              {
+                key: "action",
+                label: "Quyết định",
+                render: (candidate) =>
+                  canManageTrace(traceReview.defect) ? (
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      onClick={() => void confirmTraceCandidate(candidate)}
+                    >
+                      Xác nhận ca kiểm thử
                     </button>
                   ) : null,
               },
@@ -495,22 +655,26 @@ export default function DefectsPage({ project }) {
                     {item.linked_test_case_version_id || "Chưa liên kết ca kiểm thử"}
                   </span>
                   <span className="flex flex-wrap gap-2">
-                    <button
-                      className="secondary-button"
-                      type="button"
-                      onClick={async () => {
-                        try {
-                          setTraceReview({
-                            defect: item,
-                            candidates: await testingApi.findDefectTraceCandidates(item._id),
-                          });
-                        } catch (reason) {
-                          setError(messageOf(reason));
-                        }
-                      }}
-                    >
-                      Gợi ý liên kết
-                    </button>
+                    {can("ai.suggest_bug_trace") && (
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            setTraceReview({
+                              defect: item,
+                              result: await testingApi.suggestDefectTrace(project._id, item._id, {
+                                idempotency_key: crypto.randomUUID(),
+                              }),
+                            });
+                          } catch (reason) {
+                            setError(messageOf(reason));
+                          }
+                        }}
+                      >
+                        Gợi ý liên kết
+                      </button>
+                    )}
                     {item.linked_test_case_version_id && canManageTrace(item) && (
                       <button
                         className="secondary-button"
@@ -524,8 +688,9 @@ export default function DefectsPage({ project }) {
                           });
                           if (!answer) return;
                           try {
-                            await testingApi.updateDefect(item._id, {
+                            await testingApi.updateDefectTrace(project._id, item._id, {
                               expected_revision: item.revision,
+                              reason: "Người dùng xác nhận thu hồi liên kết truy vết hiện tại",
                               linked_test_case_version_id: null,
                               linked_requirement_version_ids: [],
                             });

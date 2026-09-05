@@ -11,10 +11,47 @@ from src.domain.schemas import ProjectQuestionInput, SearchInput
 from src.services.project_knowledge import search_project_with_status
 
 
-router = APIRouter(prefix="/kiem-thu", tags=["QA Analytics"])
+router = APIRouter(prefix="/kiem-thu", tags=["Phân tích kiểm thử"])
 
 
-@router.get("/du-an/{project_id}/tong-quan")
+@router.get("/du-an/{project_id}/tim-kiem", openapi_extra={"x-function-ids": ["SRCH-01"]})
+async def search_project(
+    project_id: str,
+    q: str = Query(min_length=1, max_length=1000),
+    limit: int = Query(default=50, ge=1, le=200),
+    user: CurrentUser = Depends(get_current_user),
+):
+    await get_project(project_id, user, "project.read")
+    pattern = re.escape(q)
+    sources = [
+        ("requirement", "requirements", ("title", "requirement_key")),
+        ("test_case", "test_cases", ("title", "test_case_key")),
+        ("test_run", "test_runs", ("name",)),
+        ("defect", "defects", ("title", "defect_key")),
+        ("test_plan", "test_plans", ("name",)),
+    ]
+    items = []
+    per_source = max(1, limit // len(sources))
+    for artifact_type, collection, fields in sources:
+        query = {
+            "project_id": project_id,
+            "$or": [{field: {"$regex": pattern, "$options": "i"}} for field in fields],
+        }
+        rows = await database.value[collection].find(query).sort("updated_at", -1).limit(per_source).to_list(per_source)
+        items.extend(
+            {
+                "artifact_type": artifact_type,
+                "artifact_id": row["_id"],
+                "title": row.get("title") or row.get("name") or row.get("defect_key") or row.get("requirement_key") or row.get("test_case_key"),
+                "status": row.get("status"),
+                "project_id": project_id,
+            }
+            for row in rows
+        )
+    return envelope({"items": items[:limit], "query": q, "project_id": project_id})
+
+
+@router.get("/du-an/{project_id}/tong-quan", openapi_extra={"x-function-ids": ["PRJ-03", "RPT-01", "RPT-02"]})
 async def dashboard(project_id: str, user: CurrentUser = Depends(get_current_user)):
     await get_project(project_id, user, "analytics.read")
     requirements = await database.value.requirements.count_documents({"project_id": project_id, "status": "BASELINED"})
@@ -161,7 +198,7 @@ async def ask_project(
     return envelope({"answer": result.get("answer") or "Không có câu trả lời có căn cứ", "evidence": evidence, "confidence": result.get("confidence", 0), "warnings": result.get("warnings", []), "model": result.get("model", {}), "reason_codes": result.get("reason_codes", [])}, status=result.get("status", "SUCCESS"), degraded_mode=result.get("degraded_mode"))
 
 
-@router.get("/du-an/{project_id}/nhat-ky")
+@router.get("/du-an/{project_id}/nhat-ky", openapi_extra={"x-function-ids": ["AUD-01"]})
 async def project_audit(
     project_id: str,
     limit: int = Query(default=100, ge=1, le=500),
@@ -228,17 +265,26 @@ async def ai_analytics(project_id: str, user: CurrentUser = Depends(get_current_
 async def execution_report(
     project_id: str,
     release: str = Query(default="", max_length=200),
+    release_id: str = Query(default="", max_length=200),
     environment: str = Query(default="", max_length=500),
+    environment_id: str = Query(default="", max_length=200),
     build: str = Query(default="", max_length=200),
+    build_id: str = Query(default="", max_length=200),
     user: CurrentUser = Depends(get_current_user),
 ):
     await get_project(project_id, user, "report.read")
     run_query = {"project_id": project_id}
     if environment:
         run_query["environment"] = environment
+    if environment_id:
+        run_query["environment_id"] = environment_id
     if build:
         run_query["build"] = build
-    if release:
+    if build_id:
+        run_query["build_id"] = build_id
+    if release_id:
+        run_query["release_id"] = release_id
+    elif release:
         plans = await database.value.test_plans.find(
             {"project_id": project_id, "release": release}, {"_id": 1}
         ).to_list(5000)
@@ -270,7 +316,7 @@ async def execution_report(
             "pass_rate": round(result_counts.get("PASS", 0) / terminal_count, 4)
             if terminal_count
             else None,
-            "scope": {"release": release or None, "environment": environment or None, "build": build or None},
+            "scope": {"release": release or None, "release_id": release_id or None, "environment": environment or None, "environment_id": environment_id or None, "build": build or None, "build_id": build_id or None},
         }
     )
 
@@ -279,18 +325,27 @@ async def execution_report(
 async def defect_report(
     project_id: str,
     release: str = Query(default="", max_length=200),
+    release_id: str = Query(default="", max_length=200),
     environment: str = Query(default="", max_length=500),
+    environment_id: str = Query(default="", max_length=200),
     build: str = Query(default="", max_length=200),
+    build_id: str = Query(default="", max_length=200),
     user: CurrentUser = Depends(get_current_user),
 ):
     await get_project(project_id, user, "report.read")
     query = {"project_id": project_id}
     if release:
         query["release"] = release
+    if release_id:
+        query["release_id"] = release_id
     if environment:
         query["environment"] = environment
+    if environment_id:
+        query["environment_id"] = environment_id
     if build:
         query["build"] = build
+    if build_id:
+        query["build_id"] = build_id
     defects = await database.value.defects.find(
         query, {"status": 1, "severity": 1, "created_at": 1}
     ).to_list(50000)
@@ -320,12 +375,12 @@ async def defect_report(
             "severity_counts": severity_counts,
             "reopened_count": reopened_count,
             "average_open_age_days": round(sum(open_ages) / len(open_ages), 2) if open_ages else 0,
-            "scope": {"release": release or None, "environment": environment or None, "build": build or None},
+            "scope": {"release": release or None, "release_id": release_id or None, "environment": environment or None, "environment_id": environment_id or None, "build": build or None, "build_id": build_id or None},
         }
     )
 
 
-@router.get("/du-an/{project_id}/hoat-dong")
+@router.get("/du-an/{project_id}/hoat-dong", openapi_extra={"x-function-ids": ["ACT-01"]})
 async def project_activity(
     project_id: str,
     limit: int = Query(default=50, ge=1, le=200),

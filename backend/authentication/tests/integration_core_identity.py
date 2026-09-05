@@ -64,6 +64,44 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
     assert me.json()["data"]["full_name"] == "Identity Test"
     assert "password_hash" not in me.json()["data"]
 
+    resent = client.post("/xac-thuc/xac-minh-thu-dien-tu/gui-lai", headers=bearer)
+    assert resent.status_code == 200, resent.text
+    verification_token = f"verify-email-{run_id}"
+    verification_hash = hmac.new(
+        os.environ["SECRET_KEY"].encode("utf-8"),
+        verification_token.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+    mongo_client = MongoClient(os.environ["MONGODB_URI"])
+    verification_tokens = mongo_client[os.environ["AUTHENTICATION_DB_NAME"]].email_verification_tokens
+    verification_tokens.update_many(
+        {"user_id": account_id, "used": False},
+        {"$set": {"used": True}},
+    )
+    verification_tokens.insert_one(
+        {
+            "_id": f"verify-{run_id}",
+            "user_id": account_id,
+            "email": email,
+            "token_hash": verification_hash,
+            "used": False,
+            "created_at": datetime.now(timezone.utc),
+            "expires_at": datetime.now(timezone.utc) + timedelta(minutes=5),
+        }
+    )
+    mongo_client.close()
+    email_verified = client.post(
+        "/xac-thuc/xac-minh-thu-dien-tu",
+        json={"token": verification_token},
+    )
+    assert email_verified.status_code == 200, email_verified.text
+    assert email_verified.json()["data"]["verified"] is True
+    assert client.post(
+        "/xac-thuc/xac-minh-thu-dien-tu",
+        json={"token": verification_token},
+    ).status_code == 400
+    assert client.get("/xac-thuc/ca-nhan", headers=bearer).json()["data"]["is_verified"] is True
+
     internal = client.get(
         f"/xac-thuc/noi-bo/tai-khoan/{account_id}",
         headers={"X-Internal-Token": os.environ["SECRET_KEY"]},
@@ -105,11 +143,11 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         algorithms=["HS256"],
     )
     assert admin_claims["system_role"] == "ADMIN"
-    accounts = client.get("/xac-thuc/quan-tri/tai-khoan", headers=admin_headers)
+    accounts = client.get("/quan-tri/tai-khoan", headers=admin_headers)
     assert accounts.status_code == 200, accounts.text
     assert managed_id in {row["_id"] for row in accounts.json()["data"]}
     disabled = client.patch(
-        f"/xac-thuc/quan-tri/tai-khoan/{managed_id}",
+        f"/quan-tri/tai-khoan/{managed_id}",
         headers=admin_headers,
         json={"is_active": False, "reason": "Kiểm thử khóa tài khoản có kiểm toán"},
     )
@@ -119,7 +157,7 @@ with httpx.Client(base_url=base_url, timeout=30) as client:
         "/xac-thuc/dang-nhap", data={"username": managed_email, "password": managed_password}
     )
     assert managed_login.status_code == 403
-    audit = client.get("/xac-thuc/quan-tri/nhat-ky", headers=admin_headers)
+    audit = client.get("/quan-tri/nhat-ky", headers=admin_headers)
     assert audit.status_code == 200, audit.text
     account_updates = [
         event

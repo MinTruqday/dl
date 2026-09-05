@@ -146,6 +146,7 @@ export default function ReviewQueuePage({ project }) {
                   await testingApi.bulkApproveProposals(project._id, {
                     proposal_ids: selectedIds,
                     review_note: answer.note,
+                    idempotency_key: crypto.randomUUID(),
                   });
                   setSelectedIds([]);
                   await load();

@@ -1,6 +1,8 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import DataTable from "../../components/DataTable";
+import DeviceMatricesPanel from "../../components/DeviceMatricesPanel";
+import AutomationExecutionPanel from "../../components/AutomationExecutionPanel";
 import { uploadAssetAPI } from "@/features/cloud/services/upload.service";
 import {
   ErrorState,
@@ -19,6 +21,9 @@ export default function ExecutionPage({ project, section }) {
   const runId = section[0] || "";
   const [plans, setPlans] = useState([]);
   const [suites, setSuites] = useState([]);
+  const [releases, setReleases] = useState([]);
+  const [builds, setBuilds] = useState([]);
+  const [environments, setEnvironments] = useState([]);
   const [runs, setRuns] = useState([]);
   const [runPage, setRunPage] = useState(1);
   const [runPageInfo, setRunPageInfo] = useState(null);
@@ -48,6 +53,9 @@ export default function ExecutionPage({ project, section }) {
     release: "",
     build: "",
     environment: "staging",
+    environmentId: "",
+    releaseId: "",
+    buildId: "",
     testPlanId: "",
     suiteIds: [],
     versionIds: [],
@@ -55,20 +63,38 @@ export default function ExecutionPage({ project, section }) {
   const [actuals, setActuals] = useState({});
   const [stepResults, setStepResults] = useState({});
   const [attachments, setAttachments] = useState({});
+  const [resumeContext, setResumeContext] = useState(null);
   const can = (permission) => project.current_permissions?.includes(permission);
+  const terminalResultStatuses = project.settings?.allow_not_applicable_results
+    ? ["PASS", "FAIL", "BLOCKED", "SKIPPED", "NOT_APPLICABLE"]
+    : ["PASS", "FAIL", "BLOCKED", "SKIPPED"];
   const load = useCallback(async () => {
     try {
-      const [planValues, suiteValues, runValues, testValues] = await Promise.all([
+      const [
+        planValues,
+        suiteValues,
+        runValues,
+        testValues,
+        releaseValues,
+        buildValues,
+        environmentValues,
+      ] = await Promise.all([
         testingApi.listPlans(project._id, planFilters),
         testingApi.listSuites(project._id, suiteFilters),
         testingApi.listRunPage(project._id, { ...runFilters, page: runPage, page_size: 50 }),
         testingApi.listTestCases(project._id, { page_size: 500 }),
+        testingApi.listReleases(project._id),
+        testingApi.listBuilds(project._id),
+        testingApi.listEnvironments(project._id),
       ]);
       setPlans(planValues);
       setSuites(suiteValues);
       setRuns(runValues.items);
       setRunPageInfo(runValues);
       setTests(testValues);
+      setReleases(releaseValues);
+      setBuilds(buildValues);
+      setEnvironments(environmentValues);
       if (runId) setRun(await testingApi.getRun(runId));
     } catch (reason) {
       setError(messageOf(reason));
@@ -88,14 +114,20 @@ export default function ExecutionPage({ project, section }) {
         test_suite_ids: runForm.suiteIds,
         test_case_version_ids: runForm.versionIds,
         environment: runForm.environment,
+        environment_id: runForm.environmentId || null,
         release: runForm.release,
+        release_id: runForm.releaseId || null,
         build: runForm.build,
+        build_id: runForm.buildId || null,
       });
       setRunForm({
         name: "",
         release: "",
         build: "",
         environment: "staging",
+        environmentId: "",
+        releaseId: "",
+        buildId: "",
         testPlanId: "",
         suiteIds: [],
         versionIds: [],
@@ -107,6 +139,25 @@ export default function ExecutionPage({ project, section }) {
   };
   const transition = async (execution, status, version) => {
     try {
+      let resultNote = "Kết quả thực thi thủ công";
+      if (status === "NOT_APPLICABLE") {
+        const answer = await ask({
+          title: "Ghi nhận kết quả Không áp dụng",
+          description: `${version.test_case_key} ${version.title}`,
+          confirmLabel: "Ghi nhận",
+          fields: [
+            {
+              name: "reason",
+              label: "Lý do Không áp dụng",
+              required: true,
+              multiline: true,
+              autoFocus: true,
+            },
+          ],
+        });
+        if (!answer) return;
+        resultNote = answer.reason.trim();
+      }
       const values = (version.steps || []).map((step) => {
         const existing = execution.step_results?.find((item) => item.step_id === step.id);
         const edited = stepResults[execution._id]?.[step.id];
@@ -115,18 +166,26 @@ export default function ExecutionPage({ project, section }) {
           status: edited?.status || existing?.status || "PASS",
           actual_doc: textDoc(edited?.actual || docText(existing?.actual_doc)),
           attachments: existing?.attachments || [],
-          note: existing?.note || "",
+          note: edited?.note ?? existing?.note ?? "",
         };
       });
+      const invalidStep = values.find(
+        (item) => item.status === "NOT_APPLICABLE" && item.note.trim().length < 2,
+      );
+      if (invalidStep) {
+        setError("Mỗi bước Không áp dụng phải có lý do riêng");
+        return;
+      }
       await testingApi.updateExecution(project._id, execution._id, {
         status,
         step_results: status === "IN_PROGRESS" ? execution.step_results || [] : values,
         actual_result_doc: textDoc(actuals[execution._id] || docText(execution.actual_result_doc)),
         attachments: attachments[execution._id] || execution.attachments || [],
-        note: "Kết quả thực thi thủ công",
+        note: resultNote,
         idempotency_key: crypto.randomUUID(),
         expected_revision: execution.revision,
       });
+      setResumeContext(null);
       setRun(await testingApi.getRun(run._id));
     } catch (reason) {
       setError(messageOf(reason));
@@ -292,6 +351,26 @@ export default function ExecutionPage({ project, section }) {
               )}
               {run.status === "IN_PROGRESS" && (
                 <>
+                  {can("testrun.execute") && (
+                    <button
+                      className="apple-button"
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          const value = await testingApi.resumeRun(project._id, run._id, {
+                            expected_revision: run.revision,
+                            idempotency_key: crypto.randomUUID(),
+                          });
+                          setResumeContext(value);
+                          setRun(await testingApi.getRun(run._id));
+                        } catch (reason) {
+                          setError(messageOf(reason));
+                        }
+                      }}
+                    >
+                      Tiếp tục thực thi
+                    </button>
+                  )}
                   {can("testrun.abort") && (
                     <button
                       className="secondary-button"
@@ -348,6 +427,25 @@ export default function ExecutionPage({ project, section }) {
         >
           <div className="p-5">
             <StatusPill value={run.status} />
+            {resumeContext && (
+              <div className="mt-4 rounded-xl border border-border bg-surface-raised p-4 text-[13px]">
+                {resumeContext.current_test_case_version ? (
+                  <>
+                    <p className="font-semibold">Vị trí tiếp tục</p>
+                    <p className="mt-2">
+                      {resumeContext.current_test_case_version.test_case_key}{" "}
+                      {resumeContext.current_test_case_version.title}
+                    </p>
+                    <p className="mt-1 text-ink-muted">
+                      Vị trí {resumeContext.position} trên {resumeContext.total_count} còn lại{" "}
+                      {resumeContext.remaining_count}
+                    </p>
+                  </>
+                ) : (
+                  <p>Không còn ca kiểm thử được phân công cần thực thi</p>
+                )}
+              </div>
+            )}
           </div>
         </Panel>
         <Panel title="Kết quả thủ công">
@@ -449,13 +547,11 @@ export default function ExecutionPage({ project, section }) {
                                 }))
                               }
                             >
-                              {["PASS", "FAIL", "BLOCKED", "SKIPPED", "NOT_APPLICABLE"].map(
-                                (value) => (
-                                  <option value={value} key={value}>
-                                    {valueLabel(value)}
-                                  </option>
-                                ),
-                              )}
+                              {terminalResultStatuses.map((value) => (
+                                <option value={value} key={value}>
+                                  {valueLabel(value)}
+                                </option>
+                              ))}
                             </select>
                             <textarea
                               aria-label={`Kết quả bước ${stepIndex + 1} ${item.test_case_key}`}
@@ -474,6 +570,24 @@ export default function ExecutionPage({ project, section }) {
                                 }))
                               }
                               placeholder="Kết quả thực tế của bước"
+                            />
+                            <textarea
+                              aria-label={`Lý do trạng thái bước ${stepIndex + 1} ${item.test_case_key}`}
+                              className="apple-input min-h-16"
+                              value={edited.note ?? existing?.note ?? ""}
+                              onChange={(event) =>
+                                setStepResults((values) => ({
+                                  ...values,
+                                  [result._id]: {
+                                    ...values[result._id],
+                                    [step.id]: {
+                                      ...values[result._id]?.[step.id],
+                                      note: event.target.value,
+                                    },
+                                  },
+                                }))
+                              }
+                              placeholder="Ghi chú hoặc lý do Không áp dụng"
                             />
                           </fieldset>
                         );
@@ -512,7 +626,7 @@ export default function ExecutionPage({ project, section }) {
                         </p>
                       ))}
                       <span className="flex flex-wrap gap-2">
-                        {["PASS", "FAIL", "BLOCKED", "SKIPPED", "NOT_APPLICABLE"].map((value) => (
+                        {terminalResultStatuses.map((value) => (
                           <button
                             className="secondary-button"
                             type="button"
@@ -650,27 +764,77 @@ export default function ExecutionPage({ project, section }) {
                 placeholder="Tên lần chạy"
               />
               <div className="grid gap-3 sm:grid-cols-3">
-                <input
+                <select
                   aria-label="Bản phát hành"
                   className="apple-input"
-                  placeholder="Bản phát hành"
-                  value={runForm.release}
-                  onChange={(event) => setRunForm({ ...runForm, release: event.target.value })}
-                />
-                <input
+                  value={runForm.releaseId}
+                  onChange={(event) => {
+                    const releaseId = event.target.value;
+                    const release = releases.find((item) => item._id === releaseId);
+                    setRunForm({
+                      ...runForm,
+                      releaseId,
+                      release: release?.key || "",
+                      buildId: "",
+                      build: "",
+                    });
+                  }}
+                >
+                  <option value="">Không gắn bản phát hành</option>
+                  {releases.map((item) => (
+                    <option key={item._id} value={item._id}>
+                      {item.key} · {item.name}
+                    </option>
+                  ))}
+                </select>
+                <select
                   aria-label="Bản dựng"
                   className="apple-input"
-                  placeholder="Bản dựng"
-                  value={runForm.build}
-                  onChange={(event) => setRunForm({ ...runForm, build: event.target.value })}
-                />
-                <input
+                  value={runForm.buildId}
+                  onChange={(event) => {
+                    const buildId = event.target.value;
+                    const build = builds.find((item) => item._id === buildId);
+                    setRunForm({
+                      ...runForm,
+                      buildId,
+                      build: build?.identifier || "",
+                      releaseId: build?.release_id || runForm.releaseId,
+                      release:
+                        releases.find((item) => item._id === build?.release_id)?.key ||
+                        runForm.release,
+                    });
+                  }}
+                >
+                  <option value="">Không gắn bản dựng</option>
+                  {builds
+                    .filter((item) => !runForm.releaseId || item.release_id === runForm.releaseId)
+                    .map((item) => (
+                      <option key={item._id} value={item._id}>
+                        {item.identifier} · {item.version}
+                      </option>
+                    ))}
+                </select>
+                <select
                   aria-label="Môi trường"
                   className="apple-input"
-                  placeholder="Môi trường"
-                  value={runForm.environment}
-                  onChange={(event) => setRunForm({ ...runForm, environment: event.target.value })}
-                />
+                  value={runForm.environmentId}
+                  onChange={(event) => {
+                    const environmentId = event.target.value;
+                    const environment = environments.find((item) => item._id === environmentId);
+                    setRunForm({
+                      ...runForm,
+                      environmentId,
+                      environment: environment?.name || "staging",
+                    });
+                  }}
+                >
+                  <option value="">Mặc định staging</option>
+                  {environments.map((item) => (
+                    <option key={item._id} value={item._id}>
+                      {item.name} · {item.environment_type}
+                    </option>
+                  ))}
+                </select>
               </div>
               <select
                 aria-label="Kế hoạch kiểm thử"
@@ -742,6 +906,8 @@ export default function ExecutionPage({ project, section }) {
         )}
       </div>
       <div className="grid gap-5 xl:grid-cols-2">
+        <DeviceMatricesPanel project={project} plans={plans} runs={runs} onChanged={load} />
+        <AutomationExecutionPanel project={project} />
         <Panel title="Kế hoạch kiểm thử">
           <div className="grid gap-3 border-b border-border p-4 sm:grid-cols-2 lg:grid-cols-4">
             <input
@@ -1024,9 +1190,7 @@ export default function ExecutionPage({ project, section }) {
           </select>
         </div>
         <DataTable
-          onSelect={(item) =>
-            window.location.assign(`/qa/projects/${project._id}/execution/${item._id}`)
-          }
+          onSelect={(item) => window.location.assign(`/du-an/${project._id}/thuc-thi/${item._id}`)}
           items={runs}
           empty="Chưa có lần chạy"
           columns={[

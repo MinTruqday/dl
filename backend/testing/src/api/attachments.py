@@ -7,7 +7,7 @@ from src.core.database import database
 from src.domain.schemas import AttachmentCreate, AttachmentModeration
 
 
-router = APIRouter(prefix="/kiem-thu", tags=["QA Attachments"])
+router = APIRouter(prefix="/kiem-thu", tags=["Tệp đính kèm kiểm thử"])
 
 
 @router.post("/du-an/{project_id}/tep-dinh-kem", status_code=201)

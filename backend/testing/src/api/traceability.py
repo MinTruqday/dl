@@ -13,7 +13,7 @@ from src.core.metrics import STALE, TRACE_ACCEPTANCE_RATE, UNCOVERED
 from src.domain.schemas import TraceLinkCreate
 
 
-router = APIRouter(prefix="/kiem-thu", tags=["QA Traceability"])
+router = APIRouter(prefix="/kiem-thu", tags=["Truy vết kiểm thử"])
 
 
 @router.post("/lien-ket-truy-vet", status_code=201)
@@ -180,7 +180,9 @@ async def traceability(project_id: str, user: CurrentUser = Depends(get_current_
 async def coverage(
     project_id: str,
     build: str = Query(default="", max_length=200),
+    build_id: str = Query(default="", max_length=200),
     release: str = Query(default="", max_length=200),
+    release_id: str = Query(default="", max_length=200),
     user: CurrentUser = Depends(get_current_user),
 ):
     await get_project(project_id, user, "coverage.read")
@@ -215,9 +217,14 @@ async def coverage(
     }
     fresh_coverage = percent(len(requirement_versions & fresh_requirement_ids), len(requirement_versions))
     run_query = {"project_id": project_id}
-    if build:
+    if build_id:
+        run_query["build_id"] = build_id
+    elif build:
         run_query["build"] = build
-    if release:
+    if release_id:
+        plans = await database.value.test_plans.find({"project_id": project_id, "release_id": release_id}, {"_id": 1}).to_list(5000)
+        run_query["test_plan_id"] = {"$in": [item["_id"] for item in plans]}
+    elif release:
         plans = await database.value.test_plans.find({"project_id": project_id, "release": release}, {"_id": 1}).to_list(5000)
         run_query["test_plan_id"] = {"$in": [item["_id"] for item in plans]}
     runs = await database.value.test_runs.find(run_query).to_list(10000)
@@ -231,7 +238,7 @@ async def coverage(
         latest_execution.setdefault(item["test_case_version_id"], item)
     UNCOVERED.set(len(uncovered))
     STALE.set(stale_tests)
-    return envelope({"requirement_coverage": requirement_coverage, "acceptance_criterion_coverage": criterion_coverage, "fresh_coverage": fresh_coverage, "execution_coverage": execution_coverage, "category_coverage": categories, "uncovered_requirements": uncovered, "unlinked_tests": unlinked_tests, "stale_tests": stale_tests, "latest_execution": latest_execution, "scope": {"build": build or None, "release": release or None, "test_case_version_ids": sorted(execution_scope_ids)}})
+    return envelope({"requirement_coverage": requirement_coverage, "acceptance_criterion_coverage": criterion_coverage, "fresh_coverage": fresh_coverage, "execution_coverage": execution_coverage, "category_coverage": categories, "uncovered_requirements": uncovered, "unlinked_tests": unlinked_tests, "stale_tests": stale_tests, "latest_execution": latest_execution, "scope": {"build": build or None, "build_id": build_id or None, "release": release or None, "release_id": release_id or None, "test_case_version_ids": sorted(execution_scope_ids)}})
 
 
 @router.get("/yeu-cau/{requirement_id}/do-phu")
@@ -264,11 +271,22 @@ async def create_coverage_snapshot(
         existing = await database.value.coverage_snapshots.find_one({"project_id": project_id, "idempotency_key": idempotency_key})
         if existing:
             return envelope(existing)
-    metrics = (await coverage(project_id, build=str(payload.get("build") or ""), release=str(payload.get("release") or ""), user=user))["data"]
+    metrics = (
+        await coverage(
+            project_id,
+            build=str(payload.get("build") or ""),
+            build_id=str(payload.get("build_id") or ""),
+            release=str(payload.get("release") or ""),
+            release_id=str(payload.get("release_id") or ""),
+            user=user,
+        )
+    )["data"]
     snapshot = {
         "_id": new_id("COV"),
         "project_id": project_id,
         "label": str(payload.get("label") or ""),
+        "release_id": str(payload.get("release_id") or "") or None,
+        "build_id": str(payload.get("build_id") or "") or None,
         "idempotency_key": idempotency_key,
         "metrics": metrics,
         "created_by": user.id,

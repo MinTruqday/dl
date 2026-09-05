@@ -17,7 +17,12 @@ export function ToastContainer({ toasts, removeToast }) {
           {t.type === "success" && <CheckCircle className="w-5 h-5" />}
           {t.type === "error" && <XCircle className="w-5 h-5" />}
           <p>{t.message}</p>
-          <button onClick={() => removeToast(t.id)} className="ml-auto opacity-70 ">
+          <button
+            type="button"
+            aria-label="Đóng thông báo"
+            onClick={() => removeToast(t.id)}
+            className="ml-auto opacity-70"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>

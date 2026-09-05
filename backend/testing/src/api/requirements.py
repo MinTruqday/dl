@@ -36,31 +36,62 @@ from src.domain.schemas import (
     KnowledgeSourceCreate,
     ProjectArchiveInput,
     RequirementBaselineInput,
+    RequirementCandidateMergeInput,
+    RequirementCandidateRejectInput,
+    RequirementCandidateSplitInput,
     RequirementCompareInput,
     RequirementDependencyInput,
+    RequirementDuplicateCheckInput,
     RequirementDocumentPatch,
     RequirementCreate,
     RequirementDraftPatch,
     RequirementExtractionInput,
     RequirementImportReview,
     RequirementObsoleteInput,
+    RequirementMergeInput,
     RequirementRestoreInput,
+    RequirementSplitInput,
     RequirementParseRetry,
     RequirementVersionCreate,
     ReviewTransitionInput,
 )
 from src.services.change_analysis import semantic_changes
-from src.services.linters import requirement_findings
+from src.services.linters import requirement_duplicate_score, requirement_findings
 from src.services.project_knowledge import index_artifact
 
 
-router = APIRouter(prefix="/kiem-thu", tags=["QA Requirements"])
+router = APIRouter(prefix="/kiem-thu", tags=["Yêu cầu kiểm thử"])
 
 
 def serialized_content(content):
     if isinstance(content, str):
         return content
     return json.dumps(content, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
+def prepare_requirement_candidates(job_id, candidates):
+    prepared = []
+    for index, value in enumerate(candidates):
+        candidate = dict(value)
+        candidate["candidate_id"] = candidate.get("candidate_id") or f"{job_id}-CAND-{index + 1}"
+        candidate["candidate_status"] = "ACTIVE"
+        candidate["candidate_revision"] = int(candidate.get("candidate_revision", 1))
+        candidate["parent_candidate_ids"] = list(candidate.get("parent_candidate_ids", []))
+        prepared.append(candidate)
+    return prepared
+
+
+def candidate_fingerprint(candidate):
+    return hashlib.sha256(
+        serialized_content(
+            {
+                "candidate_id": candidate.get("candidate_id"),
+                "title": candidate.get("title"),
+                "content_doc": candidate.get("content_doc"),
+                "source_refs": candidate.get("source_refs", []),
+            }
+        ).encode("utf-8")
+    ).hexdigest()
 
 
 async def create_requirement_document_record(project_id, payload, user):
@@ -249,6 +280,357 @@ async def create_requirement_record(project_id, payload, user, origin="manual"):
     await index_requirement(version)
     await audit(user.id, "requirement_created", "Requirement", requirement_id, project_id)
     return {**requirement, "current_version": version}
+
+
+def unique_source_refs(values):
+    result = []
+    seen = set()
+    for value in values:
+        marker = serialized_content(value)
+        if marker in seen:
+            continue
+        seen.add(marker)
+        result.append(value)
+    return result
+
+
+async def load_requirement_baselines(project_id, requirement_ids, expected_version_ids, user, permission):
+    await get_project(project_id, user, permission)
+    ordered_ids = list(dict.fromkeys(requirement_ids))
+    if len(ordered_ids) != len(requirement_ids):
+        raise HTTPException(status_code=422, detail={"code": "DUPLICATE_SOURCE_REQUIREMENT"})
+    if set(expected_version_ids) != set(ordered_ids):
+        raise HTTPException(status_code=422, detail={"code": "SOURCE_VERSION_SET_MISMATCH"})
+    requirements = await database.value.requirements.find(
+        {"_id": {"$in": ordered_ids}, "project_id": project_id}
+    ).to_list(len(ordered_ids))
+    by_id = {item["_id"]: item for item in requirements}
+    if set(by_id) != set(ordered_ids):
+        raise HTTPException(status_code=404, detail={"code": "SOURCE_REQUIREMENT_NOT_FOUND"})
+    version_ids = list(expected_version_ids.values())
+    versions = await database.value.requirement_versions.find(
+        {"_id": {"$in": version_ids}, "project_id": project_id}
+    ).to_list(len(version_ids))
+    versions_by_id = {item["_id"]: item for item in versions}
+    if set(versions_by_id) != set(version_ids):
+        raise HTTPException(status_code=404, detail={"code": "SOURCE_REQUIREMENT_VERSION_NOT_FOUND"})
+    sources = []
+    for requirement_id in ordered_ids:
+        requirement = by_id[requirement_id]
+        version_id = expected_version_ids[requirement_id]
+        version = versions_by_id[version_id]
+        if requirement.get("current_version_id") != version_id:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "code": "STALE_SOURCE_REQUIREMENT",
+                    "requirement_id": requirement_id,
+                    "current_version_id": requirement.get("current_version_id"),
+                },
+            )
+        if requirement.get("status") != "BASELINED" or version.get("status") != "BASELINED":
+            raise HTTPException(
+                status_code=409,
+                detail={"code": "SOURCE_REQUIREMENT_NOT_BASELINED", "requirement_id": requirement_id},
+            )
+        sources.append((requirement, version))
+    return sources
+
+
+async def claim_requirement_transformation(project_id, transformation_type, payload, source_requirement_ids, source_version_ids, user):
+    request_payload = payload.model_dump(mode="json")
+    request_fingerprint = hashlib.sha256(
+        serialized_content({key: value for key, value in request_payload.items() if key != "idempotency_key"}).encode("utf-8")
+    ).hexdigest()
+    existing = await database.value.requirement_transformations.find_one(
+        {"project_id": project_id, "idempotency_key": payload.idempotency_key}
+    )
+    if existing:
+        if existing.get("request_fingerprint") != request_fingerprint:
+            raise HTTPException(status_code=409, detail={"code": "IDEMPOTENCY_KEY_REUSED"})
+        if existing.get("status") == "CONFIRMED":
+            return existing, False
+        if existing.get("status") == "CONFIRMING":
+            raise HTTPException(status_code=409, detail={"code": "REQUIREMENT_TRANSFORMATION_IN_PROGRESS"})
+        claimed = await database.value.requirement_transformations.find_one_and_update(
+            {"_id": existing["_id"], "project_id": project_id, "status": "FAILED"},
+            {
+                "$set": {"status": "CONFIRMING", "updated_at": now()},
+                "$unset": {"error_code": ""},
+                "$inc": {"attempt": 1},
+            },
+            return_document=ReturnDocument.AFTER,
+        )
+        if not claimed:
+            raise HTTPException(status_code=409, detail={"code": "REQUIREMENT_TRANSFORMATION_CONFLICT"})
+        return claimed, True
+    timestamp = now()
+    transformation = {
+        "_id": new_id("RTX"),
+        "project_id": project_id,
+        "type": transformation_type,
+        "source_requirement_ids": source_requirement_ids,
+        "source_version_ids": source_version_ids,
+        "result_requirement_ids": [],
+        "result_version_ids": [],
+        "reason": payload.reason,
+        "idempotency_key": payload.idempotency_key,
+        "request_fingerprint": request_fingerprint,
+        "status": "CONFIRMING",
+        "attempt": 1,
+        "created_by": user.id,
+        "created_at": timestamp,
+        "updated_at": timestamp,
+    }
+    try:
+        await database.value.requirement_transformations.insert_one(transformation)
+    except DuplicateKeyError:
+        existing = await database.value.requirement_transformations.find_one(
+            {"project_id": project_id, "idempotency_key": payload.idempotency_key}
+        )
+        if existing and existing.get("request_fingerprint") == request_fingerprint and existing.get("status") == "CONFIRMED":
+            return existing, False
+        raise HTTPException(status_code=409, detail={"code": "REQUIREMENT_TRANSFORMATION_CONFLICT"})
+    return transformation, True
+
+
+async def prepare_requirement_output(project_id, draft, user, transformation, index, sources, relation):
+    validate_doc(draft.content_doc)
+    keys = [item.key for item in draft.acceptance_criteria]
+    if len(keys) != len(set(keys)):
+        raise HTTPException(status_code=422, detail={"code": "DUPLICATE_ACCEPTANCE_CRITERION_KEY"})
+    for item in draft.acceptance_criteria:
+        validate_doc(item.content_doc)
+    source_refs = unique_source_refs(
+        list(draft.source_refs)
+        + [
+            {
+                "type": "requirement_version",
+                "requirement_id": requirement["_id"],
+                "requirement_version_id": version["_id"],
+                "relation": relation,
+            }
+            for requirement, version in sources
+        ]
+    )
+    await validate_requirement_sources(project_id, source_refs)
+    timestamp = now()
+    requirement_id = f"{transformation['_id']}-REQ-{index + 1}"
+    version_id = f"{transformation['_id']}-REQV-{index + 1}"
+    requirement_key = draft.requirement_key or await next_key(project_id, "requirement", "REQ")
+    version = {
+        "_id": version_id,
+        "project_id": project_id,
+        "requirement_id": requirement_id,
+        "requirement_key": requirement_key,
+        "version": 1,
+        "title": draft.title,
+        "type": draft.type,
+        "priority": draft.priority,
+        "risk": draft.risk,
+        "content_doc": draft.content_doc,
+        "plain_text_projection": plain_text(draft.content_doc),
+        "business_rules": draft.business_rules,
+        "actors": draft.actors,
+        "dependencies": draft.dependencies,
+        "source_refs": source_refs,
+        "tags": draft.tags,
+        "owner_id": draft.owner_id or user.id,
+        "acceptance_criterion_ids": [],
+        "parent_version_id": None,
+        "change_reason": transformation["reason"],
+        "status": "DRAFT",
+        "revision": 1,
+        "origin": relation,
+        "transformation_id": transformation["_id"],
+        "derived_from": [
+            {"requirement_id": requirement["_id"], "requirement_version_id": source["_id"]}
+            for requirement, source in sources
+        ],
+        "created_by": user.id,
+        "created_at": timestamp,
+        "updated_at": timestamp,
+    }
+    criteria = []
+    for criterion_index, value in enumerate(draft.acceptance_criteria):
+        item = value.model_dump()
+        item["status"] = "draft"
+        criterion = {
+            "_id": f"{transformation['_id']}-AC-{index + 1}-{criterion_index + 1}",
+            "project_id": project_id,
+            "requirement_version_id": version_id,
+            **item,
+            "plain_text": plain_text(item["content_doc"]),
+            "created_at": timestamp,
+        }
+        criteria.append(criterion)
+    version["acceptance_criterion_ids"] = [item["_id"] for item in criteria]
+    requirement = {
+        "_id": requirement_id,
+        "project_id": project_id,
+        "requirement_key": requirement_key,
+        "current_version_id": version_id,
+        "status": "DRAFT",
+        "owner_id": draft.owner_id or user.id,
+        "tags": draft.tags,
+        "transformation_id": transformation["_id"],
+        "created_at": timestamp,
+        "updated_at": timestamp,
+    }
+    return requirement, version, criteria
+
+
+async def hydrate_requirement_transformation(transformation):
+    requirements = await database.value.requirements.find(
+        {"project_id": transformation["project_id"], "_id": {"$in": transformation.get("result_requirement_ids", [])}}
+    ).to_list(100)
+    versions = await database.value.requirement_versions.find(
+        {"project_id": transformation["project_id"], "_id": {"$in": transformation.get("result_version_ids", [])}}
+    ).to_list(100)
+    versions_by_id = {item["_id"]: item for item in versions}
+    return {
+        "transformation": transformation,
+        "requirements": [
+            {**item, "current_version": versions_by_id.get(item.get("current_version_id"))}
+            for item in requirements
+        ],
+    }
+
+
+async def execute_requirement_transformation(project_id, transformation, sources, drafts, user, relation):
+    output_requirements = []
+    output_versions = []
+    output_criteria = []
+    updated_sources = []
+    try:
+        for index, draft in enumerate(drafts):
+            requirement, version, criteria = await prepare_requirement_output(
+                project_id, draft, user, transformation, index, sources, relation
+            )
+            output_requirements.append(requirement)
+            output_versions.append(version)
+            output_criteria.extend(criteria)
+        keys = [item["requirement_key"] for item in output_requirements]
+        if len(keys) != len(set(keys)):
+            raise HTTPException(status_code=422, detail={"code": "DUPLICATE_OUTPUT_REQUIREMENT_KEY"})
+        await database.value.requirements.insert_many(output_requirements)
+        await database.value.requirement_versions.insert_many(output_versions)
+        if output_criteria:
+            await database.value.acceptance_criteria.insert_many(output_criteria)
+        result_ids = [item["_id"] for item in output_requirements]
+        for source_requirement, source_version in sources:
+            version_result = await database.value.requirement_versions.update_one(
+                {
+                    "_id": source_version["_id"],
+                    "project_id": project_id,
+                    "status": "BASELINED",
+                    "superseded_by_transformation_id": {"$exists": False},
+                },
+                {
+                    "$set": {
+                        "status": "SUPERSEDED",
+                        "superseded_by_requirement_ids": result_ids,
+                        "superseded_by_transformation_id": transformation["_id"],
+                        "superseded_at": now(),
+                        "superseded_by": user.id,
+                        "updated_at": now(),
+                    },
+                    "$inc": {"revision": 1},
+                },
+            )
+            if version_result.matched_count != 1:
+                raise HTTPException(status_code=409, detail={"code": "STALE_SOURCE_REQUIREMENT"})
+            updated_sources.append((source_requirement["_id"], source_version["_id"]))
+            requirement_result = await database.value.requirements.update_one(
+                {
+                    "_id": source_requirement["_id"],
+                    "project_id": project_id,
+                    "current_version_id": source_version["_id"],
+                    "status": "BASELINED",
+                    "superseded_by_transformation_id": {"$exists": False},
+                },
+                {
+                    "$set": {
+                        "status": "SUPERSEDED",
+                        "superseded_by_requirement_ids": result_ids,
+                        "superseded_by_transformation_id": transformation["_id"],
+                        "superseded_at": now(),
+                        "superseded_by": user.id,
+                        "updated_at": now(),
+                    }
+                },
+            )
+            if requirement_result.matched_count != 1:
+                raise HTTPException(status_code=409, detail={"code": "STALE_SOURCE_REQUIREMENT"})
+        transformation = await database.value.requirement_transformations.find_one_and_update(
+            {"_id": transformation["_id"], "project_id": project_id, "status": "CONFIRMING"},
+            {
+                "$set": {
+                    "status": "CONFIRMED",
+                    "result_requirement_ids": result_ids,
+                    "result_version_ids": [item["_id"] for item in output_versions],
+                    "confirmed_at": now(),
+                    "updated_at": now(),
+                }
+            },
+            return_document=ReturnDocument.AFTER,
+        )
+        if not transformation:
+            raise HTTPException(status_code=409, detail={"code": "REQUIREMENT_TRANSFORMATION_CONFLICT"})
+    except Exception as error:
+        for requirement_id, version_id in updated_sources:
+            await database.value.requirements.update_one(
+                {"_id": requirement_id, "project_id": project_id, "superseded_by_transformation_id": transformation["_id"]},
+                {
+                    "$set": {"status": "BASELINED", "updated_at": now()},
+                    "$unset": {
+                        "superseded_by_requirement_ids": "",
+                        "superseded_by_transformation_id": "",
+                        "superseded_at": "",
+                        "superseded_by": "",
+                    },
+                },
+            )
+            await database.value.requirement_versions.update_one(
+                {"_id": version_id, "project_id": project_id, "superseded_by_transformation_id": transformation["_id"]},
+                {
+                    "$set": {"status": "BASELINED", "updated_at": now()},
+                    "$unset": {
+                        "superseded_by_requirement_ids": "",
+                        "superseded_by_transformation_id": "",
+                        "superseded_at": "",
+                        "superseded_by": "",
+                    },
+                    "$inc": {"revision": 1},
+                },
+            )
+        await database.value.acceptance_criteria.delete_many({"project_id": project_id, "_id": {"$in": [item["_id"] for item in output_criteria]}})
+        await database.value.requirement_versions.delete_many({"project_id": project_id, "transformation_id": transformation["_id"]})
+        await database.value.requirements.delete_many({"project_id": project_id, "transformation_id": transformation["_id"]})
+        await database.value.requirement_transformations.update_one(
+            {"_id": transformation["_id"], "project_id": project_id},
+            {"$set": {"status": "FAILED", "error_code": getattr(error, "detail", {"code": type(error).__name__}), "updated_at": now()}},
+        )
+        raise
+    indexed = [await index_requirement(version) for version in output_versions]
+    await audit(
+        user.id,
+        f"requirement_{relation}_confirmed",
+        "RequirementTransformation",
+        transformation["_id"],
+        project_id,
+        {
+            "source_requirement_ids": transformation["source_requirement_ids"],
+            "result_requirement_ids": transformation["result_requirement_ids"],
+            "reason": transformation["reason"],
+        },
+    )
+    result = await hydrate_requirement_transformation(transformation)
+    return envelope(
+        result,
+        status="SUCCESS" if all(indexed) else "DEGRADED",
+        degraded_mode=None if all(indexed) else "DEGRADED_VECTOR",
+    )
 
 
 @router.post("/du-an/{project_id}/yeu-cau", status_code=201)
@@ -622,7 +1004,9 @@ async def submit_requirement_review(
             detail={"code": "REVISION_CONFLICT", "current_revision": version["revision"]},
         )
     findings = requirement_findings(version)
-    if any(item["severity"] == "error" for item in findings):
+    project = await database.value.projects.find_one({"_id": project_id}, {"settings": 1})
+    lint_blocking = (project.get("settings") or {}).get("requirement_lint_blocking", True)
+    if lint_blocking and any(item["severity"] == "error" for item in findings):
         raise HTTPException(
             status_code=409,
             detail={"code": "REQUIREMENT_LINT_BLOCKED", "findings": findings},
@@ -722,7 +1106,11 @@ async def baseline_requirement_version(
     if version["revision"] != payload.expected_revision:
         raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT", "current_revision": version["revision"]})
     findings = requirement_findings(version)
-    if any(item["severity"] == "error" for item in findings):
+    project = await database.value.projects.find_one(
+        {"_id": version["project_id"]}, {"settings": 1}
+    )
+    lint_blocking = (project.get("settings") or {}).get("requirement_lint_blocking", True)
+    if lint_blocking and any(item["severity"] == "error" for item in findings):
         raise HTTPException(status_code=409, detail={"code": "REQUIREMENT_LINT_BLOCKED", "findings": findings})
     timestamp = now()
     version = await database.value.requirement_versions.find_one_and_update(
@@ -1063,6 +1451,185 @@ async def diff_requirement(
         RequirementCompareInput(from_version_id=from_version, to_version_id=to_version),
         user,
     )
+
+
+@router.post("/du-an/{project_id}/yeu-cau/{requirement_id}/tach", status_code=201)
+async def split_requirement(
+    project_id: str,
+    requirement_id: str,
+    payload: RequirementSplitInput,
+    user: CurrentUser = Depends(get_current_user),
+):
+    expected_versions = {requirement_id: payload.expected_source_version_id}
+    await get_project(project_id, user, "requirement.split")
+    existing = await database.value.requirement_transformations.find_one(
+        {"project_id": project_id, "idempotency_key": payload.idempotency_key}
+    )
+    sources = None
+    if not existing:
+        sources = await load_requirement_baselines(
+            project_id,
+            [requirement_id],
+            expected_versions,
+            user,
+            "requirement.split",
+        )
+    transformation, execute = await claim_requirement_transformation(
+        project_id,
+        "SPLIT",
+        payload,
+        [requirement_id],
+        [payload.expected_source_version_id],
+        user,
+    )
+    if not execute:
+        return envelope(await hydrate_requirement_transformation(transformation))
+    if sources is None:
+        sources = await load_requirement_baselines(
+            project_id,
+            [requirement_id],
+            expected_versions,
+            user,
+            "requirement.split",
+        )
+    return await execute_requirement_transformation(
+        project_id,
+        transformation,
+        sources,
+        payload.drafts,
+        user,
+        "split",
+    )
+
+
+@router.post("/du-an/{project_id}/yeu-cau/gop", status_code=201)
+async def merge_requirements(
+    project_id: str,
+    payload: RequirementMergeInput,
+    user: CurrentUser = Depends(get_current_user),
+):
+    await get_project(project_id, user, "requirement.merge")
+    existing = await database.value.requirement_transformations.find_one(
+        {"project_id": project_id, "idempotency_key": payload.idempotency_key}
+    )
+    sources = None
+    if not existing:
+        sources = await load_requirement_baselines(
+            project_id,
+            payload.source_requirement_ids,
+            payload.expected_source_version_ids,
+            user,
+            "requirement.merge",
+        )
+    transformation, execute = await claim_requirement_transformation(
+        project_id,
+        "MERGE",
+        payload,
+        payload.source_requirement_ids,
+        [payload.expected_source_version_ids[item] for item in payload.source_requirement_ids],
+        user,
+    )
+    if not execute:
+        return envelope(await hydrate_requirement_transformation(transformation))
+    if sources is None:
+        sources = await load_requirement_baselines(
+            project_id,
+            payload.source_requirement_ids,
+            payload.expected_source_version_ids,
+            user,
+            "requirement.merge",
+        )
+    return await execute_requirement_transformation(
+        project_id,
+        transformation,
+        sources,
+        [payload.draft],
+        user,
+        "merge",
+    )
+
+
+@router.post("/du-an/{project_id}/yeu-cau/kiem-tra-trung-lap", status_code=201)
+async def find_duplicate_requirements(
+    project_id: str,
+    payload: RequirementDuplicateCheckInput,
+    user: CurrentUser = Depends(get_current_user),
+):
+    await get_project(project_id, user, "requirement.duplicate_check")
+    query = {"project_id": project_id, "status": {"$nin": ["OBSOLETE", "ARCHIVED"]}}
+    selected_ids = list(dict.fromkeys(payload.requirement_ids))
+    if selected_ids:
+        query["_id"] = {"$in": selected_ids}
+    requirements = await database.value.requirements.find(query).to_list(500)
+    if selected_ids and {item["_id"] for item in requirements} != set(selected_ids):
+        raise HTTPException(status_code=404, detail={"code": "REQUIREMENT_SELECTION_NOT_FOUND"})
+    versions = await database.value.requirement_versions.find(
+        {
+            "project_id": project_id,
+            "_id": {"$in": [item["current_version_id"] for item in requirements]},
+        }
+    ).to_list(500)
+    criteria = await database.value.acceptance_criteria.find(
+        {"project_id": project_id, "requirement_version_id": {"$in": [item["_id"] for item in versions]}}
+    ).to_list(10000)
+    criteria_by_version = {}
+    for criterion in criteria:
+        criteria_by_version.setdefault(criterion["requirement_version_id"], []).append(criterion)
+    version_by_id = {item["_id"]: {**item, "acceptance_criteria": criteria_by_version.get(item["_id"], [])} for item in versions}
+    candidates = []
+    ordered = sorted(requirements, key=lambda item: item["_id"])
+    for index, left in enumerate(ordered):
+        left_version = version_by_id.get(left["current_version_id"])
+        if not left_version:
+            continue
+        for right in ordered[index + 1 :]:
+            right_version = version_by_id.get(right["current_version_id"])
+            if not right_version:
+                continue
+            score, reasons = requirement_duplicate_score(left_version, right_version)
+            if score < payload.threshold:
+                continue
+            candidates.append(
+                {
+                    "left_requirement_id": left["_id"],
+                    "left_version_id": left_version["_id"],
+                    "right_requirement_id": right["_id"],
+                    "right_version_id": right_version["_id"],
+                    "score": score,
+                    "match_type": "EXACT" if score == 1 else "SEMANTIC",
+                    "reasons": reasons,
+                    "status": "CANDIDATE",
+                }
+            )
+    candidates.sort(key=lambda item: (-item["score"], item["left_requirement_id"], item["right_requirement_id"]))
+    candidates = candidates[: payload.limit]
+    scan = {
+        "_id": new_id("RDS"),
+        "project_id": project_id,
+        "requirement_ids": selected_ids,
+        "threshold": payload.threshold,
+        "candidate_count": len(candidates),
+        "candidates": candidates,
+        "algorithm": {
+            "name": "requirement-duplicate-v1",
+            "lexical_weight": 0.65,
+            "term_weight": 0.25,
+            "business_rule_weight": 0.1,
+        },
+        "status": "COMPLETED",
+        "created_by": user.id,
+        "created_at": now(),
+    }
+    await database.value.requirement_duplicate_scans.insert_one(scan)
+    await audit(
+        user.id,
+        "requirement_duplicate_scan_completed",
+        "RequirementDuplicateScan",
+        scan["_id"],
+        project_id,
+        {"candidate_count": len(candidates), "threshold": payload.threshold},
+    )
+    return envelope(scan)
 
 
 @router.post("/du-an/{project_id}/tai-lieu-yeu-cau", status_code=201)
@@ -1603,9 +2170,10 @@ async def extract_requirement_document(
         document_id,
         document["project_id"],
     )
-    candidates = atomic_requirement_candidates(document)
+    job_id = new_id("RIMP")
+    candidates = prepare_requirement_candidates(job_id, atomic_requirement_candidates(document))
     job = {
-        "_id": new_id("RIMP"),
+        "_id": job_id,
         "project_id": document["project_id"],
         "source_document_id": document_id,
         "source_content_hash": document["content_hash"],
@@ -1654,9 +2222,10 @@ async def create_requirement_import(
     user: CurrentUser = Depends(get_current_user),
 ):
     await get_project(project_id, user, "requirement.create")
-    previews = parse_import(payload)
+    job_id = new_id("RIMP")
+    previews = prepare_requirement_candidates(job_id, parse_import(payload))
     job = {
-        "_id": new_id("RIMP"),
+        "_id": job_id,
         "project_id": project_id,
         "filename": payload.filename,
         "format": payload.format,
@@ -1712,8 +2281,24 @@ async def review_requirement_import(
             status_code=409,
             detail={"code": "IMPORT_PREVIEW_NOT_EDITABLE", "status": job.get("status")},
         )
-    preview = [candidate.model_dump() for candidate in payload.preview]
-    for candidate in preview:
+    current_preview = prepare_requirement_candidates(job_id, job.get("preview", []))
+    submitted = [candidate.model_dump() for candidate in payload.preview]
+    if len(submitted) == len(current_preview) and all(not item.get("candidate_id") for item in submitted):
+        for index, item in enumerate(submitted):
+            item["candidate_id"] = current_preview[index]["candidate_id"]
+    current_by_id = {item["candidate_id"]: item for item in current_preview}
+    submitted_by_id = {item.get("candidate_id"): item for item in submitted}
+    if None in submitted_by_id or set(submitted_by_id) != set(current_by_id):
+        raise HTTPException(status_code=422, detail={"code": "CANDIDATE_SET_CHANGED"})
+    preview = []
+    for current in current_preview:
+        candidate = submitted_by_id[current["candidate_id"]]
+        candidate["source_refs"] = current.get("source_refs", [])
+        candidate["candidate_status"] = "ACTIVE"
+        candidate["candidate_revision"] = int(current.get("candidate_revision", 1)) + 1
+        candidate["candidate_relation"] = current.get("candidate_relation")
+        candidate["parent_candidate_ids"] = current.get("parent_candidate_ids", [])
+        preview.append(candidate)
         validate_doc(candidate["content_doc"])
         for criterion in candidate.get("acceptance_criteria", []):
             validate_doc(criterion["content_doc"])
@@ -1746,6 +2331,247 @@ async def review_requirement_import(
         job_id,
         job["project_id"],
         {"candidate_count": len(preview), "review_note": payload.review_note},
+    )
+    return envelope(updated, revision=updated["revision"])
+
+
+@router.post("/nhap-yeu-cau/{job_id}/ung-vien/gop")
+async def merge_requirement_candidates(
+    job_id: str,
+    payload: RequirementCandidateMergeInput,
+    user: CurrentUser = Depends(get_current_user),
+):
+    job = await get_project_entity("import_jobs", job_id, user, "requirement_document.review_extraction")
+    if job.get("status") != "PREVIEW_READY":
+        raise HTTPException(status_code=409, detail={"code": "IMPORT_PREVIEW_NOT_EDITABLE"})
+    candidate_ids = list(dict.fromkeys(payload.candidate_ids))
+    if len(candidate_ids) != len(payload.candidate_ids):
+        raise HTTPException(status_code=422, detail={"code": "DUPLICATE_CANDIDATE_ID"})
+    preview = prepare_requirement_candidates(job_id, job.get("preview", []))
+    by_id = {item["candidate_id"]: item for item in preview}
+    if not set(candidate_ids) <= set(by_id):
+        raise HTTPException(status_code=404, detail={"code": "CANDIDATE_NOT_FOUND"})
+    parents = [by_id[item] for item in candidate_ids]
+    merged = payload.merged.model_dump()
+    validate_doc(merged["content_doc"])
+    for criterion in merged.get("acceptance_criteria", []):
+        validate_doc(criterion["content_doc"])
+    merged["source_refs"] = unique_source_refs(
+        [source for parent in parents for source in parent.get("source_refs", [])]
+        + merged.get("source_refs", [])
+    )
+    await validate_requirement_sources(job["project_id"], merged["source_refs"])
+    merged_id = new_id("RCAND")
+    merged.update(
+        {
+            "candidate_id": merged_id,
+            "candidate_status": "ACTIVE",
+            "candidate_revision": 1,
+            "candidate_relation": "merged",
+            "parent_candidate_ids": candidate_ids,
+            "extraction_confidence": min(
+                (float(item.get("extraction_confidence", 1)) for item in parents),
+                default=1,
+            ),
+        }
+    )
+    first_index = min(index for index, item in enumerate(preview) if item["candidate_id"] in candidate_ids)
+    next_preview = [item for item in preview if item["candidate_id"] not in candidate_ids]
+    next_preview.insert(first_index, merged)
+    event = {
+        "_id": new_id("RCOP"),
+        "type": "MERGE",
+        "parent_candidate_ids": candidate_ids,
+        "result_candidate_ids": [merged_id],
+        "parent_fingerprints": [candidate_fingerprint(item) for item in parents],
+        "source_refs": merged["source_refs"],
+        "reason": payload.reason,
+        "actor_id": user.id,
+        "created_at": now(),
+    }
+    updated = await database.value.import_jobs.find_one_and_update(
+        {
+            "_id": job_id,
+            "project_id": job["project_id"],
+            "status": "PREVIEW_READY",
+            "revision": payload.expected_revision,
+        },
+        {
+            "$set": {
+                "preview": next_preview,
+                "candidate_count": len(next_preview),
+                "reviewed_by": user.id,
+                "reviewed_at": now(),
+                "updated_at": now(),
+            },
+            "$push": {"candidate_lineage": event},
+            "$inc": {"revision": 1},
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+    if not updated:
+        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+    await audit(
+        user.id,
+        "requirement_candidates_merged",
+        "RequirementImport",
+        job_id,
+        job["project_id"],
+        {"parent_candidate_ids": candidate_ids, "result_candidate_id": merged_id, "reason": payload.reason},
+    )
+    return envelope(updated, revision=updated["revision"])
+
+
+@router.post("/nhap-yeu-cau/{job_id}/ung-vien/{candidate_id}/tach")
+async def split_requirement_candidate(
+    job_id: str,
+    candidate_id: str,
+    payload: RequirementCandidateSplitInput,
+    user: CurrentUser = Depends(get_current_user),
+):
+    job = await get_project_entity("import_jobs", job_id, user, "requirement_document.review_extraction")
+    if job.get("status") != "PREVIEW_READY":
+        raise HTTPException(status_code=409, detail={"code": "IMPORT_PREVIEW_NOT_EDITABLE"})
+    preview = prepare_requirement_candidates(job_id, job.get("preview", []))
+    parent = next((item for item in preview if item["candidate_id"] == candidate_id), None)
+    if not parent:
+        raise HTTPException(status_code=404, detail={"code": "CANDIDATE_NOT_FOUND"})
+    if len(preview) - 1 + len(payload.drafts) > 500:
+        raise HTTPException(status_code=422, detail={"code": "CANDIDATE_LIMIT_EXCEEDED"})
+    children = []
+    for index, draft in enumerate(payload.drafts):
+        child = draft.model_dump()
+        validate_doc(child["content_doc"])
+        for criterion in child.get("acceptance_criteria", []):
+            validate_doc(criterion["content_doc"])
+        child["source_refs"] = unique_source_refs(
+            parent.get("source_refs", []) + child.get("source_refs", [])
+        )
+        await validate_requirement_sources(job["project_id"], child["source_refs"])
+        child.update(
+            {
+                "candidate_id": new_id("RCAND"),
+                "candidate_status": "ACTIVE",
+                "candidate_revision": 1,
+                "candidate_relation": f"split-{index + 1}",
+                "parent_candidate_ids": [candidate_id],
+                "extraction_confidence": float(parent.get("extraction_confidence", 1)),
+            }
+        )
+        children.append(child)
+    parent_index = next(index for index, item in enumerate(preview) if item["candidate_id"] == candidate_id)
+    next_preview = list(preview)
+    next_preview[parent_index : parent_index + 1] = children
+    event = {
+        "_id": new_id("RCOP"),
+        "type": "SPLIT",
+        "parent_candidate_ids": [candidate_id],
+        "result_candidate_ids": [item["candidate_id"] for item in children],
+        "parent_fingerprints": [candidate_fingerprint(parent)],
+        "source_refs": parent.get("source_refs", []),
+        "reason": payload.reason,
+        "actor_id": user.id,
+        "created_at": now(),
+    }
+    updated = await database.value.import_jobs.find_one_and_update(
+        {
+            "_id": job_id,
+            "project_id": job["project_id"],
+            "status": "PREVIEW_READY",
+            "revision": payload.expected_revision,
+        },
+        {
+            "$set": {
+                "preview": next_preview,
+                "candidate_count": len(next_preview),
+                "reviewed_by": user.id,
+                "reviewed_at": now(),
+                "updated_at": now(),
+            },
+            "$push": {"candidate_lineage": event},
+            "$inc": {"revision": 1},
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+    if not updated:
+        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+    await audit(
+        user.id,
+        "requirement_candidate_split",
+        "RequirementImport",
+        job_id,
+        job["project_id"],
+        {
+            "parent_candidate_id": candidate_id,
+            "result_candidate_ids": [item["candidate_id"] for item in children],
+            "reason": payload.reason,
+        },
+    )
+    return envelope(updated, revision=updated["revision"])
+
+
+@router.post("/nhap-yeu-cau/{job_id}/ung-vien/{candidate_id}/tu-choi")
+async def reject_requirement_candidate(
+    job_id: str,
+    candidate_id: str,
+    payload: RequirementCandidateRejectInput,
+    user: CurrentUser = Depends(get_current_user),
+):
+    job = await get_project_entity("import_jobs", job_id, user, "requirement_document.review_extraction")
+    if job.get("status") != "PREVIEW_READY":
+        raise HTTPException(status_code=409, detail={"code": "IMPORT_PREVIEW_NOT_EDITABLE"})
+    preview = prepare_requirement_candidates(job_id, job.get("preview", []))
+    candidate = next((item for item in preview if item["candidate_id"] == candidate_id), None)
+    if not candidate:
+        rejected = next(
+            (
+                item
+                for item in job.get("rejected_candidates", [])
+                if item.get("candidate_id") == candidate_id
+            ),
+            None,
+        )
+        if rejected:
+            return envelope(job, revision=job["revision"])
+        raise HTTPException(status_code=404, detail={"code": "CANDIDATE_NOT_FOUND"})
+    rejected = {
+        **candidate,
+        "candidate_status": "REJECTED",
+        "candidate_revision": int(candidate.get("candidate_revision", 1)) + 1,
+        "rejection_reason": payload.reason,
+        "rejected_by": user.id,
+        "rejected_at": now(),
+    }
+    next_preview = [item for item in preview if item["candidate_id"] != candidate_id]
+    updated = await database.value.import_jobs.find_one_and_update(
+        {
+            "_id": job_id,
+            "project_id": job["project_id"],
+            "status": "PREVIEW_READY",
+            "revision": payload.expected_revision,
+        },
+        {
+            "$set": {
+                "preview": next_preview,
+                "candidate_count": len(next_preview),
+                "reviewed_by": user.id,
+                "reviewed_at": now(),
+                "updated_at": now(),
+            },
+            "$push": {"rejected_candidates": rejected},
+            "$inc": {"revision": 1},
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+    if not updated:
+        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+    await audit(
+        user.id,
+        "requirement_candidate_rejected",
+        "RequirementImport",
+        job_id,
+        job["project_id"],
+        {"candidate_id": candidate_id, "reason": payload.reason},
     )
     return envelope(updated, revision=updated["revision"])
 

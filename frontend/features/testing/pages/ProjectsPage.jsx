@@ -174,7 +174,7 @@ export default function ProjectsPage() {
                 className="grid gap-3 p-5 transition hover:bg-surface-quiet md:grid-cols-[120px_1fr_140px_160px_auto] md:items-center"
               >
                 <span className="font-mono text-[13px] font-semibold text-brand">{item.key}</span>
-                <Link href={`/qa/projects/${item._id}`} className="min-w-0">
+                <Link href={`/du-an/${item._id}`} className="min-w-0">
                   <strong className="block text-[14px]">{item.name}</strong>
                   <small className="line-clamp-1 text-ink-muted">
                     {item.description || "Chưa có mô tả"}

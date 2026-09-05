@@ -149,7 +149,7 @@ export function changeMyPassword(payload) {
 }
 export function changeMyEmail(payload) {
   return authenticatedJson(
-    "/xac-thuc/doi-email",
+    "/xac-thuc/doi-thu-dien-tu",
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -266,7 +266,7 @@ export const passkeyRegisterFinishAPI = async (email, credential) => {
   return data.data || data;
 };
 export const getGoogleLoginUrlAPI = async () => {
-  const res = await fetch(`${API_URL}/google/dang-nhap`);
+  const res = await fetch(`${API_URL}/xac-thuc/google/dang-nhap`);
   const data = await res.json();
   if (!res.ok || !data.data?.url)
     throw new Error("Không thể tải điểm cuối xác thực định danh Google");
@@ -274,7 +274,7 @@ export const getGoogleLoginUrlAPI = async () => {
 };
 export const completeGoogleLoginAPI = async (code, state) => {
   const res = await fetch(
-    `${API_URL}/google/chuyen-huong?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`,
+    `${API_URL}/xac-thuc/google/chuyen-huong?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`,
     { credentials: "include" },
   );
   const data = await res.json();

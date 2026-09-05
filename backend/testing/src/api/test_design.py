@@ -37,7 +37,7 @@ from src.services.linters import duplicate_score, lint_test_case
 from src.services.project_knowledge import index_artifact
 
 
-router = APIRouter(prefix="/kiem-thu", tags=["QA Test Design"])
+router = APIRouter(prefix="/kiem-thu", tags=["Thiết kế kiểm thử"])
 
 
 @router.post("/du-an/{project_id}/kich-ban-kiem-thu", status_code=201)
@@ -358,7 +358,9 @@ async def submit_test_case_review(
     if draft["revision"] != payload.expected_revision:
         raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT", "current_revision": draft["revision"]})
     findings = lint_test_case(draft)
-    if any(item["severity"] == "error" for item in findings):
+    project = await database.value.projects.find_one({"_id": project_id}, {"settings": 1})
+    lint_blocking = (project.get("settings") or {}).get("testcase_lint_blocking", True)
+    if lint_blocking and any(item["severity"] == "error" for item in findings):
         raise HTTPException(status_code=409, detail={"code": "TEST_CASE_LINT_BLOCKED", "findings": findings})
     timestamp = now()
     result = await database.value.test_case_drafts.update_one(
@@ -451,7 +453,11 @@ async def freeze_test_case_draft(
     if draft["revision"] != payload.expected_revision:
         raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT", "current_revision": draft["revision"]})
     findings = lint_test_case(draft)
-    if any(item["severity"] == "error" for item in findings):
+    project = await database.value.projects.find_one(
+        {"_id": draft["project_id"]}, {"settings": 1}
+    )
+    lint_blocking = (project.get("settings") or {}).get("testcase_lint_blocking", True)
+    if lint_blocking and any(item["severity"] == "error" for item in findings):
         raise HTTPException(status_code=409, detail={"code": "TEST_CASE_LINT_BLOCKED", "findings": findings})
     claimed = await database.value.test_case_drafts.find_one_and_update(
         {"_id": draft_id, "project_id": draft["project_id"], "status": "IN_REVIEW", "revision": payload.expected_revision},

@@ -7,13 +7,21 @@ from src.services.cache import cache_service
 router = APIRouter(dependencies=[Depends(verify_internal_token)])
 
 
-@router.post("/doc", response_model=APIResponse[CacheGetResponse], description="Đọc semantic cache của knowledge")
+@router.post(
+    "/truy-xuat",
+    response_model=APIResponse[CacheGetResponse],
+    description="Truy xuất bộ nhớ đệm ngữ nghĩa của tri thức",
+)
 async def get_cache(req: CacheGetRequest):
     res = await cache_service.get_response(req.query_text, req.query_vector)
-    return APIResponse(data=res, message="Truy vấn semantic cache thành công")
+    return APIResponse(data=res, message="Truy xuất bộ nhớ đệm ngữ nghĩa thành công")
 
 
-@router.post("/ghi", response_model=APIResponse[dict], description="Ghi semantic cache của knowledge")
+@router.post(
+    "/ghi",
+    response_model=APIResponse[dict],
+    description="Ghi bộ nhớ đệm ngữ nghĩa của tri thức",
+)
 async def set_cache(req: CacheSetRequest):
     await cache_service.set_response(req.query_text, req.response_text, req.query_vector)
-    return APIResponse(data={"status": "stored"}, message="Lưu semantic cache thành công")
+    return APIResponse(data={"status": "stored"}, message="Ghi bộ nhớ đệm ngữ nghĩa thành công")

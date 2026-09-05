@@ -32,7 +32,7 @@ export function useGoogleCallback() {
               !requested.startsWith("//") &&
               !requested.startsWith("/dang-nhap")
               ? requested
-              : "/qa/projects",
+              : "/du-an",
           );
         }
       } catch (reason) {
@@ -56,7 +56,7 @@ export function useGoogleCallback() {
           !requested.startsWith("//") &&
           !requested.startsWith("/dang-nhap")
           ? requested
-          : "/qa/projects",
+          : "/du-an",
       );
     },
     back: () => router.replace("/dang-nhap"),

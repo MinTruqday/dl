@@ -1,6 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import DataTable from "../../components/DataTable";
+import ProjectNotificationsPanel from "../../components/ProjectNotificationsPanel";
+import WebhookPanel from "../../components/WebhookPanel";
+import ProjectConnectorsPanel from "../../components/ProjectConnectorsPanel";
+import CicdPanel from "../../components/CicdPanel";
 import {
   ErrorState,
   Panel,
@@ -26,6 +30,7 @@ const toggleSettings = [
   ["tester_can_correct_results", "Cho phép Tester sửa kết quả bằng sự kiện hiệu chỉnh"],
   ["tester_can_assign_testplans", "Cho phép Tester phân công thành viên trong Test Plan"],
   ["partial_complete_allowed", "Cho phép hoàn tất một phần Test Run"],
+  ["allow_not_applicable_results", "Cho phép kết quả Không áp dụng khi có lý do"],
   ["tester_can_close_defect", "Cho phép Tester đóng Defect"],
   ["tester_can_reject_defect", "Cho phép Tester từ chối Defect"],
   ["tester_can_mark_duplicate_defect", "Cho phép Tester đánh dấu Defect trùng"],
@@ -39,6 +44,7 @@ const toggleSettings = [
   ["tester_can_override_impact", "Cho phép Tester override Impact"],
   ["tester_can_close_impact", "Cho phép Tester đóng Impact"],
   ["tester_can_manage_knowledge", "Cho phép Tester quản lý Knowledge"],
+  ["tester_can_archive_testcase_templates", "Cho phép Tester lưu trữ mẫu ca kiểm thử"],
   ["viewer_can_export", "Cho phép Viewer xuất báo cáo"],
   ["developer_can_export", "Cho phép Developer xuất báo cáo"],
   ["ai_auto_draft", "Cho phép AI tạo bản nháp"],
@@ -113,7 +119,7 @@ export default function SettingsPage({ project, onProjectChange }) {
             onSubmit={async (event) => {
               event.preventDefault();
               try {
-                await testingApi.updateProject(project._id, {
+                await testingApi.updateProjectSettings(project._id, {
                   expected_revision: project.revision,
                   name,
                   description,
@@ -132,6 +138,9 @@ export default function SettingsPage({ project, onProjectChange }) {
                         ? ["QA_LEAD", "TESTER"]
                         : ["QA_LEAD"],
                       "testplan.assignments": settings.tester_can_assign_testplans
+                        ? ["QA_LEAD", "TESTER"]
+                        : ["QA_LEAD"],
+                      "testcase.template.archive": settings.tester_can_archive_testcase_templates
                         ? ["QA_LEAD", "TESTER"]
                         : ["QA_LEAD"],
                     },
@@ -269,7 +278,7 @@ export default function SettingsPage({ project, onProjectChange }) {
                     expected_revision: project.revision,
                     reason: answer.reason,
                   });
-                  window.location.assign("/qa/projects");
+                  window.location.assign("/du-an");
                 } catch (value) {
                   setError(messageOf(value));
                 }
@@ -465,6 +474,10 @@ export default function SettingsPage({ project, onProjectChange }) {
           </div>
         </Panel>
       </div>
+      <ProjectNotificationsPanel project={project} />
+      <ProjectConnectorsPanel project={project} />
+      <CicdPanel project={project} />
+      <WebhookPanel project={project} />
       <Panel title="Nhật ký kiểm toán">
         <DataTable
           items={audit}

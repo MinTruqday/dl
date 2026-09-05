@@ -25,26 +25,9 @@ export default function AuthFrame({ title, description, children, footer, width 
           Về trang chủ
         </Link>
       </div>
-      <div className="mx-auto grid min-h-[calc(100dvh-104px)] w-full max-w-[1180px] items-center gap-8 py-8 lg:grid-cols-[minmax(0,1fr)_minmax(420px,500px)] lg:gap-16">
-        <section className="hidden max-w-xl lg:block">
-          <h2 className="text-[28px] font-semibold tracking-[-0.035em] text-ink">
-            Chức năng chính
-          </h2>
-          <div className="mt-6 grid gap-3 sm:grid-cols-2">
-            {[
-              "Quản lý yêu cầu và phiên bản",
-              "Thiết kế ca kiểm thử",
-              "Theo dõi truy vết và độ phủ",
-              "Quản lý thay đổi và lỗi",
-            ].map((label) => (
-              <div key={label} className="rounded-2xl border border-brand/10 bg-white/70 p-4">
-                <p className="text-[14px] font-semibold leading-6 text-ink">{label}</p>
-              </div>
-            ))}
-          </div>
-        </section>
+      <div className="mx-auto flex min-h-[calc(100dvh-104px)] w-full max-w-[1180px] items-center justify-center py-8">
         <section
-          className={`w-full ${width === "md" ? "max-w-[520px]" : "max-w-[500px]"} justify-self-center rounded-3xl border border-border bg-surface p-6 shadow-[0_24px_70px_rgba(48,47,42,0.12)] sm:p-9 lg:justify-self-end`}
+          className={`w-full ${width === "md" ? "max-w-[520px]" : "max-w-[500px]"} rounded-3xl border border-border bg-surface p-6 shadow-[0_24px_70px_rgba(48,47,42,0.12)] sm:p-9`}
         >
           <header className="mb-6">
             <h1 className="text-[28px] font-semibold leading-tight tracking-[-0.035em] text-ink">

@@ -157,7 +157,7 @@ async def require_system_admin(current_user: CurrentUser = Depends(get_current_u
     return current_user
 
 
-router = APIRouter(dependencies=[Depends(require_system_admin)])
+router = APIRouter(tags=["Quản trị hệ thống"], dependencies=[Depends(require_system_admin)])
 
 
 @router.post("/quan-tri/tai-khoan", response_model=APIResponse[Any], status_code=201)

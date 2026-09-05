@@ -63,12 +63,15 @@ class SessionService:
             "system_role": "USER",
             "permissions": [],
             "is_active": True,
+            "is_verified": False,
+            "email_verified": False,
             "password_hash": get_password_hash(user_in.password),
             "passkeys": [],
             "created_at": created_at,
             "updated_at": created_at,
         }
         await IdentityRepository.create_auth_credential(auth_cred)
+        await SessionService.issue_email_verification(user_id, user_in.email, client_ip)
         await IdentityRepository.insert_audit_log(
             {
                 "action": "REGISTER_USER",
@@ -87,6 +90,67 @@ class SessionService:
             "id": user_id,
             "created_at": created_at,
         }
+
+    @staticmethod
+    async def issue_email_verification(user_id: str, email: str, client_ip: str):
+        token = secrets.token_urlsafe(32)
+        timestamp = datetime.now(timezone.utc)
+        await IdentityRepository.create_email_verification_token(
+            {
+                "_id": secrets.token_hex(16),
+                "user_id": user_id,
+                "email": email,
+                "token": token,
+                "used": False,
+                "expires_at": timestamp + timedelta(minutes=30),
+                "created_at": timestamp,
+                "requested_ip": client_ip,
+            }
+        )
+        delivered = True
+        try:
+            await EmailService.send_email_verification(email, token)
+        except Exception:
+            delivered = False
+            logger.exception("Failed to dispatch email verification notification")
+        await IdentityRepository.insert_audit_log(
+            {
+                "action": "EMAIL_VERIFICATION_REQUESTED",
+                "actor_email": email.lower(),
+                "target_user_id": user_id,
+                "ip": client_ip,
+                "delivery_status": "SENT" if delivered else "FAILED",
+                "timestamp": timestamp,
+            }
+        )
+        return {"status": "ok", "delivery_status": "SENT" if delivered else "FAILED"}
+
+    @staticmethod
+    async def verify_email(token: str, client_ip: str):
+        token_doc = await IdentityRepository.consume_email_verification_token(token)
+        if not token_doc:
+            raise HTTPException(
+                status_code=400,
+                detail="Mã xác minh thư điện tử không hợp lệ hoặc đã hết hạn",
+            )
+        account = await IdentityRepository.mark_email_verified(
+            str(token_doc["user_id"]), token_doc["email"]
+        )
+        if not account:
+            raise HTTPException(
+                status_code=409,
+                detail="Địa chỉ thư điện tử của tài khoản đã thay đổi hoặc tài khoản không khả dụng",
+            )
+        await IdentityRepository.insert_audit_log(
+            {
+                "action": "EMAIL_VERIFIED",
+                "actor_email": token_doc["email"],
+                "target_user_id": str(token_doc["user_id"]),
+                "ip": client_ip,
+                "timestamp": datetime.now(timezone.utc),
+            }
+        )
+        return {"verified": True, "email": token_doc["email"]}
 
     @staticmethod
     async def login_user(username: str, password: str, client_ip: str):

@@ -18,7 +18,7 @@ export default function ChatInstructionsModal({ open, close, initial, save }) {
     setSaving(false);
   };
   return (
-    <Modal isOpen={open} onClose={close}>
+    <Modal isOpen={open} onClose={close} ariaLabel="Chỉ dẫn cá nhân">
       <ModalHeader>
         <ModalTitle>Chỉ dẫn cá nhân</ModalTitle>
       </ModalHeader>

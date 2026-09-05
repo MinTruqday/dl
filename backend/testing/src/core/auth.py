@@ -32,7 +32,7 @@ requirement_document.confirm_extraction requirement_document.archive requirement
 requirement.read requirement.create requirement.update requirement.review requirement.submit_review
 requirement.approve requirement.archive requirement.restore requirement.version.create
 requirement.version.read requirement.diff.read acceptance_criteria.manage business_rule.manage
-requirement_dependency.manage
+requirement_dependency.manage requirement.split requirement.merge requirement.duplicate_check
 testplan.read testplan.create testplan.update testplan.submit_review testplan.approve testplan.archive
 testscenario.read testscenario.create testscenario.update testscenario.clone testscenario.archive
 testcase.read testcase.create testcase.update testcase.review testcase.clone testcase.import
@@ -51,10 +51,28 @@ defect.read defect.create defect.update defect.trace.manage defect.assign defect
 defect.transition.developer defect.retest defect.close defect.duplicate_check
 knowledge.read knowledge.manage ai.ask_project ai.generate_scenario ai.generate_testcase
 ai.run_lint ai.run_duplicate_check ai.run_impact ai.create_proposal ai.generate_regression
-ai.result_metadata.read analytics.read analytics.ai.read report.read report.export
+ai.result_metadata.read ai.suggest_bug_trace analytics.read analytics.ai.read report.read report.export
+testcase.bulk.update proposal.bulk.generate proposal.bulk.approve testcase.bulk.archive
 comment.read comment.create comment.update_own comment.delete_own comment.moderate
 attachment.read attachment.manage attachment.upload attachment.delete_own_unreferenced attachment.moderate
 notification.read notification.mark_read notification.preferences.manage
+release.read release.create release.update release.manage release.close release.archive
+build.read build.create build.manage
+environment.read environment.create environment.update environment.secret_ref.manage environment.archive
+risk.read risk.generate risk.review risk.approve
+testdata.read testdata.create testdata.update testdata.bind testdata.preview testdata.archive
+testcase.template.read testcase.template.manage
+apiartifact.read apiartifact.import apiartifact.review apiartifact.confirm apiartifact.diff.read
+apiartifact.archive ai.generate_api_testcase
+device_matrix.read device_matrix.manage device_matrix.assign
+notification.watch.manage notification.project_rule.manage
+ai.generate_security_tests ai.generate_performance_plan
+webhook.project.manage webhook.project.read webhook.project.replay
+ai.generate_automation_script automation.script.update automation.script.export automation.script.approve
+project.connector.read project.connector.manage project.connector.sync project.connector.review
+automation.read automation.create automation.execute automation.ingest
+cicd.manage cicd.trigger cicd.result.ingest cicd.retry cicd.read
+collaboration.presence.read collaboration.conflict.resolve
 """.split()
 )
 
@@ -85,7 +103,21 @@ READ_ONLY_PERMISSIONS = {
     "comment.read",
     "attachment.read",
     "notification.read",
+    "release.read",
+    "build.read",
+    "environment.read",
+    "risk.read",
+    "testcase.template.read",
+    "apiartifact.read",
+    "apiartifact.diff.read",
+    "device_matrix.read",
+    "project.connector.read",
+    "automation.read",
+    "cicd.read",
+    "collaboration.presence.read",
 }
+
+ARCHIVE_READ_PERMISSIONS = READ_ONLY_PERMISSIONS | {"testdata.read"}
 
 COMMENT_COLLABORATOR_PERMISSIONS = {
     "comment.read",
@@ -95,6 +127,7 @@ COMMENT_COLLABORATOR_PERMISSIONS = {
     "notification.read",
     "notification.mark_read",
     "notification.preferences.manage",
+    "notification.watch.manage",
 }
 
 COLLABORATOR_PERMISSIONS = COMMENT_COLLABORATOR_PERMISSIONS | {
@@ -115,8 +148,22 @@ trace.create trace.review trace.recover changeset.create changeset.review
 impact.execute impact.review proposal.review regression.generate
 testrun.execute defect.create defect.update defect.trace.manage defect.triage defect.retest defect.duplicate_check
 ai.ask_project ai.generate_scenario ai.generate_testcase ai.run_lint ai.run_duplicate_check
-ai.run_impact ai.create_proposal ai.generate_regression analytics.ai.read report.export
+ai.run_impact ai.create_proposal ai.generate_regression ai.suggest_bug_trace analytics.ai.read report.export
+testcase.bulk.update proposal.bulk.generate
 attachment.manage
+release.create release.update release.manage release.close release.archive
+build.create build.manage environment.create environment.update environment.secret_ref.manage environment.archive
+risk.generate risk.review
+testdata.read testdata.create testdata.update testdata.bind testdata.preview testdata.archive
+testcase.template.read testcase.template.manage
+apiartifact.import apiartifact.review apiartifact.confirm ai.generate_api_testcase
+device_matrix.assign
+ai.generate_security_tests ai.generate_performance_plan
+ai.generate_automation_script automation.script.update automation.script.export
+project.connector.read project.connector.sync
+automation.read automation.create automation.execute
+cicd.read cicd.retry
+collaboration.conflict.resolve
 """.split()
 )
 
@@ -127,10 +174,14 @@ requirement_document.review_extraction requirement_document.confirm_extraction
 requirement_document.archive requirement_document.restore
 requirement.create requirement.update requirement.review requirement.submit_review
 requirement.version.create acceptance_criteria.manage business_rule.manage requirement_dependency.manage
+requirement.split requirement.merge requirement.duplicate_check
 trace.create trace.review trace.recover changeset.create changeset.review impact.review proposal.review
 testcase.export testcase.lint testcase.duplicate_check testcase.review defect.create defect.trace.manage
-knowledge.manage ai.ask_project ai.run_lint ai.run_duplicate_check analytics.ai.read report.export
+knowledge.manage ai.ask_project ai.run_lint ai.run_duplicate_check ai.suggest_bug_trace analytics.ai.read report.export
 attachment.manage
+apiartifact.import apiartifact.review apiartifact.confirm apiartifact.archive
+project.connector.sync project.connector.review
+collaboration.conflict.resolve
 """.split()
 )
 
@@ -149,7 +200,8 @@ ROLE_PERMISSIONS = {
     ProjectRole.TESTER: TESTER_PERMISSIONS,
     ProjectRole.BA: BA_PERMISSIONS,
     ProjectRole.DEVELOPER: DEVELOPER_PERMISSIONS,
-    ProjectRole.VIEWER: READ_ONLY_PERMISSIONS,
+    ProjectRole.VIEWER: READ_ONLY_PERMISSIONS
+    | {"notification.watch.manage", "notification.preferences.manage"},
 }
 
 POLICY_PERMISSIONS = {
@@ -170,6 +222,10 @@ POLICY_PERMISSIONS = {
     "tester_can_complete_runs": (ProjectRole.TESTER, "testrun.complete"),
     "tester_can_abort_runs": (ProjectRole.TESTER, "testrun.abort"),
     "tester_can_correct_results": (ProjectRole.TESTER, "testresult.correct"),
+    "tester_can_bulk_update": (ProjectRole.TESTER, "testcase.bulk.update"),
+    "tester_can_bulk_archive": (ProjectRole.TESTER, "testcase.bulk.archive"),
+    "tester_can_bulk_generate_proposals": (ProjectRole.TESTER, "proposal.bulk.generate"),
+    "tester_can_bulk_approve_proposals": (ProjectRole.TESTER, "proposal.bulk.approve"),
     "tester_can_approve_regression": (ProjectRole.TESTER, "regression.approve"),
     "tester_can_create_coverage_snapshot": (ProjectRole.TESTER, "coverage.snapshot.create"),
     "tester_can_review_testcase_changes": (ProjectRole.TESTER, "testcase.review"),

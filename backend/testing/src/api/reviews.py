@@ -6,7 +6,7 @@ from src.core.database import database
 from src.domain.schemas import ReviewCommentAction, ReviewCommentCreate, ReviewCommentPatch
 
 
-router = APIRouter(prefix="/kiem-thu", tags=["QA Review"])
+router = APIRouter(prefix="/kiem-thu", tags=["Rà soát kiểm thử"])
 
 
 @router.post("/du-an/{project_id}/nhan-xet-ra-soat", status_code=201)

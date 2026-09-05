@@ -44,3 +44,5 @@ frontend/.next
 frontend/.next-dev/
 frontend/playwright-report/
 frontend/test-results/
+
+frontend/.next-ui-audit/

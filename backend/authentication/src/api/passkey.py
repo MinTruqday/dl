@@ -8,7 +8,7 @@ from src.core.dependency import CurrentUser, RateLimiting, get_current_user
 from src.core.response import APIResponse
 from src.schemas.identity import PasskeyFinishRequest, PasskeyRequest
 
-router = APIRouter(prefix="/xac-thuc/khoa-bao-mat")
+router = APIRouter(prefix="/xac-thuc/khoa-bao-mat", tags=["Khóa bảo mật"])
 
 
 @router.post(

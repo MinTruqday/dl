@@ -152,6 +152,10 @@ class VerifyCodeRequest(BaseModel):
     token: str = Field(min_length=6, max_length=128)
 
 
+class EmailVerificationInput(BaseModel):
+    token: str = Field(min_length=16, max_length=256)
+
+
 class NotificationSettingsUpdate(BaseModel):
     enable_comment_notifications: bool = True
     enable_mention_notifications: bool = True

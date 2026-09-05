@@ -50,16 +50,30 @@ with httpx.Client(base_url=BASE_URL, timeout=60, headers=headers("api-artifact-l
     imported = call(
         client,
         "POST",
-        f"/kiem-thu/du-an/{project_id}/nhap-dac-ta",
+        f"/kiem-thu/du-an/{project_id}/dac-ta-giao-dien/nhap",
         201,
         json={"filename": "openapi.json", "format": "openapi", "content": openapi},
     )
-    assert imported["status"] == "CONFIRMED"
-    assert len(imported["operations"]) == 1
-    operation_id = imported["operations"][0]["_id"]
-    operations = call(client, "GET", f"/kiem-thu/du-an/{project_id}/thao-tac-dac-ta", 200)
+    assert imported["status"] == "PREVIEW_READY"
+    assert len(imported["preview"]) == 1
+    reviewed = call(
+        client,
+        "PATCH",
+        f"/kiem-thu/dac-ta-giao-dien/{imported['_id']}/ra-soat",
+        200,
+        json={"expected_revision": 1, "selected_indexes": [0], "review_note": "Đã rà soát"},
+    )
+    confirmed = call(
+        client,
+        "POST",
+        f"/kiem-thu/dac-ta-giao-dien/{imported['_id']}/xac-nhan",
+        200,
+        json={"expected_revision": reviewed["revision"], "idempotency_key": f"confirm-{stamp}"},
+    )
+    operation_id = confirmed["operations"][0]["_id"]
+    operations = call(client, "GET", f"/kiem-thu/du-an/{project_id}/dac-ta-giao-dien/thao-tac", 200)
     assert operations[0]["operation_id"] == "readUser"
-    generated = call(client, "POST", f"/kiem-thu/thao-tac-dac-ta/{operation_id}/sinh-kiem-thu", 201)
+    generated = call(client, "POST", f"/kiem-thu/dac-ta-giao-dien/thao-tac/{operation_id}/sinh-ca-kiem-thu", 201)
     assert {"success", "required_missing", "auth", "not_found"} <= {item["tags"][1] for item in generated["items"]}
     postman = {
         "variable": [{"key": "baseUrl", "value": "https://example.test"}],
@@ -68,10 +82,10 @@ with httpx.Client(base_url=BASE_URL, timeout=60, headers=headers("api-artifact-l
     imported_postman = call(
         client,
         "POST",
-        f"/kiem-thu/du-an/{project_id}/nhap-dac-ta",
+        f"/kiem-thu/du-an/{project_id}/dac-ta-giao-dien/nhap",
         201,
         json={"filename": "collection.json", "format": "postman", "content": postman},
     )
-    assert imported_postman["operations"][0]["source_type"] == "postman"
+    assert imported_postman["preview"][0]["source_type"] == "postman"
 
 print("API artifact integration passed")

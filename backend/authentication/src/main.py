@@ -14,6 +14,7 @@ from src.api.platform_controls import router as platform_controls_router
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import close_db, database, init_db
 from src.core.infrastructure.redis import redis
+from src.core.function_ids import apply_function_ids
 from src.core.metrics import PrometheusMiddleware, metrics_endpoint
 
 
@@ -46,6 +47,7 @@ app.include_router(google_router)
 app.include_router(internal_router)
 app.include_router(platform_router)
 app.include_router(platform_controls_router)
+apply_function_ids(app)
 
 
 @app.get("/suc-khoe")

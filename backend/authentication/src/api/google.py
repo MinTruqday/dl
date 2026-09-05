@@ -4,7 +4,7 @@ from src.api.cookies import set_refresh_cookie
 from src.core.response import APIResponse
 from src.services.google import GoogleService
 
-router = APIRouter(prefix="/google")
+router = APIRouter(prefix="/xac-thuc/google", tags=["Xác thực Google"])
 
 
 @router.get("/dang-nhap", response_model=APIResponse[Any])
