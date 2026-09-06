@@ -49,6 +49,7 @@ test("shared navigation and tables remain operable with keyboard and mobile focu
   assert.match(appShellSource, /role="menu"/);
   assert.match(appShellSource, /min-\[380px\]:flex/);
   assert.match(appShellSource, /whitespace-nowrap rounded-control bg-brand/);
+  assert.match(appShellSource, /!\["dashboard", "projects"\]\.includes\(item\.id\)/);
   assert.match(dataTableSource, /openFromKeyboard/);
   assert.equal(dataTableSource.match(/tabIndex=\{onSelect \? 0 : undefined\}/g)?.length, 2);
   assert.match(dataTableSource, /Chọn tất cả trên trang/);

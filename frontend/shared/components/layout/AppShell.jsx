@@ -25,7 +25,8 @@ function NavigationList({ onNavigate, projectPermissions }) {
             {group.items.map((item) => {
               const active =
                 pathname === item.href ||
-                (item.id !== "dashboard" && pathname.startsWith(`${item.href}/`));
+                (!["dashboard", "projects"].includes(item.id) &&
+                  pathname.startsWith(`${item.href}/`));
               return (
                 <Link
                   key={item.id}
@@ -341,8 +342,8 @@ export default function AppShell({ children, requireAuth }) {
         </div>
       </header>
 
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[260px] bg-surface shadow-[10px_0_30px_rgba(48,47,42,0.04)] lg:block">
-        <div className="flex h-[68px] items-center px-5">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[260px] border-r border-border bg-surface lg:block">
+        <div className="flex h-[68px] items-center border-b border-border px-5">
           <Link
             href="/"
             className="flex items-center gap-3 text-[19px] font-semibold tracking-[-0.035em] text-ink"
