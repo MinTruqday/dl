@@ -7,10 +7,10 @@ import {
   Pagination,
   Panel,
   ProjectCrumb,
-  QaPage,
+  WorkspacePage,
   StatusPill,
-  useQaActionDialog,
-} from "../../components/TestingUi";
+  useActionDialog,
+} from "../../components/WorkspacePrimitives";
 import { testingApi } from "../../services/testing.service";
 import { messageOf, textDoc, valueLabel } from "../../lib/testing";
 import { Modal, ModalHeader, ModalTitle } from "@/shared/components/ui/Modal";
@@ -37,7 +37,7 @@ const traceReasonLabels = {
 };
 
 export default function DefectsPage({ project }) {
-  const { ask, dialog } = useQaActionDialog();
+  const { ask, dialog } = useActionDialog();
   const [items, setItems] = useState([]);
   const [releases, setReleases] = useState([]);
   const [builds, setBuilds] = useState([]);
@@ -259,7 +259,7 @@ export default function DefectsPage({ project }) {
     }
   };
   return (
-    <QaPage
+    <WorkspacePage
       title="Lỗi"
       actions={
         <div className="flex flex-wrap items-center gap-3">
@@ -805,6 +805,6 @@ export default function DefectsPage({ project }) {
         <Pagination value={pageInfo} onChange={setPage} />
       </Panel>
       {dialog}
-    </QaPage>
+    </WorkspacePage>
   );
 }

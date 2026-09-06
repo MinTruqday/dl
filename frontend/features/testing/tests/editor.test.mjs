@@ -3,12 +3,12 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const editorSource = await readFile(
-  new URL("../editor/QaDocumentEditor.jsx", import.meta.url),
+  new URL("../editor/DocumentEditor.jsx", import.meta.url),
   "utf8",
 );
 const extensionSource = await readFile(new URL("../editor/extensions.js", import.meta.url), "utf8");
 
-test("QA editor registers every Tiptap capability required by the V1 specification", () => {
+test("Testing editor registers every Tiptap capability required by the V1 specification", () => {
   const packages = [
     "character-count",
     "code-block-lowlight",
@@ -58,7 +58,7 @@ test("QA editor registers every Tiptap capability required by the V1 specificati
   assert.match(editorSource, /FloatingMenu/);
 });
 
-test("QA editor exposes editing controls and preserves read only rendering", () => {
+test("Testing editor exposes editing controls and preserves read only rendering", () => {
   for (const label of [
     "Đánh dấu",
     "Chỉ số dưới",

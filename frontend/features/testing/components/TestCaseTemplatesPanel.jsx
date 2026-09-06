@@ -7,8 +7,8 @@ import {
   LoadingState,
   Panel,
   StatusPill,
-  useQaActionDialog,
-} from "./TestingUi";
+  useActionDialog,
+} from "./WorkspacePrimitives";
 import { testingApi } from "../services/testing.service";
 import { formatDate, messageOf } from "../lib/testing";
 
@@ -47,7 +47,7 @@ const splitTags = (value) =>
   );
 
 export default function TestCaseTemplatesPanel({ project }) {
-  const { ask, dialog } = useQaActionDialog();
+  const { ask, dialog } = useActionDialog();
   const [items, setItems] = useState([]);
   const [selected, setSelected] = useState(null);
   const [templateType, setTemplateType] = useState("");

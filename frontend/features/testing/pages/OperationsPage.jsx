@@ -9,9 +9,9 @@ import {
   Metric,
   Pagination,
   Panel,
-  QaPage,
+  WorkspacePage,
   StatusPill,
-} from "../components/TestingUi";
+} from "../components/WorkspacePrimitives";
 import { formatDate, messageOf, valueLabel } from "../lib/testing";
 import { testingApi } from "../services/testing.service";
 
@@ -96,7 +96,7 @@ export default function OperationsPage() {
     },
   ];
   return (
-    <QaPage title="Vận hành nền tảng">
+    <WorkspacePage title="Vận hành nền tảng">
       <nav
         aria-label="Khu vực quản trị"
         className="flex max-w-full gap-1 overflow-x-auto rounded-xl bg-surface-quiet p-1"
@@ -280,6 +280,6 @@ export default function OperationsPage() {
           </Panel>
         </>
       )}
-    </QaPage>
+    </WorkspacePage>
   );
 }

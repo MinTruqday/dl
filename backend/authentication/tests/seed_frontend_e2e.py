@@ -10,7 +10,7 @@ from src.core.security.access import get_password_hash
 
 PASSWORD = "Veriq-E2E-Password-2026"
 ACCOUNTS = (
-    ("qa-lead", "e2e-qa-lead@example.com", "reader", "QA Lead E2E"),
+    ("testing-lead", "e2e-lead@example.com", "reader", "Trưởng nhóm kiểm thử E2E"),
     ("tester", "e2e-tester@example.com", "reader", "Kiểm thử viên E2E"),
     ("business-analyst", "e2e-ba@example.com", "reader", "Chuyên viên phân tích E2E"),
     ("developer", "e2e-developer@example.com", "reader", "Lập trình viên E2E"),
@@ -19,7 +19,7 @@ ACCOUNTS = (
 )
 PROJECT_ID = "PRJ-FRONTEND-ROLE-AUDIT"
 PROJECT_ROLES = {
-    "qa-lead": "QA_LEAD",
+    "testing-lead": "QA_LEAD",
     "tester": "TESTER",
     "business-analyst": "BA",
     "developer": "DEVELOPER",
@@ -85,7 +85,7 @@ for slug, email, role, full_name in ACCOUNTS:
     )
 
 testing_database = client[os.environ.get("TESTING_DB_NAME", "veriq_testing")]
-lead_id = str(uuid5(NAMESPACE_DNS, "e2e-qa-lead@example.com"))
+lead_id = str(uuid5(NAMESPACE_DNS, "e2e-lead@example.com"))
 testing_database.projects.update_one(
     {"_id": PROJECT_ID},
     {

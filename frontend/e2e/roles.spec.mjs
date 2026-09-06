@@ -8,6 +8,8 @@ import {
   observeRuntime,
 } from "./support.mjs";
 
+const apiBaseUrl = process.env.E2E_API_URL || "http://localhost:8000";
+
 const projectId = "PRJ-FRONTEND-ROLE-AUDIT";
 const readableSections = [
   ["", "Kiểm thử giao diện theo vai trò"],
@@ -39,7 +41,7 @@ for (const role of ["lead", "tester", "ba", "developer", "viewer"]) {
     test.setTimeout(180000);
     const errors = observeRuntime(page);
     const token = await loginByApi(request, role);
-    const response = await request.get(`http://localhost:8000/kiem-thu/du-an/${projectId}`, {
+    const response = await request.get(`${apiBaseUrl}/kiem-thu/du-an/${projectId}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     expect(response.ok(), await response.text()).toBeTruthy();
@@ -87,6 +89,13 @@ for (const role of ["lead", "tester", "ba", "developer", "viewer"]) {
     } else {
       await expect(page.getByText("Bạn không có quyền mở khu vực này trong dự án")).toBeVisible();
     }
+    await page.setViewportSize({ width: 390, height: 844 });
+    await openSection(page, "/du-an", "Dự án");
+    await expectUsablePage(page);
+    for (const [section, heading] of readableSections) {
+      await openSection(page, `/du-an/${projectId}${section ? `/${section}` : ""}`, heading);
+      await expectUsablePage(page);
+    }
     await expectRuntimeClean(errors);
   });
 }
@@ -112,6 +121,16 @@ test("admin mở được toàn bộ khu vực quản trị đã nối với bac
   await expect(page.getByText("Not Found", { exact: true })).toHaveCount(0);
   await expect(page.getByText("UNKNOWN", { exact: true })).toHaveCount(0);
   await expectUsablePage(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const [path, heading] of [
+    ["/du-an", "Dự án"],
+    ["/cai-dat", "Tài khoản và bảo mật"],
+    ["/thong-bao", "Thông báo"],
+    ["/van-hanh", "Vận hành nền tảng"],
+  ]) {
+    await openSection(page, path, heading);
+    await expectUsablePage(page);
+  }
   await expectRuntimeClean(errors);
 });
 

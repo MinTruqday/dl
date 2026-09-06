@@ -7,9 +7,9 @@ import {
   LoadingState,
   Metric,
   Panel,
-  QaPage,
+  WorkspacePage,
   StatusPill,
-} from "../../components/TestingUi";
+} from "../../components/WorkspacePrimitives";
 import { testingApi } from "../../services/testing.service";
 import { formatDate, messageOf, valueLabel } from "../../lib/testing";
 
@@ -23,7 +23,7 @@ export default function DashboardPage({ project }) {
   }, [project._id]);
   const base = `/du-an/${project._id}`;
   return (
-    <QaPage title={project.name}>
+    <WorkspacePage title={project.name}>
       {error && <ErrorState message={error} />}
       {!value ? (
         <LoadingState />
@@ -144,6 +144,6 @@ export default function DashboardPage({ project }) {
           </Panel>
         </>
       )}
-    </QaPage>
+    </WorkspacePage>
   );
 }

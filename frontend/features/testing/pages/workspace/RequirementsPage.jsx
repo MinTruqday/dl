@@ -9,13 +9,13 @@ import {
   Pagination,
   Panel,
   ProjectCrumb,
-  QaPage,
+  WorkspacePage,
   StatusPill,
-  useQaActionDialog,
-} from "../../components/TestingUi";
+  useActionDialog,
+} from "../../components/WorkspacePrimitives";
 import { testingApi } from "../../services/testing.service";
 import { docText, emptyDoc, messageOf, textDoc, valueLabel } from "../../lib/testing";
-import QaDocumentEditor from "../../editor/QaDocumentEditor";
+import DocumentEditor from "../../editor/DocumentEditor";
 import { Modal, ModalHeader, ModalTitle } from "@/shared/components/ui/Modal";
 
 const initialForm = {
@@ -52,7 +52,7 @@ function acceptanceCriteria(value) {
 }
 
 export default function RequirementsPage({ project, section }) {
-  const { ask, dialog } = useQaActionDialog();
+  const { ask, dialog } = useActionDialog();
   const requirementId = section[0] && !["new", "import"].includes(section[0]) ? section[0] : "";
   const [items, setItems] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
@@ -797,7 +797,7 @@ export default function RequirementsPage({ project, section }) {
     }
   };
   return (
-    <QaPage
+    <WorkspacePage
       title={selected ? `${selected.requirement_key} ${current?.title || ""}` : "Yêu cầu"}
       actions={
         <div className="flex flex-wrap items-center gap-3">
@@ -1025,7 +1025,7 @@ export default function RequirementsPage({ project, section }) {
                       ))}
                     </select>
                   </div>
-                  <QaDocumentEditor
+                  <DocumentEditor
                     value={draft.content_doc}
                     onChange={(content_doc) => changeDraft({ content_doc })}
                     label="Nội dung yêu cầu"
@@ -1090,7 +1090,7 @@ export default function RequirementsPage({ project, section }) {
                 </div>
               ) : (
                 <div className="md:col-span-3">
-                  <QaDocumentEditor
+                  <DocumentEditor
                     value={current.content_doc}
                     onChange={() => {}}
                     label="Nội dung yêu cầu"
@@ -1816,7 +1816,7 @@ export default function RequirementsPage({ project, section }) {
                       </select>
                     </label>
                   </div>
-                  <QaDocumentEditor
+                  <DocumentEditor
                     value={form.content_doc}
                     onChange={(content_doc) => setForm({ ...form, content_doc })}
                     label="Nội dung yêu cầu"
@@ -2151,6 +2151,6 @@ export default function RequirementsPage({ project, section }) {
         </>
       )}
       {dialog}
-    </QaPage>
+    </WorkspacePage>
   );
 }

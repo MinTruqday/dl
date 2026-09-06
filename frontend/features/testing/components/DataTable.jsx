@@ -1,5 +1,5 @@
 "use client";
-import { EmptyState } from "./TestingUi";
+import { EmptyState } from "./WorkspacePrimitives";
 
 export default function DataTable({
   columns,

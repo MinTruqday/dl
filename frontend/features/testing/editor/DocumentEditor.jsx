@@ -41,7 +41,7 @@ import {
 } from "lucide-react";
 import { createQaExtensions } from "./extensions";
 
-export default function QaDocumentEditor({
+export default function DocumentEditor({
   value,
   onChange,
   label,
@@ -60,7 +60,7 @@ export default function QaDocumentEditor({
     editable: !readOnly,
     editorProps: {
       attributes: {
-        class: `qa-tiptap ${minHeight}`,
+        class: `testing-tiptap ${minHeight}`,
         role: "textbox",
         "aria-label": label,
         spellcheck: "true",
@@ -180,7 +180,11 @@ export default function QaDocumentEditor({
 
   return (
     <div className="relative overflow-hidden rounded-panel border border-border bg-surface">
-      <div className="qa-editor-toolbar" role="toolbar" aria-label="Công cụ soạn thảo QA">
+      <div
+        className="testing-editor-toolbar"
+        role="toolbar"
+        aria-label="Công cụ soạn thảo kiểm thử"
+      >
         <div className="editor-tool-group">
           {tool("In đậm", editor.isActive("bold"), toggleBold, <Bold size={17} />)}
           {tool(
@@ -436,8 +440,8 @@ export default function QaDocumentEditor({
         </output>
       </div>
       {tableOfContents.length > 0 && (
-        <nav className="qa-table-of-contents" aria-label="Mục lục nội dung">
-          <span className="qa-table-of-contents-title">Mục lục</span>
+        <nav className="testing-table-of-contents" aria-label="Mục lục nội dung">
+          <span className="testing-table-of-contents-title">Mục lục</span>
           <ol>
             {tableOfContents.map((item) => (
               <li key={item.id} style={{ paddingLeft: `${Math.max(item.level - 1, 0) * 0.75}rem` }}>
@@ -457,7 +461,7 @@ export default function QaDocumentEditor({
       )}
       {!readOnly && (
         <>
-          <BubbleMenu editor={editor} className="qa-bubble-menu">
+          <BubbleMenu editor={editor} className="testing-bubble-menu">
             {tool("In đậm", editor.isActive("bold"), toggleBold, <Bold size={15} />)}
             {tool(
               "In nghiêng",
@@ -472,7 +476,7 @@ export default function QaDocumentEditor({
               <Highlighter size={15} />,
             )}
           </BubbleMenu>
-          <FloatingMenu editor={editor} className="qa-floating-menu">
+          <FloatingMenu editor={editor} className="testing-floating-menu">
             {tool(
               "Tiêu đề cấp 2",
               false,

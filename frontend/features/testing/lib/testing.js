@@ -1,1 +1,1 @@
-export * from "./qa.logic.mjs";
+export * from "./testing.logic.mjs";

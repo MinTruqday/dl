@@ -1,11 +1,11 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ErrorState, Panel, useQaActionDialog } from "./TestingUi";
+import { ErrorState, Panel, useActionDialog } from "./WorkspacePrimitives";
 import { testingApi } from "../services/testing.service";
 import { messageOf } from "../lib/testing";
 
 export default function CollaborationPanel({ project, artifactType, artifactId, onResolved }) {
-  const { ask, dialog } = useQaActionDialog();
+  const { ask, dialog } = useActionDialog();
   const clientId = useRef(`workspace-${crypto.randomUUID()}`);
   const [presence, setPresence] = useState([]);
   const [conflicts, setConflicts] = useState([]);

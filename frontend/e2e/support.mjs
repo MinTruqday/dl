@@ -1,10 +1,12 @@
 import { expect } from "@playwright/test";
 
 const tokens = new Map();
+const apiBaseUrl = process.env.E2E_API_URL || "http://localhost:8000";
+const webBaseUrl = process.env.E2E_BASE_URL || "http://localhost:3000";
 
 export const credentials = {
   lead: {
-    email: "e2e-qa-lead@example.com",
+    email: "e2e-lead@example.com",
     password: "Veriq-E2E-Password-2026",
   },
   tester: {
@@ -59,7 +61,7 @@ export async function expectRuntimeClean(errors) {
 export async function loginByApi(request, role) {
   if (tokens.has(role)) return tokens.get(role);
   const account = credentials[role];
-  const response = await request.post("http://localhost:8000/xac-thuc/dang-nhap", {
+  const response = await request.post(`${apiBaseUrl}/xac-thuc/dang-nhap`, {
     form: { username: account.email, password: account.password },
   });
   expect(response.ok(), await response.text()).toBeTruthy();
@@ -72,8 +74,8 @@ export async function loginByApi(request, role) {
 export async function authenticatePage(page, request, role) {
   const token = await loginByApi(request, role);
   await page.context().addCookies([
-    { name: "token", value: token, url: "http://localhost:3000", sameSite: "Lax" },
-    { name: "role", value: role, url: "http://localhost:3000" },
+    { name: "token", value: token, url: webBaseUrl, sameSite: "Lax" },
+    { name: "role", value: role, url: webBaseUrl },
   ]);
   await page.addInitScript((value) => localStorage.setItem("veriq_token", value), token);
   return token;
@@ -88,7 +90,7 @@ export function userIdFromToken(token) {
 }
 
 export async function jsonRequest(request, method, path, token, data) {
-  const response = await request.fetch(`http://localhost:8000${path}`, {
+  const response = await request.fetch(`${apiBaseUrl}${path}`, {
     method,
     headers: { Authorization: `Bearer ${token}` },
     data,

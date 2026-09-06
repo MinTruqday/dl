@@ -8,7 +8,7 @@ from src.core.infrastructure.configuration import settings
 
 VALID_AGENTS = {
     "EngineAgent": "Searches the internet for real-time information, news, current events and external data",
-    "Action": "Calls QA domain operations for drafts trace impact proposal regression and human approved version mutations",
+    "Action": "Calls testing domain operations for drafts trace impact proposal regression and human approved version mutations",
     "Knowledge": "Retrieves project scoped Requirement Test Case Defect API specification and execution evidence",
     "Reasoning": "Analyzes semantic requirement changes trace evidence test impact duplicate risk and maintenance proposals",
 }

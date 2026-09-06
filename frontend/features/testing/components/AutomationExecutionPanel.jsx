@@ -1,12 +1,12 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import DataTable from "./DataTable";
-import { ErrorState, Panel, StatusPill, useQaActionDialog } from "./TestingUi";
+import { ErrorState, Panel, StatusPill, useActionDialog } from "./WorkspacePrimitives";
 import { testingApi } from "../services/testing.service";
 import { messageOf } from "../lib/testing";
 
 export default function AutomationExecutionPanel({ project }) {
-  const { ask, dialog } = useQaActionDialog();
+  const { ask, dialog } = useActionDialog();
   const [items, setItems] = useState([]);
   const [artifacts, setArtifacts] = useState([]);
   const [selected, setSelected] = useState(null);

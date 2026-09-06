@@ -6,16 +6,16 @@ import {
   ErrorState,
   Panel,
   ProjectCrumb,
-  QaPage,
+  WorkspacePage,
   StatusPill,
-  useQaActionDialog,
-} from "../../components/TestingUi";
+  useActionDialog,
+} from "../../components/WorkspacePrimitives";
 import { testingApi } from "../../services/testing.service";
 import { messageOf, valueLabel } from "../../lib/testing";
 import { Modal, ModalHeader, ModalTitle } from "@/shared/components/ui/Modal";
 
 export default function KnowledgePage({ project, initialQuery = "", useGlobalSearch = false }) {
-  const { ask, dialog } = useQaActionDialog();
+  const { ask, dialog } = useActionDialog();
   const [query, setQuery] = useState(initialQuery);
   const [result, setResult] = useState(null);
   const [question, setQuestion] = useState("");
@@ -43,7 +43,7 @@ export default function KnowledgePage({ project, initialQuery = "", useGlobalSea
       .catch((reason) => setError(messageOf(reason)));
   }, [initialQuery, project._id, useGlobalSearch]);
   return (
-    <QaPage
+    <WorkspacePage
       title="Kho tri thức"
       actions={
         <div className="flex flex-wrap items-center gap-3">
@@ -367,6 +367,6 @@ export default function KnowledgePage({ project, initialQuery = "", useGlobalSea
         />
       </Panel>
       {dialog}
-    </QaPage>
+    </WorkspacePage>
   );
 }

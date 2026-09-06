@@ -1,12 +1,12 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import DataTable from "./DataTable";
-import { ErrorState, Panel, StatusPill, useQaActionDialog } from "./TestingUi";
+import { ErrorState, Panel, StatusPill, useActionDialog } from "./WorkspacePrimitives";
 import { formatDate, messageOf } from "../lib/testing";
 import { testingApi } from "../services/testing.service";
 
 export default function WebhookPanel({ project }) {
-  const { ask, dialog } = useQaActionDialog();
+  const { ask, dialog } = useActionDialog();
   const [subscriptions, setSubscriptions] = useState([]);
   const [deliveries, setDeliveries] = useState([]);
   const [error, setError] = useState("");

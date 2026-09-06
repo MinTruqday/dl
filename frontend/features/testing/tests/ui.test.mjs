@@ -9,7 +9,7 @@ const appShellSource = await readSource("../../../shared/components/layout/AppSh
 const modalSource = await readSource("../../../shared/components/ui/Modal.jsx");
 const buttonSource = await readSource("../../../shared/components/ui/Button.jsx");
 const authFrameSource = await readSource("../../authentication/components/AuthFrame.jsx");
-const testingUiSource = await readSource("../components/TestingUi.jsx");
+const workspacePrimitivesSource = await readSource("../components/WorkspacePrimitives.jsx");
 const operationsSource = await readSource("../pages/OperationsPage.jsx");
 const projectsSource = await readSource("../pages/ProjectsPage.jsx");
 const requirementsSource = await readSource("../pages/workspace/RequirementsPage.jsx");
@@ -74,8 +74,8 @@ test("authentication screens contain only the form instead of promotional filler
 test("testing workspaces use the available width without compressing dense tables", () => {
   assert.match(appShellSource, /const fullWidthRoutes = \["\/du-an", "\/van-hanh"\]/);
   assert.match(dataTableSource, /columns\.length \* 150/);
-  assert.match(testingUiSource, /break-words text-\[30px\]/);
-  assert.match(testingUiSource, /min-w-0 flex-1/);
+  assert.match(workspacePrimitivesSource, /break-words text-\[30px\]/);
+  assert.match(workspacePrimitivesSource, /min-w-0 flex-1/);
 });
 
 test("project creation fields use a stable full width layout", () => {

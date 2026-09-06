@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { ErrorState, Panel, StatusPill } from "./TestingUi";
+import { ErrorState, Panel, StatusPill } from "./WorkspacePrimitives";
 import { messageOf } from "../lib/testing";
 import { testingApi } from "../services/testing.service";
 

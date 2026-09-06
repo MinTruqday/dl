@@ -8,12 +8,12 @@ import {
   Pagination,
   Panel,
   StatusPill,
-  useQaActionDialog,
-} from "./TestingUi";
+  useActionDialog,
+} from "./WorkspacePrimitives";
 import { formatDate, messageOf, valueLabel } from "../lib/testing";
 
 export default function PlatformUsersPanel() {
-  const { ask, dialog } = useQaActionDialog();
+  const { ask, dialog } = useActionDialog();
   const [users, setUsers] = useState([]);
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState("");

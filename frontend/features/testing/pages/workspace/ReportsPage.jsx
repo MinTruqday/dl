@@ -7,14 +7,14 @@ import {
   Metric,
   Panel,
   ProjectCrumb,
-  QaPage,
-  useQaActionDialog,
-} from "../../components/TestingUi";
+  WorkspacePage,
+  useActionDialog,
+} from "../../components/WorkspacePrimitives";
 import { formatDate, messageOf, valueLabel } from "../../lib/testing";
 import { testingApi } from "../../services/testing.service";
 
 export default function ReportsPage({ project }) {
-  const { ask, dialog } = useQaActionDialog();
+  const { ask, dialog } = useActionDialog();
   const [value, setValue] = useState(null);
   const [releases, setReleases] = useState([]);
   const [builds, setBuilds] = useState([]);
@@ -65,7 +65,7 @@ export default function ReportsPage({ project }) {
     void load();
   }, [load]);
   return (
-    <QaPage title="Báo cáo" actions={<ProjectCrumb projectId={project._id} />}>
+    <WorkspacePage title="Báo cáo" actions={<ProjectCrumb projectId={project._id} />}>
       {error && <ErrorState message={error} />}
       <Panel
         title="Phạm vi báo cáo"
@@ -362,6 +362,6 @@ export default function ReportsPage({ project }) {
         </>
       )}
       {dialog}
-    </QaPage>
+    </WorkspacePage>
   );
 }

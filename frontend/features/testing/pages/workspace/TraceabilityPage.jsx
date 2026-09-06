@@ -6,16 +6,16 @@ import {
   Metric,
   Panel,
   ProjectCrumb,
-  QaPage,
+  WorkspacePage,
   StatusPill,
-  useQaActionDialog,
-} from "../../components/TestingUi";
+  useActionDialog,
+} from "../../components/WorkspacePrimitives";
 import { testingApi } from "../../services/testing.service";
 import { formatDate, messageOf } from "../../lib/testing";
 import { Modal, ModalHeader, ModalTitle } from "@/shared/components/ui/Modal";
 
 export default function TraceabilityPage({ project }) {
-  const { ask, dialog } = useQaActionDialog();
+  const { ask, dialog } = useActionDialog();
   const [matrix, setMatrix] = useState({ trace_links: [], requirements: [], test_cases: [] });
   const [coverage, setCoverage] = useState({});
   const [snapshots, setSnapshots] = useState([]);
@@ -49,7 +49,7 @@ export default function TraceabilityPage({ project }) {
     }
   };
   return (
-    <QaPage
+    <WorkspacePage
       title="Truy vết"
       actions={
         <div className="flex flex-wrap items-center gap-3">
@@ -366,6 +366,6 @@ export default function TraceabilityPage({ project }) {
         />
       </Panel>
       {dialog}
-    </QaPage>
+    </WorkspacePage>
   );
 }

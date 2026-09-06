@@ -9,9 +9,9 @@ import {
   ErrorState,
   Panel,
   ProjectCrumb,
-  QaPage,
-  useQaActionDialog,
-} from "../../components/TestingUi";
+  WorkspacePage,
+  useActionDialog,
+} from "../../components/WorkspacePrimitives";
 import { testingApi } from "../../services/testing.service";
 import { formatDate, messageOf, valueLabel } from "../../lib/testing";
 
@@ -84,7 +84,7 @@ const settingValueLabels = {
 };
 
 export default function SettingsPage({ project, onProjectChange }) {
-  const { ask, dialog } = useQaActionDialog();
+  const { ask, dialog } = useActionDialog();
   const [audit, setAudit] = useState([]);
   const [members, setMembers] = useState([]);
   const [analytics, setAnalytics] = useState(null);
@@ -131,7 +131,7 @@ export default function SettingsPage({ project, onProjectChange }) {
       .catch((reason) => setError(messageOf(reason)));
   }, [project._id]);
   return (
-    <QaPage title="Cài đặt và nhật ký" actions={<ProjectCrumb projectId={project._id} />}>
+    <WorkspacePage title="Cài đặt và nhật ký" actions={<ProjectCrumb projectId={project._id} />}>
       {error && <ErrorState message={error} />}
       <div className="grid gap-5 xl:grid-cols-2">
         <Panel title="Thông tin dự án">
@@ -532,6 +532,6 @@ export default function SettingsPage({ project, onProjectChange }) {
         />
       </Panel>
       {dialog}
-    </QaPage>
+    </WorkspacePage>
   );
 }

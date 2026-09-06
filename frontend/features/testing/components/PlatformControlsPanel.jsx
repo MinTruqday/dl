@@ -9,8 +9,8 @@ import {
   Pagination,
   Panel,
   StatusPill,
-  useQaActionDialog,
-} from "./TestingUi";
+  useActionDialog,
+} from "./WorkspacePrimitives";
 import { formatDate, messageOf, valueLabel } from "../lib/testing";
 
 const configGroups = [
@@ -39,7 +39,7 @@ function configValue(value) {
 }
 
 export default function PlatformControlsPanel() {
-  const { ask, dialog } = useQaActionDialog();
+  const { ask, dialog } = useActionDialog();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

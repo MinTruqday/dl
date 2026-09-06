@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { docText, formatDate, messageOf, textDoc } from "../lib/testing";
 import { testingApi } from "../services/testing.service";
-import { ErrorState, Panel, StatusPill } from "./TestingUi";
+import { ErrorState, Panel, StatusPill } from "./WorkspacePrimitives";
 
 export default function ReviewCommentsPanel({ projectId, artifactType, artifactId, title }) {
   const [items, setItems] = useState([]);

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { statusLabel } from "../lib/testing";
 
-export function useQaActionDialog() {
+export function useActionDialog() {
   const titleId = useId();
   const dialogRef = useRef(null);
   const previousFocusRef = useRef(null);
@@ -149,7 +149,7 @@ export function useQaActionDialog() {
   return { ask, dialog };
 }
 
-export function QaPage({ title, description, actions, children }) {
+export function WorkspacePage({ title, description, actions, children }) {
   return (
     <div className="mx-auto w-full max-w-[1480px] space-y-7 p-4 sm:p-6 md:p-9">
       <header className="flex flex-col gap-5 border-b border-border pb-6 md:flex-row md:items-end md:justify-between">

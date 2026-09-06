@@ -12,17 +12,17 @@ import {
   Pagination,
   Panel,
   ProjectCrumb,
-  QaPage,
+  WorkspacePage,
   StatusPill,
-  useQaActionDialog,
-} from "../../components/TestingUi";
+  useActionDialog,
+} from "../../components/WorkspacePrimitives";
 import { testingApi } from "../../services/testing.service";
 import { docText, emptyDoc, messageOf, textDoc, valueLabel } from "../../lib/testing";
-import QaDocumentEditor from "../../editor/QaDocumentEditor";
+import DocumentEditor from "../../editor/DocumentEditor";
 import { Modal, ModalHeader, ModalTitle } from "@/shared/components/ui/Modal";
 
 export default function TestDesignPage({ project }) {
-  const { ask, dialog } = useQaActionDialog();
+  const { ask, dialog } = useActionDialog();
   const [requirements, setRequirements] = useState([]);
   const [scenarios, setScenarios] = useState([]);
   const [dataSets, setDataSets] = useState([]);
@@ -418,7 +418,7 @@ export default function TestDesignPage({ project }) {
     return () => window.clearTimeout(timer);
   }, [draftDirty, draftEdit, persistDraft, project.current_permissions, selectedDraft?.status]);
   return (
-    <QaPage
+    <WorkspacePage
       title="Thiết kế kiểm thử"
       actions={
         <div className="flex flex-wrap items-center gap-3">
@@ -1388,7 +1388,7 @@ export default function TestDesignPage({ project }) {
               </div>
               <div>
                 <p className="field-label mb-2">Thao tác</p>
-                <QaDocumentEditor
+                <DocumentEditor
                   value={form.action}
                   onChange={(action) => setForm({ ...form, action })}
                   label="Thao tác của ca kiểm thử"
@@ -1397,7 +1397,7 @@ export default function TestDesignPage({ project }) {
               </div>
               <div>
                 <p className="field-label mb-2">Kết quả mong đợi</p>
-                <QaDocumentEditor
+                <DocumentEditor
                   value={form.expected}
                   onChange={(expected) => setForm({ ...form, expected })}
                   label="Kết quả mong đợi của ca kiểm thử"
@@ -2228,6 +2228,6 @@ export default function TestDesignPage({ project }) {
         </div>
       </Panel>
       {dialog}
-    </QaPage>
+    </WorkspacePage>
   );
 }

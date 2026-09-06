@@ -2,10 +2,14 @@
 !frontend
 !frontend/**
 !packages
-!packages/**
 frontend/.next
+frontend/.next-*
 frontend/node_modules
 frontend/.pnpm-store
-frontend/jsconfig.tsbuildinfo
+frontend/*.tsbuildinfo
+frontend/playwright-report
+frontend/test-results
 **/__pycache__
 **/*.pyc
+.git
+.env

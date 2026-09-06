@@ -154,7 +154,6 @@ services:
     volumes:
       - ./frontend:/app
       - frontend_node_modules:/app/node_modules
-      - ./packages:/packages
       - frontend_next_cache:/app/.next-dev
     environment:
       WATCHPACK_POLLING: "true"
@@ -196,6 +195,7 @@ services:
       - redis
     volumes:
       - ./backend/notification/src:/app/src
+      - ./backend/notification/tests:/app/tests:ro
       - ./backend/logs/notification:/app/logs
     networks:
       - veriq_network

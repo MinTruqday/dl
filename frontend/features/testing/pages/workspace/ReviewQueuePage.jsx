@@ -6,15 +6,15 @@ import {
   ErrorState,
   Panel,
   ProjectCrumb,
-  QaPage,
+  WorkspacePage,
   StatusPill,
-  useQaActionDialog,
-} from "../../components/TestingUi";
+  useActionDialog,
+} from "../../components/WorkspacePrimitives";
 import { messageOf, valueLabel } from "../../lib/testing";
 import { testingApi } from "../../services/testing.service";
 
 export default function ReviewQueuePage({ project }) {
-  const { ask, dialog } = useQaActionDialog();
+  const { ask, dialog } = useActionDialog();
   const [items, setItems] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
   const [filters, setFilters] = useState({
@@ -116,7 +116,7 @@ export default function ReviewQueuePage({ project }) {
     }
   };
   return (
-    <QaPage title="Rà soát đề xuất AI" actions={<ProjectCrumb projectId={project._id} />}>
+    <WorkspacePage title="Rà soát đề xuất AI" actions={<ProjectCrumb projectId={project._id} />}>
       {error && <ErrorState message={error} />}
       <Panel
         title="Đề xuất đang chờ"
@@ -295,6 +295,6 @@ export default function ReviewQueuePage({ project }) {
         />
       </Panel>
       {dialog}
-    </QaPage>
+    </WorkspacePage>
   );
 }

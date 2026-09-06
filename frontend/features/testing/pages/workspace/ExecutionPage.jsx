@@ -9,16 +9,16 @@ import {
   Pagination,
   Panel,
   ProjectCrumb,
-  QaPage,
+  WorkspacePage,
   StatusPill,
-  useQaActionDialog,
-} from "../../components/TestingUi";
+  useActionDialog,
+} from "../../components/WorkspacePrimitives";
 import { testingApi } from "../../services/testing.service";
 import { docText, messageOf, textDoc, valueLabel } from "../../lib/testing";
 import { Modal, ModalHeader, ModalTitle } from "@/shared/components/ui/Modal";
 
 export default function ExecutionPage({ project, section }) {
-  const { ask, dialog } = useQaActionDialog();
+  const { ask, dialog } = useActionDialog();
   const runId = section[0] || "";
   const [plans, setPlans] = useState([]);
   const [suites, setSuites] = useState([]);
@@ -319,7 +319,7 @@ export default function ExecutionPage({ project, section }) {
   };
   if (run)
     return (
-      <QaPage title={run.name} actions={<ProjectCrumb projectId={project._id} />}>
+      <WorkspacePage title={run.name} actions={<ProjectCrumb projectId={project._id} />}>
         {error && <ErrorState message={error} />}
         <Panel
           title="Điều khiển lần chạy"
@@ -658,10 +658,10 @@ export default function ExecutionPage({ project, section }) {
           />
         </Panel>
         {dialog}
-      </QaPage>
+      </WorkspacePage>
     );
   return (
-    <QaPage
+    <WorkspacePage
       title="Thực thi kiểm thử"
       actions={
         <div className="flex flex-wrap items-center gap-2">
@@ -1316,6 +1316,6 @@ export default function ExecutionPage({ project, section }) {
         <Pagination value={runPageInfo} onChange={setRunPage} />
       </Panel>
       {dialog}
-    </QaPage>
+    </WorkspacePage>
   );
 }

@@ -37,7 +37,7 @@ def parse(value):
 
 
 @tool
-async def get_project_context(project_id: Annotated[str, Field(description="Mã Project QA")], config: RunnableConfig = None) -> str:
+async def get_project_context(project_id: Annotated[str, Field(description="Mã dự án kiểm thử")], config: RunnableConfig = None) -> str:
     """Lấy Project và dashboard trong đúng tenant hiện tại"""
     project = await call("GET", f"/du-an/{project_id}", config)
     dashboard = await call("GET", f"/du-an/{project_id}/tong-quan", config)
@@ -45,8 +45,8 @@ async def get_project_context(project_id: Annotated[str, Field(description="Mã 
 
 
 @tool
-async def search_project_knowledge(project_id: Annotated[str, Field(description="Mã Project QA")], query: Annotated[str, Field(min_length=1, description="Truy vấn artifact")], config: RunnableConfig = None) -> str:
-    """Tìm bằng chứng chỉ trong một Project QA"""
+async def search_project_knowledge(project_id: Annotated[str, Field(description="Mã dự án kiểm thử")], query: Annotated[str, Field(min_length=1, description="Truy vấn hiện vật")], config: RunnableConfig = None) -> str:
+    """Tìm bằng chứng trong phạm vi một dự án kiểm thử"""
     return await call("POST", f"/du-an/{project_id}/tri-thuc/tim-kiem", config, {"query": query, "artifact_types": [], "limit": 20})
 
 
@@ -69,14 +69,14 @@ async def get_acceptance_criteria(requirement_id: Annotated[str, Field(descripti
 
 
 @tool
-async def get_trace_links(project_id: Annotated[str, Field(description="Mã Project QA")], config: RunnableConfig = None) -> str:
+async def get_trace_links(project_id: Annotated[str, Field(description="Mã dự án kiểm thử")], config: RunnableConfig = None) -> str:
     """Lấy ma trận Trace Link gồm trạng thái xác nhận"""
     return await call("GET", f"/du-an/{project_id}/truy-vet", config)
 
 
 @tool
-async def search_test_cases(project_id: Annotated[str, Field(description="Mã Project QA")], query: Annotated[str, Field(description="Từ khóa Test Case")] = "", config: RunnableConfig = None) -> str:
-    """Tìm Test Case trong đúng Project QA"""
+async def search_test_cases(project_id: Annotated[str, Field(description="Mã dự án kiểm thử")], query: Annotated[str, Field(description="Từ khóa ca kiểm thử")] = "", config: RunnableConfig = None) -> str:
+    """Tìm ca kiểm thử trong đúng phạm vi dự án"""
     return await call("GET", f"/du-an/{project_id}/ca-kiem-thu?q={query}", config)
 
 
@@ -93,19 +93,19 @@ async def get_test_results(test_run_id: Annotated[str, Field(description="Mã Te
 
 
 @tool
-async def get_historical_defects(project_id: Annotated[str, Field(description="Mã Project QA")], config: RunnableConfig = None) -> str:
+async def get_historical_defects(project_id: Annotated[str, Field(description="Mã dự án kiểm thử")], config: RunnableConfig = None) -> str:
     """Lấy lịch sử Defect để làm evidence cho đề xuất kiểm thử"""
     return await call("GET", f"/du-an/{project_id}/loi", config)
 
 
 @tool
-async def find_near_duplicates(project_id: Annotated[str, Field(description="Mã Project QA")], config: RunnableConfig = None) -> str:
+async def find_near_duplicates(project_id: Annotated[str, Field(description="Mã dự án kiểm thử")], config: RunnableConfig = None) -> str:
     """Tìm các Test Case gần trùng và trả bằng chứng cấu trúc"""
     return await call("GET", f"/du-an/{project_id}/ca-kiem-thu/trung-lap", config)
 
 
 @tool
-async def create_test_case_draft(project_id: Annotated[str, Field(description="Mã Project QA")], draft_json: Annotated[str, Field(description="TestCaseDraft JSON có Tiptap JSON")], config: RunnableConfig = None) -> str:
+async def create_test_case_draft(project_id: Annotated[str, Field(description="Mã dự án kiểm thử")], draft_json: Annotated[str, Field(description="Bản nháp ca kiểm thử dạng JSON có nội dung Tiptap")], config: RunnableConfig = None) -> str:
     """Tạo Test Case Draft để con người rà soát"""
     payload = parse(draft_json)
     return await call("POST", f"/du-an/{project_id}/ban-nhap-ca-kiem-thu", config, payload) if payload else json.dumps({"status": "invalid_payload"})
@@ -166,7 +166,7 @@ async def mark_test_case_obsolete(test_case_id: Annotated[str, Field(description
 async def apply_test_case_revision(proposal_id: Annotated[str, Field(description="Mã Maintenance Proposal")], expected_revision: Annotated[int, Field(ge=1, description="Revision của proposal")], patch_json: Annotated[str, Field(description="JSON chỉnh sửa đã được người dùng duyệt")] = "{}", config: RunnableConfig = None) -> str:
     """Áp dụng Test Case revision qua proposal đã được con người chấp nhận"""
     patch = parse(patch_json)
-    return await call("POST", f"/de-xuat-bao-tri/{proposal_id}/chap-nhan-co-chinh-sua", config, {"expected_revision": expected_revision, "patch": patch or {}, "review_note": "Approved through QA agent tool"})
+    return await call("POST", f"/de-xuat-bao-tri/{proposal_id}/chap-nhan-co-chinh-sua", config, {"expected_revision": expected_revision, "patch": patch or {}, "review_note": "Đã phê duyệt qua công cụ tác tử kiểm thử"})
 
 
 @tool

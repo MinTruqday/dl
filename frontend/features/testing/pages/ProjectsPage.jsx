@@ -8,15 +8,15 @@ import {
   ErrorState,
   LoadingState,
   Panel,
-  QaPage,
+  WorkspacePage,
   StatusPill,
-  useQaActionDialog,
-} from "../components/TestingUi";
+  useActionDialog,
+} from "../components/WorkspacePrimitives";
 import { testingApi } from "../services/testing.service";
 import { formatDate, messageOf } from "../lib/testing";
 
 export default function ProjectsPage() {
-  const { ask, dialog } = useQaActionDialog();
+  const { ask, dialog } = useActionDialog();
   const [items, setItems] = useState([]);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("active");
@@ -26,6 +26,10 @@ export default function ProjectsPage() {
   const [createError, setCreateError] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const openCreateModal = () => {
+    setCreateError("");
+    setCreating(true);
+  };
   const load = useCallback(async (value = "", statusValue = "active") => {
     setLoading(true);
     setError("");
@@ -63,17 +67,10 @@ export default function ProjectsPage() {
     }
   };
   return (
-    <QaPage
+    <WorkspacePage
       title="Dự án"
       actions={
-        <button
-          type="button"
-          className="apple-button"
-          onClick={() => {
-            setCreateError("");
-            setCreating(true);
-          }}
-        >
+        <button type="button" className="apple-button" onClick={openCreateModal}>
           <Plus size={16} />
           Tạo dự án
         </button>
@@ -171,15 +168,15 @@ export default function ProjectsPage() {
               void load(query, status);
             }}
           >
-            <div className="relative">
+            <div className="relative flex items-center">
               <Search
                 aria-hidden="true"
-                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint"
+                className="pointer-events-none absolute left-3 z-10 text-ink-faint"
                 size={16}
               />
               <input
                 aria-label="Tìm dự án"
-                className="apple-input w-64 pl-9"
+                className="apple-input h-10 w-64 py-0 pl-10"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Tìm mã hoặc tên"
@@ -203,7 +200,10 @@ export default function ProjectsPage() {
             <LoadingState />
           </div>
         ) : items.length === 0 ? (
-          <EmptyState>
+          <EmptyState
+            onAction={!query.trim() && status === "active" ? openCreateModal : undefined}
+            actionLabel="Tạo dự án"
+          >
             {query.trim()
               ? "Không tìm thấy dự án phù hợp"
               : status === "archived"
@@ -271,6 +271,6 @@ export default function ProjectsPage() {
         )}
       </Panel>
       {dialog}
-    </QaPage>
+    </WorkspacePage>
   );
 }

@@ -46,7 +46,7 @@ class MetricsCollector:
             lines.append(
                 f'http_errors_total{{service="{service_name}",method="{method}",path="{path}"}} {count}'
             )
-        lines.append("# HELP worker_queue_depth Number of queued QA jobs")
+        lines.append("# HELP worker_queue_depth Number of queued testing jobs")
         lines.append("# TYPE worker_queue_depth gauge")
         for queue_name, depth in self._queue_depth.items():
             lines.append(f'worker_queue_depth{{queue="{queue_name}"}} {depth}')

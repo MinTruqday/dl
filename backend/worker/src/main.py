@@ -41,7 +41,7 @@ app.add_middleware(PrometheusMiddleware, service_name="worker")
 app.add_route("/so-lieu", metrics_endpoint("worker"))
 
 
-class QAJobRequest(BaseModel):
+class TestingJobRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", protected_namespaces=())
 
     event: str = Field(pattern=r"^(document\.parse|requirement\.extract|requirement\.semantic_diff|test\.generate|duplicate\.scan|impact\.analysis|knowledge\.index|automation\.newman)\.requested$")
@@ -88,7 +88,7 @@ async def ready():
     dependencies=[Depends(require_internal_token)],
     status_code=202,
 )
-async def enqueue_qa_job(payload: QAJobRequest):
+async def enqueue_testing_job(payload: TestingJobRequest):
     idempotency_key = ":".join([payload.project_id, payload.artifact_version_id, payload.event, payload.model_version])
     job_id = f"qa-{hashlib.sha256(idempotency_key.encode()).hexdigest()[:40]}"
     existing = await database.mongodb[settings.WORKER_DB_NAME].worker_jobs.find_one({"_id": job_id})

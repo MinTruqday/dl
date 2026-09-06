@@ -28,7 +28,7 @@ def validate_identifier(value: str, field: str):
         raise PermanentTaskError(f"Invalid {field}")
 
 
-async def handle_qa_job(payload: dict):
+async def handle_testing_job(payload: dict):
     job_id = str(payload.get("job_id") or "")
     requester_id = str(payload.get("requester_id") or "")
     requester_email = str(payload.get("requester_email") or "")
@@ -39,7 +39,7 @@ async def handle_qa_job(payload: dict):
         return
     job_payload = payload.get("payload")
     if not isinstance(job_payload, dict):
-        raise PermanentTaskError("QA job payload is required")
+        raise PermanentTaskError("Testing job payload is required")
     await record_job(
         job_id,
         {"status": "running", "attempt_started_at": datetime.now(timezone.utc)},
@@ -165,7 +165,7 @@ async def run_newman(job_id, payload, job_payload):
     return {"execution_id": execution_id, "status": status, "summary": callback["summary"]}
 
 
-HANDLERS = {"qa_job_queue": handle_qa_job}
+HANDLERS = {"qa_job_queue": handle_testing_job}
 
 
 async def mark_failed(queue_name: str, payload: dict, error: Exception):

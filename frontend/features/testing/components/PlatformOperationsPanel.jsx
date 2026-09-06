@@ -8,13 +8,13 @@ import {
   Pagination,
   Panel,
   StatusPill,
-  useQaActionDialog,
-} from "./TestingUi";
+  useActionDialog,
+} from "./WorkspacePrimitives";
 import { formatDate, messageOf, valueLabel } from "../lib/testing";
 import PlatformControlsPanel from "./PlatformControlsPanel";
 
 export default function PlatformOperationsPanel() {
-  const { ask, dialog } = useQaActionDialog();
+  const { ask, dialog } = useActionDialog();
   const [projects, setProjects] = useState([]);
   const [policy, setPolicy] = useState(null);
   const [providers, setProviders] = useState([]);

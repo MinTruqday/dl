@@ -8,7 +8,7 @@ import {
   statusLabel,
   textDoc,
   valueLabel,
-} from "../lib/qa.logic.mjs";
+} from "../lib/testing.logic.mjs";
 
 test("Tiptap documents retain plain text and preserve an empty document", () => {
   assert.deepEqual(emptyDoc(), { type: "doc", content: [] });
@@ -34,7 +34,7 @@ test("nested Tiptap content is projected in display order", () => {
   assert.equal(docText(document), "Profile Phone validation");
 });
 
-test("QA status labels cover human review and version maintenance states", () => {
+test("Testing status labels cover human review and version maintenance states", () => {
   assert.equal(statusLabel("SUGGESTED"), "AI đề xuất");
   assert.equal(statusLabel("NEEDS_UPDATE"), "Cần cập nhật");
   assert.equal(statusLabel("EDITED_ACCEPTED"), "Đã chấp nhận sau chỉnh sửa");

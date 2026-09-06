@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import DataTable from "./DataTable";
-import { ErrorState, Panel, StatusPill, useQaActionDialog } from "./TestingUi";
+import { ErrorState, Panel, StatusPill, useActionDialog } from "./WorkspacePrimitives";
 import { testingApi } from "../services/testing.service";
 import { formatDate, messageOf, valueLabel } from "../lib/testing";
 
@@ -21,7 +21,7 @@ const parseMapping = (value) => {
 };
 
 export default function ProjectConnectorsPanel({ project }) {
-  const { ask, dialog } = useQaActionDialog();
+  const { ask, dialog } = useActionDialog();
   const [items, setItems] = useState([]);
   const [logs, setLogs] = useState([]);
   const [conflicts, setConflicts] = useState([]);

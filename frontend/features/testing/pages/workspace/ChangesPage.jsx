@@ -7,15 +7,15 @@ import {
   ErrorState,
   Panel,
   ProjectCrumb,
-  QaPage,
+  WorkspacePage,
   StatusPill,
-  useQaActionDialog,
-} from "../../components/TestingUi";
+  useActionDialog,
+} from "../../components/WorkspacePrimitives";
 import { testingApi } from "../../services/testing.service";
 import { messageOf, valueLabel } from "../../lib/testing";
 
 export default function ChangesPage({ project }) {
-  const { ask, dialog } = useQaActionDialog();
+  const { ask, dialog } = useActionDialog();
   const [sets, setSets] = useState([]);
   const [proposals, setProposals] = useState([]);
   const [selectedProposalIds, setSelectedProposalIds] = useState([]);
@@ -226,7 +226,7 @@ export default function ChangesPage({ project }) {
     }
   };
   return (
-    <QaPage title="Phân tích thay đổi" actions={<ProjectCrumb projectId={project._id} />}>
+    <WorkspacePage title="Phân tích thay đổi" actions={<ProjectCrumb projectId={project._id} />}>
       {error && <ErrorState message={error} />}
       <Panel title="Bộ thay đổi">
         <details className="border-b border-border p-4">
@@ -649,6 +649,6 @@ export default function ChangesPage({ project }) {
         />
       </Panel>
       {dialog}
-    </QaPage>
+    </WorkspacePage>
   );
 }

@@ -20,17 +20,17 @@ class KnowledgeDocumentSummaryRequest(BaseModel):
     text: str = Field(min_length=1, max_length=15000, description="Nội dung tài liệu cần tóm tắt cho knowledge")
 
 
-class QAAssistanceRequest(BaseModel):
-    capability: Literal["project_question", "requirement_lint", "scenario_generation", "test_generation", "trace_recommendation", "semantic_change", "impact_analysis", "maintenance_proposal", "regression_recommendation", "defect_linking", "security_test_generation", "performance_plan_generation", "automation_script_generation"] = Field(description="Năng lực QA cần thực hiện")
+class TestingAssistanceRequest(BaseModel):
+    capability: Literal["project_question", "requirement_lint", "scenario_generation", "test_generation", "trace_recommendation", "semantic_change", "impact_analysis", "maintenance_proposal", "regression_recommendation", "defect_linking", "security_test_generation", "performance_plan_generation", "automation_script_generation"] = Field(description="Năng lực kiểm thử cần thực hiện")
     project_id: str = Field(min_length=1, max_length=128, description="Mã Project giới hạn phạm vi xử lý")
     instruction: str = Field(default="", max_length=5000, description="Chỉ dẫn nghiệp vụ bổ sung của người dùng")
     evidence: List[dict[str, Any]] = Field(min_length=1, max_length=100, description="Bằng chứng artifact đã được giới hạn theo Project")
 
 
-class QAAssistanceResult(BaseModel):
+class TestingAssistanceResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    capability: str = Field(description="Năng lực QA đã thực hiện")
+    capability: str = Field(description="Năng lực kiểm thử đã thực hiện")
     suggestions: List[dict[str, Any]] = Field(default_factory=list, max_length=100, description="Danh sách đề xuất chỉ ở trạng thái chờ duyệt")
     evidence_refs: List[str] = Field(default_factory=list, max_length=200, description="Mã bằng chứng hỗ trợ kết quả")
     confidence: float = Field(ge=0, le=1, description="Độ tin cậy tham khảo của mô hình")

@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ErrorState, Panel, StatusPill, useQaActionDialog } from "./TestingUi";
+import { ErrorState, Panel, StatusPill, useActionDialog } from "./WorkspacePrimitives";
 import { messageOf } from "../lib/testing";
 import { testingApi } from "../services/testing.service";
 import { Modal, ModalHeader, ModalTitle } from "@/shared/components/ui/Modal";
@@ -18,7 +18,7 @@ const EMPTY_FORM = {
 };
 
 export default function DeviceMatricesPanel({ project, plans, runs, onChanged }) {
-  const { ask, dialog } = useQaActionDialog();
+  const { ask, dialog } = useActionDialog();
   const [matrices, setMatrices] = useState([]);
   const [form, setForm] = useState(EMPTY_FORM);
   const [selectedMatrixId, setSelectedMatrixId] = useState("");

@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -54,7 +55,7 @@ export function Modal({
     }
   }, [isOpen]);
   if (!isOpen) return null;
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[2000] flex items-center justify-center bg-ink/30 p-4 backdrop-blur-[2px] animate-in fade-in"
       onMouseDown={(event) => {
@@ -84,7 +85,8 @@ export function Modal({
         )}
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 export function ModalHeader({ children, className }) {
