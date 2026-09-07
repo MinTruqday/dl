@@ -389,6 +389,12 @@ test("luồng chữ ký Requirement đến Regression bảo toàn phiên bản v
   await page.goto(`/du-an/${project._id}/truy-vet`);
   await expect(page.getByText("Độ phủ còn hiệu lực")).toBeVisible();
   await expect(page.getByText("Độ phủ thực thi")).toBeVisible();
+  await expect(page.getByText(/^REQ-PROFILE-004 v1 Giới hạn số điện thoại$/).first()).toBeVisible();
+  await expect(
+    page.getByText(/^TC-PROFILE-041 v1 Số điện thoại 9 chữ số bị từ chối$/).first(),
+  ).toBeVisible();
+  await expect(page.getByText(/^REQV-/)).toHaveCount(0);
+  await expect(page.getByText(/^TCV-/)).toHaveCount(0);
   await page.goto(`/du-an/${project._id}/thuc-thi/${run._id}`);
   await expect(page.getByText("Đạt", { exact: true })).toHaveCount(3);
   await page.goto("/cai-dat");
@@ -536,6 +542,23 @@ test("các nút thao tác chính tạo thay đổi thật qua backend", async ({
   expect((await settingsResponse).status()).toBe(200);
   const updatedProject = await apiRequest(request, token, "GET", `/du-an/${project._id}`);
   expect(updatedProject.name).toBe(updatedName);
+  await expect(
+    page
+      .getByText("Bổ nhiệm thêm trưởng nhóm trước khi thay đổi hoặc xóa", { exact: true })
+      .first(),
+  ).toBeVisible();
+  const membersPanel = page
+    .getByRole("heading", { level: 2, name: "Thành viên dự án" })
+    .locator("xpath=ancestor::section");
+  const leadRow = membersPanel.getByRole("row").filter({ hasText: "Trưởng nhóm kiểm thử" });
+  await expect(leadRow).toContainText("Trưởng nhóm kiểm thử E2E");
+  await expect(leadRow).toContainText("e2e-lead@example.com");
+  await expect(leadRow.getByRole("button", { name: "Xóa", exact: true })).toHaveCount(0);
+  await page.getByLabel("Email hoặc mã người dùng").fill("e2e-tester@example.com");
+  await page.getByLabel("Vai trò dự án").selectOption("TESTER");
+  await page.getByRole("button", { name: "Gửi lời mời", exact: true }).click();
+  const testerRow = membersPanel.getByRole("row").filter({ hasText: "e2e-tester@example.com" });
+  await expect(testerRow).toContainText("Kiểm thử viên E2E");
 
   await page.goto("/du-an");
   const missingProject = `Không tồn tại ${stamp}`;
@@ -544,5 +567,17 @@ test("các nút thao tác chính tạo thay đổi thật qua backend", async ({
   await expect(page.getByText("Không tìm thấy dự án phù hợp")).toBeVisible();
   await page.getByRole("button", { name: "Tạo dự án", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Tạo dự án" })).toBeVisible();
+  await authenticatePage(page, request, "tester");
+  await page.goto("/du-an");
+  const invitationPanel = page
+    .getByRole("heading", { level: 2, name: "Lời mời tham gia dự án" })
+    .locator("xpath=ancestor::section");
+  await expect(invitationPanel).toContainText(updatedName);
+  await expect(invitationPanel).toContainText("Kiểm thử viên");
+  await invitationPanel.getByRole("button", { name: "Chấp nhận", exact: true }).click();
+  await expect(page.getByText(updatedName, { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Lời mời tham gia dự án" })).toHaveCount(
+    0,
+  );
   await expectRuntimeClean(errors);
 });

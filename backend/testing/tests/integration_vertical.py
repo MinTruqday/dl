@@ -1,3 +1,4 @@
+import csv
 import io
 import os
 import time
@@ -66,6 +67,10 @@ with httpx.Client(base_url=BASE_URL, timeout=30) as client:
         },
     )
     project_id = project["_id"]
+    assert any(
+        item["_id"] == project_id
+        for item in request(client, "GET", "/kiem-thu/du-an?status=all")
+    )
     assert request(client, "GET", f"/kiem-thu/du-an/{project_id}/thanh-vien")
     request(
         client,
@@ -74,6 +79,13 @@ with httpx.Client(base_url=BASE_URL, timeout=30) as client:
         422,
         json={"expected_revision": 1, "project_role": "VIEWER"},
     )
+    last_lead_delete = request(
+        client,
+        "DELETE",
+        f"/kiem-thu/du-an/{project_id}/thanh-vien/qa-lead-e2e",
+        422,
+    )
+    assert last_lead_delete["error"]["code"] == "PROJECT_LAST_QA_LEAD_REQUIRED"
     comment = request(
         client,
         "POST",
@@ -291,6 +303,28 @@ with httpx.Client(base_url=BASE_URL, timeout=30) as client:
         f"/kiem-thu/du-an/{project_id}/thanh-vien/outsider-e2e",
     )
     request(client, "GET", f"/kiem-thu/du-an/{project_id}", 403, headers=OUTSIDER)
+    invitation = request(
+        client,
+        "POST",
+        f"/kiem-thu/du-an/{project_id}/loi-moi",
+        201,
+        json={"user_id": "outsider-e2e", "project_role": "VIEWER"},
+    )
+    pending_invitations = request(client, "GET", "/kiem-thu/loi-moi-du-an", headers=OUTSIDER)
+    assert pending_invitations[0]["_id"] == invitation["_id"]
+    assert pending_invitations[0]["project"]["name"] == project["name"]
+    accepted_invitation = request(
+        client,
+        "POST",
+        f"/kiem-thu/loi-moi-du-an/{invitation['_id']}/chap-nhan",
+        headers=OUTSIDER,
+    )
+    assert accepted_invitation["status"] == "ACTIVE"
+    request(
+        client,
+        "DELETE",
+        f"/kiem-thu/du-an/{project_id}/thanh-vien/outsider-e2e",
+    )
     updated_project = request(
         client,
         "PATCH",
@@ -765,6 +799,7 @@ with httpx.Client(base_url=BASE_URL, timeout=30) as client:
         json={"status": "FAIL", "step_results": [{"step_id": "step-1", "status": "FAIL"}], "actual_result_doc": doc("Ứng dụng chấp nhận 11 số"), "attachments": [], "note": "Đã xác nhận execution", "idempotency_key": f"execution-complete-{stamp}", "expected_revision": 2},
     )
     result = completed_execution["execution"]
+    assert result["executed_at"]
     correction = request(
         client,
         "POST",
@@ -859,6 +894,11 @@ with httpx.Client(base_url=BASE_URL, timeout=30) as client:
     run_report = client.get(f"/kiem-thu/lan-chay-kiem-thu/{run['_id']}/bao-cao", headers=HEADERS)
     assert run_report.status_code == 200
     assert "TC-PROFILE-043" in run_report.text and "FAIL" in run_report.text
+    report_rows = list(csv.DictReader(io.StringIO(run_report.text)))
+    assert {"executed_by_name", "executed_by_email", "executed_at"} <= set(
+        report_rows[0]
+    )
+    assert all(item["executed_at"] for item in report_rows if item["result"] != "NOT_RUN")
     defect = request(client, "POST", f"/kiem-thu/loi/{defect['_id']}/chuyen-trang-thai", json={"expected_revision": defect["revision"], "to_status": "IN_PROGRESS", "reason": "Bắt đầu sửa lỗi"})
     defect = request(client, "POST", f"/kiem-thu/loi/{defect['_id']}/chuyen-trang-thai", json={"expected_revision": defect["revision"], "to_status": "RESOLVED", "reason": "Đã sửa giới hạn"})
     defect = request(client, "POST", f"/kiem-thu/loi/{defect['_id']}/chuyen-trang-thai", json={"expected_revision": defect["revision"], "to_status": "READY_FOR_RETEST", "reason": "Sẵn sàng kiểm tra lại"})
@@ -946,8 +986,13 @@ with httpx.Client(base_url=BASE_URL, timeout=30) as client:
         json={"from_version_id": version_1["_id"], "to_version_id": version_2["_id"]},
     )
     assert change_set["changes"][0]["type"] == "MODIFIED_BOUNDARY"
-    assert request(client, "GET", f"/kiem-thu/bo-thay-doi/{change_set['_id']}")["_id"] == change_set["_id"]
-    assert request(client, "GET", f"/kiem-thu/du-an/{project_id}/bo-thay-doi")
+    change_set_detail = request(client, "GET", f"/kiem-thu/bo-thay-doi/{change_set['_id']}")
+    assert change_set_detail["_id"] == change_set["_id"]
+    assert change_set_detail["requirement_label"] == "REQ-PROFILE-004"
+    assert change_set_detail["from_version_label"] == "v1"
+    assert change_set_detail["to_version_label"] == "v2"
+    change_sets = request(client, "GET", f"/kiem-thu/du-an/{project_id}/bo-thay-doi")
+    assert change_sets[0]["requirement_label"] == "REQ-PROFILE-004"
     change_set = request(
         client,
         "POST",
@@ -1008,7 +1053,10 @@ with httpx.Client(base_url=BASE_URL, timeout=30) as client:
     proposals = request(client, "POST", f"/kiem-thu/phan-tich-anh-huong/{impact['_id']}/de-xuat-bao-tri", 201)
     proposal = next(item for item in proposals if item["proposal_type"] == "UPDATE_TEST_CASE")
     assert request(client, "GET", f"/kiem-thu/de-xuat-bao-tri/{proposal['_id']}")["_id"] == proposal["_id"]
-    assert request(client, "GET", f"/kiem-thu/du-an/{project_id}/de-xuat-bao-tri")
+    listed_proposals = request(client, "GET", f"/kiem-thu/du-an/{project_id}/de-xuat-bao-tri")
+    listed_proposal = next(item for item in listed_proposals if item["_id"] == proposal["_id"])
+    assert listed_proposal["base_version"]["version"] == test_version_1["version"]
+    assert listed_proposal["impact_analysis"]["snapshot_number"] == impact["snapshot_number"]
     proposal = request(
         client,
         "POST",
@@ -1139,6 +1187,7 @@ with httpx.Client(base_url=BASE_URL, timeout=30) as client:
     assert any(item["action"] == "maintenance_proposal_applied" for item in audits)
     dashboard = request(client, "GET", f"/kiem-thu/du-an/{project_id}/tong-quan")
     assert dashboard["requirements"] == 1 and dashboard["active_tests"] == 1
+    assert dashboard["recent_changes"][0]["requirement_label"] == "REQ-PROFILE-004"
     review_required = request(
         client,
         "POST",
@@ -1161,6 +1210,16 @@ with httpx.Client(base_url=BASE_URL, timeout=30) as client:
     )
     assert obsolete_test_case["status"] == "OBSOLETE"
     obsolete_matrix = request(client, "GET", f"/kiem-thu/du-an/{project_id}/truy-vet")
+    assert all(
+        item["target_label"] and not item["target_label"].startswith("TCV-")
+        for item in obsolete_matrix["trace_links"]
+        if item["target_type"] == "test_case_version"
+    )
+    assert all(
+        item["source_label"] and not item["source_label"].startswith("REQV-")
+        for item in obsolete_matrix["trace_links"]
+        if item["source_type"] == "requirement_version"
+    )
     assert any(
         item["obsolete"] and "OBSOLETE_SOURCE" in item["obsolete_reasons"]
         for item in obsolete_matrix["trace_links"]

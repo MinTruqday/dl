@@ -128,7 +128,7 @@ export default function DashboardPage({ project }) {
               items={value.recent_changes}
               empty="Chưa có bộ thay đổi"
               columns={[
-                { key: "_id", label: "Mã" },
+                { key: "requirement_label", label: "Yêu cầu" },
                 {
                   key: "status",
                   label: "Trạng thái",

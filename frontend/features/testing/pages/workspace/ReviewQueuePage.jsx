@@ -218,8 +218,22 @@ export default function ReviewQueuePage({ project }) {
           columns={[
             { key: "proposal_type", label: "Loại" },
             { key: "test_case_key", label: "Đối tượng" },
-            { key: "base_version_id", label: "Phiên bản gốc" },
-            { key: "impact_analysis_id", label: "Phân tích thay đổi" },
+            {
+              key: "base_version",
+              label: "Phiên bản gốc",
+              render: (item) =>
+                item.base_version
+                  ? `${item.test_case_key || "Ca kiểm thử"} phiên bản ${item.base_version.version}`
+                  : "Đề xuất tạo mới",
+            },
+            {
+              key: "impact_analysis",
+              label: "Phân tích thay đổi",
+              render: (item) =>
+                item.impact_analysis
+                  ? `Lần phân tích ${item.impact_analysis.snapshot_number || 1}`
+                  : "Không có",
+            },
             {
               key: "confidence",
               label: "Mức tin cậy hỗ trợ",

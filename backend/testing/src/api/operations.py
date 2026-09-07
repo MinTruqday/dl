@@ -3,7 +3,7 @@ import re
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from src.core.auth import CurrentUser, get_current_user
-from src.core.common import envelope, now
+from src.core.common import envelope, load_user_identities, now
 from src.core.configuration import settings
 from src.core.database import database
 
@@ -130,7 +130,10 @@ async def operations(
             {"actor_id": {"$regex": pattern, "$options": "i"}},
         ]
     audit_events = await database.value.audit_events.find(audit_filter).sort("created_at", -1).to_list(limit)
+    identities = await load_user_identities(event.get("actor_id") for event in audit_events)
     for event in audit_events:
+        identity = identities.get(str(event.get("actor_id")))
+        event["actor_label"] = identity.get("label") if identity else event.get("actor_id")
         if hasattr(event.get("created_at"), "isoformat"):
             event["created_at"] = event["created_at"].isoformat()
     return envelope(

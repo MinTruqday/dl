@@ -27,6 +27,48 @@ from src.services.project_knowledge import index_artifact
 router = APIRouter(prefix="/kiem-thu", tags=["Bảo trì thay đổi kiểm thử"])
 
 
+async def enrich_change_sets(items, project_id):
+    requirement_ids = sorted({item.get("requirement_id") for item in items if item.get("requirement_id")})
+    version_ids = sorted(
+        {
+            version_id
+            for item in items
+            for version_id in (item.get("from_version_id"), item.get("to_version_id"))
+            if version_id
+        }
+    )
+    requirements = await database.value.requirements.find(
+        {"project_id": project_id, "_id": {"$in": requirement_ids}},
+        {"_id": 1, "requirement_key": 1, "title": 1},
+    ).to_list(len(requirement_ids))
+    versions = await database.value.requirement_versions.find(
+        {"project_id": project_id, "_id": {"$in": version_ids}},
+        {"_id": 1, "version": 1},
+    ).to_list(len(version_ids))
+    requirements_by_id = {item["_id"]: item for item in requirements}
+    versions_by_id = {item["_id"]: item for item in versions}
+    enriched = []
+    for item in items:
+        requirement = requirements_by_id.get(item.get("requirement_id"), {})
+        from_version = versions_by_id.get(item.get("from_version_id"), {})
+        to_version = versions_by_id.get(item.get("to_version_id"), {})
+        enriched.append(
+            {
+                **item,
+                "requirement_label": requirement.get("requirement_key")
+                or requirement.get("title")
+                or item.get("requirement_id"),
+                "from_version_label": (
+                    f"v{from_version['version']}" if from_version.get("version") is not None else None
+                ),
+                "to_version_label": (
+                    f"v{to_version['version']}" if to_version.get("version") is not None else None
+                ),
+            }
+        )
+    return enriched
+
+
 @router.post("/yeu-cau/{requirement_id}/bo-thay-doi", status_code=201)
 async def create_change_set(
     requirement_id: str,
@@ -82,16 +124,16 @@ async def list_change_sets(
     sort_field, direction = sort_spec(
         sort, {"requirement_id", "status", "created_at", "updated_at"}, "-created_at"
     )
-    return envelope(await database.value.requirement_change_sets.find(query).sort(sort_field, direction).to_list(limit))
+    items = await database.value.requirement_change_sets.find(query).sort(sort_field, direction).to_list(limit)
+    return envelope(await enrich_change_sets(items, project_id))
 
 
 @router.get("/bo-thay-doi/{change_set_id}")
 async def get_change_set(change_set_id: str, user: CurrentUser = Depends(get_current_user)):
-    return envelope(
-        await get_project_entity(
-            "requirement_change_sets", change_set_id, user, "changeset.read"
-        )
+    item = await get_project_entity(
+        "requirement_change_sets", change_set_id, user, "changeset.read"
     )
+    return envelope((await enrich_change_sets([item], item["project_id"]))[0])
 
 
 @router.post("/bo-thay-doi/{change_set_id}/ra-soat")
@@ -555,9 +597,21 @@ async def list_proposals(
         {"project_id": project_id, "_id": {"$in": base_ids}}
     ).to_list(limit)
     by_id = {item["_id"]: item for item in bases}
+    analysis_ids = [
+        item.get("impact_analysis_id") for item in proposals if item.get("impact_analysis_id")
+    ]
+    analyses = await database.value.impact_analyses.find(
+        {"project_id": project_id, "_id": {"$in": analysis_ids}},
+        {"_id": 1, "snapshot_number": 1, "change_set_id": 1},
+    ).to_list(limit)
+    analyses_by_id = {item["_id"]: item for item in analyses}
     return envelope(
         [
-            {**item, "base_version": by_id.get(item.get("base_version_id"))}
+            {
+                **item,
+                "base_version": by_id.get(item.get("base_version_id")),
+                "impact_analysis": analyses_by_id.get(item.get("impact_analysis_id")),
+            }
             for item in proposals
         ]
     )

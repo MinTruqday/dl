@@ -146,6 +146,35 @@ async def traceability(project_id: str, user: CurrentUser = Depends(get_current_
         }
     ).to_list(20000)
     links = await database.value.trace_links.find({"project_id": project_id}).to_list(50000)
+    linked_requirement_version_ids = {
+        item.get("source_id")
+        for item in links
+        if item.get("source_type") == "requirement_version" and item.get("source_id")
+    }
+    linked_test_case_version_ids = {
+        item.get("target_id")
+        for item in links
+        if item.get("target_type") == "test_case_version" and item.get("target_id")
+    }
+    known_requirement_version_ids = {item["_id"] for item in versions}
+    known_test_case_version_ids = {item["_id"] for item in test_versions}
+    missing_requirement_versions = linked_requirement_version_ids - known_requirement_version_ids
+    missing_test_case_versions = linked_test_case_version_ids - known_test_case_version_ids
+    if missing_requirement_versions:
+        versions.extend(
+            await database.value.requirement_versions.find(
+                {"project_id": project_id, "_id": {"$in": list(missing_requirement_versions)}}
+            ).to_list(5000)
+        )
+    if missing_test_case_versions:
+        test_versions.extend(
+            await database.value.test_case_versions.find(
+                {"project_id": project_id, "_id": {"$in": list(missing_test_case_versions)}}
+            ).to_list(10000)
+        )
+    requirement_versions_by_id = {item["_id"]: item for item in versions}
+    criteria_by_id = {item["_id"]: item for item in criteria}
+    test_versions_by_id = {item["_id"]: item for item in test_versions}
     obsolete_requirement_ids = {
         item["_id"] for item in requirements if item.get("status") == "OBSOLETE"
     }
@@ -172,7 +201,31 @@ async def traceability(project_id: str, user: CurrentUser = Depends(get_current_
             reasons.append("OBSOLETE_SOURCE")
         if link.get("target_id") in obsolete_test_version_ids:
             reasons.append("OBSOLETE_TARGET")
-        enriched_links.append({**link, "obsolete": bool(reasons), "obsolete_reasons": reasons})
+        source = (
+            requirement_versions_by_id.get(link.get("source_id"))
+            if link.get("source_type") == "requirement_version"
+            else criteria_by_id.get(link.get("source_id"))
+        )
+        target = test_versions_by_id.get(link.get("target_id"))
+        source_label = (
+            f"{source.get('requirement_key', '')} v{source.get('version', '')} {source.get('title', '')}".strip()
+            if link.get("source_type") == "requirement_version" and source
+            else source.get("key", link.get("source_id")) if source else link.get("source_id")
+        )
+        target_label = (
+            f"{target.get('test_case_key', '')} v{target.get('version', '')} {target.get('title', '')}".strip()
+            if target
+            else link.get("target_id")
+        )
+        enriched_links.append(
+            {
+                **link,
+                "source_label": source_label,
+                "target_label": target_label,
+                "obsolete": bool(reasons),
+                "obsolete_reasons": reasons,
+            }
+        )
     return envelope({"requirements": requirements, "requirement_versions": versions, "acceptance_criteria": criteria, "test_cases": tests, "test_case_versions": test_versions, "trace_links": enriched_links, "defects": defects})
 
 

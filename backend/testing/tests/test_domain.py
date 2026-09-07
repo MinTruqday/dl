@@ -314,7 +314,7 @@ def test_requirement_duplicate_score_distinguishes_exact_semantic_and_unrelated_
         },
     )
     assert exact_score == 1
-    assert exact_reasons == ["Nội dung Requirement trùng khớp hoàn toàn"]
+    assert exact_reasons == ["Nội dung yêu cầu trùng khớp hoàn toàn"]
     assert semantic_score > unrelated_score
     assert semantic_reasons
 

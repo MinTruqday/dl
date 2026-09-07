@@ -4,7 +4,7 @@ import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from src.core.auth import CurrentUser, get_current_user
-from src.core.common import envelope, get_project, now
+from src.core.common import envelope, get_project, load_user_identities, now
 from src.core.database import database
 from src.core.configuration import settings
 from src.domain.schemas import ProjectQuestionInput, SearchInput
@@ -106,6 +106,17 @@ async def dashboard(project_id: str, user: CurrentUser = Depends(get_current_use
     )
     coverage = await coverage_snapshot(project_id)
     recent_changes = await database.value.requirement_change_sets.find({"project_id": project_id}).sort("created_at", -1).to_list(10)
+    requirement_ids = [item.get("requirement_id") for item in recent_changes if item.get("requirement_id")]
+    recent_requirements = await database.value.requirements.find(
+        {"project_id": project_id, "_id": {"$in": requirement_ids}},
+        {"_id": 1, "requirement_key": 1, "title": 1},
+    ).to_list(len(requirement_ids))
+    recent_requirement_labels = {
+        item["_id"]: item.get("requirement_key") or item.get("title")
+        for item in recent_requirements
+    }
+    for item in recent_changes:
+        item["requirement_label"] = recent_requirement_labels.get(item.get("requirement_id")) or item.get("requirement_id")
     return envelope({"requirements": requirements, "active_tests": active_tests, "tests_needing_update": stale_tests, "pending_proposals": pending_proposals, "current_runs": current_runs, "open_defects": open_defects, "open_defects_by_severity": open_defects_by_severity, "latest_run": latest_run_summary, "changes_waiting_impact": changes_waiting_impact, **coverage, "recent_changes": recent_changes})
 
 
@@ -205,7 +216,23 @@ async def project_audit(
     user: CurrentUser = Depends(get_current_user),
 ):
     await get_project(project_id, user, "project.audit.read")
-    return envelope(await database.value.audit_events.find({"project_id": project_id}).sort("created_at", -1).to_list(limit))
+    events = (
+        await database.value.audit_events.find({"project_id": project_id})
+        .sort("created_at", -1)
+        .to_list(limit)
+    )
+    identities = await load_user_identities(item.get("actor_id") for item in events)
+    return envelope(
+        [
+            {
+                **event,
+                "actor": identities.get(event.get("actor_id")),
+                "actor_label": (identities.get(event.get("actor_id")) or {}).get("label")
+                or event.get("actor_id"),
+            }
+            for event in events
+        ]
+    )
 
 
 @router.get("/du-an/{project_id}/phan-tich-bao-tri")

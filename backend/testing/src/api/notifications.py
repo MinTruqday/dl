@@ -33,6 +33,16 @@ async def require_artifact(project_id, artifact_type, artifact_id):
         raise HTTPException(status_code=404, detail={"code": "ENTITY_NOT_FOUND"})
 
 
+def artifact_label(artifact_type, artifact):
+    return (
+        artifact.get("requirement_key")
+        or artifact.get("test_case_key")
+        or artifact.get("name")
+        or artifact.get("defect_key")
+        or artifact.get("title")
+    )
+
+
 def default_rules(project_id):
     return {
         "_id": f"PNRULE:{project_id}",
@@ -78,6 +88,18 @@ async def list_notification_watches(
     items = await database.value.notification_subscriptions.find(query).sort(
         "updated_at", -1
     ).to_list(1000)
+    for artifact_type_value, collection_name in ARTIFACT_COLLECTIONS.items():
+        matching = [item for item in items if item.get("artifact_type") == artifact_type_value]
+        identifiers = [item.get("artifact_id") for item in matching if item.get("artifact_id")]
+        if not identifiers:
+            continue
+        artifacts = await database.value[collection_name].find(
+            {"project_id": project_id, "_id": {"$in": identifiers}},
+            {"_id": 1, "requirement_key": 1, "test_case_key": 1, "name": 1, "defect_key": 1, "title": 1},
+        ).to_list(len(identifiers))
+        labels = {item["_id"]: artifact_label(artifact_type_value, item) for item in artifacts}
+        for item in matching:
+            item["artifact_label"] = labels.get(item.get("artifact_id")) or item.get("artifact_id")
     return envelope(items)
 
 

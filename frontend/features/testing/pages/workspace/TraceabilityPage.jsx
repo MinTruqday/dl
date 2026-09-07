@@ -11,7 +11,7 @@ import {
   useActionDialog,
 } from "../../components/WorkspacePrimitives";
 import { testingApi } from "../../services/testing.service";
-import { formatDate, messageOf } from "../../lib/testing";
+import { formatDate, messageOf, valueLabel } from "../../lib/testing";
 import { Modal, ModalHeader, ModalTitle } from "@/shared/components/ui/Modal";
 
 export default function TraceabilityPage({ project }) {
@@ -215,9 +215,21 @@ export default function TraceabilityPage({ project }) {
           items={matrix.trace_links || []}
           empty="Chưa có liên kết truy vết"
           columns={[
-            { key: "source_type", label: "Nguồn" },
-            { key: "source_id", label: "Mã nguồn" },
-            { key: "target_id", label: "Phiên bản ca kiểm thử" },
+            {
+              key: "source_type",
+              label: "Nguồn",
+              render: (item) => valueLabel(item.source_type),
+            },
+            {
+              key: "source_id",
+              label: "Yêu cầu nguồn",
+              render: (item) => item.source_label || item.source_id,
+            },
+            {
+              key: "target_id",
+              label: "Ca kiểm thử",
+              render: (item) => item.target_label || item.target_id,
+            },
             { key: "confidence", label: "Độ tin cậy" },
             {
               key: "freshness",

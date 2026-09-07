@@ -6,6 +6,7 @@ FUNCTION_IDS = {
     "archive_project": ["PRJ-05"],
     "restore_project": ["PRJ-06"],
     "list_project_members": ["MEM-01"],
+    "list_project_invitations": ["MEM-01"],
     "add_project_member": ["MEM-02"],
     "invite_project_member": ["MEM-02"],
     "accept_project_invitation": ["MEM-SELF-01"],

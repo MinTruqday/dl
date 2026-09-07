@@ -13,11 +13,12 @@ import {
   useActionDialog,
 } from "../components/WorkspacePrimitives";
 import { testingApi } from "../services/testing.service";
-import { formatDate, messageOf } from "../lib/testing";
+import { formatDate, messageOf, valueLabel } from "../lib/testing";
 
 export default function ProjectsPage() {
   const { ask, dialog } = useActionDialog();
   const [items, setItems] = useState([]);
+  const [invitations, setInvitations] = useState([]);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("active");
   const [form, setForm] = useState({ key: "", name: "", description: "", project_type: "web" });
@@ -34,7 +35,12 @@ export default function ProjectsPage() {
     setLoading(true);
     setError("");
     try {
-      setItems(await testingApi.listProjects(value, statusValue));
+      const [projects, pendingInvitations] = await Promise.all([
+        testingApi.listProjects(value, statusValue),
+        testingApi.listInvitations(),
+      ]);
+      setItems(projects);
+      setInvitations(pendingInvitations);
     } catch (reason) {
       setError(messageOf(reason));
     } finally {
@@ -158,6 +164,61 @@ export default function ProjectsPage() {
           </div>
         </form>
       </Modal>
+      {invitations.length > 0 && (
+        <Panel
+          title="Lời mời tham gia dự án"
+          description="Chấp nhận lời mời để dự án xuất hiện trong danh sách của bạn"
+        >
+          <div className="divide-y divide-border">
+            {invitations.map((invitation) => (
+              <article
+                key={invitation._id}
+                className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between"
+              >
+                <div className="min-w-0">
+                  <span className="font-mono text-[12px] font-semibold text-brand">
+                    {invitation.project?.key}
+                  </span>
+                  <strong className="mt-1 block text-[14px]">{invitation.project?.name}</strong>
+                  <small className="text-ink-muted">
+                    Vai trò được mời {valueLabel(invitation.project_role)}
+                  </small>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={async () => {
+                      try {
+                        await testingApi.declineInvitation(invitation._id);
+                        await load(query, status);
+                      } catch (reason) {
+                        setError(messageOf(reason));
+                      }
+                    }}
+                  >
+                    Từ chối
+                  </button>
+                  <button
+                    type="button"
+                    className="apple-button"
+                    onClick={async () => {
+                      try {
+                        await testingApi.acceptInvitation(invitation._id);
+                        await load(query, status);
+                      } catch (reason) {
+                        setError(messageOf(reason));
+                      }
+                    }}
+                  >
+                    Chấp nhận
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        </Panel>
+      )}
       <Panel
         title="Danh sách dự án"
         actions={

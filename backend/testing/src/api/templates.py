@@ -10,6 +10,7 @@ from src.core.common import (
     envelope,
     get_project,
     get_project_entity,
+    load_user_identities,
     new_id,
     now,
     require_action_policy,
@@ -58,6 +59,10 @@ async def list_templates(
     if template_type:
         query["template_type"] = template_type
     items = await database.value.test_case_templates.find(query).sort("updated_at", -1).to_list(500)
+    identities = await load_user_identities(item.get("created_by") for item in items)
+    for item in items:
+        identity = identities.get(str(item.get("created_by")))
+        item["created_by_label"] = identity.get("label") if identity else item.get("created_by")
     return envelope(items)
 
 
@@ -66,9 +71,11 @@ async def list_templates(
     openapi_extra={"x-function-ids": ["TPLT-01"]},
 )
 async def get_template(template_id: str, user: CurrentUser = Depends(get_current_user)):
-    return envelope(
-        await get_project_entity("test_case_templates", template_id, user, "testcase.template.read")
-    )
+    item = await get_project_entity("test_case_templates", template_id, user, "testcase.template.read")
+    identities = await load_user_identities([item.get("created_by")])
+    identity = identities.get(str(item.get("created_by")))
+    item["created_by_label"] = identity.get("label") if identity else item.get("created_by")
+    return envelope(item)
 
 
 @router.post(

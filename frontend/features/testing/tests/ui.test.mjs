@@ -13,6 +13,7 @@ const workspacePrimitivesSource = await readSource("../components/WorkspacePrimi
 const operationsSource = await readSource("../pages/OperationsPage.jsx");
 const projectsSource = await readSource("../pages/ProjectsPage.jsx");
 const requirementsSource = await readSource("../pages/workspace/RequirementsPage.jsx");
+const traceabilitySource = await readSource("../pages/workspace/TraceabilityPage.jsx");
 const changesSource = await readSource("../pages/workspace/ChangesPage.jsx");
 const executionSource = await readSource("../pages/workspace/ExecutionPage.jsx");
 const defectsSource = await readSource("../pages/workspace/DefectsPage.jsx");
@@ -56,6 +57,21 @@ test("shared navigation and tables remain operable with keyboard and mobile focu
   assert.match(dataTableSource, /event\.stopPropagation\(\)/);
 });
 
+test("project membership and traceability surfaces explain identities before destructive actions", () => {
+  assert.match(settingsSource, /isOnlyActiveLead/);
+  assert.match(settingsSource, /Bổ nhiệm thêm trưởng nhóm trước khi thay đổi hoặc xóa/);
+  assert.match(settingsSource, /item\.status !== "ACTIVE" \|\| isOnlyActiveLead\(item\)/);
+  assert.match(settingsSource, /item\.user_label \|\| item\.user_id/);
+  assert.match(settingsSource, /Email hoặc mã người dùng/);
+  assert.match(testingServiceSource, /removeMember/);
+  assert.match(traceabilitySource, /item\.target_label \|\| item\.target_id/);
+  assert.match(traceabilitySource, /valueLabel\(item\.source_type\)/);
+  assert.match(projectsSource, /Lời mời tham gia dự án/);
+  assert.match(projectsSource, /testingApi\.acceptInvitation/);
+  assert.match(projectsSource, /testingApi\.declineInvitation/);
+  assert.match(testingServiceSource, /params\.set\("status", status\)/);
+});
+
 test("shared modal has an accessible name and its close control never submits a form", () => {
   assert.match(modalSource, /aria-label=\{ariaLabel\}/);
   assert.match(modalSource, /type="button"\s+onClick=\{onClose\}/);
@@ -72,11 +88,22 @@ test("authentication screens contain only the form instead of promotional filler
   assert.match(authFrameSource, /items-center justify-center/);
 });
 
-test("testing workspaces use the available width without compressing dense tables", () => {
-  assert.match(appShellSource, /const fullWidthRoutes = \["\/du-an", "\/van-hanh"\]/);
+test("testing workspaces retain the shared page frame from commit 556", () => {
+  assert.match(appShellSource, /const fullWidthRoutes = \[\]/);
   assert.match(dataTableSource, /columns\.length \* 150/);
   assert.match(workspacePrimitivesSource, /break-words text-\[30px\]/);
   assert.match(workspacePrimitivesSource, /min-w-0 flex-1/);
+});
+
+test("people and artifact references use readable labels instead of opaque identifiers", () => {
+  assert.match(requirementsSource, /Mọi người phụ trách/);
+  assert.match(requirementsSource, /item\.user_label \|\| item\.user\?\.email/);
+  assert.match(defectsSource, /label: "Người xử lý"/);
+  assert.match(defectsSource, /members\.find\(\(member\) => member\.user_id === item\.assignee\)/);
+  assert.match(changesSource, /item\.from_version_label && item\.to_version_label/);
+  assert.match(templatePanelSource, /selected\.created_by_label \|\| selected\.created_by/);
+  assert.match(projectNotificationsSource, /item\.artifact_label \|\| item\.artifact_id/);
+  assert.match(operationsSource, /key: "actor_label"/);
 });
 
 test("project creation fields use a stable full width layout", () => {
@@ -144,8 +171,8 @@ test("impact rerun creates a new snapshot and keeps review override controls", (
   assert.ok(testingServiceSource.includes("/phan-tich-anh-huong/${id}/chay-lai"));
   for (const label of [
     "Chạy lại phân tích ảnh hưởng",
-    "Tạo snapshot mới",
-    "Chạy lại thành snapshot mới",
+    "Tạo lần phân tích mới",
+    "Chạy lại thành lần phân tích mới",
     "Duyệt phân tích",
   ]) {
     assert.ok(changesSource.includes(label), label);

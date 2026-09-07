@@ -1592,8 +1592,14 @@ async def find_duplicate_requirements(
             candidates.append(
                 {
                     "left_requirement_id": left["_id"],
+                    "left_requirement_label": left.get("requirement_key")
+                    or left_version.get("title")
+                    or left["_id"],
                     "left_version_id": left_version["_id"],
                     "right_requirement_id": right["_id"],
+                    "right_requirement_label": right.get("requirement_key")
+                    or right_version.get("title")
+                    or right["_id"],
                     "right_version_id": right_version["_id"],
                     "score": score,
                     "match_type": "EXACT" if score == 1 else "SEMANTIC",

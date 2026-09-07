@@ -58,10 +58,11 @@ export default function OperationsPage() {
     const query = auditQuery.trim().toLowerCase();
     return (
       !query ||
-      [item.action, item.entity_type, item.entity_id, item.actor_id].some((field) =>
-        String(field || "")
-          .toLowerCase()
-          .includes(query),
+      [item.action, item.entity_type, item.entity_id, item.actor_label, item.actor_id].some(
+        (field) =>
+          String(field || "")
+            .toLowerCase()
+            .includes(query),
       )
     );
   });
@@ -263,7 +264,7 @@ export default function OperationsPage() {
                   render: (item) => valueLabel(item.entity_type),
                 },
                 { key: "entity_id", label: "Mã" },
-                { key: "actor_id", label: "Người thực hiện" },
+                { key: "actor_label", label: "Người thực hiện" },
                 {
                   key: "created_at",
                   label: "Thời điểm",

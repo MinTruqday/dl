@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from math import ceil
+import os
 from uuid import uuid4
 
 from fastapi import HTTPException
@@ -31,6 +32,39 @@ def new_id(prefix: str):
 
 def now():
     return datetime.now(timezone.utc)
+
+
+async def load_user_identities(user_ids):
+    identifiers = sorted({str(value) for value in user_ids if value})
+    if not identifiers or database.client is None:
+        return {}
+    authentication_db = os.environ.get("AUTHENTICATION_DB_NAME", "veriq_authentication")
+    accounts = await database.client[authentication_db].auth_credentials.find(
+        {"_id": {"$in": identifiers}},
+        {"email": 1, "full_name": 1, "slug": 1},
+    ).to_list(len(identifiers))
+    return {
+        str(account["_id"]): {
+            "user_id": str(account["_id"]),
+            "email": account.get("email"),
+            "full_name": account.get("full_name"),
+            "slug": account.get("slug"),
+            "label": account.get("full_name") or account.get("email") or account.get("slug"),
+        }
+        for account in accounts
+    }
+
+
+async def resolve_user_reference(value):
+    reference = str(value or "").strip()
+    if not reference or database.client is None:
+        return reference
+    authentication_db = os.environ.get("AUTHENTICATION_DB_NAME", "veriq_authentication")
+    query = {"email": reference.lower()} if "@" in reference else {"_id": reference}
+    account = await database.client[authentication_db].auth_credentials.find_one(query, {"_id": 1})
+    if "@" in reference and not account:
+        raise HTTPException(status_code=404, detail={"code": "USER_NOT_FOUND"})
+    return str(account["_id"]) if account else reference
 
 
 def envelope(

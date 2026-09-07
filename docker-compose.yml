@@ -23,8 +23,8 @@ x-minio-environment: &minio-environment
 x-app-healthcheck: &app-healthcheck
   test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/san-sang', timeout=15)"]
   interval: 30s
-  timeout: 20s
-  start_period: 30s
+  timeout: 60s
+  start_period: 60s
   retries: 3
 
 services:
@@ -36,13 +36,15 @@ services:
       - --replSet
       - rs0
       - --bind_ip_all
+      - --wiredTigerCacheSizeGB
+      - "0.5"
     volumes:
       - mongodb_data:/data/db
     healthcheck:
       test: ["CMD-SHELL", "mongosh --quiet --eval 'try { const state = rs.status(); quit(state.ok == 1 ? 0 : 1) } catch (error) { try { quit(rs.initiate({_id:\"rs0\",members:[{_id:0,host:\"mongodb:27017\"}]}).ok == 1 ? 0 : 1) } catch (retryError) { quit(retryError.codeName == \"AlreadyInitialized\" ? 0 : 1) } }'"]
-      interval: 3s
-      timeout: 10s
-      start_period: 3s
+      interval: 30s
+      timeout: 45s
+      start_period: 60s
       retries: 20
     networks:
       - veriq_network
@@ -74,8 +76,8 @@ services:
         - -q
         - ping
       interval: 5s
-      timeout: 20s
-      start_period: 10s
+      timeout: 45s
+      start_period: 60s
       retries: 12
     networks:
       - veriq_network
@@ -165,8 +167,8 @@ services:
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
       interval: 30s
-      timeout: 20s
-      start_period: 30s
+      timeout: 60s
+      start_period: 60s
       retries: 3
     depends_on:
       - traefik

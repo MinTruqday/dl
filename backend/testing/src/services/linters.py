@@ -30,8 +30,8 @@ def requirement_findings(version):
                 "rule_id": "MISSING_ACTOR",
                 "severity": "warning",
                 "span": None,
-                "message": "Requirement chưa xác định actor",
-                "suggestion": "Bổ sung actor thực hiện hoặc chịu tác động",
+                "message": "Yêu cầu chưa xác định tác nhân",
+                "suggestion": "Bổ sung tác nhân thực hiện hoặc chịu tác động",
             }
         )
     if not version.get("acceptance_criterion_ids"):
@@ -40,7 +40,7 @@ def requirement_findings(version):
                 "rule_id": "MISSING_ACCEPTANCE_CRITERIA",
                 "severity": "error",
                 "span": None,
-                "message": "Requirement chưa có Acceptance Criterion",
+                "message": "Yêu cầu chưa có tiêu chí chấp nhận",
                 "suggestion": "Bổ sung ít nhất một điều kiện chấp nhận có thể kiểm thử",
             }
         )
@@ -73,7 +73,7 @@ def requirement_duplicate_score(left, right):
     if not left_text or not right_text:
         return 0, []
     if left_text == right_text:
-        return 1, ["Nội dung Requirement trùng khớp hoàn toàn"]
+        return 1, ["Nội dung yêu cầu trùng khớp hoàn toàn"]
     lexical = SequenceMatcher(None, left_text, right_text).ratio()
     left_terms = set(re.findall(r"[\wÀ-ỹ]+", left_text))
     right_terms = set(re.findall(r"[\wÀ-ỹ]+", right_text))
@@ -113,7 +113,7 @@ def lint_test_case(draft):
     if not precondition:
         findings.append(_finding("TCQ-002", "warning", "Thiếu điều kiện tiên quyết"))
     if not draft.get("requirement_version_ids") and not draft.get("acceptance_criterion_ids"):
-        findings.append(_finding("TCQ-005", "error", "Test Case chưa có liên kết truy vết"))
+        findings.append(_finding("TCQ-005", "error", "Ca kiểm thử chưa có liên kết truy vết"))
     if not draft.get("test_data") and not any(step.get("test_data") for step in draft.get("steps", [])):
         findings.append(_finding("TCQ-009", "warning", "Thiếu dữ liệu kiểm thử"))
     for step in draft.get("steps", []):
@@ -153,7 +153,7 @@ def duplicate_score(left, right):
     if lexical >= 0.75:
         reasons.append("Nội dung và kết quả mong đợi gần giống")
     if trace > 0:
-        reasons.append("Cùng liên kết Requirement hoặc Acceptance Criterion")
+        reasons.append("Cùng liên kết yêu cầu hoặc tiêu chí chấp nhận")
     if structure >= 0.8:
         reasons.append("Cấu trúc bước tương đồng")
     return round(score, 4), reasons

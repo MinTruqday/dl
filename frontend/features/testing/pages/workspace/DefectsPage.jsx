@@ -39,6 +39,7 @@ const traceReasonLabels = {
 export default function DefectsPage({ project }) {
   const { ask, dialog } = useActionDialog();
   const [items, setItems] = useState([]);
+  const [members, setMembers] = useState([]);
   const [releases, setReleases] = useState([]);
   const [builds, setBuilds] = useState([]);
   const [environments, setEnvironments] = useState([]);
@@ -101,24 +102,34 @@ export default function DefectsPage({ project }) {
   };
   const load = useCallback(async () => {
     try {
-      const [defectValues, resultValues, releaseValues, buildValues, environmentValues] =
-        await Promise.all([
-          testingApi.listDefectPage(project._id, { ...filters, page, page_size: 50 }),
-          testingApi.listResults(project._id, "PASS,FAIL"),
-          testingApi.listReleases(project._id),
-          testingApi.listBuilds(project._id),
-          testingApi.listEnvironments(project._id),
-        ]);
+      const [
+        defectValues,
+        resultValues,
+        releaseValues,
+        buildValues,
+        environmentValues,
+        memberValues,
+      ] = await Promise.all([
+        testingApi.listDefectPage(project._id, { ...filters, page, page_size: 50 }),
+        testingApi.listResults(project._id, "PASS,FAIL"),
+        testingApi.listReleases(project._id),
+        testingApi.listBuilds(project._id),
+        testingApi.listEnvironments(project._id),
+        project.current_permissions?.includes("project.members.read")
+          ? testingApi.listMembers(project._id)
+          : Promise.resolve([]),
+      ]);
       setItems(defectValues.items);
       setPageInfo(defectValues);
       setResults(resultValues);
       setReleases(releaseValues);
       setBuilds(buildValues);
       setEnvironments(environmentValues);
+      setMembers(memberValues.filter((item) => item.status === "ACTIVE"));
     } catch (reason) {
       setError(messageOf(reason));
     }
-  }, [filters, page, project._id]);
+  }, [filters, page, project._id, project.current_permissions]);
   useEffect(() => {
     void load();
   }, [load]);
@@ -200,9 +211,16 @@ export default function DefectsPage({ project }) {
       fields: [
         {
           name: "assignee",
-          label: "Mã người dùng để trống nếu muốn bỏ gán",
+          label: "Người xử lý",
           initialValue: item.assignee || "",
           autoFocus: true,
+          options: [
+            { value: "", label: "Chưa gán" },
+            ...members.map((member) => ({
+              value: member.user_id,
+              label: member.user_label || member.user?.email || member.user_id,
+            })),
+          ],
         },
       ],
     });
@@ -628,16 +646,22 @@ export default function DefectsPage({ project }) {
                 </option>
               ))}
             </select>
-            <input
+            <select
               aria-label="Lọc người xử lý lỗi"
               className="apple-input"
-              placeholder="Mã người xử lý"
               value={filters.assignee}
               onChange={(event) => {
                 setFilters({ ...filters, assignee: event.target.value });
                 setPage(1);
               }}
-            />
+            >
+              <option value="">Mọi người xử lý</option>
+              {members.map((item) => (
+                <option key={item.user_id} value={item.user_id}>
+                  {item.user_label || item.user?.email || item.user_id}
+                </option>
+              ))}
+            </select>
             <select
               aria-label="Sắp xếp lỗi"
               className="apple-input"
@@ -738,10 +762,14 @@ export default function DefectsPage({ project }) {
                     type="button"
                     onClick={() => assignDefect(item)}
                   >
-                    {item.assignee || "Gán người xử lý"}
+                    {members.find((member) => member.user_id === item.assignee)?.user_label ||
+                      item.assignee ||
+                      "Gán người xử lý"}
                   </button>
                 ) : (
-                  item.assignee || "Chưa gán"
+                  members.find((member) => member.user_id === item.assignee)?.user_label ||
+                  item.assignee ||
+                  "Chưa gán"
                 ),
             },
             {

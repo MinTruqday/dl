@@ -102,7 +102,7 @@ export default function ChangesPage({ project }) {
     if (action === "edit")
       fields.push({
         name: "patch",
-        label: "Patch JSON sau khi chỉnh sửa",
+        label: "Nội dung đề xuất sau chỉnh sửa dạng JSON",
         initialValue: JSON.stringify(item.patch, null, 2),
         required: true,
         multiline: true,
@@ -127,7 +127,7 @@ export default function ChangesPage({ project }) {
           try {
             patch = JSON.parse(answer.patch);
           } catch {
-            setError("Patch phải là JSON hợp lệ");
+            setError("Nội dung chỉnh sửa phải là JSON hợp lệ");
             return;
           }
         }
@@ -190,8 +190,8 @@ export default function ChangesPage({ project }) {
   const rerunImpact = async () => {
     const answer = await ask({
       title: "Chạy lại phân tích ảnh hưởng",
-      description: `Snapshot ${impact.snapshot_number || 1} vẫn được giữ nguyên để đối chiếu`,
-      confirmLabel: "Tạo snapshot mới",
+      description: `Lần phân tích ${impact.snapshot_number || 1} vẫn được giữ nguyên để đối chiếu`,
+      confirmLabel: "Tạo lần phân tích mới",
       fields: [
         {
           name: "reason",
@@ -269,8 +269,15 @@ export default function ChangesPage({ project }) {
           items={sets}
           empty="Tạo phiên bản yêu cầu mới rồi tạo bộ thay đổi để bắt đầu"
           columns={[
-            { key: "_id", label: "Mã" },
-            { key: "requirement_id", label: "Yêu cầu" },
+            { key: "requirement_label", label: "Yêu cầu" },
+            {
+              key: "versions",
+              label: "Phiên bản",
+              render: (item) =>
+                item.from_version_label && item.to_version_label
+                  ? `${item.from_version_label} đến ${item.to_version_label}`
+                  : "Chưa xác định",
+            },
             {
               key: "status",
               label: "Trạng thái",
@@ -392,7 +399,7 @@ export default function ChangesPage({ project }) {
               items={regression?.items || []}
               empty="Chưa có khuyến nghị"
               columns={[
-                { key: "test_case_id", label: "Ca kiểm thử" },
+                { key: "test_case_key", label: "Ca kiểm thử" },
                 {
                   key: "level",
                   label: "Khuyến nghị",
@@ -446,7 +453,7 @@ export default function ChangesPage({ project }) {
       )}
       {impact && (
         <Panel
-          title={`Phân tích ảnh hưởng snapshot ${impact.snapshot_number || 1}`}
+          title={`Phân tích ảnh hưởng lần ${impact.snapshot_number || 1}`}
           actions={
             <div className="flex flex-wrap gap-2">
               {impact.status === "REVIEW_READY" && can("impact.review") && (
@@ -458,7 +465,7 @@ export default function ChangesPage({ project }) {
                 can("impact.execute") &&
                 can("ai.run_impact") && (
                   <button className="secondary-button" type="button" onClick={rerunImpact}>
-                    Chạy lại thành snapshot mới
+                    Chạy lại thành lần phân tích mới
                   </button>
                 )}
             </div>
@@ -558,7 +565,14 @@ export default function ChangesPage({ project }) {
           columns={[
             { key: "test_case_key", label: "Ca kiểm thử" },
             { key: "proposal_type", label: "Loại đề xuất" },
-            { key: "base_version_id", label: "Phiên bản gốc" },
+            {
+              key: "base_version",
+              label: "Phiên bản gốc",
+              render: (item) =>
+                item.base_version
+                  ? `${item.test_case_key || "Ca kiểm thử"} phiên bản ${item.base_version.version}`
+                  : "Đề xuất tạo mới",
+            },
             {
               key: "patch",
               label: "Thay đổi đề xuất",

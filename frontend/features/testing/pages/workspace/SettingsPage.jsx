@@ -116,6 +116,11 @@ export default function SettingsPage({ project, onProjectChange }) {
     ),
   });
   const [error, setError] = useState("");
+  const activeLeadCount = members.filter(
+    (item) => item.project_role === "QA_LEAD" && item.status === "ACTIVE",
+  ).length;
+  const isOnlyActiveLead = (item) =>
+    item.project_role === "QA_LEAD" && item.status === "ACTIVE" && activeLeadCount === 1;
   useEffect(() => {
     Promise.all([
       testingApi.audit(project._id),
@@ -340,8 +345,8 @@ export default function SettingsPage({ project, onProjectChange }) {
                 className="apple-input"
                 name="user_id"
                 required
-                placeholder="Mã người dùng"
-                aria-label="Mã người dùng"
+                placeholder="Email hoặc mã người dùng"
+                aria-label="Email hoặc mã người dùng"
               />
               <select className="apple-input" name="project_role" aria-label="Vai trò dự án">
                 <option value="TESTER">Kiểm thử viên</option>
@@ -358,16 +363,29 @@ export default function SettingsPage({ project, onProjectChange }) {
               items={members}
               empty="Chưa có thành viên"
               columns={[
-                { key: "user_id", label: "Người dùng" },
+                {
+                  key: "user_id",
+                  label: "Người dùng",
+                  render: (item) => (
+                    <span className="flex flex-col">
+                      <span className="font-semibold text-ink">
+                        {item.user_label || item.user_id}
+                      </span>
+                      {item.user?.email && item.user.email !== item.user_label && (
+                        <span className="text-[12px] text-ink-muted">{item.user.email}</span>
+                      )}
+                    </span>
+                  ),
+                },
                 {
                   key: "project_role",
                   label: "Vai trò",
                   render: (item) => (
                     <select
-                      aria-label={`Vai trò ${item.user_id}`}
+                      aria-label={`Vai trò ${item.user_label || item.user_id}`}
                       className="apple-input"
                       value={item.project_role}
-                      disabled={item.status !== "ACTIVE"}
+                      disabled={item.status !== "ACTIVE" || isOnlyActiveLead(item)}
                       onChange={async (event) => {
                         try {
                           await testingApi.updateMember(project._id, item.user_id, {
@@ -405,81 +423,86 @@ export default function SettingsPage({ project, onProjectChange }) {
                 {
                   key: "actions",
                   label: "Thao tác",
-                  render: (item) => (
-                    <span className="flex flex-wrap gap-2">
-                      {item.status === "INVITED" ? (
-                        <>
+                  render: (item) =>
+                    isOnlyActiveLead(item) ? (
+                      <span className="text-[12px] text-ink-muted">
+                        Bổ nhiệm thêm trưởng nhóm trước khi thay đổi hoặc xóa
+                      </span>
+                    ) : (
+                      <span className="flex flex-wrap gap-2">
+                        {item.status === "INVITED" ? (
+                          <>
+                            <button
+                              className="secondary-button"
+                              type="button"
+                              onClick={async () => {
+                                try {
+                                  await testingApi.resendMemberInvite(project._id, item.user_id);
+                                  setMembers(await testingApi.listMembers(project._id));
+                                } catch (reason) {
+                                  setError(messageOf(reason));
+                                }
+                              }}
+                            >
+                              Gửi lại lời mời
+                            </button>
+                            <button
+                              className="secondary-button"
+                              type="button"
+                              onClick={async () => {
+                                try {
+                                  await testingApi.cancelMemberInvite(project._id, item.user_id);
+                                  setMembers(await testingApi.listMembers(project._id));
+                                } catch (reason) {
+                                  setError(messageOf(reason));
+                                }
+                              }}
+                            >
+                              Hủy lời mời
+                            </button>
+                          </>
+                        ) : item.status !== "CANCELLED" ? (
                           <button
                             className="secondary-button"
                             type="button"
                             onClick={async () => {
                               try {
-                                await testingApi.resendMemberInvite(project._id, item.user_id);
+                                await testingApi.updateMember(project._id, item.user_id, {
+                                  expected_revision: item.membership_revision,
+                                  status: item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
+                                });
                                 setMembers(await testingApi.listMembers(project._id));
                               } catch (reason) {
                                 setError(messageOf(reason));
                               }
                             }}
                           >
-                            Gửi lại lời mời
+                            {item.status === "ACTIVE" ? "Vô hiệu hóa" : "Kích hoạt"}
                           </button>
-                          <button
-                            className="secondary-button"
-                            type="button"
-                            onClick={async () => {
-                              try {
-                                await testingApi.cancelMemberInvite(project._id, item.user_id);
-                                setMembers(await testingApi.listMembers(project._id));
-                              } catch (reason) {
-                                setError(messageOf(reason));
-                              }
-                            }}
-                          >
-                            Hủy lời mời
-                          </button>
-                        </>
-                      ) : item.status !== "CANCELLED" ? (
+                        ) : null}
                         <button
                           className="secondary-button"
                           type="button"
                           onClick={async () => {
+                            const answer = await ask({
+                              title: "Xóa thành viên khỏi dự án",
+                              description: `${item.user_label || item.user_id} sẽ mất toàn bộ quyền truy cập dự án này`,
+                              confirmLabel: "Xóa thành viên",
+                              danger: true,
+                            });
+                            if (!answer) return;
                             try {
-                              await testingApi.updateMember(project._id, item.user_id, {
-                                expected_revision: item.membership_revision,
-                                status: item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
-                              });
+                              await testingApi.removeMember(project._id, item.user_id);
                               setMembers(await testingApi.listMembers(project._id));
                             } catch (reason) {
                               setError(messageOf(reason));
                             }
                           }}
                         >
-                          {item.status === "ACTIVE" ? "Vô hiệu hóa" : "Kích hoạt"}
+                          Xóa
                         </button>
-                      ) : null}
-                      <button
-                        className="secondary-button"
-                        type="button"
-                        onClick={async () => {
-                          const answer = await ask({
-                            title: "Xóa thành viên khỏi dự án",
-                            description: `${item.user_id} sẽ mất toàn bộ quyền truy cập dự án này`,
-                            confirmLabel: "Xóa thành viên",
-                            danger: true,
-                          });
-                          if (!answer) return;
-                          try {
-                            await testingApi.removeMember(project._id, item.user_id);
-                            setMembers(await testingApi.listMembers(project._id));
-                          } catch (reason) {
-                            setError(messageOf(reason));
-                          }
-                        }}
-                      >
-                        Xóa
-                      </button>
-                    </span>
-                  ),
+                      </span>
+                    ),
                 },
               ]}
             />
@@ -522,7 +545,11 @@ export default function SettingsPage({ project, onProjectChange }) {
               render: (item) => valueLabel(item.artifact_type),
             },
             { key: "artifact_id", label: "Mã" },
-            { key: "actor_id", label: "Người thực hiện" },
+            {
+              key: "actor_id",
+              label: "Người thực hiện",
+              render: (item) => item.actor_label || item.actor_id,
+            },
             {
               key: "created_at",
               label: "Thời điểm",

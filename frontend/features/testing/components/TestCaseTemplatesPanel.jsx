@@ -305,7 +305,9 @@ export default function TestCaseTemplatesPanel({ project }) {
                 <dl className="grid gap-3 text-[12px] sm:grid-cols-2">
                   <div>
                     <dt className="text-ink-faint">Người tạo</dt>
-                    <dd className="mt-1 break-all">{selected.created_by}</dd>
+                    <dd className="mt-1 break-all">
+                      {selected.created_by_label || selected.created_by}
+                    </dd>
                   </div>
                   <div>
                     <dt className="text-ink-faint">Cập nhật</dt>

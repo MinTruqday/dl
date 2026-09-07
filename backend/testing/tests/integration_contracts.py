@@ -42,6 +42,7 @@ with httpx.Client(base_url=SERVICES["testing"], timeout=20) as client:
     paths = client.get("/openapi.json").json()["paths"]
     required = {
         "/kiem-thu/du-an",
+        "/kiem-thu/loi-moi-du-an",
         "/kiem-thu/du-an/{project_id}/yeu-cau",
         "/kiem-thu/du-an/{project_id}/ban-nhap-ca-kiem-thu",
         "/kiem-thu/du-an/{project_id}/truy-vet",

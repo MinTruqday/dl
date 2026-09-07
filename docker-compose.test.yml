@@ -13,6 +13,7 @@ services:
     volumes:
       - ./frontend:/work
       - frontend_node_modules:/work/node_modules
+      - ./test-results:/tmp/veriq-playwright-results
 
   model_stub:
     image: veriq-ai

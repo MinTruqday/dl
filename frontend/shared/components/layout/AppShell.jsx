@@ -8,7 +8,7 @@ import { useAuth } from "@/features/authentication/contexts/AuthContext";
 import { useAnnouncements } from "@/shared/contexts/AnnouncementContext";
 import { API_URL, authenticatedFetch } from "@/shared/services/api-client";
 import { availableNavigation, navigationGroupsFor, projectIdFromPath } from "./navigation";
-const fullWidthRoutes = ["/du-an", "/van-hanh"];
+const fullWidthRoutes = [];
 function NavigationList({ onNavigate, projectPermissions }) {
   const pathname = usePathname();
   const { user } = useAuth();

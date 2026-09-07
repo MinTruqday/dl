@@ -55,6 +55,7 @@ export default function RequirementsPage({ project, section }) {
   const { ask, dialog } = useActionDialog();
   const requirementId = section[0] && !["new", "import"].includes(section[0]) ? section[0] : "";
   const [items, setItems] = useState([]);
+  const [members, setMembers] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
   const [selected, setSelected] = useState(null);
   const [versions, setVersions] = useState([]);
@@ -105,6 +106,11 @@ export default function RequirementsPage({ project, section }) {
       });
       setItems(values.items);
       setPageInfo(values);
+      if (project.current_permissions?.includes("project.members.read")) {
+        setMembers(
+          (await testingApi.listMembers(project._id)).filter((item) => item.status === "ACTIVE"),
+        );
+      }
       if (project.current_permissions?.includes("requirement_document.read")) {
         setSourceDocuments(await testingApi.listRequirementDocuments(project._id));
       }
@@ -1067,13 +1073,19 @@ export default function RequirementsPage({ project, section }) {
                       onChange={(event) => changeDraft({ tags: event.target.value })}
                       placeholder="Nhãn phân cách bằng dấu phẩy"
                     />
-                    <input
+                    <select
                       aria-label="Người phụ trách yêu cầu"
                       className="apple-input"
                       value={draft.ownerId}
                       onChange={(event) => changeDraft({ ownerId: event.target.value })}
-                      placeholder="Mã người phụ trách"
-                    />
+                    >
+                      <option value="">Chưa phân công</option>
+                      {members.map((item) => (
+                        <option key={item.user_id} value={item.user_id}>
+                          {item.user_label || item.user?.email || item.user_id}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <button className="secondary-button" type="button" onClick={saveDraft}>
                     Lưu bản nháp
@@ -1108,7 +1120,18 @@ export default function RequirementsPage({ project, section }) {
               }))}
               empty="Yêu cầu được tạo thủ công và chưa có nguồn tài liệu đính kèm"
               columns={[
-                { key: "requirement_document_id", label: "Tài liệu nguồn" },
+                {
+                  key: "requirement_document_id",
+                  label: "Tài liệu nguồn",
+                  render: (item) =>
+                    sourceDocuments.find(
+                      (document) => document._id === item.requirement_document_id,
+                    )?.title ||
+                    sourceDocuments.find(
+                      (document) => document._id === item.requirement_document_id,
+                    )?.filename ||
+                    item.requirement_document_id,
+                },
                 { key: "format", label: "Định dạng" },
                 {
                   key: "location",
@@ -1125,7 +1148,13 @@ export default function RequirementsPage({ project, section }) {
             />
           </Panel>
           {lint && (
-            <Panel title={lint.valid ? "AI lint không có lỗi chặn" : "AI lint phát hiện vấn đề"}>
+            <Panel
+              title={
+                lint.valid
+                  ? "Kiểm tra chất lượng AI không có lỗi chặn"
+                  : "Kiểm tra chất lượng AI phát hiện vấn đề"
+              }
+            >
               <DataTable
                 items={lint.findings}
                 empty="Không có vấn đề"
@@ -1419,16 +1448,22 @@ export default function RequirementsPage({ project, section }) {
                       setPage(1);
                     }}
                   />
-                  <input
+                  <select
                     aria-label="Lọc người phụ trách yêu cầu"
                     className="apple-input"
-                    placeholder="Mã người phụ trách"
                     value={filters.owner}
                     onChange={(event) => {
                       setFilters({ ...filters, owner: event.target.value });
                       setPage(1);
                     }}
-                  />
+                  >
+                    <option value="">Mọi người phụ trách</option>
+                    {members.map((item) => (
+                      <option key={item.user_id} value={item.user_id}>
+                        {item.user_label || item.user?.email || item.user_id}
+                      </option>
+                    ))}
+                  </select>
                   <select
                     aria-label="Sắp xếp yêu cầu"
                     className="apple-input"
@@ -1493,8 +1528,8 @@ export default function RequirementsPage({ project, section }) {
                 }))}
                 empty="Không phát hiện cặp yêu cầu vượt ngưỡng trùng lặp"
                 columns={[
-                  { key: "left_requirement_id", label: "Yêu cầu thứ nhất" },
-                  { key: "right_requirement_id", label: "Yêu cầu thứ hai" },
+                  { key: "left_requirement_label", label: "Yêu cầu thứ nhất" },
+                  { key: "right_requirement_label", label: "Yêu cầu thứ hai" },
                   {
                     key: "match_type",
                     label: "Loại khớp",
@@ -1863,12 +1898,19 @@ export default function RequirementsPage({ project, section }) {
                       />
                     </label>
                     <label className="field-label">
-                      Mã người phụ trách
-                      <input
+                      Người phụ trách
+                      <select
                         className="apple-input mt-2"
                         value={form.ownerId}
                         onChange={(event) => setForm({ ...form, ownerId: event.target.value })}
-                      />
+                      >
+                        <option value="">Chưa phân công</option>
+                        {members.map((item) => (
+                          <option key={item.user_id} value={item.user_id}>
+                            {item.user_label || item.user?.email || item.user_id}
+                          </option>
+                        ))}
+                      </select>
                     </label>
                   </div>
                   <div className="flex justify-end gap-3">

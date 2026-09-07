@@ -11,7 +11,7 @@ from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
 
 from src.core.auth import CurrentUser, get_current_user
-from src.core.common import audit, envelope, get_project, get_project_entity, new_id, next_key, now, optimistic_patch, page_payload, plain_text, require_action_policy, sort_spec
+from src.core.common import audit, envelope, get_project, get_project_entity, load_user_identities, new_id, next_key, now, optimistic_patch, page_payload, plain_text, require_action_policy, sort_spec
 from src.core.database import database
 from src.domain.schemas import (
     BugTraceSuggestionInput,
@@ -625,13 +625,15 @@ async def export_test_run_report(run_id: str, user: CurrentUser = Depends(get_cu
     versions = await database.value.test_case_versions.find({"_id": {"$in": run["test_case_version_ids"]}}).to_list(10000)
     results = await database.value.test_results.find({"test_run_id": run_id}).to_list(10000)
     by_result = {item["test_case_version_id"]: item for item in results}
-    fields = ["run_id", "run_name", "environment", "build", "test_case_key", "test_case_version", "title", "result", "executed_by", "executed_at", "note"]
+    identities = await load_user_identities(item.get("executed_by") for item in results)
+    fields = ["run_id", "run_name", "environment", "build", "test_case_key", "test_case_version", "title", "result", "executed_by", "executed_by_name", "executed_by_email", "executed_at", "note"]
     stream = io.StringIO()
     writer = csv.DictWriter(stream, fieldnames=fields)
     writer.writeheader()
     for version in versions:
         result = by_result.get(version["_id"], {})
-        writer.writerow({"run_id": run_id, "run_name": run["name"], "environment": run.get("environment"), "build": run.get("build"), "test_case_key": version.get("test_case_key"), "test_case_version": version.get("version"), "title": version.get("title"), "result": result.get("status", "NOT_RUN"), "executed_by": result.get("executed_by"), "executed_at": result.get("executed_at"), "note": result.get("note")})
+        identity = identities.get(result.get("executed_by"), {})
+        writer.writerow({"run_id": run_id, "run_name": run["name"], "environment": run.get("environment"), "build": run.get("build"), "test_case_key": version.get("test_case_key"), "test_case_version": version.get("version"), "title": version.get("title"), "result": result.get("status", "NOT_RUN"), "executed_by": result.get("executed_by"), "executed_by_name": identity.get("full_name"), "executed_by_email": identity.get("email"), "executed_at": result.get("executed_at") or result.get("completed_at") or result.get("updated_at"), "note": result.get("note")})
     return StreamingResponse(iter([stream.getvalue()]), media_type="text/csv", headers={"Content-Disposition": f'attachment; filename="test-run-{run_id}.csv"'})
 
 
@@ -859,6 +861,7 @@ async def patch_test_execution(
                 "executed_by": user.id,
                 "started_at": result.get("started_at") or timestamp,
                 "completed_at": timestamp if terminal else None,
+                "executed_at": timestamp if terminal else result.get("executed_at"),
                 "updated_at": timestamp,
                 "last_updated_by": user.id,
             },

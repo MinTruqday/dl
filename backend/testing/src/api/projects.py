@@ -4,7 +4,16 @@ from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
 
 from src.core.auth import CurrentUser, PROJECT_PERMISSIONS, get_current_user, permissions_for_role
-from src.core.common import audit, envelope, get_project, new_id, now, optimistic_patch
+from src.core.common import (
+    audit,
+    envelope,
+    get_project,
+    load_user_identities,
+    new_id,
+    now,
+    optimistic_patch,
+    resolve_user_reference,
+)
 from src.core.configuration import settings
 from src.core.database import database
 from src.domain.schemas import (
@@ -95,7 +104,7 @@ async def list_projects(
     ).to_list(5000)
     by_grant = {item["project_id"]: item for item in grants}
     query = {"_id": {"$in": list(set(by_project) | set(by_grant))}}
-    if status:
+    if status and status != "all":
         query["status"] = status
     if q:
         query["$or"] = [
@@ -135,6 +144,36 @@ async def list_projects(
             }
         )
     return envelope(items)
+
+
+@router.get(
+    "/loi-moi-du-an",
+    openapi_extra={"x-function-ids": ["MEM-01"]},
+)
+async def list_project_invitations(user: CurrentUser = Depends(get_current_user)):
+    invitations = (
+        await database.value.project_members.find(
+            {"user_id": user.id, "status": "INVITED"}
+        )
+        .sort("invited_at", -1)
+        .to_list(500)
+    )
+    project_ids = {item["project_id"] for item in invitations}
+    projects = await database.value.projects.find(
+        {"_id": {"$in": list(project_ids)}},
+        {"key": 1, "name": 1, "description": 1, "status": 1},
+    ).to_list(len(project_ids))
+    projects_by_id = {item["_id"]: item for item in projects}
+    return envelope(
+        [
+            {
+                **invitation,
+                "project": projects_by_id.get(invitation["project_id"]),
+            }
+            for invitation in invitations
+            if invitation["project_id"] in projects_by_id
+        ]
+    )
 
 
 @router.get("/du-an/{project_id}")
@@ -301,7 +340,18 @@ async def list_project_members(project_id: str, user: CurrentUser = Depends(get_
         .sort("created_at", 1)
         .to_list(5000)
     )
-    return envelope(members)
+    identities = await load_user_identities(item.get("user_id") for item in members)
+    return envelope(
+        [
+            {
+                **member,
+                "user": identities.get(member.get("user_id")),
+                "user_label": (identities.get(member.get("user_id")) or {}).get("label")
+                or member.get("user_id"),
+            }
+            for member in members
+        ]
+    )
 
 
 @router.post("/du-an/{project_id}/thanh-vien", status_code=201)
@@ -309,11 +359,12 @@ async def add_project_member(
     project_id: str, payload: ProjectMemberCreate, user: CurrentUser = Depends(get_current_user)
 ):
     await get_project(project_id, user, "project.members.manage")
+    member_user_id = await resolve_user_reference(payload.user_id)
     timestamp = now()
     membership = {
         "_id": new_id("PM"),
         "project_id": project_id,
-        "user_id": payload.user_id,
+        "user_id": member_user_id,
         "project_role": payload.project_role,
         "status": "ACTIVE",
         "membership_revision": 1,
@@ -331,7 +382,7 @@ async def add_project_member(
         "ProjectMember",
         membership["_id"],
         project_id,
-        {"user_id": payload.user_id, "project_role": payload.project_role},
+        {"user_id": member_user_id, "project_role": payload.project_role},
     )
     return envelope(membership, revision=1)
 
@@ -341,11 +392,12 @@ async def invite_project_member(
     project_id: str, payload: ProjectMemberCreate, user: CurrentUser = Depends(get_current_user)
 ):
     await get_project(project_id, user, "project.members.manage")
+    member_user_id = await resolve_user_reference(payload.user_id)
     timestamp = now()
     membership = {
         "_id": new_id("PM"),
         "project_id": project_id,
-        "user_id": payload.user_id,
+        "user_id": member_user_id,
         "project_role": payload.project_role,
         "status": "INVITED",
         "membership_revision": 1,
@@ -365,7 +417,7 @@ async def invite_project_member(
         "ProjectMember",
         membership["_id"],
         project_id,
-        {"user_id": payload.user_id, "project_role": payload.project_role},
+        {"user_id": member_user_id, "project_role": payload.project_role},
     )
     return envelope(membership, revision=1)
 

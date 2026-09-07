@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { ErrorState, Panel } from "./WorkspacePrimitives";
-import { messageOf } from "../lib/testing";
+import { messageOf, valueLabel } from "../lib/testing";
 import { testingApi } from "../services/testing.service";
 
 const DEFAULT_PREFERENCES = {
@@ -131,7 +131,7 @@ export default function ProjectNotificationsPanel({ project }) {
               {watches.map((item) => (
                 <div className="flex items-center justify-between gap-2 text-sm" key={item._id}>
                   <span className="min-w-0 truncate">
-                    {item.artifact_type} {item.artifact_id}
+                    {valueLabel(item.artifact_type)} {item.artifact_label || item.artifact_id}
                   </span>
                   <button
                     className="secondary-button"

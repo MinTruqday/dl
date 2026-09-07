@@ -64,13 +64,14 @@ export const testingApi = {
   listProjects: (query = "", status = "active") => {
     const params = new URLSearchParams();
     if (query) params.set("q", query);
-    if (status !== "all") params.set("status", status);
+    if (status) params.set("status", status);
     return testingRequest(`/du-an?${params.toString()}`);
   },
   createProject: (payload) =>
     testingRequest("/du-an", { method: "POST", body: JSON.stringify(payload) }),
   getProject: (id) => testingRequest(`/du-an/${id}`),
   listMembers: (id) => testingRequest(`/du-an/${id}/thanh-vien`),
+  listInvitations: () => testingRequest("/loi-moi-du-an"),
   addMember: (id, payload) =>
     testingRequest(`/du-an/${id}/thanh-vien`, { method: "POST", body: JSON.stringify(payload) }),
   inviteMember: (id, payload) =>
