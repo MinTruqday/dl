@@ -27,54 +27,19 @@ def validate_source(source):
     return source
 
 
-def script_template(framework, language, version):
-    title = str(version.get("title") or "Ca kiểm thử").replace("'", "")[:120]
-    if framework == "selenium":
-        return "\n".join(
-            [
-                "import os",
-                "from selenium import webdriver",
-                "",
-                f"def test_{re.sub(r'[^a-z0-9]+', '_', title.lower()).strip('_') or 'case'}():",
-                "    driver = webdriver.Remote(command_executor=os.environ['WEBDRIVER_URL'])",
-                "    try:",
-                "        driver.get(os.environ['BASE_URL'])",
-                "        assert driver.current_url",
-                "    finally:",
-                "        driver.quit()",
-            ]
-        )
-    runner = "test" if framework == "playwright" else "it"
-    import_line = (
-        "import { test, expect } from '@playwright/test';"
-        if framework == "playwright"
-        else "describe('Kiểm thử', () => {});"
-    )
-    if framework == "playwright":
-        return "\n".join(
-            [
-                import_line,
-                "",
-                f"{runner}('{title}', async ({{ page }}) => {{",
-                (
-                    "  await page.goto(process.env.BASE_URL as string);"
-                    if language == "typescript"
-                    else "  await page.goto(process.env.BASE_URL);"
-                ),
-                "  await expect(page).toHaveURL(/.+/);",
-                "});",
-            ]
-        )
-    return "\n".join(
-        [
-            f"describe('{title}', () => {{",
-            f"  {runner}('thực hiện luồng đã rà soát', () => {{",
-            "    cy.visit(Cypress.env('BASE_URL'));",
-            "    cy.url().should('match', /.+/);",
-            "  });",
-            "});",
-        ]
-    )
+def generated_script(result):
+    if result.get("status") != "SUCCESS" or result.get("degraded_mode"):
+        raise HTTPException(503, detail={"code": "AI_PROVIDER_UNAVAILABLE", "retryable": True})
+    suggestions = result.get("suggestions")
+    if not isinstance(suggestions, list) or len(suggestions) != 1 or not isinstance(suggestions[0], dict):
+        raise HTTPException(502, detail={"code": "AI_SCRIPT_INVALID"})
+    source = suggestions[0].get("source")
+    placeholders = suggestions[0].get("secret_placeholders", [])
+    if not isinstance(source, str) or not source.strip() or len(source) > 100000 or source.lstrip().startswith("```"):
+        raise HTTPException(502, detail={"code": "AI_SCRIPT_INVALID"})
+    if not isinstance(placeholders, list) or any(not isinstance(item, str) or not re.fullmatch(r"[A-Z][A-Z0-9_]{0,99}", item) for item in placeholders):
+        raise HTTPException(502, detail={"code": "AI_SCRIPT_PLACEHOLDERS_INVALID"})
+    return validate_source(source), list(dict.fromkeys(placeholders))
 
 
 def default_filename(framework, language, version):
@@ -137,10 +102,11 @@ async def generate_automation_script_draft(
     ai_result = await request_design_assistance(
         "automation_script_generation",
         project_id,
-        f"Tạo bản nháp {payload.framework} {payload.language} từ evidence chỉ dùng secret placeholder và không ghi repository",
+        f"Tạo bản nháp {payload.framework} {payload.language} thực hiện các bước và kiểm tra kết quả trong evidence chỉ dùng secret placeholder và không ghi repository Trả suggestions có đúng một object gồm source là toàn bộ mã nguồn không có markdown và secret_placeholders là danh sách tên biến môi trường Nếu thiếu locator hoặc URL thì dùng biến môi trường và nêu rõ trong warnings Không tạo bài kiểm thử chỉ mở trang và kiểm tra URL",
         evidence
         + ([{"artifact_type": "user_context", "text": payload.context}] if payload.context else []),
     )
+    source, placeholders = generated_script(ai_result)
     timestamp = now()
     value = {
         "_id": new_id("AUTOSCR"),
@@ -151,9 +117,8 @@ async def generate_automation_script_draft(
         "framework": payload.framework,
         "language": payload.language,
         "filename": default_filename(payload.framework, payload.language, version),
-        "source": script_template(payload.framework, payload.language, version),
-        "secret_placeholders": ["BASE_URL"]
-        + (["WEBDRIVER_URL"] if payload.framework == "selenium" else []),
+        "source": source,
+        "secret_placeholders": placeholders,
         "model_suggestions": ai_result.get("suggestions", []),
         "evidence_refs": ai_result.get("evidence_refs", [version["_id"]]),
         "model": ai_result.get("model", {}),

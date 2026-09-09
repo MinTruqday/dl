@@ -95,6 +95,11 @@ const labels = {
 };
 
 const valueLabels = {
+  authorization: "Phân quyền",
+  authentication: "Xác thực",
+  input_validation: "Kiểm tra đầu vào",
+  session: "Phiên đăng nhập",
+  data_protection: "Bảo vệ dữ liệu",
   ADMIN: "Quản trị viên",
   USER: "Người dùng",
   QA_LEAD: "Trưởng nhóm kiểm thử",

@@ -4,8 +4,8 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from loguru import logger
 from src.core.registry import PromptType, registry
 from src.agents.react.planning import llm
-from src.agents.harness.agentops import agentops
-from src.agents.harness.tool import ToolHarness
+from src.services.agent_metrics import agentops
+from src.agents.react.tools import ToolExecutor
 from src.tools import tools
 
 from src.core.infrastructure.configuration import settings
@@ -68,9 +68,9 @@ class ActingAgent:
     def __init__(self):
         self.base_url = settings.INTERNAL_API_URL
         self.tool_map = {t.name: t for t in tools}
-        self.tool_harness = ToolHarness()
+        self.tool_executor = ToolExecutor()
         for registered_tool in tools:
-            self.tool_harness.register(
+            self.tool_executor.register(
                 registered_tool.name,
                 registered_tool.ainvoke,
                 max_retries=(0 if registered_tool.name in _REQUIRES_APPROVAL_TOOLS else 2),
@@ -200,7 +200,7 @@ class ActingAgent:
                     "high" if tool_name in {"delete_document", "restore_document"} else "medium"
                 )
                 if tool_name in _REQUIRES_APPROVAL_TOOLS:
-                    from src.agents.loop.intervention import intervention
+                    from src.agents.workflow.intervention import intervention
 
                     if tool_name not in _HUMAN_ONLY_APPROVAL_TOOLS:
                         approved_automatically = (
@@ -241,7 +241,7 @@ class ActingAgent:
                             )
 
                 logger.info("Tool execution started tool={}", tool_name)
-                tool_result = await self.tool_harness.execute(
+                tool_result = await self.tool_executor.execute(
                     tool_name,
                     session_id,
                     tool_params,

@@ -55,7 +55,7 @@ class HttpCore:
 class OrchestrationHarness:
     """
     <module_purpose>
-    <purpose>Coordinates the harness testing framework for multi-agent validation.</purpose>
+    <purpose>Coordinates multi-agent workflow sessions and validation.</purpose>
     <metis_behavior>Forces strict boundaries during testing. Does not permit network access for mock nodes.</metis_behavior>
     </module_purpose>
     """

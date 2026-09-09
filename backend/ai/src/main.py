@@ -29,9 +29,9 @@ logger.add(
     diagnose=False,
 )
 from fastapi.middleware.cors import CORSMiddleware
-from src.agents.harness.agentops import agentops
-from src.agents.loop.evaluation import evaluation
-from src.agents.harness.orchestration import orchestration
+from src.services.agent_metrics import agentops
+from src.services.evaluation import evaluation
+from src.agents.workflow.sessions import orchestration
 from src.api.interaction import router as chat
 from src.api.feedback import router as feedback
 from src.api.history import router as history
@@ -156,8 +156,8 @@ async def readiness_check():
 
 
 @app.get("/danh-gia/so-lieu")
-async def harness_metrics():
-    """Expose agent harness telemetry in Prometheus text format"""
+async def agent_metrics():
+    """Expose agent telemetry in Prometheus text format"""
     from fastapi.responses import PlainTextResponse
 
     return PlainTextResponse(
@@ -166,7 +166,7 @@ async def harness_metrics():
 
 
 @app.get("/danh-gia/trang-thai", dependencies=[Depends(require_role([Role.ADMIN]))])
-async def harness_status():
+async def agent_status():
     """Return orchestration circuit and evaluation status for administrators"""
     return {
         "orchestration": {
@@ -193,13 +193,13 @@ async def startup_event():
         retrieval_ready = False
         logger.exception("AI retrieval capability startup error")
     try:
-        from src.agents.loop.event import cron_scheduler, event_driven_loop
+        from src.agents.workflow.events import cron_scheduler, event_processor
 
-        await event_driven_loop.start_worker()
+        await event_processor.start_worker()
         await cron_scheduler.start()
-        logger.info("Event-driven loop started")
+        logger.info("Event processor started")
     except Exception:
-        logger.exception("Event-driven loop startup error")
+        logger.exception("Event processor startup error")
     try:
         from src.utils.background import create_background_task
         from src.utils.local_models import local_model_client
@@ -219,12 +219,12 @@ async def shutdown_event():
     except Exception:
         logger.exception("Background task shutdown failed")
     try:
-        from src.agents.loop.event import cron_scheduler, event_driven_loop
+        from src.agents.workflow.events import cron_scheduler, event_processor
 
         await cron_scheduler.stop()
-        await event_driven_loop.stop_worker()
+        await event_processor.stop_worker()
     except Exception:
-        logger.exception("Event loop shutdown failed")
+        logger.exception("Event processor shutdown failed")
     try:
         from src.core.infrastructure.redis import redis
 

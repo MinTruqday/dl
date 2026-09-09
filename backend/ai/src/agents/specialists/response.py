@@ -3,7 +3,7 @@ from typing import List
 from loguru import logger
 from src.core.registry import PromptType, registry
 
-from src.agents.harness.security import security
+from src.core.security.scanning import security
 
 
 class GenerationAgent:

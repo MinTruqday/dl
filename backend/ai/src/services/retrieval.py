@@ -160,7 +160,7 @@ class RetrievalService:
             )
 
         dense_result, sparse_result = await asyncio.gather(
-            dense_search(),
+            asyncio.wait_for(dense_search(), timeout=1.0),
             bm25_store.search(
                 query=query,
                 document_ids=document_ids,
@@ -192,7 +192,9 @@ class RetrievalService:
 
         try:
             pairs = [[query, doc.get("text", "")] for doc in documents]
-            scores = await asyncio.to_thread(current_reranker.predict, pairs)
+            scores = await asyncio.wait_for(
+                asyncio.to_thread(current_reranker.predict, pairs), timeout=1.0
+            )
             scored_documents = sorted(zip(documents, scores), key=lambda x: x[1], reverse=True)
             return [doc for doc, _ in scored_documents[:k]]
         except Exception:

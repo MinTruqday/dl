@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { ErrorState, Panel, StatusPill } from "./WorkspacePrimitives";
-import { messageOf } from "../lib/testing";
+import { messageOf, valueLabel } from "../lib/testing";
 import { testingApi } from "../services/testing.service";
 
 export default function SpecializedDesignPanel({ project, requirements }) {
@@ -158,9 +158,17 @@ export default function SpecializedDesignPanel({ project, requirements }) {
                   </div>
                   <ul className="mt-2 space-y-1 text-sm text-ink-muted">
                     {result.candidates.map((candidate) => (
-                      <li key={candidate.candidate_id}>{candidate.title}</li>
+                      <li className="rounded-lg bg-surface-subtle p-3" key={candidate.candidate_id}>
+                        <p className="font-medium text-ink">{candidate.title}</p>
+                        <p className="mt-1">{valueLabel(candidate.category)}</p>
+                        <p className="mt-1">Thao tác {candidate.action}</p>
+                        <p className="mt-1">Kết quả {candidate.expected}</p>
+                      </li>
                     ))}
                   </ul>
+                  <p className="mt-2 text-xs text-ink-muted">
+                    {result.model?.model} · Độ tin cậy {result.confidence}
+                  </p>
                 </div>
               ))}
             </div>
@@ -261,6 +269,23 @@ export default function SpecializedDesignPanel({ project, requirements }) {
                   </div>
                   <p className="mt-1 text-sm text-ink-muted">
                     {plan.scenarios.length} kịch bản tải và chưa thực thi phát tải
+                  </p>
+                  <div className="mt-2 space-y-2">
+                    {plan.scenarios.map((scenario) => (
+                      <div
+                        className="rounded-lg bg-surface-subtle p-3 text-sm"
+                        key={scenario.scenario_id}
+                      >
+                        <p className="font-medium text-ink">{scenario.title}</p>
+                        <p className="mt-1 text-ink-muted">
+                          {scenario.virtual_users} người dùng · {scenario.duration_minutes} phút
+                        </p>
+                        <p className="mt-1 text-ink-muted">{scenario.expected}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-xs text-ink-muted">
+                    {plan.model?.model} · Độ tin cậy {plan.confidence}
                   </p>
                 </div>
               ))}

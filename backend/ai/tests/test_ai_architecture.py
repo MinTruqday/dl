@@ -13,9 +13,11 @@ class AIArchitectureTests(unittest.TestCase):
         self.assertFalse((AI_ROOT / "knowledge-requirements.txt").exists())
 
     def test_agent_runtime_is_grouped_under_agents(self):
-        for group in ("harness", "loop", "memory", "workflow"):
+        for group in ("memory", "workflow", "react", "specialists"):
             self.assertFalse((SOURCE_ROOT / group).exists())
             self.assertTrue((SOURCE_ROOT / "agents" / group).is_dir())
+        for group in ("harness", "loop"):
+            self.assertEqual([], list((SOURCE_ROOT / "agents" / group).glob("*.py")))
 
     def test_internal_imports_resolve(self):
         missing = []
@@ -37,6 +39,8 @@ class AIArchitectureTests(unittest.TestCase):
     def test_old_module_names_are_absent(self):
         stale = []
         old_names = (
+            "src.agents.harness",
+            "src.agents.loop",
             "src.knowledge",
             "src.harness",
             "src.loop",

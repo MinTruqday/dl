@@ -35,6 +35,7 @@ from src.domain.schemas import (
 )
 from src.services.linters import duplicate_score, lint_test_case
 from src.services.project_knowledge import index_artifact
+from src.services.generation import generate_requirement_drafts
 
 
 router = APIRouter(prefix="/kiem-thu", tags=["Thiết kế kiểm thử"])
@@ -196,30 +197,16 @@ async def generate_scenarios(
     payload: GenerateInput,
     user: CurrentUser = Depends(get_current_user),
 ):
-    with AI_GENERATION_LATENCY.labels("scenario").time():
-        version = await get_project_entity(
-            "requirement_versions", version_id, user, "ai.generate_scenario"
-        )
-        criteria = await database.value.acceptance_criteria.find({"requirement_version_id": version_id}).to_list(500)
-        categories = payload.categories or ["happy_path", "negative", "boundary", "validation"]
-        created = []
-        for category in categories:
-            for number in range(payload.count_per_category):
-                evidence = criteria[number % len(criteria)] if criteria else None
-                scenario_payload = ScenarioCreate(
-                    title=f"{category.replace('_', ' ').title()} cho {version['title']}",
-                    objective=evidence.get("plain_text", "") if evidence else version["plain_text_projection"],
-                    risk=version.get("risk", "medium"),
-                    priority=version.get("priority", "medium"),
-                    requirement_version_ids=[version_id],
-                    acceptance_criterion_ids=[evidence["_id"]] if evidence else [],
-                    origin="ai_generated",
-                    category=category,
-                )
-                response = await create_scenario(version["project_id"], scenario_payload, user)
-                created.append(response["data"])
-    await audit(user.id, "test_scenarios_generated", "RequirementVersion", version_id, version["project_id"], {"count": len(created), "evidence_count": len(criteria)})
-    return envelope({"items": created, "evidence": criteria, "model": model_metadata("scenario-generator-v1")})
+    version = await get_project_entity("requirement_versions", version_id, user, "ai.generate_scenario")
+    await get_project(version["project_id"], user, "testscenario.create")
+    criteria = await database.value.acceptance_criteria.find({"requirement_version_id": version_id}).to_list(500)
+    drafts, result = await generate_requirement_drafts(version, criteria, payload, scenario=True)
+    created = []
+    for draft in drafts:
+        response = await create_scenario(version["project_id"], draft, user)
+        created.append(response["data"])
+    await audit(user.id, "scenario_drafts_generated", "RequirementVersion", version_id, version["project_id"], {"count": len(created), "model": result.get("model", {})})
+    return envelope({"items": created, "evidence": criteria, "model": result.get("model", {}), "generation_status": result["status"]})
 
 
 @router.post("/du-an/{project_id}/ca-kiem-thu", status_code=201)
@@ -1007,39 +994,16 @@ async def generate_test_cases(
     payload: GenerateInput,
     user: CurrentUser = Depends(get_current_user),
 ):
-    with AI_GENERATION_LATENCY.labels("test_case").time():
-        version = await get_project_entity(
-            "requirement_versions", version_id, user, "ai.generate_testcase"
-        )
-        criteria = await database.value.acceptance_criteria.find({"requirement_version_id": version_id}).to_list(500)
-        categories = payload.categories or ["happy_path", "negative", "boundary"]
-        created = []
-        for category in categories:
-            for number in range(payload.count_per_category):
-                criterion = criteria[number % len(criteria)] if criteria else None
-                evidence_text = criterion.get("plain_text") if criterion else version["plain_text_projection"]
-                draft_payload = CaseDraftCreate(
-                    title=f"{category.replace('_', ' ').title()} cho {version['title']}",
-                    type=category,
-                    priority=version.get("priority", "medium"),
-                    risk=version.get("risk", "medium"),
-                    objective_doc=text_doc(evidence_text),
-                    preconditions_doc=text_doc(f"Requirement {version['requirement_key']} đã sẵn sàng để kiểm thử"),
-                    steps=[
-                        {"id": "step-1", "order": 1, "action_doc": text_doc(f"Thực hiện hành vi theo {evidence_text}"), "test_data": {}, "expected_doc": text_doc("Hệ thống phản hồi đúng theo baseline")}
-                    ],
-                    test_data={"source": "baseline"},
-                    expected_result_doc=text_doc(evidence_text),
-                    techniques=techniques_for_category(category),
-                    requirement_version_ids=[version_id],
-                    acceptance_criterion_ids=[criterion["_id"]] if criterion else [],
-                    origin="ai_generated",
-                    source_evidence=[{"artifact_type": "acceptance_criterion" if criterion else "requirement_version", "artifact_version_id": criterion["_id"] if criterion else version_id, "text": evidence_text}],
-                )
-                response = await create_test_case_draft(version["project_id"], draft_payload, user)
-                created.append(response["data"])
-    await audit(user.id, "test_case_drafts_generated", "RequirementVersion", version_id, version["project_id"], {"count": len(created)})
-    return envelope({"items": created, "evidence": criteria, "model": model_metadata("test-generator-v1")})
+    version = await get_project_entity("requirement_versions", version_id, user, "ai.generate_testcase")
+    await get_project(version["project_id"], user, "testcase.create")
+    criteria = await database.value.acceptance_criteria.find({"requirement_version_id": version_id}).to_list(500)
+    drafts, result = await generate_requirement_drafts(version, criteria, payload, scenario=False)
+    created = []
+    for draft in drafts:
+        response = await create_test_case_draft(version["project_id"], draft, user)
+        created.append(response["data"])
+    await audit(user.id, "test_case_drafts_generated", "RequirementVersion", version_id, version["project_id"], {"count": len(created), "model": result.get("model", {})})
+    return envelope({"items": created, "evidence": criteria, "model": result.get("model", {}), "generation_status": result["status"]})
 
 
 @router.post("/du-an/{project_id}/ca-kiem-thu/sinh", status_code=201)

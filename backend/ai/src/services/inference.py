@@ -1,7 +1,7 @@
 import asyncio
 from typing import List
 
-from src.agents.harness.security import security
+from src.core.security.scanning import security
 from src.core.infrastructure.configuration import settings
 from src.core.model_runtime import run_chat_completion
 from src.core.registry import PromptType, registry
@@ -17,6 +17,7 @@ async def chat(
     temperature: float = 0.2,
     attempts: int = 1,
     timeout_seconds: int = 60,
+    response_schema: dict | None = None,
 ):
     return await run_chat_completion(
         client=local_model_client,
@@ -26,16 +27,19 @@ async def chat(
         temperature=temperature,
         attempts=attempts,
         timeout_seconds=timeout_seconds,
+        response_schema=response_schema,
     )
 
 
 async def structured(prompt, schema, max_tokens=1200, timeout_seconds=90):
+    response_schema = schema.model_json_schema()
     raw = await chat(
         [{"role": "user", "content": prompt}],
         max_tokens=max_tokens,
         temperature=0.1,
-        attempts=3,
+        attempts=1,
         timeout_seconds=timeout_seconds,
+        response_schema=response_schema,
     )
     try:
         return validate_structured_output(raw, schema)
@@ -50,6 +54,7 @@ async def structured(prompt, schema, max_tokens=1200, timeout_seconds=90):
             temperature=0,
             attempts=2,
             timeout_seconds=timeout_seconds,
+            response_schema=response_schema,
         )
         return validate_structured_output(corrected, schema)
 

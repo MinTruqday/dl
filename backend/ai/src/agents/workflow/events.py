@@ -70,7 +70,7 @@ class CronSchedule:
 class CronScheduler:
     def __init__(self):
         self._schedules: Dict[str, CronSchedule] = {}
-        self._event_loop_ref: Optional["EventDrivenLoop"] = None
+        self._event_processor_ref: Optional["EventProcessor"] = None
         self._running = False
 
     def register(self, schedule: CronSchedule):
@@ -97,8 +97,8 @@ class CronScheduler:
                 self._run_schedule(schedule), name=f"cron:{schedule.name}"
             )
 
-    def set_event_loop(self, event_driven_loop: "EventDrivenLoop"):
-        self._event_loop_ref = event_driven_loop
+    def set_event_processor(self, event_processor: "EventProcessor"):
+        self._event_processor_ref = event_processor
 
     def list_schedules(self) -> List[Dict]:
         return [
@@ -156,13 +156,13 @@ class CronScheduler:
                     f"CronScheduler firing event for schedule '{schedule.name}' (run #{schedule.run_count})"
                 )
 
-                if self._event_loop_ref:
+                if self._event_processor_ref:
                     create_background_task(
-                        self._event_loop_ref.handle_event(event), f"cron-event-{event.event_id}"
+                        self._event_processor_ref.handle_event(event), f"cron-event-{event.event_id}"
                     )
                 else:
                     logger.warning(
-                        f"CronScheduler no EventDrivenLoop attached for schedule '{schedule.name}'"
+                        f"CronScheduler has no event processor for schedule '{schedule.name}'"
                     )
 
             except asyncio.CancelledError:
@@ -199,7 +199,7 @@ class SystemUpdateRegistry:
         }
 
 
-class EventDrivenLoop:
+class EventProcessor:
     def __init__(self):
         self._handlers: Dict[EventType, List[EventHandler]] = {}
         self._event_queue: asyncio.Queue[AgentEvent] = asyncio.Queue(maxsize=1000)
@@ -213,17 +213,17 @@ class EventDrivenLoop:
             self._handlers[handler.event_type] = []
         self._handlers[handler.event_type].append(handler)
         logger.info(
-            f"EventDrivenLoop registered handler for {handler.event_type.value} {handler.description}"
+            f"Event processor registered handler for {handler.event_type.value} {handler.description}"
         )
 
     async def emit_event(self, event: AgentEvent):
         self._event_queue.put_nowait(event)
-        logger.info(f"EventDrivenLoop queued event {event.event_id} ({event.event_type.value})")
+        logger.info(f"Event processor queued event {event.event_id} ({event.event_type.value})")
 
     async def handle_event(self, event: AgentEvent) -> Optional[str]:
         handlers = self._handlers.get(event.event_type, [])
         if not handlers:
-            logger.debug(f"EventDrivenLoop no handlers for {event.event_type.value}")
+            logger.debug(f"Event processor has no handlers for {event.event_type.value}")
             return None
 
         results = []
@@ -243,7 +243,7 @@ class EventDrivenLoop:
                     )
                     self._update_registry.record(update)
             except Exception as e:
-                logger.exception(f"EventDrivenLoop handler '{handler.description}' failed")
+                logger.exception(f"Event processor handler '{handler.description}' failed")
                 update = SystemUpdate(
                     update_id=str(uuid7()),
                     event_id=event.event_id,
@@ -260,16 +260,16 @@ class EventDrivenLoop:
 
     async def start_worker(self):
         self._running = True
-        self._worker_task = asyncio.create_task(self._worker_loop(), name="event_driven_worker")
-        logger.info("EventDrivenLoop worker started")
+        self._worker_task = asyncio.create_task(self._worker(), name="event_processor_worker")
+        logger.info("Event processor worker started")
 
     async def stop_worker(self):
         self._running = False
         if self._worker_task and not self._worker_task.done():
             self._worker_task.cancel()
-        logger.info("EventDrivenLoop worker stopped")
+        logger.info("Event processor worker stopped")
 
-    async def _worker_loop(self):
+    async def _worker(self):
         while self._running:
             try:
                 event = await asyncio.wait_for(self._event_queue.get(), timeout=1.0)
@@ -280,7 +280,7 @@ class EventDrivenLoop:
             except asyncio.CancelledError:
                 break
             except Exception:
-                logger.exception("EventDrivenLoop worker error")
+                logger.exception("Event processor worker error")
 
     def get_stats(self) -> Dict[str, Any]:
         return {
@@ -312,7 +312,7 @@ class EventDrivenLoop:
 
 
 async def _handle_system_heartbeat(event: AgentEvent) -> Optional[str]:
-    logger.info(f"EventDrivenLoop heartbeat ping from {event.source}")
+    logger.info(f"Event processor heartbeat ping from {event.source}")
     return "Heartbeat processed"
 
 
@@ -332,7 +332,7 @@ async def _handle_document_uploaded(event: AgentEvent) -> Optional[str]:
     superseded_document_id = event.payload.get("superseded_document_id", "")
     if not doc_id:
         return None
-    logger.info(f"EventDrivenLoop document uploaded event for doc_id={doc_id}")
+    logger.info(f"Event processor document uploaded event for doc_id={doc_id}")
 
     async def _run_ingest():
         try:
@@ -350,29 +350,29 @@ async def _handle_document_uploaded(event: AgentEvent) -> Optional[str]:
 async def _handle_user_query_event(event: AgentEvent) -> Optional[str]:
     query = event.payload.get("query", "")
     user_id = event.payload.get("user_id", "")
-    logger.debug(f"EventDrivenLoop user query event from user={user_id} query_chars={len(query)}")
+    logger.debug(f"Event processor user query event from user={user_id} query_chars={len(query)}")
     return f"User query event recorded for user {user_id}"
 
 
-event_driven_loop = EventDrivenLoop()
+event_processor = EventProcessor()
 cron_scheduler = CronScheduler()
-cron_scheduler.set_event_loop(event_driven_loop)
+cron_scheduler.set_event_processor(event_processor)
 
-event_driven_loop.register_handler(
+event_processor.register_handler(
     EventHandler(
         event_type=EventType.SYSTEM_HEARTBEAT,
         handler=_handle_system_heartbeat,
         description="System heartbeat health check",
     )
 )
-event_driven_loop.register_handler(
+event_processor.register_handler(
     EventHandler(
         event_type=EventType.DOCUMENT_UPLOADED,
         handler=_handle_document_uploaded,
         description="Document upload indexing verification",
     )
 )
-event_driven_loop.register_handler(
+event_processor.register_handler(
     EventHandler(
         event_type=EventType.USER_QUERY,
         handler=_handle_user_query_event,

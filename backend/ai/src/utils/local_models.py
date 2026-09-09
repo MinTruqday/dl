@@ -55,6 +55,18 @@ def _response(
     )
 
 
+def _ollama_schema(value):
+    if isinstance(value, dict):
+        return {
+            key: _ollama_schema(item)
+            for key, item in value.items()
+            if key not in {"maxLength", "minLength", "pattern"}
+        }
+    if isinstance(value, list):
+        return [_ollama_schema(item) for item in value]
+    return value
+
+
 class LocalModelClient:
     def __init__(self):
         self._primary_runtime_status = "unverified"
@@ -81,7 +93,7 @@ class LocalModelClient:
         except Exception:
             return False
 
-    async def _ollama_completion(self, model, messages, max_tokens, temperature):
+    async def _ollama_completion(self, model, messages, max_tokens, temperature, response_schema=None):
         payload = {
             "model": model,
             "messages": _ollama_messages(messages),
@@ -90,6 +102,8 @@ class LocalModelClient:
             "keep_alive": settings.MODEL_KEEP_ALIVE,
             "options": {"num_predict": max_tokens, "temperature": temperature},
         }
+        if response_schema:
+            payload["format"] = _ollama_schema(response_schema)
         async with httpx.AsyncClient(timeout=settings.MODEL_TIMEOUT_SECONDS) as client:
             response = await client.post(settings.PRIMARY_MODEL_URL, json=payload)
         response.raise_for_status()
@@ -106,7 +120,7 @@ class LocalModelClient:
             settings.LLM_MODEL,
         )
 
-    async def _openai_primary_completion(self, model, messages, max_tokens, temperature):
+    async def _openai_primary_completion(self, model, messages, max_tokens, temperature, response_schema=None):
         headers = {"Content-Type": "application/json"}
         if settings.PRIMARY_MODEL_API_TOKEN:
             headers["Authorization"] = f"Bearer {settings.PRIMARY_MODEL_API_TOKEN}"
@@ -116,6 +130,11 @@ class LocalModelClient:
             "max_tokens": max_tokens,
             "temperature": temperature,
         }
+        if response_schema:
+            payload["response_format"] = {
+                "type": "json_schema",
+                "json_schema": {"name": "structured_response", "schema": response_schema},
+            }
         async with httpx.AsyncClient(timeout=settings.MODEL_TIMEOUT_SECONDS) as client:
             response = await client.post(settings.PRIMARY_MODEL_URL, headers=headers, json=payload)
         response.raise_for_status()
@@ -134,14 +153,14 @@ class LocalModelClient:
             str(body.get("model") or settings.LLM_MODEL),
         )
 
-    async def _primary_completion(self, messages, max_tokens, temperature):
+    async def _primary_completion(self, messages, max_tokens, temperature, response_schema=None):
         if settings.PRIMARY_MODEL_STYLE == "ollama":
             return await self._ollama_completion(
-                settings.LLM_MODEL, messages, max_tokens, temperature
+                settings.LLM_MODEL, messages, max_tokens, temperature, response_schema
             )
         if settings.PRIMARY_MODEL_STYLE == "openai":
             return await self._openai_primary_completion(
-                settings.LLM_MODEL, messages, max_tokens, temperature
+                settings.LLM_MODEL, messages, max_tokens, temperature, response_schema
             )
         raise LocalModelUnavailable("primary_model_style_unsupported")
 
@@ -155,12 +174,13 @@ class LocalModelClient:
         max_tokens: int = 1024,
         temperature: float = 0.1,
         stream: bool = False,
+        response_schema: dict[str, Any] | None = None,
         **_: Any,
     ):
         if stream:
             return self._stream(messages, max_tokens, temperature, model)
         try:
-            return await self._primary_completion(messages, max_tokens, temperature)
+            return await self._primary_completion(messages, max_tokens, temperature, response_schema)
         except Exception as primary_error:
             self._primary_runtime_status = "unavailable"
             logger.warning(

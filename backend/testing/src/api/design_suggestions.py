@@ -1,3 +1,5 @@
+import json
+
 from fastapi import APIRouter, Depends, HTTPException
 from pymongo.errors import DuplicateKeyError
 
@@ -6,6 +8,7 @@ from src.core.common import audit, envelope, get_project, new_id, now
 from src.core.database import database
 from src.domain.schemas import PerformancePlanDraftInput, SecurityTestSuggestionInput
 from src.services.design_assistance import request_design_assistance
+from src.services.generation import SecurityCandidate, PerformanceScenario, validated_suggestions
 
 
 router = APIRouter(prefix="/kiem-thu", tags=["Thiết kế kiểm thử chuyên sâu"])
@@ -37,80 +40,6 @@ async def requirement_evidence(project_id, requirement_version_ids):
             )[:4000],
         }
         for item in versions
-    ]
-
-
-def security_candidates(categories, versions):
-    definitions = {
-        "authorization": (
-            "Từ chối thao tác vượt quyền",
-            "Thực hiện thao tác được bảo vệ bằng vai trò không đủ quyền",
-            "Hệ thống từ chối yêu cầu và không thay đổi dữ liệu",
-        ),
-        "authentication": (
-            "Từ chối danh tính không hợp lệ",
-            "Gửi thông tin xác thực sai hoặc đã bị thu hồi",
-            "Hệ thống từ chối xác thực và ghi nhận sự kiện an toàn",
-        ),
-        "input_validation": (
-            "Kiểm tra dữ liệu đầu vào không hợp lệ",
-            "Gửi dữ liệu sai kiểu vượt biên và chứa chuỗi điều khiển",
-            "Hệ thống từ chối an toàn không thực thi nội dung và không rò rỉ chi tiết nội bộ",
-        ),
-        "session": (
-            "Từ chối phiên hết hạn hoặc bị thu hồi",
-            "Dùng lại phiên đã hết hạn hoặc đã đăng xuất",
-            "Hệ thống từ chối phiên và yêu cầu xác thực lại",
-        ),
-        "data_protection": (
-            "Không lộ dữ liệu nhạy cảm",
-            "Quan sát phản hồi nhật ký và tệp xuất trong luồng nghiệp vụ",
-            "Dữ liệu nhạy cảm được che giấu và chỉ hiển thị theo quyền",
-        ),
-    }
-    refs = [item["_id"] for item in versions]
-    return [
-        {
-            "candidate_id": f"SEC-{index}",
-            "category": category,
-            "title": definitions[category][0],
-            "preconditions": ["Dùng môi trường kiểm thử được cô lập"],
-            "action": definitions[category][1],
-            "expected": definitions[category][2],
-            "requirement_version_ids": refs,
-            "origin": "ai_assisted_draft",
-            "status": "SUGGESTED",
-        }
-        for index, category in enumerate(categories, 1)
-    ]
-
-
-def performance_scenarios(payload):
-    factors = {
-        "baseline": 0.25,
-        "load": 1,
-        "stress": 1.5,
-        "spike": 2,
-        "soak": 0.75,
-    }
-    return [
-        {
-            "scenario_id": f"PERF-{index}",
-            "workload_type": workload,
-            "virtual_users": max(1, round(payload.target_virtual_users * factors[workload])),
-            "requests_per_second": (
-                round(payload.target_requests_per_second * factors[workload], 2)
-                if payload.target_requests_per_second
-                else None
-            ),
-            "duration_minutes": (
-                max(payload.duration_minutes, 240)
-                if workload == "soak"
-                else payload.duration_minutes
-            ),
-            "ramp_pattern": "immediate" if workload == "spike" else "gradual",
-        }
-        for index, workload in enumerate(payload.workload_types, 1)
     ]
 
 
@@ -147,10 +76,25 @@ async def generate_security_test_suggestions(
     ai_result = await request_design_assistance(
         "security_test_generation",
         project_id,
-        "Tạo đề xuất kiểm thử authorization authentication input session data protection chỉ từ evidence và không tuyên bố đã quét lỗ hổng",
+        json.dumps({"task": "Sinh kiểm thử bảo mật cụ thể theo bằng chứng bằng tiếng Việt không tuyên bố đã quét lỗ hổng mỗi nhóm có ít nhất một đề xuất", "categories": payload.categories, "suggestion_schema": SecurityCandidate.model_json_schema()}, ensure_ascii=False),
         evidence
-        + ([{"artifact_type": "user_context", "text": payload.context}] if payload.context else []),
+        + [
+            {
+                "artifact_type": "design_request",
+                "artifact_id": payload.idempotency_key,
+                "authority": "USER_REQUEST",
+                "text": json.dumps(
+                    {"categories": payload.categories, "context": payload.context},
+                    ensure_ascii=False,
+                ),
+            }
+        ],
     )
+    candidates = validated_suggestions(ai_result, SecurityCandidate)
+    version_ids = {item["_id"] for item in versions}
+    if {item["category"] for item in candidates} != set(payload.categories) or any(not set(item["requirement_version_ids"]) <= version_ids for item in candidates):
+        raise HTTPException(502, detail={"code": "AI_GENERATION_INVALID"})
+    candidates = [{**item, "candidate_id": f"SEC-{index}", "status": "SUGGESTED", "origin": "ai_generated"} for index, item in enumerate(candidates, 1)]
     timestamp = now()
     result = {
         "_id": new_id("SECSUG"),
@@ -158,7 +102,7 @@ async def generate_security_test_suggestions(
         "result_type": "SECURITY_TEST_SUGGESTION",
         "categories": payload.categories,
         "requirement_version_ids": [item["_id"] for item in versions],
-        "candidates": security_candidates(payload.categories, versions),
+        "candidates": candidates,
         "model_suggestions": ai_result.get("suggestions", []),
         "evidence_refs": ai_result.get("evidence_refs", []),
         "confidence": ai_result.get("confidence", 0),
@@ -232,10 +176,31 @@ async def generate_performance_plan_draft(
     ai_result = await request_design_assistance(
         "performance_plan_generation",
         project_id,
-        "Tạo bản nháp workload scenario metric threshold chỉ từ evidence và không chạy công cụ phát tải",
+        json.dumps({"task": "Sinh kế hoạch hiệu năng bằng tiếng Việt gắn với hành vi trong bằng chứng mỗi workload có ít nhất một kịch bản không chạy phát tải", "workload_types": payload.workload_types, "target_virtual_users": payload.target_virtual_users, "target_requests_per_second": payload.target_requests_per_second, "duration_minutes": payload.duration_minutes, "objective": payload.objective, "suggestion_schema": PerformanceScenario.model_json_schema()}, ensure_ascii=False),
         evidence
-        + ([{"artifact_type": "user_context", "text": payload.context}] if payload.context else []),
+        + [
+            {
+                "artifact_type": "design_request",
+                "artifact_id": payload.idempotency_key,
+                "authority": "USER_REQUEST",
+                "text": json.dumps(
+                    {
+                        "objective": payload.objective,
+                        "workload_types": payload.workload_types,
+                        "target_virtual_users": payload.target_virtual_users,
+                        "target_requests_per_second": payload.target_requests_per_second,
+                        "duration_minutes": payload.duration_minutes,
+                        "context": payload.context,
+                    },
+                    ensure_ascii=False,
+                ),
+            }
+        ],
     )
+    scenarios = validated_suggestions(ai_result, PerformanceScenario)
+    if {item["workload_type"] for item in scenarios} != set(payload.workload_types):
+        raise HTTPException(502, detail={"code": "AI_GENERATION_INVALID"})
+    scenarios = [{**item, "scenario_id": f"PERF-{index}"} for index, item in enumerate(scenarios, 1)]
     timestamp = now()
     result = {
         "_id": new_id("PERFPLAN"),
@@ -248,7 +213,7 @@ async def generate_performance_plan_draft(
             "target_requests_per_second": payload.target_requests_per_second,
             "duration_minutes": payload.duration_minutes,
         },
-        "scenarios": performance_scenarios(payload),
+        "scenarios": scenarios,
         "metrics": [
             {"key": "response_time_p95_ms", "threshold": payload.response_time_p95_ms},
             {"key": "error_rate", "threshold": payload.maximum_error_rate},

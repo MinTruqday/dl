@@ -29,7 +29,7 @@ class ToolDefinition:
     is_async: bool = True
 
 
-class ToolHarness:
+class ToolExecutor:
     def __init__(self):
         self._registry: dict[str, ToolDefinition] = {}
 
@@ -106,4 +106,4 @@ class ToolHarness:
         return list(self._registry.keys())
 
 
-tool = ToolHarness()
+tool = ToolExecutor()

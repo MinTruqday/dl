@@ -53,7 +53,7 @@ async def supervisor_node(state: ActingState):
     req_data = state.get("req_data", {})
     session_id = req_data.get("session_id", "")
     if session_id:
-        from src.agents.harness.governance import governance
+        from src.core.security.policy import governance
 
         session_summary = governance.get_session_summary(session_id)
         if session_summary:
@@ -84,7 +84,7 @@ async def supervisor_node(state: ActingState):
             deps = n.get("dependencies", [])
             if all(dep in completed_tasks for dep in deps):
                 if session_id:
-                    from src.agents.harness.governance import governance
+                    from src.core.security.policy import governance
 
                     session_summary = governance.get_session_summary(session_id)
                     decision = governance.check_tool_allowed(session_id, n.get("agent", "Action"))
@@ -229,7 +229,7 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
         current_task = _task_with_dependency_context(task_obj, stored_results)
         try:
             if session_id:
-                from src.agents.harness.governance import governance
+                from src.core.security.policy import governance
 
                 if governance.get_session_summary(session_id):
                     governance.record_tool_call(session_id, current_task)
@@ -489,9 +489,9 @@ class OrchestrationWorkflow:
 
     async def execute_plan(self, req_data):
         self.initialize()
-        from src.agents.harness.governance import governance
-        from src.agents.loop.rubric import standard_rubric_middleware
-        from src.agents.loop.verification import verification
+        from src.core.security.policy import governance
+        from src.agents.workflow.rubric import standard_rubric_middleware
+        from src.agents.workflow.verification import verification
 
         logger.info(
             f"Initializing orchestration execution stream for query length {len(req_data.get('query', ''))}"

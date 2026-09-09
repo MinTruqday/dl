@@ -30,6 +30,7 @@ async def run_chat_completion(
     temperature: float,
     attempts: int = 3,
     timeout_seconds: float = 60.0,
+    response_schema: dict[str, Any] | None = None,
 ) -> str:
     if attempts < 1:
         raise ValueError("Model invocation attempts must be positive")
@@ -56,6 +57,7 @@ async def run_chat_completion(
                     messages=list(messages),
                     max_tokens=max_tokens,
                     temperature=temperature,
+                    response_schema=response_schema,
                 )
             choices = getattr(response, "choices", None)
             if not choices:

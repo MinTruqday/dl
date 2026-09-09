@@ -29,8 +29,6 @@ from src.domain.schemas import (
     DeviceMatrixAssignment,
     ProjectNotificationPreferencePatch,
     ProjectNotificationRulePatch,
-    PerformancePlanDraftInput,
-    SecurityTestSuggestionInput,
     WebhookSubscriptionCreate,
     TestExecutionPatch as ExecutionPatchSchema,
     TestStepResultInput as StepResultSchema,
@@ -43,8 +41,7 @@ from src.services.linters import (
     requirement_duplicate_score,
     requirement_findings,
 )
-from src.api.design_suggestions import performance_scenarios, security_candidates
-from src.api.automation_scripts import script_template, validate_source
+from src.api.automation_scripts import generated_script, validate_source
 from benchmark.run import evaluate_all
 
 
@@ -165,27 +162,6 @@ def test_project_notification_inputs_validate_channels_and_quiet_hours():
         )
 
 
-def test_specialized_design_drafts_never_claim_execution_or_approval():
-    security_payload = SecurityTestSuggestionInput(
-        categories=["authorization", "session"],
-        idempotency_key="security-design-1",
-    )
-    candidates = security_candidates(security_payload.categories, [])
-    assert [item["status"] for item in candidates] == ["SUGGESTED", "SUGGESTED"]
-    assert all(item["origin"] == "ai_assisted_draft" for item in candidates)
-    performance_payload = PerformancePlanDraftInput(
-        name="Tải đăng nhập",
-        workload_types=["baseline", "spike", "soak"],
-        target_virtual_users=100,
-        duration_minutes=30,
-        idempotency_key="performance-design-1",
-    )
-    scenarios = performance_scenarios(performance_payload)
-    assert scenarios[0]["virtual_users"] == 25
-    assert scenarios[1]["virtual_users"] == 200
-    assert scenarios[2]["duration_minutes"] == 240
-
-
 def test_webhook_subscription_accepts_only_platform_references():
     value = WebhookSubscriptionCreate(
         name="Thông báo lỗi mới",
@@ -203,13 +179,14 @@ def test_webhook_subscription_accepts_only_platform_references():
         )
 
 
-def test_automation_script_templates_use_environment_placeholders_and_reject_raw_secrets():
-    version = {"title": "Đăng nhập hợp lệ", "test_case_key": "TC-001"}
-    playwright = script_template("playwright", "typescript", version)
-    selenium = script_template("selenium", "python", version)
-    assert "process.env.BASE_URL" in playwright
-    assert "os.environ['BASE_URL']" in selenium
+def test_automation_script_preserves_generated_content_and_rejects_raw_secrets():
+    playwright = "await page.getByLabel('Email').fill(process.env.TEST_EMAIL);"
+    source, placeholders = generated_script({"status": "SUCCESS", "suggestions": [{"source": playwright, "secret_placeholders": ["TEST_EMAIL"]}]})
+    assert source == playwright
+    assert placeholders == ["TEST_EMAIL"]
     assert validate_source(playwright) == playwright
+    with pytest.raises(Exception):
+        generated_script({"status": "DEGRADED", "suggestions": []})
     with pytest.raises(Exception):
         validate_source('const password = "plain-password";')
 

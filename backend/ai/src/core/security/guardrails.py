@@ -30,10 +30,13 @@ class GuardrailsEngine:
         def redact(match: re.Match) -> str:
             nonlocal found
             candidate = match.group(0)
+            identifier = candidate.strip("\"'`,;:[]{}()")
             if re.fullmatch(
                 r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}",
-                candidate,
+                identifier,
             ):
+                return candidate
+            if re.fullmatch(r"[A-Z][A-Z0-9]{0,15}-[0-9a-fA-F]{32}", identifier):
                 return candidate
             has_character_mix = bool(
                 re.search(r"[A-Za-z]", candidate) and re.search(r"\d", candidate)

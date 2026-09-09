@@ -227,7 +227,7 @@ export default function AutomationScriptsPanel({ project, tests }) {
                 </div>
                 {selected.degraded_mode && (
                   <p className="text-sm text-ink-muted">
-                    Mô hình đang suy giảm nên hệ thống dùng mẫu an toàn để tạo bản nháp
+                    Lượt sinh cũ không dùng được model hãy tạo lại bản nháp
                   </p>
                 )}
                 <label className="field-label block">

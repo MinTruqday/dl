@@ -13,6 +13,7 @@ class Settings(BaseModel):
     TESTING_ALLOW_TEST_IDENTITY: bool = os.getenv("TESTING_ALLOW_TEST_IDENTITY", "false").lower() == "true"
     PROJECT_CREATION_POLICY: str = os.getenv("PROJECT_CREATION_POLICY", "AUTHENTICATED")
     AI_URL: str = os.getenv("AI_URL", "http://ai:8000")
+    AI_REQUEST_TIMEOUT_SECONDS: float = float(os.getenv("AI_REQUEST_TIMEOUT_SECONDS", "900"))
     CONTENT_URL: str = os.getenv("CONTENT_URL", "http://content:8000")
     WORKER_URL: str = os.getenv("WORKER_URL", "http://worker:8000")
     CLOUD_URL: str = os.getenv("CLOUD_URL", "http://cloud:8000")

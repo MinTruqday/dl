@@ -34,7 +34,7 @@ async def request_impact_classification(project_id, change_set, candidates):
         "evidence": evidence,
     }
     try:
-        async with httpx.AsyncClient(timeout=15) as client:
+        async with httpx.AsyncClient(timeout=settings.AI_REQUEST_TIMEOUT_SECONDS) as client:
             response = await client.post(
                 f"{settings.AI_URL.rstrip('/')}/suy-luan/noi-bo/kiem-thu/ho-tro",
                 headers={"X-Internal-Token": settings.SECRET_KEY},
@@ -47,7 +47,8 @@ async def request_impact_classification(project_id, change_set, candidates):
         latency_ms = round((time.perf_counter() - started_at) * 1000, 3)
         result["latency_ms"] = latency_ms
         AI_GENERATION_LATENCY.labels("impact_classification").observe(latency_ms / 1000)
-        AI_REQUESTS.labels("impact_classification", "success").inc()
+        outcome = "success" if result.get("status") == "SUCCESS" and not result.get("degraded_mode") else "degraded"
+        AI_REQUESTS.labels("impact_classification", outcome).inc()
         return result
     except Exception as error:
         latency_ms = round((time.perf_counter() - started_at) * 1000, 3)
