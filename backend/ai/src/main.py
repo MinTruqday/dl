@@ -186,11 +186,14 @@ async def startup_event():
     except Exception:
         logger.exception("MongoDB indexing error")
     global retrieval_ready
+    retrieval_ready = False
     try:
-        await initialize_retrieval()
-        retrieval_ready = True
+        from src.utils.background import create_background_task
+
+        create_background_task(
+            initialize_retrieval_background(), "retrieval-model-warmup"
+        )
     except Exception:
-        retrieval_ready = False
         logger.exception("AI retrieval capability startup error")
     try:
         from src.agents.workflow.events import cron_scheduler, event_processor
@@ -207,6 +210,17 @@ async def startup_event():
         create_background_task(local_model_client.warm_primary(), "primary-model-warmup")
     except Exception:
         logger.exception("Primary model warmup startup error")
+
+
+async def initialize_retrieval_background():
+    global retrieval_ready
+    try:
+        await initialize_retrieval()
+        retrieval_ready = True
+        logger.info("AI retrieval capability initialized")
+    except Exception:
+        retrieval_ready = False
+        logger.exception("AI retrieval capability startup error")
 
 
 async def shutdown_event():

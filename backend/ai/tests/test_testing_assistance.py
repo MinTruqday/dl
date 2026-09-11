@@ -6,10 +6,14 @@ from src.api import inference
 from src.core.security.guardrails import guardrails_engine
 from src.schemas.inference import (
     AutomationScriptOutput,
+    CausalHypothesesOutput,
+    CompletionReportNarrativeOutput,
     GeneratedCasesOutput,
     PerformanceSuggestionsOutput,
     ProjectQuestionOutput,
     SecuritySuggestionsOutput,
+    StatusReportNarrativeOutput,
+    LessonsLearnedClustersOutput,
     TestingAssistanceRequest as AssistanceRequest,
 )
 
@@ -33,6 +37,21 @@ def test_project_artifact_ids_are_not_classified_as_credentials():
     assessment = guardrails_engine.inspect_input(
         '{"project_id": "PRJ-d3ea810846444793998b2fd4c803e4c1", "artifact_version_id": "TCV-b2da9d19a7574bab85cb399f1b4ddce0"}'
     )
+
+    assert assessment["is_safe"] is True
+    assert "[REDACTED]" not in assessment["sanitized_text"]
+
+
+def test_nested_project_artifact_ids_remain_safe_in_testing_evidence():
+    evidence = [
+        {
+            "artifact_type": "test_completion_report",
+            "artifact_id": "TCP-d3ea810846444793998b2fd4c803e4c1",
+            "text": '{"defect_id": "DEF-b2da9d19a7574bab85cb399f1b4ddce0", "environment_id": "ENV-a2da9d19a7574bab85cb399f1b4ddce1"}',
+        }
+    ]
+
+    assessment = guardrails_engine.inspect_input(inference.testing_evidence_text(evidence))
 
     assert assessment["is_safe"] is True
     assert "[REDACTED]" not in assessment["sanitized_text"]
@@ -132,6 +151,61 @@ def test_project_artifact_ids_are_not_classified_as_credentials():
                         "secret_placeholders": [],
                     }
                 ],
+                "evidence_refs": ["REQV-1"],
+                "confidence": 0.8,
+                "warnings": [],
+            },
+        ),
+        (
+            "causal_analysis",
+            CausalHypothesesOutput,
+            {
+                "capability": "causal_analysis",
+                "suggestions": [
+                    {
+                        "root_cause_category": "CONFIGURATION",
+                        "hypothesis": "Cấu hình môi trường không đồng nhất",
+                        "contributing_factors": ["Thiếu kiểm tra cấu hình trước triển khai"],
+                        "five_whys": ["Cấu hình không được xác minh tự động"],
+                        "missing_test_conditions": ["Kiểm tra cấu hình môi trường"],
+                        "missing_test_cases": ["Từ chối chạy khi cấu hình sai"],
+                        "evidence_refs": ["REQV-1"],
+                        "confidence": 0.7,
+                    }
+                ],
+                "evidence_refs": ["REQV-1"],
+                "confidence": 0.7,
+                "warnings": [],
+            },
+        ),
+        (
+            "status_report_narrative",
+            StatusReportNarrativeOutput,
+            {
+                "capability": "status_report_narrative",
+                "suggestions": [{"executive_summary": "Tổng quan kiểm thử", "progress_summary": "Tiến độ kiểm thử", "coverage_summary": "Độ phủ kiểm thử", "defect_summary": "Tình trạng lỗi", "forecast": "Dự báo kỳ tiếp theo", "recommendation": "CONTINUE_TESTING"}],
+                "evidence_refs": ["REQV-1"],
+                "confidence": 0.8,
+                "warnings": [],
+            },
+        ),
+        (
+            "completion_report_narrative",
+            CompletionReportNarrativeOutput,
+            {
+                "capability": "completion_report_narrative",
+                "suggestions": [{"executive_summary": "Tổng kết kiểm thử", "closure_summary": "Tổng kết đóng kiểm thử", "residual_risk_summary": "Tổng kết rủi ro còn lại", "recommendation_rationale": "Cơ sở khuyến nghị"}],
+                "evidence_refs": ["REQV-1"],
+                "confidence": 0.8,
+                "warnings": [],
+            },
+        ),
+        (
+            "lessons_learned_clustering",
+            LessonsLearnedClustersOutput,
+            {
+                "capability": "lessons_learned_clustering",
+                "suggestions": [{"theme": "Môi trường", "category": "IMPROVEMENT", "summary": "Chuẩn hóa kiểm tra môi trường", "source_indices": [0], "improvement_candidates": ["Tự động hóa kiểm tra"]}],
                 "evidence_refs": ["REQV-1"],
                 "confidence": 0.8,
                 "warnings": [],

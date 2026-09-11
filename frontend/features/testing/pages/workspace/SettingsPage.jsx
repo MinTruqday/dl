@@ -48,6 +48,7 @@ const toggleSettings = [
   ["viewer_can_export", "Cho phép người xem xuất báo cáo"],
   ["developer_can_export", "Cho phép lập trình viên xuất báo cáo"],
   ["ai_auto_draft", "Cho phép AI tạo bản nháp"],
+  ["require_completion_report_before_release_close", "Yêu cầu báo cáo hoàn tất đã phê duyệt trước khi đóng bản phát hành"],
 ];
 
 const numberSettings = [

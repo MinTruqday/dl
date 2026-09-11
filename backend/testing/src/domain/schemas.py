@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -5,6 +6,34 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 def empty_doc():
     return {"type": "doc", "content": []}
+
+
+KnowledgeSourceType = Literal[
+    "SRS",
+    "BRD",
+    "USER_STORY",
+    "ACCEPTANCE_CRITERIA",
+    "BUSINESS_RULE",
+    "API_SPEC",
+    "UI_SPEC",
+    "ARCHITECTURE",
+    "MEETING_NOTE",
+    "RELEASE_NOTE",
+    "BUG_HISTORY",
+    "TEST_ARTIFACT",
+    "REGULATION",
+    "REFERENCE",
+    "OTHER",
+]
+KnowledgeAuthority = Literal[
+    "APPROVED_SOURCE",
+    "CONTROLLED_SOURCE",
+    "PROJECT_REFERENCE",
+    "SUPPLEMENTAL",
+    "DRAFT",
+    "UNVERIFIED",
+]
+KnowledgeApprovalStatus = Literal["DRAFT", "IN_REVIEW", "APPROVED", "REJECTED"]
 
 
 class ProjectCreate(BaseModel):
@@ -166,31 +195,46 @@ class RequirementParseRetry(BaseModel):
 class RequirementDocumentPatch(BaseModel):
     expected_revision: int = Field(ge=1)
     title: str | None = Field(default=None, min_length=2, max_length=300)
-    source_type: Literal["teacher_material", "official_textbook", "curriculum", "reference", "api_contract", "other"] | None = None
-    authority: Literal["teacher", "official", "supplemental", "reference"] | None = None
-    teacher_id: str | None = Field(default=None, max_length=200)
-    subject: str | None = Field(default=None, max_length=200)
-    grade: str | None = Field(default=None, max_length=100)
+    source_type: KnowledgeSourceType | None = None
+    authority: KnowledgeAuthority | None = None
+    owner_id: str | None = Field(default=None, max_length=200)
+    module: str | None = Field(default=None, max_length=200)
+    component: str | None = Field(default=None, max_length=200)
+    product_area: str | None = Field(default=None, max_length=200)
+    release_id: str | None = Field(default=None, max_length=200)
+    external_source_id: str | None = Field(default=None, max_length=500)
+    approval_status: KnowledgeApprovalStatus | None = None
+    approved_by: str | None = Field(default=None, max_length=200)
+    approved_at: datetime | None = None
+    source_version: str | None = Field(default=None, max_length=100)
+    effective_from: datetime | None = None
     tags: list[str] | None = Field(default=None, max_length=100)
 
 
 class KnowledgeSourceCreate(BaseModel):
     title: str = Field(min_length=2, max_length=300)
     content: str = Field(min_length=1, max_length=2_000_000)
-    source_type: Literal[
-        "teacher_material",
-        "official_textbook",
-        "curriculum",
-        "reference",
-        "api_contract",
-        "other",
-    ] = "reference"
-    authority: Literal["teacher", "official", "supplemental", "reference"] = "reference"
+    source_type: KnowledgeSourceType = "REFERENCE"
+    authority: KnowledgeAuthority = "PROJECT_REFERENCE"
     source_url: str | None = Field(default=None, max_length=2000)
-    teacher_id: str | None = Field(default=None, max_length=200)
-    subject: str | None = Field(default=None, max_length=200)
-    grade: str | None = Field(default=None, max_length=100)
+    owner_id: str | None = Field(default=None, max_length=200)
+    module: str | None = Field(default=None, max_length=200)
+    component: str | None = Field(default=None, max_length=200)
+    product_area: str | None = Field(default=None, max_length=200)
+    release_id: str | None = Field(default=None, max_length=200)
+    external_source_id: str | None = Field(default=None, max_length=500)
+    approval_status: KnowledgeApprovalStatus = "DRAFT"
+    approved_by: str | None = Field(default=None, max_length=200)
+    approved_at: datetime | None = None
+    source_version: str = Field(default="1", min_length=1, max_length=100)
+    effective_from: datetime | None = None
     tags: list[str] = Field(default_factory=list, max_length=100)
+
+    @model_validator(mode="after")
+    def validate_approval(self):
+        if self.approval_status == "APPROVED" and (not self.approved_by or not self.approved_at):
+            raise ValueError("Nguồn đã phê duyệt phải có người và thời điểm phê duyệt")
+        return self
 
 
 class AttachmentCreate(BaseModel):
@@ -297,6 +341,7 @@ class ScenarioCreate(BaseModel):
     priority: Literal["critical", "high", "medium", "low"] = "medium"
     requirement_version_ids: list[str] = Field(default_factory=list, max_length=200)
     acceptance_criterion_ids: list[str] = Field(default_factory=list, max_length=500)
+    test_condition_ids: list[str] = Field(default_factory=list, max_length=500)
     status: Literal["draft", "in_review", "approved", "archived"] = "draft"
     origin: Literal["manual", "ai_generated", "import"] = "manual"
     category: Literal[
@@ -321,6 +366,7 @@ class ScenarioPatch(BaseModel):
     priority: str | None = None
     requirement_version_ids: list[str] | None = Field(default=None, max_length=200)
     acceptance_criterion_ids: list[str] | None = Field(default=None, max_length=500)
+    test_condition_ids: list[str] | None = Field(default=None, max_length=500)
     category: str | None = None
 
 
@@ -366,6 +412,7 @@ class TestCaseDraftCreate(BaseModel):
     data_set_version_ids: list[str] = Field(default_factory=list, max_length=100)
     requirement_version_ids: list[str] = Field(default_factory=list, max_length=200)
     acceptance_criterion_ids: list[str] = Field(default_factory=list, max_length=500)
+    test_condition_ids: list[str] = Field(default_factory=list, max_length=500)
     scenario_id: str | None = None
     origin: Literal["manual", "ai_generated", "clone", "import", "maintenance"] = "manual"
     source_evidence: list[dict[str, Any]] = Field(default_factory=list, max_length=200)
@@ -410,6 +457,7 @@ class TestCaseDraftPatch(BaseModel):
     data_set_version_ids: list[str] | None = None
     requirement_version_ids: list[str] | None = None
     acceptance_criterion_ids: list[str] | None = None
+    test_condition_ids: list[str] | None = None
     scenario_id: str | None = None
 
 
@@ -567,6 +615,38 @@ class TestPlanCreate(BaseModel):
     release_id: str | None = Field(default=None, max_length=200)
     build: str = Field(default="", max_length=200)
     build_id: str | None = Field(default=None, max_length=200)
+    strategy_version_id: str | None = Field(default=None, max_length=200)
+    test_level: str = Field(default="SYSTEM", min_length=1, max_length=100)
+    test_approach: str = Field(default="", max_length=10000)
+    assumptions: list[str] = Field(default_factory=list, max_length=200)
+    constraints: list[str] = Field(default_factory=list, max_length=200)
+    dependencies: list[dict[str, Any]] = Field(default_factory=list, max_length=500)
+    stakeholders: list[dict[str, Any]] = Field(default_factory=list, max_length=500)
+    responsibility_matrix: list[dict[str, Any]] = Field(default_factory=list, max_length=500)
+    estimation: dict[str, Any] = Field(default_factory=dict)
+    schedule: dict[str, Any] = Field(default_factory=dict)
+    milestones: list[dict[str, Any]] = Field(default_factory=list, max_length=500)
+    deliverables: list[dict[str, Any] | str] = Field(default_factory=list, max_length=500)
+    tools: list[dict[str, Any] | str] = Field(default_factory=list, max_length=200)
+    suspension_criteria: list[str] = Field(default_factory=list, max_length=200)
+    resumption_criteria: list[str] = Field(default_factory=list, max_length=200)
+    monitoring_metrics: list[dict[str, Any]] = Field(default_factory=list, max_length=200)
+    quality_targets: list[dict[str, Any]] = Field(default_factory=list, max_length=200)
+    risk_register: list[dict[str, Any]] = Field(default_factory=list, max_length=500)
+    communication_plan: dict[str, Any] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def validate_test_plan_management_fields(self):
+        if bool(self.suspension_criteria) != bool(self.resumption_criteria):
+            raise ValueError("Tiêu chí đình chỉ và tiếp tục phải được khai báo cùng nhau")
+        method = self.estimation.get("method") if self.estimation else None
+        if method and method not in {"expert_judgment", "three_point", "historical", "custom"}:
+            raise ValueError("Phương pháp ước lượng không hợp lệ")
+        if self.estimation and float(self.estimation.get("planned_effort_hours", 0)) < 0:
+            raise ValueError("Nỗ lực dự kiến không thể âm")
+        if self.estimation and int(self.estimation.get("planned_people", 0)) < 0:
+            raise ValueError("Số người dự kiến không thể âm")
+        return self
 
 
 class ReleaseCreate(BaseModel):
@@ -1032,6 +1112,25 @@ class TestPlanPatch(BaseModel):
     release_id: str | None = Field(default=None, max_length=200)
     build: str | None = Field(default=None, max_length=200)
     build_id: str | None = Field(default=None, max_length=200)
+    strategy_version_id: str | None = Field(default=None, max_length=200)
+    test_level: str | None = Field(default=None, min_length=1, max_length=100)
+    test_approach: str | None = Field(default=None, max_length=10000)
+    assumptions: list[str] | None = Field(default=None, max_length=200)
+    constraints: list[str] | None = Field(default=None, max_length=200)
+    dependencies: list[dict[str, Any]] | None = Field(default=None, max_length=500)
+    stakeholders: list[dict[str, Any]] | None = Field(default=None, max_length=500)
+    responsibility_matrix: list[dict[str, Any]] | None = Field(default=None, max_length=500)
+    estimation: dict[str, Any] | None = None
+    schedule: dict[str, Any] | None = None
+    milestones: list[dict[str, Any]] | None = Field(default=None, max_length=500)
+    deliverables: list[dict[str, Any] | str] | None = Field(default=None, max_length=500)
+    tools: list[dict[str, Any] | str] | None = Field(default=None, max_length=200)
+    suspension_criteria: list[str] | None = Field(default=None, max_length=200)
+    resumption_criteria: list[str] | None = Field(default=None, max_length=200)
+    monitoring_metrics: list[dict[str, Any]] | None = Field(default=None, max_length=200)
+    quality_targets: list[dict[str, Any]] | None = Field(default=None, max_length=200)
+    risk_register: list[dict[str, Any]] | None = Field(default=None, max_length=500)
+    communication_plan: dict[str, Any] | None = None
 
 
 class TestSuiteCreate(BaseModel):
@@ -1161,6 +1260,12 @@ class DefectCreate(BaseModel):
     linked_test_result_id: str | None = None
     linked_test_case_version_id: str | None = None
     linked_requirement_version_ids: list[str] = Field(default_factory=list, max_length=200)
+    root_cause_category: Literal["REQUIREMENT", "DESIGN", "IMPLEMENTATION", "CONFIGURATION", "TEST_DATA", "TEST_CASE_GAP", "ENVIRONMENT", "INTEGRATION", "DEPLOYMENT", "PROCESS", "UNKNOWN"] = "UNKNOWN"
+    root_cause_detail: str = Field(default="", max_length=5000)
+    injected_phase: str = Field(default="", max_length=200)
+    detected_phase: str = Field(default="", max_length=200)
+    escape_reason: str = Field(default="", max_length=5000)
+    prevention_candidate: bool = False
 
 
 class DefectTransition(BaseModel):

@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import DataTable from "../../components/DataTable";
 import ReviewCommentsPanel from "../../components/ReviewCommentsPanel";
+import FormalReviewPanel from "../../components/FormalReviewPanel";
 import CollaborationPanel from "../../components/CollaborationPanel";
 import {
   ErrorState,
@@ -1269,6 +1270,7 @@ export default function RequirementsPage({ project, section }) {
             artifactType="requirement_version"
             artifactId={current._id}
           />
+          {project.current_permissions?.includes("reviewsession.read") && <FormalReviewPanel project={project} artifactType="REQUIREMENT" artifactId={selected._id} artifactVersionId={current._id} reviewType="REQUIREMENT_REVIEW" />}
           <CollaborationPanel
             project={project}
             artifactType="requirement"
@@ -1556,18 +1558,19 @@ export default function RequirementsPage({ project, section }) {
                   {
                     key: "source_type",
                     label: "Loại nguồn",
-                    render: (item) => valueLabel(item.source_type || "reference"),
+                    render: (item) => valueLabel(item.source_type || "REFERENCE"),
                   },
                   {
                     key: "authority",
                     label: "Thẩm quyền",
-                    render: (item) => valueLabel(item.authority || "reference"),
+                    render: (item) => valueLabel(item.authority || "PROJECT_REFERENCE"),
                   },
                   {
-                    key: "subject",
-                    label: "Môn và khối",
+                    key: "module",
+                    label: "Phạm vi",
                     render: (item) =>
-                      [item.subject, item.grade].filter(Boolean).join(" · ") || "Chưa khai báo",
+                      [item.product_area, item.module, item.component].filter(Boolean).join(" · ") ||
+                      "Chưa khai báo",
                   },
                   {
                     key: "status",
@@ -1600,44 +1603,99 @@ export default function RequirementsPage({ project, section }) {
                                     {
                                       name: "source_type",
                                       label: "Loại nguồn",
-                                      initialValue: item.source_type || "reference",
+                                      initialValue: item.source_type || "REFERENCE",
                                       options: [
-                                        { value: "teacher_material", label: "Tài liệu giáo viên" },
-                                        {
-                                          value: "official_textbook",
-                                          label: "Sách giáo khoa chính thức",
-                                        },
-                                        { value: "curriculum", label: "Chương trình học" },
-                                        { value: "reference", label: "Tài liệu tham khảo" },
-                                        { value: "api_contract", label: "Đặc tả API" },
-                                        { value: "other", label: "Nguồn khác" },
+                                        { value: "SRS", label: "Đặc tả yêu cầu phần mềm" },
+                                        { value: "BRD", label: "Tài liệu yêu cầu nghiệp vụ" },
+                                        { value: "USER_STORY", label: "User story" },
+                                        { value: "ACCEPTANCE_CRITERIA", label: "Tiêu chí chấp nhận" },
+                                        { value: "BUSINESS_RULE", label: "Quy tắc nghiệp vụ" },
+                                        { value: "API_SPEC", label: "Đặc tả API" },
+                                        { value: "UI_SPEC", label: "Đặc tả giao diện" },
+                                        { value: "ARCHITECTURE", label: "Kiến trúc" },
+                                        { value: "MEETING_NOTE", label: "Biên bản họp" },
+                                        { value: "RELEASE_NOTE", label: "Ghi chú phát hành" },
+                                        { value: "BUG_HISTORY", label: "Lịch sử lỗi" },
+                                        { value: "TEST_ARTIFACT", label: "Tài sản kiểm thử" },
+                                        { value: "REGULATION", label: "Quy định" },
+                                        { value: "REFERENCE", label: "Tài liệu tham chiếu" },
+                                        { value: "OTHER", label: "Nguồn khác" },
                                       ],
                                     },
                                     {
                                       name: "authority",
                                       label: "Mức thẩm quyền",
-                                      initialValue: item.authority || "reference",
+                                      initialValue: item.authority || "PROJECT_REFERENCE",
                                       options: [
-                                        { value: "teacher", label: "Giáo viên" },
-                                        { value: "official", label: "Chính thức" },
-                                        { value: "supplemental", label: "Bổ trợ" },
-                                        { value: "reference", label: "Tham khảo" },
+                                        { value: "APPROVED_SOURCE", label: "Nguồn đã phê duyệt" },
+                                        { value: "CONTROLLED_SOURCE", label: "Nguồn được kiểm soát" },
+                                        { value: "PROJECT_REFERENCE", label: "Tham chiếu dự án" },
+                                        { value: "SUPPLEMENTAL", label: "Nguồn bổ trợ" },
+                                        { value: "DRAFT", label: "Bản nháp" },
+                                        { value: "UNVERIFIED", label: "Chưa xác minh" },
                                       ],
                                     },
                                     {
-                                      name: "teacher_id",
-                                      label: "Mã giáo viên",
-                                      initialValue: item.teacher_id || "",
+                                      name: "owner_id",
+                                      label: "Người phụ trách",
+                                      initialValue: item.owner_id || "",
                                     },
                                     {
-                                      name: "subject",
-                                      label: "Môn học",
-                                      initialValue: item.subject || "",
+                                      name: "module",
+                                      label: "Module",
+                                      initialValue: item.module || "",
                                     },
                                     {
-                                      name: "grade",
-                                      label: "Khối lớp",
-                                      initialValue: item.grade || "",
+                                      name: "component",
+                                      label: "Component",
+                                      initialValue: item.component || "",
+                                    },
+                                    {
+                                      name: "product_area",
+                                      label: "Khu vực sản phẩm",
+                                      initialValue: item.product_area || "",
+                                    },
+                                    {
+                                      name: "release_id",
+                                      label: "Bản phát hành",
+                                      initialValue: item.release_id || "",
+                                    },
+                                    {
+                                      name: "external_source_id",
+                                      label: "Mã nguồn bên ngoài",
+                                      initialValue: item.external_source_id || "",
+                                    },
+                                    {
+                                      name: "approval_status",
+                                      label: "Trạng thái phê duyệt",
+                                      initialValue: item.approval_status || "DRAFT",
+                                      options: [
+                                        { value: "DRAFT", label: "Bản nháp" },
+                                        { value: "IN_REVIEW", label: "Đang rà soát" },
+                                        { value: "APPROVED", label: "Đã phê duyệt" },
+                                        { value: "REJECTED", label: "Từ chối" },
+                                      ],
+                                    },
+                                    {
+                                      name: "approved_by",
+                                      label: "Người phê duyệt",
+                                      initialValue: item.approved_by || "",
+                                    },
+                                    {
+                                      name: "approved_at",
+                                      label: "Thời điểm phê duyệt ISO 8601",
+                                      initialValue: item.approved_at || "",
+                                    },
+                                    {
+                                      name: "source_version",
+                                      label: "Phiên bản nguồn",
+                                      initialValue: item.source_version || "1",
+                                      required: true,
+                                    },
+                                    {
+                                      name: "effective_from",
+                                      label: "Hiệu lực từ ISO 8601",
+                                      initialValue: item.effective_from || "",
                                     },
                                     {
                                       name: "tags",
@@ -1653,9 +1711,17 @@ export default function RequirementsPage({ project, section }) {
                                     title: answer.title,
                                     source_type: answer.source_type,
                                     authority: answer.authority,
-                                    teacher_id: answer.teacher_id || null,
-                                    subject: answer.subject || null,
-                                    grade: answer.grade || null,
+                                    owner_id: answer.owner_id || null,
+                                    module: answer.module || null,
+                                    component: answer.component || null,
+                                    product_area: answer.product_area || null,
+                                    release_id: answer.release_id || null,
+                                    external_source_id: answer.external_source_id || null,
+                                    approval_status: answer.approval_status,
+                                    approved_by: answer.approved_by || null,
+                                    approved_at: answer.approved_at || null,
+                                    source_version: answer.source_version,
+                                    effective_from: answer.effective_from || null,
                                     tags: answer.tags
                                       .split(",")
                                       .map((value) => value.trim())

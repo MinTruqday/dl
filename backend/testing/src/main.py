@@ -34,7 +34,18 @@ from src.api.operations import router as operations_router
 from src.api.projects import router as projects_router
 from src.api.requirements import router as requirements_router
 from src.api.reviews import router as reviews_router
+from src.api.review_sessions import router as review_sessions_router
+from src.api.measurements import router as measurements_router
+from src.api.quality_evaluations import router as quality_evaluations_router
+from src.api.defect_prevention import router as defect_prevention_router
+from src.api.environment_incidents import router as environment_incidents_router
+from src.api.non_functional_testing import router as non_functional_testing_router
 from src.api.test_design import router as test_design_router
+from src.api.test_strategy import router as test_strategy_router
+from src.api.test_analysis import router as test_analysis_router
+from src.api.test_monitoring import router as test_monitoring_router
+from src.api.test_status_reports import router as test_status_reports_router
+from src.api.test_completion import router as test_completion_router
 from src.api.traceability import router as traceability_router
 from src.core.common import failure_metadata, new_id
 from src.core.configuration import settings
@@ -64,11 +75,22 @@ app.add_middleware(
 app.include_router(projects_router)
 app.include_router(requirements_router)
 app.include_router(reviews_router)
+app.include_router(review_sessions_router)
+app.include_router(measurements_router)
+app.include_router(quality_evaluations_router)
+app.include_router(defect_prevention_router)
+app.include_router(environment_incidents_router)
+app.include_router(non_functional_testing_router)
 app.include_router(data_sets_router)
 app.include_router(device_matrices_router)
 app.include_router(design_suggestions_router)
 app.include_router(templates_router)
 app.include_router(test_design_router)
+app.include_router(test_strategy_router)
+app.include_router(test_analysis_router)
+app.include_router(test_monitoring_router)
+app.include_router(test_status_reports_router)
+app.include_router(test_completion_router)
 app.include_router(traceability_router)
 app.include_router(changes_router)
 app.include_router(execution_router)

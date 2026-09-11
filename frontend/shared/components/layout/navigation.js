@@ -6,10 +6,13 @@ import {
   FileCheck2,
   FolderKanban,
   GitCompareArrows,
+  Gauge,
   LayoutDashboard,
   Network,
   PlayCircle,
   Search,
+  ShieldCheck,
+  ScanSearch,
   Settings,
   TestTube2,
 } from "lucide-react";
@@ -28,8 +31,8 @@ export function projectIdFromPath(pathname) {
 export function navigationGroupsFor(pathname) {
   const projectId = projectIdFromPath(pathname);
   const root = projectId ? projectRoute(projectId) : "";
-  const projectItems = projectId
-    ? [
+  const projectItems = projectId ? {
+    project: [
         {
           id: "dashboard",
           label: "Tổng quan",
@@ -45,11 +48,41 @@ export function navigationGroupsFor(pathname) {
           permission: "requirement.read",
         },
         {
+          id: "test-analysis",
+          label: "Phân tích kiểm thử",
+          href: `${root}/${PROJECT_SECTION_SLUGS.testAnalysis}`,
+          icon: ScanSearch,
+          permission: "testcondition.read",
+        },
+        {
           id: "test-design",
           label: "Thiết kế kiểm thử",
           href: `${root}/${PROJECT_SECTION_SLUGS.testDesign}`,
           icon: TestTube2,
           permission: "testcase.read",
+        },
+      ],
+    planning: [
+        {
+          id: "governance",
+          label: "Chiến lược kiểm thử",
+          href: `${root}/${PROJECT_SECTION_SLUGS.governance}`,
+          icon: ShieldCheck,
+          permission: "teststrategy.read",
+        },
+        {
+          id: "execution",
+          label: "Kế hoạch và thực thi",
+          href: `${root}/${PROJECT_SECTION_SLUGS.execution}`,
+          icon: PlayCircle,
+          permission: "testrun.read",
+        },
+        {
+          id: "monitoring",
+          label: "Giám sát và kiểm soát",
+          href: `${root}/${PROJECT_SECTION_SLUGS.monitoring}`,
+          icon: Gauge,
+          permission: "testmonitor.read",
         },
         {
           id: "traceability",
@@ -58,19 +91,14 @@ export function navigationGroupsFor(pathname) {
           icon: Network,
           permission: "trace.read",
         },
+      ],
+    quality: [
         {
           id: "changes",
           label: "Phân tích thay đổi",
           href: `${root}/${PROJECT_SECTION_SLUGS.changes}`,
           icon: GitCompareArrows,
           permission: "impact.read",
-        },
-        {
-          id: "execution",
-          label: "Thực thi kiểm thử",
-          href: `${root}/${PROJECT_SECTION_SLUGS.execution}`,
-          icon: PlayCircle,
-          permission: "testrun.read",
         },
         {
           id: "ai-review",
@@ -93,6 +121,8 @@ export function navigationGroupsFor(pathname) {
           icon: BarChart3,
           permission: "report.read",
         },
+      ],
+    resources: [
         {
           id: "knowledge",
           label: "Kho tri thức",
@@ -107,8 +137,8 @@ export function navigationGroupsFor(pathname) {
           icon: Activity,
           permission: "project.settings.manage",
         },
-      ]
-    : [];
+      ],
+  } : { project: [], planning: [], quality: [], resources: [] };
   return [
     {
       label: "Không gian làm việc",
@@ -121,9 +151,12 @@ export function navigationGroupsFor(pathname) {
           icon: Activity,
           requireAdmin: true,
         },
-        ...projectItems,
       ],
     },
+    { label: "Dự án", items: projectItems.project },
+    { label: "Lập kế hoạch và thực thi", items: projectItems.planning },
+    { label: "Chất lượng và thay đổi", items: projectItems.quality },
+    { label: "Tri thức và cấu hình", items: projectItems.resources },
     {
       label: "Tài khoản",
       items: [

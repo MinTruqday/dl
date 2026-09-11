@@ -116,11 +116,16 @@ with httpx.Client(base_url=base_url, timeout=60) as client:
         json={
             "title": "Tài liệu phương pháp của giáo viên",
             "content": "Giáo viên hướng dẫn kiểm tra biên và dữ liệu không hợp lệ",
-            "source_type": "teacher_material",
-            "authority": "teacher",
-            "teacher_id": "catalog-ba-v43",
-            "subject": "Tin học",
-            "grade": "10",
+            "source_type": "BRD",
+            "authority": "APPROVED_SOURCE",
+            "owner_id": "catalog-ba-v43",
+            "module": "Xác thực",
+            "component": "Đăng nhập",
+            "product_area": "Quản lý tài khoản",
+            "approval_status": "APPROVED",
+            "approved_by": "catalog-ba-v43",
+            "approved_at": "2026-09-01T00:00:00Z",
+            "source_version": "1.0",
             "tags": ["phuong-phap", "bien"],
         },
     )
@@ -133,10 +138,13 @@ with httpx.Client(base_url=base_url, timeout=60) as client:
         json={
             "title": "Sách giáo khoa chính thức",
             "content": "Sách giáo khoa hướng dẫn kiểm tra biên và dữ liệu không hợp lệ",
-            "source_type": "official_textbook",
-            "authority": "official",
-            "subject": "Tin học",
-            "grade": "10",
+            "source_type": "SRS",
+            "authority": "CONTROLLED_SOURCE",
+            "module": "Xác thực",
+            "component": "Đăng nhập",
+            "product_area": "Quản lý tài khoản",
+            "approval_status": "DRAFT",
+            "source_version": "1.0",
         },
     )
     sources = call(client, "GET", f"/kiem-thu/du-an/{project_id}/nguon-tri-thuc", headers=viewer)
@@ -148,7 +156,7 @@ with httpx.Client(base_url=base_url, timeout=60) as client:
         headers=viewer,
         json={"query": "kiểm tra biên", "artifact_types": ["requirement_document"], "limit": 10},
     )
-    assert search["items"][0]["authority"] == "teacher"
+    assert search["items"][0]["authority"] == "APPROVED_SOURCE"
     archived_source = call(
         client,
         "POST",
@@ -292,17 +300,158 @@ with httpx.Client(base_url=base_url, timeout=60) as client:
     )
     assert restored["status"] == "DRAFT" and restored["current_version"]["status"] == "DRAFT"
 
+    strategy_payload = {
+        "key": "STR_CATALOG",
+        "name": "Chiến lược kiểm thử catalog",
+        "objective": "Kiểm chứng đầy đủ vòng đời kiểm thử",
+        "test_levels": ["SYSTEM"],
+        "test_types": ["FUNCTIONAL"],
+        "approach": "Kiểm thử dựa trên rủi ro và test basis đã baseline",
+        "risk_model": {
+            "probability_scale": [{"value": 1, "label": "Thấp"}, {"value": 2, "label": "Cao"}],
+            "impact_scale": [{"value": 1, "label": "Thấp"}, {"value": 2, "label": "Cao"}],
+            "risk_exposure_formula": "probability * impact",
+            "thresholds": [{"level": "HIGH", "min": 3}],
+        },
+        "reviewer_ids": ["catalog-tester-v43"],
+    }
+    strategy = call(client, "POST", f"/kiem-thu/du-an/{project_id}/chien-luoc", expected=201, json=strategy_payload)
+    call(client, "GET", f"/kiem-thu/du-an/{project_id}/chien-luoc", headers=viewer)
+    call(client, "GET", f"/kiem-thu/chien-luoc/{strategy['_id']}", headers=viewer)
+    strategy = call(client, "PATCH", f"/kiem-thu/chien-luoc/{strategy['_id']}", headers=tester, json={"expected_revision": strategy["revision"], "approach": "Kiểm thử dựa trên rủi ro và bằng chứng đã kiểm soát"})
+    strategy = call(client, "POST", f"/kiem-thu/chien-luoc/{strategy['_id']}/gui-ra-soat", headers=tester, json={"expected_revision": strategy["revision"], "note": "Gửi rà soát"})
+    strategy = call(client, "POST", f"/kiem-thu/chien-luoc/{strategy['_id']}/yeu-cau-chinh-sua", headers=tester, json={"expected_revision": strategy["revision"], "note": "Bổ sung bằng chứng"})
+    strategy = call(client, "POST", f"/kiem-thu/chien-luoc/{strategy['_id']}/gui-ra-soat", headers=tester, json={"expected_revision": strategy["revision"], "note": "Gửi lại"})
+    strategy = call(client, "POST", f"/kiem-thu/chien-luoc/{strategy['_id']}/phe-duyet", json={"expected_revision": strategy["revision"], "note": "Phê duyệt"})
+    strategy_version = call(client, "POST", f"/kiem-thu/chien-luoc/{strategy['_id']}/tao-phien-ban", expected=201, json={"expected_revision": strategy["revision"], "change_reason": "Chuẩn bị phiên bản kế tiếp"})
+    strategy_version = call(client, "POST", f"/kiem-thu/chien-luoc/{strategy_version['_id']}/luu-tru", json={"expected_revision": strategy_version["revision"], "note": "Chưa áp dụng"})
+    assert strategy_version["status"] == "ARCHIVED"
+
+    condition_payload = {
+        "title": "Đăng nhập theo requirement đã baseline",
+        "description_doc": doc("Kiểm tra hành vi đăng nhập theo test basis"),
+        "basis_refs": [{"artifact_type": "REQUIREMENT_VERSION", "artifact_id": first["_id"], "artifact_version_id": first["current_version"]["_id"]}],
+        "coverage_item": "Hành vi xác thực",
+        "test_level": "SYSTEM",
+        "test_type": "FUNCTIONAL",
+        "risk": "HIGH",
+        "priority": "HIGH",
+        "analysis_findings": [{"finding_id": "FIND-1", "finding_type": "AMBIGUITY", "severity": "LOW", "source_ref": {"artifact_type": "REQUIREMENT_VERSION", "artifact_id": first["_id"], "artifact_version_id": first["current_version"]["_id"]}, "description": "Cần làm rõ dữ liệu biên"}],
+    }
+    condition = call(client, "POST", f"/kiem-thu/du-an/{project_id}/dieu-kien-kiem-thu", headers=tester, expected=201, json=condition_payload)
+    call(client, "GET", f"/kiem-thu/du-an/{project_id}/dieu-kien-kiem-thu", headers=viewer)
+    call(client, "GET", f"/kiem-thu/dieu-kien-kiem-thu/{condition['_id']}", headers=viewer)
+    condition = call(client, "PATCH", f"/kiem-thu/dieu-kien-kiem-thu/{condition['_id']}", headers=tester, json={"expected_revision": condition["revision"], "coverage_item": "Hành vi xác thực thành công và thất bại"})
+    condition = call(client, "POST", f"/kiem-thu/dieu-kien-kiem-thu/{condition['_id']}/ket-qua/FIND-1/giai-quyet", headers=tester, json={"expected_revision": condition["revision"], "status": "RESOLVED", "resolution_ref": first["current_version"]["_id"], "note": "Đã xác minh test basis"})
+    condition = call(client, "POST", f"/kiem-thu/dieu-kien-kiem-thu/{condition['_id']}/gui-ra-soat", headers=tester, json={"expected_revision": condition["revision"], "note": "Gửi rà soát"})
+    condition = call(client, "POST", f"/kiem-thu/dieu-kien-kiem-thu/{condition['_id']}/phe-duyet", json={"expected_revision": condition["revision"], "note": "Phê duyệt"})
+    call(client, "GET", f"/kiem-thu/du-an/{project_id}/phan-tich-kiem-thu/truy-vet", headers=viewer)
+    call(client, "POST", f"/kiem-thu/du-an/{project_id}/phan-tich-kiem-thu/ai", headers=tester, expected=201, json={"basis_refs": condition_payload["basis_refs"], "instruction": "Đề xuất condition từ test basis", "idempotency_key": f"analysis-{stamp}"})
+    archived_condition = call(client, "POST", f"/kiem-thu/dieu-kien-kiem-thu/{condition['_id']}/luu-tru", json={"expected_revision": condition["revision"], "note": "Hoàn tất kiểm tra vòng đời"})
+    assert archived_condition["status"] == "ARCHIVED"
+
+    release = call(
+        client,
+        "POST",
+        f"/kiem-thu/du-an/{project_id}/ban-phat-hanh",
+        headers=tester,
+        expected=201,
+        json={"key": f"REL-{stamp}", "name": "Bản phát hành báo cáo", "version": "1.0"},
+    )
+    build = call(
+        client,
+        "POST",
+        f"/kiem-thu/du-an/{project_id}/ban-dung",
+        headers=tester,
+        expected=201,
+        json={"identifier": f"BUILD-{stamp}", "version": "1.0.0", "release_id": release["_id"], "idempotency_key": f"build-{stamp}"},
+    )
     plan = call(
         client,
         "POST",
         f"/kiem-thu/du-an/{project_id}/ke-hoach-kiem-thu",
         headers=tester,
         expected=201,
-        json={"project_id": project_id, "name": "Kế hoạch V4.3"},
+        json={"project_id": project_id, "name": "Kế hoạch V4.3", "strategy_version_id": strategy["_id"], "release_id": release["_id"], "build_id": build["_id"], "quality_targets": [{"criterion_id": "EXIT-1", "criterion": "Không có blocker", "type": "OPEN_BLOCKER_MAX", "threshold": 0}, {"criterion_id": "EXIT-2", "criterion": "Xác nhận nghiệp vụ", "type": "CUSTOM_MANUAL_GATE", "threshold": False}]},
     )
     cloned_plan = call(client, "POST", f"/kiem-thu/ke-hoach-kiem-thu/{plan['_id']}/nhan-ban", headers=tester, expected=201)
     assert cloned_plan["_id"] != plan["_id"] and cloned_plan["status"] == "DRAFT"
     call(client, "POST", f"/kiem-thu/ke-hoach-kiem-thu/{plan['_id']}/phe-duyet", headers=tester, expected=403, json={"expected_revision": 1, "review_note": "Không được duyệt"})
+    plan = call(client, "POST", f"/kiem-thu/ke-hoach-kiem-thu/{plan['_id']}/phe-duyet", json={"expected_revision": plan["revision"], "review_note": "Phê duyệt để giám sát"})
+    completion_critical_defect = call(client, "POST", f"/kiem-thu/du-an/{project_id}/loi", headers=tester, expected=201, json={"project_id": project_id, "title": "Lỗi nghiêm trọng tại thời điểm hoàn tất", "severity": "critical", "priority": "critical", "release_id": release["_id"], "build_id": build["_id"], "assignee": "catalog-tester-v43"})
+    call(client, "GET", f"/kiem-thu/du-an/{project_id}/giam-sat-kiem-thu", headers=viewer)
+    snapshot = call(client, "POST", f"/kiem-thu/du-an/{project_id}/giam-sat-kiem-thu/snapshot", expected=201, json={"test_plan_id": plan["_id"], "actual_effort": 4, "risks": [], "blockers": []})
+    snapshot = call(client, "GET", f"/kiem-thu/giam-sat-kiem-thu/snapshot/{snapshot['_id']}", headers=viewer)
+    snapshot = call(client, "POST", f"/kiem-thu/giam-sat-kiem-thu/snapshot/{snapshot['_id']}/ghi-de-tieu-chi", json={"expected_revision": snapshot["revision"], "criterion_id": "EXIT-2", "status": "PASS", "reason": "Product Owner đã xác nhận", "evidence_refs": [plan["_id"]]})
+    assert snapshot["effective_quality_gate_status"] == "PASS"
+    action = call(client, "POST", f"/kiem-thu/du-an/{project_id}/hanh-dong-dieu-khien", headers=tester, expected=201, json={"snapshot_id": snapshot["_id"], "type": "REQUEST_RETEST", "title": "Kiểm thử lại phạm vi ưu tiên", "owner_id": "catalog-tester-v43", "due_at": "2030-09-30T12:00:00Z", "priority": "HIGH", "decision_reason": "Xác nhận control action", "evidence_refs": [snapshot["_id"]]})
+    call(client, "GET", f"/kiem-thu/du-an/{project_id}/hanh-dong-dieu-khien", headers=viewer)
+    action = call(client, "PATCH", f"/kiem-thu/hanh-dong-dieu-khien/{action['_id']}", headers=tester, json={"expected_revision": action["revision"], "status": "IN_PROGRESS"})
+    assert action["status"] == "IN_PROGRESS"
+
+    call(client, "GET", f"/kiem-thu/du-an/{project_id}/bao-cao-trang-thai", headers=viewer)
+    denied_status_report = call(client, "POST", f"/kiem-thu/du-an/{project_id}/bao-cao-trang-thai/tao-tu-snapshot", headers=viewer, expected=403, json={"snapshot_id": snapshot["_id"], "build_id": build["_id"], "reporting_period": {"start_at": "2026-09-01T00:00:00Z", "end_at": "2026-09-07T23:59:59Z"}})
+    assert denied_status_report["error"]["code"] == "PROJECT_PERMISSION_DENIED"
+    status_report = call(client, "POST", f"/kiem-thu/du-an/{project_id}/bao-cao-trang-thai/tao-tu-snapshot", headers=tester, expected=201, json={"snapshot_id": snapshot["_id"], "build_id": build["_id"], "reporting_period": {"start_at": "2026-09-01T00:00:00Z", "end_at": "2026-09-07T23:59:59Z"}, "executive_summary": "Báo cáo trạng thái tuần", "forecast": "Hoàn tất theo kế hoạch", "distribution": ["qa-lead@test.local"], "evidence_refs": [snapshot["_id"]]})
+    call(client, "GET", f"/kiem-thu/bao-cao-trang-thai/{status_report['_id']}", headers=viewer)
+    status_report = call(client, "PATCH", f"/kiem-thu/bao-cao-trang-thai/{status_report['_id']}", headers=tester, json={"expected_revision": status_report["revision"], "progress_summary": "Đã kiểm chứng tiến độ từ snapshot", "recommendation": "ON_TRACK"})
+    status_report = call(client, "POST", f"/kiem-thu/bao-cao-trang-thai/{status_report['_id']}/bang-chung", headers=tester, json={"expected_revision": status_report["revision"], "evidence_refs": [plan["_id"]]})
+    status_report = call(client, "POST", f"/kiem-thu/bao-cao-trang-thai/{status_report['_id']}/gui-ra-soat", headers=tester, json={"expected_revision": status_report["revision"], "note": "Gửi báo cáo rà soát"})
+    status_report = call(client, "POST", f"/kiem-thu/bao-cao-trang-thai/{status_report['_id']}/yeu-cau-chinh-sua", json={"expected_revision": status_report["revision"], "note": "Bổ sung nhận định điều hành"})
+    status_report = call(client, "PATCH", f"/kiem-thu/bao-cao-trang-thai/{status_report['_id']}", headers=tester, json={"expected_revision": status_report["revision"], "executive_summary": "Báo cáo trạng thái đã hoàn thiện"})
+    status_report = call(client, "POST", f"/kiem-thu/bao-cao-trang-thai/{status_report['_id']}/gui-ra-soat", headers=tester, json={"expected_revision": status_report["revision"], "note": "Gửi lại"})
+    denied_status_approval = call(client, "POST", f"/kiem-thu/bao-cao-trang-thai/{status_report['_id']}/phe-duyet", headers=tester, expected=403, json={"expected_revision": status_report["revision"], "note": "Tester không được duyệt"})
+    assert denied_status_approval["error"]["code"] == "PROJECT_PERMISSION_DENIED"
+    status_report = call(client, "POST", f"/kiem-thu/bao-cao-trang-thai/{status_report['_id']}/phe-duyet", json={"expected_revision": status_report["revision"], "note": "Phê duyệt báo cáo"})
+    approved_hash = status_report["approved_snapshot_hash"]
+    immutable_status_report = call(client, "PATCH", f"/kiem-thu/bao-cao-trang-thai/{status_report['_id']}", headers=tester, expected=409, json={"expected_revision": status_report["revision"], "forecast": "Không được sửa"})
+    assert immutable_status_report["error"]["code"] == "STATUS_REPORT_IMMUTABLE"
+    status_report = call(client, "POST", f"/kiem-thu/bao-cao-trang-thai/{status_report['_id']}/phat-hanh", json={"expected_revision": status_report["revision"], "note": "Phát hành báo cáo"})
+    assert status_report["status"] == "PUBLISHED" and status_report["approved_snapshot_hash"] == approved_hash
+    second_status_report = call(client, "POST", f"/kiem-thu/du-an/{project_id}/bao-cao-trang-thai/tao-tu-snapshot", headers=tester, expected=201, json={"snapshot_id": snapshot["_id"], "build_id": build["_id"], "reporting_period": {"start_at": "2026-09-08T00:00:00Z", "end_at": "2026-09-14T23:59:59Z"}, "executive_summary": "Báo cáo kỳ tiếp theo", "forecast": "Tiếp tục thực thi"})
+    comparison = call(client, "GET", f"/kiem-thu/bao-cao-trang-thai/{status_report['_id']}/so-sanh?other_report_id={second_status_report['_id']}", headers=viewer)
+    assert comparison["changes"] and second_status_report["sequence"] == status_report["sequence"] + 1
+    for export_format, content_type in [("pdf", "application/pdf"), ("docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"), ("csv", "text/csv")]:
+        exported = client.get(f"/kiem-thu/bao-cao-trang-thai/{status_report['_id']}/xuat?format={export_format}", headers=tester)
+        assert exported.status_code == 200 and content_type in exported.headers["content-type"] and exported.content
+
+    call(client, "GET", f"/kiem-thu/du-an/{project_id}/hoan-tat-kiem-thu", headers=viewer)
+    denied_completion = call(client, "POST", f"/kiem-thu/du-an/{project_id}/hoan-tat-kiem-thu", headers=viewer, expected=403, json={"snapshot_id": snapshot["_id"], "build_id": build["_id"]})
+    assert denied_completion["error"]["code"] == "PROJECT_PERMISSION_DENIED"
+    completion_idempotency_key = f"completion-{stamp}"
+    completion = call(client, "POST", f"/kiem-thu/du-an/{project_id}/hoan-tat-kiem-thu", headers=tester, expected=201, json={"idempotency_key": completion_idempotency_key, "snapshot_id": snapshot["_id"], "build_id": build["_id"], "residual_risks": [{"risk_id": "RISK-COMP-1", "title": "Rủi ro tương thích trình duyệt cũ", "severity": "MEDIUM", "owner_id": "catalog-tester-v43"}], "lessons_learned": [{"category": "WORKED", "text": "Rà soát test basis sớm giúp giảm sai lệch"}], "improvement_actions": [{"action_id": "ACTION-COMP-1", "title": "Tăng độ phủ trình duyệt", "owner_id": "catalog-tester-v43", "status": "OPEN", "evidence_refs": [snapshot["_id"]]}]})
+    replayed_completion = call(client, "POST", f"/kiem-thu/du-an/{project_id}/hoan-tat-kiem-thu", headers=tester, expected=201, json={"idempotency_key": completion_idempotency_key, "snapshot_id": snapshot["_id"], "build_id": build["_id"]})
+    assert replayed_completion["_id"] == completion["_id"] and replayed_completion["revision"] == completion["revision"]
+    assert completion["test_plan_id"] == plan["_id"]
+    assert completion["release_id"] == release["_id"]
+    assert completion["build_id"] == build["_id"]
+    assert completion["strategy_version_id"] == strategy["_id"]
+    assert completion["monitoring_snapshot_id"] == snapshot["_id"]
+    assert completion["scope_snapshot"]["plan_snapshot_hash"] == plan["approved_snapshot_hash"]
+    assert completion["exit_criteria_evaluation"][1]["overridden"] is True
+    assert any(item.get("defect_id") == completion_critical_defect["_id"] and item.get("severity") == "critical" for item in completion["unresolved_items"])
+    completion = call(client, "PATCH", f"/kiem-thu/hoan-tat-kiem-thu/{completion['_id']}", headers=tester, json={"expected_revision": completion["revision"], "recommendation": "NOT_READY"})
+    completion = call(client, "POST", f"/kiem-thu/hoan-tat-kiem-thu/{completion['_id']}/rui-ro/RISK-COMP-1/xu-ly", headers=ba, json={"expected_revision": completion["revision"], "acceptance": "ACCEPTED", "reason": "Phạm vi trình duyệt này không thuộc bản phát hành"})
+    assert completion["residual_risks"][0]["accepted_by"] == "catalog-ba-v43"
+    project = call(client, "PATCH", f"/kiem-thu/du-an/{project_id}", json={"expected_revision": project["revision"], "settings": {"require_completion_report_before_release_close": True}})
+    release = call(client, "POST", f"/kiem-thu/ban-phat-hanh/{release['_id']}/kich-hoat", headers=tester, json={"expected_revision": release["revision"], "reason": "Bắt đầu bản phát hành"})
+    blocked_release_close = call(client, "POST", f"/kiem-thu/ban-phat-hanh/{release['_id']}/dong", headers=tester, expected=409, json={"expected_revision": release["revision"], "reason": "Chưa có báo cáo được duyệt"})
+    assert blocked_release_close["error"]["code"] == "COMPLETION_REPORT_REQUIRED"
+    completion = call(client, "POST", f"/kiem-thu/hoan-tat-kiem-thu/{completion['_id']}/gui-ra-soat", headers=tester, json={"expected_revision": completion["revision"], "note": "Gửi báo cáo hoàn tất"})
+    completion = call(client, "POST", f"/kiem-thu/hoan-tat-kiem-thu/{completion['_id']}/yeu-cau-chinh-sua", headers=ba, json={"expected_revision": completion["revision"], "note": "Bổ sung bài học kinh nghiệm"})
+    completion = call(client, "PATCH", f"/kiem-thu/hoan-tat-kiem-thu/{completion['_id']}", headers=tester, json={"expected_revision": completion["revision"], "lessons_learned": [*completion["lessons_learned"], {"category": "IMPROVEMENT", "text": "Chuẩn hóa checklist trước khi bắt đầu"}]})
+    completion = call(client, "POST", f"/kiem-thu/hoan-tat-kiem-thu/{completion['_id']}/gui-ra-soat", headers=tester, json={"expected_revision": completion["revision"], "note": "Gửi lại báo cáo hoàn tất"})
+    completion = call(client, "POST", f"/kiem-thu/hoan-tat-kiem-thu/{completion['_id']}/ky-xac-nhan", headers=tester, json={"expected_revision": completion["revision"], "decision": "APPROVE", "note": "Đã kiểm tra bằng chứng thực thi"})
+    completion = call(client, "POST", f"/kiem-thu/hoan-tat-kiem-thu/{completion['_id']}/ky-xac-nhan", json={"expected_revision": completion["revision"], "decision": "APPROVE", "note": "QA Lead xác nhận nội dung hoàn tất"})
+    denied_completion_approval = call(client, "POST", f"/kiem-thu/hoan-tat-kiem-thu/{completion['_id']}/phe-duyet", headers=tester, expected=403, json={"expected_revision": completion["revision"], "note": "Tester không được duyệt"})
+    assert denied_completion_approval["error"]["code"] == "PROJECT_PERMISSION_DENIED"
+    completion = call(client, "POST", f"/kiem-thu/hoan-tat-kiem-thu/{completion['_id']}/phe-duyet", json={"expected_revision": completion["revision"], "note": "Phê duyệt báo cáo hoàn tất"})
+    completion_hash = completion["approved_snapshot_hash"]
+    immutable_completion = call(client, "PATCH", f"/kiem-thu/hoan-tat-kiem-thu/{completion['_id']}", headers=tester, expected=409, json={"expected_revision": completion["revision"], "recommendation": "READY_FOR_RELEASE"})
+    assert immutable_completion["error"]["code"] == "COMPLETION_REPORT_IMMUTABLE"
+    release = call(client, "POST", f"/kiem-thu/ban-phat-hanh/{release['_id']}/dong", headers=tester, json={"expected_revision": release["revision"], "reason": "Báo cáo hoàn tất đã được phê duyệt"})
+    completion = call(client, "POST", f"/kiem-thu/hoan-tat-kiem-thu/{completion['_id']}/dong", json={"expected_revision": completion["revision"], "note": "Đóng quy trình kiểm thử"})
+    assert completion["status"] == "CLOSED" and completion["approved_snapshot_hash"] == completion_hash
 
     scenario = call(
         client,
@@ -431,5 +580,10 @@ with httpx.Client(base_url=base_url, timeout=60) as client:
     run = call(client, "PATCH", f"/kiem-thu/du-an/{project_id}/lan-chay-kiem-thu/{run['_id']}", json={"expected_revision": run["revision"], "build": "v4.3"})
     assigned = call(client, "POST", f"/kiem-thu/du-an/{project_id}/lan-chay-kiem-thu/{run['_id']}/phan-cong", json={"expected_revision": run["revision"], "assignee_id": "catalog-tester-v43", "test_case_assignments": {}})
     assert assigned["assignee_id"] == "catalog-tester-v43"
+
+    archived_project = call(client, "POST", f"/kiem-thu/du-an/{project_id}/luu-tru", json={"expected_revision": project["revision"], "reason": "Xác minh lưu giữ bài học hoàn tất"})
+    assert archived_project["status"] == "archived"
+    retained_completion = call(client, "GET", f"/kiem-thu/hoan-tat-kiem-thu/{completion['_id']}", headers=viewer)
+    assert retained_completion["lessons_learned"] == completion["lessons_learned"]
 
 print("V4.3 role catalog integration passed")

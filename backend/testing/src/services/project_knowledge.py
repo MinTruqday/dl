@@ -1,4 +1,5 @@
 import httpx
+from fastapi.encoders import jsonable_encoder
 
 from src.core.configuration import settings
 
@@ -18,7 +19,7 @@ async def index_artifact(
 ):
     if not str(text or "").strip():
         return False
-    payload = {
+    payload = jsonable_encoder({
         "artifact_type": artifact_type,
         "artifact_id": artifact_id,
         "artifact_version_id": artifact_version_id,
@@ -29,7 +30,7 @@ async def index_artifact(
         "version": version,
         "module": module,
         "metadata": metadata,
-    }
+    })
     try:
         async with httpx.AsyncClient(timeout=60) as client:
             response = await client.post(

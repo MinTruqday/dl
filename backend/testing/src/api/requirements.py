@@ -4,7 +4,7 @@ import io
 import json
 import re
 import zipfile
-from xml.etree import ElementTree
+from defusedxml import ElementTree
 
 import httpx
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
@@ -120,9 +120,10 @@ async def create_requirement_document_record(project_id, payload, user):
         },
         "normalized_content": payload.content,
         "normalized_content_hash": content_hash,
-        "source_version": 1,
-        "source_type": "reference",
-        "authority": "reference",
+        "source_version": "1",
+        "source_type": "REFERENCE",
+        "authority": "PROJECT_REFERENCE",
+        "approval_status": "DRAFT",
         "status": "READY",
         "index_status": "PENDING",
         "revision": 1,
@@ -1681,9 +1682,10 @@ async def upload_requirement_document(
         "content_hash": source["sha256"],
         "raw_source": source,
         "normalized_content": None,
-        "source_version": 1,
-        "source_type": "reference",
-        "authority": "reference",
+        "source_version": "1",
+        "source_type": "REFERENCE",
+        "authority": "PROJECT_REFERENCE",
+        "approval_status": "DRAFT",
         "status": "UPLOADED",
         "index_status": "PENDING",
         "revision": 1,
@@ -1776,14 +1778,21 @@ async def create_knowledge_source(
         },
         "normalized_content": payload.content,
         "normalized_content_hash": content_hash,
-        "source_version": 1,
+        "source_version": payload.source_version,
         "title": payload.title,
         "source_type": payload.source_type,
         "authority": payload.authority,
         "source_url": payload.source_url,
-        "teacher_id": payload.teacher_id,
-        "subject": payload.subject,
-        "grade": payload.grade,
+        "owner_id": payload.owner_id,
+        "module": payload.module,
+        "component": payload.component,
+        "product_area": payload.product_area,
+        "release_id": payload.release_id,
+        "external_source_id": payload.external_source_id,
+        "approval_status": payload.approval_status,
+        "approved_by": payload.approved_by,
+        "approved_at": payload.approved_at,
+        "effective_from": payload.effective_from,
         "tags": payload.tags,
         "status": "READY",
         "index_status": "PENDING",
@@ -1802,7 +1811,18 @@ async def create_knowledge_source(
         payload.content,
         document["status"],
         payload.authority,
-        1,
+        payload.source_version,
+        module=payload.module or "",
+        component=payload.component,
+        product_area=payload.product_area,
+        release_id=payload.release_id,
+        external_source_id=payload.external_source_id,
+        approval_status=payload.approval_status,
+        owner_id=payload.owner_id,
+        approved_by=payload.approved_by,
+        approved_at=payload.approved_at,
+        effective_from=payload.effective_from,
+        tags=payload.tags,
     )
     document["index_status"] = "INDEXED" if indexed else "FAILED"
     document["indexed_at"] = now()
@@ -1839,7 +1859,14 @@ async def list_knowledge_sources(
     documents = await database.value.requirement_documents.find(query).sort("updated_at", -1).to_list(1000)
     order = (await database.value.projects.find_one({"_id": project_id}, {"settings.knowledge_authority_order": 1}) or {}).get("settings", {}).get(
         "knowledge_authority_order",
-        ["teacher", "official", "baseline", "supplemental", "reference"],
+        [
+            "APPROVED_SOURCE",
+            "CONTROLLED_SOURCE",
+            "PROJECT_REFERENCE",
+            "SUPPLEMENTAL",
+            "DRAFT",
+            "UNVERIFIED",
+        ],
     )
     ranks = {value: index for index, value in enumerate(order)}
     documents.sort(key=lambda item: (ranks.get(item.get("authority"), len(ranks)), item.get("updated_at")))
@@ -1912,6 +1939,18 @@ async def update_requirement_document_metadata(
     document = await get_project_entity("requirement_documents", document_id, user, "knowledge.manage")
     changes = payload.model_dump(exclude_unset=True)
     changes.pop("expected_revision", None)
+    resulting = {**document, **changes}
+    if resulting.get("approval_status") == "APPROVED" and (
+        not resulting.get("approved_by") or not resulting.get("approved_at")
+    ):
+        raise HTTPException(status_code=422, detail={"code": "APPROVAL_PROVENANCE_REQUIRED"})
+    if changes.get("release_id"):
+        release = await database.value.releases.find_one(
+            {"_id": changes["release_id"], "project_id": document["project_id"]}
+        )
+        if not release:
+            raise HTTPException(status_code=422, detail={"code": "INVALID_RELEASE"})
+    changes["index_status"] = "PENDING"
     updated = await database.value.requirement_documents.find_one_and_update(
         {"_id": document_id, "project_id": document["project_id"], "revision": payload.expected_revision},
         {"$set": {**changes, "updated_at": now()}, "$inc": {"revision": 1}},
@@ -1919,8 +1958,42 @@ async def update_requirement_document_metadata(
     )
     if not updated:
         raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+    indexed = await index_artifact(
+        updated["project_id"],
+        "requirement_document",
+        document_id,
+        document_id,
+        updated.get("title") or updated.get("filename") or document_id,
+        serialized_content(updated.get("normalized_content") or ""),
+        updated.get("status", "READY"),
+        updated.get("authority", "PROJECT_REFERENCE"),
+        updated.get("source_version", "1"),
+        module=updated.get("module", ""),
+        component=updated.get("component"),
+        product_area=updated.get("product_area"),
+        release_id=updated.get("release_id"),
+        external_source_id=updated.get("external_source_id"),
+        approval_status=updated.get("approval_status", "DRAFT"),
+        owner_id=updated.get("owner_id"),
+        approved_by=updated.get("approved_by"),
+        approved_at=updated.get("approved_at"),
+        effective_from=updated.get("effective_from"),
+        tags=updated.get("tags", []),
+    )
+    await database.value.requirement_documents.update_one(
+        {"_id": document_id, "project_id": document["project_id"]},
+        {"$set": {"index_status": "INDEXED" if indexed else "FAILED", "indexed_at": now()}},
+    )
+    updated = await database.value.requirement_documents.find_one(
+        {"_id": document_id, "project_id": document["project_id"]}
+    )
     await audit(user.id, "requirement_document_metadata_updated", "RequirementDocument", document_id, document["project_id"], {"fields": sorted(changes)})
-    return envelope(updated, revision=updated["revision"])
+    return envelope(
+        updated,
+        revision=updated["revision"],
+        status="SUCCESS" if indexed else "DEGRADED",
+        degraded_mode=None if indexed else "DEGRADED_VECTOR",
+    )
 
 
 @router.post("/tai-lieu-yeu-cau/{document_id}/lap-chi-muc-lai", status_code=202)
@@ -1940,8 +2013,19 @@ async def reindex_requirement_document(
         document.get("title") or document.get("filename") or document_id,
         normalized,
         document.get("status", "READY"),
-        document.get("authority", "reference"),
-        document.get("source_version", 1),
+        document.get("authority", "PROJECT_REFERENCE"),
+        document.get("source_version", "1"),
+        module=document.get("module", ""),
+        component=document.get("component"),
+        product_area=document.get("product_area"),
+        release_id=document.get("release_id"),
+        external_source_id=document.get("external_source_id"),
+        approval_status=document.get("approval_status", "DRAFT"),
+        owner_id=document.get("owner_id"),
+        approved_by=document.get("approved_by"),
+        approved_at=document.get("approved_at"),
+        effective_from=document.get("effective_from"),
+        tags=document.get("tags", []),
     )
     await database.value.requirement_documents.update_one(
         {"_id": document_id, "project_id": document["project_id"]},

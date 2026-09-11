@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { uploadAssetAPI } from "@/features/cloud/services/upload.service";
 import DataTable from "../../components/DataTable";
+import FormalReviewPanel from "../../components/FormalReviewPanel";
 import ReviewCommentsPanel from "../../components/ReviewCommentsPanel";
 import TestCaseTemplatesPanel from "../../components/TestCaseTemplatesPanel";
 import SpecializedDesignPanel from "../../components/SpecializedDesignPanel";
@@ -24,6 +25,7 @@ import { Modal, ModalHeader, ModalTitle } from "@/shared/components/ui/Modal";
 export default function TestDesignPage({ project }) {
   const { ask, dialog } = useActionDialog();
   const [requirements, setRequirements] = useState([]);
+  const [testConditions, setTestConditions] = useState([]);
   const [scenarios, setScenarios] = useState([]);
   const [dataSets, setDataSets] = useState([]);
   const [drafts, setDrafts] = useState([]);
@@ -73,6 +75,7 @@ export default function TestDesignPage({ project }) {
     title: "",
     objective: "",
     category: "happy_path",
+    testConditionIds: [],
   });
   const [dataSetForm, setDataSetForm] = useState({
     name: "",
@@ -87,6 +90,7 @@ export default function TestDesignPage({ project }) {
     action: emptyDoc(),
     expected: emptyDoc(),
     dataSetVersionIds: [],
+    testConditionIds: [],
   });
   const [error, setError] = useState("");
   const [creatingTest, setCreatingTest] = useState(false);
@@ -98,6 +102,7 @@ export default function TestDesignPage({ project }) {
     try {
       const [
         requirementValues,
+        testConditionValues,
         scenarioValues,
         dataSetValues,
         draftValues,
@@ -107,6 +112,7 @@ export default function TestDesignPage({ project }) {
         operationValues,
       ] = await Promise.all([
         testingApi.listRequirements(project._id, { page_size: 500, status: "BASELINED" }),
+        testingApi.listTestConditions(project._id, { status: "APPROVED", page_size: 200 }),
         testingApi.listScenarios(project._id, scenarioFilters),
         canReadTestData ? testingApi.listDataSets(project._id) : Promise.resolve([]),
         testingApi.listTestDrafts(project._id),
@@ -120,6 +126,7 @@ export default function TestDesignPage({ project }) {
         testingApi.listApiOperations(project._id),
       ]);
       setRequirements(requirementValues);
+      setTestConditions(testConditionValues.items || []);
       setScenarios(scenarioValues);
       setDataSets(dataSetValues);
       setDrafts(draftValues);
@@ -182,6 +189,7 @@ export default function TestDesignPage({ project }) {
       automationStatus: selectedDraft.automation_status || "manual",
       attachments: selectedDraft.attachments || [],
       dataSetVersionIds: selectedDraft.data_set_version_ids || [],
+      testConditionIds: selectedDraft.test_condition_ids || [],
     });
     setDraftDirty(false);
     setDraftSaveState("saved");
@@ -219,6 +227,7 @@ export default function TestDesignPage({ project }) {
         automation_status: "manual",
         attachments: [],
         data_set_version_ids: form.dataSetVersionIds,
+        test_condition_ids: form.testConditionIds,
         requirement_version_ids: selectedRequirement ? [selectedRequirement] : [],
         acceptance_criterion_ids: [],
         origin: "manual",
@@ -232,6 +241,7 @@ export default function TestDesignPage({ project }) {
         action: emptyDoc(),
         expected: emptyDoc(),
         dataSetVersionIds: [],
+        testConditionIds: [],
       });
       setCreatingTest(false);
       await load();
@@ -250,10 +260,16 @@ export default function TestDesignPage({ project }) {
         priority: "medium",
         requirement_version_ids: selectedRequirement ? [selectedRequirement] : [],
         acceptance_criterion_ids: [],
+        test_condition_ids: scenarioForm.testConditionIds,
         status: "draft",
         origin: "manual",
       });
-      setScenarioForm({ title: "", objective: "", category: "happy_path" });
+      setScenarioForm({
+        title: "",
+        objective: "",
+        category: "happy_path",
+        testConditionIds: [],
+      });
       setCreatingScenario(false);
       await load();
     } catch (reason) {
@@ -379,6 +395,7 @@ export default function TestDesignPage({ project }) {
               automation_status: snapshot.automationStatus,
               attachments: snapshot.attachments,
               data_set_version_ids: snapshot.dataSetVersionIds,
+              test_condition_ids: snapshot.testConditionIds,
             },
           },
         );
@@ -958,6 +975,7 @@ export default function TestDesignPage({ project }) {
           />
         </Panel>
       )}
+      {selectedTestId && testVersions[0] && project.current_permissions?.includes("reviewsession.read") && <FormalReviewPanel project={project} artifactType="TEST_CASE" artifactId={selectedTestId} artifactVersionId={testVersions[0]._id} reviewType="TEST_CASE_REVIEW" />}
       {selectedDraft && draftEdit && (
         <>
           <Panel
@@ -1175,6 +1193,30 @@ export default function TestDesignPage({ project }) {
                   {dataSets.map((item) => (
                     <option key={item.current_version_id} value={item.current_version_id}>
                       {item.name} v{item.current_version?.version}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="field-label">
+                Test condition đã phê duyệt
+                <select
+                  aria-label="Test condition của bản nháp"
+                  className="apple-input mt-2 min-h-28"
+                  disabled={selectedDraft.status !== "DRAFT" || !can("testcase.update")}
+                  multiple
+                  value={draftEdit.testConditionIds}
+                  onChange={(event) =>
+                    changeDraftEdit({
+                      testConditionIds: Array.from(
+                        event.target.selectedOptions,
+                        (option) => option.value,
+                      ),
+                    })
+                  }
+                >
+                  {testConditions.map((item) => (
+                    <option key={item._id} value={item._id}>
+                      {item.condition_key} {item.title}
                     </option>
                   ))}
                 </select>
@@ -1428,6 +1470,30 @@ export default function TestDesignPage({ project }) {
                   ))}
                 </select>
               </label>
+              <label className="field-label">
+                Test condition đã phê duyệt
+                <select
+                  aria-label="Test condition cho ca kiểm thử mới"
+                  className="apple-input mt-2 min-h-28"
+                  multiple
+                  value={form.testConditionIds}
+                  onChange={(event) =>
+                    setForm({
+                      ...form,
+                      testConditionIds: Array.from(
+                        event.target.selectedOptions,
+                        (option) => option.value,
+                      ),
+                    })
+                  }
+                >
+                  {testConditions.map((item) => (
+                    <option key={item._id} value={item._id}>
+                      {item.condition_key} {item.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <div className="flex justify-end gap-3">
                 <button
                   className="secondary-button"
@@ -1512,6 +1578,30 @@ export default function TestDesignPage({ project }) {
                     </option>
                   ))}
                 </select>
+                <label className="field-label">
+                  Test condition đã phê duyệt
+                  <select
+                    aria-label="Test condition cho kịch bản"
+                    className="apple-input mt-2 min-h-28"
+                    multiple
+                    value={scenarioForm.testConditionIds}
+                    onChange={(event) =>
+                      setScenarioForm({
+                        ...scenarioForm,
+                        testConditionIds: Array.from(
+                          event.target.selectedOptions,
+                          (option) => option.value,
+                        ),
+                      })
+                    }
+                  >
+                    {testConditions.map((item) => (
+                      <option key={item._id} value={item._id}>
+                        {item.condition_key} {item.title}
+                      </option>
+                    ))}
+                  </select>
+                </label>
                 <div className="flex justify-end gap-3">
                   <button
                     className="secondary-button"

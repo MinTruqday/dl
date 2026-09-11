@@ -52,6 +52,7 @@ async def create_scenario(
         project_id,
         payload.requirement_version_ids,
         payload.acceptance_criterion_ids,
+        test_condition_ids=payload.test_condition_ids,
     )
     scenario = {
         "_id": new_id("TS"),
@@ -119,6 +120,7 @@ async def update_scenario(
         scenario["project_id"],
         payload.requirement_version_ids if payload.requirement_version_ids is not None else scenario.get("requirement_version_ids", []),
         payload.acceptance_criterion_ids if payload.acceptance_criterion_ids is not None else scenario.get("acceptance_criterion_ids", []),
+        test_condition_ids=payload.test_condition_ids if payload.test_condition_ids is not None else scenario.get("test_condition_ids", []),
     )
     updated = await optimistic_patch(
         "test_scenarios", scenario_id, scenario["project_id"], payload.expected_revision, payload.model_dump()
@@ -222,6 +224,7 @@ async def create_test_case_draft(
         payload.requirement_version_ids,
         payload.acceptance_criterion_ids,
         payload.scenario_id,
+        payload.test_condition_ids,
     )
     await validate_data_set_versions(project_id, payload.data_set_version_ids)
     draft = {
@@ -1083,7 +1086,7 @@ def techniques_for_category(category):
     }.get(category, ["functional"])
 
 
-async def validate_design_sources(project_id, requirement_version_ids, acceptance_criterion_ids, scenario_id=None):
+async def validate_design_sources(project_id, requirement_version_ids, acceptance_criterion_ids, scenario_id=None, test_condition_ids=None):
     requirement_ids = list(dict.fromkeys(requirement_version_ids or []))
     criterion_ids = list(dict.fromkeys(acceptance_criterion_ids or []))
     if requirement_ids:
@@ -1101,6 +1104,15 @@ async def validate_design_sources(project_id, requirement_version_ids, acceptanc
         scenario = await database.value.test_scenarios.find_one({"_id": scenario_id, "project_id": project_id})
         if not scenario:
             raise HTTPException(status_code=422, detail={"code": "CROSS_PROJECT_OR_MISSING_TEST_SCENARIO"})
+    condition_ids = list(dict.fromkeys(test_condition_ids or []))
+    if condition_ids:
+        project = await database.value.projects.find_one({"_id": project_id}, {"settings": 1})
+        query = {"project_id": project_id, "_id": {"$in": condition_ids}, "status": {"$ne": "ARCHIVED"}}
+        if (project or {}).get("settings", {}).get("require_approved_test_conditions", False):
+            query["status"] = "APPROVED"
+        count = await database.value.test_conditions.count_documents(query)
+        if count != len(condition_ids):
+            raise HTTPException(status_code=422, detail={"code": "CROSS_PROJECT_OR_UNAPPROVED_TEST_CONDITION"})
 
 
 async def validate_data_set_versions(project_id, data_set_version_ids):

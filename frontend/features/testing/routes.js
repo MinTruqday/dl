@@ -2,6 +2,9 @@ export const PROJECTS_ROUTE = "/du-an";
 export const OPERATIONS_ROUTE = "/van-hanh";
 
 export const PROJECT_SECTION_SLUGS = Object.freeze({
+  governance: "quan-tri-kiem-thu",
+  testAnalysis: "phan-tich-kiem-thu",
+  monitoring: "giam-sat-kiem-thu",
   requirements: "yeu-cau",
   testDesign: "thiet-ke-kiem-thu",
   traceability: "truy-vet",

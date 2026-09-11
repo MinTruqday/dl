@@ -35,6 +35,7 @@ from src.domain.schemas import (
 )
 from src.services.project_knowledge import index_artifact
 from src.services.execution_context import resolve_execution_context
+from src.services.test_plan_service import plan_snapshot, plan_snapshot_hash, resolve_strategy_binding
 
 
 router = APIRouter(prefix="/kiem-thu", tags=["Thực thi kiểm thử"])
@@ -190,8 +191,11 @@ async def create_test_plan(payload: TestPlanCreate, project_id: str | None = Non
         await require_action_policy(
             payload.project_id, user, "testplan.assignments", {"QA_LEAD"}
         )
+    strategy_binding = await resolve_strategy_binding(
+        payload.project_id, payload.strategy_version_id, auto_bind=True
+    )
     timestamp = now()
-    plan = {"_id": new_id("TP"), **payload.model_dump(), **context, "status": "DRAFT", "revision": 1, "created_by": user.id, "created_at": timestamp, "updated_at": timestamp}
+    plan = {"_id": new_id("TP"), **payload.model_dump(), **context, **strategy_binding, "status": "DRAFT", "approval_history": [], "revision": 1, "created_by": user.id, "created_at": timestamp, "updated_at": timestamp}
     await database.value.test_plans.insert_one(plan)
     await audit(user.id, "test_plan_created", "TestPlan", plan["_id"], payload.project_id)
     return envelope(plan, revision=1)
@@ -246,6 +250,13 @@ async def update_test_plan(plan_id: str, payload: TestPlanPatch, user: CurrentUs
             plan["project_id"], user, "testplan.assignments", {"QA_LEAD"}
         )
     changes = payload.model_dump(exclude_unset=True)
+    changes.pop("expected_revision", None)
+    if "strategy_version_id" in changes:
+        changes.update(
+            await resolve_strategy_binding(
+                plan["project_id"], changes.get("strategy_version_id"), auto_bind=False
+            )
+        )
     if {"release_id", "build_id", "environment_id", "release", "build", "environment"} & set(changes):
         changes.update(
             await resolve_execution_context(
@@ -259,6 +270,11 @@ async def update_test_plan(plan_id: str, payload: TestPlanPatch, user: CurrentUs
                 environment=changes.get("environment", plan.get("environment", "")),
             )
         )
+    validation_data = {
+        field: changes.get(field, plan.get(field))
+        for field in TestPlanCreate.model_fields
+    }
+    TestPlanCreate.model_validate(validation_data)
     updated = await optimistic_patch("test_plans", plan_id, plan["project_id"], payload.expected_revision, changes)
     await audit(user.id, "test_plan_updated", "TestPlan", plan_id, plan["project_id"])
     return envelope(updated, revision=updated["revision"])
@@ -279,7 +295,10 @@ async def approve_test_plan(plan_id: str, payload: ReviewTransitionInput, user: 
     plan = await get_project_entity("test_plans", plan_id, user, "testplan.approve")
     if plan.get("status") not in {"DRAFT", "IN_REVIEW"}:
         raise HTTPException(status_code=409, detail={"code": "INVALID_STATE_TRANSITION"})
-    updated = await optimistic_patch("test_plans", plan_id, plan["project_id"], payload.expected_revision, {"status": "APPROVED", "approved_by": user.id, "approved_at": now(), "review_note": payload.review_note})
+    timestamp = now()
+    approved_hash = plan_snapshot_hash(plan)
+    approval = {"actor_id": user.id, "action": "APPROVED", "note": payload.review_note, "at": timestamp}
+    updated = await optimistic_patch("test_plans", plan_id, plan["project_id"], payload.expected_revision, {"status": "APPROVED", "approved_by": user.id, "approved_at": timestamp, "approved_snapshot": plan_snapshot(plan), "approved_snapshot_hash": approved_hash, "baseline_hash": approved_hash, "approval_history": [*plan.get("approval_history", []), approval], "review_note": payload.review_note})
     await audit(user.id, "test_plan_approved", "TestPlan", plan_id, plan["project_id"])
     return envelope(updated, revision=updated["revision"])
 
@@ -297,8 +316,9 @@ async def clone_test_plan(plan_id: str, user: CurrentUser = Depends(get_current_
     plan = await get_project_entity("test_plans", plan_id, user, "testplan.create")
     timestamp = now()
     cloned = {**plan, "_id": new_id("TP"), "name": f"{plan['name']} bản sao", "status": "DRAFT", "revision": 1, "created_by": user.id, "created_at": timestamp, "updated_at": timestamp}
-    for field in ["approved_at", "approved_by", "archived_at", "archived_by", "archive_reason", "reviewed_at", "reviewed_by"]:
+    for field in ["approved_at", "approved_by", "approved_snapshot", "approved_snapshot_hash", "baseline_hash", "approval_history", "archived_at", "archived_by", "archive_reason", "reviewed_at", "reviewed_by"]:
         cloned.pop(field, None)
+    cloned["approval_history"] = []
     await database.value.test_plans.insert_one(cloned)
     await audit(user.id, "test_plan_cloned", "TestPlan", cloned["_id"], plan["project_id"], {"source_plan_id": plan_id})
     return envelope(cloned, revision=1)
@@ -644,6 +664,10 @@ async def start_test_run(run_id: str, user: CurrentUser = Depends(get_current_us
         return envelope(run)
     if run["status"] not in {"DRAFT", "READY"}:
         raise HTTPException(status_code=409, detail={"code": "INVALID_STATE_TRANSITION"})
+    if run.get("environment_id"):
+        environment = await database.value.test_environments.find_one({"_id": run["environment_id"], "project_id": run["project_id"]})
+        if environment and environment.get("availability") != "AVAILABLE":
+            raise HTTPException(status_code=409, detail={"code": "TEST_ENVIRONMENT_UNAVAILABLE"})
     scope = frozen_run_scope(run)
     scope_fingerprint = frozen_run_scope_hash(scope)
     updated = await database.value.test_runs.find_one_and_update(
@@ -786,6 +810,8 @@ async def record_test_result(
     run = await get_project_entity("test_runs", run_id, user, "testrun.execute")
     if run["status"] != "IN_PROGRESS":
         raise HTTPException(status_code=409, detail={"code": "TEST_RUN_NOT_IN_PROGRESS"})
+    if run.get("execution_paused"):
+        raise HTTPException(status_code=409, detail={"code": "TEST_RUN_PAUSED_BY_ENVIRONMENT_INCIDENT", "incident_id": run.get("paused_by_environment_incident_id")})
     if test_case_version_id not in run["test_case_version_ids"]:
         raise HTTPException(status_code=422, detail={"code": "TEST_NOT_IN_RUN_SNAPSHOT"})
     existing = await database.value.test_results.find_one({"test_run_id": run_id, "test_case_version_id": test_case_version_id})
@@ -842,6 +868,8 @@ async def patch_test_execution(
     run = await database.value.test_runs.find_one({"_id": result["test_run_id"], "project_id": project_id})
     if not run or run.get("status") != "IN_PROGRESS":
         raise HTTPException(status_code=409, detail={"code": "TEST_RUN_NOT_IN_PROGRESS"})
+    if run.get("execution_paused"):
+        raise HTTPException(status_code=409, detail={"code": "TEST_RUN_PAUSED_BY_ENVIRONMENT_INCIDENT", "incident_id": run.get("paused_by_environment_incident_id")})
     allowed = EXECUTION_TRANSITIONS.get(result.get("status"), set())
     if payload.status not in allowed:
         raise HTTPException(status_code=409, detail={"code": "INVALID_EXECUTION_TRANSITION", "from": result.get("status"), "to": payload.status})
@@ -1504,7 +1532,9 @@ async def update_defect(defect_id: str, payload: dict = Body(), project_id: str 
     expected_revision = payload.get("expected_revision")
     if not isinstance(expected_revision, int):
         raise HTTPException(status_code=422, detail="Thiếu expected_revision")
-    allowed = {"title", "description_doc", "steps_to_reproduce", "actual_result_doc", "expected_result_doc", "severity", "priority", "environment", "environment_id", "release", "release_id", "build", "build_id", "assignee", "attachments", "linked_test_result_id", "linked_test_case_version_id", "linked_requirement_version_ids"}
+    allowed = {"title", "description_doc", "steps_to_reproduce", "actual_result_doc", "expected_result_doc", "severity", "priority", "environment", "environment_id", "release", "release_id", "build", "build_id", "assignee", "attachments", "linked_test_result_id", "linked_test_case_version_id", "linked_requirement_version_ids", "root_cause_category", "root_cause_detail", "injected_phase", "detected_phase", "escape_reason", "prevention_candidate"}
+    if "root_cause_category" in payload and payload["root_cause_category"] not in {"REQUIREMENT", "DESIGN", "IMPLEMENTATION", "CONFIGURATION", "TEST_DATA", "TEST_CASE_GAP", "ENVIRONMENT", "INTEGRATION", "DEPLOYMENT", "PROCESS", "UNKNOWN"}:
+        raise HTTPException(status_code=422, detail={"code": "INVALID_ROOT_CAUSE_CATEGORY"})
     if "assignee" in payload:
         await get_project(defect["project_id"], user, "defect.assign")
     if any(field in payload for field in {"linked_test_result_id", "linked_test_case_version_id", "linked_requirement_version_ids"}):

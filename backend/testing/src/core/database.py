@@ -156,6 +156,92 @@ async def create_indexes():
     await db.maintenance_proposals.create_index([("project_id", 1), ("status", 1)])
     await db.regression_recommendations.create_index([("change_set_id", 1)], unique=True)
     await db.test_plans.create_index([("project_id", 1), ("updated_at", -1)])
+    await db.test_strategies.create_index([("project_id", 1), ("key", 1), ("version", 1)], unique=True)
+    await db.test_strategies.create_index([("lineage_id", 1), ("version", -1)])
+    await ensure_partial_unique_index(
+        db.test_strategies,
+        [("project_id", 1), ("active_approved", 1)],
+        {"active_approved": True},
+    )
+    await db.test_conditions.create_index([("project_id", 1), ("condition_key", 1)], unique=True)
+    await db.test_conditions.create_index([("project_id", 1), ("status", 1), ("updated_at", -1)])
+    await db.test_conditions.create_index([("project_id", 1), ("basis_refs.artifact_id", 1)])
+    await db.test_monitoring_snapshots.create_index([("project_id", 1), ("test_plan_id", 1), ("snapshot_at", -1)])
+    await db.test_monitoring_snapshots.create_index([("project_id", 1), ("release_id", 1), ("snapshot_at", -1)])
+    await db.test_monitoring_overrides.create_index([("snapshot_id", 1), ("criterion_id", 1), ("created_at", -1)])
+    await db.test_control_actions.create_index([("project_id", 1), ("status", 1), ("due_at", 1)])
+    await db.test_control_actions.create_index([("project_id", 1), ("owner_id", 1), ("status", 1)])
+    await db.test_status_reports.create_index([("project_id", 1), ("created_at", -1)])
+    await db.test_status_reports.create_index([("project_id", 1), ("test_plan_id", 1), ("release_id", 1), ("sequence", -1)], unique=True)
+    await db.test_status_reports.create_index([("project_id", 1), ("status", 1), ("updated_at", -1)])
+    await db.test_status_reports.create_index([("snapshot_id", 1), ("created_at", -1)])
+    await db.test_completion_reports.create_index([("project_id", 1), ("release_id", 1), ("sequence", -1)], unique=True)
+    await db.test_completion_reports.create_index([("project_id", 1), ("status", 1), ("updated_at", -1)])
+    await db.test_completion_reports.create_index([("monitoring_snapshot_id", 1), ("created_at", -1)])
+    await ensure_partial_unique_index(
+        db.test_completion_reports,
+        [("project_id", 1), ("idempotency_key", 1)],
+        {"idempotency_key": {"$type": "string"}},
+    )
+    await db.review_sessions.create_index([("project_id", 1), ("status", 1), ("updated_at", -1)])
+    await db.review_sessions.create_index([("project_id", 1), ("artifact_type", 1), ("artifact_id", 1), ("artifact_version_id", 1)])
+    await ensure_partial_unique_index(
+        db.review_sessions,
+        [("project_id", 1), ("idempotency_key", 1)],
+        {"idempotency_key": {"$type": "string"}},
+    )
+    await db.review_findings.create_index([("project_id", 1), ("review_session_id", 1), ("status", 1)])
+    await db.review_findings.create_index([("project_id", 1), ("owner_id", 1), ("status", 1)])
+    await db.measurement_definitions.create_index([("project_id", 1), ("key", 1), ("version", 1)], unique=True)
+    await db.measurement_definitions.create_index([("project_id", 1), ("status", 1), ("updated_at", -1)])
+    await ensure_partial_unique_index(
+        db.measurement_definitions,
+        [("project_id", 1), ("key", 1), ("status", 1)],
+        {"status": "ACTIVE"},
+    )
+    await ensure_partial_unique_index(
+        db.measurement_definitions,
+        [("project_id", 1), ("idempotency_key", 1)],
+        {"idempotency_key": {"$type": "string"}},
+    )
+    await db.measurement_snapshots.create_index([("project_id", 1), ("measurement_definition_id", 1), ("measured_at", -1)])
+    await db.measurement_snapshots.create_index([("project_id", 1), ("release_id", 1), ("measured_at", -1)])
+    await ensure_partial_unique_index(
+        db.measurement_snapshots,
+        [("project_id", 1), ("idempotency_key", 1)],
+        {"idempotency_key": {"$type": "string"}},
+    )
+    await db.product_quality_evaluations.create_index([("project_id", 1), ("release_id", 1), ("created_at", -1)])
+    await db.product_quality_evaluations.create_index([("project_id", 1), ("status", 1), ("updated_at", -1)])
+    await ensure_partial_unique_index(
+        db.product_quality_evaluations,
+        [("project_id", 1), ("idempotency_key", 1)],
+        {"idempotency_key": {"$type": "string"}},
+    )
+    await db.causal_analyses.create_index([("project_id", 1), ("status", 1), ("updated_at", -1)])
+    await db.causal_analyses.create_index([("project_id", 1), ("defect_ids", 1)])
+    await ensure_partial_unique_index(
+        db.causal_analyses,
+        [("project_id", 1), ("idempotency_key", 1)],
+        {"idempotency_key": {"$type": "string"}},
+    )
+    await db.preventive_actions.create_index([("project_id", 1), ("causal_analysis_id", 1), ("status", 1)])
+    await db.preventive_actions.create_index([("project_id", 1), ("owner_id", 1), ("due_at", 1)])
+    await db.environment_incidents.create_index([("project_id", 1), ("environment_id", 1), ("status", 1), ("observed_at", -1)])
+    await db.environment_incidents.create_index([("project_id", 1), ("owner_id", 1), ("status", 1)])
+    await ensure_partial_unique_index(
+        db.environment_incidents,
+        [("project_id", 1), ("idempotency_key", 1)],
+        {"idempotency_key": {"$type": "string"}},
+    )
+    await db.non_functional_test_plans.create_index([("project_id", 1), ("plan_type", 1), ("status", 1), ("updated_at", -1)])
+    await ensure_partial_unique_index(
+        db.non_functional_test_plans,
+        [("project_id", 1), ("idempotency_key", 1)],
+        {"idempotency_key": {"$type": "string"}},
+    )
+    await db.non_functional_test_evidence.create_index([("project_id", 1), ("plan_id", 1), ("created_at", -1)])
+    await db.non_functional_test_evidence.create_index([("project_id", 1), ("idempotency_key", 1)], unique=True)
     await db.test_suites.create_index([("project_id", 1), ("updated_at", -1)])
     await db.test_runs.create_index([("project_id", 1), ("status", 1), ("updated_at", -1)])
     await db.device_matrices.create_index([("project_id", 1), ("name", 1)], unique=True)

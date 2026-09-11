@@ -261,10 +261,7 @@ export default function ProjectsPage() {
             <LoadingState />
           </div>
         ) : items.length === 0 ? (
-          <EmptyState
-            onAction={!query.trim() && status === "active" ? openCreateModal : undefined}
-            actionLabel="Tạo dự án"
-          >
+          <EmptyState>
             {query.trim()
               ? "Không tìm thấy dự án phù hợp"
               : status === "archived"

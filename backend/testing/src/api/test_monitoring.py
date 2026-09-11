@@ -1,0 +1,79 @@
+from fastapi import APIRouter, Depends, Query
+
+from src.core.auth import CurrentUser, get_current_user
+from src.core.common import envelope
+from src.domain.test_monitoring import ControlActionCreate, ControlActionPatch, ExitCriterionOverride, MonitoringSnapshotCreate
+from src.services.test_monitoring_service import create_control_action, create_monitoring_snapshot, get_snapshot_for_user, list_actions_for_user, list_monitoring_snapshots, override_exit_criterion, update_control_action
+
+
+router = APIRouter(prefix="/kiem-thu", tags=["Giám sát và điều khiển kiểm thử"])
+
+
+@router.get("/du-an/{project_id}/giam-sat-kiem-thu")
+async def list_test_monitoring_snapshots(
+    project_id: str,
+    test_plan_id: str = Query(default="", max_length=200),
+    release_id: str = Query(default="", max_length=200),
+    limit: int = Query(default=100, ge=1, le=500),
+    user: CurrentUser = Depends(get_current_user),
+):
+    return envelope(await list_monitoring_snapshots(project_id, test_plan_id or None, release_id or None, limit, user))
+
+
+@router.post("/du-an/{project_id}/giam-sat-kiem-thu/snapshot", status_code=201)
+async def create_test_monitoring_snapshot(
+    project_id: str,
+    payload: MonitoringSnapshotCreate,
+    user: CurrentUser = Depends(get_current_user),
+):
+    value = await create_monitoring_snapshot(project_id, payload, user)
+    return envelope(value, revision=value["revision"])
+
+
+@router.get("/giam-sat-kiem-thu/snapshot/{snapshot_id}")
+async def get_test_monitoring_snapshot(
+    snapshot_id: str,
+    user: CurrentUser = Depends(get_current_user),
+):
+    value = await get_snapshot_for_user(snapshot_id, user)
+    return envelope(value, revision=value["revision"])
+
+
+@router.post("/giam-sat-kiem-thu/snapshot/{snapshot_id}/ghi-de-tieu-chi")
+async def override_test_monitoring_exit_criterion(
+    snapshot_id: str,
+    payload: ExitCriterionOverride,
+    user: CurrentUser = Depends(get_current_user),
+):
+    value = await override_exit_criterion(snapshot_id, payload, user)
+    return envelope(value, revision=value["revision"])
+
+
+@router.get("/du-an/{project_id}/hanh-dong-dieu-khien")
+async def list_test_control_actions(
+    project_id: str,
+    snapshot_id: str = Query(default="", max_length=200),
+    status: str = Query(default="", max_length=30),
+    user: CurrentUser = Depends(get_current_user),
+):
+    return envelope(await list_actions_for_user(project_id, snapshot_id or None, status or None, user))
+
+
+@router.post("/du-an/{project_id}/hanh-dong-dieu-khien", status_code=201)
+async def create_test_control_action(
+    project_id: str,
+    payload: ControlActionCreate,
+    user: CurrentUser = Depends(get_current_user),
+):
+    value = await create_control_action(project_id, payload, user)
+    return envelope(value, revision=value["revision"])
+
+
+@router.patch("/hanh-dong-dieu-khien/{action_id}")
+async def patch_test_control_action(
+    action_id: str,
+    payload: ControlActionPatch,
+    user: CurrentUser = Depends(get_current_user),
+):
+    value = await update_control_action(action_id, payload, user)
+    return envelope(value, revision=value["revision"])

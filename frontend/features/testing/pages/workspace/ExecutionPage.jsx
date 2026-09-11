@@ -3,6 +3,9 @@ import { useCallback, useEffect, useState } from "react";
 import DataTable from "../../components/DataTable";
 import DeviceMatricesPanel from "../../components/DeviceMatricesPanel";
 import AutomationExecutionPanel from "../../components/AutomationExecutionPanel";
+import TestPlanEditor from "../../components/TestPlanEditor";
+import EnvironmentIncidentPanel from "../../components/EnvironmentIncidentPanel";
+import NonFunctionalTestPanel from "../../components/NonFunctionalTestPanel";
 import { uploadAssetAPI } from "@/features/cloud/services/upload.service";
 import {
   ErrorState,
@@ -21,6 +24,7 @@ export default function ExecutionPage({ project, section }) {
   const { ask, dialog } = useActionDialog();
   const runId = section[0] || "";
   const [plans, setPlans] = useState([]);
+  const [strategies, setStrategies] = useState([]);
   const [suites, setSuites] = useState([]);
   const [releases, setReleases] = useState([]);
   const [builds, setBuilds] = useState([]);
@@ -82,6 +86,7 @@ export default function ExecutionPage({ project, section }) {
         releaseValues,
         buildValues,
         environmentValues,
+        strategyValues,
       ] = await Promise.all([
         testingApi.listPlans(project._id, planFilters),
         testingApi.listSuites(project._id, suiteFilters),
@@ -90,6 +95,7 @@ export default function ExecutionPage({ project, section }) {
         testingApi.listReleases(project._id),
         testingApi.listBuilds(project._id),
         testingApi.listEnvironments(project._id),
+        testingApi.listTestStrategies(project._id, { page_size: 200 }),
       ]);
       setPlans(planValues);
       setSuites(suiteValues);
@@ -99,6 +105,7 @@ export default function ExecutionPage({ project, section }) {
       setReleases(releaseValues);
       setBuilds(buildValues);
       setEnvironments(environmentValues);
+      setStrategies(strategyValues.items || []);
       if (runId) setRun(await testingApi.getRun(runId));
     } catch (reason) {
       setError(messageOf(reason));
@@ -699,67 +706,21 @@ export default function ExecutionPage({ project, section }) {
             isOpen={creatingPlan}
             onClose={() => setCreatingPlan(false)}
             ariaLabel="Tạo kế hoạch kiểm thử"
-            className="max-w-xl"
+            className="max-h-[94dvh] max-w-5xl overflow-y-auto"
           >
             <ModalHeader>
               <ModalTitle>Tạo kế hoạch kiểm thử</ModalTitle>
             </ModalHeader>
-            <form
-              className="space-y-3 p-5"
-              onSubmit={async (event) => {
-                event.preventDefault();
-                const form = event.currentTarget;
-                const value = new FormData(form);
-                try {
-                  await testingApi.createPlan({
-                    project_id: project._id,
-                    name: value.get("name"),
-                    objective: value.get("objective"),
-                    scope_in: [],
-                    scope_out: [],
-                    environment: "staging",
-                    entry_criteria: [],
-                    exit_criteria: [],
-                    risks: [],
-                    test_types: ["functional"],
-                    members: [],
-                    release: "",
-                    build: "",
-                  });
-                  form.reset();
-                  setCreatingPlan(false);
-                  await load();
-                } catch (reason) {
-                  setError(messageOf(reason));
-                }
+            <TestPlanEditor
+              projectId={project._id}
+              strategies={strategies}
+              onCancel={() => setCreatingPlan(false)}
+              onSave={async (payload) => {
+                await testingApi.createPlan(payload);
+                setCreatingPlan(false);
+                await load();
               }}
-            >
-              <input
-                aria-label="Tên kế hoạch kiểm thử"
-                name="name"
-                required
-                className="apple-input"
-                placeholder="Tên kế hoạch kiểm thử"
-              />
-              <textarea
-                aria-label="Mục tiêu kế hoạch kiểm thử"
-                name="objective"
-                className="apple-input min-h-20"
-                placeholder="Mục tiêu"
-              />
-              <div className="flex justify-end gap-3">
-                <button
-                  className="secondary-button"
-                  type="button"
-                  onClick={() => setCreatingPlan(false)}
-                >
-                  Hủy
-                </button>
-                <button className="apple-button" type="submit">
-                  Lưu kế hoạch
-                </button>
-              </div>
-            </form>
+            />
           </Modal>
         )}
         {can("testsuite.create") && (
@@ -1315,6 +1276,8 @@ export default function ExecutionPage({ project, section }) {
         />
         <Pagination value={runPageInfo} onChange={setRunPage} />
       </Panel>
+      {project.current_permissions?.includes("environmentincident.read") && <EnvironmentIncidentPanel project={project} />}
+      {project.current_permissions?.includes("nfrtest.read") && <NonFunctionalTestPanel project={project} />}
       {dialog}
     </WorkspacePage>
   );

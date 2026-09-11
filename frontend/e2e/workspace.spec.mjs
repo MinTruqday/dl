@@ -481,8 +481,10 @@ test("các nút thao tác chính tạo thay đổi thật qua backend", async ({
   const sourceDialog = page.getByRole("dialog", { name: "Thêm nguồn tri thức" });
   await expect(sourceDialog).toBeVisible();
   await sourceDialog.getByLabel("Tiêu đề nguồn").fill(`Nguồn giáo viên ${stamp}`);
-  await sourceDialog.getByLabel("Môn học").fill("Toán");
-  await sourceDialog.getByLabel("Khối lớp").fill("12");
+  await sourceDialog.getByLabel("Loại nguồn").selectOption("REFERENCE");
+  await sourceDialog.getByLabel("Mức thẩm quyền").selectOption("PROJECT_REFERENCE");
+  await sourceDialog.getByLabel("Module").fill("Nghiệp vụ kiểm thử");
+  await sourceDialog.getByLabel("Khu vực sản phẩm").fill("Quản lý yêu cầu");
   await sourceDialog
     .getByLabel("Nội dung tài liệu")
     .fill("Phương pháp giải và cách trình bày của giáo viên");
@@ -508,8 +510,8 @@ test("các nút thao tác chính tạo thay đổi thật qua backend", async ({
   const planName = `Kế hoạch giao diện ${stamp}`;
   await page.getByRole("button", { name: "Tạo kế hoạch", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Tạo kế hoạch kiểm thử" })).toBeVisible();
-  await page.getByLabel("Tên kế hoạch kiểm thử").fill(planName);
-  await page.getByLabel("Mục tiêu kế hoạch kiểm thử").fill("Xác minh nút lưu kế hoạch");
+  await page.getByLabel("Tên kế hoạch", { exact: true }).fill(planName);
+  await page.getByLabel("Mục tiêu", { exact: true }).fill("Xác minh nút lưu kế hoạch");
   const planResponse = page.waitForResponse(
     (response) =>
       response.url().endsWith("/kiem-thu/ke-hoach-kiem-thu") &&

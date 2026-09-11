@@ -126,6 +126,7 @@ export function useActionDialog() {
                   autoFocus={field.autoFocus}
                   className="apple-input mt-2"
                   required={field.required}
+                  type={field.type || "text"}
                   value={values[field.name] || ""}
                   onChange={(event) =>
                     setValues((current) => ({ ...current, [field.name]: event.target.value }))

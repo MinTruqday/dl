@@ -2,6 +2,23 @@ from fastapi import HTTPException
 
 from src.core.auth import CurrentUser
 from src.core.common import get_project_entity
+from src.core.database import database
+
+
+async def ensure_release_completion_gate(project_id: str, release_id: str):
+    project = await database.value.projects.find_one({"_id": project_id}, {"settings": 1})
+    if not (project or {}).get("settings", {}).get("require_completion_report_before_release_close", False):
+        return
+    completion = await database.value.test_completion_reports.find_one(
+        {
+            "project_id": project_id,
+            "release_id": release_id,
+            "status": {"$in": ["APPROVED", "CLOSED"]},
+        },
+        {"_id": 1},
+    )
+    if not completion:
+        raise HTTPException(status_code=409, detail={"code": "COMPLETION_REPORT_REQUIRED"})
 
 
 async def resolve_execution_context(

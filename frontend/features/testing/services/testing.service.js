@@ -105,6 +105,221 @@ export const testingApi = {
   restoreProject: (id, payload) =>
     testingRequest(`/du-an/${id}/khoi-phuc`, { method: "POST", body: JSON.stringify(payload) }),
   dashboard: (id) => testingRequest(`/du-an/${id}/tong-quan`),
+  listTestStrategies: (projectId, filters = {}) => {
+    const query = listQuery(filters);
+    return testingRequest(`/du-an/${projectId}/chien-luoc${query ? `?${query}` : ""}`);
+  },
+  createTestStrategy: (projectId, payload) =>
+    testingRequest(`/du-an/${projectId}/chien-luoc`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  getTestStrategy: (strategyId) => testingRequest(`/chien-luoc/${strategyId}`),
+  updateTestStrategy: (strategyId, payload) =>
+    testingRequest(`/chien-luoc/${strategyId}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+  submitTestStrategy: (strategyId, payload) =>
+    testingRequest(`/chien-luoc/${strategyId}/gui-ra-soat`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  requestTestStrategyChanges: (strategyId, payload) =>
+    testingRequest(`/chien-luoc/${strategyId}/yeu-cau-chinh-sua`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  approveTestStrategy: (strategyId, payload) =>
+    testingRequest(`/chien-luoc/${strategyId}/phe-duyet`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  versionTestStrategy: (strategyId, payload) =>
+    testingRequest(`/chien-luoc/${strategyId}/tao-phien-ban`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  archiveTestStrategy: (strategyId, payload) =>
+    testingRequest(`/chien-luoc/${strategyId}/luu-tru`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  listTestConditions: (projectId, filters = {}) => {
+    const query = listQuery(filters);
+    return testingRequest(`/du-an/${projectId}/dieu-kien-kiem-thu${query ? `?${query}` : ""}`);
+  },
+  createTestCondition: (projectId, payload) =>
+    testingRequest(`/du-an/${projectId}/dieu-kien-kiem-thu`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  updateTestCondition: (conditionId, payload) =>
+    testingRequest(`/dieu-kien-kiem-thu/${conditionId}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+  submitTestCondition: (conditionId, payload) =>
+    testingRequest(`/dieu-kien-kiem-thu/${conditionId}/gui-ra-soat`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  approveTestCondition: (conditionId, payload) =>
+    testingRequest(`/dieu-kien-kiem-thu/${conditionId}/phe-duyet`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  archiveTestCondition: (conditionId, payload) =>
+    testingRequest(`/dieu-kien-kiem-thu/${conditionId}/luu-tru`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  resolveTestAnalysisFinding: (conditionId, findingId, payload) =>
+    testingRequest(`/dieu-kien-kiem-thu/${conditionId}/ket-qua/${findingId}/giai-quyet`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  runTestAnalysisAi: (projectId, payload) =>
+    testingRequest(`/du-an/${projectId}/phan-tich-kiem-thu/ai`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  getTestConditionCoverage: (projectId) =>
+    testingRequest(`/du-an/${projectId}/phan-tich-kiem-thu/truy-vet`),
+  listMonitoringSnapshots: (projectId, filters = {}) => {
+    const query = listQuery(filters);
+    return testingRequest(`/du-an/${projectId}/giam-sat-kiem-thu${query ? `?${query}` : ""}`);
+  },
+  createMonitoringSnapshot: (projectId, payload) =>
+    testingRequest(`/du-an/${projectId}/giam-sat-kiem-thu/snapshot`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  getMonitoringSnapshot: (snapshotId) =>
+    testingRequest(`/giam-sat-kiem-thu/snapshot/${snapshotId}`),
+  overrideMonitoringCriterion: (snapshotId, payload) =>
+    testingRequest(`/giam-sat-kiem-thu/snapshot/${snapshotId}/ghi-de-tieu-chi`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  listControlActions: (projectId, filters = {}) => {
+    const query = listQuery(filters);
+    return testingRequest(`/du-an/${projectId}/hanh-dong-dieu-khien${query ? `?${query}` : ""}`);
+  },
+  createControlAction: (projectId, payload) =>
+    testingRequest(`/du-an/${projectId}/hanh-dong-dieu-khien`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  updateControlAction: (actionId, payload) =>
+    testingRequest(`/hanh-dong-dieu-khien/${actionId}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+  listTestStatusReports: (projectId, filters = {}) => {
+    const query = listQuery(filters);
+    return testingRequest(`/du-an/${projectId}/bao-cao-trang-thai${query ? `?${query}` : ""}`);
+  },
+  generateTestStatusReport: (projectId, payload) =>
+    testingRequest(`/du-an/${projectId}/bao-cao-trang-thai/tao-tu-snapshot`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  getTestStatusReport: (reportId) => testingRequest(`/bao-cao-trang-thai/${reportId}`),
+  updateTestStatusReport: (reportId, payload) =>
+    testingRequest(`/bao-cao-trang-thai/${reportId}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+  draftTestStatusReportNarrative: (reportId, payload) =>
+    testingRequest(`/bao-cao-trang-thai/${reportId}/ai/ban-nhap`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  attachTestStatusReportEvidence: (reportId, payload) =>
+    testingRequest(`/bao-cao-trang-thai/${reportId}/bang-chung`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  submitTestStatusReport: (reportId, payload) =>
+    testingRequest(`/bao-cao-trang-thai/${reportId}/gui-ra-soat`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  requestTestStatusReportChanges: (reportId, payload) =>
+    testingRequest(`/bao-cao-trang-thai/${reportId}/yeu-cau-chinh-sua`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  approveTestStatusReport: (reportId, payload) =>
+    testingRequest(`/bao-cao-trang-thai/${reportId}/phe-duyet`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  publishTestStatusReport: (reportId, payload) =>
+    testingRequest(`/bao-cao-trang-thai/${reportId}/phat-hanh`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  compareTestStatusReports: (reportId, otherReportId) =>
+    testingRequest(`/bao-cao-trang-thai/${reportId}/so-sanh?other_report_id=${encodeURIComponent(otherReportId)}`),
+  exportTestStatusReport: (reportId, format) =>
+    downloadTestingFile(`/bao-cao-trang-thai/${reportId}/xuat?format=${encodeURIComponent(format)}`, `test-status-report-${reportId}.${format}`),
+  listTestCompletionReports: (projectId, filters = {}) => {
+    const query = listQuery(filters);
+    return testingRequest(`/du-an/${projectId}/hoan-tat-kiem-thu${query ? `?${query}` : ""}`);
+  },
+  createTestCompletionReport: (projectId, payload) =>
+    testingRequest(`/du-an/${projectId}/hoan-tat-kiem-thu`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  getTestCompletionReport: (reportId) => testingRequest(`/hoan-tat-kiem-thu/${reportId}`),
+  updateTestCompletionReport: (reportId, payload) =>
+    testingRequest(`/hoan-tat-kiem-thu/${reportId}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+  draftTestCompletionNarrative: (reportId, payload) =>
+    testingRequest(`/hoan-tat-kiem-thu/${reportId}/ai/ban-nhap`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  clusterTestCompletionLessons: (reportId, payload) =>
+    testingRequest(`/hoan-tat-kiem-thu/${reportId}/ai/gom-bai-hoc`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  submitTestCompletionReport: (reportId, payload) =>
+    testingRequest(`/hoan-tat-kiem-thu/${reportId}/gui-ra-soat`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  requestTestCompletionChanges: (reportId, payload) =>
+    testingRequest(`/hoan-tat-kiem-thu/${reportId}/yeu-cau-chinh-sua`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  signOffTestCompletion: (reportId, payload) =>
+    testingRequest(`/hoan-tat-kiem-thu/${reportId}/ky-xac-nhan`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  decideTestCompletionResidualRisk: (reportId, riskId, payload) =>
+    testingRequest(`/hoan-tat-kiem-thu/${reportId}/rui-ro/${riskId}/xu-ly`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  approveTestCompletionReport: (reportId, payload) =>
+    testingRequest(`/hoan-tat-kiem-thu/${reportId}/phe-duyet`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  closeTestCompletionReport: (reportId, payload) =>
+    testingRequest(`/hoan-tat-kiem-thu/${reportId}/dong`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   searchProject: (id, query) =>
     testingRequest(`/du-an/${id}/tim-kiem?q=${encodeURIComponent(query)}&limit=50`),
   listRequirementPage: (id, query = "") => listPage(`/du-an/${id}/yeu-cau`, query),
@@ -934,4 +1149,82 @@ export const testingApi = {
   operations: (query = "") => testingRequest(`/van-hanh${query ? `?${query}` : ""}`),
   retryOperationJob: (jobId) =>
     testingRequest(`/van-hanh/tac-vu/${jobId}/thu-lai`, { method: "POST" }),
+  listReviewSessions: (projectId, filters = {}) =>
+    testingRequest(`/du-an/${projectId}/phien-ra-soat?${listQuery(filters)}`),
+  createReviewSession: (projectId, payload) =>
+    testingRequest(`/du-an/${projectId}/phien-ra-soat`, { method: "POST", body: JSON.stringify(payload) }),
+  getReviewSession: (reviewId) => testingRequest(`/phien-ra-soat/${reviewId}`),
+  updateReviewSession: (reviewId, payload) =>
+    testingRequest(`/phien-ra-soat/${reviewId}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  startReviewSession: (reviewId, payload) =>
+    testingRequest(`/phien-ra-soat/${reviewId}/bat-dau`, { method: "POST", body: JSON.stringify(payload) }),
+  createReviewFinding: (reviewId, payload) =>
+    testingRequest(`/phien-ra-soat/${reviewId}/findings`, { method: "POST", body: JSON.stringify(payload) }),
+  updateReviewFinding: (findingId, payload) =>
+    testingRequest(`/phien-ra-soat/finding/${findingId}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  completeReviewSession: (reviewId, payload) =>
+    testingRequest(`/phien-ra-soat/${reviewId}/hoan-tat`, { method: "POST", body: JSON.stringify(payload) }),
+  listMeasurementDefinitions: (projectId) => testingRequest(`/du-an/${projectId}/dinh-nghia-do-luong`),
+  createMeasurementDefinition: (projectId, payload) =>
+    testingRequest(`/du-an/${projectId}/dinh-nghia-do-luong`, { method: "POST", body: JSON.stringify(payload) }),
+  updateMeasurementDefinition: (definitionId, payload) =>
+    testingRequest(`/dinh-nghia-do-luong/${definitionId}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  transitionMeasurementDefinition: (definitionId, payload) =>
+    testingRequest(`/dinh-nghia-do-luong/${definitionId}/trang-thai`, { method: "POST", body: JSON.stringify(payload) }),
+  listMeasurementSnapshots: (projectId, filters = {}) =>
+    testingRequest(`/du-an/${projectId}/anh-do-luong?${listQuery(filters)}`),
+  createMeasurementSnapshot: (projectId, payload) =>
+    testingRequest(`/du-an/${projectId}/anh-do-luong`, { method: "POST", body: JSON.stringify(payload) }),
+  listQualityEvaluations: (projectId, releaseId = "") =>
+    testingRequest(`/du-an/${projectId}/danh-gia-chat-luong${releaseId ? `?release_id=${encodeURIComponent(releaseId)}` : ""}`),
+  createQualityEvaluation: (projectId, payload) =>
+    testingRequest(`/du-an/${projectId}/danh-gia-chat-luong`, { method: "POST", body: JSON.stringify(payload) }),
+  getQualityEvaluation: (evaluationId) => testingRequest(`/danh-gia-chat-luong/${evaluationId}`),
+  updateQualityEvaluation: (evaluationId, payload) =>
+    testingRequest(`/danh-gia-chat-luong/${evaluationId}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  submitQualityEvaluation: (evaluationId, payload) =>
+    testingRequest(`/danh-gia-chat-luong/${evaluationId}/gui-ra-soat`, { method: "POST", body: JSON.stringify(payload) }),
+  reviewQualityEvaluation: (evaluationId, payload) =>
+    testingRequest(`/danh-gia-chat-luong/${evaluationId}/ra-soat`, { method: "POST", body: JSON.stringify(payload) }),
+  createQualityWaiver: (evaluationId, payload) =>
+    testingRequest(`/danh-gia-chat-luong/${evaluationId}/waiver`, { method: "POST", body: JSON.stringify(payload) }),
+  decideQualityWaiver: (evaluationId, waiverId, payload) =>
+    testingRequest(`/danh-gia-chat-luong/${evaluationId}/waiver/${waiverId}/quyet-dinh`, { method: "POST", body: JSON.stringify(payload) }),
+  approveQualityEvaluation: (evaluationId, payload) =>
+    testingRequest(`/danh-gia-chat-luong/${evaluationId}/phe-duyet`, { method: "POST", body: JSON.stringify(payload) }),
+  listCausalAnalyses: (projectId) => testingRequest(`/du-an/${projectId}/phan-tich-nguyen-nhan`),
+  createCausalAnalysis: (projectId, payload) =>
+    testingRequest(`/du-an/${projectId}/phan-tich-nguyen-nhan`, { method: "POST", body: JSON.stringify(payload) }),
+  getCausalAnalysis: (analysisId) => testingRequest(`/phan-tich-nguyen-nhan/${analysisId}`),
+  updateCausalAnalysis: (analysisId, payload) =>
+    testingRequest(`/phan-tich-nguyen-nhan/${analysisId}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  approveCausalRootCause: (analysisId, payload) =>
+    testingRequest(`/phan-tich-nguyen-nhan/${analysisId}/phe-duyet-nguyen-nhan`, { method: "POST", body: JSON.stringify(payload) }),
+  createPreventionAction: (analysisId, payload) =>
+    testingRequest(`/phan-tich-nguyen-nhan/${analysisId}/hanh-dong`, { method: "POST", body: JSON.stringify(payload) }),
+  updatePreventionAction: (actionId, payload) =>
+    testingRequest(`/hanh-dong-phong-ngua/${actionId}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  transitionCausalAnalysis: (analysisId, payload) =>
+    testingRequest(`/phan-tich-nguyen-nhan/${analysisId}/trang-thai`, { method: "POST", body: JSON.stringify(payload) }),
+  generateCausalHypotheses: (analysisId, payload) =>
+    testingRequest(`/phan-tich-nguyen-nhan/${analysisId}/ai/goi-y`, { method: "POST", body: JSON.stringify(payload) }),
+  listEnvironmentIncidents: (projectId, filters = {}) =>
+    testingRequest(`/du-an/${projectId}/incident-moi-truong?${listQuery(filters)}`),
+  createEnvironmentIncident: (projectId, payload) =>
+    testingRequest(`/du-an/${projectId}/incident-moi-truong`, { method: "POST", body: JSON.stringify(payload) }),
+  updateEnvironmentIncident: (incidentId, payload) =>
+    testingRequest(`/incident-moi-truong/${incidentId}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  transitionEnvironmentIncident: (incidentId, payload, close = false) =>
+    testingRequest(`/incident-moi-truong/${incidentId}/${close ? "ket-thuc" : "dieu-tra"}`, { method: "POST", body: JSON.stringify(payload) }),
+  listNonFunctionalTestPlans: (projectId, planType = "") =>
+    testingRequest(`/du-an/${projectId}/ke-hoach-phi-chuc-nang${planType ? `?plan_type=${encodeURIComponent(planType)}` : ""}`),
+  getNonFunctionalTestPlan: (planId) => testingRequest(`/ke-hoach-phi-chuc-nang/${planId}`),
+  createNonFunctionalTestPlan: (projectId, payload) =>
+    testingRequest(`/du-an/${projectId}/ke-hoach-phi-chuc-nang`, { method: "POST", body: JSON.stringify(payload) }),
+  updateNonFunctionalTestPlan: (planId, payload) =>
+    testingRequest(`/ke-hoach-phi-chuc-nang/${planId}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  transitionNonFunctionalTestPlan: (planId, payload, approve = false) =>
+    testingRequest(`/ke-hoach-phi-chuc-nang/${planId}/${approve ? "phe-duyet" : "gui-ra-soat"}`, { method: "POST", body: JSON.stringify(payload) }),
+  importNonFunctionalEvidence: (planId, payload) =>
+    testingRequest(`/ke-hoach-phi-chuc-nang/${planId}/bang-chung-ben-ngoai`, { method: "POST", body: JSON.stringify(payload) }),
 };

@@ -14,6 +14,7 @@ from src.domain.schemas import (
     ReleasePatch,
     ReleaseTransition,
 )
+from src.services.execution_context import ensure_release_completion_gate
 
 
 router = APIRouter(prefix="/kiem-thu", tags=["Ngữ cảnh thực thi kiểm thử"])
@@ -72,6 +73,8 @@ async def release_transition(release_id, payload, user, target, permission, acti
         if release.get("status") == target:
             return envelope(release, revision=release["revision"])
         raise HTTPException(status_code=409, detail={"code": "RELEASE_STATE_INVALID", "current_status": release.get("status"), "target_status": target})
+    if target == "CLOSED":
+        await ensure_release_completion_gate(release["project_id"], release_id)
     updated = await optimistic_patch("releases", release_id, release["project_id"], payload.expected_revision, {"status": target, f"{target.lower()}_by": user.id, f"{target.lower()}_at": now(), "transition_reason": payload.reason})
     if target == "ACTIVE":
         await database.value.releases.update_many({"project_id": release["project_id"], "_id": {"$ne": release_id}, "status": "ACTIVE"}, {"$set": {"is_current": False}})

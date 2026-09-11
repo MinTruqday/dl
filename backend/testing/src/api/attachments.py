@@ -28,6 +28,8 @@ async def register_attachment(
             "test_result": "test_results",
             "defect": "defects",
             "review_comment": "review_comments",
+            "test_status_report": "test_status_reports",
+            "test_completion_report": "test_completion_reports",
         }
         collection = collections.get(payload.artifact_type)
         if not collection:

@@ -13,11 +13,14 @@ const apiBaseUrl = process.env.E2E_API_URL || "http://localhost:8000";
 const projectId = "PRJ-FRONTEND-ROLE-AUDIT";
 const readableSections = [
   ["", "Kiểm thử giao diện theo vai trò"],
+  ["quan-tri-kiem-thu", "Quản trị kiểm thử"],
   ["yeu-cau", "Yêu cầu"],
+  ["phan-tich-kiem-thu", "Phân tích kiểm thử"],
   ["thiet-ke-kiem-thu", "Thiết kế kiểm thử"],
   ["truy-vet", "Truy vết"],
   ["thay-doi", "Phân tích thay đổi"],
   ["thuc-thi", "Thực thi kiểm thử"],
+  ["giam-sat-kiem-thu", "Giám sát và điều khiển kiểm thử"],
   ["ra-soat-ai", "Rà soát đề xuất AI"],
   ["loi", "Lỗi"],
   ["bao-cao", "Báo cáo"],

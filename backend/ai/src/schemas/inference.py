@@ -21,7 +21,7 @@ class KnowledgeDocumentSummaryRequest(BaseModel):
 
 
 class TestingAssistanceRequest(BaseModel):
-    capability: Literal["project_question", "requirement_lint", "scenario_generation", "test_generation", "trace_recommendation", "semantic_change", "impact_analysis", "maintenance_proposal", "regression_recommendation", "defect_linking", "security_test_generation", "performance_plan_generation", "automation_script_generation"] = Field(description="Năng lực kiểm thử cần thực hiện")
+    capability: Literal["project_question", "requirement_lint", "scenario_generation", "test_generation", "trace_recommendation", "semantic_change", "impact_analysis", "maintenance_proposal", "regression_recommendation", "defect_linking", "security_test_generation", "performance_plan_generation", "automation_script_generation", "test_condition_generation", "causal_analysis", "status_report_narrative", "completion_report_narrative", "lessons_learned_clustering"] = Field(description="Năng lực kiểm thử cần thực hiện")
     project_id: str = Field(min_length=1, max_length=128, description="Mã Project giới hạn phạm vi xử lý")
     instruction: str = Field(default="", max_length=5000, description="Chỉ dẫn nghiệp vụ bổ sung của người dùng")
     evidence: List[dict[str, Any]] = Field(min_length=1, max_length=100, description="Bằng chứng artifact đã được giới hạn theo Project")
@@ -83,6 +83,30 @@ class GeneratedCasesOutput(BaseModel):
     warnings: List[str] = Field(default_factory=list, max_length=20)
 
 
+class TestConditionSuggestionOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    title: str = Field(min_length=2, max_length=300)
+    coverage_item: str = Field(min_length=1, max_length=500)
+    test_level: str = Field(min_length=1, max_length=100)
+    test_type: str = Field(min_length=1, max_length=100)
+    risk: Literal["CRITICAL", "HIGH", "MEDIUM", "LOW"]
+    priority: Literal["CRITICAL", "HIGH", "MEDIUM", "LOW"]
+    technique_candidates: List[str] = Field(default_factory=list, max_length=100)
+    testability_status: Literal["TESTABLE", "CONDITIONALLY_TESTABLE", "UNTESTABLE"]
+    analysis_findings: List[dict[str, Any]] = Field(default_factory=list, max_length=100)
+
+
+class TestConditionSuggestionsOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    capability: Literal["test_condition_generation"]
+    suggestions: List[TestConditionSuggestionOutput] = Field(min_length=1, max_length=100)
+    evidence_refs: List[str] = Field(default_factory=list, max_length=200)
+    confidence: float = Field(ge=0, le=1)
+    warnings: List[str] = Field(default_factory=list, max_length=20)
+
+
 class SecuritySuggestionOutput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -139,6 +163,89 @@ class AutomationScriptOutput(BaseModel):
 
     capability: Literal["automation_script_generation"]
     suggestions: List[AutomationScriptSuggestionOutput] = Field(min_length=1, max_length=1)
+    evidence_refs: List[str] = Field(default_factory=list, max_length=200)
+    confidence: float = Field(ge=0, le=1)
+    warnings: List[str] = Field(default_factory=list, max_length=20)
+
+
+class CausalHypothesisSuggestionOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    root_cause_category: Literal["REQUIREMENT", "DESIGN", "IMPLEMENTATION", "CONFIGURATION", "TEST_DATA", "TEST_CASE_GAP", "ENVIRONMENT", "INTEGRATION", "DEPLOYMENT", "PROCESS", "UNKNOWN"]
+    hypothesis: str = Field(min_length=2, max_length=5000)
+    contributing_factors: List[str] = Field(default_factory=list, max_length=50)
+    five_whys: List[str] = Field(default_factory=list, max_length=5)
+    missing_test_conditions: List[str] = Field(default_factory=list, max_length=50)
+    missing_test_cases: List[str] = Field(default_factory=list, max_length=50)
+    evidence_refs: List[str] = Field(default_factory=list, max_length=200)
+    confidence: float = Field(ge=0, le=1)
+
+
+class CausalHypothesesOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    capability: Literal["causal_analysis"]
+    suggestions: List[CausalHypothesisSuggestionOutput] = Field(min_length=1, max_length=100)
+    evidence_refs: List[str] = Field(default_factory=list, max_length=200)
+    confidence: float = Field(ge=0, le=1)
+    warnings: List[str] = Field(default_factory=list, max_length=20)
+
+
+class StatusReportNarrativeSuggestionOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    executive_summary: str = Field(min_length=2, max_length=10000)
+    progress_summary: str = Field(min_length=2, max_length=10000)
+    coverage_summary: str = Field(min_length=2, max_length=10000)
+    defect_summary: str = Field(min_length=2, max_length=10000)
+    forecast: str = Field(min_length=2, max_length=10000)
+    recommendation: Literal["ON_TRACK", "AT_RISK", "BLOCKED", "CONTINUE_TESTING", "READY_WITH_RISK", "NOT_READY"]
+
+
+class StatusReportNarrativeOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    capability: Literal["status_report_narrative"]
+    suggestions: List[StatusReportNarrativeSuggestionOutput] = Field(min_length=1, max_length=1)
+    evidence_refs: List[str] = Field(default_factory=list, max_length=200)
+    confidence: float = Field(ge=0, le=1)
+    warnings: List[str] = Field(default_factory=list, max_length=20)
+
+
+class CompletionReportNarrativeSuggestionOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    executive_summary: str = Field(min_length=2, max_length=10000)
+    closure_summary: str = Field(min_length=2, max_length=10000)
+    residual_risk_summary: str = Field(min_length=2, max_length=10000)
+    recommendation_rationale: str = Field(min_length=2, max_length=10000)
+
+
+class CompletionReportNarrativeOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    capability: Literal["completion_report_narrative"]
+    suggestions: List[CompletionReportNarrativeSuggestionOutput] = Field(min_length=1, max_length=1)
+    evidence_refs: List[str] = Field(default_factory=list, max_length=200)
+    confidence: float = Field(ge=0, le=1)
+    warnings: List[str] = Field(default_factory=list, max_length=20)
+
+
+class LessonsLearnedClusterSuggestionOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    theme: str = Field(min_length=2, max_length=500)
+    category: Literal["WORKED", "FAILED", "BLOCKER", "IMPROVEMENT"]
+    summary: str = Field(min_length=2, max_length=5000)
+    source_indices: List[int] = Field(min_length=1, max_length=500)
+    improvement_candidates: List[str] = Field(default_factory=list, max_length=100)
+
+
+class LessonsLearnedClustersOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    capability: Literal["lessons_learned_clustering"]
+    suggestions: List[LessonsLearnedClusterSuggestionOutput] = Field(min_length=1, max_length=100)
     evidence_refs: List[str] = Field(default_factory=list, max_length=200)
     confidence: float = Field(ge=0, le=1)
     warnings: List[str] = Field(default_factory=list, max_length=20)

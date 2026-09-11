@@ -40,10 +40,11 @@ test("đăng nhập báo đúng lỗi và đăng nhập người dùng thành c�
   const errors = observeRuntime(page);
   await page.goto("/dang-nhap");
   await expect(page.getByRole("heading", { name: "Đăng nhập" })).toBeVisible();
-  await page.getByLabel("Email").fill(credentials.lead.email);
+  await page.getByLabel("Email").fill("invalid-e2e@example.com");
   await page.locator("#login-password").fill("MatKhauKhongDung-2026");
   await page.getByRole("button", { name: "Đăng nhập" }).click();
   await expect(page.getByText("Không thể đăng nhập")).toBeVisible();
+  await page.getByLabel("Email").fill(credentials.lead.email);
   await page.locator("#login-password").fill(credentials.lead.password);
   await page.getByRole("button", { name: "Đăng nhập" }).click();
   await expect(page).toHaveURL(/\/du-an$/);

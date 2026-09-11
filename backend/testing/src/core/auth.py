@@ -33,7 +33,27 @@ requirement.read requirement.create requirement.update requirement.review requir
 requirement.approve requirement.archive requirement.restore requirement.version.create
 requirement.version.read requirement.diff.read acceptance_criteria.manage business_rule.manage
 requirement_dependency.manage requirement.split requirement.merge requirement.duplicate_check
-testplan.read testplan.create testplan.update testplan.submit_review testplan.approve testplan.archive
+    testplan.read testplan.create testplan.update testplan.submit_review testplan.approve testplan.archive
+    teststrategy.read teststrategy.create teststrategy.update teststrategy.submit_review
+    teststrategy.review teststrategy.approve teststrategy.version.read teststrategy.archive
+    testcondition.read testcondition.create testcondition.update testcondition.review
+    testcondition.approve testcondition.archive testanalysis.run_ai testanalysis.resolve_finding
+    testmonitor.read testmonitor.snapshot.create testmonitor.control.create
+    testmonitor.control.assign testmonitor.control.update testmonitor.exit_criteria.override
+    testmonitor.report.create
+    teststatusreport.read teststatusreport.create teststatusreport.update
+    teststatusreport.review teststatusreport.approve teststatusreport.export
+    testcompletion.read testcompletion.create testcompletion.update
+    testcompletion.review testcompletion.approve testcompletion.close
+    reviewsession.read reviewsession.create reviewsession.update
+    reviewsession.finding.manage reviewsession.complete
+    measurement.read measurement.manage measurement.snapshot.create
+    qualityevaluation.read qualityevaluation.create qualityevaluation.review
+    qualityevaluation.approve qualityevaluation.waiver.approve
+    causalanalysis.read causalanalysis.create causalanalysis.update causalanalysis.approve
+    preventionaction.manage
+    environmentincident.read environmentincident.create environmentincident.update environmentincident.close
+    nfrtest.read nfrtest.manage nfrtest.review nfrtest.approve nfrtest.evidence.import
 testscenario.read testscenario.create testscenario.update testscenario.clone testscenario.archive
 testcase.read testcase.create testcase.update testcase.review testcase.clone testcase.import
 testcase.export testcase.lint testcase.duplicate_check testcase.submit_review testcase.approve
@@ -84,6 +104,18 @@ READ_ONLY_PERMISSIONS = {
     "requirement.version.read",
     "requirement.diff.read",
     "testplan.read",
+    "teststrategy.read",
+    "teststrategy.version.read",
+    "testcondition.read",
+    "testmonitor.read",
+    "teststatusreport.read",
+    "testcompletion.read",
+    "reviewsession.read",
+    "measurement.read",
+    "qualityevaluation.read",
+    "causalanalysis.read",
+    "environmentincident.read",
+    "nfrtest.read",
     "testscenario.read",
     "testcase.read",
     "testcase.version.read",
@@ -138,7 +170,18 @@ COLLABORATOR_PERMISSIONS = COMMENT_COLLABORATOR_PERMISSIONS | {
 
 TESTER_PERMISSIONS = READ_ONLY_PERMISSIONS | COLLABORATOR_PERMISSIONS | set(
     """
-testplan.create testplan.update testplan.submit_review
+    testplan.create testplan.update testplan.submit_review
+    teststrategy.create teststrategy.update teststrategy.submit_review teststrategy.review
+    testcondition.create testcondition.update testcondition.review testanalysis.run_ai testanalysis.resolve_finding
+    testmonitor.control.create testmonitor.control.update
+    teststatusreport.create teststatusreport.update teststatusreport.review teststatusreport.export
+    testcompletion.create testcompletion.update testcompletion.review
+    reviewsession.create reviewsession.update reviewsession.finding.manage reviewsession.complete
+    measurement.snapshot.create
+    qualityevaluation.create qualityevaluation.review
+    causalanalysis.create causalanalysis.update preventionaction.manage
+    environmentincident.create environmentincident.update
+    nfrtest.manage nfrtest.review nfrtest.evidence.import
 testscenario.create testscenario.update testscenario.clone testscenario.archive
 testcase.create testcase.update testcase.review testcase.clone testcase.import testcase.export
 testcase.lint testcase.duplicate_check testcase.submit_review testcase.version.create
@@ -174,10 +217,16 @@ requirement_document.review_extraction requirement_document.confirm_extraction
 requirement_document.archive requirement_document.restore
 requirement.create requirement.update requirement.review requirement.submit_review
 requirement.version.create acceptance_criteria.manage business_rule.manage requirement_dependency.manage
-requirement.split requirement.merge requirement.duplicate_check
+    requirement.split requirement.merge requirement.duplicate_check
+    teststrategy.review
+    testcondition.create testcondition.update testcondition.review testanalysis.run_ai testanalysis.resolve_finding
 trace.create trace.review trace.recover changeset.create changeset.review impact.review proposal.review
 testcase.export testcase.lint testcase.duplicate_check testcase.review defect.create defect.trace.manage
 knowledge.manage ai.ask_project ai.run_lint ai.run_duplicate_check ai.suggest_bug_trace analytics.ai.read report.export
+    teststatusreport.export
+    testcompletion.review
+    reviewsession.create reviewsession.update reviewsession.finding.manage reviewsession.complete
+    qualityevaluation.review
 attachment.manage
 apiartifact.import apiartifact.review apiartifact.confirm apiartifact.archive
 project.connector.sync project.connector.review
@@ -192,6 +241,14 @@ DEVELOPER_PERMISSIONS = READ_ONLY_PERMISSIONS | COMMENT_COLLABORATOR_PERMISSIONS
     "defect.create",
     "defect.duplicate_check",
     "testcase.review",
+    "reviewsession.create",
+    "reviewsession.update",
+    "reviewsession.finding.manage",
+    "causalanalysis.create",
+    "causalanalysis.update",
+    "preventionaction.manage",
+    "environmentincident.create",
+    "environmentincident.update",
     "ai.ask_project",
 }
 

@@ -45,6 +45,14 @@ def response_for(payload):
             ]
         elif name == "automation_script_generation":
             suggestions = [{"source": "import { test, expect } from '@playwright/test';\ntest('đăng nhập', async ({ page }) => { await page.goto(process.env.BASE_URL); await expect(page).toHaveURL(/.+/); });", "secret_placeholders": ["BASE_URL"]}]
+        elif name == "causal_analysis":
+            suggestions = [{"root_cause_category": "CONFIGURATION", "hypothesis": "Cấu hình môi trường không đồng nhất", "contributing_factors": ["Thiếu kiểm tra trước triển khai"], "five_whys": ["Cấu hình chưa được xác minh"], "missing_test_conditions": ["Kiểm tra cấu hình môi trường"], "missing_test_cases": ["Từ chối chạy khi cấu hình sai"], "evidence_refs": [], "confidence": 0.8}]
+        elif name == "status_report_narrative":
+            suggestions = [{"executive_summary": "Tiến độ kiểm thử đang được theo dõi theo snapshot", "progress_summary": "Phạm vi đã thực thi được tổng hợp từ kết quả đã khóa", "coverage_summary": "Độ phủ được diễn giải từ số liệu xác định", "defect_summary": "Các lỗi mở cần tiếp tục được xử lý", "forecast": "Tiếp tục thực thi và đánh giá lại ở snapshot kế tiếp", "recommendation": "CONTINUE_TESTING"}]
+        elif name == "completion_report_narrative":
+            suggestions = [{"executive_summary": "Hoạt động kiểm thử đã được tổng kết theo phạm vi đã khóa", "closure_summary": "Testware và môi trường đã được rà soát cho bàn giao", "residual_risk_summary": "Rủi ro còn lại cần quyết định của người có thẩm quyền", "recommendation_rationale": "Khuyến nghị dựa trên quality gate và hạng mục chưa giải quyết"}]
+        elif name == "lessons_learned_clustering":
+            suggestions = [{"theme": "Ổn định môi trường", "category": "IMPROVEMENT", "summary": "Chuẩn hóa kiểm tra môi trường trước khi thực thi", "source_indices": [0], "improvement_candidates": ["Tự động hóa bước kiểm tra trước chạy"]}]
         elif name in {"scenario_generation", "test_generation"}:
             category_match = re.search(r'\\?"categories\\?"\s*:\s*\[\s*\\?"([a-z_]+)', prompt)
             category = category_match.group(1) if category_match else "happy_path"

@@ -14,6 +14,33 @@ import { testingApi } from "../../services/testing.service";
 import { messageOf, valueLabel } from "../../lib/testing";
 import { Modal, ModalHeader, ModalTitle } from "@/shared/components/ui/Modal";
 
+const sourceTypes = [
+  ["SRS", "Đặc tả yêu cầu phần mềm"],
+  ["BRD", "Tài liệu yêu cầu nghiệp vụ"],
+  ["USER_STORY", "User story"],
+  ["ACCEPTANCE_CRITERIA", "Tiêu chí chấp nhận"],
+  ["BUSINESS_RULE", "Quy tắc nghiệp vụ"],
+  ["API_SPEC", "Đặc tả API"],
+  ["UI_SPEC", "Đặc tả giao diện"],
+  ["ARCHITECTURE", "Kiến trúc"],
+  ["MEETING_NOTE", "Biên bản họp"],
+  ["RELEASE_NOTE", "Ghi chú phát hành"],
+  ["BUG_HISTORY", "Lịch sử lỗi"],
+  ["TEST_ARTIFACT", "Tài sản kiểm thử"],
+  ["REGULATION", "Quy định"],
+  ["REFERENCE", "Tài liệu tham chiếu"],
+  ["OTHER", "Nguồn khác"],
+];
+
+const authorityLevels = [
+  ["APPROVED_SOURCE", "Nguồn đã phê duyệt"],
+  ["CONTROLLED_SOURCE", "Nguồn được kiểm soát"],
+  ["PROJECT_REFERENCE", "Tham chiếu dự án"],
+  ["SUPPLEMENTAL", "Nguồn bổ trợ"],
+  ["DRAFT", "Bản nháp"],
+  ["UNVERIFIED", "Chưa xác minh"],
+];
+
 export default function KnowledgePage({ project, initialQuery = "", useGlobalSearch = false }) {
   const { ask, dialog } = useActionDialog();
   const [query, setQuery] = useState(initialQuery);
@@ -181,7 +208,7 @@ export default function KnowledgePage({ project, initialQuery = "", useGlobalSea
           />
         </Panel>
       )}
-      <Panel title="Nguồn tri thức giáo viên và chương trình học">
+      <Panel title="Nguồn tri thức kiểm thử của dự án">
         {canManage && (
           <Modal
             isOpen={creatingSource}
@@ -205,9 +232,17 @@ export default function KnowledgePage({ project, initialQuery = "", useGlobalSea
                     source_type: values.get("source_type"),
                     authority: values.get("authority"),
                     source_url: values.get("source_url") || null,
-                    teacher_id: values.get("teacher_id") || null,
-                    subject: values.get("subject") || null,
-                    grade: values.get("grade") || null,
+                    owner_id: values.get("owner_id") || null,
+                    module: values.get("module") || null,
+                    component: values.get("component") || null,
+                    product_area: values.get("product_area") || null,
+                    release_id: values.get("release_id") || null,
+                    external_source_id: values.get("external_source_id") || null,
+                    approval_status: values.get("approval_status"),
+                    approved_by: values.get("approved_by") || null,
+                    approved_at: values.get("approved_at") || null,
+                    source_version: values.get("source_version"),
+                    effective_from: values.get("effective_from") || null,
                     tags: String(values.get("tags") || "")
                       .split(",")
                       .map((value) => value.trim())
@@ -230,35 +265,69 @@ export default function KnowledgePage({ project, initialQuery = "", useGlobalSea
                 <select
                   className="apple-input mt-2"
                   name="source_type"
-                  defaultValue="teacher_material"
+                  defaultValue="REFERENCE"
                 >
-                  <option value="teacher_material">Tài liệu giáo viên</option>
-                  <option value="official_textbook">Sách giáo khoa chính thức</option>
-                  <option value="curriculum">Chương trình học</option>
-                  <option value="reference">Tài liệu tham khảo</option>
-                  <option value="other">Nguồn khác</option>
+                  {sourceTypes.map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
                 </select>
               </label>
               <label className="field-label">
                 Mức thẩm quyền
-                <select className="apple-input mt-2" name="authority" defaultValue="teacher">
-                  <option value="teacher">Giáo viên</option>
-                  <option value="official">Chính thức</option>
-                  <option value="supplemental">Bổ trợ</option>
-                  <option value="reference">Tham khảo</option>
+                <select className="apple-input mt-2" name="authority" defaultValue="PROJECT_REFERENCE">
+                  {authorityLevels.map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
                 </select>
               </label>
               <label className="field-label">
-                Mã giáo viên
-                <input className="apple-input mt-2" name="teacher_id" />
+                Người phụ trách
+                <input className="apple-input mt-2" name="owner_id" />
               </label>
               <label className="field-label">
-                Môn học
-                <input className="apple-input mt-2" name="subject" />
+                Module
+                <input className="apple-input mt-2" name="module" />
               </label>
               <label className="field-label">
-                Khối lớp
-                <input className="apple-input mt-2" name="grade" />
+                Component
+                <input className="apple-input mt-2" name="component" />
+              </label>
+              <label className="field-label">
+                Khu vực sản phẩm
+                <input className="apple-input mt-2" name="product_area" />
+              </label>
+              <label className="field-label">
+                Bản phát hành
+                <input className="apple-input mt-2" name="release_id" />
+              </label>
+              <label className="field-label">
+                Mã nguồn bên ngoài
+                <input className="apple-input mt-2" name="external_source_id" />
+              </label>
+              <label className="field-label">
+                Trạng thái phê duyệt
+                <select className="apple-input mt-2" name="approval_status" defaultValue="DRAFT">
+                  <option value="DRAFT">Bản nháp</option>
+                  <option value="IN_REVIEW">Đang rà soát</option>
+                  <option value="APPROVED">Đã phê duyệt</option>
+                  <option value="REJECTED">Từ chối</option>
+                </select>
+              </label>
+              <label className="field-label">
+                Phiên bản nguồn
+                <input className="apple-input mt-2" name="source_version" defaultValue="1" required />
+              </label>
+              <label className="field-label">
+                Người phê duyệt
+                <input className="apple-input mt-2" name="approved_by" />
+              </label>
+              <label className="field-label">
+                Thời điểm phê duyệt
+                <input className="apple-input mt-2" name="approved_at" type="datetime-local" />
+              </label>
+              <label className="field-label">
+                Hiệu lực từ
+                <input className="apple-input mt-2" name="effective_from" type="datetime-local" />
               </label>
               <label className="field-label">
                 Liên kết nguồn
@@ -295,10 +364,10 @@ export default function KnowledgePage({ project, initialQuery = "", useGlobalSea
             { key: "source_type", label: "Loại", render: (item) => valueLabel(item.source_type) },
             { key: "authority", label: "Thẩm quyền", render: (item) => valueLabel(item.authority) },
             {
-              key: "subject",
-              label: "Môn và khối",
+              key: "module",
+              label: "Phạm vi",
               render: (item) =>
-                [item.subject, item.grade].filter(Boolean).join(" · ") || "Chưa khai báo",
+                [item.product_area, item.module, item.component].filter(Boolean).join(" · ") || "Chưa khai báo",
             },
             {
               key: "index_status",

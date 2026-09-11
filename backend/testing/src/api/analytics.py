@@ -156,7 +156,7 @@ async def search_knowledge(
             authority = item.get("authority") or (
                 "baseline" if item.get("status") == "BASELINED" else "draft"
             )
-            results.append({"artifact_type": artifact_type, "artifact_id": item.get("requirement_id") or item.get("test_case_id") or item["_id"], "artifact_version_id": item["_id"], "title": item.get("title") or item.get("name") or item.get("filename"), "text": str(item.get(text_field, ""))[:1000], "status": item.get("status"), "authority": authority, "source_type": item.get("source_type"), "teacher_id": item.get("teacher_id"), "subject": item.get("subject"), "grade": item.get("grade"), "project_id": project_id, "score": lexical_score(payload.query, str(item.get(text_field, "")) + " " + str(item.get("title", "")) + " " + str(item.get("filename", "")))})
+            results.append({"artifact_type": artifact_type, "artifact_id": item.get("requirement_id") or item.get("test_case_id") or item["_id"], "artifact_version_id": item["_id"], "title": item.get("title") or item.get("name") or item.get("filename"), "text": str(item.get(text_field, ""))[:1000], "status": item.get("status"), "authority": authority, "source_type": item.get("source_type"), "owner_id": item.get("owner_id"), "module": item.get("module"), "component": item.get("component"), "product_area": item.get("product_area"), "release_id": item.get("release_id"), "external_source_id": item.get("external_source_id"), "approval_status": item.get("approval_status"), "approved_by": item.get("approved_by"), "approved_at": item.get("approved_at"), "source_version": item.get("source_version"), "effective_from": item.get("effective_from"), "tags": item.get("tags", []), "project_id": project_id, "score": lexical_score(payload.query, str(item.get(text_field, "")) + " " + str(item.get("title", "")) + " " + str(item.get("filename", "")))})
     by_version = {item.get("artifact_version_id"): item for item in results}
     for item in dense:
         version_id = item.get("artifact_version_id")
@@ -168,7 +168,7 @@ async def search_knowledge(
     results = list(by_version.values())
     authority_order = (project.get("settings") or {}).get(
         "knowledge_authority_order",
-        ["teacher", "official", "baseline", "supplemental", "reference", "draft"],
+        ["APPROVED_SOURCE", "CONTROLLED_SOURCE", "PROJECT_REFERENCE", "SUPPLEMENTAL", "DRAFT", "UNVERIFIED"],
     )
     authority_rank = {value: index for index, value in enumerate(authority_order)}
     results.sort(

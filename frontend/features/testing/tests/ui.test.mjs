@@ -28,8 +28,96 @@ const projectConnectorsSource = await readSource("../components/ProjectConnector
 const automationExecutionSource = await readSource("../components/AutomationExecutionPanel.jsx");
 const cicdSource = await readSource("../components/CicdPanel.jsx");
 const collaborationSource = await readSource("../components/CollaborationPanel.jsx");
+const statusReportSource = await readSource("../components/TestStatusReportPanel.jsx");
+const completionSource = await readSource("../pages/workspace/CompletionPage.jsx");
+const completionEditorSource = await readSource("../components/CompletionReportEditor.jsx");
+const residualRiskSource = await readSource("../components/ResidualRiskPanel.jsx");
+const lessonsLearnedSource = await readSource("../components/LessonsLearnedPanel.jsx");
+const testwareHandoverSource = await readSource("../components/TestwareHandoverPanel.jsx");
+const reportsSource = await readSource("../pages/workspace/ReportsPage.jsx");
 const settingsSource = await readSource("../pages/workspace/SettingsPage.jsx");
 const testingServiceSource = await readSource("../services/testing.service.js");
+const formalReviewSource = await readSource("../components/FormalReviewPanel.jsx");
+const measurementSource = await readSource("../components/MetricDefinitionPanel.jsx");
+const releaseQualitySource = await readSource("../components/ReleaseQualityPanel.jsx");
+const causalAnalysisSource = await readSource("../components/CausalAnalysisPanel.jsx");
+const environmentIncidentSource = await readSource("../components/EnvironmentIncidentPanel.jsx");
+const nonFunctionalSource = await readSource("../components/NonFunctionalTestPanel.jsx");
+
+test("status reports retain snapshot review publication comparison and export workflows", () => {
+  for (const route of [
+    "/du-an/${projectId}/bao-cao-trang-thai",
+    "/du-an/${projectId}/bao-cao-trang-thai/tao-tu-snapshot",
+    "/bao-cao-trang-thai/${reportId}/bang-chung",
+    "/bao-cao-trang-thai/${reportId}/gui-ra-soat",
+    "/bao-cao-trang-thai/${reportId}/yeu-cau-chinh-sua",
+    "/bao-cao-trang-thai/${reportId}/phe-duyet",
+    "/bao-cao-trang-thai/${reportId}/phat-hanh",
+    "/bao-cao-trang-thai/${reportId}/so-sanh",
+    "/bao-cao-trang-thai/${reportId}/xuat",
+    "/bao-cao-trang-thai/${reportId}/ai/ban-nhap",
+  ]) {
+    assert.ok(testingServiceSource.includes(route), route);
+  }
+  for (const label of [
+    "Báo cáo trạng thái kiểm thử",
+    "Tạo từ snapshot",
+    "Gửi rà soát",
+    "Phê duyệt",
+    "Phát hành",
+    "So sánh",
+    "Xuất PDF",
+    "Xuất DOCX",
+    "Xuất CSV",
+    "AI soạn bản nháp",
+    "Dùng làm bản nháp",
+  ]) {
+    assert.ok(statusReportSource.includes(label), label);
+  }
+  assert.match(statusReportSource, /snapshot_source_fingerprint/);
+  assert.match(statusReportSource, /teststatusreport\.approve/);
+  assert.match(reportsSource, /<TestStatusReportPanel project=\{project\}/);
+});
+
+test("test completion retains exact snapshots residual risk lessons sign off and release gate policy", () => {
+  for (const route of [
+    "/du-an/${projectId}/hoan-tat-kiem-thu",
+    "/hoan-tat-kiem-thu/${reportId}",
+    "/hoan-tat-kiem-thu/${reportId}/gui-ra-soat",
+    "/hoan-tat-kiem-thu/${reportId}/yeu-cau-chinh-sua",
+    "/hoan-tat-kiem-thu/${reportId}/ky-xac-nhan",
+    "/hoan-tat-kiem-thu/${reportId}/rui-ro/${riskId}/xu-ly",
+    "/hoan-tat-kiem-thu/${reportId}/phe-duyet",
+    "/hoan-tat-kiem-thu/${reportId}/dong",
+    "/hoan-tat-kiem-thu/${reportId}/ai/ban-nhap",
+    "/hoan-tat-kiem-thu/${reportId}/ai/gom-bai-hoc",
+  ]) {
+    assert.ok(testingServiceSource.includes(route), route);
+  }
+  for (const label of [
+    "Báo cáo hoàn tất kiểm thử",
+    "Tạo báo cáo hoàn tất",
+    "Gửi rà soát",
+    "Ký xác nhận",
+    "Phê duyệt báo cáo",
+    "Đóng báo cáo",
+    "Đánh giá exit criteria",
+    "Hạng mục chưa giải quyết",
+    "AI soạn bản nháp",
+    "AI gom bài học",
+  ]) {
+    assert.ok(completionSource.includes(label), label);
+  }
+  assert.match(completionSource, /testcompletion\.approve/);
+  assert.match(completionSource, /monitoring_snapshot_id/);
+  assert.match(completionEditorSource, /ResidualRiskPanel/);
+  assert.match(completionEditorSource, /LessonsLearnedPanel/);
+  assert.match(residualRiskSource, /accepted_by/);
+  assert.match(lessonsLearnedSource, /Hành động cải tiến/);
+  assert.match(testwareHandoverSource, /Bàn giao testware/);
+  assert.match(reportsSource, /<CompletionPage project=\{project\}/);
+  assert.match(settingsSource, /require_completion_report_before_release_close/);
+});
 
 test("DataTable always assigns a unique key to desktop and mobile rows", () => {
   assert.doesNotMatch(dataTableSource, /key=\{item\._id \|\| item\.id\}/);
@@ -459,4 +547,38 @@ test("automated execution CI CD and collaboration services use canonical Vietnam
   assert.match(testDesignSource, /applyTestCaseCollaborationOperation/);
   assert.match(requirementsSource, /<CollaborationPanel/);
   assert.match(testDesignSource, /<CollaborationPanel/);
+});
+
+test("V5 P1 process surfaces connect formal review measurement release quality RCA incidents and NFR", () => {
+  for (const route of [
+    "/du-an/${projectId}/phien-ra-soat",
+    "/phien-ra-soat/${reviewId}/hoan-tat",
+    "/du-an/${projectId}/dinh-nghia-do-luong",
+    "/du-an/${projectId}/anh-do-luong",
+    "/du-an/${projectId}/danh-gia-chat-luong",
+    "/danh-gia-chat-luong/${evaluationId}/phe-duyet",
+    "/du-an/${projectId}/phan-tich-nguyen-nhan",
+    "/phan-tich-nguyen-nhan/${analysisId}/ai/goi-y",
+    "/du-an/${projectId}/incident-moi-truong",
+    "/du-an/${projectId}/ke-hoach-phi-chuc-nang",
+  ]) assert.ok(testingServiceSource.includes(route), route);
+  assert.match(formalReviewSource, /Hoàn tất phiên rà soát/);
+  assert.match(measurementSource, /Đo ngay/);
+  assert.match(releaseQualitySource, /qualityevaluation\.approve/);
+  assert.match(releaseQualitySource, /Tạo waiver/);
+  assert.match(causalAnalysisSource, /AI đề xuất giả thuyết/);
+  assert.match(causalAnalysisSource, /Cập nhật nguyên nhân/);
+  assert.match(causalAnalysisSource, /Xác nhận nguyên nhân/);
+  assert.match(causalAnalysisSource, /Dùng làm bản nháp/);
+  assert.match(environmentIncidentSource, /Ghi nhận incident/);
+  assert.match(nonFunctionalSource, /Security Test Plan/);
+  assert.match(nonFunctionalSource, /Nhập bằng chứng/);
+  assert.match(nonFunctionalSource, /getNonFunctionalTestPlan/);
+  assert.match(reportsSource, /<ReleaseQualityPanel/);
+  assert.match(reportsSource, /<MetricDefinitionPanel/);
+  assert.match(defectsSource, /<CausalAnalysisPanel/);
+  assert.match(executionSource, /<EnvironmentIncidentPanel/);
+  assert.match(executionSource, /<NonFunctionalTestPanel/);
+  assert.match(requirementsSource, /<FormalReviewPanel/);
+  assert.match(testDesignSource, /<FormalReviewPanel/);
 });

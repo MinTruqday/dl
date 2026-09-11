@@ -303,6 +303,7 @@ services:
       - cloud
       - worker
     volumes:
+      - ./scripts:/app/scripts:ro
       - ./backend/testing/src:/app/src
       - ./backend/testing/tests:/app/tests
     networks:
