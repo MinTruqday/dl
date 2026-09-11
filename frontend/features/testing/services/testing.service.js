@@ -130,6 +130,11 @@ export const testingApi = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  reviewTestStrategy: (strategyId, payload) =>
+    testingRequest(`/chien-luoc/${strategyId}/ra-soat`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   approveTestStrategy: (strategyId, payload) =>
     testingRequest(`/chien-luoc/${strategyId}/phe-duyet`, {
       method: "POST",
@@ -140,6 +145,15 @@ export const testingApi = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  compareTestStrategyVersions: (strategyId, otherStrategyId) =>
+    testingRequest(`/chien-luoc/${strategyId}/so-sanh?other_strategy_id=${encodeURIComponent(otherStrategyId)}`),
+  cloneTestStrategy: (projectId, payload) =>
+    testingRequest(`/du-an/${projectId}/chien-luoc/nhan-ban`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  validateTestStrategy: (strategyId) =>
+    testingRequest(`/chien-luoc/${strategyId}/kiem-tra`, { method: "POST" }),
   archiveTestStrategy: (strategyId, payload) =>
     testingRequest(`/chien-luoc/${strategyId}/luu-tru`, {
       method: "POST",

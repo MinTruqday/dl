@@ -20,7 +20,7 @@ from src.services.change_analysis import (
     semantic_changes,
     technique_candidate,
 )
-from src.services.ai_assistance import apply_ai_impact_suggestions, request_impact_classification
+from src.services.impact_assistance import apply_ai_impact_suggestions, request_impact_classification
 from src.services.project_knowledge import index_artifact
 
 

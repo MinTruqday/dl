@@ -89,6 +89,52 @@ class StrategyVersionInput(BaseModel):
     change_reason: str = Field(min_length=2, max_length=5000)
 
 
+class StrategyCloneInput(BaseModel):
+    source_strategy_id: str = Field(min_length=1, max_length=200)
+    key: str = Field(min_length=2, max_length=80, pattern=r"^[A-Z][A-Z0-9_-]+$")
+    name: str = Field(min_length=2, max_length=300)
+    tailoring_rationale: str = Field(min_length=2, max_length=5000)
+
+
+def strategy_completeness(strategy):
+    checks = (
+        ("STRATEGY_OBJECTIVE_MISSING", bool(str(strategy.get("objective", "")).strip())),
+        ("STRATEGY_TEST_LEVEL_MISSING", bool(strategy.get("test_levels"))),
+        ("STRATEGY_TEST_TYPE_MISSING", bool(strategy.get("test_types"))),
+        ("STRATEGY_RISK_MODEL_MISSING", bool(strategy.get("risk_model"))),
+        ("STRATEGY_ENTRY_CRITERIA_MISSING", bool(strategy.get("entry_criteria_defaults"))),
+        ("STRATEGY_EXIT_CRITERIA_MISSING", bool(strategy.get("exit_criteria_defaults"))),
+        ("STRATEGY_SUSPENSION_CRITERIA_MISSING", bool(strategy.get("suspension_criteria"))),
+        ("STRATEGY_RESUMPTION_CRITERIA_MISSING", bool(strategy.get("resumption_criteria"))),
+        ("STRATEGY_REPORTING_CADENCE_MISSING", bool(strategy.get("reporting_policy", {}).get("cadence"))),
+        ("STRATEGY_QUALITY_OBJECTIVE_MISSING", bool(strategy.get("quality_objectives"))),
+    )
+    findings = [{"code": code, "severity": "MAJOR"} for code, passed in checks if not passed]
+    return {"ready_for_review": not findings, "findings": findings}
+
+
+def compare_strategy_snapshots(left, right):
+    left_snapshot = strategy_snapshot(left)
+    right_snapshot = strategy_snapshot(right)
+    ignored = {"strategy_id", "version"}
+    changed_fields = [
+        field
+        for field in sorted(set(left_snapshot) | set(right_snapshot))
+        if field not in ignored and left_snapshot.get(field) != right_snapshot.get(field)
+    ]
+    return {
+        "left_strategy_id": left["_id"],
+        "right_strategy_id": right["_id"],
+        "left_version": left["version"],
+        "right_version": right["version"],
+        "changed_fields": changed_fields,
+        "changes": [
+            {"field": field, "before": left_snapshot.get(field), "after": right_snapshot.get(field)}
+            for field in changed_fields
+        ],
+    }
+
+
 def strategy_snapshot(strategy):
     fields = tuple(TestStrategyFields.model_fields)
     return {

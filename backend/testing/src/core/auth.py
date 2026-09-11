@@ -35,7 +35,7 @@ requirement.version.read requirement.diff.read acceptance_criteria.manage busine
 requirement_dependency.manage requirement.split requirement.merge requirement.duplicate_check
     testplan.read testplan.create testplan.update testplan.submit_review testplan.approve testplan.archive
     teststrategy.read teststrategy.create teststrategy.update teststrategy.submit_review
-    teststrategy.review teststrategy.approve teststrategy.version.read teststrategy.archive
+    teststrategy.review teststrategy.approve teststrategy.version.create teststrategy.version.read teststrategy.archive
     testcondition.read testcondition.create testcondition.update testcondition.review
     testcondition.approve testcondition.archive testanalysis.run_ai testanalysis.resolve_finding
     testmonitor.read testmonitor.snapshot.create testmonitor.control.create

@@ -6,7 +6,7 @@ from pydantic import ValidationError
 from src.core.auth import ProjectRole, permissions_for_role
 from src.domain.test_strategy import TestStrategyCreate as StrategyCreate
 from src.domain.test_strategy import TestStrategyFields as StrategyFields
-from src.domain.test_strategy import strategy_hash, strategy_snapshot
+from src.domain.test_strategy import compare_strategy_snapshots, strategy_completeness, strategy_hash, strategy_snapshot
 
 
 def strategy_payload():
@@ -29,6 +29,8 @@ def strategy_payload():
         "exit_criteria_defaults": ["Không còn lỗi blocker"],
         "suspension_criteria": ["Môi trường không khả dụng"],
         "resumption_criteria": ["Môi trường đã được xác minh"],
+        "reporting_policy": {"cadence": "WEEKLY"},
+        "quality_objectives": [{"key": "PASS_RATE", "target": 95}],
         "reviewer_ids": ["TESTER-1"],
     }
 
@@ -69,6 +71,28 @@ def test_strategy_snapshot_hash_is_stable_and_content_sensitive():
     assert strategy_snapshot(strategy)["version"] == 1
 
 
+def test_strategy_completeness_reports_deterministic_findings():
+    complete = strategy_payload()
+    assert strategy_completeness(complete) == {"ready_for_review": True, "findings": []}
+    incomplete = {**complete, "reporting_policy": {}, "quality_objectives": []}
+    result = strategy_completeness(incomplete)
+    assert result["ready_for_review"] is False
+    assert {item["code"] for item in result["findings"]} == {
+        "STRATEGY_REPORTING_CADENCE_MISSING",
+        "STRATEGY_QUALITY_OBJECTIVE_MISSING",
+    }
+
+
+def test_strategy_comparison_returns_only_changed_controlled_fields():
+    payload = strategy_payload()
+    payload.pop("key")
+    left = {"_id": "TSTR-1", "lineage_id": "TSTR-1", "project_id": "PROJECT-1", "key": "STR_LOGIN", "version": 1, **StrategyFields(**payload).model_dump()}
+    right = {**left, "_id": "TSTR-2", "version": 2, "approach": "Kết hợp rủi ro và exploratory testing"}
+    result = compare_strategy_snapshots(left, right)
+    assert result["changed_fields"] == ["approach"]
+    assert result["changes"][0]["before"] == left["approach"]
+
+
 def test_strategy_permissions_cover_all_project_roles():
     lead = permissions_for_role(ProjectRole.QA_LEAD)
     tester = permissions_for_role(ProjectRole.TESTER)
@@ -82,6 +106,7 @@ def test_strategy_permissions_cover_all_project_roles():
         "teststrategy.submit_review",
         "teststrategy.review",
         "teststrategy.approve",
+        "teststrategy.version.create",
         "teststrategy.version.read",
         "teststrategy.archive",
     } <= lead
@@ -90,3 +115,4 @@ def test_strategy_permissions_cover_all_project_roles():
     assert {"teststrategy.read", "teststrategy.version.read"} <= developer
     assert {"teststrategy.read", "teststrategy.version.read"} <= viewer
     assert "teststrategy.approve" not in tester | analyst | developer | viewer
+    assert "teststrategy.version.create" not in tester | analyst | developer | viewer

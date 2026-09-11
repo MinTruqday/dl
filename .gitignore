@@ -32,3 +32,6 @@ test-results/
 *.archive
 *.docx
 
+*.mp4
+*.mov
+*.avi

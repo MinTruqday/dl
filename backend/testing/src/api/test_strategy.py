@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, Query
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
-from src.domain.test_strategy import StrategyTransitionInput, StrategyVersionInput, TestStrategyCreate, TestStrategyPatch
-from src.services.test_strategy import approve_strategy, archive_strategy, create_strategy, create_strategy_version, get_strategy_for_user, list_strategies, request_strategy_changes, submit_strategy, update_strategy
+from src.domain.test_strategy import StrategyCloneInput, StrategyTransitionInput, StrategyVersionInput, TestStrategyCreate, TestStrategyPatch
+from src.services.test_strategy import approve_strategy, archive_strategy, clone_strategy, compare_strategies, create_strategy, create_strategy_version, get_strategy_for_user, list_strategies, request_strategy_changes, review_strategy, submit_strategy, update_strategy, validate_strategy
 
 
 router = APIRouter(prefix="/kiem-thu", tags=["Quản trị kiểm thử"])
@@ -71,6 +71,16 @@ async def request_test_strategy_changes(
     return envelope(value, revision=value["revision"])
 
 
+@router.post("/chien-luoc/{strategy_id}/ra-soat")
+async def review_test_strategy(
+    strategy_id: str,
+    payload: StrategyTransitionInput,
+    user: CurrentUser = Depends(get_current_user),
+):
+    value = await review_strategy(strategy_id, payload, user)
+    return envelope(value, revision=value["revision"])
+
+
 @router.post("/chien-luoc/{strategy_id}/phe-duyet")
 async def approve_test_strategy(
     strategy_id: str,
@@ -89,6 +99,33 @@ async def version_test_strategy(
 ):
     value = await create_strategy_version(strategy_id, payload, user)
     return envelope(value, revision=value["revision"])
+
+
+@router.get("/chien-luoc/{strategy_id}/so-sanh")
+async def compare_test_strategy_versions(
+    strategy_id: str,
+    other_strategy_id: str = Query(min_length=1, max_length=200),
+    user: CurrentUser = Depends(get_current_user),
+):
+    return envelope(await compare_strategies(strategy_id, other_strategy_id, user))
+
+
+@router.post("/du-an/{project_id}/chien-luoc/nhan-ban", status_code=201)
+async def clone_test_strategy(
+    project_id: str,
+    payload: StrategyCloneInput,
+    user: CurrentUser = Depends(get_current_user),
+):
+    value = await clone_strategy(project_id, payload, user)
+    return envelope(value, revision=value["revision"])
+
+
+@router.post("/chien-luoc/{strategy_id}/kiem-tra")
+async def validate_test_strategy(
+    strategy_id: str,
+    user: CurrentUser = Depends(get_current_user),
+):
+    return envelope(await validate_strategy(strategy_id, user))
 
 
 @router.post("/chien-luoc/{strategy_id}/luu-tru")

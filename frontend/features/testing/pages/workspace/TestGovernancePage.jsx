@@ -18,6 +18,8 @@ export default function TestGovernancePage({ project }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
+  const [validation, setValidation] = useState(null);
+  const [comparison, setComparison] = useState(null);
   const can = (permission) => project.current_permissions?.includes(permission);
   const load = useCallback(async () => {
     try {
@@ -36,6 +38,27 @@ export default function TestGovernancePage({ project }) {
     try {
       await action(selected._id, { expected_revision: selected.revision, [field]: answer[field] });
       await load();
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
+  };
+  const validateSelected = async () => {
+    if (!selected) return;
+    try {
+      setValidation(await testingApi.validateTestStrategy(selected._id));
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
+  };
+  const compareSelected = async () => {
+    if (!selected) return;
+    const other = items.find((item) => item.lineage_id === selected.lineage_id && item._id !== selected._id);
+    if (!other) {
+      setComparison({ changed_fields: [], unavailable: true });
+      return;
+    }
+    try {
+      setComparison(await testingApi.compareTestStrategyVersions(selected._id, other._id));
     } catch (reason) {
       setError(messageOf(reason));
     }
@@ -72,10 +95,13 @@ export default function TestGovernancePage({ project }) {
       {selected && (
         <Panel title={`${selected.key} phiên bản ${selected.version}`} actions={<div className="flex flex-wrap gap-2">
           {can("teststrategy.update") && ["DRAFT", "IN_REVIEW"].includes(selected.status) && <button className="secondary-button" type="button" onClick={() => setEditing(true)}>Chỉnh sửa</button>}
+          {can("teststrategy.review") && <button className="secondary-button" type="button" onClick={() => void validateSelected()}>Kiểm tra đầy đủ</button>}
           {can("teststrategy.submit_review") && selected.status === "DRAFT" && <button className="secondary-button" type="button" onClick={() => transition("Gửi chiến lược để rà soát", "Gửi rà soát", testingApi.submitTestStrategy)}>Gửi rà soát</button>}
+          {can("teststrategy.review") && selected.status === "IN_REVIEW" && <button className="secondary-button" type="button" onClick={() => transition("Ghi nhận rà soát chiến lược", "Ghi nhận", testingApi.reviewTestStrategy)}>Ghi nhận rà soát</button>}
           {can("teststrategy.review") && selected.status === "IN_REVIEW" && <button className="secondary-button" type="button" onClick={() => transition("Yêu cầu chỉnh sửa chiến lược", "Yêu cầu chỉnh sửa", testingApi.requestTestStrategyChanges)}>Yêu cầu chỉnh sửa</button>}
           {can("teststrategy.approve") && selected.status === "IN_REVIEW" && <button className="apple-button" type="button" onClick={() => transition("Phê duyệt chiến lược", "Phê duyệt", testingApi.approveTestStrategy)}>Phê duyệt</button>}
-          {can("teststrategy.create") && ["APPROVED", "SUPERSEDED"].includes(selected.status) && <button className="secondary-button" type="button" onClick={() => transition("Tạo phiên bản chiến lược mới", "Tạo phiên bản", testingApi.versionTestStrategy, "change_reason")}>Tạo phiên bản mới</button>}
+          {can("teststrategy.version.create") && ["APPROVED", "SUPERSEDED"].includes(selected.status) && <button className="secondary-button" type="button" onClick={() => transition("Tạo phiên bản chiến lược mới", "Tạo phiên bản", testingApi.versionTestStrategy, "change_reason")}>Tạo phiên bản mới</button>}
+          {can("teststrategy.version.read") && <button className="secondary-button" type="button" onClick={() => void compareSelected()}>So sánh phiên bản</button>}
           {can("teststrategy.archive") && ["DRAFT", "SUPERSEDED"].includes(selected.status) && <button className="secondary-button" type="button" onClick={() => transition("Lưu trữ chiến lược", "Lưu trữ", testingApi.archiveTestStrategy)}>Lưu trữ</button>}
         </div>}>
           <div className="grid gap-5 p-5 md:grid-cols-2">
@@ -86,6 +112,8 @@ export default function TestGovernancePage({ project }) {
             <div><p className="field-label">Công thức rủi ro</p><p className="mt-2 text-sm">{selected.risk_model?.risk_exposure_formula}</p></div>
             <div><p className="field-label">Snapshot</p><p className="mt-2 break-all font-mono text-xs">{selected.snapshot_hash || "Chưa phê duyệt"}</p></div>
           </div>
+          {validation && <div className="border-t border-border p-5 text-sm">{validation.ready_for_review ? "Chiến lược đã đủ điều kiện rà soát" : validation.findings.map((item) => item.code).join(" · ")}</div>}
+          {comparison && <div className="border-t border-border p-5 text-sm">{comparison.unavailable ? "Chưa có phiên bản khác để so sánh" : comparison.changed_fields.length ? `Trường thay đổi ${comparison.changed_fields.join(" · ")}` : "Hai phiên bản không khác nội dung kiểm soát"}</div>}
         </Panel>
       )}
       {selected && <Panel title="Lịch sử phiên bản"><StrategyVersionHistory items={items} lineageId={selected.lineage_id} onSelect={setSelected} /></Panel>}

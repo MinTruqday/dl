@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, now, page_payload
-from src.domain.test_strategy import TestStrategyFields, strategy_hash, strategy_snapshot
+from src.domain.test_strategy import TestStrategyFields, compare_strategy_snapshots, strategy_completeness, strategy_hash, strategy_snapshot
 from src.repositories.test_strategy import test_strategy_repository
 
 
@@ -77,6 +77,9 @@ async def update_strategy(strategy_id, payload, user):
 
 async def submit_strategy(strategy_id, payload, user):
     strategy = await get_strategy_for_user(strategy_id, user, "teststrategy.submit_review")
+    completeness = strategy_completeness(strategy)
+    if not completeness["ready_for_review"]:
+        raise HTTPException(status_code=409, detail={"code": "TEST_STRATEGY_INCOMPLETE", **completeness})
     if not strategy.get("reviewer_ids"):
         raise HTTPException(status_code=422, detail={"code": "STRATEGY_REVIEWERS_REQUIRED"})
     updated = await test_strategy_repository.update(
@@ -115,6 +118,9 @@ async def approve_strategy(strategy_id, payload, user):
         raise HTTPException(status_code=409, detail={"code": "STRATEGY_NOT_IN_REVIEW"})
     if payload.expected_revision != strategy["revision"]:
         raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+    completeness = strategy_completeness(strategy)
+    if not completeness["ready_for_review"]:
+        raise HTTPException(status_code=409, detail={"code": "TEST_STRATEGY_INCOMPLETE", **completeness})
     timestamp = now()
     existing = await test_strategy_repository.active_approved(strategy["project_id"], strategy_id)
     if existing:
@@ -148,7 +154,7 @@ async def approve_strategy(strategy_id, payload, user):
 
 
 async def create_strategy_version(strategy_id, payload, user):
-    strategy = await get_strategy_for_user(strategy_id, user, "teststrategy.create")
+    strategy = await get_strategy_for_user(strategy_id, user, "teststrategy.version.create")
     if strategy["status"] not in {"APPROVED", "SUPERSEDED"}:
         raise HTTPException(status_code=409, detail={"code": "STRATEGY_VERSION_SOURCE_NOT_APPROVED"})
     if payload.expected_revision != strategy["revision"]:
@@ -179,6 +185,77 @@ async def create_strategy_version(strategy_id, payload, user):
     except DuplicateKeyError as error:
         raise HTTPException(status_code=409, detail={"code": "STRATEGY_VERSION_CONFLICT"}) from error
     await audit(user.id, "test_strategy_version_created", "TestStrategy", value["_id"], strategy["project_id"], {"source_strategy_id": strategy_id, "version": version, "reason": payload.change_reason})
+    return value
+
+
+async def validate_strategy(strategy_id, user):
+    strategy = await get_strategy_for_user(strategy_id, user, "teststrategy.review")
+    return strategy_completeness(strategy)
+
+
+async def review_strategy(strategy_id, payload, user):
+    strategy = await get_strategy_for_user(strategy_id, user, "teststrategy.review")
+    if strategy["status"] != "IN_REVIEW":
+        raise HTTPException(status_code=409, detail={"code": "TEST_STRATEGY_NOT_IN_REVIEW"})
+    if user.id not in strategy.get("reviewer_ids", []):
+        raise HTTPException(status_code=403, detail={"code": "STRATEGY_REVIEW_ASSIGNMENT_REQUIRED"})
+    entry = {"reviewer_id": user.id, "note": payload.note, "at": now()}
+    updated = await test_strategy_repository.update(
+        strategy_id,
+        strategy["project_id"],
+        payload.expected_revision,
+        {"IN_REVIEW"},
+        {
+            "reviewed_by": list(dict.fromkeys([*strategy.get("reviewed_by", []), user.id])),
+            "review_history": [*strategy.get("review_history", []), entry],
+            "updated_at": now(),
+        },
+    )
+    if not updated:
+        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+    await audit(user.id, "test_strategy_reviewed", "TestStrategy", strategy_id, strategy["project_id"], {"note": payload.note})
+    return updated
+
+
+async def compare_strategies(strategy_id, other_strategy_id, user):
+    left = await get_strategy_for_user(strategy_id, user, "teststrategy.version.read")
+    right = await get_strategy_for_user(other_strategy_id, user, "teststrategy.version.read")
+    if left["project_id"] != right["project_id"]:
+        raise HTTPException(status_code=422, detail={"code": "CROSS_PROJECT_REFERENCE"})
+    return compare_strategy_snapshots(left, right)
+
+
+async def clone_strategy(project_id, payload, user):
+    await get_project(project_id, user, "teststrategy.create")
+    source = await get_strategy_for_user(payload.source_strategy_id, user, "teststrategy.read")
+    timestamp = now()
+    strategy_id = new_id("TSTR")
+    fields = {field: source.get(field) for field in TestStrategyFields.model_fields}
+    fields["name"] = payload.name
+    fields["tailoring_rationale"] = payload.tailoring_rationale
+    value = {
+        "_id": strategy_id,
+        "lineage_id": strategy_id,
+        "project_id": project_id,
+        "key": payload.key,
+        **fields,
+        "version": 1,
+        "status": "DRAFT",
+        "active_approved": False,
+        "reviewed_by": [],
+        "approval_history": [],
+        "cloned_from_strategy_id": source["_id"],
+        "cloned_from_project_id": source["project_id"],
+        "revision": 1,
+        "created_by": user.id,
+        "created_at": timestamp,
+        "updated_at": timestamp,
+    }
+    try:
+        await test_strategy_repository.create(value)
+    except DuplicateKeyError as error:
+        raise HTTPException(status_code=409, detail={"code": "STRATEGY_KEY_VERSION_EXISTS"}) from error
+    await audit(user.id, "test_strategy_cloned", "TestStrategy", strategy_id, project_id, {"source_strategy_id": source["_id"]})
     return value
 
 
