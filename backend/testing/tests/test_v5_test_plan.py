@@ -2,7 +2,7 @@ import pytest
 from pydantic import ValidationError
 
 from src.domain.schemas import TestPlanCreate as PlanCreate
-from src.services.test_plan_service import plan_snapshot_hash
+from src.services.test_plan import plan_snapshot_hash
 
 
 def base_plan():

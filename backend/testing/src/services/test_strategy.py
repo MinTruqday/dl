@@ -5,7 +5,7 @@ from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, now, page_payload
 from src.domain.test_strategy import TestStrategyFields, strategy_hash, strategy_snapshot
-from src.repositories.test_strategy_repository import test_strategy_repository
+from src.repositories.test_strategy import test_strategy_repository
 
 
 async def get_strategy_for_user(strategy_id, user, permission="teststrategy.read"):

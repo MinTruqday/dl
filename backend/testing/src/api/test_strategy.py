@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Query
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
 from src.domain.test_strategy import StrategyTransitionInput, StrategyVersionInput, TestStrategyCreate, TestStrategyPatch
-from src.services.test_strategy_service import approve_strategy, archive_strategy, create_strategy, create_strategy_version, get_strategy_for_user, list_strategies, request_strategy_changes, submit_strategy, update_strategy
+from src.services.test_strategy import approve_strategy, archive_strategy, create_strategy, create_strategy_version, get_strategy_for_user, list_strategies, request_strategy_changes, submit_strategy, update_strategy
 
 
 router = APIRouter(prefix="/kiem-thu", tags=["Quản trị kiểm thử"])

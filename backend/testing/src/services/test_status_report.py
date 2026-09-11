@@ -6,8 +6,8 @@ from pymongo.errors import DuplicateKeyError
 from src.core.common import audit, get_project, new_id, now
 from src.core.database import database
 from src.domain.test_status_report import status_report_hash, status_report_snapshot
-from src.repositories.test_status_report_repository import find_report, list_reports, next_sequence, update_report
-from src.services.test_monitoring_service import effective_snapshot
+from src.repositories.test_status_report import find_report, list_reports, next_sequence, update_report
+from src.services.test_monitoring import effective_snapshot
 from src.services.design_assistance import request_design_assistance
 
 

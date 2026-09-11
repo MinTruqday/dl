@@ -4,7 +4,7 @@ from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
 from src.core.database import database
 from src.domain.measurement import MeasurementDefinitionCreate, MeasurementDefinitionPatch, MeasurementSnapshotCreate, MeasurementTransition
-from src.services.measurement_service import create_definition, create_snapshot, list_definitions, list_snapshots, transition_definition, update_definition
+from src.services.measurement import create_definition, create_snapshot, list_definitions, list_snapshots, transition_definition, update_definition
 
 
 router = APIRouter(prefix="/kiem-thu", tags=["Đo lường kiểm thử"])

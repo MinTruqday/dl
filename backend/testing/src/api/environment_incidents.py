@@ -4,7 +4,7 @@ from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
 from src.core.database import database
 from src.domain.environment_incident import EnvironmentIncidentCreate, EnvironmentIncidentPatch, EnvironmentIncidentTransition
-from src.services.environment_incident_service import create_incident, get_incident, list_incidents, transition_incident, update_incident
+from src.services.environment_incident import create_incident, get_incident, list_incidents, transition_incident, update_incident
 
 
 router = APIRouter(prefix="/kiem-thu", tags=["Incident môi trường"])

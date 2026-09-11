@@ -7,7 +7,7 @@ from pymongo.errors import DuplicateKeyError
 from src.core.common import audit, get_project, new_id, next_key, now, page_payload
 from src.core.database import database
 from src.domain.test_analysis import TestConditionCreate, condition_hash, condition_snapshot
-from src.repositories.test_condition_repository import test_condition_repository
+from src.repositories.test_condition import test_condition_repository
 from src.services.design_assistance import request_design_assistance
 
 

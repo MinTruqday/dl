@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Query
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
 from src.domain.test_monitoring import ControlActionCreate, ControlActionPatch, ExitCriterionOverride, MonitoringSnapshotCreate
-from src.services.test_monitoring_service import create_control_action, create_monitoring_snapshot, get_snapshot_for_user, list_actions_for_user, list_monitoring_snapshots, override_exit_criterion, update_control_action
+from src.services.test_monitoring import create_control_action, create_monitoring_snapshot, get_snapshot_for_user, list_actions_for_user, list_monitoring_snapshots, override_exit_criterion, update_control_action
 
 
 router = APIRouter(prefix="/kiem-thu", tags=["Giám sát và điều khiển kiểm thử"])

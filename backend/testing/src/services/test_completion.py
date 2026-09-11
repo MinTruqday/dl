@@ -6,8 +6,8 @@ from pymongo.errors import DuplicateKeyError
 from src.core.common import audit, get_project, new_id, now
 from src.core.database import database
 from src.domain.test_completion import completion_hash, completion_snapshot
-from src.repositories.test_completion_repository import find_completion, list_completions, next_completion_sequence, update_completion
-from src.services.exit_criteria_service import evaluate_exit_criteria, quality_gate_status
+from src.repositories.test_completion import find_completion, list_completions, next_completion_sequence, update_completion
+from src.services.exit_criteria import evaluate_exit_criteria, quality_gate_status
 from src.services.design_assistance import request_design_assistance
 
 

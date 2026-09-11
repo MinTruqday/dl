@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Query
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
 from src.domain.test_analysis import FindingResolutionInput, TestAnalysisAIInput, TestConditionCreate, TestConditionPatch, TestConditionTransition
-from src.services.test_analysis_service import condition_coverage, create_condition, get_condition_for_user, list_conditions, resolve_finding, run_ai_analysis, transition_condition, update_condition
+from src.services.test_analysis import condition_coverage, create_condition, get_condition_for_user, list_conditions, resolve_finding, run_ai_analysis, transition_condition, update_condition
 
 
 router = APIRouter(prefix="/kiem-thu", tags=["Phân tích kiểm thử"])

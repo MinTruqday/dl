@@ -5,7 +5,7 @@ from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
 from src.domain.test_status_report import TestStatusReportAiDraft, TestStatusReportEvidence, TestStatusReportGenerate, TestStatusReportPatch, TestStatusReportTransition
 from src.services.test_status_report_export import export_status_report
-from src.services.test_status_report_service import attach_status_report_evidence, compare_status_reports, generate_status_report, generate_status_report_narrative, get_report_for_user, list_status_reports, transition_status_report, update_status_report
+from src.services.test_status_report import attach_status_report_evidence, compare_status_reports, generate_status_report, generate_status_report_narrative, get_report_for_user, list_status_reports, transition_status_report, update_status_report
 
 
 router = APIRouter(prefix="/kiem-thu", tags=["Báo cáo trạng thái kiểm thử"])

@@ -4,7 +4,7 @@ from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
 from src.core.database import database
 from src.domain.causal_analysis import CausalAiRequest, CausalAnalysisCreate, CausalAnalysisPatch, CausalApproval, CausalTransition, PreventionActionCreate, PreventionActionPatch
-from src.services.causal_analysis_service import approve_root_cause, create_action, create_analysis, generate_hypotheses, get_analysis, list_analyses, transition_analysis, update_action, update_analysis
+from src.services.causal_analysis import approve_root_cause, create_action, create_analysis, generate_hypotheses, get_analysis, list_analyses, transition_analysis, update_action, update_analysis
 
 
 router = APIRouter(prefix="/kiem-thu", tags=["Phòng ngừa lỗi"])

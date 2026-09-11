@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Query
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
 from src.domain.test_completion import CompletionSignOff, CompletionTransition, ResidualRiskDecision, TestCompletionAiDraft, TestCompletionCreate, TestCompletionPatch
-from src.services.test_completion_service import cluster_completion_lessons, create_completion_report, decide_residual_risk, generate_completion_narrative, get_completion_for_user, list_completion_reports, sign_off_completion, transition_completion, update_completion_report
+from src.services.test_completion import cluster_completion_lessons, create_completion_report, decide_residual_risk, generate_completion_narrative, get_completion_for_user, list_completion_reports, sign_off_completion, transition_completion, update_completion_report
 
 
 router = APIRouter(prefix="/kiem-thu", tags=["Hoàn tất kiểm thử"])

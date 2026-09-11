@@ -8,7 +8,7 @@ from pypdf import PdfReader
 from src.core.auth import ProjectRole, permissions_for_role
 from src.domain.test_status_report import ReportingPeriod, TestStatusReportGenerate as StatusReportGenerate, status_report_hash
 from src.services.test_status_report_export import export_csv, export_docx, export_pdf, report_rows
-from src.services.test_status_report_service import default_recommendation, generated_summaries
+from src.services.test_status_report import default_recommendation, generated_summaries
 
 
 def report_fixture():

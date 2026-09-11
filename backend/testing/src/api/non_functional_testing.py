@@ -4,7 +4,7 @@ from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
 from src.core.database import database
 from src.domain.non_functional_test import ExternalTestEvidenceImport, NonFunctionalTestPlanCreate, NonFunctionalTestPlanPatch, NonFunctionalTransition
-from src.services.non_functional_test_service import create_plan, get_plan, import_evidence, list_plans, transition_plan, update_plan
+from src.services.non_functional_test import create_plan, get_plan, import_evidence, list_plans, transition_plan, update_plan
 
 
 router = APIRouter(prefix="/kiem-thu", tags=["Kiểm thử phi chức năng"])

@@ -3,7 +3,7 @@ from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, now
-from src.services.test_monitoring_service import effective_snapshot
+from src.services.test_monitoring import effective_snapshot
 
 
 async def get_evaluation(db, evaluation_id, user, permission="qualityevaluation.read"):

@@ -4,7 +4,7 @@ from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
 from src.core.database import database
 from src.domain.review_session import ReviewFindingCreate, ReviewFindingPatch, ReviewSessionCreate, ReviewSessionPatch, ReviewTransition
-from src.services.review_session_service import add_finding, create_review, get_review, list_reviews, transition_review, update_finding, update_review
+from src.services.review_session import add_finding, create_review, get_review, list_reviews, transition_review, update_finding, update_review
 
 
 router = APIRouter(prefix="/kiem-thu", tags=["Rà soát chính thức"])

@@ -5,8 +5,8 @@ from pydantic import ValidationError
 
 from src.core.auth import ProjectRole, permissions_for_role
 from src.domain.test_monitoring import ControlActionCreate, ExitCriterionDefinition, source_fingerprint
-from src.services.exit_criteria_service import evaluate_exit_criteria, quality_gate_status
-from src.services.test_monitoring_service import build_metrics
+from src.services.exit_criteria import evaluate_exit_criteria, quality_gate_status
+from src.services.test_monitoring import build_metrics
 
 
 def test_exit_criteria_are_deterministic_and_support_percent_ratios():

@@ -6,8 +6,8 @@ from src.core.auth import permissions_for_role
 from src.core.common import audit, get_project, new_id, now, optimistic_patch
 from src.core.database import database
 from src.domain.test_monitoring import ControlActionCreate, ControlActionPatch, ExitCriterionOverride, MonitoringSnapshotCreate, source_fingerprint
-from src.repositories.test_monitoring_repository import find_snapshot, list_control_actions, list_snapshots
-from src.services.exit_criteria_service import evaluate_exit_criteria, quality_gate_status
+from src.repositories.test_monitoring import find_snapshot, list_control_actions, list_snapshots
+from src.services.exit_criteria import evaluate_exit_criteria, quality_gate_status
 
 
 TERMINAL_RESULT_STATUSES = {"PASS", "FAIL", "BLOCKED", "SKIPPED", "NOT_APPLICABLE"}

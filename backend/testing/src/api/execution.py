@@ -35,7 +35,7 @@ from src.domain.schemas import (
 )
 from src.services.project_knowledge import index_artifact
 from src.services.execution_context import resolve_execution_context
-from src.services.test_plan_service import plan_snapshot, plan_snapshot_hash, resolve_strategy_binding
+from src.services.test_plan import plan_snapshot, plan_snapshot_hash, resolve_strategy_binding
 
 
 router = APIRouter(prefix="/kiem-thu", tags=["Thực thi kiểm thử"])

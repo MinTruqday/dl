@@ -4,7 +4,7 @@ from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
 from src.core.database import database
 from src.domain.quality_evaluation import QualityEvaluationCreate, QualityEvaluationPatch, QualityEvaluationReview, QualityEvaluationTransition, QualityWaiverCreate, QualityWaiverDecision
-from src.services.quality_evaluation_service import add_waiver, approve_evaluation, create_evaluation, decide_waiver, get_evaluation, list_evaluations, review_evaluation, submit_evaluation, update_evaluation
+from src.services.quality_evaluation import add_waiver, approve_evaluation, create_evaluation, decide_waiver, get_evaluation, list_evaluations, review_evaluation, submit_evaluation, update_evaluation
 
 
 router = APIRouter(prefix="/kiem-thu", tags=["Đánh giá chất lượng sản phẩm"])

@@ -10,7 +10,7 @@ from src.domain.measurement import MeasurementDefinitionCreate, validate_thresho
 from src.domain.non_functional_test import ExternalTestEvidenceImport, NonFunctionalTestPlanCreate
 from src.domain.quality_evaluation import QualityEvaluationCreate, QualityWaiverDecision
 from src.domain.review_session import ReviewFindingPatch, ReviewSessionCreate
-from src.services.measurement_service import ratio
+from src.services.measurement import ratio
 
 
 def test_formal_review_contract_requires_distinct_moderator_and_reviewer():

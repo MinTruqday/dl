@@ -6,7 +6,7 @@ from src.core.auth import ProjectRole, permissions_for_role
 from src.core.database import database
 from src.domain.test_completion import ResidualRisk, ResidualRiskDecision, TestCompletionCreate as CompletionCreate, completion_hash
 from src.services.execution_context import ensure_release_completion_gate
-from src.services.test_completion_service import default_completion_recommendation
+from src.services.test_completion import default_completion_recommendation
 
 
 def completion_fixture():
