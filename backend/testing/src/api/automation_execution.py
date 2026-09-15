@@ -1,6 +1,5 @@
 import hashlib
 import hmac
-import json
 import re
 
 import httpx
@@ -17,7 +16,6 @@ from src.domain.schemas import (
     AutomationExecutionCreate,
     AutomationExecutionResultInput,
 )
-
 
 router = APIRouter(prefix="/kiem-thu", tags=["Thực thi tự động"])
 internal_router = APIRouter(
@@ -46,24 +44,22 @@ def public_execution(value, evidence=False):
 
 @router.get("/du-an/{project_id}/thuc-thi-tu-dong")
 async def list_automation_executions(
-    project_id: str,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, user: CurrentUser = Depends(get_current_user)
 ):
     await get_project(project_id, user, "automation.read")
-    items = await database.value.automation_executions.find(
-        {"project_id": project_id}
-    ).sort("created_at", -1).to_list(1000)
+    items = (
+        await database.value.automation_executions.find({"project_id": project_id})
+        .sort("created_at", -1)
+        .to_list(1000)
+    )
     return envelope([public_execution(item) for item in items])
 
 
 @router.get("/thuc-thi-tu-dong/{execution_id}")
 async def get_automation_execution(
-    execution_id: str,
-    user: CurrentUser = Depends(get_current_user),
+    execution_id: str, user: CurrentUser = Depends(get_current_user)
 ):
-    value = await get_project_entity(
-        "automation_executions", execution_id, user, "automation.read"
-    )
+    value = await get_project_entity("automation_executions", execution_id, user, "automation.read")
     return envelope(public_execution(value), revision=value["revision"])
 
 
@@ -94,11 +90,7 @@ async def create_automation_execution(
     environment = None
     if payload.environment_id:
         environment = await database.value.test_environments.find_one(
-            {
-                "_id": payload.environment_id,
-                "project_id": project_id,
-                "status": {"$ne": "ARCHIVED"},
-            }
+            {"_id": payload.environment_id, "project_id": project_id, "status": {"$ne": "ARCHIVED"}}
         )
         if not environment:
             raise HTTPException(status_code=422, detail={"code": "INVALID_ENVIRONMENT"})
@@ -113,9 +105,7 @@ async def create_automation_execution(
         "environment_snapshot": {
             "name": environment.get("name"),
             "variable_names": sorted((environment.get("variables") or {}).keys()),
-            "secret_reference_names": sorted(
-                (environment.get("secret_references") or {}).keys()
-            ),
+            "secret_reference_names": sorted((environment.get("secret_references") or {}).keys()),
         }
         if environment
         else None,
@@ -160,9 +150,15 @@ async def start_automation_execution(
     execution = await get_project_entity(
         "automation_executions", execution_id, user, "automation.execute"
     )
-    if execution.get("status") == "QUEUED" and execution.get("start_idempotency_key") == payload.idempotency_key:
+    if (
+        execution.get("status") == "QUEUED"
+        and execution.get("start_idempotency_key") == payload.idempotency_key
+    ):
         return envelope(public_execution(execution), operation_id=execution.get("operation_id"))
-    if execution.get("status") != "CREATED" or execution.get("revision") != payload.expected_revision:
+    if (
+        execution.get("status") != "CREATED"
+        or execution.get("revision") != payload.expected_revision
+    ):
         raise HTTPException(status_code=409, detail={"code": "AUTOMATION_STATE_CONFLICT"})
     request = {
         "event": "automation.newman.requested",
@@ -203,7 +199,14 @@ async def start_automation_execution(
     )
     if not updated:
         raise HTTPException(status_code=409, detail={"code": "AUTOMATION_STATE_CONFLICT"})
-    await audit(user.id, "automation_execution_queued", "AutomationExecution", execution_id, execution["project_id"], {"operation_id": operation_id})
+    await audit(
+        user.id,
+        "automation_execution_queued",
+        "AutomationExecution",
+        execution_id,
+        execution["project_id"],
+        {"operation_id": operation_id},
+    )
     return envelope(public_execution(updated), operation_id=operation_id)
 
 
@@ -218,7 +221,10 @@ async def cancel_automation_execution(
     )
     if execution.get("status") == "CANCELLED":
         return envelope(public_execution(execution), revision=execution["revision"])
-    if execution.get("status") != "QUEUED" or execution.get("revision") != payload.expected_revision:
+    if (
+        execution.get("status") != "QUEUED"
+        or execution.get("revision") != payload.expected_revision
+    ):
         raise HTTPException(status_code=409, detail={"code": "AUTOMATION_NOT_CANCELLABLE"})
     try:
         async with httpx.AsyncClient(timeout=10) as client:
@@ -231,28 +237,36 @@ async def cancel_automation_execution(
         raise HTTPException(status_code=503, detail={"code": "WORKER_UNAVAILABLE"}) from error
     updated = await database.value.automation_executions.find_one_and_update(
         {"_id": execution_id, "revision": payload.expected_revision, "status": "QUEUED"},
-        {"$set": {"status": "CANCELLED", "cancelled_by": user.id, "cancelled_at": now(), "updated_at": now()}, "$inc": {"revision": 1}},
+        {
+            "$set": {
+                "status": "CANCELLED",
+                "cancelled_by": user.id,
+                "cancelled_at": now(),
+                "updated_at": now(),
+            },
+            "$inc": {"revision": 1},
+        },
         return_document=ReturnDocument.AFTER,
     )
-    await audit(user.id, "automation_execution_cancelled", "AutomationExecution", execution_id, execution["project_id"])
+    await audit(
+        user.id,
+        "automation_execution_cancelled",
+        "AutomationExecution",
+        execution_id,
+        execution["project_id"],
+    )
     return envelope(public_execution(updated), revision=updated["revision"])
 
 
 @router.get("/thuc-thi-tu-dong/{execution_id}/bang-chung")
-async def get_automation_evidence(
-    execution_id: str,
-    user: CurrentUser = Depends(get_current_user),
-):
-    value = await get_project_entity(
-        "automation_executions", execution_id, user, "automation.read"
-    )
+async def get_automation_evidence(execution_id: str, user: CurrentUser = Depends(get_current_user)):
+    value = await get_project_entity("automation_executions", execution_id, user, "automation.read")
     return envelope(public_execution(value, evidence=True), revision=value["revision"])
 
 
 @internal_router.post("/ket-qua", include_in_schema=False)
 async def ingest_automation_result(
-    payload: AutomationExecutionResultInput,
-    x_internal_token: str = Header(default=""),
+    payload: AutomationExecutionResultInput, x_internal_token: str = Header(default="")
 ):
     if not hmac.compare_digest(x_internal_token, settings.SECRET_KEY):
         raise HTTPException(status_code=403, detail={"code": "INVALID_INTERNAL_TOKEN"})
@@ -270,11 +284,33 @@ async def ingest_automation_result(
     if execution.get("status") in {"COMPLETED", "FAILED", "CANCELLED"}:
         return envelope(public_execution(execution, evidence=True), revision=execution["revision"])
     updated = await database.value.automation_executions.find_one_and_update(
-        {"_id": payload.execution_id, "operation_id": payload.operation_id, "status": {"$in": ["QUEUED", "RUNNING"]}},
-        {"$set": {"status": payload.status, "summary": redact(payload.summary), "results": redact(payload.results), "logs": redact(payload.logs), "artifact_refs": payload.artifact_refs, "completed_at": now(), "updated_at": now()}, "$inc": {"revision": 1}},
+        {
+            "_id": payload.execution_id,
+            "operation_id": payload.operation_id,
+            "status": {"$in": ["QUEUED", "RUNNING"]},
+        },
+        {
+            "$set": {
+                "status": payload.status,
+                "summary": redact(payload.summary),
+                "results": redact(payload.results),
+                "logs": redact(payload.logs),
+                "artifact_refs": payload.artifact_refs,
+                "completed_at": now(),
+                "updated_at": now(),
+            },
+            "$inc": {"revision": 1},
+        },
         return_document=ReturnDocument.AFTER,
     )
     if not updated:
         raise HTTPException(status_code=409, detail={"code": "AUTOMATION_STATE_CONFLICT"})
-    await audit("service:worker", "automation_result_ingested", "AutomationExecution", payload.execution_id, updated["project_id"], {"operation_id": payload.operation_id, "status": payload.status})
+    await audit(
+        "service:worker",
+        "automation_result_ingested",
+        "AutomationExecution",
+        payload.execution_id,
+        updated["project_id"],
+        {"operation_id": payload.operation_id, "status": payload.status},
+    )
     return envelope(public_execution(updated, evidence=True), revision=updated["revision"])

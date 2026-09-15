@@ -13,7 +13,6 @@ from src.domain.schemas import (
     ProjectConnectorUnbind,
 )
 
-
 router = APIRouter(prefix="/kiem-thu", tags=["Kết nối dự án"])
 
 
@@ -24,22 +23,19 @@ def public_connector(value):
 
 
 @router.get("/du-an/{project_id}/ket-noi")
-async def list_project_connectors(
-    project_id: str,
-    user: CurrentUser = Depends(get_current_user),
-):
+async def list_project_connectors(project_id: str, user: CurrentUser = Depends(get_current_user)):
     await get_project(project_id, user, "project.connector.read")
-    items = await database.value.project_connectors.find(
-        {"project_id": project_id}
-    ).sort("updated_at", -1).to_list(100)
+    items = (
+        await database.value.project_connectors.find({"project_id": project_id})
+        .sort("updated_at", -1)
+        .to_list(100)
+    )
     return envelope([public_connector(item) for item in items])
 
 
 @router.post("/du-an/{project_id}/ket-noi", status_code=201)
 async def bind_project_connector(
-    project_id: str,
-    payload: ProjectConnectorCreate,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, payload: ProjectConnectorCreate, user: CurrentUser = Depends(get_current_user)
 ):
     await get_project(project_id, user, "project.connector.manage")
     timestamp = now()
@@ -111,11 +107,7 @@ async def update_project_connector(
             },
         ]
     updated = await database.value.project_connectors.find_one_and_update(
-        {
-            "_id": connector_id,
-            "project_id": project_id,
-            "revision": payload.expected_revision,
-        },
+        {"_id": connector_id, "project_id": project_id, "revision": payload.expected_revision},
         {"$set": {**changes, "updated_at": now()}, "$inc": {"revision": 1}},
         return_document=ReturnDocument.AFTER,
     )
@@ -236,14 +228,13 @@ async def start_connector_sync(
 
 
 @router.get("/du-an/{project_id}/ket-noi/nhat-ky")
-async def list_connector_sync_log(
-    project_id: str,
-    user: CurrentUser = Depends(get_current_user),
-):
+async def list_connector_sync_log(project_id: str, user: CurrentUser = Depends(get_current_user)):
     await get_project(project_id, user, "project.connector.read")
-    items = await database.value.connector_sync_jobs.find(
-        {"project_id": project_id}
-    ).sort("created_at", -1).to_list(1000)
+    items = (
+        await database.value.connector_sync_jobs.find({"project_id": project_id})
+        .sort("created_at", -1)
+        .to_list(1000)
+    )
     for item in items:
         item.pop("raw_payload", None)
         item.pop("secret", None)
@@ -251,14 +242,13 @@ async def list_connector_sync_log(
 
 
 @router.get("/du-an/{project_id}/ket-noi/xung-dot")
-async def list_connector_conflicts(
-    project_id: str,
-    user: CurrentUser = Depends(get_current_user),
-):
+async def list_connector_conflicts(project_id: str, user: CurrentUser = Depends(get_current_user)):
     await get_project(project_id, user, "project.connector.review")
-    items = await database.value.connector_sync_conflicts.find(
-        {"project_id": project_id}
-    ).sort("created_at", -1).to_list(1000)
+    items = (
+        await database.value.connector_sync_conflicts.find({"project_id": project_id})
+        .sort("created_at", -1)
+        .to_list(1000)
+    )
     return envelope(items)
 
 

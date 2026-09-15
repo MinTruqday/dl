@@ -13,18 +13,35 @@ class ConversionService:
     """Convert stored documents with Docling and expose structured text to KNOWLEDGE."""
 
     def __init__(self):
-        self._minio_base = settings.MINIO_ENDPOINT.rstrip("/")
-        self._minio_private_bucket = settings.MINIO_PRIVATE_BUCKET
-        self._minio_public_bucket = settings.MINIO_PUBLIC_BUCKET
-        self._minio_access = settings.MINIO_ACCESS_KEY
-        self._minio_secret = settings.MINIO_SECRET_KEY
+        self._storage_endpoint = settings.OBJECT_STORAGE_ENDPOINT.rstrip("/")
+        self._storage_private_bucket = settings.OBJECT_STORAGE_PRIVATE_BUCKET
+        self._storage_public_bucket = settings.OBJECT_STORAGE_PUBLIC_BUCKET
+        self._storage_access_key = settings.OBJECT_STORAGE_ACCESS_KEY
+        self._storage_secret_key = settings.OBJECT_STORAGE_SECRET_KEY
+        self._storage_region = settings.OBJECT_STORAGE_REGION
         self._docling = None
         logger.info("Docling document conversion service initialized")
 
     def _resolve_bucket(self, object_key: str, visibility: str) -> str:
         if visibility in ("private", "restricted"):
-            return self._minio_private_bucket
-        return self._minio_public_bucket
+            return self._storage_private_bucket
+        return self._storage_public_bucket
+
+    def _storage_client(self):
+        import boto3
+
+        return boto3.client(
+            "s3",
+            endpoint_url=self._storage_endpoint,
+            aws_access_key_id=self._storage_access_key,
+            aws_secret_access_key=self._storage_secret_key,
+            region_name=self._storage_region,
+        )
+
+    async def storage_ready(self) -> bool:
+        client = self._storage_client()
+        await asyncio.to_thread(client.head_bucket, Bucket=self._storage_private_bucket)
+        return True
 
     def _get_docling(self):
         if self._docling is None:
@@ -81,7 +98,9 @@ class ConversionService:
         return {"markdown": markdown, "structure": structure, "page_count": page_count}
 
     async def parse_document(self, file_url: str, visibility: str = "public") -> Dict:
-        file_bytes, file_ext = await self._download_from_minio(file_url, visibility=visibility)
+        file_bytes, file_ext = await self._download_from_object_storage(
+            file_url, visibility=visibility
+        )
         if not file_bytes:
             return {"error": "File load failed"}
 
@@ -109,11 +128,10 @@ class ConversionService:
         parse_result = await self.parse_document(file_url, visibility=visibility)
         return parse_result.get("markdown", "")
 
-    async def _download_from_minio(
+    async def _download_from_object_storage(
         self, file_url: str, visibility: str = "public"
     ) -> tuple[Optional[bytes], str]:
         try:
-            import boto3
             from urllib.parse import urlparse
 
             if file_url.startswith("http"):
@@ -128,13 +146,7 @@ class ConversionService:
                 return None, ""
 
             bucket = self._resolve_bucket(object_key, visibility)
-            s3 = boto3.client(
-                "s3",
-                endpoint_url=self._minio_base,
-                aws_access_key_id=self._minio_access,
-                aws_secret_access_key=self._minio_secret,
-                region_name="us-east-1",
-            )
+            s3 = self._storage_client()
             obj = await asyncio.to_thread(s3.get_object, Bucket=bucket, Key=object_key)
             data = await asyncio.to_thread(obj["Body"].read)
             extension = f".{object_key.rsplit('.', 1)[-1].lower()}" if "." in object_key else ".pdf"

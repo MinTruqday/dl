@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Plus, Search } from "lucide-react";
 import { Modal, ModalHeader, ModalTitle } from "@/shared/components/ui/Modal";
 import {
@@ -27,11 +27,13 @@ export default function ProjectsPage() {
   const [createError, setCreateError] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const requestSequence = useRef(0);
   const openCreateModal = () => {
     setCreateError("");
     setCreating(true);
   };
   const load = useCallback(async (value = "", statusValue = "active") => {
+    const requestId = ++requestSequence.current;
     setLoading(true);
     setError("");
     try {
@@ -39,12 +41,14 @@ export default function ProjectsPage() {
         testingApi.listProjects(value, statusValue),
         testingApi.listInvitations(),
       ]);
+      if (requestId !== requestSequence.current) return;
       setItems(projects);
       setInvitations(pendingInvitations);
     } catch (reason) {
+      if (requestId !== requestSequence.current) return;
       setError(messageOf(reason));
     } finally {
-      setLoading(false);
+      if (requestId === requestSequence.current) setLoading(false);
     }
   }, []);
   useEffect(() => {
@@ -240,9 +244,17 @@ export default function ProjectsPage() {
                 className="apple-input h-10 w-64 py-0 pl-10"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key !== "Enter") return;
+                  event.preventDefault();
+                  void load(event.currentTarget.value, status);
+                }}
                 placeholder="Tìm mã hoặc tên"
               />
             </div>
+            <button className="secondary-button h-10" type="submit">
+              Tìm
+            </button>
             <select
               aria-label="Trạng thái dự án"
               className="apple-input"

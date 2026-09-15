@@ -16,7 +16,9 @@ export default function RiskModelEditor({ value, onChange }) {
         <textarea
           className="apple-input mt-2 min-h-28"
           value={(value.probability_scale || []).map((item) => item.label).join("\n")}
-          onChange={(event) => updateScale(value, onChange, "probability_scale", event.target.value)}
+          onChange={(event) =>
+            updateScale(value, onChange, "probability_scale", event.target.value)
+          }
           required
         />
       </label>
@@ -51,8 +53,13 @@ export default function RiskModelEditor({ value, onChange }) {
         Độ sâu kiểm thử bắt buộc dạng JSON
         <textarea
           className="apple-input mt-2 min-h-32 font-mono text-xs"
-          value={value.mandatory_test_depth_text ?? JSON.stringify(value.mandatory_test_depth || {}, null, 2)}
-          onChange={(event) => onChange({ ...value, mandatory_test_depth_text: event.target.value })}
+          value={
+            value.mandatory_test_depth_text ??
+            JSON.stringify(value.mandatory_test_depth || {}, null, 2)
+          }
+          onChange={(event) =>
+            onChange({ ...value, mandatory_test_depth_text: event.target.value })
+          }
         />
       </label>
       <label className="field-label md:col-span-2">
@@ -63,7 +70,10 @@ export default function RiskModelEditor({ value, onChange }) {
           onChange={(event) =>
             onChange({
               ...value,
-              regression_priority_rules: event.target.value.split("\n").map((item) => item.trim()).filter(Boolean),
+              regression_priority_rules: event.target.value
+                .split("\n")
+                .map((item) => item.trim())
+                .filter(Boolean),
             })
           }
         />

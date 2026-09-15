@@ -1,6 +1,5 @@
-import hmac
 import hashlib
-import uuid
+import hmac
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
@@ -44,7 +43,9 @@ app.add_route("/so-lieu", metrics_endpoint("worker"))
 class TestingJobRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", protected_namespaces=())
 
-    event: str = Field(pattern=r"^(document\.parse|requirement\.extract|requirement\.semantic_diff|test\.generate|duplicate\.scan|impact\.analysis|knowledge\.index|automation\.newman)\.requested$")
+    event: str = Field(
+        pattern=r"^(document\.parse|requirement\.extract|requirement\.semantic_diff|test\.generate|duplicate\.scan|impact\.analysis|knowledge\.index|automation\.newman)\.requested$"
+    )
     project_id: str = Field(min_length=1, max_length=128)
     artifact_version_id: str = Field(min_length=1, max_length=128)
     model_version: str = Field(min_length=1, max_length=128)
@@ -89,7 +90,9 @@ async def ready():
     status_code=202,
 )
 async def enqueue_testing_job(payload: TestingJobRequest):
-    idempotency_key = ":".join([payload.project_id, payload.artifact_version_id, payload.event, payload.model_version])
+    idempotency_key = ":".join(
+        [payload.project_id, payload.artifact_version_id, payload.event, payload.model_version]
+    )
     job_id = f"qa-{hashlib.sha256(idempotency_key.encode()).hexdigest()[:40]}"
     existing = await database.mongodb[settings.WORKER_DB_NAME].worker_jobs.find_one({"_id": job_id})
     if existing:
@@ -114,7 +117,11 @@ async def enqueue_testing_job(payload: TestingJobRequest):
     return {"job_id": job_id, "status": "queued"}
 
 
-@app.post("/xu-ly-nen/noi-bo/tac-vu/{job_id}/thu-lai", dependencies=[Depends(require_internal_token)], status_code=202)
+@app.post(
+    "/xu-ly-nen/noi-bo/tac-vu/{job_id}/thu-lai",
+    dependencies=[Depends(require_internal_token)],
+    status_code=202,
+)
 async def retry_job(job_id: str):
     if len(job_id) > 128:
         raise HTTPException(status_code=422, detail="Invalid job identifier")
@@ -132,7 +139,12 @@ async def retry_job(job_id: str):
         raise HTTPException(status_code=409, detail="Manual retry limit reached")
     await record_job(
         job_id,
-        {"status": "queued", "manual_retry_count": retry_count + 1, "error": None, "error_code": None},
+        {
+            "status": "queued",
+            "manual_retry_count": retry_count + 1,
+            "error": None,
+            "error_code": None,
+        },
     )
     await mq.publish("qa_job_queue", request)
     metrics_collector.change_queue_depth("qa_job_queue", 1)

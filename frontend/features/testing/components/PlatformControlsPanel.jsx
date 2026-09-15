@@ -192,7 +192,12 @@ export default function PlatformControlsPanel() {
     );
   };
 
-  if (loading && !data) return <LoadingState />;
+  if (loading && !data)
+    return (
+      <Panel title="Cấu hình nền tảng">
+        <LoadingState />
+      </Panel>
+    );
 
   return (
     <div className="space-y-5">

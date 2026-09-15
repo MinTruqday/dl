@@ -5,9 +5,16 @@ from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope, get_project
 from src.core.configuration import settings
 
-
 router = APIRouter(prefix="/kiem-thu", tags=["Tác vụ kiểm thử bất đồng bộ"])
-ALLOWED_EVENTS = {"document.parse.requested", "requirement.extract.requested", "requirement.semantic_diff.requested", "test.generate.requested", "duplicate.scan.requested", "impact.analysis.requested", "knowledge.index.requested"}
+ALLOWED_EVENTS = {
+    "document.parse.requested",
+    "requirement.extract.requested",
+    "requirement.semantic_diff.requested",
+    "test.generate.requested",
+    "duplicate.scan.requested",
+    "impact.analysis.requested",
+    "knowledge.index.requested",
+}
 EVENT_PERMISSIONS = {
     "document.parse.requested": ("requirement_document.extract",),
     "requirement.extract.requested": ("requirement_document.extract",),
@@ -20,7 +27,9 @@ EVENT_PERMISSIONS = {
 
 
 @router.post("/du-an/{project_id}/tac-vu", status_code=202)
-async def enqueue_job(project_id: str, body: dict = Body(), user: CurrentUser = Depends(get_current_user)):
+async def enqueue_job(
+    project_id: str, body: dict = Body(), user: CurrentUser = Depends(get_current_user)
+):
     event = body.get("event")
     if event not in ALLOWED_EVENTS:
         raise HTTPException(status_code=422, detail={"code": "UNSUPPORTED_JOB_EVENT"})
@@ -30,10 +39,22 @@ async def enqueue_job(project_id: str, body: dict = Body(), user: CurrentUser = 
     model_version = str(body.get("model_version") or "")
     if not artifact_version_id or not model_version:
         raise HTTPException(status_code=422, detail={"code": "JOB_IDEMPOTENCY_FIELDS_REQUIRED"})
-    payload = {"event": event, "project_id": project_id, "artifact_version_id": artifact_version_id, "model_version": model_version, "requester_id": user.id, "requester_email": user.email, "payload": body.get("payload") or {}}
+    payload = {
+        "event": event,
+        "project_id": project_id,
+        "artifact_version_id": artifact_version_id,
+        "model_version": model_version,
+        "requester_id": user.id,
+        "requester_email": user.email,
+        "payload": body.get("payload") or {},
+    }
     try:
         async with httpx.AsyncClient(timeout=10) as client:
-            response = await client.post(f"{settings.WORKER_URL}/xu-ly-nen/noi-bo/kiem-thu/tac-vu", headers={"X-Internal-Token": settings.SECRET_KEY}, json=payload)
+            response = await client.post(
+                f"{settings.WORKER_URL}/xu-ly-nen/noi-bo/kiem-thu/tac-vu",
+                headers={"X-Internal-Token": settings.SECRET_KEY},
+                json=payload,
+            )
             response.raise_for_status()
     except httpx.HTTPError as error:
         raise HTTPException(status_code=503, detail={"code": "WORKER_UNAVAILABLE"}) from error
@@ -44,7 +65,10 @@ async def enqueue_job(project_id: str, body: dict = Body(), user: CurrentUser = 
 async def get_job(job_id: str, user: CurrentUser = Depends(get_current_user)):
     try:
         async with httpx.AsyncClient(timeout=10) as client:
-            response = await client.get(f"{settings.WORKER_URL}/xu-ly-nen/noi-bo/tac-vu/{job_id}", headers={"X-Internal-Token": settings.SECRET_KEY})
+            response = await client.get(
+                f"{settings.WORKER_URL}/xu-ly-nen/noi-bo/tac-vu/{job_id}",
+                headers={"X-Internal-Token": settings.SECRET_KEY},
+            )
             response.raise_for_status()
             job = response.json()
     except httpx.HTTPStatusError as error:

@@ -1,5 +1,4 @@
 import os
-from typing import Optional
 
 from pydantic import BaseModel
 
@@ -25,8 +24,8 @@ class Settings(BaseModel):
     AI_URL: str = get_service_url("AI")
     NOTIFICATION_URL: str = get_service_url("NOTIFICATION")
     CONTENT_DB_NAME: str = os.environ["CONTENT_DB_NAME"]
-    MINIO_ENDPOINT: str = os.environ["MINIO_ENDPOINT"]
-    MINIO_PUBLIC_URL: str = os.environ["MINIO_PUBLIC_URL"]
+    OBJECT_STORAGE_ENDPOINT: str = os.environ["OBJECT_STORAGE_ENDPOINT"]
+    OBJECT_STORAGE_PUBLIC_URL: str = os.environ["OBJECT_STORAGE_PUBLIC_URL"]
 
 
 settings = Settings()

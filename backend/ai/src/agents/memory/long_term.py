@@ -18,8 +18,8 @@ from uuid6 import uuid7
 
 from src.core.infrastructure.configuration import settings
 from src.core.registry import PromptType, registry
-from src.services.knowledge import knowledge_service
 from src.schemas.memory import MemoryOperation
+from src.services.knowledge import knowledge_service
 from src.utils.huggingface import create_chat_model
 
 

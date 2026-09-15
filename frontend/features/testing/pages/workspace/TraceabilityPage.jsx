@@ -79,7 +79,7 @@ export default function TraceabilityPage({ project }) {
                 }
               }}
             >
-              Khôi phục liên kết bằng AI
+              Đề xuất liên kết cần khôi phục
             </button>
           )}
           {can("coverage.snapshot.create") && (

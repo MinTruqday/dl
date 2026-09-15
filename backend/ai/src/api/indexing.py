@@ -1,8 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException
 from loguru import logger
-from src.schemas.response import APIResponse
-from src.core.dependency import CurrentUser, Role, get_current_user, get_current_user_optional, verify_internal_token
+
+from src.core.dependency import (
+    CurrentUser,
+    Role,
+    get_current_user,
+    get_current_user_optional,
+    verify_internal_token,
+)
 from src.schemas.ingestion import AttachmentConversionRequest, IngestRequest, IngestResponse
+from src.schemas.response import APIResponse
 from src.services.ingestion import convert_attachment as convert_attachment_data
 from src.services.ingestion import extract_document as extract_document_text
 from src.services.ingestion import index_document, remove_document
@@ -63,7 +70,11 @@ def document_error(error: Exception):
     return HTTPException(status_code=502, detail={"code": "knowledge_dependency_failed"})
 
 
-@indexing_router.post("/tiep-nap", response_model=APIResponse[IngestResponse], description="Nạp và chỉ mục hóa tài liệu vào knowledge")
+@indexing_router.post(
+    "/tiep-nap",
+    response_model=APIResponse[IngestResponse],
+    description="Nạp và chỉ mục hóa tài liệu vào knowledge",
+)
 async def ingest_document(
     req: IngestRequest, user: CurrentUser = Depends(get_current_user_optional)
 ):
@@ -85,7 +96,11 @@ async def ingest_document(
     )
 
 
-@indexing_router.post("/trich-xuat", response_model=APIResponse[dict], description="Trích xuất nội dung tài liệu cho knowledge")
+@indexing_router.post(
+    "/trich-xuat",
+    response_model=APIResponse[dict],
+    description="Trích xuất nội dung tài liệu cho knowledge",
+)
 async def extract_document(
     req: IngestRequest, user: CurrentUser = Depends(get_current_user_optional)
 ):
@@ -100,19 +115,24 @@ async def extract_document(
     )
 
 
-@indexing_router.post("/chuyen-doi", response_model=APIResponse[dict], description="Chuyển đổi attachment thành nội dung có cấu trúc")
+@indexing_router.post(
+    "/chuyen-doi",
+    response_model=APIResponse[dict],
+    description="Chuyển đổi attachment thành nội dung có cấu trúc",
+)
 async def convert_attachment(req: AttachmentConversionRequest):
     try:
         result = await convert_attachment_data(req.data, req.filename)
     except ValueError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error
-    return APIResponse(
-        data=result,
-        message="Chuyển đổi tài liệu thành công",
-    )
+    return APIResponse(data=result, message="Chuyển đổi tài liệu thành công")
 
 
-@indexing_router.delete("/tai-lieu/{document_id}", response_model=APIResponse[dict], description="Xóa chỉ mục knowledge của tài liệu")
+@indexing_router.delete(
+    "/tai-lieu/{document_id}",
+    response_model=APIResponse[dict],
+    description="Xóa chỉ mục knowledge của tài liệu",
+)
 async def delete_document(
     document_id: str,
     requester_id: str = "",
@@ -127,7 +147,4 @@ async def delete_document(
         result = await remove_document(document_id, resolved_id, resolved_admin)
     except Exception as error:
         raise document_error(error)
-    return APIResponse(
-        data=result,
-        message="Xóa chỉ mục tài liệu thành công",
-    )
+    return APIResponse(data=result, message="Xóa chỉ mục tài liệu thành công")

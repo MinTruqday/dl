@@ -14,7 +14,9 @@ export function useActionDialog() {
       new Promise((resolve) => {
         const fields = options.fields || [];
         setValues(
-          Object.fromEntries(fields.map((field) => [field.name, field.initialValue || ""])),
+          Object.fromEntries(
+            fields.map((field) => [field.name, field.initialValue ?? (field.multiple ? [] : "")]),
+          ),
         );
         setState({ ...options, resolve });
       }),
@@ -99,11 +101,15 @@ export function useActionDialog() {
                 <select
                   autoFocus={field.autoFocus}
                   className="apple-input mt-2"
+                  multiple={field.multiple}
                   required={field.required}
-                  value={values[field.name] || ""}
-                  onChange={(event) =>
-                    setValues((current) => ({ ...current, [field.name]: event.target.value }))
-                  }
+                  value={values[field.name] ?? (field.multiple ? [] : "")}
+                  onChange={(event) => {
+                    const value = field.multiple
+                      ? Array.from(event.target.selectedOptions, (option) => option.value)
+                      : event.target.value;
+                    setValues((current) => ({ ...current, [field.name]: value }));
+                  }}
                 >
                   {field.options.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -259,12 +265,23 @@ export function ProjectCrumb({ projectId, projectName }) {
 }
 
 export function Pagination({ value, page, pageSize, total, onChange }) {
-  const pagination = value || {
-    page,
-    total,
-    total_pages: Math.max(1, Math.ceil(total / pageSize)),
-  };
-  if (!pagination || pagination.total_pages <= 1) return null;
+  const pagination =
+    value ||
+    (Number.isFinite(page) && Number.isFinite(pageSize) && Number.isFinite(total)
+      ? {
+          page,
+          total,
+          total_pages: Math.ceil(total / pageSize),
+        }
+      : null);
+  if (
+    !pagination ||
+    !Number.isFinite(pagination.page) ||
+    !Number.isFinite(pagination.total) ||
+    !Number.isFinite(pagination.total_pages) ||
+    pagination.total_pages <= 1
+  )
+    return null;
   return (
     <nav
       aria-label="Phân trang"

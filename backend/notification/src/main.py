@@ -7,13 +7,12 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 
 from src.api.announcement import router as announcement_router
+from src.core.function_ids import apply_function_ids
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import close_db, database, init_db
 from src.core.infrastructure.redis import redis
-from src.core.function_ids import apply_function_ids
 from src.core.metrics import PrometheusMiddleware, metrics_endpoint
 from src.core.middleware import add_trace_id_header, trace_id_filter
-
 
 logger.remove()
 logger.add(

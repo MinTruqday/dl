@@ -5,7 +5,6 @@ from typing import Dict, List, Optional
 
 from loguru import logger
 
-
 ENTROPY_MESSAGE_WEIGHT = 0.3
 ENTROPY_TOKEN_WEIGHT = 0.3
 ENTROPY_AGE_WEIGHT = 0.2

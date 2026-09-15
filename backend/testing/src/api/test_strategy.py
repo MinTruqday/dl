@@ -2,9 +2,28 @@ from fastapi import APIRouter, Depends, Query
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
-from src.domain.test_strategy import StrategyCloneInput, StrategyTransitionInput, StrategyVersionInput, TestStrategyCreate, TestStrategyPatch
-from src.services.test_strategy import approve_strategy, archive_strategy, clone_strategy, compare_strategies, create_strategy, create_strategy_version, get_strategy_for_user, list_strategies, request_strategy_changes, review_strategy, submit_strategy, update_strategy, validate_strategy
-
+from src.domain.test_strategy import (
+    StrategyCloneInput,
+    StrategyTransitionInput,
+    StrategyVersionInput,
+    TestStrategyCreate,
+    TestStrategyPatch,
+)
+from src.services.test_strategy import (
+    approve_strategy,
+    archive_strategy,
+    clone_strategy,
+    compare_strategies,
+    create_strategy,
+    create_strategy_version,
+    get_strategy_for_user,
+    list_strategies,
+    request_strategy_changes,
+    review_strategy,
+    submit_strategy,
+    update_strategy,
+    validate_strategy,
+)
 
 router = APIRouter(prefix="/kiem-thu", tags=["Quản trị kiểm thử"])
 
@@ -24,28 +43,21 @@ async def list_test_strategies(
 
 @router.post("/du-an/{project_id}/chien-luoc", status_code=201)
 async def create_test_strategy(
-    project_id: str,
-    payload: TestStrategyCreate,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, payload: TestStrategyCreate, user: CurrentUser = Depends(get_current_user)
 ):
     value = await create_strategy(project_id, payload, user)
     return envelope(value, revision=value["revision"])
 
 
 @router.get("/chien-luoc/{strategy_id}")
-async def get_test_strategy(
-    strategy_id: str,
-    user: CurrentUser = Depends(get_current_user),
-):
+async def get_test_strategy(strategy_id: str, user: CurrentUser = Depends(get_current_user)):
     value = await get_strategy_for_user(strategy_id, user)
     return envelope(value, revision=value["revision"])
 
 
 @router.patch("/chien-luoc/{strategy_id}")
 async def patch_test_strategy(
-    strategy_id: str,
-    payload: TestStrategyPatch,
-    user: CurrentUser = Depends(get_current_user),
+    strategy_id: str, payload: TestStrategyPatch, user: CurrentUser = Depends(get_current_user)
 ):
     value = await update_strategy(strategy_id, payload, user)
     return envelope(value, revision=value["revision"])
@@ -93,9 +105,7 @@ async def approve_test_strategy(
 
 @router.post("/chien-luoc/{strategy_id}/tao-phien-ban", status_code=201)
 async def version_test_strategy(
-    strategy_id: str,
-    payload: StrategyVersionInput,
-    user: CurrentUser = Depends(get_current_user),
+    strategy_id: str, payload: StrategyVersionInput, user: CurrentUser = Depends(get_current_user)
 ):
     value = await create_strategy_version(strategy_id, payload, user)
     return envelope(value, revision=value["revision"])
@@ -112,19 +122,14 @@ async def compare_test_strategy_versions(
 
 @router.post("/du-an/{project_id}/chien-luoc/nhan-ban", status_code=201)
 async def clone_test_strategy(
-    project_id: str,
-    payload: StrategyCloneInput,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, payload: StrategyCloneInput, user: CurrentUser = Depends(get_current_user)
 ):
     value = await clone_strategy(project_id, payload, user)
     return envelope(value, revision=value["revision"])
 
 
 @router.post("/chien-luoc/{strategy_id}/kiem-tra")
-async def validate_test_strategy(
-    strategy_id: str,
-    user: CurrentUser = Depends(get_current_user),
-):
+async def validate_test_strategy(strategy_id: str, user: CurrentUser = Depends(get_current_user)):
     return envelope(await validate_strategy(strategy_id, user))
 
 

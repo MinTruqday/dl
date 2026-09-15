@@ -3,10 +3,11 @@ import time
 import uuid
 
 from langgraph.checkpoint.mongodb import MongoDBSaver
-from pymongo import MongoClient
 from langgraph.graph import END, StateGraph
 from loguru import logger
-from src.core.infrastructure.configuration import settings
+from pymongo import MongoClient
+from uuid6 import uuid7
+
 from src.agents.react.acting import actor
 from src.agents.react.planning import planner
 from src.agents.react.reasoning import reasoner
@@ -14,8 +15,7 @@ from src.agents.specialists.knowledge import researcher
 from src.agents.specialists.response import response_generator
 from src.agents.specialists.web_search import search_engine
 from src.agents.workflow.state import ActingState
-from uuid6 import uuid7
-
+from src.core.infrastructure.configuration import settings
 from src.schemas.evaluation import TaskEvaluation
 
 
@@ -383,7 +383,7 @@ async def trimmer_node(state: ActingState):
             from src.agents.workflow.graph import llm
 
             combined = "\n\n".join(str(r) for r in results)
-            from src.core.registry import registry, PromptType
+            from src.core.registry import PromptType, registry
 
             summary_prompt = registry.get(PromptType.ORCHESTRATOR_TRIMMER).format(
                 combined=combined[:20000]
@@ -407,8 +407,9 @@ def trimmer_router(state: ActingState):
 
 
 async def sanitizer_node(state: ActingState):
-    from src.core.security.governance import enforce_resource_limits, sanitize_output
     from loguru import logger
+
+    from src.core.security.governance import enforce_resource_limits, sanitize_output
 
     results = state.get("consolidated_results", [])
     if not results:
@@ -489,9 +490,9 @@ class OrchestrationWorkflow:
 
     async def execute_plan(self, req_data):
         self.initialize()
-        from src.core.security.policy import governance
         from src.agents.workflow.rubric import standard_rubric_middleware
         from src.agents.workflow.verification import verification
+        from src.core.security.policy import governance
 
         logger.info(
             f"Initializing orchestration execution stream for query length {len(req_data.get('query', ''))}"

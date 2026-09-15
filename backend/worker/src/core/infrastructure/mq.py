@@ -6,7 +6,6 @@ import aio_pika
 
 from src.core.infrastructure.configuration import settings
 
-
 QUEUE_PATTERN = re.compile(r"^[a-z0-9_]{1,100}$")
 
 

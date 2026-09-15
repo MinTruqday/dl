@@ -1,7 +1,9 @@
 from typing import Any, List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query
+
+from fastapi import APIRouter, Depends, Query
+
+from src.core.dependency import Role, get_current_user, require_role
 from src.core.response import APIResponse
-from src.api.dependency import get_current_user, require_role, Role
 from src.services.document import DocumentService
 
 router = APIRouter()

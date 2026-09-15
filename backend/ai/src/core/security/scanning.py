@@ -1,8 +1,9 @@
-import re
 import asyncio
+import re
 from dataclasses import dataclass, field
-from loguru import logger
 from typing import List
+
+from loguru import logger
 
 
 @dataclass
@@ -35,8 +36,8 @@ class SecurityHarness:
     def _initialize_pii_engine(self):
         try:
             from presidio_analyzer import AnalyzerEngine
-            from presidio_anonymizer import AnonymizerEngine
             from presidio_analyzer.nlp_engine import NlpEngineProvider
+            from presidio_anonymizer import AnonymizerEngine
 
             provider = NlpEngineProvider(
                 nlp_configuration={
@@ -66,10 +67,10 @@ class SecurityHarness:
     ) -> tuple[str, List[str]]:
         await self._ensure_pii_engine()
         from langchain_core.messages import HumanMessage
-        from src.utils.huggingface import create_chat_model
-        from src.core.infrastructure.configuration import settings
-        from src.schemas.security import SecurityEvaluation
+
         from src.core.registry import PromptType, registry
+        from src.schemas.security import SecurityEvaluation
+        from src.utils.huggingface import create_chat_model
 
         violations = []
         from src.core.security.guardrails import guardrails_engine

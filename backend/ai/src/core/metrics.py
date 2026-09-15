@@ -1,5 +1,6 @@
 import time
 from collections import defaultdict
+
 from fastapi import Request
 from fastapi.responses import PlainTextResponse
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -23,8 +24,7 @@ class MetricsCollector:
     def record_artifact_retrieval(self, documents: list, artifact_type: str | None):
         self._artifact_retrievals += 1
         if any(
-            not artifact_type
-            or document.get("metadata", {}).get("artifact_type") == artifact_type
+            not artifact_type or document.get("metadata", {}).get("artifact_type") == artifact_type
             for document in documents
         ):
             self._artifact_hits += 1
@@ -52,7 +52,9 @@ class MetricsCollector:
             lines.append(
                 f'http_errors_total{{service="{service_name}",method="{method}",path="{path}"}} {count}'
             )
-        hit_rate = self._artifact_hits / self._artifact_retrievals if self._artifact_retrievals else 0
+        hit_rate = (
+            self._artifact_hits / self._artifact_retrievals if self._artifact_retrievals else 0
+        )
         lines.append(f"knowledge_artifact_retrieval_hit_rate {hit_rate}")
         return "\n".join(lines) + "\n"
 

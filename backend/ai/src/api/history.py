@@ -1,11 +1,10 @@
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from src.core.dependency import get_current_user, CurrentUser
+from fastapi import APIRouter, Depends, Query
 
-
-from src.services.history import HistoryService
+from src.core.dependency import CurrentUser, get_current_user
 from src.schemas.history import MessageCreate, SessionCreate, SessionStateUpdate, SessionTitleUpdate
+from src.services.history import HistoryService
 
 router = APIRouter(prefix="/lich-su")
 

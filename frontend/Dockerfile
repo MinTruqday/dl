@@ -1,19 +1,28 @@
 FROM node:20-alpine AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
+RUN apk add --no-cache curl \
+    && curl --fail --location --retry 5 --retry-all-errors --output /tmp/pnpm.tgz https://registry.npmmirror.com/pnpm/-/pnpm-10.17.1.tgz \
+    && echo "a1e0133f6801c13039ae41309e5e5a7d1058a3a1e1edd020a4944a83c5368d04  /tmp/pnpm.tgz" | sha256sum -c - \
+    && npm install --global /tmp/pnpm.tgz --no-audit --no-fund \
+    && apk del curl \
+    && rm /tmp/pnpm.tgz
 
 FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
-COPY frontend/package.json frontend/pnpm-lock.yaml* frontend/pnpm-workspace.yaml ./
+COPY frontend/package.json frontend/pnpm-lock.yaml* frontend/pnpm-workspace.yaml frontend/.npmrc ./
 RUN pnpm install --frozen-lockfile
 
 FROM base AS builder
 WORKDIR /app
+ARG NEXT_PUBLIC_API_URL=http://localhost:8000
+ARG NEXT_PUBLIC_NOTIFICATION_ENABLED=true
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_NOTIFICATION_ENABLED=$NEXT_PUBLIC_NOTIFICATION_ENABLED
 COPY --from=deps /app/node_modules ./node_modules
 COPY frontend/ .
-RUN mkdir -p public && pnpm run test:unit && pnpm run build
+RUN mkdir -p public && pnpm run format:check && pnpm run lint && pnpm run build
 
 FROM base AS runner
 WORKDIR /app

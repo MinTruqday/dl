@@ -1,18 +1,23 @@
 from fastapi import APIRouter, Depends
+
 from src.core.dependency import verify_internal_token
-from src.schemas.response import APIResponse
 from src.schemas.embedding import (
-    EmbedQueryRequest,
+    BatchEmbeddingResponse,
     EmbedBatchRequest,
     EmbeddingResponse,
-    BatchEmbeddingResponse,
+    EmbedQueryRequest,
 )
+from src.schemas.response import APIResponse
 from src.services.embedding import embedder
 
 router = APIRouter(dependencies=[Depends(verify_internal_token)])
 
 
-@router.post("/truy-van", response_model=APIResponse[EmbeddingResponse], description="Tạo embedding cho một truy vấn knowledge")
+@router.post(
+    "/truy-van",
+    response_model=APIResponse[EmbeddingResponse],
+    description="Tạo embedding cho một truy vấn knowledge",
+)
 async def embed_single_query(req: EmbedQueryRequest):
     emb = await embedder.embed_query(req.text)
     return APIResponse(
@@ -20,7 +25,11 @@ async def embed_single_query(req: EmbedQueryRequest):
     )
 
 
-@router.post("/hang-loat", response_model=APIResponse[BatchEmbeddingResponse], description="Tạo embedding theo lô cho knowledge")
+@router.post(
+    "/hang-loat",
+    response_model=APIResponse[BatchEmbeddingResponse],
+    description="Tạo embedding theo lô cho knowledge",
+)
 async def embed_batch_texts(req: EmbedBatchRequest):
     embs = await embedder.embed_batch(req.texts)
     return APIResponse(

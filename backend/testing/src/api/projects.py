@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
 import os
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
 
-from src.core.auth import CurrentUser, PROJECT_PERMISSIONS, get_current_user, permissions_for_role
+from src.core.auth import PROJECT_PERMISSIONS, CurrentUser, get_current_user, permissions_for_role
 from src.core.common import (
     audit,
     envelope,
@@ -23,7 +24,6 @@ from src.domain.schemas import (
     ProjectMemberPatch,
     ProjectPatch,
 )
-
 
 router = APIRouter(prefix="/kiem-thu", tags=["Dự án kiểm thử"])
 
@@ -121,7 +121,9 @@ async def list_projects(
             if membership
             else set()
         )
-        grant_permissions = set(grant.get("permissions", [])) & PROJECT_PERMISSIONS if grant else set()
+        grant_permissions = (
+            set(grant.get("permissions", [])) & PROJECT_PERMISSIONS if grant else set()
+        )
         permissions = role_permissions | grant_permissions
         items.append(
             {
@@ -146,30 +148,21 @@ async def list_projects(
     return envelope(items)
 
 
-@router.get(
-    "/loi-moi-du-an",
-    openapi_extra={"x-function-ids": ["MEM-01"]},
-)
+@router.get("/loi-moi-du-an", openapi_extra={"x-function-ids": ["MEM-01"]})
 async def list_project_invitations(user: CurrentUser = Depends(get_current_user)):
     invitations = (
-        await database.value.project_members.find(
-            {"user_id": user.id, "status": "INVITED"}
-        )
+        await database.value.project_members.find({"user_id": user.id, "status": "INVITED"})
         .sort("invited_at", -1)
         .to_list(500)
     )
     project_ids = {item["project_id"] for item in invitations}
     projects = await database.value.projects.find(
-        {"_id": {"$in": list(project_ids)}},
-        {"key": 1, "name": 1, "description": 1, "status": 1},
+        {"_id": {"$in": list(project_ids)}}, {"key": 1, "name": 1, "description": 1, "status": 1}
     ).to_list(len(project_ids))
     projects_by_id = {item["_id"]: item for item in projects}
     return envelope(
         [
-            {
-                **invitation,
-                "project": projects_by_id.get(invitation["project_id"]),
-            }
+            {**invitation, "project": projects_by_id.get(invitation["project_id"])}
             for invitation in invitations
             if invitation["project_id"] in projects_by_id
         ]
@@ -211,9 +204,7 @@ async def project_detail(project_id: str, user: CurrentUser = Depends(get_curren
         {
             **project,
             "current_membership": membership,
-            "current_permissions": sorted(
-                role_permissions | grant_permissions
-            ),
+            "current_permissions": sorted(role_permissions | grant_permissions),
             "access_context": access_context,
         }
     )
@@ -422,9 +413,7 @@ async def invite_project_member(
     return envelope(membership, revision=1)
 
 
-async def _accept_project_invitation(
-    invitation_id: str, user: CurrentUser
-):
+async def _accept_project_invitation(invitation_id: str, user: CurrentUser):
     membership = await database.value.project_members.find_one_and_update(
         {"_id": invitation_id, "user_id": user.id, "status": "INVITED"},
         {
@@ -443,8 +432,7 @@ async def _accept_project_invitation(
 
 
 @router.post(
-    "/loi-moi-du-an/{invitation_id}/chap-nhan",
-    openapi_extra={"x-function-ids": ["MEM-SELF-01"]},
+    "/loi-moi-du-an/{invitation_id}/chap-nhan", openapi_extra={"x-function-ids": ["MEM-SELF-01"]}
 )
 async def accept_project_invitation_by_id(
     invitation_id: str, user: CurrentUser = Depends(get_current_user)
@@ -467,8 +455,7 @@ async def accept_project_invitation(
 
 
 @router.post(
-    "/loi-moi-du-an/{invitation_id}/tu-choi",
-    openapi_extra={"x-function-ids": ["MEM-SELF-02"]},
+    "/loi-moi-du-an/{invitation_id}/tu-choi", openapi_extra={"x-function-ids": ["MEM-SELF-02"]}
 )
 async def decline_project_invitation(
     invitation_id: str, user: CurrentUser = Depends(get_current_user)
@@ -493,14 +480,14 @@ async def decline_project_invitation(
     return envelope(membership, revision=membership["membership_revision"])
 
 
-@router.post(
-    "/du-an/{project_id}/roi-du-an",
-    openapi_extra={"x-function-ids": ["MEM-SELF-03"]},
-)
+@router.post("/du-an/{project_id}/roi-du-an", openapi_extra={"x-function-ids": ["MEM-SELF-03"]})
 async def leave_project(project_id: str, user: CurrentUser = Depends(get_current_user)):
     membership = await database.value.project_members.find_one_and_update(
         {"project_id": project_id, "user_id": user.id, "status": "ACTIVE"},
-        {"$set": {"status": "LEFT", "left_at": now(), "updated_at": now()}, "$inc": {"membership_revision": 1}},
+        {
+            "$set": {"status": "LEFT", "left_at": now(), "updated_at": now()},
+            "$inc": {"membership_revision": 1},
+        },
         return_document=ReturnDocument.AFTER,
     )
     if not membership:

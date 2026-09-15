@@ -19,8 +19,7 @@ class KnowledgeService:
 
         embeddings = await embedder.embed_batch(texts)
         if len(embeddings) != len(texts) or any(
-            len(embedding) != KnowledgeService.embedding_dimensions
-            for embedding in embeddings
+            len(embedding) != KnowledgeService.embedding_dimensions for embedding in embeddings
         ):
             raise RuntimeError("Knowledge batch embedding dimension mismatch")
         return embeddings
@@ -99,9 +98,7 @@ class KnowledgeService:
 
     @staticmethod
     async def set_cache(
-        query_text: str,
-        response_text: str,
-        query_vector: Optional[List[float]] = None,
+        query_text: str, response_text: str, query_vector: Optional[List[float]] = None
     ) -> None:
         from src.services.cache import cache_service
 

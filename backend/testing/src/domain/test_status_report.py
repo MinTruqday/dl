@@ -1,18 +1,12 @@
 import hashlib
 import json
 from datetime import datetime
-from typing import Any, Literal
+from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-
 Recommendation = Literal[
-    "ON_TRACK",
-    "AT_RISK",
-    "BLOCKED",
-    "CONTINUE_TESTING",
-    "READY_WITH_RISK",
-    "NOT_READY",
+    "ON_TRACK", "AT_RISK", "BLOCKED", "CONTINUE_TESTING", "READY_WITH_RISK", "NOT_READY"
 ]
 
 
@@ -22,34 +16,39 @@ class ReportingPeriod(BaseModel):
 
     @model_validator(mode="after")
     def validate_period(self):
+        if self.start_at.tzinfo is None or self.end_at.tzinfo is None:
+            raise ValueError("Kỳ báo cáo phải có múi giờ")
         if self.end_at < self.start_at:
             raise ValueError("Thời điểm kết thúc kỳ báo cáo phải sau thời điểm bắt đầu")
         return self
 
 
+class StatusForecast(BaseModel):
+    expected_completion_at: datetime | None = None
+    confidence: float | None = Field(default=None, ge=0, le=1)
+    assumptions: list[str] = Field(default_factory=list, max_length=200)
+
+
 class TestStatusReportGenerate(BaseModel):
+    idempotency_key: str | None = Field(default=None, min_length=8, max_length=200)
     snapshot_id: str = Field(min_length=1, max_length=200)
     build_id: str = Field(min_length=1, max_length=200)
     reporting_period: ReportingPeriod
     executive_summary: str = Field(default="", max_length=10000)
-    forecast: str = Field(default="", max_length=10000)
+    forecast: StatusForecast | str = Field(default_factory=StatusForecast)
     recommendation: Recommendation | None = None
     distribution: list[str] = Field(default_factory=list, max_length=500)
     evidence_refs: list[str] = Field(default_factory=list, max_length=500)
 
 
 class TestStatusReportPatch(BaseModel):
+    model_config = {"extra": "forbid"}
+
     expected_revision: int = Field(ge=1)
     executive_summary: str | None = Field(default=None, max_length=10000)
-    progress_summary: str | None = Field(default=None, max_length=10000)
-    coverage_summary: str | None = Field(default=None, max_length=10000)
-    defect_summary: str | None = Field(default=None, max_length=10000)
-    deviations: list[dict[str, Any] | str] | None = Field(default=None, max_length=500)
-    blockers: list[dict[str, Any] | str] | None = Field(default=None, max_length=500)
-    risks: list[dict[str, Any] | str] | None = Field(default=None, max_length=500)
-    control_actions: list[dict[str, Any] | str] | None = Field(default=None, max_length=500)
-    forecast: str | None = Field(default=None, max_length=10000)
-    recommendation: Recommendation | None = None
+    risk_explanation: str | None = Field(default=None, max_length=10000)
+    forecast: StatusForecast | str | None = None
+    recommendation_narrative: str | None = Field(default=None, max_length=10000)
     distribution: list[str] | None = Field(default=None, max_length=500)
 
 
@@ -93,5 +92,11 @@ def status_report_snapshot(report):
 
 
 def status_report_hash(report):
-    canonical = json.dumps(status_report_snapshot(report), ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
+    canonical = json.dumps(
+        status_report_snapshot(report),
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+        default=str,
+    )
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()

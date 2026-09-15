@@ -1,11 +1,9 @@
 import uuid
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
-
-from src.core.infrastructure.configuration import settings
 
 
 class KYC(str, Enum):

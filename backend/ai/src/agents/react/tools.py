@@ -5,7 +5,6 @@ from typing import Any, Callable
 
 from loguru import logger
 
-
 DEFAULT_TOOL_TIMEOUT_SECONDS = 30.0
 DEFAULT_MAX_RETRIES = 2
 RETRY_BASE_DELAY_SECONDS = 0.5

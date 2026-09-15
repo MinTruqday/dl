@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from typing import Dict, List, Literal, Optional
 
 from loguru import logger
+
 from src.utils.background import create_background_task
 
 InterventionStatus = Literal["PENDING_APPROVAL", "APPROVED", "REJECTED", "CORRECTED", "EXPIRED"]
@@ -56,6 +57,7 @@ class InterventionHarness:
         if self._redis_client is None:
             try:
                 import redis.asyncio as aioredis
+
                 from src.core.infrastructure.configuration import settings
 
                 self._redis_client = aioredis.from_url(settings.REDIS_URI, decode_responses=True)

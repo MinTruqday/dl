@@ -53,13 +53,6 @@ class HttpCore:
 
 
 class OrchestrationHarness:
-    """
-    <module_purpose>
-    <purpose>Coordinates multi-agent workflow sessions and validation.</purpose>
-    <metis_behavior>Forces strict boundaries during testing. Does not permit network access for mock nodes.</metis_behavior>
-    </module_purpose>
-    """
-
     def __init__(self):
         self._sessions: dict[str, SessionState] = {}
         self._circuit_breaker = HttpCore(

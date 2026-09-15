@@ -1,9 +1,11 @@
 import asyncio
 import json
 import uuid
+from typing import Any, Dict, Optional
+
 import aio_pika
 from loguru import logger
-from typing import Any, Dict, Optional
+
 from src.core.infrastructure.configuration import settings
 
 
@@ -50,7 +52,7 @@ class RabbitMQClient:
             )
             await self.channel.default_exchange.publish(message, routing_key=queue_name)
             return True
-        except Exception as e:
+        except Exception:
             logger.exception("RabbitMQ message publishing error")
             return False
 
@@ -72,7 +74,7 @@ class RabbitMQClient:
             return None
         except aio_pika.exceptions.QueueEmpty:
             return None
-        except Exception as e:
+        except Exception:
             logger.exception("RabbitMQ message consumption error")
             return None
 
@@ -92,7 +94,7 @@ class RabbitMQClient:
             try:
                 await message.ack()
                 return True
-            except Exception as e:
+            except Exception:
                 logger.exception("RabbitMQ message acknowledgement error")
                 return False
         return False

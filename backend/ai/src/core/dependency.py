@@ -1,4 +1,4 @@
-from src.core.infrastructure.redis import redis
+import hmac
 from typing import List, Optional
 
 import jwt
@@ -7,8 +7,9 @@ from fastapi.security import OAuth2PasswordBearer
 from loguru import logger
 
 from src.core.infrastructure.configuration import settings
-
-from src.schemas.auth import Role, CurrentUser
+from src.core.infrastructure.mongo import mongo
+from src.core.infrastructure.redis import redis
+from src.schemas.auth import CurrentUser, Role, SystemRole
 
 ALGORITHM = "HS256"
 SECRET_KEY = settings.SECRET_KEY
@@ -47,7 +48,9 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
         "_id": uid,
         "email": email,
         "role": payload.get("role", "reader"),
+        "system_role": payload.get("system_role", "USER"),
         "permissions": payload.get("permissions", []),
+        "session_id": session_id,
         "full_name": payload.get("full_name", ""),
         "slug": payload.get("slug", ""),
         "is_active": True,
@@ -56,7 +59,9 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
 
 
 async def get_current_user_optional(
-    token: Optional[str] = Depends(OAuth2PasswordBearer(tokenUrl="/xac-thuc/dang-nhap", auto_error=False)),
+    token: Optional[str] = Depends(
+        OAuth2PasswordBearer(tokenUrl="/xac-thuc/dang-nhap", auto_error=False)
+    ),
 ) -> Optional[CurrentUser]:
     if not token:
         return None
@@ -72,7 +77,7 @@ async def get_current_user_token_param(token: str) -> CurrentUser:
 
 def require_role(required_roles: List[Role]):
     async def role_checker(current_user: CurrentUser = Depends(get_current_user)) -> CurrentUser:
-        if current_user.role == Role.ADMIN:
+        if current_user.system_role == SystemRole.ADMIN or current_user.role == Role.ADMIN:
             return current_user
         if current_user.role not in required_roles:
             logger.warning("Access denied due to insufficient authorization privileges")
@@ -108,7 +113,7 @@ def require_permissions(required_permissions: List[str]):
         current_user: CurrentUser = Depends(get_current_user),
     ) -> CurrentUser:
         user_perms = current_user.permissions or []
-        if current_user.role == Role.ADMIN:
+        if current_user.system_role == SystemRole.ADMIN or current_user.role == Role.ADMIN:
             return current_user
         missing = [p for p in required_permissions if p not in user_perms]
         if missing:
@@ -120,29 +125,12 @@ def require_permissions(required_permissions: List[str]):
     return permission_checker
 
 
-class AuthenticatedUser:
-    def __init__(self, user_id: str, user_name: str = "User"):
-        self.id = user_id
-        self.full_name = user_name
-
-
-def get_current_user_from_header(x_user_id: str = Header(None), x_user_name: str = Header("User")):
-    if not x_user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail={"code": "user_identity_not_found"}
-        )
-    return AuthenticatedUser(x_user_id, x_user_name)
-
-
-from src.core.infrastructure.mongo import mongo
-
-
 async def get_db():
     return mongo.get_db()
 
 
-async def verify_internal_token(x_internal_token: Optional[str] = Header(default=None)) -> None:
-    if not settings.SECRET_KEY or x_internal_token != settings.SECRET_KEY:
+async def verify_internal_token(x_internal_token: str = Header(default="")) -> None:
+    if not settings.SECRET_KEY or not hmac.compare_digest(x_internal_token, settings.SECRET_KEY):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden invalid internal token"
         )

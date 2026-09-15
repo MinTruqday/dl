@@ -1,6 +1,6 @@
+import os
 from datetime import datetime, timezone
 from math import ceil
-import os
 from uuid import uuid4
 
 from fastapi import HTTPException
@@ -8,13 +8,11 @@ from pymongo import ReturnDocument
 
 from src.core.auth import (
     ARCHIVE_READ_PERMISSIONS,
-    CurrentUser,
     PROJECT_PERMISSIONS,
-    READ_PERMISSIONS,
+    CurrentUser,
     permissions_for_role,
 )
 from src.core.database import database
-
 
 RETRYABLE_ERROR_CODES = {
     "WORKER_UNAVAILABLE",
@@ -23,6 +21,28 @@ RETRYABLE_ERROR_CODES = {
     "AI_PROVIDER_UNAVAILABLE",
     "PROPOSAL_APPLY_PARTIAL",
     "WORKER_JOB_FAILED",
+}
+
+VIEWER_DEFECT_FIELDS = {
+    "_id",
+    "project_id",
+    "defect_key",
+    "title",
+    "severity",
+    "priority",
+    "status",
+    "assignee",
+    "release",
+    "release_id",
+    "build",
+    "build_id",
+    "environment",
+    "environment_id",
+    "root_cause_category",
+    "prevention_candidate",
+    "revision",
+    "created_at",
+    "updated_at",
 }
 
 
@@ -34,15 +54,31 @@ def now():
     return datetime.now(timezone.utc)
 
 
+async def get_project_role(project_id, user_id):
+    membership = await database.value.project_members.find_one(
+        {"project_id": project_id, "user_id": user_id, "status": "ACTIVE"}, {"project_role": 1}
+    )
+    return (membership or {}).get("project_role")
+
+
+def visible_defect(defect, role):
+    if role != "VIEWER":
+        return defect
+    return {key: value for key, value in defect.items() if key in VIEWER_DEFECT_FIELDS}
+
+
 async def load_user_identities(user_ids):
     identifiers = sorted({str(value) for value in user_ids if value})
     if not identifiers or database.client is None:
         return {}
     authentication_db = os.environ.get("AUTHENTICATION_DB_NAME", "veriq_authentication")
-    accounts = await database.client[authentication_db].auth_credentials.find(
-        {"_id": {"$in": identifiers}},
-        {"email": 1, "full_name": 1, "slug": 1},
-    ).to_list(len(identifiers))
+    accounts = (
+        await database.client[authentication_db]
+        .auth_credentials.find(
+            {"_id": {"$in": identifiers}}, {"email": 1, "full_name": 1, "slug": 1}
+        )
+        .to_list(len(identifiers))
+    )
     return {
         str(account["_id"]): {
             "user_id": str(account["_id"]),
@@ -239,9 +275,7 @@ async def get_project(
         and (project.get("settings") or {}).get("read_after_archive_policy", "ALLOW_READ")
         == "DENY_READ"
     ):
-        raise HTTPException(
-            status_code=403, detail={"code": "PROJECT_ARCHIVED_READ_DENIED"}
-        )
+        raise HTTPException(status_code=403, detail={"code": "PROJECT_ARCHIVED_READ_DENIED"})
     if permission in grant_permissions and permission not in permissions:
         return {
             **project,
@@ -287,7 +321,7 @@ async def get_project_entity(
         projection[assigned_user_field] = 1
     identity = await database.value[collection].find_one({"_id": entity_id}, projection)
     if not identity:
-        raise HTTPException(status_code=404, detail={"code": "ENTITY_NOT_FOUND"})
+        raise HTTPException(status_code=404, detail={"code": "ARTIFACT_NOT_FOUND"})
     await get_project(
         identity["project_id"],
         user,
@@ -299,7 +333,7 @@ async def get_project_entity(
         {"_id": entity_id, "project_id": identity["project_id"]}
     )
     if not entity:
-        raise HTTPException(status_code=404, detail={"code": "ENTITY_NOT_FOUND"})
+        raise HTTPException(status_code=404, detail={"code": "ARTIFACT_NOT_FOUND"})
     return entity
 
 

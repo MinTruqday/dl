@@ -1,9 +1,9 @@
 import time
 from collections import defaultdict
+
 from fastapi import Request
 from fastapi.responses import PlainTextResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.routing import Router
 
 
 class MetricsCollector:

@@ -63,11 +63,10 @@ def _compute_rouge_l(reference: str, hypothesis: str) -> float:
 
 async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
     from langchain_core.messages import HumanMessage
+
     from src.core.registry import PromptType, registry
     from src.schemas.evaluation import JudgeScores
     from src.utils.huggingface import create_chat_model
-
-    from src.core.infrastructure.configuration import settings
 
     prompt = registry.get(PromptType.EVAL_JUDGE).format(
         instruction=instruction, expected=expected, actual=actual
@@ -161,13 +160,13 @@ class EvaluationHarness:
         return report
 
     async def run_benchmark(self, model_name: str, use_judge: bool = False) -> dict:
-        from src.utils.local_models import local_model_client
+        from src.utils.model_provider import model_client
 
         if not self._dataset:
             return {"error_code": "evaluation_dataset_not_loaded"}
 
         try:
-            client = local_model_client
+            client = model_client
         except Exception:
             logger.exception("Evaluation client initialization failed")
             return {"error_code": "evaluation_client_initialization_failed"}
@@ -177,7 +176,7 @@ class EvaluationHarness:
             instruction = sample.get("instruction", "")
             inp = sample.get("input", "")
             expected = sample.get("output", "")
-            from src.core.registry import registry, PromptType
+            from src.core.registry import PromptType, registry
 
             prompt = (
                 registry.get(PromptType.EVALUATION_HARNESS_PROMPT)

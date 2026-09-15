@@ -1,13 +1,13 @@
 import asyncio
 from typing import List
 
-from src.core.security.scanning import security
 from src.core.infrastructure.configuration import settings
 from src.core.model_runtime import run_chat_completion
 from src.core.registry import PromptType, registry
 from src.core.security.guardrails import guardrails_engine
+from src.core.security.scanning import security
 from src.schemas.routing import CrossDocumentQueries, MultiQueryOutput
-from src.utils.local_models import local_model_client
+from src.utils.model_provider import model_client
 from src.utils.structured_output import validate_structured_output
 
 
@@ -20,7 +20,7 @@ async def chat(
     response_schema: dict | None = None,
 ):
     return await run_chat_completion(
-        client=local_model_client,
+        client=model_client,
         messages=messages,
         model=settings.LLM_MODEL,
         max_tokens=max_tokens,
@@ -52,7 +52,7 @@ async def structured(prompt, schema, max_tokens=1200, timeout_seconds=90):
             ],
             max_tokens=max_tokens,
             temperature=0,
-            attempts=2,
+            attempts=1,
             timeout_seconds=timeout_seconds,
             response_schema=response_schema,
         )
@@ -105,9 +105,7 @@ async def inspect_chunks(texts: list[str]) -> set[int]:
             result = await security.ascan_input(text)
             return index if result.passed else None
 
-    values = await asyncio.gather(
-        *[inspect(index, text) for index, text in enumerate(texts)]
-    )
+    values = await asyncio.gather(*[inspect(index, text) for index, text in enumerate(texts)])
     return {value for value in values if value is not None}
 
 

@@ -29,6 +29,9 @@ const toggleSettings = [
   ["tester_can_abort_runs", "Cho phép kiểm thử viên hủy lần chạy kiểm thử"],
   ["tester_can_correct_results", "Cho phép kiểm thử viên hiệu chỉnh kết quả"],
   ["tester_can_assign_testplans", "Cho phép kiểm thử viên phân công kế hoạch kiểm thử"],
+  ["strict_test_plan_approval", "Chỉ phê duyệt kế hoạch kiểm thử khi đã đủ thông tin quản trị"],
+  ["require_release_for_test_plan", "Yêu cầu chọn bản phát hành trước khi phê duyệt kế hoạch"],
+  ["require_environment_for_test_plan", "Yêu cầu chọn môi trường trước khi phê duyệt kế hoạch"],
   ["partial_complete_allowed", "Cho phép hoàn tất một phần lần chạy kiểm thử"],
   ["allow_not_applicable_results", "Cho phép kết quả Không áp dụng khi có lý do"],
   ["tester_can_close_defect", "Cho phép kiểm thử viên đóng lỗi"],
@@ -48,13 +51,25 @@ const toggleSettings = [
   ["viewer_can_export", "Cho phép người xem xuất báo cáo"],
   ["developer_can_export", "Cho phép lập trình viên xuất báo cáo"],
   ["ai_auto_draft", "Cho phép AI tạo bản nháp"],
-  ["require_completion_report_before_release_close", "Yêu cầu báo cáo hoàn tất đã phê duyệt trước khi đóng bản phát hành"],
+  [
+    "require_completion_report_before_release_close",
+    "Yêu cầu báo cáo hoàn tất đã phê duyệt trước khi đóng bản phát hành",
+  ],
 ];
 
 const numberSettings = [
   ["impact_confidence_threshold", "Ngưỡng tin cậy phân tích ảnh hưởng", 0, 1, 0.01],
   ["testcase_duplicate_threshold", "Ngưỡng phát hiện ca kiểm thử trùng", 0, 1, 0.01],
   ["impact_candidate_limit", "Số ứng viên ảnh hưởng tối đa", 1, 5000, 1],
+  [
+    "completion_open_blocker_threshold",
+    "Số lỗi chặn toàn bộ đang mở tối đa khi phê duyệt hoàn tất",
+    0,
+    1000,
+    1,
+  ],
+  ["rca_reopen_threshold", "Số lần mở lại lỗi để đề xuất RCA", 1, 100, 1],
+  ["rca_duplicate_threshold", "Số lỗi cùng cụm để đề xuất RCA", 2, 100, 1],
 ];
 
 const selectSettings = [

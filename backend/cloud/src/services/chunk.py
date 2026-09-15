@@ -1,14 +1,14 @@
 import shutil
 from pathlib import Path
 from uuid import UUID
+
 import aiofiles
 from fastapi import HTTPException
-from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 from src.core.storage import upload_file
-from src.services.upload import UploadService
 from src.services.file import FileService
+from src.services.upload import UploadService
 
 
 class ChunkService:

@@ -100,44 +100,30 @@ class ProjectQuotaUpdate(BaseModel):
 
 
 async def account_or_404(user_id: str):
-    account = await database.mongodb[
-        settings.AUTHENTICATION_DB_NAME
-    ].auth_credentials.find_one({"_id": user_id})
+    account = await database.mongodb[settings.AUTHENTICATION_DB_NAME].auth_credentials.find_one(
+        {"_id": user_id}
+    )
     if not account:
         raise HTTPException(status_code=404, detail="Không tìm thấy tài khoản")
     return account
 
 
 async def protect_last_admin(account: dict, desired_role=None, desired_active=None):
-    current_role = account.get(
-        "system_role", "ADMIN" if account.get("role") == "admin" else "USER"
-    )
-    removing_admin = current_role == "ADMIN" and (
-        desired_role == "USER" or desired_active is False
-    )
+    current_role = account.get("system_role", "ADMIN" if account.get("role") == "admin" else "USER")
+    removing_admin = current_role == "ADMIN" and (desired_role == "USER" or desired_active is False)
     if not removing_admin:
         return
     active_admins = await database.mongodb[
         settings.AUTHENTICATION_DB_NAME
     ].auth_credentials.count_documents(
-        {
-            "is_active": {"$ne": False},
-            "$or": [{"system_role": "ADMIN"}, {"role": "admin"}],
-        }
+        {"is_active": {"$ne": False}, "$or": [{"system_role": "ADMIN"}, {"role": "admin"}]}
     )
     if active_admins <= 1:
-        raise HTTPException(
-            status_code=422,
-            detail="Không thể vô hiệu hóa quản trị viên cuối cùng",
-        )
+        raise HTTPException(status_code=422, detail="Không thể vô hiệu hóa quản trị viên cuối cùng")
 
 
 async def record_audit(
-    current_user: CurrentUser,
-    action: str,
-    user_id: str,
-    reason: str,
-    details=None,
+    current_user: CurrentUser, action: str, user_id: str, reason: str, details=None
 ):
     await IdentityRepository.insert_audit_log(
         {
@@ -178,8 +164,7 @@ async def create_account(
         request.client.host if request.client else "admin",
     )
     await SessionService.forgot_password(
-        str(payload.email),
-        request.client.host if request.client else "admin",
+        str(payload.email), request.client.host if request.client else "admin"
     )
     await record_audit(
         current_user,
@@ -276,9 +261,7 @@ async def update_account(
 
 
 @router.get("/quan-tri/tai-khoan/{user_id}", response_model=APIResponse[Any])
-async def account_detail(
-    user_id: str, current_user: CurrentUser = Depends(get_current_user)
-):
+async def account_detail(user_id: str, current_user: CurrentUser = Depends(get_current_user)):
     account = await account_or_404(user_id)
     session_count = await database.mongodb[
         settings.AUTHENTICATION_DB_NAME
@@ -301,9 +284,7 @@ async def account_detail(
 
 @router.patch("/quan-tri/tai-khoan/{user_id}/ho-so", response_model=APIResponse[Any])
 async def update_account_profile(
-    user_id: str,
-    payload: ProfileUpdate,
-    current_user: CurrentUser = Depends(get_current_user),
+    user_id: str, payload: ProfileUpdate, current_user: CurrentUser = Depends(get_current_user)
 ):
     await account_or_404(user_id)
     changes = {
@@ -319,21 +300,12 @@ async def update_account_profile(
     ].auth_credentials.find_one_and_update(
         {"_id": user_id}, {"$set": changes}, return_document=ReturnDocument.AFTER
     )
-    await record_audit(
-        current_user,
-        "ADMIN_USER_PROFILE_UPDATED",
-        user_id,
-        payload.reason,
-        changes,
-    )
+    await record_audit(current_user, "ADMIN_USER_PROFILE_UPDATED", user_id, payload.reason, changes)
     return APIResponse(data=account_view(account), message="Cập nhật hồ sơ tài khoản hoàn tất")
 
 
 async def change_account_status(
-    user_id: str,
-    desired_status: str,
-    payload: ActionReason,
-    current_user: CurrentUser,
+    user_id: str, desired_status: str, payload: ActionReason, current_user: CurrentUser
 ):
     account = await account_or_404(user_id)
     active = desired_status == "ACTIVE"
@@ -345,58 +317,39 @@ async def change_account_status(
         settings.AUTHENTICATION_DB_NAME
     ].auth_credentials.find_one_and_update(
         {"_id": user_id},
-        {
-            "$set": {
-                "is_active": active,
-                "account_status": desired_status,
-                "updated_at": updated_at,
-            }
-        },
+        {"$set": {"is_active": active, "account_status": desired_status, "updated_at": updated_at}},
         return_document=ReturnDocument.AFTER,
     )
     if not active:
         await IdentityRepository.revoke_all_sessions(user_id)
-    await record_audit(
-        current_user,
-        f"ADMIN_USER_{desired_status}",
-        user_id,
-        payload.reason,
-    )
+    await record_audit(current_user, f"ADMIN_USER_{desired_status}", user_id, payload.reason)
     return APIResponse(data=account_view(account), message="Cập nhật trạng thái tài khoản hoàn tất")
 
 
 @router.post("/quan-tri/tai-khoan/{user_id}/kich-hoat", response_model=APIResponse[Any])
 async def enable_account(
-    user_id: str,
-    payload: ActionReason,
-    current_user: CurrentUser = Depends(get_current_user),
+    user_id: str, payload: ActionReason, current_user: CurrentUser = Depends(get_current_user)
 ):
     return await change_account_status(user_id, "ACTIVE", payload, current_user)
 
 
 @router.post("/quan-tri/tai-khoan/{user_id}/vo-hieu-hoa", response_model=APIResponse[Any])
 async def disable_account(
-    user_id: str,
-    payload: ActionReason,
-    current_user: CurrentUser = Depends(get_current_user),
+    user_id: str, payload: ActionReason, current_user: CurrentUser = Depends(get_current_user)
 ):
     return await change_account_status(user_id, "DISABLED", payload, current_user)
 
 
 @router.post("/quan-tri/tai-khoan/{user_id}/khoa", response_model=APIResponse[Any])
 async def lock_account(
-    user_id: str,
-    payload: ActionReason,
-    current_user: CurrentUser = Depends(get_current_user),
+    user_id: str, payload: ActionReason, current_user: CurrentUser = Depends(get_current_user)
 ):
     return await change_account_status(user_id, "LOCKED", payload, current_user)
 
 
 @router.post("/quan-tri/tai-khoan/{user_id}/mo-khoa", response_model=APIResponse[Any])
 async def unlock_account(
-    user_id: str,
-    payload: ActionReason,
-    current_user: CurrentUser = Depends(get_current_user),
+    user_id: str, payload: ActionReason, current_user: CurrentUser = Depends(get_current_user)
 ):
     return await change_account_status(user_id, "ACTIVE", payload, current_user)
 
@@ -418,9 +371,7 @@ async def force_password_reset(
 
 
 @router.get("/quan-tri/tai-khoan/{user_id}/phien", response_model=APIResponse[Any])
-async def list_user_sessions(
-    user_id: str, current_user: CurrentUser = Depends(get_current_user)
-):
+async def list_user_sessions(user_id: str, current_user: CurrentUser = Depends(get_current_user)):
     await account_or_404(user_id)
     sessions = (
         await database.mongodb[settings.AUTHENTICATION_DB_NAME]
@@ -434,9 +385,7 @@ async def list_user_sessions(
 
 @router.delete("/quan-tri/tai-khoan/{user_id}/phien/{session_id}", response_model=APIResponse[Any])
 async def revoke_user_session(
-    user_id: str,
-    session_id: str,
-    current_user: CurrentUser = Depends(get_current_user),
+    user_id: str, session_id: str, current_user: CurrentUser = Depends(get_current_user)
 ):
     await account_or_404(user_id)
     await IdentityRepository.revoke_session(user_id, session_id)
@@ -448,8 +397,7 @@ async def revoke_user_session(
         {"session_id": session_id},
     )
     return APIResponse(
-        data={"revoked": True, "session_id": session_id},
-        message="Thu hồi phiên hoàn tất",
+        data={"revoked": True, "session_id": session_id}, message="Thu hồi phiên hoàn tất"
     )
 
 
@@ -459,20 +407,13 @@ async def revoke_all_user_sessions(
 ):
     await account_or_404(user_id)
     await IdentityRepository.revoke_all_sessions(user_id)
-    await record_audit(
-        current_user,
-        "ADMIN_USER_SESSIONS_REVOKED",
-        user_id,
-        "security action",
-    )
+    await record_audit(current_user, "ADMIN_USER_SESSIONS_REVOKED", user_id, "security action")
     return APIResponse(data={"revoked": True}, message="Thu hồi toàn bộ phiên hoàn tất")
 
 
 @router.delete("/quan-tri/tai-khoan/{user_id}/khoa-bao-mat", response_model=APIResponse[Any])
 async def reset_user_passkeys(
-    user_id: str,
-    payload: ActionReason,
-    current_user: CurrentUser = Depends(get_current_user),
+    user_id: str, payload: ActionReason, current_user: CurrentUser = Depends(get_current_user)
 ):
     await account_or_404(user_id)
     await database.mongodb[settings.AUTHENTICATION_DB_NAME].auth_credentials.update_one(
@@ -485,9 +426,7 @@ async def reset_user_passkeys(
 
 @router.patch("/quan-tri/tai-khoan/{user_id}/vai-tro-he-thong", response_model=APIResponse[Any])
 async def update_system_role(
-    user_id: str,
-    payload: SystemRoleUpdate,
-    current_user: CurrentUser = Depends(get_current_user),
+    user_id: str, payload: SystemRoleUpdate, current_user: CurrentUser = Depends(get_current_user)
 ):
     account = await account_or_404(user_id)
     await protect_last_admin(account, desired_role=payload.system_role.value)
@@ -574,20 +513,25 @@ async def list_project_metadata(
             {"key": {"$regex": pattern, "$options": "i"}},
             {"name": {"$regex": pattern, "$options": "i"}},
         ]
-    projects = await testing_db.projects.find(
-        query,
-        {
-            "key": 1,
-            "name": 1,
-            "status": 1,
-            "administrative_status": 1,
-            "project_type": 1,
-            "quota": 1,
-            "created_by": 1,
-            "created_at": 1,
-            "updated_at": 1,
-        },
-    ).sort("updated_at", -1).limit(limit).to_list(limit)
+    projects = (
+        await testing_db.projects.find(
+            query,
+            {
+                "key": 1,
+                "name": 1,
+                "status": 1,
+                "administrative_status": 1,
+                "project_type": 1,
+                "quota": 1,
+                "created_by": 1,
+                "created_at": 1,
+                "updated_at": 1,
+            },
+        )
+        .sort("updated_at", -1)
+        .limit(limit)
+        .to_list(limit)
+    )
     project_ids = [project["_id"] for project in projects]
     member_counts = await testing_db.project_members.aggregate(
         [
@@ -597,8 +541,7 @@ async def list_project_metadata(
     ).to_list(limit)
     count_by_project = {item["_id"]: item["count"] for item in member_counts}
     data = [
-        {**project, "member_count": count_by_project.get(project["_id"], 0)}
-        for project in projects
+        {**project, "member_count": count_by_project.get(project["_id"], 0)} for project in projects
     ]
     await record_audit(current_user, "ADMIN_PROJECT_METADATA_VIEWED", "platform", "operations")
     return APIResponse(data=data, message="Tải siêu dữ liệu dự án hoàn tất")
@@ -606,20 +549,37 @@ async def list_project_metadata(
 
 @router.get("/quan-tri/du-an/{project_id}", response_model=APIResponse[Any])
 async def project_metadata_detail(
-    project_id: str,
-    current_user: CurrentUser = Depends(get_current_user),
+    project_id: str, current_user: CurrentUser = Depends(get_current_user)
 ):
     testing_db = database.mongodb[os.environ.get("TESTING_DB_NAME", "veriq_testing")]
     project = await testing_db.projects.find_one(
         {"_id": project_id},
-        {"key": 1, "name": 1, "status": 1, "project_type": 1, "created_by": 1, "created_at": 1, "updated_at": 1, "revision": 1, "quota": 1},
+        {
+            "key": 1,
+            "name": 1,
+            "status": 1,
+            "project_type": 1,
+            "created_by": 1,
+            "created_at": 1,
+            "updated_at": 1,
+            "revision": 1,
+            "quota": 1,
+        },
     )
     if not project:
         raise HTTPException(status_code=404, detail="Không tìm thấy dự án")
-    project["member_count"] = await testing_db.project_members.count_documents({"project_id": project_id})
-    project["active_member_count"] = await testing_db.project_members.count_documents({"project_id": project_id, "status": "ACTIVE"})
-    project["job_count"] = await database.mongodb[os.environ.get("WORKER_DB_NAME", "veriq_worker")].worker_jobs.count_documents({"project_id": project_id})
-    await record_audit(current_user, "ADMIN_PROJECT_METADATA_VIEWED", project_id, "support metadata")
+    project["member_count"] = await testing_db.project_members.count_documents(
+        {"project_id": project_id}
+    )
+    project["active_member_count"] = await testing_db.project_members.count_documents(
+        {"project_id": project_id, "status": "ACTIVE"}
+    )
+    project["job_count"] = await database.mongodb[
+        os.environ.get("WORKER_DB_NAME", "veriq_worker")
+    ].worker_jobs.count_documents({"project_id": project_id})
+    await record_audit(
+        current_user, "ADMIN_PROJECT_METADATA_VIEWED", project_id, "support metadata"
+    )
     return APIResponse(data=project, message="Tải siêu dữ liệu dự án hoàn tất")
 
 
@@ -633,12 +593,27 @@ async def update_project_status(
     timestamp = datetime.now(timezone.utc)
     project = await testing_db.projects.find_one_and_update(
         {"_id": project_id},
-        {"$set": {"administrative_status": payload.status, "administrative_reason": payload.reason, "administrative_updated_by": current_user.id, "administrative_updated_at": timestamp, "updated_at": timestamp}, "$inc": {"revision": 1}},
+        {
+            "$set": {
+                "administrative_status": payload.status,
+                "administrative_reason": payload.reason,
+                "administrative_updated_by": current_user.id,
+                "administrative_updated_at": timestamp,
+                "updated_at": timestamp,
+            },
+            "$inc": {"revision": 1},
+        },
         return_document=ReturnDocument.AFTER,
     )
     if not project:
         raise HTTPException(status_code=404, detail="Không tìm thấy dự án")
-    await record_audit(current_user, "ADMIN_PROJECT_STATUS_UPDATED", project_id, payload.reason, {"status": payload.status})
+    await record_audit(
+        current_user,
+        "ADMIN_PROJECT_STATUS_UPDATED",
+        project_id,
+        payload.reason,
+        {"status": payload.status},
+    )
     return APIResponse(data=project, message="Cập nhật trạng thái quản trị dự án hoàn tất")
 
 
@@ -654,19 +629,28 @@ async def update_project_quota(
     testing_db = database.mongodb[os.environ.get("TESTING_DB_NAME", "veriq_testing")]
     project = await testing_db.projects.find_one_and_update(
         {"_id": project_id},
-        {"$set": {"quota": quota, "quota_updated_by": current_user.id, "quota_updated_at": datetime.now(timezone.utc)}, "$inc": {"revision": 1}},
+        {
+            "$set": {
+                "quota": quota,
+                "quota_updated_by": current_user.id,
+                "quota_updated_at": datetime.now(timezone.utc),
+            },
+            "$inc": {"revision": 1},
+        },
         return_document=ReturnDocument.AFTER,
     )
     if not project:
         raise HTTPException(status_code=404, detail="Không tìm thấy dự án")
-    await record_audit(current_user, "ADMIN_PROJECT_QUOTA_UPDATED", project_id, payload.reason, quota)
-    return APIResponse(data={"project_id": project_id, "quota": quota}, message="Cập nhật hạn mức dự án hoàn tất")
+    await record_audit(
+        current_user, "ADMIN_PROJECT_QUOTA_UPDATED", project_id, payload.reason, quota
+    )
+    return APIResponse(
+        data={"project_id": project_id, "quota": quota}, message="Cập nhật hạn mức dự án hoàn tất"
+    )
 
 
 @router.get("/quan-tri/nen-tang/chinh-sach-du-an", response_model=APIResponse[Any])
-async def get_project_policy(
-    current_user: CurrentUser = Depends(get_current_user),
-):
+async def get_project_policy(current_user: CurrentUser = Depends(get_current_user)):
     config = await database.mongodb[settings.AUTHENTICATION_DB_NAME].system_configs.find_one(
         {"type": "project_creation"}
     )
@@ -683,8 +667,7 @@ async def get_project_policy(
 
 @router.patch("/quan-tri/nen-tang/chinh-sach-du-an", response_model=APIResponse[Any])
 async def update_project_policy(
-    payload: ProjectPolicyUpdate,
-    current_user: CurrentUser = Depends(get_current_user),
+    payload: ProjectPolicyUpdate, current_user: CurrentUser = Depends(get_current_user)
 ):
     timestamp = datetime.now(timezone.utc)
     await database.mongodb[settings.AUTHENTICATION_DB_NAME].system_configs.update_one(
@@ -726,20 +709,18 @@ def provider_view(provider: dict):
 
 
 @router.get("/quan-tri/ai/nha-cung-cap", response_model=APIResponse[Any])
-async def list_ai_providers(
-    current_user: CurrentUser = Depends(get_current_user),
-):
+async def list_ai_providers(current_user: CurrentUser = Depends(get_current_user)):
     collection = database.mongodb[settings.AUTHENTICATION_DB_NAME].ai_providers
     providers = await collection.find({}).sort("_id", 1).to_list(100)
     if not providers:
         providers = [
             {
-                "_id": os.environ.get("PRIMARY_MODEL_STYLE", "ollama"),
+                "_id": os.environ.get("AI_PROVIDER", "huggingface"),
                 "enabled": True,
                 "model": os.environ.get("LLM_MODEL", ""),
                 "timeout_seconds": int(os.environ.get("MODEL_TIMEOUT_SECONDS", "900")),
                 "max_output_tokens": int(os.environ.get("AGENT_DEFAULT_MAX_OUTPUT_TOKENS", "4096")),
-                "secret_reference": bool(os.environ.get("PRIMARY_MODEL_API_TOKEN")),
+                "secret_reference": os.environ.get("AI_PROVIDER_CONFIGURED") == "true",
                 "requires_restart": False,
             }
         ]
@@ -751,9 +732,7 @@ async def list_ai_providers(
 
 @router.patch("/quan-tri/ai/nha-cung-cap/{provider_id}", response_model=APIResponse[Any])
 async def update_ai_provider(
-    provider_id: str,
-    payload: ProviderUpdate,
-    current_user: CurrentUser = Depends(get_current_user),
+    provider_id: str, payload: ProviderUpdate, current_user: CurrentUser = Depends(get_current_user)
 ):
     changes = {
         key: value
@@ -779,10 +758,7 @@ async def update_ai_provider(
 
 
 @router.post("/quan-tri/ai/nha-cung-cap/{provider_id}/kiem-tra", response_model=APIResponse[Any])
-async def test_ai_provider(
-    provider_id: str,
-    current_user: CurrentUser = Depends(get_current_user),
-):
+async def test_ai_provider(provider_id: str, current_user: CurrentUser = Depends(get_current_user)):
     ai_url = os.environ.get("AI_INTERNAL_URL", "http://ai:8000").rstrip("/")
     try:
         async with httpx.AsyncClient(timeout=15) as client:
@@ -790,7 +766,9 @@ async def test_ai_provider(
             response.raise_for_status()
             health = response.json()
     except httpx.HTTPError as error:
-        await record_audit(current_user, "ADMIN_AI_PROVIDER_TEST_FAILED", provider_id, "health test")
+        await record_audit(
+            current_user, "ADMIN_AI_PROVIDER_TEST_FAILED", provider_id, "health test"
+        )
         raise HTTPException(status_code=503, detail="Nhà cung cấp AI chưa sẵn sàng") from error
     await record_audit(current_user, "ADMIN_AI_PROVIDER_TESTED", provider_id, "health test")
     return APIResponse(
@@ -818,24 +796,14 @@ async def list_operations_jobs(
         .limit(limit)
         .to_list(limit)
     )
-    await record_audit(
-        current_user,
-        "ADMIN_OPERATIONS_JOBS_VIEWED",
-        "platform",
-        "operations",
-    )
+    await record_audit(current_user, "ADMIN_OPERATIONS_JOBS_VIEWED", "platform", "operations")
     return APIResponse(data=jobs, message="Tải danh sách tác vụ nền hoàn tất")
 
 
 @router.post(
-    "/quan-tri/van-hanh/tac-vu/{job_id}/thu-lai",
-    response_model=APIResponse[Any],
-    status_code=202,
+    "/quan-tri/van-hanh/tac-vu/{job_id}/thu-lai", response_model=APIResponse[Any], status_code=202
 )
-async def retry_operations_job(
-    job_id: str,
-    current_user: CurrentUser = Depends(get_current_user),
-):
+async def retry_operations_job(job_id: str, current_user: CurrentUser = Depends(get_current_user)):
     worker_url = os.environ.get("WORKER_INTERNAL_URL", "http://worker:8000").rstrip("/")
     try:
         async with httpx.AsyncClient(timeout=15) as client:
@@ -854,29 +822,27 @@ async def retry_operations_job(
         raise HTTPException(status_code=502, detail="Không thể chạy lại tác vụ nền") from error
     except httpx.HTTPError as error:
         raise HTTPException(status_code=503, detail="Dịch vụ tác vụ nền chưa sẵn sàng") from error
-    await record_audit(
-        current_user,
-        "ADMIN_OPERATIONS_JOB_RETRIED",
-        job_id,
-        "operations retry",
-    )
+    await record_audit(current_user, "ADMIN_OPERATIONS_JOB_RETRIED", job_id, "operations retry")
     return APIResponse(data=result, message="Đưa tác vụ vào hàng đợi chạy lại hoàn tất")
 
 
 @router.post("/quan-tri/van-hanh/tac-vu/{job_id}/huy", response_model=APIResponse[Any])
-async def cancel_operations_job(
-    job_id: str,
-    current_user: CurrentUser = Depends(get_current_user),
-):
+async def cancel_operations_job(job_id: str, current_user: CurrentUser = Depends(get_current_user)):
     worker_url = os.environ.get("WORKER_INTERNAL_URL", "http://worker:8000").rstrip("/")
     try:
         async with httpx.AsyncClient(timeout=15) as client:
-            response = await client.post(f"{worker_url}/xu-ly-nen/noi-bo/tac-vu/{job_id}/huy", headers={"X-Internal-Token": settings.SECRET_KEY})
+            response = await client.post(
+                f"{worker_url}/xu-ly-nen/noi-bo/tac-vu/{job_id}/huy",
+                headers={"X-Internal-Token": settings.SECRET_KEY},
+            )
             response.raise_for_status()
             result = response.json()
     except httpx.HTTPStatusError as error:
         if error.response.status_code in {404, 409, 422}:
-            raise HTTPException(status_code=error.response.status_code, detail="Tác vụ không tồn tại hoặc không thể hủy") from error
+            raise HTTPException(
+                status_code=error.response.status_code,
+                detail="Tác vụ không tồn tại hoặc không thể hủy",
+            ) from error
         raise HTTPException(status_code=502, detail="Không thể hủy tác vụ nền") from error
     except httpx.HTTPError as error:
         raise HTTPException(status_code=503, detail="Dịch vụ tác vụ nền chưa sẵn sàng") from error
@@ -889,21 +855,32 @@ async def list_dead_letter_jobs(
     limit: int = Query(default=200, ge=1, le=1000),
     current_user: CurrentUser = Depends(get_current_user),
 ):
-    jobs = await database.mongodb[os.environ.get("WORKER_DB_NAME", "veriq_worker")].worker_jobs.find(
-        {"status": "failed"}, {"request.internal_token": 0}
-    ).sort("updated_at", -1).limit(limit).to_list(limit)
+    jobs = (
+        await database.mongodb[os.environ.get("WORKER_DB_NAME", "veriq_worker")]
+        .worker_jobs.find({"status": "failed"}, {"request.internal_token": 0})
+        .sort("updated_at", -1)
+        .limit(limit)
+        .to_list(limit)
+    )
     return APIResponse(data=jobs, message="Tải danh sách tác vụ lỗi hoàn tất")
 
 
 @router.post("/quan-tri/van-hanh/dlq/{job_id}/loai-bo", response_model=APIResponse[Any])
 async def discard_dead_letter_job(
-    job_id: str,
-    payload: ActionReason,
-    current_user: CurrentUser = Depends(get_current_user),
+    job_id: str, payload: ActionReason, current_user: CurrentUser = Depends(get_current_user)
 ):
-    job = await database.mongodb[os.environ.get("WORKER_DB_NAME", "veriq_worker")].worker_jobs.find_one_and_update(
+    job = await database.mongodb[
+        os.environ.get("WORKER_DB_NAME", "veriq_worker")
+    ].worker_jobs.find_one_and_update(
         {"_id": job_id, "status": "failed"},
-        {"$set": {"status": "discarded", "discard_reason": payload.reason, "discarded_by": current_user.id, "discarded_at": datetime.now(timezone.utc)}},
+        {
+            "$set": {
+                "status": "discarded",
+                "discard_reason": payload.reason,
+                "discarded_by": current_user.id,
+                "discarded_at": datetime.now(timezone.utc),
+            }
+        },
         return_document=ReturnDocument.AFTER,
     )
     if not job:
@@ -933,9 +910,7 @@ async def service_health(name: str, url: str):
 
 
 @router.get("/quan-tri/suc-khoe", response_model=APIResponse[Any])
-async def platform_health(
-    current_user: CurrentUser = Depends(get_current_user),
-):
+async def platform_health(current_user: CurrentUser = Depends(get_current_user)):
     services = {
         "authentication": "http://authentication:8000/san-sang",
         "testing": "http://testing:8000/san-sang",
@@ -943,25 +918,14 @@ async def platform_health(
         "ai": "http://ai:8000/suc-khoe",
         "content": "http://content:8000/san-sang",
     }
-    results = await asyncio.gather(
-        *(service_health(name, url) for name, url in services.items())
-    )
+    results = await asyncio.gather(*(service_health(name, url) for name, url in services.items()))
     try:
         await database.mongodb.admin.command("ping")
         mongodb = {"service": "mongodb", "healthy": True, "details": {"status": "ready"}}
     except Exception:
-        mongodb = {
-            "service": "mongodb",
-            "healthy": False,
-            "details": {"status": "unavailable"},
-        }
+        mongodb = {"service": "mongodb", "healthy": False, "details": {"status": "unavailable"}}
     results.append(mongodb)
-    await record_audit(
-        current_user,
-        "ADMIN_PLATFORM_HEALTH_VIEWED",
-        "platform",
-        "operations",
-    )
+    await record_audit(current_user, "ADMIN_PLATFORM_HEALTH_VIEWED", "platform", "operations")
     return APIResponse(
         data={
             "healthy": all(item["healthy"] for item in results),
@@ -1005,20 +969,34 @@ async def get_platform_config(config_type: str, current_user: CurrentUser):
         {"type": config_type}
     )
     await record_audit(current_user, "ADMIN_CONFIG_VIEWED", config_type, "platform configuration")
-    return APIResponse(data=masked_config(config or {"type": config_type}), message="Tải cấu hình nền tảng hoàn tất")
+    return APIResponse(
+        data=masked_config(config or {"type": config_type}),
+        message="Tải cấu hình nền tảng hoàn tất",
+    )
 
 
-async def update_platform_config(config_type: str, payload: ConfigUpdate, current_user: CurrentUser):
-    allowed = {key: value for key, value in payload.values.items() if isinstance(key, str) and len(key) <= 100}
+async def update_platform_config(
+    config_type: str, payload: ConfigUpdate, current_user: CurrentUser
+):
+    allowed = {
+        key: value
+        for key, value in payload.values.items()
+        if isinstance(key, str) and len(key) <= 100
+    }
     if not allowed:
         raise HTTPException(status_code=422, detail="Không có cấu hình hợp lệ")
     timestamp = datetime.now(timezone.utc)
     await database.mongodb[settings.AUTHENTICATION_DB_NAME].system_configs.update_one(
         {"type": config_type},
-        {"$set": {**allowed, "updated_at": timestamp, "updated_by": current_user.id}, "$setOnInsert": {"type": config_type, "created_at": timestamp}},
+        {
+            "$set": {**allowed, "updated_at": timestamp, "updated_by": current_user.id},
+            "$setOnInsert": {"type": config_type, "created_at": timestamp},
+        },
         upsert=True,
     )
-    await record_audit(current_user, "ADMIN_CONFIG_UPDATED", config_type, payload.reason, {"keys": sorted(allowed)})
+    await record_audit(
+        current_user, "ADMIN_CONFIG_UPDATED", config_type, payload.reason, {"keys": sorted(allowed)}
+    )
     return await get_platform_config(config_type, current_user)
 
 
@@ -1028,7 +1006,9 @@ async def get_auth_policy(current_user: CurrentUser = Depends(get_current_user))
 
 
 @router.patch("/quan-tri/bao-mat/chinh-sach-xac-thuc", response_model=APIResponse[Any])
-async def update_auth_policy(payload: ConfigUpdate, current_user: CurrentUser = Depends(get_current_user)):
+async def update_auth_policy(
+    payload: ConfigUpdate, current_user: CurrentUser = Depends(get_current_user)
+):
     return await update_platform_config("security_auth_policy", payload, current_user)
 
 
@@ -1038,7 +1018,9 @@ async def get_integrations(current_user: CurrentUser = Depends(get_current_user)
 
 
 @router.patch("/quan-tri/tich-hop", response_model=APIResponse[Any])
-async def update_integrations(payload: ConfigUpdate, current_user: CurrentUser = Depends(get_current_user)):
+async def update_integrations(
+    payload: ConfigUpdate, current_user: CurrentUser = Depends(get_current_user)
+):
     return await update_platform_config("integrations", payload, current_user)
 
 
@@ -1048,7 +1030,9 @@ async def get_storage_config(current_user: CurrentUser = Depends(get_current_use
 
 
 @router.patch("/quan-tri/luu-tru", response_model=APIResponse[Any])
-async def update_storage_config(payload: ConfigUpdate, current_user: CurrentUser = Depends(get_current_user)):
+async def update_storage_config(
+    payload: ConfigUpdate, current_user: CurrentUser = Depends(get_current_user)
+):
     return await update_platform_config("storage", payload, current_user)
 
 
@@ -1058,18 +1042,30 @@ async def get_system_config(current_user: CurrentUser = Depends(get_current_user
 
 
 @router.patch("/quan-tri/cau-hinh", response_model=APIResponse[Any])
-async def update_system_config(payload: ConfigUpdate, current_user: CurrentUser = Depends(get_current_user)):
+async def update_system_config(
+    payload: ConfigUpdate, current_user: CurrentUser = Depends(get_current_user)
+):
     return await update_platform_config("system", payload, current_user)
 
 
 @router.get("/quan-tri/ai/mo-hinh", response_model=APIResponse[Any])
 async def list_ai_models(current_user: CurrentUser = Depends(get_current_user)):
-    models = await database.mongodb[settings.AUTHENTICATION_DB_NAME].ai_models.find({}).sort("model", 1).to_list(500)
-    return APIResponse(data=[{**model, "_id": str(model["_id"])} for model in models], message="Tải danh mục mô hình AI hoàn tất")
+    models = (
+        await database.mongodb[settings.AUTHENTICATION_DB_NAME]
+        .ai_models.find({})
+        .sort("model", 1)
+        .to_list(500)
+    )
+    return APIResponse(
+        data=[{**model, "_id": str(model["_id"])} for model in models],
+        message="Tải danh mục mô hình AI hoàn tất",
+    )
 
 
 @router.post("/quan-tri/ai/mo-hinh", response_model=APIResponse[Any], status_code=201)
-async def register_ai_model(payload: ModelRegistryEntry, current_user: CurrentUser = Depends(get_current_user)):
+async def register_ai_model(
+    payload: ModelRegistryEntry, current_user: CurrentUser = Depends(get_current_user)
+):
     timestamp = datetime.now(timezone.utc)
     model = {
         "provider_id": payload.provider_id,
@@ -1088,13 +1084,20 @@ async def register_ai_model(payload: ModelRegistryEntry, current_user: CurrentUs
 
 
 @router.patch("/quan-tri/ai/mo-hinh/{model_id}", response_model=APIResponse[Any])
-async def update_ai_model(model_id: str, payload: ConfigUpdate, current_user: CurrentUser = Depends(get_current_user)):
-    changes = {key: value for key, value in payload.values.items() if key in {"enabled", "version", "capabilities", "model", "provider_id"}}
+async def update_ai_model(
+    model_id: str, payload: ConfigUpdate, current_user: CurrentUser = Depends(get_current_user)
+):
+    changes = {
+        key: value
+        for key, value in payload.values.items()
+        if key in {"enabled", "version", "capabilities", "model", "provider_id"}
+    }
     if not changes:
         raise HTTPException(status_code=422, detail="Không có thay đổi mô hình hợp lệ")
     changes["updated_at"] = datetime.now(timezone.utc)
     try:
         from bson import ObjectId
+
         identifier = ObjectId(model_id)
     except Exception:
         identifier = model_id
@@ -1104,7 +1107,9 @@ async def update_ai_model(model_id: str, payload: ConfigUpdate, current_user: Cu
     if not model:
         raise HTTPException(status_code=404, detail="Không tìm thấy mô hình AI")
     model["_id"] = str(model["_id"])
-    await record_audit(current_user, "ADMIN_AI_MODEL_UPDATED", model_id, payload.reason, {"keys": sorted(changes)})
+    await record_audit(
+        current_user, "ADMIN_AI_MODEL_UPDATED", model_id, payload.reason, {"keys": sorted(changes)}
+    )
     return APIResponse(data=model, message="Cập nhật mô hình AI hoàn tất")
 
 
@@ -1114,11 +1119,24 @@ async def get_ai_defaults(current_user: CurrentUser = Depends(get_current_user))
 
 
 @router.patch("/quan-tri/ai/mac-dinh", response_model=APIResponse[Any])
-async def update_ai_defaults(payload: ConfigUpdate, current_user: CurrentUser = Depends(get_current_user)):
-    allowed_keys = {"chat_model_id", "structured_model_id", "fallback_model_ids", "timeout_seconds", "max_output_tokens", "concurrency"}
+async def update_ai_defaults(
+    payload: ConfigUpdate, current_user: CurrentUser = Depends(get_current_user)
+):
+    allowed_keys = {
+        "chat_model_id",
+        "structured_model_id",
+        "fallback_model_ids",
+        "timeout_seconds",
+        "max_output_tokens",
+        "concurrency",
+    }
     if not set(payload.values) <= allowed_keys:
         raise HTTPException(status_code=422, detail="Cấu hình mặc định AI chứa trường không hợp lệ")
-    model_ids = [value for key, value in payload.values.items() if key in {"chat_model_id", "structured_model_id"} and value]
+    model_ids = [
+        value
+        for key, value in payload.values.items()
+        if key in {"chat_model_id", "structured_model_id"} and value
+    ]
     model_ids.extend(payload.values.get("fallback_model_ids") or [])
     if model_ids:
         identifiers = []
@@ -1127,16 +1145,31 @@ async def update_ai_defaults(payload: ConfigUpdate, current_user: CurrentUser = 
                 identifiers.append(ObjectId(model_id))
             except Exception:
                 identifiers.append(model_id)
-        existing = await database.mongodb[settings.AUTHENTICATION_DB_NAME].ai_models.count_documents({"_id": {"$in": identifiers}, "enabled": True})
+        existing = await database.mongodb[
+            settings.AUTHENTICATION_DB_NAME
+        ].ai_models.count_documents({"_id": {"$in": identifiers}, "enabled": True})
         if existing != len(set(model_ids)):
-            raise HTTPException(status_code=422, detail="Mô hình mặc định hoặc dự phòng chưa được đăng ký và kích hoạt")
+            raise HTTPException(
+                status_code=422,
+                detail="Mô hình mặc định hoặc dự phòng chưa được đăng ký và kích hoạt",
+            )
     return await update_platform_config("ai_defaults", payload, current_user)
 
 
 @router.get("/quan-tri/ai/phien-ban", response_model=APIResponse[Any])
 async def get_ai_versions(current_user: CurrentUser = Depends(get_current_user)):
-    config = await database.mongodb[settings.AUTHENTICATION_DB_NAME].system_configs.find_one({"type": "ai_defaults"}) or {}
-    models = await database.mongodb[settings.AUTHENTICATION_DB_NAME].ai_models.find({"enabled": True}).sort("model", 1).to_list(500)
+    config = (
+        await database.mongodb[settings.AUTHENTICATION_DB_NAME].system_configs.find_one(
+            {"type": "ai_defaults"}
+        )
+        or {}
+    )
+    models = (
+        await database.mongodb[settings.AUTHENTICATION_DB_NAME]
+        .ai_models.find({"enabled": True})
+        .sort("model", 1)
+        .to_list(500)
+    )
     return APIResponse(
         data={
             "defaults": masked_config(config),
@@ -1152,7 +1185,13 @@ async def get_ai_versions(current_user: CurrentUser = Depends(get_current_user))
 @router.post("/quan-tri/luu-tru/kiem-tra", response_model=APIResponse[Any])
 async def test_storage(current_user: CurrentUser = Depends(get_current_user)):
     result = await service_health("cloud", "http://cloud:8000/san-sang")
-    await record_audit(current_user, "ADMIN_STORAGE_TESTED", "storage", "connectivity test", {"healthy": result["healthy"]})
+    await record_audit(
+        current_user,
+        "ADMIN_STORAGE_TESTED",
+        "storage",
+        "connectivity test",
+        {"healthy": result["healthy"]},
+    )
     if not result["healthy"]:
         raise HTTPException(status_code=503, detail="Kho lưu trữ chưa sẵn sàng")
     return APIResponse(data=result, message="Kiểm tra kho lưu trữ hoàn tất")
@@ -1169,23 +1208,46 @@ async def integration_health(current_user: CurrentUser = Depends(get_current_use
     services = await asyncio.gather(*(service_health(name, url) for name, url in targets.items()))
     try:
         await database.mongodb.admin.command("ping")
-        services.append({"service": "mongodb", "healthy": True, "status_code": 200, "details": {"status": "ready"}})
+        services.append(
+            {
+                "service": "mongodb",
+                "healthy": True,
+                "status_code": 200,
+                "details": {"status": "ready"},
+            }
+        )
     except Exception:
-        services.append({"service": "mongodb", "healthy": False, "status_code": None, "details": {"status": "unavailable"}})
-    return APIResponse(data={"healthy": all(item["healthy"] for item in services), "services": services}, message="Tải trạng thái tích hợp hoàn tất")
+        services.append(
+            {
+                "service": "mongodb",
+                "healthy": False,
+                "status_code": None,
+                "details": {"status": "unavailable"},
+            }
+        )
+    return APIResponse(
+        data={"healthy": all(item["healthy"] for item in services), "services": services},
+        message="Tải trạng thái tích hợp hoàn tất",
+    )
 
 
 @router.get("/quan-tri/van-hanh/so-lieu", response_model=APIResponse[Any])
 async def operations_metrics(current_user: CurrentUser = Depends(get_current_user)):
     worker_db = database.mongodb[os.environ.get("WORKER_DB_NAME", "veriq_worker")]
     testing_db = database.mongodb[os.environ.get("TESTING_DB_NAME", "veriq_testing")]
-    status_rows = await worker_db.worker_jobs.aggregate([{"$group": {"_id": "$status", "count": {"$sum": 1}}}]).to_list(100)
+    status_rows = await worker_db.worker_jobs.aggregate(
+        [{"$group": {"_id": "$status", "count": {"$sum": 1}}}]
+    ).to_list(100)
     return APIResponse(
         data={
             "jobs_by_status": {item["_id"]: item["count"] for item in status_rows},
             "impact_analyses": await testing_db.impact_analyses.count_documents({}),
-            "degraded_impact_analyses": await testing_db.impact_analyses.count_documents({"mode": "DEGRADED_AI"}),
-            "pending_proposals": await testing_db.maintenance_proposals.count_documents({"status": "PENDING"}),
+            "degraded_impact_analyses": await testing_db.impact_analyses.count_documents(
+                {"mode": "DEGRADED_AI"}
+            ),
+            "pending_proposals": await testing_db.maintenance_proposals.count_documents(
+                {"status": "PENDING"}
+            ),
             "generated_at": datetime.now(timezone.utc),
         },
         message="Tải số liệu vận hành hoàn tất",
@@ -1194,7 +1256,13 @@ async def operations_metrics(current_user: CurrentUser = Depends(get_current_use
 
 @router.get("/quan-tri/nhat-ky/xuat")
 async def export_global_audit(current_user: CurrentUser = Depends(get_current_user)):
-    events = await database.mongodb[settings.AUTHENTICATION_DB_NAME].audit_logs.find({}).sort("timestamp", -1).limit(100000).to_list(100000)
+    events = (
+        await database.mongodb[settings.AUTHENTICATION_DB_NAME]
+        .audit_logs.find({})
+        .sort("timestamp", -1)
+        .limit(100000)
+        .to_list(100000)
+    )
     stream = io.StringIO()
     fields = ["timestamp", "action", "actor_email", "target_user_id", "reason"]
     writer = csv.DictWriter(stream, fieldnames=fields)
@@ -1202,4 +1270,8 @@ async def export_global_audit(current_user: CurrentUser = Depends(get_current_us
     for event in events:
         writer.writerow({field: event.get(field) for field in fields})
     await record_audit(current_user, "ADMIN_GLOBAL_AUDIT_EXPORTED", "platform", "audit export")
-    return StreamingResponse(iter([stream.getvalue()]), media_type="text/csv", headers={"Content-Disposition": "attachment; filename=veriq-global-audit.csv"})
+    return StreamingResponse(
+        iter([stream.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=veriq-global-audit.csv"},
+    )

@@ -3,9 +3,10 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Callable, Coroutine, List, Optional
-from src.schemas.evaluation import HallucinationJudgment, RelevanceJudgment
 
 from loguru import logger
+
+from src.schemas.evaluation import HallucinationJudgment, RelevanceJudgment
 
 
 @dataclass
@@ -173,7 +174,7 @@ class HallucinationGrader(BaseGrader):
 
             evaluator = llm.with_structured_output(HallucinationJudgment)
             query = context.get("query", "user query")
-            from src.core.registry import registry, PromptType
+            from src.core.registry import PromptType, registry
 
             prompt = registry.get(PromptType.RUBRIC_HALLUCINATION_JUDGE).format(
                 query=query[:200], response=response[:500]
@@ -210,7 +211,7 @@ class RelevanceGrader(BaseGrader):
             from src.agents.workflow.graph import llm
 
             evaluator = llm.with_structured_output(RelevanceJudgment)
-            from src.core.registry import registry, PromptType
+            from src.core.registry import PromptType, registry
 
             prompt = registry.get(PromptType.RUBRIC_RELEVANCE_JUDGE).format(
                 query=query[:300], response=response[:500]

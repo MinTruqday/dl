@@ -3,7 +3,6 @@ from difflib import SequenceMatcher
 
 from src.core.common import plain_text
 
-
 AMBIGUOUS_TERMS = ("nhanh", "dễ dùng", "hợp lý", "tối ưu", "kịp thời", "bảo mật tốt")
 NON_DETERMINISTIC = ("thích hợp", "đầy đủ", "chính xác", "ổn định", "thân thiện")
 
@@ -19,7 +18,11 @@ def requirement_findings(version):
                 {
                     "rule_id": "AMBIGUOUS_TERM",
                     "severity": "warning",
-                    "span": {"start": start, "end": start + len(term), "text": text[start : start + len(term)]},
+                    "span": {
+                        "start": start,
+                        "end": start + len(term),
+                        "text": text[start : start + len(term)],
+                    },
                     "message": f"Thuật ngữ {term} chưa có tiêu chí đo lường",
                     "suggestion": "Thay bằng ngưỡng hoặc hành vi có thể kiểm thử",
                 }
@@ -79,9 +82,7 @@ def requirement_duplicate_score(left, right):
     right_terms = set(re.findall(r"[\wÀ-ỹ]+", right_text))
     semantic = len(left_terms & right_terms) / max(1, len(left_terms | right_terms))
     left_rules = {
-        str(value).strip().lower()
-        for value in left.get("business_rules", [])
-        if str(value).strip()
+        str(value).strip().lower() for value in left.get("business_rules", []) if str(value).strip()
     }
     right_rules = {
         str(value).strip().lower()
@@ -114,7 +115,9 @@ def lint_test_case(draft):
         findings.append(_finding("TCQ-002", "warning", "Thiếu điều kiện tiên quyết"))
     if not draft.get("requirement_version_ids") and not draft.get("acceptance_criterion_ids"):
         findings.append(_finding("TCQ-005", "error", "Ca kiểm thử chưa có liên kết truy vết"))
-    if not draft.get("test_data") and not any(step.get("test_data") for step in draft.get("steps", [])):
+    if not draft.get("test_data") and not any(
+        step.get("test_data") for step in draft.get("steps", [])
+    ):
         findings.append(_finding("TCQ-009", "warning", "Thiếu dữ liệu kiểm thử"))
     for step in draft.get("steps", []):
         action = plain_text(step.get("action_doc", {}))
@@ -142,8 +145,12 @@ def duplicate_score(left, right):
     left_text = _test_projection(left)
     right_text = _test_projection(right)
     lexical = SequenceMatcher(None, left_text, right_text).ratio()
-    left_links = set(left.get("requirement_version_ids", [])) | set(left.get("acceptance_criterion_ids", []))
-    right_links = set(right.get("requirement_version_ids", [])) | set(right.get("acceptance_criterion_ids", []))
+    left_links = set(left.get("requirement_version_ids", [])) | set(
+        left.get("acceptance_criterion_ids", [])
+    )
+    right_links = set(right.get("requirement_version_ids", [])) | set(
+        right.get("acceptance_criterion_ids", [])
+    )
     trace = len(left_links & right_links) / max(1, len(left_links | right_links))
     left_steps = len(left.get("steps", []))
     right_steps = len(right.get("steps", []))

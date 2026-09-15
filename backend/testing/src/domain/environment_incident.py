@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Literal
+from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -10,7 +10,18 @@ class EnvironmentIncidentCreate(BaseModel):
     build_id: str | None = Field(default=None, max_length=200)
     observed_at: datetime
     severity: Literal["BLOCKER", "CRITICAL", "MAJOR", "MINOR"]
-    type: Literal["UNAVAILABLE", "DEPLOYMENT_FAILURE", "TEST_DATA_FAILURE", "NETWORK", "DEPENDENCY", "CONFIGURATION", "CAPACITY", "CERTIFICATE", "OTHER"]
+    type: Literal[
+        "UNAVAILABLE",
+        "DEPLOYMENT_FAILURE",
+        "TEST_DATA_FAILURE",
+        "NETWORK",
+        "DEPENDENCY",
+        "CONFIGURATION",
+        "CAPACITY",
+        "CERTIFICATE",
+        "ACCESS",
+        "OTHER",
+    ]
     description: str = Field(min_length=2, max_length=10000)
     affected_run_ids: list[str] = Field(default_factory=list, max_length=1000)
     evidence_refs: list[str] = Field(default_factory=list, max_length=1000)
@@ -34,7 +45,7 @@ class EnvironmentIncidentPatch(BaseModel):
 
 class EnvironmentIncidentTransition(BaseModel):
     expected_revision: int = Field(ge=1)
-    status: Literal["INVESTIGATING", "RESOLVED", "CLOSED"]
+    status: Literal["INVESTIGATING", "MITIGATED", "RESOLVED", "CLOSED"]
     resolution: str = Field(default="", max_length=10000)
 
     @model_validator(mode="after")

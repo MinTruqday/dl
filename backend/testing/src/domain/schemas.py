@@ -96,7 +96,9 @@ class RequirementCreate(BaseModel):
     priority: Literal["critical", "high", "medium", "low"] = "medium"
     risk: Literal["critical", "high", "medium", "low"] = "medium"
     content_doc: dict[str, Any] = Field(default_factory=empty_doc)
-    acceptance_criteria: list[AcceptanceCriterionInput] = Field(default_factory=list, max_length=200)
+    acceptance_criteria: list[AcceptanceCriterionInput] = Field(
+        default_factory=list, max_length=200
+    )
     business_rules: list[str] = Field(default_factory=list, max_length=200)
     actors: list[str] = Field(default_factory=list, max_length=100)
     dependencies: list[str] = Field(default_factory=list, max_length=200)
@@ -120,6 +122,17 @@ class RequirementDraftPatch(BaseModel):
     source_refs: list[dict[str, Any]] | None = Field(default=None, max_length=200)
     tags: list[str] | None = Field(default=None, max_length=100)
     owner_id: str | None = Field(default=None, max_length=200)
+
+
+class RequirementAIAnalysisInput(BaseModel):
+    idempotency_key: str = Field(min_length=8, max_length=200)
+    instruction: str = Field(default="", max_length=5000)
+
+
+class RequirementAISuggestionApply(BaseModel):
+    expected_revision: int = Field(ge=1)
+    ai_result_id: str = Field(min_length=1, max_length=200)
+    suggestion_id: str = Field(min_length=1, max_length=200)
 
 
 class RequirementVersionCreate(RequirementCreate):
@@ -418,10 +431,7 @@ class TestCaseDraftCreate(BaseModel):
     source_evidence: list[dict[str, Any]] = Field(default_factory=list, max_length=200)
 
     @field_validator(
-        "preconditions_doc",
-        "objective_doc",
-        "expected_result_doc",
-        "postconditions_doc",
+        "preconditions_doc", "objective_doc", "expected_result_doc", "postconditions_doc"
     )
     @classmethod
     def validate_documents(cls, value):
@@ -481,7 +491,9 @@ class DataSetCreate(BaseModel):
     def validate_secret_policy(self):
         sensitive_markers = ("password", "passwd", "token", "secret", "api_key", "private_key")
         unsafe_keys = [
-            key for key in self.variables if any(marker in key.lower() for marker in sensitive_markers)
+            key
+            for key in self.variables
+            if any(marker in key.lower() for marker in sensitive_markers)
         ]
         if unsafe_keys:
             raise ValueError("Dữ liệu bí mật phải được khai báo bằng secret_refs")
@@ -555,12 +567,7 @@ class ProposalRegenerateInput(BaseModel):
 
 class ImpactOverrideItem(BaseModel):
     test_case_version_id: str = Field(min_length=1, max_length=200)
-    classification: Literal[
-        "STILL_VALID",
-        "POTENTIALLY_AFFECTED",
-        "NEEDS_UPDATE",
-        "OBSOLETE",
-    ]
+    classification: Literal["STILL_VALID", "POTENTIALLY_AFFECTED", "NEEDS_UPDATE", "OBSOLETE"]
     reason: str = Field(min_length=2, max_length=2000)
 
 
@@ -598,6 +605,53 @@ class RegressionApprovalInput(BaseModel):
     review_note: str = Field(default="", max_length=5000)
 
 
+class TestPlanEstimation(BaseModel):
+    method: Literal["expert_judgment", "three_point", "historical", "custom"] = "expert_judgment"
+    planned_effort_hours: float = Field(default=0, ge=0)
+    planned_people: int = Field(default=0, ge=0)
+    basis: str = Field(default="", max_length=5000)
+
+
+class TestPlanSchedule(BaseModel):
+    planned_start_at: str | None = Field(default=None, max_length=80)
+    planned_end_at: str | None = Field(default=None, max_length=80)
+
+
+class TestPlanMilestone(BaseModel):
+    name: str = Field(min_length=1, max_length=300)
+    planned_at: str | None = Field(default=None, max_length=80)
+    actual_at: str | None = Field(default=None, max_length=80)
+    status: str = Field(default="PLANNED", min_length=1, max_length=80)
+    evidence_refs: list[str] = Field(default_factory=list, max_length=500)
+
+
+class TestPlanResponsibility(BaseModel):
+    activity: str = Field(min_length=1, max_length=500)
+    responsible_user_ids: list[str] = Field(default_factory=list, max_length=500)
+    accountable_user_id: str | None = Field(default=None, max_length=200)
+    consulted_user_ids: list[str] = Field(default_factory=list, max_length=500)
+    informed_user_ids: list[str] = Field(default_factory=list, max_length=500)
+
+
+class TestPlanRisk(BaseModel):
+    risk_id: str = Field(min_length=1, max_length=200)
+    title: str = Field(min_length=1, max_length=500)
+    description: str = Field(default="", max_length=5000)
+    probability: float = Field(ge=0)
+    impact: float = Field(ge=0)
+    exposure: float = Field(ge=0)
+    response: str = Field(default="", max_length=5000)
+    owner_id: str | None = Field(default=None, max_length=200)
+    status: Literal["OPEN", "MITIGATING", "ACCEPTED", "CLOSED"] = "OPEN"
+    due_at: str | None = Field(default=None, max_length=80)
+
+
+class TestPlanCommunication(BaseModel):
+    status_report_frequency: str = Field(default="", max_length=200)
+    recipients: list[str] = Field(default_factory=list, max_length=500)
+    escalation_roles: list[str] = Field(default_factory=list, max_length=100)
+
+
 class TestPlanCreate(BaseModel):
     project_id: str
     name: str = Field(min_length=2, max_length=300)
@@ -622,30 +676,25 @@ class TestPlanCreate(BaseModel):
     constraints: list[str] = Field(default_factory=list, max_length=200)
     dependencies: list[dict[str, Any]] = Field(default_factory=list, max_length=500)
     stakeholders: list[dict[str, Any]] = Field(default_factory=list, max_length=500)
-    responsibility_matrix: list[dict[str, Any]] = Field(default_factory=list, max_length=500)
-    estimation: dict[str, Any] = Field(default_factory=dict)
-    schedule: dict[str, Any] = Field(default_factory=dict)
-    milestones: list[dict[str, Any]] = Field(default_factory=list, max_length=500)
+    responsibility_matrix: list[TestPlanResponsibility] = Field(
+        default_factory=list, max_length=500
+    )
+    estimation: TestPlanEstimation = Field(default_factory=TestPlanEstimation)
+    schedule: TestPlanSchedule = Field(default_factory=TestPlanSchedule)
+    milestones: list[TestPlanMilestone] = Field(default_factory=list, max_length=500)
     deliverables: list[dict[str, Any] | str] = Field(default_factory=list, max_length=500)
     tools: list[dict[str, Any] | str] = Field(default_factory=list, max_length=200)
     suspension_criteria: list[str] = Field(default_factory=list, max_length=200)
     resumption_criteria: list[str] = Field(default_factory=list, max_length=200)
     monitoring_metrics: list[dict[str, Any]] = Field(default_factory=list, max_length=200)
     quality_targets: list[dict[str, Any]] = Field(default_factory=list, max_length=200)
-    risk_register: list[dict[str, Any]] = Field(default_factory=list, max_length=500)
-    communication_plan: dict[str, Any] = Field(default_factory=dict)
+    risk_register: list[TestPlanRisk] = Field(default_factory=list, max_length=500)
+    communication_plan: TestPlanCommunication = Field(default_factory=TestPlanCommunication)
 
     @model_validator(mode="after")
     def validate_test_plan_management_fields(self):
         if bool(self.suspension_criteria) != bool(self.resumption_criteria):
             raise ValueError("Tiêu chí đình chỉ và tiếp tục phải được khai báo cùng nhau")
-        method = self.estimation.get("method") if self.estimation else None
-        if method and method not in {"expert_judgment", "three_point", "historical", "custom"}:
-            raise ValueError("Phương pháp ước lượng không hợp lệ")
-        if self.estimation and float(self.estimation.get("planned_effort_hours", 0)) < 0:
-            raise ValueError("Nỗ lực dự kiến không thể âm")
-        if self.estimation and int(self.estimation.get("planned_people", 0)) < 0:
-            raise ValueError("Số người dự kiến không thể âm")
         return self
 
 
@@ -693,7 +742,9 @@ class BuildPatch(BaseModel):
 
 class EnvironmentCreate(BaseModel):
     name: str = Field(min_length=2, max_length=200)
-    environment_type: Literal["development", "testing", "staging", "production", "custom"] = "testing"
+    environment_type: Literal["development", "testing", "staging", "production", "custom"] = (
+        "testing"
+    )
     base_url: str | None = Field(default=None, max_length=2000)
     capabilities: dict[str, Any] = Field(default_factory=dict)
     availability: Literal["AVAILABLE", "UNAVAILABLE", "MAINTENANCE"] = "AVAILABLE"
@@ -710,7 +761,9 @@ class EnvironmentCreate(BaseModel):
 class EnvironmentPatch(BaseModel):
     expected_revision: int = Field(ge=1)
     name: str | None = Field(default=None, min_length=2, max_length=200)
-    environment_type: Literal["development", "testing", "staging", "production", "custom"] | None = None
+    environment_type: (
+        Literal["development", "testing", "staging", "production", "custom"] | None
+    ) = None
     base_url: str | None = Field(default=None, max_length=2000)
     capabilities: dict[str, Any] | None = None
     availability: Literal["AVAILABLE", "UNAVAILABLE", "MAINTENANCE"] | None = None
@@ -808,12 +861,8 @@ class ProjectNotificationPreferencePatch(BaseModel):
         default_factory=lambda: ["in_app"], max_length=2
     )
     muted_events: list[str] = Field(default_factory=list, max_length=200)
-    quiet_hours_start: str | None = Field(
-        default=None, pattern=r"^(?:[01]\d|2[0-3]):[0-5]\d$"
-    )
-    quiet_hours_end: str | None = Field(
-        default=None, pattern=r"^(?:[01]\d|2[0-3]):[0-5]\d$"
-    )
+    quiet_hours_start: str | None = Field(default=None, pattern=r"^(?:[01]\d|2[0-3]):[0-5]\d$")
+    quiet_hours_end: str | None = Field(default=None, pattern=r"^(?:[01]\d|2[0-3]):[0-5]\d$")
     timezone: str = Field(default="Asia/Ho_Chi_Minh", min_length=2, max_length=80)
 
 
@@ -835,9 +884,7 @@ class PerformancePlanDraftInput(BaseModel):
     objective: str = Field(default="", max_length=5000)
     requirement_version_ids: list[str] = Field(default_factory=list, max_length=500)
     workload_types: list[Literal["baseline", "load", "stress", "spike", "soak"]] = Field(
-        default_factory=lambda: ["baseline", "load", "stress"],
-        min_length=1,
-        max_length=5,
+        default_factory=lambda: ["baseline", "load", "stress"], min_length=1, max_length=5
     )
     target_virtual_users: int = Field(default=100, ge=1, le=1000000)
     target_requests_per_second: float | None = Field(default=None, gt=0, le=1000000)
@@ -878,9 +925,7 @@ class WebhookSubscriptionPatch(BaseModel):
             "endpoint://"
         ):
             raise ValueError("Điểm cuối phải dùng endpoint reference của nền tảng")
-        if self.secret_reference is not None and not self.secret_reference.startswith(
-            "secret://"
-        ):
+        if self.secret_reference is not None and not self.secret_reference.startswith("secret://"):
             raise ValueError("Bí mật phải dùng secret reference của nền tảng")
         return self
 
@@ -970,9 +1015,7 @@ class ProjectConnectorUnbind(BaseModel):
 
 class ConnectorSyncInput(BaseModel):
     direction: Literal["PULL", "PUSH", "BIDIRECTIONAL"]
-    scopes: list[Literal["requirements", "defects", "statuses"]] = Field(
-        min_length=1, max_length=3
-    )
+    scopes: list[Literal["requirements", "defects", "statuses"]] = Field(min_length=1, max_length=3)
     idempotency_key: str = Field(min_length=8, max_length=200)
 
 
@@ -1119,33 +1162,36 @@ class TestPlanPatch(BaseModel):
     constraints: list[str] | None = Field(default=None, max_length=200)
     dependencies: list[dict[str, Any]] | None = Field(default=None, max_length=500)
     stakeholders: list[dict[str, Any]] | None = Field(default=None, max_length=500)
-    responsibility_matrix: list[dict[str, Any]] | None = Field(default=None, max_length=500)
-    estimation: dict[str, Any] | None = None
-    schedule: dict[str, Any] | None = None
-    milestones: list[dict[str, Any]] | None = Field(default=None, max_length=500)
+    responsibility_matrix: list[TestPlanResponsibility] | None = Field(default=None, max_length=500)
+    estimation: TestPlanEstimation | None = None
+    schedule: TestPlanSchedule | None = None
+    milestones: list[TestPlanMilestone] | None = Field(default=None, max_length=500)
     deliverables: list[dict[str, Any] | str] | None = Field(default=None, max_length=500)
     tools: list[dict[str, Any] | str] | None = Field(default=None, max_length=200)
     suspension_criteria: list[str] | None = Field(default=None, max_length=200)
     resumption_criteria: list[str] | None = Field(default=None, max_length=200)
     monitoring_metrics: list[dict[str, Any]] | None = Field(default=None, max_length=200)
     quality_targets: list[dict[str, Any]] | None = Field(default=None, max_length=200)
-    risk_register: list[dict[str, Any]] | None = Field(default=None, max_length=500)
-    communication_plan: dict[str, Any] | None = None
+    risk_register: list[TestPlanRisk] | None = Field(default=None, max_length=500)
+    communication_plan: TestPlanCommunication | None = None
 
 
 class TestSuiteCreate(BaseModel):
     project_id: str
     name: str = Field(min_length=2, max_length=300)
-    suite_type: Literal["smoke", "regression", "sanity", "feature", "api", "ui", "integration", "custom"]
+    suite_type: Literal[
+        "smoke", "regression", "sanity", "feature", "api", "ui", "integration", "custom"
+    ]
     test_case_version_ids: list[str] = Field(default_factory=list, max_length=5000)
 
 
 class TestSuitePatch(BaseModel):
     expected_revision: int = Field(ge=1)
     name: str | None = Field(default=None, min_length=2, max_length=300)
-    suite_type: Literal[
-        "smoke", "regression", "sanity", "feature", "api", "ui", "integration", "custom"
-    ] | None = None
+    suite_type: (
+        Literal["smoke", "regression", "sanity", "feature", "api", "ui", "integration", "custom"]
+        | None
+    ) = None
     test_case_version_ids: list[str] | None = Field(default=None, max_length=5000)
 
 
@@ -1218,7 +1264,9 @@ class TestResultInput(BaseModel):
 
 
 class TestExecutionPatch(BaseModel):
-    status: Literal["PASS", "FAIL", "BLOCKED", "SKIPPED", "NOT_APPLICABLE", "IN_PROGRESS", "NOT_RUN"]
+    status: Literal[
+        "PASS", "FAIL", "BLOCKED", "SKIPPED", "NOT_APPLICABLE", "IN_PROGRESS", "NOT_RUN"
+    ]
     step_results: list[TestStepResultInput] = Field(default_factory=list, max_length=500)
     actual_result_doc: dict[str, Any] = Field(default_factory=empty_doc)
     attachments: list[dict[str, Any]] = Field(default_factory=list, max_length=100)
@@ -1260,7 +1308,20 @@ class DefectCreate(BaseModel):
     linked_test_result_id: str | None = None
     linked_test_case_version_id: str | None = None
     linked_requirement_version_ids: list[str] = Field(default_factory=list, max_length=200)
-    root_cause_category: Literal["REQUIREMENT", "DESIGN", "IMPLEMENTATION", "CONFIGURATION", "TEST_DATA", "TEST_CASE_GAP", "ENVIRONMENT", "INTEGRATION", "DEPLOYMENT", "PROCESS", "UNKNOWN"] = "UNKNOWN"
+    root_cause_category: Literal[
+        "REQUIREMENT",
+        "DESIGN",
+        "IMPLEMENTATION",
+        "CONFIGURATION",
+        "TEST_DATA",
+        "TEST_CASE_GAP",
+        "ENVIRONMENT",
+        "INTEGRATION",
+        "DEPLOYMENT",
+        "PROCESS",
+        "THIRD_PARTY",
+        "UNKNOWN",
+    ] = "UNKNOWN"
     root_cause_detail: str = Field(default="", max_length=5000)
     injected_phase: str = Field(default="", max_length=200)
     detected_phase: str = Field(default="", max_length=200)

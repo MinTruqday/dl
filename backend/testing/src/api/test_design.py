@@ -20,32 +20,29 @@ from src.core.common import (
     sort_spec,
 )
 from src.core.database import database
-from src.core.metrics import AI_GENERATION_LATENCY
 from src.domain.schemas import (
     GenerateInput,
     ProjectArchiveInput,
     ReviewTransitionInput,
     ScenarioCreate,
     ScenarioPatch,
-    TestCaseDraftCreate as CaseDraftCreate,
-    TestCaseDraftPatch as CaseDraftPatch,
     TestCaseCloneInput,
-    TestCaseFreezeInput as CaseFreezeInput,
     TestCaseGenerateInput,
 )
+from src.domain.schemas import TestCaseDraftCreate as CaseDraftCreate
+from src.domain.schemas import TestCaseDraftPatch as CaseDraftPatch
+from src.domain.schemas import TestCaseFreezeInput as CaseFreezeInput
+from src.services.design_assistance import ai_contract_metadata
+from src.services.generation import generate_requirement_drafts
 from src.services.linters import duplicate_score, lint_test_case
 from src.services.project_knowledge import index_artifact
-from src.services.generation import generate_requirement_drafts
-
 
 router = APIRouter(prefix="/kiem-thu", tags=["Thiết kế kiểm thử"])
 
 
 @router.post("/du-an/{project_id}/kich-ban-kiem-thu", status_code=201)
 async def create_scenario(
-    project_id: str,
-    payload: ScenarioCreate,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, payload: ScenarioCreate, user: CurrentUser = Depends(get_current_user)
 ):
     await get_project(project_id, user, "testscenario.create")
     await validate_design_sources(
@@ -96,47 +93,60 @@ async def list_scenarios(
     sort_field, direction = sort_spec(
         sort, {"scenario_key", "title", "category", "risk", "status", "created_at", "updated_at"}
     )
-    items = await database.value.test_scenarios.find(query).sort(sort_field, direction).to_list(limit)
+    items = (
+        await database.value.test_scenarios.find(query).sort(sort_field, direction).to_list(limit)
+    )
     return envelope(items)
 
 
 @router.get("/kich-ban-kiem-thu/{scenario_id}")
 async def get_test_scenario(scenario_id: str, user: CurrentUser = Depends(get_current_user)):
     scenario = await get_project_entity("test_scenarios", scenario_id, user, "testscenario.read")
-    cases = await database.value.test_cases.find({"project_id": scenario["project_id"], "scenario_id": scenario_id}).sort("test_case_key", 1).to_list(5000)
+    cases = (
+        await database.value.test_cases.find(
+            {"project_id": scenario["project_id"], "scenario_id": scenario_id}
+        )
+        .sort("test_case_key", 1)
+        .to_list(5000)
+    )
     return envelope({**scenario, "test_cases": cases})
 
 
 @router.patch("/kich-ban-kiem-thu/{scenario_id}")
 async def update_scenario(
-    scenario_id: str,
-    payload: ScenarioPatch,
-    user: CurrentUser = Depends(get_current_user),
+    scenario_id: str, payload: ScenarioPatch, user: CurrentUser = Depends(get_current_user)
 ):
     scenario = await get_project_entity("test_scenarios", scenario_id, user, "testscenario.update")
     if scenario.get("status") != "draft":
         raise HTTPException(status_code=409, detail={"code": "IMMUTABLE_SCENARIO"})
     await validate_design_sources(
         scenario["project_id"],
-        payload.requirement_version_ids if payload.requirement_version_ids is not None else scenario.get("requirement_version_ids", []),
-        payload.acceptance_criterion_ids if payload.acceptance_criterion_ids is not None else scenario.get("acceptance_criterion_ids", []),
-        test_condition_ids=payload.test_condition_ids if payload.test_condition_ids is not None else scenario.get("test_condition_ids", []),
+        payload.requirement_version_ids
+        if payload.requirement_version_ids is not None
+        else scenario.get("requirement_version_ids", []),
+        payload.acceptance_criterion_ids
+        if payload.acceptance_criterion_ids is not None
+        else scenario.get("acceptance_criterion_ids", []),
+        test_condition_ids=payload.test_condition_ids
+        if payload.test_condition_ids is not None
+        else scenario.get("test_condition_ids", []),
     )
     updated = await optimistic_patch(
-        "test_scenarios", scenario_id, scenario["project_id"], payload.expected_revision, payload.model_dump()
+        "test_scenarios",
+        scenario_id,
+        scenario["project_id"],
+        payload.expected_revision,
+        payload.model_dump(),
     )
-    await audit(user.id, "test_scenario_updated", "TestScenario", scenario_id, scenario["project_id"])
+    await audit(
+        user.id, "test_scenario_updated", "TestScenario", scenario_id, scenario["project_id"]
+    )
     return envelope(updated, revision=updated["revision"])
 
 
 @router.post("/kich-ban-kiem-thu/{scenario_id}/nhan-ban", status_code=201)
-async def clone_scenario(
-    scenario_id: str,
-    user: CurrentUser = Depends(get_current_user),
-):
-    scenario = await get_project_entity(
-        "test_scenarios", scenario_id, user, "testscenario.clone"
-    )
+async def clone_scenario(scenario_id: str, user: CurrentUser = Depends(get_current_user)):
+    scenario = await get_project_entity("test_scenarios", scenario_id, user, "testscenario.clone")
     timestamp = now()
     cloned = {
         **scenario,
@@ -164,13 +174,9 @@ async def clone_scenario(
 
 @router.post("/kich-ban-kiem-thu/{scenario_id}/luu-tru")
 async def archive_scenario(
-    scenario_id: str,
-    payload: ProjectArchiveInput,
-    user: CurrentUser = Depends(get_current_user),
+    scenario_id: str, payload: ProjectArchiveInput, user: CurrentUser = Depends(get_current_user)
 ):
-    scenario = await get_project_entity(
-        "test_scenarios", scenario_id, user, "testscenario.archive"
-    )
+    scenario = await get_project_entity("test_scenarios", scenario_id, user, "testscenario.archive")
     updated = await optimistic_patch(
         "test_scenarios",
         scenario_id,
@@ -184,39 +190,49 @@ async def archive_scenario(
         },
     )
     await audit(
-        user.id,
-        "test_scenario_archived",
-        "TestScenario",
-        scenario_id,
-        scenario["project_id"],
+        user.id, "test_scenario_archived", "TestScenario", scenario_id, scenario["project_id"]
     )
     return envelope(updated, revision=updated["revision"])
 
 
 @router.post("/phien-ban-yeu-cau/{version_id}/ai/sinh-kich-ban", status_code=201)
 async def generate_scenarios(
-    version_id: str,
-    payload: GenerateInput,
-    user: CurrentUser = Depends(get_current_user),
+    version_id: str, payload: GenerateInput, user: CurrentUser = Depends(get_current_user)
 ):
-    version = await get_project_entity("requirement_versions", version_id, user, "ai.generate_scenario")
+    version = await get_project_entity(
+        "requirement_versions", version_id, user, "ai.generate_scenario"
+    )
     await get_project(version["project_id"], user, "testscenario.create")
-    criteria = await database.value.acceptance_criteria.find({"requirement_version_id": version_id}).to_list(500)
+    criteria = await database.value.acceptance_criteria.find(
+        {"requirement_version_id": version_id}
+    ).to_list(500)
     drafts, result = await generate_requirement_drafts(version, criteria, payload, scenario=True)
     created = []
     for draft in drafts:
         response = await create_scenario(version["project_id"], draft, user)
         created.append(response["data"])
-    await audit(user.id, "scenario_drafts_generated", "RequirementVersion", version_id, version["project_id"], {"count": len(created), "model": result.get("model", {})})
-    return envelope({"items": created, "evidence": criteria, "model": result.get("model", {}), "generation_status": result["status"]})
+    await audit(
+        user.id,
+        "scenario_drafts_generated",
+        "RequirementVersion",
+        version_id,
+        version["project_id"],
+        {"count": len(created), "model": result.get("model", {})},
+    )
+    return envelope(
+        {
+            "items": created,
+            "evidence": criteria,
+            **ai_contract_metadata(result),
+            "generation_status": result["status"],
+        }
+    )
 
 
 @router.post("/du-an/{project_id}/ca-kiem-thu", status_code=201)
 @router.post("/du-an/{project_id}/ban-nhap-ca-kiem-thu", status_code=201)
 async def create_test_case_draft(
-    project_id: str,
-    payload: CaseDraftCreate,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, payload: CaseDraftCreate, user: CurrentUser = Depends(get_current_user)
 ):
     await get_project(project_id, user, "testcase.create")
     await validate_design_sources(
@@ -250,20 +266,24 @@ async def list_test_case_drafts(
     user: CurrentUser = Depends(get_current_user),
 ):
     await get_project(project_id, user, "testcase.read")
-    return envelope(await database.value.test_case_drafts.find({"project_id": project_id}).sort("updated_at", -1).to_list(limit))
+    return envelope(
+        await database.value.test_case_drafts.find({"project_id": project_id})
+        .sort("updated_at", -1)
+        .to_list(limit)
+    )
 
 
 @router.get("/ban-nhap-ca-kiem-thu/{draft_id}")
 async def get_test_case_draft(draft_id: str, user: CurrentUser = Depends(get_current_user)):
-    return envelope(
-        await get_project_entity("test_case_drafts", draft_id, user, "testcase.read")
-    )
+    return envelope(await get_project_entity("test_case_drafts", draft_id, user, "testcase.read"))
 
 
 @router.get("/ca-kiem-thu/{test_case_id}")
 async def get_test_case(test_case_id: str, user: CurrentUser = Depends(get_current_user)):
     test_case = await get_project_entity("test_cases", test_case_id, user, "testcase.read")
-    version = await database.value.test_case_versions.find_one({"_id": test_case.get("current_version_id"), "project_id": test_case["project_id"]})
+    version = await database.value.test_case_versions.find_one(
+        {"_id": test_case.get("current_version_id"), "project_id": test_case["project_id"]}
+    )
     return envelope({**test_case, "current_version": version})
 
 
@@ -276,9 +296,7 @@ async def update_test_case_draft(
     project_id: str | None = None,
     user: CurrentUser = Depends(get_current_user),
 ):
-    draft = await get_project_entity(
-        "test_case_drafts", draft_id, user, "testcase.update"
-    )
+    draft = await get_project_entity("test_case_drafts", draft_id, user, "testcase.update")
     if project_id is not None and draft["project_id"] != project_id:
         raise HTTPException(status_code=422, detail={"code": "PROJECT_MISMATCH"})
     if draft["status"] != "DRAFT":
@@ -287,8 +305,12 @@ async def update_test_case_draft(
         await get_project(draft["project_id"], user, "attachment.manage")
     await validate_design_sources(
         draft["project_id"],
-        payload.requirement_version_ids if payload.requirement_version_ids is not None else draft.get("requirement_version_ids", []),
-        payload.acceptance_criterion_ids if payload.acceptance_criterion_ids is not None else draft.get("acceptance_criterion_ids", []),
+        payload.requirement_version_ids
+        if payload.requirement_version_ids is not None
+        else draft.get("requirement_version_ids", []),
+        payload.acceptance_criterion_ids
+        if payload.acceptance_criterion_ids is not None
+        else draft.get("acceptance_criterion_ids", []),
         payload.scenario_id if payload.scenario_id is not None else draft.get("scenario_id"),
     )
     await validate_data_set_versions(
@@ -311,10 +333,10 @@ async def update_test_case_draft(
 @router.post("/du-an/{project_id}/ca-kiem-thu/{draft_id}/kiem-tra")
 @router.post("/ca-kiem-thu/{draft_id}/kiem-tra")
 @router.post("/ban-nhap-ca-kiem-thu/{draft_id}/kiem-tra")
-async def lint_test_case_draft(draft_id: str, project_id: str | None = None, user: CurrentUser = Depends(get_current_user)):
-    draft = await get_project_entity(
-        "test_case_drafts", draft_id, user, "testcase.lint"
-    )
+async def lint_test_case_draft(
+    draft_id: str, project_id: str | None = None, user: CurrentUser = Depends(get_current_user)
+):
+    draft = await get_project_entity("test_case_drafts", draft_id, user, "testcase.lint")
     await get_project(draft["project_id"], user, "ai.run_lint")
     if project_id is not None and draft["project_id"] != project_id:
         raise HTTPException(status_code=422, detail={"code": "PROJECT_MISMATCH"})
@@ -325,7 +347,16 @@ async def lint_test_case_draft(draft_id: str, project_id: str | None = None, use
         "valid": not any(item["severity"] == "error" for item in findings),
         "model": model_metadata("test-quality-linter-v1"),
     }
-    await database.value.ai_findings.insert_one({"_id": new_id("AIF"), "project_id": draft["project_id"], "artifact_type": "test_case_draft", "artifact_id": draft_id, **result, "created_at": now()})
+    await database.value.ai_findings.insert_one(
+        {
+            "_id": new_id("AIF"),
+            "project_id": draft["project_id"],
+            "artifact_type": "test_case_draft",
+            "artifact_id": draft_id,
+            **result,
+            "created_at": now(),
+        }
+    )
     return envelope(result)
 
 
@@ -336,9 +367,7 @@ async def submit_test_case_review(
     payload: ReviewTransitionInput,
     user: CurrentUser = Depends(get_current_user),
 ):
-    draft = await get_project_entity(
-        "test_case_drafts", draft_id, user, "testcase.submit_review"
-    )
+    draft = await get_project_entity("test_case_drafts", draft_id, user, "testcase.submit_review")
     if draft["project_id"] != project_id:
         raise HTTPException(status_code=422, detail={"code": "PROJECT_MISMATCH"})
     if draft["status"] == "IN_REVIEW":
@@ -346,15 +375,25 @@ async def submit_test_case_review(
     if draft["status"] != "DRAFT":
         raise HTTPException(status_code=409, detail={"code": "INVALID_STATE_TRANSITION"})
     if draft["revision"] != payload.expected_revision:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT", "current_revision": draft["revision"]})
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "REVISION_CONFLICT", "current_revision": draft["revision"]},
+        )
     findings = lint_test_case(draft)
     project = await database.value.projects.find_one({"_id": project_id}, {"settings": 1})
     lint_blocking = (project.get("settings") or {}).get("testcase_lint_blocking", True)
     if lint_blocking and any(item["severity"] == "error" for item in findings):
-        raise HTTPException(status_code=409, detail={"code": "TEST_CASE_LINT_BLOCKED", "findings": findings})
+        raise HTTPException(
+            status_code=409, detail={"code": "TEST_CASE_LINT_BLOCKED", "findings": findings}
+        )
     timestamp = now()
     result = await database.value.test_case_drafts.update_one(
-        {"_id": draft_id, "project_id": project_id, "revision": payload.expected_revision, "status": "DRAFT"},
+        {
+            "_id": draft_id,
+            "project_id": project_id,
+            "revision": payload.expected_revision,
+            "status": "DRAFT",
+        },
         {
             "$set": {
                 "status": "IN_REVIEW",
@@ -368,16 +407,23 @@ async def submit_test_case_review(
     )
     if result.matched_count != 1:
         raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
-    draft = await database.value.test_case_drafts.find_one({"_id": draft_id, "project_id": project_id})
-    await audit(user.id, "test_case_review_submitted", "TestCaseDraft", draft_id, project_id, {"review_note": payload.review_note})
+    draft = await database.value.test_case_drafts.find_one(
+        {"_id": draft_id, "project_id": project_id}
+    )
+    await audit(
+        user.id,
+        "test_case_review_submitted",
+        "TestCaseDraft",
+        draft_id,
+        project_id,
+        {"review_note": payload.review_note},
+    )
     return envelope(draft, revision=draft["revision"])
 
 
 @router.post("/ca-kiem-thu/{draft_id}/ra-soat")
 async def submit_test_case_review_alias(
-    draft_id: str,
-    payload: ReviewTransitionInput,
-    user: CurrentUser = Depends(get_current_user),
+    draft_id: str, payload: ReviewTransitionInput, user: CurrentUser = Depends(get_current_user)
 ):
     draft = await get_project_entity("test_case_drafts", draft_id, user, "testcase.submit_review")
     return await submit_test_case_review(draft["project_id"], draft_id, payload, user)
@@ -390,19 +436,25 @@ async def request_test_case_changes(
     payload: ReviewTransitionInput,
     user: CurrentUser = Depends(get_current_user),
 ):
-    draft = await get_project_entity(
-        "test_case_drafts", draft_id, user, "testcase.review"
-    )
+    draft = await get_project_entity("test_case_drafts", draft_id, user, "testcase.review")
     await require_action_policy(draft["project_id"], user, "testcase.request_changes", {"QA_LEAD"})
     if draft["project_id"] != project_id:
         raise HTTPException(status_code=422, detail={"code": "PROJECT_MISMATCH"})
     if draft["status"] != "IN_REVIEW":
         raise HTTPException(status_code=409, detail={"code": "INVALID_STATE_TRANSITION"})
     if draft["revision"] != payload.expected_revision:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT", "current_revision": draft["revision"]})
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "REVISION_CONFLICT", "current_revision": draft["revision"]},
+        )
     timestamp = now()
     result = await database.value.test_case_drafts.update_one(
-        {"_id": draft_id, "project_id": project_id, "revision": payload.expected_revision, "status": "IN_REVIEW"},
+        {
+            "_id": draft_id,
+            "project_id": project_id,
+            "revision": payload.expected_revision,
+            "status": "IN_REVIEW",
+        },
         {
             "$set": {
                 "status": "DRAFT",
@@ -416,20 +468,25 @@ async def request_test_case_changes(
     )
     if result.matched_count != 1:
         raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
-    draft = await database.value.test_case_drafts.find_one({"_id": draft_id, "project_id": project_id})
-    await audit(user.id, "test_case_changes_requested", "TestCaseDraft", draft_id, project_id, {"review_note": payload.review_note})
+    draft = await database.value.test_case_drafts.find_one(
+        {"_id": draft_id, "project_id": project_id}
+    )
+    await audit(
+        user.id,
+        "test_case_changes_requested",
+        "TestCaseDraft",
+        draft_id,
+        project_id,
+        {"review_note": payload.review_note},
+    )
     return envelope(draft, revision=draft["revision"])
 
 
 @router.post("/ban-nhap-ca-kiem-thu/{draft_id}/dong-bang", status_code=201)
 async def freeze_test_case_draft(
-    draft_id: str,
-    payload: CaseFreezeInput,
-    user: CurrentUser = Depends(get_current_user),
+    draft_id: str, payload: CaseFreezeInput, user: CurrentUser = Depends(get_current_user)
 ):
-    draft = await get_project_entity(
-        "test_case_drafts", draft_id, user, "testcase.approve"
-    )
+    draft = await get_project_entity("test_case_drafts", draft_id, user, "testcase.approve")
     if draft["status"] == "APPROVED" and draft.get("frozen_version_id"):
         version = await database.value.test_case_versions.find_one(
             {"_id": draft["frozen_version_id"], "project_id": draft["project_id"]}
@@ -441,24 +498,46 @@ async def freeze_test_case_draft(
     if draft["status"] != "IN_REVIEW":
         raise HTTPException(status_code=409, detail={"code": "INVALID_STATE_TRANSITION"})
     if draft["revision"] != payload.expected_revision:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT", "current_revision": draft["revision"]})
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "REVISION_CONFLICT", "current_revision": draft["revision"]},
+        )
     findings = lint_test_case(draft)
-    project = await database.value.projects.find_one(
-        {"_id": draft["project_id"]}, {"settings": 1}
-    )
+    project = await database.value.projects.find_one({"_id": draft["project_id"]}, {"settings": 1})
     lint_blocking = (project.get("settings") or {}).get("testcase_lint_blocking", True)
     if lint_blocking and any(item["severity"] == "error" for item in findings):
-        raise HTTPException(status_code=409, detail={"code": "TEST_CASE_LINT_BLOCKED", "findings": findings})
+        raise HTTPException(
+            status_code=409, detail={"code": "TEST_CASE_LINT_BLOCKED", "findings": findings}
+        )
     claimed = await database.value.test_case_drafts.find_one_and_update(
-        {"_id": draft_id, "project_id": draft["project_id"], "status": "IN_REVIEW", "revision": payload.expected_revision},
-        {"$set": {"status": "APPROVING", "approval_started_by": user.id, "approval_started_at": now(), "updated_at": now()}, "$inc": {"revision": 1}},
+        {
+            "_id": draft_id,
+            "project_id": draft["project_id"],
+            "status": "IN_REVIEW",
+            "revision": payload.expected_revision,
+        },
+        {
+            "$set": {
+                "status": "APPROVING",
+                "approval_started_by": user.id,
+                "approval_started_at": now(),
+                "updated_at": now(),
+            },
+            "$inc": {"revision": 1},
+        },
         return_document=ReturnDocument.AFTER,
     )
     if not claimed:
-        current = await database.value.test_case_drafts.find_one({"_id": draft_id, "project_id": draft["project_id"]})
+        current = await database.value.test_case_drafts.find_one(
+            {"_id": draft_id, "project_id": draft["project_id"]}
+        )
         if current and current.get("status") == "APPROVED" and current.get("frozen_version_id"):
-            version = await database.value.test_case_versions.find_one({"_id": current["frozen_version_id"], "project_id": current["project_id"]})
-            test_case = await database.value.test_cases.find_one({"_id": version["test_case_id"], "project_id": current["project_id"]})
+            version = await database.value.test_case_versions.find_one(
+                {"_id": current["frozen_version_id"], "project_id": current["project_id"]}
+            )
+            test_case = await database.value.test_cases.find_one(
+                {"_id": version["test_case_id"], "project_id": current["project_id"]}
+            )
             return envelope({"test_case": test_case, "version": version})
         raise HTTPException(status_code=409, detail={"code": "TEST_CASE_APPROVAL_IN_PROGRESS"})
     draft = claimed
@@ -468,11 +547,17 @@ async def freeze_test_case_draft(
     parent_version_id = None
     created_test_case = False
     try:
-        existing = await database.value.test_cases.find_one({"project_id": draft["project_id"], "test_case_key": draft["test_case_key"]})
+        existing = await database.value.test_cases.find_one(
+            {"project_id": draft["project_id"], "test_case_key": draft["test_case_key"]}
+        )
         if existing:
-            latest = await database.value.test_case_versions.find_one({"test_case_id": existing["_id"]}, sort=[("version", -1)])
+            latest = await database.value.test_case_versions.find_one(
+                {"test_case_id": existing["_id"]}, sort=[("version", -1)]
+            )
             if not latest:
-                raise HTTPException(status_code=409, detail={"code": "TEST_CASE_VERSION_HISTORY_INVALID"})
+                raise HTTPException(
+                    status_code=409, detail={"code": "TEST_CASE_VERSION_HISTORY_INVALID"}
+                )
             test_case = existing
             version_number = int(latest["version"]) + 1
             parent_version_id = latest["_id"]
@@ -527,24 +612,61 @@ async def freeze_test_case_draft(
         }
         await database.value.test_case_versions.insert_one(version)
         updated_case = await database.value.test_cases.update_one(
-            {"_id": test_case["_id"], "project_id": draft["project_id"], "current_version_id": parent_version_id},
-            {"$set": {"current_version_id": version["_id"], "status": "ACTIVE", "updated_at": timestamp}},
+            {
+                "_id": test_case["_id"],
+                "project_id": draft["project_id"],
+                "current_version_id": parent_version_id,
+            },
+            {
+                "$set": {
+                    "current_version_id": version["_id"],
+                    "status": "ACTIVE",
+                    "updated_at": timestamp,
+                }
+            },
         )
         if updated_case.matched_count != 1:
             raise HTTPException(status_code=409, detail={"code": "TEST_CASE_VERSION_CONFLICT"})
         updated_draft = await database.value.test_case_drafts.update_one(
-            {"_id": draft_id, "project_id": draft["project_id"], "status": "APPROVING", "revision": draft["revision"]},
-            {"$set": {"status": "APPROVED", "frozen_version_id": version["_id"], "updated_at": timestamp}, "$inc": {"revision": 1}},
+            {
+                "_id": draft_id,
+                "project_id": draft["project_id"],
+                "status": "APPROVING",
+                "revision": draft["revision"],
+            },
+            {
+                "$set": {
+                    "status": "APPROVED",
+                    "frozen_version_id": version["_id"],
+                    "updated_at": timestamp,
+                },
+                "$inc": {"revision": 1},
+            },
         )
         if updated_draft.matched_count != 1:
             raise HTTPException(status_code=409, detail={"code": "TEST_CASE_APPROVAL_CONFLICT"})
     except Exception:
         if version:
-            await database.value.test_case_versions.delete_one({"_id": version["_id"], "project_id": draft["project_id"]})
+            await database.value.test_case_versions.delete_one(
+                {"_id": version["_id"], "project_id": draft["project_id"]}
+            )
         if test_case and created_test_case:
-            await database.value.test_cases.delete_one({"_id": test_case["_id"], "project_id": draft["project_id"], "current_version_id": {"$in": [None, version["_id"] if version else None]}})
+            await database.value.test_cases.delete_one(
+                {
+                    "_id": test_case["_id"],
+                    "project_id": draft["project_id"],
+                    "current_version_id": {"$in": [None, version["_id"] if version else None]},
+                }
+            )
         elif test_case and version:
-            await database.value.test_cases.update_one({"_id": test_case["_id"], "project_id": draft["project_id"], "current_version_id": version["_id"]}, {"$set": {"current_version_id": parent_version_id, "updated_at": now()}})
+            await database.value.test_cases.update_one(
+                {
+                    "_id": test_case["_id"],
+                    "project_id": draft["project_id"],
+                    "current_version_id": version["_id"],
+                },
+                {"$set": {"current_version_id": parent_version_id, "updated_at": now()}},
+            )
         await database.value.test_case_drafts.update_one(
             {"_id": draft_id, "project_id": draft["project_id"], "status": "APPROVING"},
             {"$set": {"status": "IN_REVIEW", "approval_error_at": now(), "updated_at": now()}},
@@ -555,10 +677,31 @@ async def freeze_test_case_draft(
         await create_suggested_traces(draft, version, user)
     except Exception:
         trace_ready = False
-    indexed = await index_artifact(version["project_id"], "test_case_version", version["test_case_id"], version["_id"], version["title"], version["plain_text_projection"], version["status"], "approved", version["version"])
-    await audit(user.id, "test_case_version_approved", "TestCaseVersion", version["_id"], draft["project_id"], {"draft_id": draft_id})
+    indexed = await index_artifact(
+        version["project_id"],
+        "test_case_version",
+        version["test_case_id"],
+        version["_id"],
+        version["title"],
+        version["plain_text_projection"],
+        version["status"],
+        "APPROVED_SOURCE",
+        version["version"],
+    )
+    await audit(
+        user.id,
+        "test_case_version_approved",
+        "TestCaseVersion",
+        version["_id"],
+        draft["project_id"],
+        {"draft_id": draft_id},
+    )
     ready = trace_ready and indexed
-    return envelope({"test_case": {**test_case, "current_version_id": version["_id"]}, "version": version}, status="SUCCESS" if ready else "DEGRADED", degraded_mode=None if ready else "DEGRADED_DERIVED_DATA")
+    return envelope(
+        {"test_case": {**test_case, "current_version_id": version["_id"]}, "version": version},
+        status="SUCCESS" if ready else "DEGRADED",
+        degraded_mode=None if ready else "DEGRADED_DERIVED_DATA",
+    )
 
 
 @router.post("/du-an/{project_id}/ca-kiem-thu/{draft_id}/phe-duyet", status_code=201)
@@ -568,9 +711,7 @@ async def approve_test_case(
     payload: CaseFreezeInput,
     user: CurrentUser = Depends(get_current_user),
 ):
-    draft = await get_project_entity(
-        "test_case_drafts", draft_id, user, "testcase.approve"
-    )
+    draft = await get_project_entity("test_case_drafts", draft_id, user, "testcase.approve")
     if draft["project_id"] != project_id:
         raise HTTPException(status_code=422, detail={"code": "PROJECT_MISMATCH"})
     return await freeze_test_case_draft(draft_id, payload, user)
@@ -578,11 +719,9 @@ async def approve_test_case(
 
 @router.post("/ca-kiem-thu/{draft_id}/phe-duyet", status_code=201)
 async def approve_test_case_alias(
-    draft_id: str,
-    payload: CaseFreezeInput,
-    user: CurrentUser = Depends(get_current_user),
+    draft_id: str, payload: CaseFreezeInput, user: CurrentUser = Depends(get_current_user)
 ):
-    draft = await get_project_entity("test_case_drafts", draft_id, user, "testcase.approve")
+    await get_project_entity("test_case_drafts", draft_id, user, "testcase.approve")
     return await freeze_test_case_draft(draft_id, payload, user)
 
 
@@ -618,27 +757,31 @@ async def list_test_cases(
         {"project_id": project_id, "_id": {"$in": version_ids}}
     ).to_list(20000)
     by_id = {item["_id"]: item for item in versions}
-    items = [{**item, "current_version": by_id.get(item.get("current_version_id"))} for item in tests]
+    items = [
+        {**item, "current_version": by_id.get(item.get("current_version_id"))} for item in tests
+    ]
     traces = await database.value.trace_links.find(
-        {
-            "project_id": project_id,
-            "target_id": {"$in": version_ids},
-            "status": "CONFIRMED",
-        },
+        {"project_id": project_id, "target_id": {"$in": version_ids}, "status": "CONFIRMED"},
         {"target_id": 1},
     ).to_list(50000)
     trace_counts = {}
     for trace in traces:
         trace_counts[trace["target_id"]] = trace_counts.get(trace["target_id"], 0) + 1
-    results = await database.value.test_results.find(
-        {"project_id": project_id, "test_case_version_id": {"$in": version_ids}}
-    ).sort("updated_at", -1).to_list(50000)
+    results = (
+        await database.value.test_results.find(
+            {"project_id": project_id, "test_case_version_id": {"$in": version_ids}}
+        )
+        .sort("updated_at", -1)
+        .to_list(50000)
+    )
     latest_results = {}
     for result in results:
         latest_results.setdefault(result["test_case_version_id"], result.get("status"))
     suite_version_ids = set()
     if suite_id:
-        suite = await database.value.test_suites.find_one({"_id": suite_id, "project_id": project_id})
+        suite = await database.value.test_suites.find_one(
+            {"_id": suite_id, "project_id": project_id}
+        )
         if not suite:
             raise HTTPException(status_code=422, detail={"code": "INVALID_TEST_SUITE"})
         suite_version_ids = set(suite.get("test_case_version_ids", []))
@@ -663,10 +806,12 @@ async def list_test_cases(
         item["tags"] = sorted(set(item.get("tags", [])) | set(version.get("tags", [])))
     terms = [value.strip().lower() for value in (q, key, title) if value.strip()]
     if terms:
+
         def matches_test_case(item):
             version = item.get("current_version") or {}
             searchable = f"{item.get('test_case_key', '')} {version.get('title', '')}".lower()
             return all(value in searchable for value in terms)
+
         items = [item for item in items if matches_test_case(item)]
     field_filters = {
         "priority": priority,
@@ -682,7 +827,11 @@ async def list_test_cases(
                 if (item.get("current_version") or {}).get(field, item.get(field)) == value
             ]
     if technique:
-        items = [item for item in items if technique in (item.get("current_version") or {}).get("techniques", [])]
+        items = [
+            item
+            for item in items
+            if technique in (item.get("current_version") or {}).get("techniques", [])
+        ]
     if tag:
         items = [item for item in items if tag in item.get("tags", [])]
     if stale_status:
@@ -724,9 +873,7 @@ async def list_test_cases(
 
 @router.post("/ca-kiem-thu/{test_case_id}/nhan-ban", status_code=201)
 async def clone_test_case(
-    test_case_id: str,
-    payload: TestCaseCloneInput,
-    user: CurrentUser = Depends(get_current_user),
+    test_case_id: str, payload: TestCaseCloneInput, user: CurrentUser = Depends(get_current_user)
 ):
     test_case = await get_project_entity("test_cases", test_case_id, user, "testcase.clone")
     if test_case.get("current_version_id") != payload.expected_current_version_id:
@@ -794,18 +941,18 @@ async def clone_test_case(
 
 @router.get("/ca-kiem-thu/{test_case_id}/phien-ban")
 async def list_test_case_versions(test_case_id: str, user: CurrentUser = Depends(get_current_user)):
-    test_case = await get_project_entity(
-        "test_cases", test_case_id, user, "testcase.version.read"
+    await get_project_entity("test_cases", test_case_id, user, "testcase.version.read")
+    versions = (
+        await database.value.test_case_versions.find({"test_case_id": test_case_id})
+        .sort("version", -1)
+        .to_list(500)
     )
-    versions = await database.value.test_case_versions.find({"test_case_id": test_case_id}).sort("version", -1).to_list(500)
     return envelope(versions)
 
 
 @router.post("/ca-kiem-thu/{test_case_id}/phien-ban/ban-nhap", status_code=201)
 async def create_test_case_version_draft(
-    test_case_id: str,
-    payload: dict = Body(),
-    user: CurrentUser = Depends(get_current_user),
+    test_case_id: str, payload: dict = Body(), user: CurrentUser = Depends(get_current_user)
 ):
     test_case = await get_project_entity(
         "test_cases", test_case_id, user, "testcase.version.create"
@@ -882,9 +1029,7 @@ async def diff_test_case_versions(
     to_version: str = Query(alias="to", min_length=1, max_length=200),
     user: CurrentUser = Depends(get_current_user),
 ):
-    test_case = await get_project_entity(
-        "test_cases", test_case_id, user, "testcase.version.read"
-    )
+    test_case = await get_project_entity("test_cases", test_case_id, user, "testcase.version.read")
     versions = await database.value.test_case_versions.find(
         {
             "_id": {"$in": [from_version, to_version]},
@@ -931,36 +1076,52 @@ async def diff_test_case_versions(
 
 @router.post("/ca-kiem-thu/{test_case_id}/ngung-hieu-luc")
 async def mark_test_case_obsolete(
-    test_case_id: str,
-    payload: dict = Body(),
-    user: CurrentUser = Depends(get_current_user),
+    test_case_id: str, payload: dict = Body(), user: CurrentUser = Depends(get_current_user)
 ):
-    test_case = await get_project_entity(
-        "test_cases", test_case_id, user, "testcase.archive"
-    )
+    test_case = await get_project_entity("test_cases", test_case_id, user, "testcase.archive")
     if test_case.get("status") == "OBSOLETE":
         return envelope(test_case)
     if test_case.get("status") not in {"ACTIVE", "NEEDS_UPDATE"}:
         raise HTTPException(status_code=409, detail={"code": "INVALID_STATE_TRANSITION"})
     if payload.get("expected_current_version_id") != test_case.get("current_version_id"):
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT", "current_version_id": test_case.get("current_version_id")})
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "REVISION_CONFLICT",
+                "current_version_id": test_case.get("current_version_id"),
+            },
+        )
     reason = str(payload.get("reason") or "").strip()
     if len(reason) < 2:
         raise HTTPException(status_code=422, detail={"code": "OBSOLETE_REASON_REQUIRED"})
-    await database.value.test_cases.update_one({"_id": test_case_id}, {"$set": {"status": "OBSOLETE", "obsolete_reason": reason, "obsolete_by": user.id, "obsolete_at": now(), "updated_at": now()}})
-    await audit(user.id, "test_case_marked_obsolete", "TestCase", test_case_id, test_case["project_id"], {"reason": reason})
+    await database.value.test_cases.update_one(
+        {"_id": test_case_id},
+        {
+            "$set": {
+                "status": "OBSOLETE",
+                "obsolete_reason": reason,
+                "obsolete_by": user.id,
+                "obsolete_at": now(),
+                "updated_at": now(),
+            }
+        },
+    )
+    await audit(
+        user.id,
+        "test_case_marked_obsolete",
+        "TestCase",
+        test_case_id,
+        test_case["project_id"],
+        {"reason": reason},
+    )
     return envelope(await database.value.test_cases.find_one({"_id": test_case_id}))
 
 
 @router.post("/ca-kiem-thu/{test_case_id}/khoi-phuc")
 async def restore_test_case(
-    test_case_id: str,
-    payload: dict = Body(),
-    user: CurrentUser = Depends(get_current_user),
+    test_case_id: str, payload: dict = Body(), user: CurrentUser = Depends(get_current_user)
 ):
-    test_case = await get_project_entity(
-        "test_cases", test_case_id, user, "testcase.restore"
-    )
+    test_case = await get_project_entity("test_cases", test_case_id, user, "testcase.restore")
     if test_case.get("status") != "OBSOLETE":
         return envelope(test_case)
     if payload.get("expected_current_version_id") != test_case.get("current_version_id"):
@@ -993,58 +1154,93 @@ async def restore_test_case(
 
 @router.post("/phien-ban-yeu-cau/{version_id}/ai/sinh-ca-kiem-thu", status_code=201)
 async def generate_test_cases(
-    version_id: str,
-    payload: GenerateInput,
-    user: CurrentUser = Depends(get_current_user),
+    version_id: str, payload: GenerateInput, user: CurrentUser = Depends(get_current_user)
 ):
-    version = await get_project_entity("requirement_versions", version_id, user, "ai.generate_testcase")
+    version = await get_project_entity(
+        "requirement_versions", version_id, user, "ai.generate_testcase"
+    )
     await get_project(version["project_id"], user, "testcase.create")
-    criteria = await database.value.acceptance_criteria.find({"requirement_version_id": version_id}).to_list(500)
+    criteria = await database.value.acceptance_criteria.find(
+        {"requirement_version_id": version_id}
+    ).to_list(500)
     drafts, result = await generate_requirement_drafts(version, criteria, payload, scenario=False)
     created = []
     for draft in drafts:
         response = await create_test_case_draft(version["project_id"], draft, user)
         created.append(response["data"])
-    await audit(user.id, "test_case_drafts_generated", "RequirementVersion", version_id, version["project_id"], {"count": len(created), "model": result.get("model", {})})
-    return envelope({"items": created, "evidence": criteria, "model": result.get("model", {}), "generation_status": result["status"]})
+    await audit(
+        user.id,
+        "test_case_drafts_generated",
+        "RequirementVersion",
+        version_id,
+        version["project_id"],
+        {"count": len(created), "model": result.get("model", {})},
+    )
+    return envelope(
+        {
+            "items": created,
+            "evidence": criteria,
+            **ai_contract_metadata(result),
+            "generation_status": result["status"],
+        }
+    )
 
 
 @router.post("/du-an/{project_id}/ca-kiem-thu/sinh", status_code=201)
 async def generate_project_test_cases(
-    project_id: str,
-    payload: TestCaseGenerateInput,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, payload: TestCaseGenerateInput, user: CurrentUser = Depends(get_current_user)
 ):
-    version = await get_project_entity("requirement_versions", payload.requirement_version_id, user, "ai.generate_testcase")
+    version = await get_project_entity(
+        "requirement_versions", payload.requirement_version_id, user, "ai.generate_testcase"
+    )
     if version["project_id"] != project_id:
         raise HTTPException(status_code=422, detail={"code": "PROJECT_MISMATCH"})
-    return await generate_test_cases(payload.requirement_version_id, GenerateInput(categories=payload.categories, count_per_category=payload.count_per_category, instruction=payload.instruction), user)
+    return await generate_test_cases(
+        payload.requirement_version_id,
+        GenerateInput(
+            categories=payload.categories,
+            count_per_category=payload.count_per_category,
+            instruction=payload.instruction,
+        ),
+        user,
+    )
 
 
 @router.get("/du-an/{project_id}/ca-kiem-thu/trung-lap")
 async def find_duplicates(project_id: str, user: CurrentUser = Depends(get_current_user)):
     await get_project(project_id, user, "testcase.duplicate_check")
     await get_project(project_id, user, "ai.run_duplicate_check")
-    versions = await database.value.test_case_versions.find({"project_id": project_id, "status": "ACTIVE"}).to_list(2000)
+    versions = await database.value.test_case_versions.find(
+        {"project_id": project_id, "status": "ACTIVE"}
+    ).to_list(2000)
     pairs = []
     for index, left in enumerate(versions):
         for right in versions[index + 1 :]:
             score, reasons = duplicate_score(left, right)
             if score >= 0.72:
-                pairs.append({"left": left, "right": right, "similarity": score, "reasons": reasons})
+                pairs.append(
+                    {"left": left, "right": right, "similarity": score, "reasons": reasons}
+                )
     return envelope(sorted(pairs, key=lambda item: item["similarity"], reverse=True)[:100])
 
 
 async def create_suggested_traces(draft, version, user):
     sources = [
-        ("requirement_version", source_id)
-        for source_id in draft.get("requirement_version_ids", [])
+        ("requirement_version", source_id) for source_id in draft.get("requirement_version_ids", [])
     ] + [
         ("acceptance_criterion", source_id)
         for source_id in draft.get("acceptance_criterion_ids", [])
     ]
     for source_type, source_id in sources:
-        exists = await database.value.trace_links.find_one({"project_id": draft["project_id"], "source_type": source_type, "source_id": source_id, "target_type": "test_case_version", "target_id": version["_id"]})
+        exists = await database.value.trace_links.find_one(
+            {
+                "project_id": draft["project_id"],
+                "source_type": source_type,
+                "source_id": source_id,
+                "target_type": "test_case_version",
+                "target_id": version["_id"],
+            }
+        )
         if exists:
             continue
         await database.value.trace_links.insert_one(
@@ -1072,7 +1268,15 @@ def project_test_text(value):
         f"{plain_text(step.get('action_doc', {}))} {plain_text(step.get('expected_doc', {}))}"
         for step in value.get("steps", [])
     )
-    return " ".join([value.get("title", ""), plain_text(value.get("objective_doc", {})), plain_text(value.get("preconditions_doc", {})), steps, plain_text(value.get("expected_result_doc", {}))]).strip()
+    return " ".join(
+        [
+            value.get("title", ""),
+            plain_text(value.get("objective_doc", {})),
+            plain_text(value.get("preconditions_doc", {})),
+            steps,
+            plain_text(value.get("expected_result_doc", {})),
+        ]
+    ).strip()
 
 
 def techniques_for_category(category):
@@ -1086,33 +1290,71 @@ def techniques_for_category(category):
     }.get(category, ["functional"])
 
 
-async def validate_design_sources(project_id, requirement_version_ids, acceptance_criterion_ids, scenario_id=None, test_condition_ids=None):
+async def validate_design_sources(
+    project_id,
+    requirement_version_ids,
+    acceptance_criterion_ids,
+    scenario_id=None,
+    test_condition_ids=None,
+):
     requirement_ids = list(dict.fromkeys(requirement_version_ids or []))
     criterion_ids = list(dict.fromkeys(acceptance_criterion_ids or []))
     if requirement_ids:
-        count = await database.value.requirement_versions.count_documents({"project_id": project_id, "_id": {"$in": requirement_ids}})
+        count = await database.value.requirement_versions.count_documents(
+            {"project_id": project_id, "_id": {"$in": requirement_ids}}
+        )
         if count != len(requirement_ids):
-            raise HTTPException(status_code=422, detail={"code": "CROSS_PROJECT_OR_MISSING_REQUIREMENT_VERSION"})
+            raise HTTPException(
+                status_code=422, detail={"code": "CROSS_PROJECT_OR_MISSING_REQUIREMENT_VERSION"}
+            )
     if criterion_ids:
         query = {"project_id": project_id, "_id": {"$in": criterion_ids}}
         if requirement_ids:
             query["requirement_version_id"] = {"$in": requirement_ids}
         count = await database.value.acceptance_criteria.count_documents(query)
         if count != len(criterion_ids):
-            raise HTTPException(status_code=422, detail={"code": "CROSS_PROJECT_OR_MISSING_ACCEPTANCE_CRITERION"})
+            raise HTTPException(
+                status_code=422, detail={"code": "CROSS_PROJECT_OR_MISSING_ACCEPTANCE_CRITERION"}
+            )
     if scenario_id:
-        scenario = await database.value.test_scenarios.find_one({"_id": scenario_id, "project_id": project_id})
+        scenario = await database.value.test_scenarios.find_one(
+            {"_id": scenario_id, "project_id": project_id}
+        )
         if not scenario:
-            raise HTTPException(status_code=422, detail={"code": "CROSS_PROJECT_OR_MISSING_TEST_SCENARIO"})
+            raise HTTPException(
+                status_code=422, detail={"code": "CROSS_PROJECT_OR_MISSING_TEST_SCENARIO"}
+            )
     condition_ids = list(dict.fromkeys(test_condition_ids or []))
     if condition_ids:
         project = await database.value.projects.find_one({"_id": project_id}, {"settings": 1})
-        query = {"project_id": project_id, "_id": {"$in": condition_ids}, "status": {"$ne": "ARCHIVED"}}
-        if (project or {}).get("settings", {}).get("require_approved_test_conditions", False):
-            query["status"] = "APPROVED"
-        count = await database.value.test_conditions.count_documents(query)
-        if count != len(condition_ids):
-            raise HTTPException(status_code=422, detail={"code": "CROSS_PROJECT_OR_UNAPPROVED_TEST_CONDITION"})
+        query = {
+            "project_id": project_id,
+            "_id": {"$in": condition_ids},
+            "status": {"$ne": "ARCHIVED"},
+        }
+        conditions = await database.value.test_conditions.find(
+            query, {"_id": 1, "status": 1}
+        ).to_list(len(condition_ids))
+        found_ids = {item["_id"] for item in conditions}
+        missing_ids = [
+            condition_id for condition_id in condition_ids if condition_id not in found_ids
+        ]
+        if missing_ids:
+            raise HTTPException(
+                status_code=422,
+                detail={"code": "TEST_CONDITION_NOT_FOUND", "condition_ids": missing_ids},
+            )
+        settings = (project or {}).get("settings", {})
+        strict = settings.get(
+            "require_condition_approval_before_testcase",
+            settings.get("require_approved_test_conditions", False),
+        )
+        unapproved_ids = [item["_id"] for item in conditions if item.get("status") != "APPROVED"]
+        if strict and unapproved_ids:
+            raise HTTPException(
+                status_code=422,
+                detail={"code": "TEST_CONDITION_NOT_APPROVED", "condition_ids": unapproved_ids},
+            )
 
 
 async def validate_data_set_versions(project_id, data_set_version_ids):
@@ -1124,13 +1366,15 @@ async def validate_data_set_versions(project_id, data_set_version_ids):
     )
     if count != len(version_ids):
         raise HTTPException(
-            status_code=422,
-            detail={"code": "CROSS_PROJECT_OR_MISSING_DATA_SET_VERSION"},
+            status_code=422, detail={"code": "CROSS_PROJECT_OR_MISSING_DATA_SET_VERSION"}
         )
 
 
 def text_doc(value):
-    return {"type": "doc", "content": [{"type": "paragraph", "content": [{"type": "text", "text": str(value)}]}]}
+    return {
+        "type": "doc",
+        "content": [{"type": "paragraph", "content": [{"type": "text", "text": str(value)}]}],
+    }
 
 
 def model_metadata(model):

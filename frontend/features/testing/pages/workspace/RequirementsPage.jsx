@@ -77,6 +77,7 @@ export default function RequirementsPage({ project, section }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [lint, setLint] = useState(null);
+  const [checkingWithAi, setCheckingWithAi] = useState(false);
   const [importValue, setImportValue] = useState({
     filename: "requirements.md",
     format: "md",
@@ -91,6 +92,7 @@ export default function RequirementsPage({ project, section }) {
   const [draftDirty, setDraftDirty] = useState(false);
   const [saveState, setSaveState] = useState("saved");
   const draftSequence = useRef(0);
+  const saveInFlight = useRef(null);
   const loadedVersion = useRef("");
   const [comparison, setComparison] = useState(null);
   const [duplicateScan, setDuplicateScan] = useState(null);
@@ -168,71 +170,78 @@ export default function RequirementsPage({ project, section }) {
   const persistDraft = useCallback(
     async (snapshot, sequence) => {
       if (!snapshot || !current || !selected) return;
-      setSaveState("saving");
-      try {
-        const result = await testingApi.applyRequirementCollaborationOperation(
-          project._id,
-          selected._id,
-          {
-            base_revision: current.revision,
-            operation_id: crypto.randomUUID(),
-            changes: {
-              title: snapshot.title,
-              type: snapshot.type,
-              priority: snapshot.priority,
-              risk: snapshot.risk,
-              content_doc: snapshot.content_doc,
-              acceptance_criteria: snapshot.acceptance
-                .split("\n")
-                .map((line) => line.trim())
-                .filter(Boolean)
-                .map((line, index) => ({
-                  key: `AC-${index + 1}`,
-                  content_doc: textDoc(line),
-                  status: "draft",
-                })),
-              business_rules: snapshot.businessRules
-                .split("\n")
-                .map((value) => value.trim())
-                .filter(Boolean),
-              actors: snapshot.actors
-                .split(",")
-                .map((value) => value.trim())
-                .filter(Boolean),
-              dependencies: snapshot.dependencies
-                .split("\n")
-                .map((value) => value.trim())
-                .filter(Boolean),
-              tags: snapshot.tags
-                .split(",")
-                .map((value) => value.trim())
-                .filter(Boolean),
-              owner_id: snapshot.ownerId.trim() || null,
+      if (saveInFlight.current) return saveInFlight.current;
+      const request = (async () => {
+        setSaveState("saving");
+        try {
+          const result = await testingApi.applyRequirementCollaborationOperation(
+            project._id,
+            selected._id,
+            {
+              base_revision: current.revision,
+              operation_id: crypto.randomUUID(),
+              changes: {
+                title: snapshot.title,
+                type: snapshot.type,
+                priority: snapshot.priority,
+                risk: snapshot.risk,
+                content_doc: snapshot.content_doc,
+                acceptance_criteria: snapshot.acceptance
+                  .split("\n")
+                  .map((line) => line.trim())
+                  .filter(Boolean)
+                  .map((line, index) => ({
+                    key: `AC-${index + 1}`,
+                    content_doc: textDoc(line),
+                    status: "draft",
+                  })),
+                business_rules: snapshot.businessRules
+                  .split("\n")
+                  .map((value) => value.trim())
+                  .filter(Boolean),
+                actors: snapshot.actors
+                  .split(",")
+                  .map((value) => value.trim())
+                  .filter(Boolean),
+                dependencies: snapshot.dependencies
+                  .split("\n")
+                  .map((value) => value.trim())
+                  .filter(Boolean),
+                tags: snapshot.tags
+                  .split(",")
+                  .map((value) => value.trim())
+                  .filter(Boolean),
+                owner_id: snapshot.ownerId.trim() || null,
+              },
             },
-          },
-        );
-        setSelected(result);
-        if (draftSequence.current === sequence) {
-          setDraftDirty(false);
-          setSaveState("saved");
-        } else {
-          setSaveState("pending");
+          );
+          setSelected(result);
+          if (draftSequence.current === sequence) {
+            setDraftDirty(false);
+            setSaveState("saved");
+          } else {
+            setSaveState("pending");
+          }
+        } catch (reason) {
+          setSaveState("error");
+          setError(messageOf(reason));
         }
-      } catch (reason) {
-        setSaveState("error");
-        setError(messageOf(reason));
-      }
+      })();
+      saveInFlight.current = request;
+      await request;
+      if (saveInFlight.current === request) saveInFlight.current = null;
     },
     [current, project._id, selected],
   );
   useEffect(() => {
-    if (!draftDirty || current?.status !== "DRAFT" || !draft) return undefined;
+    if (!draftDirty || saveState === "saving" || current?.status !== "DRAFT" || !draft)
+      return undefined;
     const sequence = draftSequence.current;
     const timer = window.setTimeout(() => {
       void persistDraft(draft, sequence);
     }, 1500);
     return () => window.clearTimeout(timer);
-  }, [current?.status, draft, draftDirty, persistDraft]);
+  }, [current?.status, draft, draftDirty, persistDraft, saveState]);
   const criteria = useMemo(
     () =>
       form.acceptance
@@ -846,16 +855,26 @@ export default function RequirementsPage({ project, section }) {
                 {can("ai.run_lint") && (
                   <button
                     className="secondary-button"
+                    aria-busy={checkingWithAi}
+                    disabled={checkingWithAi}
                     type="button"
                     onClick={async () => {
+                      setCheckingWithAi(true);
                       try {
-                        setLint(await testingApi.lintRequirement(current._id));
+                        setLint(
+                          await testingApi.lintRequirement(current._id, {
+                            idempotency_key: crypto.randomUUID(),
+                            instruction: "Phân tích chất lượng và đề xuất bản sửa có căn cứ",
+                          }),
+                        );
                       } catch (reason) {
                         setError(messageOf(reason));
+                      } finally {
+                        setCheckingWithAi(false);
                       }
                     }}
                   >
-                    Kiểm tra chất lượng bằng AI
+                    {checkingWithAi ? "AI đang kiểm tra chất lượng" : "Kiểm tra chất lượng"}
                   </button>
                 )}
                 {current.status === "BASELINED" && can("requirement.version.create") && (
@@ -1152,19 +1171,78 @@ export default function RequirementsPage({ project, section }) {
             <Panel
               title={
                 lint.valid
-                  ? "Kiểm tra chất lượng AI không có lỗi chặn"
-                  : "Kiểm tra chất lượng AI phát hiện vấn đề"
+                  ? "Kiểm tra chất lượng không có lỗi chặn"
+                  : "Kiểm tra chất lượng phát hiện vấn đề"
               }
             >
               <DataTable
                 items={lint.findings}
                 empty="Không có vấn đề"
                 columns={[
+                  {
+                    key: "origin",
+                    label: "Nguồn",
+                    render: (item) => (item.origin === "AI" ? "AI" : "Quy tắc"),
+                  },
                   { key: "severity", label: "Mức độ" },
-                  { key: "code", label: "Mã" },
+                  { key: "rule_id", label: "Mã" },
                   { key: "message", label: "Nội dung" },
+                  { key: "suggestion", label: "Đề xuất" },
                 ]}
               />
+              {lint.degraded_mode && (
+                <p className="mt-3 text-sm text-warning">
+                  Mô hình AI chưa sẵn sàng nên kết quả hiện chỉ gồm kiểm tra bằng quy tắc
+                </p>
+              )}
+              <div className="mt-4">
+                <DataTable
+                  items={lint.suggestions || []}
+                  empty="AI chưa tạo đề xuất chỉnh sửa"
+                  columns={[
+                    { key: "revised_title", label: "Tên đề xuất" },
+                    { key: "revised_content", label: "Nội dung đề xuất" },
+                    { key: "rationale", label: "Cơ sở" },
+                    {
+                      key: "actions",
+                      label: "Thao tác",
+                      render: (item) =>
+                        current.status === "DRAFT" && can("requirement.update") ? (
+                          <button
+                            className="apple-button"
+                            type="button"
+                            disabled={(lint.applied_suggestion_ids || []).includes(
+                              item.suggestion_id,
+                            )}
+                            onClick={async () => {
+                              try {
+                                await testingApi.applyRequirementAiSuggestion(current._id, {
+                                  expected_revision: current.revision,
+                                  ai_result_id: lint._id,
+                                  suggestion_id: item.suggestion_id,
+                                });
+                                setSelected(await testingApi.getRequirement(selected._id));
+                                setLint((value) => ({
+                                  ...value,
+                                  applied_suggestion_ids: [
+                                    ...(value.applied_suggestion_ids || []),
+                                    item.suggestion_id,
+                                  ],
+                                }));
+                              } catch (reason) {
+                                setError(messageOf(reason));
+                              }
+                            }}
+                          >
+                            {(lint.applied_suggestion_ids || []).includes(item.suggestion_id)
+                              ? "Đã áp dụng"
+                              : "Áp dụng vào bản nháp"}
+                          </button>
+                        ) : null,
+                    },
+                  ]}
+                />
+              </div>
             </Panel>
           )}
           <Panel title="Lịch sử phiên bản">
@@ -1270,7 +1348,15 @@ export default function RequirementsPage({ project, section }) {
             artifactType="requirement_version"
             artifactId={current._id}
           />
-          {project.current_permissions?.includes("reviewsession.read") && <FormalReviewPanel project={project} artifactType="REQUIREMENT" artifactId={selected._id} artifactVersionId={current._id} reviewType="REQUIREMENT_REVIEW" />}
+          {project.current_permissions?.includes("reviewsession.read") && (
+            <FormalReviewPanel
+              project={project}
+              artifactType="REQUIREMENT"
+              artifactId={selected._id}
+              artifactVersionId={current._id}
+              reviewType="REQUIREMENT_REVIEW"
+            />
+          )}
           <CollaborationPanel
             project={project}
             artifactType="requirement"
@@ -1569,8 +1655,9 @@ export default function RequirementsPage({ project, section }) {
                     key: "module",
                     label: "Phạm vi",
                     render: (item) =>
-                      [item.product_area, item.module, item.component].filter(Boolean).join(" · ") ||
-                      "Chưa khai báo",
+                      [item.product_area, item.module, item.component]
+                        .filter(Boolean)
+                        .join(" · ") || "Chưa khai báo",
                   },
                   {
                     key: "status",
@@ -1608,7 +1695,10 @@ export default function RequirementsPage({ project, section }) {
                                         { value: "SRS", label: "Đặc tả yêu cầu phần mềm" },
                                         { value: "BRD", label: "Tài liệu yêu cầu nghiệp vụ" },
                                         { value: "USER_STORY", label: "User story" },
-                                        { value: "ACCEPTANCE_CRITERIA", label: "Tiêu chí chấp nhận" },
+                                        {
+                                          value: "ACCEPTANCE_CRITERIA",
+                                          label: "Tiêu chí chấp nhận",
+                                        },
                                         { value: "BUSINESS_RULE", label: "Quy tắc nghiệp vụ" },
                                         { value: "API_SPEC", label: "Đặc tả API" },
                                         { value: "UI_SPEC", label: "Đặc tả giao diện" },
@@ -1628,7 +1718,10 @@ export default function RequirementsPage({ project, section }) {
                                       initialValue: item.authority || "PROJECT_REFERENCE",
                                       options: [
                                         { value: "APPROVED_SOURCE", label: "Nguồn đã phê duyệt" },
-                                        { value: "CONTROLLED_SOURCE", label: "Nguồn được kiểm soát" },
+                                        {
+                                          value: "CONTROLLED_SOURCE",
+                                          label: "Nguồn được kiểm soát",
+                                        },
                                         { value: "PROJECT_REFERENCE", label: "Tham chiếu dự án" },
                                         { value: "SUPPLEMENTAL", label: "Nguồn bổ trợ" },
                                         { value: "DRAFT", label: "Bản nháp" },

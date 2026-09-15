@@ -6,27 +6,47 @@ import { ErrorState, Panel, StatusPill, useActionDialog } from "./WorkspacePrimi
 import { messageOf } from "../lib/testing";
 import { testingApi } from "../services/testing.service";
 
-const ROOT_CAUSE_CATEGORIES = ["REQUIREMENT", "DESIGN", "IMPLEMENTATION", "CONFIGURATION", "TEST_DATA", "TEST_CASE_GAP", "ENVIRONMENT", "INTEGRATION", "DEPLOYMENT", "PROCESS", "UNKNOWN"];
-const NEXT_STATUS = { OPEN: "IN_PROGRESS", IN_PROGRESS: "IMPLEMENTED", IMPLEMENTED: "EFFECTIVENESS_REVIEW", EFFECTIVENESS_REVIEW: "CLOSED" };
-const lines = (value) => String(value || "").split("\n").map((item) => item.trim()).filter(Boolean);
+const ROOT_CAUSE_CATEGORIES = [
+  "REQUIREMENT",
+  "DESIGN",
+  "IMPLEMENTATION",
+  "CONFIGURATION",
+  "TEST_DATA",
+  "TEST_CASE_GAP",
+  "ENVIRONMENT",
+  "INTEGRATION",
+  "DEPLOYMENT",
+  "PROCESS",
+  "THIRD_PARTY",
+  "UNKNOWN",
+];
+const lines = (value) =>
+  String(value || "")
+    .split("\n")
+    .map((item) => item.trim())
+    .filter(Boolean);
 
 export default function CausalAnalysisPanel({ project }) {
   const [items, setItems] = useState([]);
   const [defects, setDefects] = useState([]);
   const [members, setMembers] = useState([]);
+  const [candidates, setCandidates] = useState([]);
   const [selected, setSelected] = useState(null);
   const [hypotheses, setHypotheses] = useState([]);
   const [error, setError] = useState("");
+  const [generatingHypotheses, setGeneratingHypotheses] = useState(false);
   const { ask, dialog } = useActionDialog();
   const can = (permission) => project.current_permissions?.includes(permission);
   const load = useCallback(async () => {
     try {
-      const [result, defectValues, memberValues] = await Promise.all([
+      const [result, candidateValues, defectValues, memberValues] = await Promise.all([
         testingApi.listCausalAnalyses(project._id),
+        testingApi.listCausalAnalysisCandidates(project._id),
         testingApi.listDefects(project._id),
         testingApi.listMembers(project._id),
       ]);
       setItems(result.items || []);
+      setCandidates(candidateValues.items || []);
       setDefects(defectValues);
       setMembers(memberValues.filter((item) => item.status === "ACTIVE"));
       if (selected?._id) setSelected(await testingApi.getCausalAnalysis(selected._id));
@@ -35,86 +55,606 @@ export default function CausalAnalysisPanel({ project }) {
       setError(messageOf(reason));
     }
   }, [project._id, selected?._id]);
-  useEffect(() => { void load(); }, [load]);
-  const memberOptions = members.map((item) => ({ value: item.user_id, label: item.user_label || item.email || item.user_id }));
+  useEffect(() => {
+    void load();
+  }, [load]);
+  const memberOptions = members.map((item) => ({
+    value: item.user_id,
+    label: item.user_label || item.email || item.user_id,
+  }));
   const refreshSelected = async () => setSelected(await testingApi.getCausalAnalysis(selected._id));
   const create = async () => {
-    const eligible = defects.filter((item) => ["blocker", "critical"].includes(item.severity) || item.status === "REOPENED");
-    const answer = await ask({ title: "Tạo phân tích nguyên nhân", confirmLabel: "Tạo", fields: [
-      { name: "defect_ids", label: "Mã lỗi cách nhau bởi dấu phẩy", required: true, initialValue: eligible.map((item) => item._id).join(",") },
-      { name: "problem_statement", label: "Mô tả vấn đề", required: true, multiline: true },
-      { name: "evidence", label: "Bằng chứng", required: true, multiline: true },
-      { name: "owner_id", label: "Phụ trách", required: true, options: [{ value: "", label: "Chọn thành viên" }, ...memberOptions] },
-    ] });
+    const eligible = defects.filter(
+      (item) => ["blocker", "critical"].includes(item.severity) || item.status === "REOPENED",
+    );
+    const answer = await ask({
+      title: "Tạo phân tích nguyên nhân",
+      confirmLabel: "Tạo",
+      fields: [
+        {
+          name: "defect_ids",
+          label: "Mã lỗi cách nhau bởi dấu phẩy",
+          required: true,
+          initialValue: eligible.map((item) => item._id).join(","),
+        },
+        { name: "problem_statement", label: "Mô tả vấn đề", required: true, multiline: true },
+        { name: "evidence", label: "Bằng chứng", required: true, multiline: true },
+        {
+          name: "owner_id",
+          label: "Phụ trách",
+          required: true,
+          options: [{ value: "", label: "Chọn thành viên" }, ...memberOptions],
+        },
+      ],
+    });
     if (!answer) return;
     try {
-      const value = await testingApi.createCausalAnalysis(project._id, { idempotency_key: crypto.randomUUID(), defect_ids: answer.defect_ids.split(",").map((item) => item.trim()).filter(Boolean), problem_statement: answer.problem_statement, evidence: [answer.evidence], root_causes: [], contributing_factors: [], five_whys: [], owner_id: answer.owner_id });
+      const value = await testingApi.createCausalAnalysis(project._id, {
+        idempotency_key: crypto.randomUUID(),
+        defect_ids: answer.defect_ids
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean),
+        problem_statement: answer.problem_statement,
+        evidence_refs: [answer.evidence],
+        owner_id: answer.owner_id,
+      });
       setSelected(value);
       await load();
-    } catch (reason) { setError(messageOf(reason)); }
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
   };
   const editAnalysis = async () => {
-    const rootCause = selected.root_causes?.[0] || {};
-    const answer = await ask({ title: "Cập nhật nguyên nhân", confirmLabel: "Lưu", fields: [
-      { name: "problem_statement", label: "Mô tả vấn đề", required: true, multiline: true, initialValue: selected.problem_statement },
-      { name: "category", label: "Nhóm nguyên nhân", options: ROOT_CAUSE_CATEGORIES.map((value) => ({ value, label: value })), initialValue: rootCause.category || rootCause.root_cause_category || "UNKNOWN" },
-      { name: "detail", label: "Nguyên nhân", required: true, multiline: true, initialValue: rootCause.detail || rootCause.hypothesis || "" },
-      { name: "contributing_factors", label: "Yếu tố đóng góp mỗi dòng một mục", multiline: true, initialValue: (selected.contributing_factors || []).map((item) => typeof item === "string" ? item : item.detail || JSON.stringify(item)).join("\n") },
-      { name: "five_whys", label: "Five whys mỗi dòng một mục", multiline: true, initialValue: (selected.five_whys || []).join("\n") },
-    ] });
+    const answer = await ask({
+      title: "Cập nhật phân tích",
+      confirmLabel: "Lưu",
+      fields: [
+        {
+          name: "problem_statement",
+          label: "Mô tả vấn đề",
+          required: true,
+          multiline: true,
+          initialValue: selected.problem_statement,
+        },
+        {
+          name: "evidence_refs",
+          label: "Bằng chứng mỗi dòng một mã",
+          required: true,
+          multiline: true,
+          initialValue: (selected.evidence_refs || []).join("\n"),
+        },
+        {
+          name: "owner_id",
+          label: "Phụ trách",
+          required: true,
+          options: [{ value: "", label: "Chọn thành viên" }, ...memberOptions],
+          initialValue: selected.owner_id,
+        },
+      ],
+    });
     if (!answer) return;
     try {
-      setSelected(await testingApi.updateCausalAnalysis(selected._id, { expected_revision: selected.revision, problem_statement: answer.problem_statement, root_causes: [{ category: answer.category, detail: answer.detail }], contributing_factors: lines(answer.contributing_factors), five_whys: lines(answer.five_whys).slice(0, 5) }));
+      setSelected(
+        await testingApi.updateCausalAnalysis(selected._id, {
+          expected_revision: selected.revision,
+          problem_statement: answer.problem_statement,
+          evidence_refs: lines(answer.evidence_refs),
+          owner_id: answer.owner_id,
+        }),
+      );
       setError("");
-    } catch (reason) { setError(messageOf(reason)); }
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
   };
-  const decideRootCause = async () => {
-    const answer = await ask({ title: "Quyết định nguyên nhân gốc", confirmLabel: "Ghi nhận", fields: [
-      { name: "decision", label: "Quyết định", options: [{ value: "APPROVE", label: "Xác nhận" }, { value: "REQUEST_CHANGES", label: "Yêu cầu chỉnh sửa" }] },
-      { name: "note", label: "Ghi chú", required: true, multiline: true },
-    ] });
+  const linkDefects = async () => {
+    const answer = await ask({
+      title: "Liên kết lỗi",
+      confirmLabel: "Liên kết",
+      fields: [
+        {
+          name: "defect_ids",
+          label: "Mã lỗi cách nhau bởi dấu phẩy",
+          required: true,
+          initialValue: selected.defect_ids?.join(",") || "",
+        },
+      ],
+    });
     if (!answer) return;
-    try { setSelected(await testingApi.approveCausalRootCause(selected._id, { expected_revision: selected.revision, ...answer })); } catch (reason) { setError(messageOf(reason)); }
+    try {
+      setSelected(
+        await testingApi.linkCausalAnalysisDefects(selected._id, {
+          expected_revision: selected.revision,
+          defect_ids: answer.defect_ids
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean),
+        }),
+      );
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
+  };
+  const addFiveWhy = async () => {
+    const answer = await ask({
+      title: "Thêm câu trả lời năm câu hỏi tại sao",
+      confirmLabel: "Thêm",
+      fields: [
+        {
+          name: "why",
+          label: `Lý do thứ ${(selected.five_whys?.length || 0) + 1}`,
+          required: true,
+          multiline: true,
+        },
+      ],
+    });
+    if (!answer) return;
+    try {
+      setSelected(
+        await testingApi.addCausalFiveWhy(selected._id, {
+          expected_revision: selected.revision,
+          why: answer.why,
+        }),
+      );
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
+  };
+  const recordRootCause = async () => {
+    const rootCause = selected.root_causes?.[0] || {};
+    const answer = await ask({
+      title: "Ghi nhận nguyên nhân gốc",
+      confirmLabel: "Ghi nhận",
+      fields: [
+        {
+          name: "category",
+          label: "Nhóm nguyên nhân",
+          options: ROOT_CAUSE_CATEGORIES.map((value) => ({ value, label: value })),
+          initialValue: rootCause.category || "UNKNOWN",
+        },
+        {
+          name: "detail",
+          label: "Nguyên nhân",
+          required: true,
+          multiline: true,
+          initialValue: rootCause.detail || "",
+        },
+        {
+          name: "contributing_factors",
+          label: "Yếu tố đóng góp mỗi dòng một mục",
+          multiline: true,
+          initialValue: (selected.contributing_factors || []).join("\n"),
+        },
+        {
+          name: "evidence_refs",
+          label: "Bằng chứng mỗi dòng một mã",
+          required: true,
+          multiline: true,
+          initialValue: (rootCause.evidence_refs || selected.evidence_refs || []).join("\n"),
+        },
+      ],
+    });
+    if (!answer) return;
+    try {
+      setSelected(
+        await testingApi.recordCausalRootCause(selected._id, {
+          expected_revision: selected.revision,
+          category: answer.category,
+          detail: answer.detail,
+          contributing_factors: lines(answer.contributing_factors),
+          evidence_refs: lines(answer.evidence_refs),
+        }),
+      );
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
   };
   const generateHypotheses = async () => {
+    setGeneratingHypotheses(true);
     try {
-      const value = await testingApi.generateCausalHypotheses(selected._id, { idempotency_key: crypto.randomUUID(), instruction: "Đề xuất dựa trên bằng chứng dự án" });
+      const value = await testingApi.generateCausalHypotheses(selected._id, {
+        idempotency_key: crypto.randomUUID(),
+        instruction: "Đề xuất dựa trên bằng chứng dự án",
+      });
       setHypotheses(value.suggestions || []);
       setError(value.status === "SUCCESS" ? "" : "AI chưa sẵn sàng và không tạo được giả thuyết");
-    } catch (reason) { setError(messageOf(reason)); }
+    } catch (reason) {
+      setError(messageOf(reason));
+    } finally {
+      setGeneratingHypotheses(false);
+    }
   };
   const applyHypothesis = async (item) => {
     try {
-      setSelected(await testingApi.updateCausalAnalysis(selected._id, { expected_revision: selected.revision, root_causes: [{ category: item.root_cause_category, detail: item.hypothesis }], contributing_factors: item.contributing_factors || [], five_whys: (item.five_whys || []).slice(0, 5) }));
+      let value = await testingApi.recordCausalRootCause(selected._id, {
+        expected_revision: selected.revision,
+        category: item.root_cause_category,
+        detail: item.hypothesis,
+        contributing_factors: item.contributing_factors || [],
+        evidence_refs: item.evidence_refs?.length ? item.evidence_refs : selected.evidence_refs,
+      });
+      for (const why of (item.five_whys || []).slice(0, 5 - (value.five_whys?.length || 0)))
+        value = await testingApi.addCausalFiveWhy(selected._id, {
+          expected_revision: value.revision,
+          why,
+        });
+      setSelected(value);
       setError("");
-    } catch (reason) { setError(messageOf(reason)); }
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
   };
-  const addAction = async () => {
-    const answer = await ask({ title: "Thêm hành động CAPA", confirmLabel: "Thêm", fields: [
-      { name: "action_type", label: "Loại", options: ["CORRECTIVE", "PREVENTIVE"].map((value) => ({ value, label: value })) },
-      { name: "title", label: "Tên hành động", required: true },
-      { name: "description", label: "Mô tả", required: true, multiline: true },
-      { name: "owner_id", label: "Phụ trách", required: true, options: [{ value: "", label: "Chọn thành viên" }, ...memberOptions] },
-      { name: "due_at", label: "Hạn", required: true, type: "datetime-local" },
-    ] });
+  const addAction = async (actionType) => {
+    const answer = await ask({
+      title: actionType === "CORRECTIVE" ? "Thêm hành động khắc phục" : "Thêm hành động phòng ngừa",
+      confirmLabel: "Thêm",
+      fields: [
+        { name: "title", label: "Tên hành động", required: true },
+        { name: "description", label: "Mô tả", required: true, multiline: true },
+        { name: "due_at", label: "Hạn", required: true, type: "datetime-local" },
+        { name: "evidence_refs", label: "Bằng chứng mỗi dòng một mã", multiline: true },
+      ],
+    });
     if (!answer) return;
-    try { await testingApi.createPreventionAction(selected._id, { ...answer, due_at: new Date(answer.due_at).toISOString(), evidence_refs: [] }); await refreshSelected(); } catch (reason) { setError(messageOf(reason)); }
+    try {
+      const payload = {
+        title: answer.title,
+        description: answer.description,
+        due_at: new Date(answer.due_at).toISOString(),
+        evidence_refs: lines(answer.evidence_refs),
+      };
+      await (actionType === "CORRECTIVE"
+        ? testingApi.createCorrectiveAction(selected._id, payload)
+        : testingApi.createPreventiveAction(selected._id, payload));
+      await refreshSelected();
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
   };
-  const advanceAnalysis = async () => {
-    const status = NEXT_STATUS[selected.status];
-    if (!status) return;
-    const answer = await ask({ title: `Chuyển phân tích sang ${status}`, confirmLabel: "Chuyển", fields: [{ name: "note", label: "Ghi chú", required: true, multiline: true }] });
+  const submitReview = async () => {
+    const answer = await ask({
+      title: "Gửi phân tích để rà soát",
+      confirmLabel: "Gửi",
+      fields: [{ name: "note", label: "Ghi chú", required: true, multiline: true }],
+    });
     if (!answer) return;
-    try { setSelected(await testingApi.transitionCausalAnalysis(selected._id, { expected_revision: selected.revision, status, note: answer.note })); } catch (reason) { setError(messageOf(reason)); }
+    try {
+      setSelected(
+        await testingApi.submitCausalAnalysis(selected._id, {
+          expected_revision: selected.revision,
+          note: answer.note,
+        }),
+      );
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
   };
-  return <Panel title="Phân tích nguyên nhân và CAPA" actions={can("causalanalysis.create") ? <button className="apple-button" type="button" onClick={create}>Tạo phân tích</button> : null}>
-    {dialog}{error && <div className="p-4"><ErrorState message={error} /></div>}
-    <DataTable items={items} empty="Chưa có phân tích nguyên nhân" columns={[{ key: "problem_statement", label: "Vấn đề" }, { key: "defect_ids", label: "Lỗi", render: (item) => item.defect_ids?.length || 0 }, { key: "status", label: "Trạng thái", render: (item) => <StatusPill value={item.status} /> }, { key: "action", label: "Thao tác", render: (item) => <button className="secondary-button" type="button" onClick={async () => { try { setSelected(await testingApi.getCausalAnalysis(item._id)); setHypotheses([]); } catch (reason) { setError(messageOf(reason)); } }}>Mở</button> }]} />
-    {selected && <div className="space-y-4 border-t border-border p-5">
-      <div className="flex flex-wrap justify-between gap-3"><div><p className="font-semibold">{selected.problem_statement}</p><p className="text-sm text-ink-muted">Nguyên nhân đã xác nhận {selected.root_cause_approved ? "Có" : "Chưa"}</p></div><div className="flex flex-wrap gap-2">{selected.status !== "CLOSED" && can("causalanalysis.update") && <><button className="secondary-button" type="button" onClick={editAnalysis}>Cập nhật nguyên nhân</button><button className="secondary-button" type="button" onClick={generateHypotheses}>AI đề xuất giả thuyết</button>{NEXT_STATUS[selected.status] && NEXT_STATUS[selected.status] !== "CLOSED" && <button className="secondary-button" type="button" onClick={advanceAnalysis}>Chuyển {NEXT_STATUS[selected.status]}</button>}</>}{NEXT_STATUS[selected.status] === "CLOSED" && can("causalanalysis.approve") && <button className="secondary-button" type="button" onClick={advanceAnalysis}>Đóng phân tích</button>}{selected.root_causes?.length > 0 && !selected.root_cause_approved && can("causalanalysis.approve") && <button className="apple-button" type="button" onClick={decideRootCause}>Xác nhận nguyên nhân</button>}{selected.status !== "CLOSED" && can("preventionaction.manage") && <button className="apple-button" type="button" onClick={addAction}>Thêm CAPA</button>}</div></div>
-      <DataTable items={selected.root_causes || []} empty="Chưa ghi nhận nguyên nhân" columns={[{ key: "category", label: "Nhóm" }, { key: "detail", label: "Nguyên nhân" }]} />
-      {hypotheses.length > 0 && <DataTable items={hypotheses} empty="Chưa có giả thuyết" columns={[{ key: "root_cause_category", label: "Nhóm" }, { key: "hypothesis", label: "Giả thuyết" }, { key: "confidence", label: "Tin cậy" }, { key: "action", label: "Thao tác", render: (item) => can("causalanalysis.update") ? <button className="secondary-button" type="button" onClick={() => applyHypothesis(item)}>Dùng làm bản nháp</button> : null }]} />}
-      <PreventiveActionTable items={selected.actions} canManage={can("preventionaction.manage")} onAdvance={async (item, status) => { const answer = await ask({ title: `Chuyển hành động sang ${status}`, confirmLabel: "Chuyển", fields: [{ name: "result", label: "Kết quả", required: !["IN_PROGRESS"].includes(status), multiline: true }] }); if (answer) { try { await testingApi.updatePreventionAction(item._id, { expected_revision: item.revision, status, result: answer.result || "Đang thực hiện" }); await refreshSelected(); } catch (reason) { setError(messageOf(reason)); } } }} />
-    </div>}
-  </Panel>;
+  const decideReview = async () => {
+    const answer = await ask({
+      title: "Phê duyệt phân tích nguyên nhân",
+      confirmLabel: "Ghi nhận",
+      fields: [
+        {
+          name: "decision",
+          label: "Quyết định",
+          options: [
+            { value: "APPROVE", label: "Phê duyệt" },
+            { value: "REQUEST_CHANGES", label: "Yêu cầu chỉnh sửa" },
+          ],
+        },
+        { name: "note", label: "Ghi chú", required: true, multiline: true },
+      ],
+    });
+    if (!answer) return;
+    try {
+      setSelected(
+        await testingApi.approveCausalAnalysis(selected._id, {
+          expected_revision: selected.revision,
+          ...answer,
+        }),
+      );
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
+  };
+  const reviewEffectiveness = async () => {
+    const answer = await ask({
+      title: "Đánh giá hiệu lực CAPA",
+      confirmLabel: "Ghi nhận",
+      fields: [
+        {
+          name: "decision",
+          label: "Kết quả",
+          options: [
+            { value: "EFFECTIVE", label: "Có hiệu lực" },
+            { value: "INEFFECTIVE", label: "Chưa có hiệu lực" },
+          ],
+        },
+        { name: "result", label: "Kết quả kiểm chứng", required: true, multiline: true },
+        {
+          name: "evidence_refs",
+          label: "Bằng chứng mỗi dòng một mã",
+          required: true,
+          multiline: true,
+        },
+        {
+          name: "reviewed_at",
+          label: "Thời điểm đánh giá",
+          required: true,
+          type: "datetime-local",
+        },
+      ],
+    });
+    if (!answer) return;
+    try {
+      setSelected(
+        await testingApi.reviewCausalEffectiveness(selected._id, {
+          expected_revision: selected.revision,
+          decision: answer.decision,
+          result: answer.result,
+          evidence_refs: lines(answer.evidence_refs),
+          reviewed_at: new Date(answer.reviewed_at).toISOString(),
+        }),
+      );
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
+  };
+  const closeAnalysis = async () => {
+    const answer = await ask({
+      title: "Đóng phân tích nguyên nhân",
+      confirmLabel: "Đóng",
+      fields: [{ name: "note", label: "Kết luận", required: true, multiline: true }],
+    });
+    if (!answer) return;
+    try {
+      setSelected(
+        await testingApi.closeCausalAnalysis(selected._id, {
+          expected_revision: selected.revision,
+          note: answer.note,
+        }),
+      );
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
+  };
+  return (
+    <Panel
+      title="Phân tích nguyên nhân và CAPA"
+      actions={
+        can("causalanalysis.create") ? (
+          <button className="apple-button" type="button" onClick={create}>
+            Tạo phân tích
+          </button>
+        ) : null
+      }
+    >
+      {dialog}
+      {error && (
+        <div className="p-4">
+          <ErrorState message={error} />
+        </div>
+      )}
+      <DataTable
+        items={candidates}
+        empty="Không có lỗi đạt điều kiện đề xuất RCA"
+        columns={[
+          { key: "problem_statement", label: "Ứng viên RCA" },
+          { key: "defect_ids", label: "Lỗi", render: (item) => item.defect_ids.join(", ") },
+          { key: "reason_codes", label: "Lý do", render: (item) => item.reason_codes.join(", ") },
+        ]}
+      />
+      <DataTable
+        items={items}
+        empty="Chưa có phân tích nguyên nhân"
+        columns={[
+          { key: "problem_statement", label: "Vấn đề" },
+          { key: "defect_ids", label: "Lỗi", render: (item) => item.defect_ids?.length || 0 },
+          {
+            key: "status",
+            label: "Trạng thái",
+            render: (item) => <StatusPill value={item.status} />,
+          },
+          {
+            key: "action",
+            label: "Thao tác",
+            render: (item) => (
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={async () => {
+                  try {
+                    setSelected(await testingApi.getCausalAnalysis(item._id));
+                    setHypotheses([]);
+                  } catch (reason) {
+                    setError(messageOf(reason));
+                  }
+                }}
+              >
+                Mở
+              </button>
+            ),
+          },
+        ]}
+      />
+      {selected && (
+        <div className="space-y-4 border-t border-border p-5">
+          <div className="flex flex-wrap justify-between gap-3">
+            <div>
+              <p className="font-semibold">{selected.problem_statement}</p>
+              <p className="text-sm text-ink-muted">
+                {selected.analysis_key} · <StatusPill value={selected.status} />
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {selected.status === "DRAFT" && can("causalanalysis.update") && (
+                <>
+                  <button className="secondary-button" type="button" onClick={editAnalysis}>
+                    Cập nhật
+                  </button>
+                  <button className="secondary-button" type="button" onClick={linkDefects}>
+                    Liên kết lỗi
+                  </button>
+                  {(selected.five_whys?.length || 0) < 5 && (
+                    <button className="secondary-button" type="button" onClick={addFiveWhy}>
+                      Thêm năm câu hỏi tại sao
+                    </button>
+                  )}
+                  <button className="secondary-button" type="button" onClick={recordRootCause}>
+                    Ghi nhận nguyên nhân
+                  </button>
+                  <button
+                    aria-busy={generatingHypotheses}
+                    className="secondary-button"
+                    disabled={generatingHypotheses}
+                    type="button"
+                    onClick={generateHypotheses}
+                  >
+                    {generatingHypotheses
+                      ? "AI đang phân tích nguyên nhân"
+                      : "AI đề xuất giả thuyết"}
+                  </button>
+                  <button className="apple-button" type="button" onClick={submitReview}>
+                    Gửi rà soát
+                  </button>
+                </>
+              )}
+              {selected.status === "IN_REVIEW" && can("causalanalysis.approve") && (
+                <button className="apple-button" type="button" onClick={decideReview}>
+                  Ra quyết định
+                </button>
+              )}
+              {["APPROVED", "ACTION_IN_PROGRESS"].includes(selected.status) &&
+                can("preventionaction.manage") && (
+                  <>
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      onClick={() => addAction("CORRECTIVE")}
+                    >
+                      Thêm hành động khắc phục
+                    </button>
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      onClick={() => addAction("PREVENTIVE")}
+                    >
+                      Thêm hành động phòng ngừa
+                    </button>
+                  </>
+                )}
+              {selected.status === "ACTION_IN_PROGRESS" && can("causalanalysis.update") && (
+                <button className="apple-button" type="button" onClick={reviewEffectiveness}>
+                  Đánh giá hiệu lực
+                </button>
+              )}
+              {selected.status === "EFFECTIVENESS_REVIEW" && can("causalanalysis.approve") && (
+                <button className="apple-button" type="button" onClick={closeAnalysis}>
+                  Đóng phân tích
+                </button>
+              )}
+            </div>
+          </div>
+          <DataTable
+            items={(selected.five_whys || []).map((why, index) => ({ sequence: index + 1, why }))}
+            empty="Chưa ghi nhận năm câu hỏi tại sao"
+            columns={[
+              { key: "sequence", label: "Lần" },
+              { key: "why", label: "Lý do" },
+            ]}
+          />
+          <DataTable
+            items={selected.root_causes || []}
+            empty="Chưa ghi nhận nguyên nhân"
+            columns={[
+              { key: "category", label: "Nhóm" },
+              { key: "detail", label: "Nguyên nhân" },
+            ]}
+          />
+          {hypotheses.length > 0 && (
+            <DataTable
+              items={hypotheses}
+              empty="Chưa có giả thuyết"
+              columns={[
+                { key: "root_cause_category", label: "Nhóm" },
+                { key: "hypothesis", label: "Giả thuyết" },
+                { key: "confidence", label: "Tin cậy" },
+                {
+                  key: "action",
+                  label: "Thao tác",
+                  render: (item) =>
+                    can("causalanalysis.update") ? (
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={() => applyHypothesis(item)}
+                      >
+                        Dùng làm bản nháp
+                      </button>
+                    ) : null,
+                },
+              ]}
+            />
+          )}
+          <PreventiveActionTable
+            items={selected.actions}
+            canManage={can("preventionaction.manage")}
+            onAssign={async (item) => {
+              const answer = await ask({
+                title: "Phân công hành động",
+                confirmLabel: "Phân công",
+                fields: [
+                  {
+                    name: "owner_id",
+                    label: "Phụ trách",
+                    required: true,
+                    options: [{ value: "", label: "Chọn thành viên" }, ...memberOptions],
+                    initialValue: item.owner_id || "",
+                  },
+                ],
+              });
+              if (answer) {
+                try {
+                  await testingApi.assignPreventionAction(item._id, {
+                    expected_revision: item.revision,
+                    owner_id: answer.owner_id,
+                  });
+                  await refreshSelected();
+                } catch (reason) {
+                  setError(messageOf(reason));
+                }
+              }
+            }}
+            onAdvance={async (item, status) => {
+              const answer = await ask({
+                title: `Chuyển hành động sang ${status}`,
+                confirmLabel: "Chuyển",
+                fields: [
+                  {
+                    name: "result",
+                    label: "Kết quả",
+                    required: !["IN_PROGRESS"].includes(status),
+                    multiline: true,
+                  },
+                ],
+              });
+              if (answer) {
+                try {
+                  await testingApi.updatePreventionAction(item._id, {
+                    expected_revision: item.revision,
+                    status,
+                    result: answer.result || "Đang thực hiện",
+                  });
+                  await refreshSelected();
+                } catch (reason) {
+                  setError(messageOf(reason));
+                }
+              }
+            }}
+          />
+        </div>
+      )}
+    </Panel>
+  );
 }

@@ -43,10 +43,7 @@ class TestCaseTemplateArchive(BaseModel):
 router = APIRouter(prefix="/kiem-thu", tags=["Mẫu ca kiểm thử"])
 
 
-@router.get(
-    "/du-an/{project_id}/mau-ca-kiem-thu",
-    openapi_extra={"x-function-ids": ["TPLT-01"]},
-)
+@router.get("/du-an/{project_id}/mau-ca-kiem-thu", openapi_extra={"x-function-ids": ["TPLT-01"]})
 async def list_templates(
     project_id: str,
     template_type: Literal["functional", "api", "rbac", "state", "bva"] | None = Query(
@@ -66,12 +63,11 @@ async def list_templates(
     return envelope(items)
 
 
-@router.get(
-    "/mau-ca-kiem-thu/{template_id}",
-    openapi_extra={"x-function-ids": ["TPLT-01"]},
-)
+@router.get("/mau-ca-kiem-thu/{template_id}", openapi_extra={"x-function-ids": ["TPLT-01"]})
 async def get_template(template_id: str, user: CurrentUser = Depends(get_current_user)):
-    item = await get_project_entity("test_case_templates", template_id, user, "testcase.template.read")
+    item = await get_project_entity(
+        "test_case_templates", template_id, user, "testcase.template.read"
+    )
     identities = await load_user_identities([item.get("created_by")])
     identity = identities.get(str(item.get("created_by")))
     item["created_by_label"] = identity.get("label") if identity else item.get("created_by")
@@ -84,9 +80,7 @@ async def get_template(template_id: str, user: CurrentUser = Depends(get_current
     openapi_extra={"x-function-ids": ["TPLT-02"]},
 )
 async def create_template(
-    project_id: str,
-    payload: TestCaseTemplateCreate,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, payload: TestCaseTemplateCreate, user: CurrentUser = Depends(get_current_user)
 ):
     await get_project(project_id, user, "testcase.template.manage")
     timestamp = now()
@@ -106,25 +100,26 @@ async def create_template(
         if getattr(error, "code", None) == 11000:
             raise HTTPException(status_code=409, detail={"code": "TEMPLATE_NAME_EXISTS"}) from error
         raise
-    await audit(user.id, "test_case_template_created", "TestCaseTemplate", template["_id"], project_id)
+    await audit(
+        user.id, "test_case_template_created", "TestCaseTemplate", template["_id"], project_id
+    )
     return envelope(template, revision=1)
 
 
-@router.patch(
-    "/mau-ca-kiem-thu/{template_id}",
-    openapi_extra={"x-function-ids": ["TPLT-02"]},
-)
+@router.patch("/mau-ca-kiem-thu/{template_id}", openapi_extra={"x-function-ids": ["TPLT-02"]})
 async def update_template(
-    template_id: str,
-    payload: TestCaseTemplatePatch,
-    user: CurrentUser = Depends(get_current_user),
+    template_id: str, payload: TestCaseTemplatePatch, user: CurrentUser = Depends(get_current_user)
 ):
     template = await get_project_entity(
         "test_case_templates", template_id, user, "testcase.template.manage"
     )
     if template.get("status") != "ACTIVE":
         raise HTTPException(status_code=409, detail={"code": "TEMPLATE_ARCHIVED"})
-    changes = {key: value for key, value in payload.model_dump().items() if key != "expected_revision" and value is not None}
+    changes = {
+        key: value
+        for key, value in payload.model_dump().items()
+        if key != "expected_revision" and value is not None
+    }
     updated = await database.value.test_case_templates.find_one_and_update(
         {
             "_id": template_id,
@@ -137,13 +132,18 @@ async def update_template(
     )
     if not updated:
         raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
-    await audit(user.id, "test_case_template_updated", "TestCaseTemplate", template_id, template["project_id"])
+    await audit(
+        user.id,
+        "test_case_template_updated",
+        "TestCaseTemplate",
+        template_id,
+        template["project_id"],
+    )
     return envelope(updated, revision=updated["revision"])
 
 
 @router.post(
-    "/mau-ca-kiem-thu/{template_id}/luu-tru",
-    openapi_extra={"x-function-ids": ["TPLT-03"]},
+    "/mau-ca-kiem-thu/{template_id}/luu-tru", openapi_extra={"x-function-ids": ["TPLT-03"]}
 )
 async def archive_template(
     template_id: str,
@@ -173,5 +173,12 @@ async def archive_template(
     )
     if not updated:
         raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
-    await audit(user.id, "test_case_template_archived", "TestCaseTemplate", template_id, template["project_id"], {"reason": payload.reason})
+    await audit(
+        user.id,
+        "test_case_template_archived",
+        "TestCaseTemplate",
+        template_id,
+        template["project_id"],
+        {"reason": payload.reason},
+    )
     return envelope(updated, revision=updated["revision"])

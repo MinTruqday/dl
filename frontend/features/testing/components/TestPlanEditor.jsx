@@ -1,6 +1,5 @@
 import { useState } from "react";
 
-
 const listFields = [
   ["scope_in", "Trong phạm vi"],
   ["scope_out", "Ngoài phạm vi"],
@@ -73,9 +72,21 @@ export default function TestPlanEditor({ projectId, strategies, onSave, onCancel
         event.preventDefault();
         setError("");
         try {
-          const payload = { project_id: projectId, ...value, strategy_version_id: value.strategy_version_id || null, release: "", release_id: null, build: "", build_id: null, environment_id: null };
-          for (const [key] of jsonFields) payload[key] = JSON.parse(value[`${key}_text`] ?? JSON.stringify(value[key]));
-          Object.keys(payload).filter((key) => key.endsWith("_text")).forEach((key) => delete payload[key]);
+          const payload = {
+            project_id: projectId,
+            ...value,
+            strategy_version_id: value.strategy_version_id || null,
+            release: "",
+            release_id: null,
+            build: "",
+            build_id: null,
+            environment_id: null,
+          };
+          for (const [key] of jsonFields)
+            payload[key] = JSON.parse(value[`${key}_text`] ?? JSON.stringify(value[key]));
+          Object.keys(payload)
+            .filter((key) => key.endsWith("_text"))
+            .forEach((key) => delete payload[key]);
           await onSave(payload);
         } catch (reason) {
           setError(reason.message || "Dữ liệu kế hoạch không hợp lệ");
@@ -86,47 +97,100 @@ export default function TestPlanEditor({ projectId, strategies, onSave, onCancel
       <div className="grid gap-4 md:grid-cols-2">
         <label className="field-label">
           Tên kế hoạch
-          <input className="apple-input mt-2" value={value.name} onChange={(event) => setField("name", event.target.value)} required />
+          <input
+            className="apple-input mt-2"
+            value={value.name}
+            onChange={(event) => setField("name", event.target.value)}
+            required
+          />
         </label>
         <label className="field-label">
           Phiên bản chiến lược đã phê duyệt
-          <select className="apple-input mt-2" value={value.strategy_version_id} onChange={(event) => setField("strategy_version_id", event.target.value)}>
+          <select
+            className="apple-input mt-2"
+            value={value.strategy_version_id}
+            onChange={(event) => setField("strategy_version_id", event.target.value)}
+          >
             <option value="">Tự động dùng chiến lược đang áp dụng</option>
-            {strategies.filter((item) => item.status === "APPROVED").map((item) => <option key={item._id} value={item._id}>{item.key} phiên bản {item.version}</option>)}
+            {strategies
+              .filter((item) => item.status === "APPROVED")
+              .map((item) => (
+                <option key={item._id} value={item._id}>
+                  {item.key} phiên bản {item.version}
+                </option>
+              ))}
           </select>
         </label>
         <label className="field-label">
           Cấp kiểm thử
-          <input className="apple-input mt-2" value={value.test_level} onChange={(event) => setField("test_level", event.target.value)} required />
+          <input
+            className="apple-input mt-2"
+            value={value.test_level}
+            onChange={(event) => setField("test_level", event.target.value)}
+            required
+          />
         </label>
         <label className="field-label">
           Môi trường mặc định
-          <input className="apple-input mt-2" value={value.environment} onChange={(event) => setField("environment", event.target.value)} required />
+          <input
+            className="apple-input mt-2"
+            value={value.environment}
+            onChange={(event) => setField("environment", event.target.value)}
+            required
+          />
         </label>
         <label className="field-label md:col-span-2">
           Mục tiêu
-          <textarea className="apple-input mt-2 min-h-24" value={value.objective} onChange={(event) => setField("objective", event.target.value)} />
+          <textarea
+            className="apple-input mt-2 min-h-24"
+            value={value.objective}
+            onChange={(event) => setField("objective", event.target.value)}
+          />
         </label>
         <label className="field-label md:col-span-2">
           Cách tiếp cận kiểm thử
-          <textarea className="apple-input mt-2 min-h-24" value={value.test_approach} onChange={(event) => setField("test_approach", event.target.value)} />
+          <textarea
+            className="apple-input mt-2 min-h-24"
+            value={value.test_approach}
+            onChange={(event) => setField("test_approach", event.target.value)}
+          />
         </label>
         {listFields.map(([key, label]) => (
           <label className="field-label" key={key}>
             {label} mỗi dòng một giá trị
-            <textarea className="apple-input mt-2 min-h-24" value={(value[key] || []).join("\n")} onChange={(event) => setField(key, event.target.value.split("\n").map((item) => item.trim()).filter(Boolean))} />
+            <textarea
+              className="apple-input mt-2 min-h-24"
+              value={(value[key] || []).join("\n")}
+              onChange={(event) =>
+                setField(
+                  key,
+                  event.target.value
+                    .split("\n")
+                    .map((item) => item.trim())
+                    .filter(Boolean),
+                )
+              }
+            />
           </label>
         ))}
         {jsonFields.map(([key, label]) => (
           <label className="field-label" key={key}>
             {label} dạng JSON
-            <textarea className="apple-input mt-2 min-h-32 font-mono text-xs" value={value[`${key}_text`] ?? JSON.stringify(value[key], null, 2)} onChange={(event) => setField(`${key}_text`, event.target.value)} />
+            <textarea
+              className="apple-input mt-2 min-h-32 font-mono text-xs"
+              value={value[`${key}_text`] ?? JSON.stringify(value[key], null, 2)}
+              onChange={(event) => setField(`${key}_text`, event.target.value)}
+            />
           </label>
         ))}
       </div>
       <div className="flex justify-end gap-3">
-        <button className="secondary-button" type="button" onClick={onCancel}>Hủy</button>
-        <button className="apple-button" type="submit">Lưu kế hoạch</button>
+        <button className="secondary-button" type="button" onClick={onCancel}>
+          Hủy
+        </button>
+        <button className="apple-button" type="submit">
+          Lưu kế hoạch
+        </button>
       </div>
     </form>
   );

@@ -1,6 +1,9 @@
 FROM node:22-slim AS newman
 
-RUN npm install --global newman@6.2.1 \
+RUN npm config set fetch-retries 5 \
+    && npm config set fetch-retry-mintimeout 20000 \
+    && npm config set fetch-retry-maxtimeout 120000 \
+    && npm install --global newman@6.2.1 \
     && npm cache clean --force
 
 FROM python:3.12-slim

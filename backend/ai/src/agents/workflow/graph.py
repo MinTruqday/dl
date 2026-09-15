@@ -9,55 +9,17 @@ Veriq Orchestration Graph configuring the state machine nodes, edges, and condit
 </contract>
 """
 
-import asyncio
-
 import langchain
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.prompts import PromptTemplate
 from langgraph.graph import END, StateGraph
 from loguru import logger
-from src.agents.memory.management import memory_manager
 
-from src.services.knowledge import knowledge_service
-from src.utils.processing import extract_text_from_base64
 from src.agents.workflow.state import AgentState
-
 from src.core.infrastructure.configuration import settings
-
-nli_model = None
-reranker = None
-_nli_model_initialized = False
-_reranker_initialized = False
-_model_initialization_lock = asyncio.Lock()
-
-
-async def _get_cross_encoder(kind: str):
-    global nli_model, reranker, _nli_model_initialized, _reranker_initialized
-
-    initialized = _nli_model_initialized if kind == "nli" else _reranker_initialized
-    if initialized:
-        return nli_model if kind == "nli" else reranker
-
-    async with _model_initialization_lock:
-        initialized = _nli_model_initialized if kind == "nli" else _reranker_initialized
-        if initialized:
-            return nli_model if kind == "nli" else reranker
-        try:
-            from sentence_transformers import CrossEncoder
-
-            model_name = settings.NLI_MODEL_NAME if kind == "nli" else settings.RERANKER_MODEL
-            model = await asyncio.to_thread(CrossEncoder, model_name)
-        except Exception:
-            logger.exception("Cross encoder model loading error")
-            model = None
-        if kind == "nli":
-            nli_model = model
-            _nli_model_initialized = True
-        else:
-            reranker = model
-            _reranker_initialized = True
-        return model
-
+from src.services.knowledge import knowledge_service
+from src.utils.model_provider import auxiliary_client
+from src.utils.processing import extract_text_from_base64
 
 try:
     redis_url = settings.REDIS_URI
@@ -74,8 +36,8 @@ llm = create_chat_model()
 
 llm_generate = llm.with_config({"tags": ["final_generator"]})
 
-from src.schemas.routing import ContextQuery, GraphRoute, RetrievalStrategy, QueryOptimization
 from src.schemas.evaluation import DocumentGrade
+from src.schemas.routing import ContextQuery, GraphRoute, QueryOptimization, RetrievalStrategy
 
 
 async def contextualize_question(state: AgentState):
@@ -210,20 +172,16 @@ async def retrieve_db(state: AgentState):
             logger.exception("Vector similarity search error")
 
     if all_raw_documents:
-        reranker_model = await _get_cross_encoder("reranker")
-        if reranker_model:
-            try:
-                pairs = [[doc["_query"], doc.get("text", "")] for doc in all_raw_documents]
-                scores = await asyncio.to_thread(reranker_model.predict, pairs)
-                scored_documents = list(zip(all_raw_documents, scores))
-                scored_documents.sort(key=lambda x: x[1], reverse=True)
-                top_documents = _lost_in_the_middle_reorder(
-                    [doc for doc, score in scored_documents[:6]]
-                )[:3]
-            except Exception:
-                logger.exception("Search result reordering error via reranker model")
-                top_documents = all_raw_documents[:3]
-        else:
+        try:
+            pairs = [[doc["_query"], doc.get("text", "")] for doc in all_raw_documents]
+            scores = await auxiliary_client.rerank(pairs)
+            scored_documents = list(zip(all_raw_documents, scores))
+            scored_documents.sort(key=lambda x: x[1], reverse=True)
+            top_documents = _lost_in_the_middle_reorder(
+                [doc for doc, score in scored_documents[:6]]
+            )[:3]
+        except Exception:
+            logger.exception("Search result reordering error via reranker model")
             top_documents = all_raw_documents[:3]
 
         for doc in top_documents:
@@ -390,8 +348,6 @@ async def grade_generation(state: AgentState):
         return {"hallucination_pass": "yes"}
 
     try:
-        import asyncio
-
         from src.agents.react.reasoning import reasoner
 
         documents_list = [{"text": d, "metadata": {"title": "Source"}} for d in documents]
@@ -399,13 +355,10 @@ async def grade_generation(state: AgentState):
 
         is_hallucination = eval_res.get("should_retry", False)
 
-        nli_cross_encoder = await _get_cross_encoder("nli")
-        if not is_hallucination and nli_cross_encoder:
+        if not is_hallucination:
             documents_str = "".join(documents)[:1500]
-            scores = await asyncio.to_thread(
-                nli_cross_encoder.predict, [[documents_str, generation]]
-            )
-            if scores[0][0] > scores[0][1]:
+            entailment_score = await auxiliary_client.entailment(documents_str, generation)
+            if entailment_score < 0.5:
                 is_hallucination = True
 
         return {"hallucination_pass": "no" if is_hallucination else "yes"}

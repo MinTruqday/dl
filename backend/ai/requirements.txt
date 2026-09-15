@@ -10,8 +10,6 @@ langgraph
 langgraph-checkpoint-mongodb
 langchain-core
 langchain-community
-transformers>=5.5.0,<6.0.0
-sentence-transformers>=5.2.0,<6.0.0
 qdrant-client==1.9.2
 tavily-python==0.3.1
 python-multipart==0.0.9

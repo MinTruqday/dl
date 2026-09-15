@@ -1,15 +1,13 @@
 import re
 
-import httpx
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope, get_project, load_user_identities, now
 from src.core.database import database
-from src.core.configuration import settings
 from src.domain.schemas import ProjectQuestionInput, SearchInput
+from src.services.design_assistance import ai_contract_metadata, request_design_assistance
 from src.services.project_knowledge import search_project_with_status
-
 
 router = APIRouter(prefix="/kiem-thu", tags=["Phân tích kiểm thử"])
 
@@ -37,12 +35,22 @@ async def search_project(
             "project_id": project_id,
             "$or": [{field: {"$regex": pattern, "$options": "i"}} for field in fields],
         }
-        rows = await database.value[collection].find(query).sort("updated_at", -1).limit(per_source).to_list(per_source)
+        rows = (
+            await database.value[collection]
+            .find(query)
+            .sort("updated_at", -1)
+            .limit(per_source)
+            .to_list(per_source)
+        )
         items.extend(
             {
                 "artifact_type": artifact_type,
                 "artifact_id": row["_id"],
-                "title": row.get("title") or row.get("name") or row.get("defect_key") or row.get("requirement_key") or row.get("test_case_key"),
+                "title": row.get("title")
+                or row.get("name")
+                or row.get("defect_key")
+                or row.get("requirement_key")
+                or row.get("test_case_key"),
                 "status": row.get("status"),
                 "project_id": project_id,
             }
@@ -51,15 +59,30 @@ async def search_project(
     return envelope({"items": items[:limit], "query": q, "project_id": project_id})
 
 
-@router.get("/du-an/{project_id}/tong-quan", openapi_extra={"x-function-ids": ["PRJ-03", "RPT-01", "RPT-02"]})
+@router.get(
+    "/du-an/{project_id}/tong-quan",
+    openapi_extra={"x-function-ids": ["PRJ-03", "RPT-01", "RPT-02"]},
+)
 async def dashboard(project_id: str, user: CurrentUser = Depends(get_current_user)):
     await get_project(project_id, user, "analytics.read")
-    requirements = await database.value.requirements.count_documents({"project_id": project_id, "status": "BASELINED"})
-    active_tests = await database.value.test_cases.count_documents({"project_id": project_id, "status": "ACTIVE"})
-    stale_tests = await database.value.test_cases.count_documents({"project_id": project_id, "status": "NEEDS_UPDATE"})
-    pending_proposals = await database.value.maintenance_proposals.count_documents({"project_id": project_id, "status": "PENDING"})
-    current_runs = await database.value.test_runs.count_documents({"project_id": project_id, "status": {"$in": ["READY", "IN_PROGRESS"]}})
-    open_defects = await database.value.defects.count_documents({"project_id": project_id, "status": {"$nin": ["CLOSED", "REJECTED", "DUPLICATE"]}})
+    requirements = await database.value.requirements.count_documents(
+        {"project_id": project_id, "status": "BASELINED"}
+    )
+    active_tests = await database.value.test_cases.count_documents(
+        {"project_id": project_id, "status": "ACTIVE"}
+    )
+    stale_tests = await database.value.test_cases.count_documents(
+        {"project_id": project_id, "status": "NEEDS_UPDATE"}
+    )
+    pending_proposals = await database.value.maintenance_proposals.count_documents(
+        {"project_id": project_id, "status": "PENDING"}
+    )
+    current_runs = await database.value.test_runs.count_documents(
+        {"project_id": project_id, "status": {"$in": ["READY", "IN_PROGRESS"]}}
+    )
+    open_defects = await database.value.defects.count_documents(
+        {"project_id": project_id, "status": {"$nin": ["CLOSED", "REJECTED", "DUPLICATE"]}}
+    )
     defect_severity_rows = await database.value.defects.aggregate(
         [
             {
@@ -73,8 +96,7 @@ async def dashboard(project_id: str, user: CurrentUser = Depends(get_current_use
     ).to_list(20)
     open_defects_by_severity = {
         severity: next(
-            (item["count"] for item in defect_severity_rows if item["_id"] == severity),
-            0,
+            (item["count"] for item in defect_severity_rows if item["_id"] == severity), 0
         )
         for severity in ("blocker", "critical", "major", "minor", "trivial")
     }
@@ -105,8 +127,14 @@ async def dashboard(project_id: str, user: CurrentUser = Depends(get_current_use
         {"project_id": project_id, "status": "REVIEW_READY"}
     )
     coverage = await coverage_snapshot(project_id)
-    recent_changes = await database.value.requirement_change_sets.find({"project_id": project_id}).sort("created_at", -1).to_list(10)
-    requirement_ids = [item.get("requirement_id") for item in recent_changes if item.get("requirement_id")]
+    recent_changes = (
+        await database.value.requirement_change_sets.find({"project_id": project_id})
+        .sort("created_at", -1)
+        .to_list(10)
+    )
+    requirement_ids = [
+        item.get("requirement_id") for item in recent_changes if item.get("requirement_id")
+    ]
     recent_requirements = await database.value.requirements.find(
         {"project_id": project_id, "_id": {"$in": requirement_ids}},
         {"_id": 1, "requirement_key": 1, "title": 1},
@@ -116,18 +144,34 @@ async def dashboard(project_id: str, user: CurrentUser = Depends(get_current_use
         for item in recent_requirements
     }
     for item in recent_changes:
-        item["requirement_label"] = recent_requirement_labels.get(item.get("requirement_id")) or item.get("requirement_id")
-    return envelope({"requirements": requirements, "active_tests": active_tests, "tests_needing_update": stale_tests, "pending_proposals": pending_proposals, "current_runs": current_runs, "open_defects": open_defects, "open_defects_by_severity": open_defects_by_severity, "latest_run": latest_run_summary, "changes_waiting_impact": changes_waiting_impact, **coverage, "recent_changes": recent_changes})
+        item["requirement_label"] = recent_requirement_labels.get(
+            item.get("requirement_id")
+        ) or item.get("requirement_id")
+    return envelope(
+        {
+            "requirements": requirements,
+            "active_tests": active_tests,
+            "tests_needing_update": stale_tests,
+            "pending_proposals": pending_proposals,
+            "current_runs": current_runs,
+            "open_defects": open_defects,
+            "open_defects_by_severity": open_defects_by_severity,
+            "latest_run": latest_run_summary,
+            "changes_waiting_impact": changes_waiting_impact,
+            **coverage,
+            "recent_changes": recent_changes,
+        }
+    )
 
 
 @router.post("/du-an/{project_id}/tri-thuc/tim-kiem")
 async def search_knowledge(
-    project_id: str,
-    payload: SearchInput,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, payload: SearchInput, user: CurrentUser = Depends(get_current_user)
 ):
     project = await get_project(project_id, user, "knowledge.read")
-    dense_result = await search_project_with_status(project_id, payload.query, payload.artifact_types, payload.limit)
+    dense_result = await search_project_with_status(
+        project_id, payload.query, payload.artifact_types, payload.limit
+    )
     dense = dense_result["items"]
     pattern = re.escape(payload.query)
     requested = set(payload.artifact_types)
@@ -151,24 +195,72 @@ async def search_knowledge(
         }
         if artifact_type == "requirement_document":
             source_query["status"] = {"$ne": "ARCHIVED"}
-        documents = await database.value[collection].find(source_query).limit(payload.limit).to_list(payload.limit)
+        documents = (
+            await database.value[collection]
+            .find(source_query)
+            .limit(payload.limit)
+            .to_list(payload.limit)
+        )
         for item in documents:
             authority = item.get("authority") or (
-                "baseline" if item.get("status") == "BASELINED" else "draft"
+                "APPROVED_SOURCE" if item.get("status") == "BASELINED" else "DRAFT"
             )
-            results.append({"artifact_type": artifact_type, "artifact_id": item.get("requirement_id") or item.get("test_case_id") or item["_id"], "artifact_version_id": item["_id"], "title": item.get("title") or item.get("name") or item.get("filename"), "text": str(item.get(text_field, ""))[:1000], "status": item.get("status"), "authority": authority, "source_type": item.get("source_type"), "owner_id": item.get("owner_id"), "module": item.get("module"), "component": item.get("component"), "product_area": item.get("product_area"), "release_id": item.get("release_id"), "external_source_id": item.get("external_source_id"), "approval_status": item.get("approval_status"), "approved_by": item.get("approved_by"), "approved_at": item.get("approved_at"), "source_version": item.get("source_version"), "effective_from": item.get("effective_from"), "tags": item.get("tags", []), "project_id": project_id, "score": lexical_score(payload.query, str(item.get(text_field, "")) + " " + str(item.get("title", "")) + " " + str(item.get("filename", "")))})
+            results.append(
+                {
+                    "artifact_type": artifact_type,
+                    "artifact_id": item.get("requirement_id")
+                    or item.get("test_case_id")
+                    or item["_id"],
+                    "artifact_version_id": item["_id"],
+                    "title": item.get("title") or item.get("name") or item.get("filename"),
+                    "text": str(item.get(text_field, ""))[:1000],
+                    "status": item.get("status"),
+                    "authority": authority,
+                    "source_type": item.get("source_type"),
+                    "owner_id": item.get("owner_id"),
+                    "module": item.get("module"),
+                    "component": item.get("component"),
+                    "product_area": item.get("product_area"),
+                    "release_id": item.get("release_id"),
+                    "external_source_id": item.get("external_source_id"),
+                    "approval_status": item.get("approval_status"),
+                    "approved_by": item.get("approved_by"),
+                    "approved_at": item.get("approved_at"),
+                    "source_version": item.get("source_version"),
+                    "effective_from": item.get("effective_from"),
+                    "tags": item.get("tags", []),
+                    "project_id": project_id,
+                    "score": lexical_score(
+                        payload.query,
+                        str(item.get(text_field, ""))
+                        + " "
+                        + str(item.get("title", ""))
+                        + " "
+                        + str(item.get("filename", "")),
+                    ),
+                }
+            )
     by_version = {item.get("artifact_version_id"): item for item in results}
     for item in dense:
         version_id = item.get("artifact_version_id")
         if version_id in by_version:
-            by_version[version_id]["score"] = round(0.45 * by_version[version_id]["score"] + 0.55 * item["score"], 4)
+            by_version[version_id]["score"] = round(
+                0.45 * by_version[version_id]["score"] + 0.55 * item["score"], 4
+            )
             by_version[version_id]["retrieval_source"] = "hybrid_fusion"
         else:
             by_version[version_id] = item
     results = list(by_version.values())
     authority_order = (project.get("settings") or {}).get(
         "knowledge_authority_order",
-        ["APPROVED_SOURCE", "CONTROLLED_SOURCE", "PROJECT_REFERENCE", "SUPPLEMENTAL", "DRAFT", "UNVERIFIED"],
+        [
+            "APPROVED_SOURCE",
+            "CONTROLLED_SOURCE",
+            "PROJECT_REFERENCE",
+            "SUPPLEMENTAL",
+            "DRAFT",
+            "UNVERIFIED",
+        ],
     )
     authority_rank = {value: index for index, value in enumerate(authority_order)}
     results.sort(
@@ -177,36 +269,84 @@ async def search_knowledge(
             -item.get("score", 0),
         )
     )
-    return envelope({"items": results[: payload.limit], "filters": {"project_id": project_id, "artifact_types": list(requested)}, "retrieval_version": "project-hybrid-knowledge-v1", "degraded_mode": dense_result["degraded_mode"], "fallback": dense_result["degraded_mode"] != "NORMAL", "error_code": dense_result["error_code"]}, degraded_mode=dense_result["degraded_mode"] if dense_result["degraded_mode"] != "NORMAL" else None)
+    return envelope(
+        {
+            "items": results[: payload.limit],
+            "filters": {"project_id": project_id, "artifact_types": list(requested)},
+            "retrieval_version": "project-hybrid-knowledge-v1",
+            "degraded_mode": dense_result["degraded_mode"],
+            "fallback": dense_result["degraded_mode"] != "NORMAL",
+            "error_code": dense_result["error_code"],
+        },
+        degraded_mode=dense_result["degraded_mode"]
+        if dense_result["degraded_mode"] != "NORMAL"
+        else None,
+    )
 
 
 @router.post("/du-an/{project_id}/ai/hoi-dap")
 async def ask_project(
-    project_id: str,
-    payload: ProjectQuestionInput,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, payload: ProjectQuestionInput, user: CurrentUser = Depends(get_current_user)
 ):
     await get_project(project_id, user, "ai.ask_project")
     await get_project(project_id, user, "knowledge.read")
-    search_result = await search_knowledge(project_id, SearchInput(query=payload.question, artifact_types=payload.artifact_types, limit=payload.evidence_limit), user)
+    search_result = await search_knowledge(
+        project_id,
+        SearchInput(
+            query=payload.question,
+            artifact_types=payload.artifact_types,
+            limit=payload.evidence_limit,
+        ),
+        user,
+    )
     evidence = search_result["data"]["items"]
     if not evidence:
-        return envelope({"answer": "Không có đủ bằng chứng trong dự án để trả lời câu hỏi này", "evidence": [], "confidence": 0, "warnings": ["PROJECT_EVIDENCE_NOT_FOUND"], "model": {"provider": "none", "retrieval_version": search_result["data"]["retrieval_version"]}})
-    request = {
-        "capability": "project_question",
-        "project_id": project_id,
-        "instruction": payload.question,
-        "evidence": evidence,
-    }
-    try:
-        async with httpx.AsyncClient(timeout=120) as client:
-            response = await client.post(f"{settings.AI_URL.rstrip('/')}/suy-luan/noi-bo/kiem-thu/ho-tro", headers={"X-Internal-Token": settings.SECRET_KEY}, json=request)
-            response.raise_for_status()
-            result = response.json()
-    except httpx.HTTPError as error:
-        raise HTTPException(status_code=503, detail={"code": "AI_PROVIDER_UNAVAILABLE", "retryable": True}) from error
-    await database.value.ai_request_audit.insert_one({"_id": f"ASK-{search_result['meta']['trace_id']}", "project_id": project_id, "capability": "project_question", "requested_by": user.id, "evidence_refs": result.get("evidence_refs", []), "model": result.get("model", {}), "status": result.get("status"), "created_at": now()})
-    return envelope({"answer": result.get("answer") or "Không có câu trả lời có căn cứ", "evidence": evidence, "confidence": result.get("confidence", 0), "warnings": result.get("warnings", []), "model": result.get("model", {}), "reason_codes": result.get("reason_codes", [])}, status=result.get("status", "SUCCESS"), degraded_mode=result.get("degraded_mode"))
+        missing = ai_contract_metadata(
+            {
+                "capability": "project_question",
+                "status": "DEGRADED",
+                "degraded_mode": "DEGRADED_KNOWLEDGE",
+                "provider": "none",
+                "model": {
+                    "provider": "none",
+                    "model": "none",
+                    "retrieval_version": search_result["data"]["retrieval_version"],
+                },
+                "warnings": ["PROJECT_EVIDENCE_NOT_FOUND"],
+                "reason_codes": ["PROJECT_EVIDENCE_NOT_FOUND"],
+            }
+        )
+        return envelope(
+            {
+                "answer": "Không có đủ bằng chứng trong dự án để trả lời câu hỏi này",
+                "evidence": [],
+                **missing,
+            },
+            status=missing["status"],
+            degraded_mode=missing["degraded_mode"],
+        )
+    result = await request_design_assistance(
+        "project_question", project_id, payload.question, evidence
+    )
+    contract = ai_contract_metadata(result)
+    await database.value.ai_request_audit.insert_one(
+        {
+            "_id": f"ASK-{search_result['meta']['trace_id']}",
+            "project_id": project_id,
+            "requested_by": user.id,
+            **contract,
+            "created_at": now(),
+        }
+    )
+    return envelope(
+        {
+            "answer": result.get("answer") or "Không có câu trả lời có căn cứ",
+            "evidence": evidence,
+            **contract,
+        },
+        status=contract["status"],
+        degraded_mode=contract["degraded_mode"],
+    )
 
 
 @router.get("/du-an/{project_id}/nhat-ky", openapi_extra={"x-function-ids": ["AUD-01"]})
@@ -239,7 +379,9 @@ async def project_audit(
 async def maintenance_analytics(project_id: str, user: CurrentUser = Depends(get_current_user)):
     await get_project(project_id, user, "analytics.read")
     impact_count = await database.value.impact_analyses.count_documents({"project_id": project_id})
-    stale_count = await database.value.test_cases.count_documents({"project_id": project_id, "status": "NEEDS_UPDATE"})
+    stale_count = await database.value.test_cases.count_documents(
+        {"project_id": project_id, "status": "NEEDS_UPDATE"}
+    )
     return envelope({"impact_analysis_count": impact_count, "tests_stale": stale_count})
 
 
@@ -251,18 +393,18 @@ async def ai_analytics(project_id: str, user: CurrentUser = Depends(get_current_
         {"$group": {"_id": "$status", "count": {"$sum": 1}}},
     ]
     proposal_status = await database.value.maintenance_proposals.aggregate(pipeline).to_list(100)
-    accepted = sum(item["count"] for item in proposal_status if item["_id"] in {"ACCEPTED", "EDITED_ACCEPTED"})
+    accepted = sum(
+        item["count"] for item in proposal_status if item["_id"] in {"ACCEPTED", "EDITED_ACCEPTED"}
+    )
     reviewed = sum(item["count"] for item in proposal_status if item["_id"] != "PENDING")
     impact_rows = await database.value.impact_analyses.find(
-        {"project_id": project_id},
-        {"ai_result": 1, "review_overrides": 1, "model_version": 1},
+        {"project_id": project_id}, {"ai_result": 1, "review_overrides": 1, "model_version": 1}
     ).to_list(10000)
     measured = [item for item in impact_rows if isinstance(item.get("ai_result"), dict)]
     degraded = sum(
         1
         for item in measured
-        if item["ai_result"].get("status") != "SUCCESS"
-        or item["ai_result"].get("degraded_mode")
+        if item["ai_result"].get("status") != "SUCCESS" or item["ai_result"].get("degraded_mode")
     )
     latencies = [
         item["ai_result"].get("latency_ms")
@@ -326,9 +468,9 @@ async def execution_report(
     ).to_list(20)
     run_status_rows = {}
     for item in runs:
-        run_status_rows[item.get("status", "UNKNOWN")] = run_status_rows.get(
-            item.get("status", "UNKNOWN"), 0
-        ) + 1
+        run_status_rows[item.get("status", "UNKNOWN")] = (
+            run_status_rows.get(item.get("status", "UNKNOWN"), 0) + 1
+        )
     result_counts = {item["_id"]: item["count"] for item in result_rows}
     terminal_count = sum(
         result_counts.get(status, 0)
@@ -343,7 +485,14 @@ async def execution_report(
             "pass_rate": round(result_counts.get("PASS", 0) / terminal_count, 4)
             if terminal_count
             else None,
-            "scope": {"release": release or None, "release_id": release_id or None, "environment": environment or None, "environment_id": environment_id or None, "build": build or None, "build_id": build_id or None},
+            "scope": {
+                "release": release or None,
+                "release_id": release_id or None,
+                "environment": environment or None,
+                "environment_id": environment_id or None,
+                "build": build or None,
+                "build_id": build_id or None,
+            },
         }
     )
 
@@ -396,13 +545,22 @@ async def defect_report(
         {
             "defect_count": len(defects),
             "open_count": sum(
-                count for status_value, count in status_counts.items() if status_value not in terminal_statuses
+                count
+                for status_value, count in status_counts.items()
+                if status_value not in terminal_statuses
             ),
             "status_counts": status_counts,
             "severity_counts": severity_counts,
             "reopened_count": reopened_count,
             "average_open_age_days": round(sum(open_ages) / len(open_ages), 2) if open_ages else 0,
-            "scope": {"release": release or None, "release_id": release_id or None, "environment": environment or None, "environment_id": environment_id or None, "build": build or None, "build_id": build_id or None},
+            "scope": {
+                "release": release or None,
+                "release_id": release_id or None,
+                "environment": environment or None,
+                "environment_id": environment_id or None,
+                "build": build or None,
+                "build_id": build_id or None,
+            },
         }
     )
 
@@ -422,21 +580,52 @@ async def project_activity(
         "project_invitation_cancelled",
         "project_invitation_resent",
     }
-    events = await database.value.audit_events.find(
-        {"project_id": project_id, "action": {"$nin": sorted(excluded_actions)}},
-        {"action": 1, "entity_type": 1, "entity_id": 1, "created_at": 1},
-    ).sort("created_at", -1).to_list(limit)
+    events = (
+        await database.value.audit_events.find(
+            {"project_id": project_id, "action": {"$nin": sorted(excluded_actions)}},
+            {"action": 1, "entity_type": 1, "entity_id": 1, "created_at": 1},
+        )
+        .sort("created_at", -1)
+        .to_list(limit)
+    )
     return envelope(events)
 
 
 async def coverage_snapshot(project_id):
-    requirements = await database.value.requirements.find({"project_id": project_id, "status": "BASELINED"}).to_list(10000)
+    requirements = await database.value.requirements.find(
+        {"project_id": project_id, "status": "BASELINED"}
+    ).to_list(10000)
     requirement_versions = {item["current_version_id"] for item in requirements}
-    criteria = await database.value.acceptance_criteria.find({"project_id": project_id, "requirement_version_id": {"$in": list(requirement_versions)}, "status": {"$ne": "obsolete"}}).to_list(20000)
-    links = await database.value.trace_links.find({"project_id": project_id, "status": "CONFIRMED"}).to_list(50000)
-    covered_requirements = {item["source_id"] for item in links if item["source_type"] == "requirement_version"}
-    covered_criteria = {item["source_id"] for item in links if item["source_type"] == "acceptance_criterion"}
-    return {"requirement_coverage": percentage(len(requirement_versions & covered_requirements), len(requirement_versions)), "acceptance_criterion_coverage": percentage(len({item["_id"] for item in criteria} & covered_criteria), len(criteria)), "unlinked_tests": await database.value.test_cases.count_documents({"project_id": project_id, "current_version_id": {"$nin": [item["target_id"] for item in links]}})}
+    criteria = await database.value.acceptance_criteria.find(
+        {
+            "project_id": project_id,
+            "requirement_version_id": {"$in": list(requirement_versions)},
+            "status": {"$ne": "obsolete"},
+        }
+    ).to_list(20000)
+    links = await database.value.trace_links.find(
+        {"project_id": project_id, "status": "CONFIRMED"}
+    ).to_list(50000)
+    covered_requirements = {
+        item["source_id"] for item in links if item["source_type"] == "requirement_version"
+    }
+    covered_criteria = {
+        item["source_id"] for item in links if item["source_type"] == "acceptance_criterion"
+    }
+    return {
+        "requirement_coverage": percentage(
+            len(requirement_versions & covered_requirements), len(requirement_versions)
+        ),
+        "acceptance_criterion_coverage": percentage(
+            len({item["_id"] for item in criteria} & covered_criteria), len(criteria)
+        ),
+        "unlinked_tests": await database.value.test_cases.count_documents(
+            {
+                "project_id": project_id,
+                "current_version_id": {"$nin": [item["target_id"] for item in links]},
+            }
+        ),
+    }
 
 
 def percentage(value, total):

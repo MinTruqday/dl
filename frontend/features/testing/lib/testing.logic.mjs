@@ -81,6 +81,10 @@ const labels = {
   SKIPPED: "Đã bỏ qua",
   STALE: "Đã lỗi thời",
   STILL_VALID: "Vẫn hợp lệ",
+  TESTABLE: "Có thể kiểm thử",
+  TESTABLE_WITH_RISK: "Có thể kiểm thử kèm rủi ro",
+  NOT_TESTABLE: "Không thể kiểm thử",
+  NEEDS_CLARIFICATION: "Cần làm rõ",
   SUCCESS: "Thành công",
   SUGGESTED: "AI đề xuất",
   SUPERSEDED: "Đã được thay thế",
@@ -225,11 +229,16 @@ const valueLabels = {
   non_functional: "Phi chức năng",
   permission: "Phân quyền",
   regression: "Hồi quy",
+  sanity: "Kiểm tra nhanh có trọng tâm",
   smoke: "Kiểm tra nhanh",
   state_transition: "Chuyển trạng thái",
   trivial: "Không đáng kể",
   ui: "Giao diện",
   validation: "Xác thực dữ liệu",
+  system: "Hệ thống",
+  manual: "Thủ công",
+  candidate: "Ứng viên tự động hóa",
+  automated: "Đã tự động hóa",
 };
 
 export function statusLabel(value) {

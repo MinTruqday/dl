@@ -1,7 +1,9 @@
 from typing import Any, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query
+
+from fastapi import APIRouter, Depends
+
+from src.core.dependency import get_current_user
 from src.core.response import APIResponse
-from src.api.dependency import get_current_user
 from src.schemas.document import FolderCreate
 from src.services.document import DocumentService
 

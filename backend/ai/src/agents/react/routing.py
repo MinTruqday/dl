@@ -5,7 +5,6 @@ from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 
-
 VALID_AGENTS = {
     "EngineAgent": "Searches the internet for real-time information, news, current events and external data",
     "Action": "Calls testing domain operations for drafts trace impact proposal regression and human approved version mutations",

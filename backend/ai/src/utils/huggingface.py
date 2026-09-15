@@ -11,9 +11,10 @@ from langchain_core.messages import (
 from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResult
 from langchain_core.runnables import RunnableLambda
 from langchain_core.utils.function_calling import convert_to_openai_tool
-from pydantic import Field
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from loguru import logger
+from pydantic import Field
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
+
 from src.core.infrastructure.configuration import settings
 from src.utils.structured_output import (
     extract_json_value,
@@ -32,9 +33,9 @@ def resolve_model_revision(model_id: str, token: Optional[str] = None) -> str:
 
 
 def create_chat_model(model: Optional[str] = None):
-    from src.utils.local_models import local_model_client
+    from src.utils.model_provider import model_client
 
-    return HFInferenceChat(client=local_model_client, model=model or settings.LLM_MODEL)
+    return HFInferenceChat(client=model_client, model=model or settings.LLM_MODEL)
 
 
 def _merge_system_messages(messages: List[dict]) -> List[dict]:
@@ -106,9 +107,9 @@ class HFInferenceChat(BaseChatModel):
             "max_tokens": kwargs.get("max_tokens", settings.AGENT_DEFAULT_MAX_OUTPUT_TOKENS),
             "temperature": kwargs.get("temperature", 0.1),
         }
-        from src.utils.local_models import local_model_client
+        from src.utils.model_provider import model_client
 
-        client = self.client or local_model_client
+        client = self.client or model_client
         response = await client.chat_completion(**chat_kwargs)
         content = response.choices[0].message.content
         from src.services.token_accounting import record_usage
@@ -158,10 +159,10 @@ class HFInferenceChat(BaseChatModel):
             hf_messages.append({"role": role, "content": msg.content})
         hf_messages = _merge_system_messages(hf_messages)
 
-        from src.utils.local_models import local_model_client
+        from src.utils.model_provider import model_client
 
         effective_model = self.model or settings.LLM_MODEL
-        client = self.client or local_model_client
+        client = self.client or model_client
         stream = await client.chat_completion(
             model=effective_model,
             messages=hf_messages,

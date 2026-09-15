@@ -11,7 +11,6 @@ from src.domain.schemas import (
     ProjectNotificationRulePatch,
 )
 
-
 router = APIRouter(prefix="/kiem-thu", tags=["Thông báo dự án"])
 
 ARTIFACT_COLLECTIONS = {
@@ -81,31 +80,41 @@ async def list_notification_watches(
     if artifact_type:
         if artifact_type not in ARTIFACT_COLLECTIONS:
             raise HTTPException(
-                status_code=422,
-                detail={"code": "NOTIFICATION_ARTIFACT_TYPE_INVALID"},
+                status_code=422, detail={"code": "NOTIFICATION_ARTIFACT_TYPE_INVALID"}
             )
         query["artifact_type"] = artifact_type
-    items = await database.value.notification_subscriptions.find(query).sort(
-        "updated_at", -1
-    ).to_list(1000)
+    items = (
+        await database.value.notification_subscriptions.find(query)
+        .sort("updated_at", -1)
+        .to_list(1000)
+    )
     for artifact_type_value, collection_name in ARTIFACT_COLLECTIONS.items():
         matching = [item for item in items if item.get("artifact_type") == artifact_type_value]
         identifiers = [item.get("artifact_id") for item in matching if item.get("artifact_id")]
         if not identifiers:
             continue
-        artifacts = await database.value[collection_name].find(
-            {"project_id": project_id, "_id": {"$in": identifiers}},
-            {"_id": 1, "requirement_key": 1, "test_case_key": 1, "name": 1, "defect_key": 1, "title": 1},
-        ).to_list(len(identifiers))
+        artifacts = (
+            await database.value[collection_name]
+            .find(
+                {"project_id": project_id, "_id": {"$in": identifiers}},
+                {
+                    "_id": 1,
+                    "requirement_key": 1,
+                    "test_case_key": 1,
+                    "name": 1,
+                    "defect_key": 1,
+                    "title": 1,
+                },
+            )
+            .to_list(len(identifiers))
+        )
         labels = {item["_id"]: artifact_label(artifact_type_value, item) for item in artifacts}
         for item in matching:
             item["artifact_label"] = labels.get(item.get("artifact_id")) or item.get("artifact_id")
     return envelope(items)
 
 
-@router.put(
-    "/du-an/{project_id}/thong-bao/theo-doi/{artifact_type}/{artifact_id}"
-)
+@router.put("/du-an/{project_id}/thong-bao/theo-doi/{artifact_type}/{artifact_id}")
 async def set_notification_watch(
     project_id: str,
     artifact_type: str,
@@ -123,47 +132,28 @@ async def set_notification_watch(
     }
     if not payload.watching:
         await database.value.notification_subscriptions.delete_one(scope)
-        await audit(
-            user.id,
-            "notification_watch_removed",
-            artifact_type,
-            artifact_id,
-            project_id,
-        )
+        await audit(user.id, "notification_watch_removed", artifact_type, artifact_id, project_id)
         return envelope({**scope, "watching": False})
     timestamp = now()
     subscription = await database.value.notification_subscriptions.find_one_and_update(
         scope,
         {
             "$set": {"updated_at": timestamp},
-            "$setOnInsert": {
-                "_id": new_id("NSUB"),
-                **scope,
-                "created_at": timestamp,
-            },
+            "$setOnInsert": {"_id": new_id("NSUB"), **scope, "created_at": timestamp},
         },
         upsert=True,
         return_document=ReturnDocument.AFTER,
     )
-    await audit(
-        user.id,
-        "notification_watch_added",
-        artifact_type,
-        artifact_id,
-        project_id,
-    )
+    await audit(user.id, "notification_watch_added", artifact_type, artifact_id, project_id)
     return envelope({**subscription, "watching": True})
 
 
 @router.get("/du-an/{project_id}/thong-bao/quy-tac")
 async def get_project_notification_rules(
-    project_id: str,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, user: CurrentUser = Depends(get_current_user)
 ):
     await get_project(project_id, user, "notification.project_rule.manage")
-    value = await database.value.project_notification_rules.find_one(
-        {"project_id": project_id}
-    )
+    value = await database.value.project_notification_rules.find_one({"project_id": project_id})
     return envelope(value or default_rules(project_id), revision=(value or {}).get("revision", 0))
 
 
@@ -174,9 +164,7 @@ async def update_project_notification_rules(
     user: CurrentUser = Depends(get_current_user),
 ):
     await get_project(project_id, user, "notification.project_rule.manage")
-    current = await database.value.project_notification_rules.find_one(
-        {"project_id": project_id}
-    )
+    current = await database.value.project_notification_rules.find_one({"project_id": project_id})
     changes = payload.model_dump(exclude={"expected_revision"})
     if current:
         updated = await optimistic_patch(
@@ -214,16 +202,14 @@ async def update_project_notification_rules(
 
 @router.get("/du-an/{project_id}/thong-bao/tuy-chon")
 async def get_project_notification_preferences(
-    project_id: str,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, user: CurrentUser = Depends(get_current_user)
 ):
     await get_project(project_id, user, "notification.preferences.manage")
     value = await database.value.project_notification_preferences.find_one(
         {"project_id": project_id, "user_id": user.id}
     )
     return envelope(
-        value or default_preferences(project_id, user.id),
-        revision=(value or {}).get("revision", 0),
+        value or default_preferences(project_id, user.id), revision=(value or {}).get("revision", 0)
     )
 
 

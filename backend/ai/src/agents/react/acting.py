@@ -2,13 +2,13 @@ import json
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from loguru import logger
-from src.core.registry import PromptType, registry
-from src.agents.react.planning import llm
-from src.services.agent_metrics import agentops
-from src.agents.react.tools import ToolExecutor
-from src.tools import tools
 
+from src.agents.react.planning import llm
+from src.agents.react.tools import ToolExecutor
 from src.core.infrastructure.configuration import settings
+from src.core.registry import PromptType, registry
+from src.services.agent_metrics import agentops
+from src.tools import tools
 
 _MAX_ATTEMPTS = 3
 
@@ -38,7 +38,15 @@ _REQUIRES_APPROVAL_TOOLS = frozenset(
     }
 )
 
-_HUMAN_ONLY_APPROVAL_TOOLS = frozenset({"apply_test_case_revision", "confirm_trace_link", "baseline_requirement_version", "approve_test_case_version", "mark_test_case_obsolete"})
+_HUMAN_ONLY_APPROVAL_TOOLS = frozenset(
+    {
+        "apply_test_case_revision",
+        "confirm_trace_link",
+        "baseline_requirement_version",
+        "approve_test_case_version",
+        "mark_test_case_obsolete",
+    }
+)
 
 _AUTO_SAFE_TOOLS = frozenset({"update_document_metadata"})
 

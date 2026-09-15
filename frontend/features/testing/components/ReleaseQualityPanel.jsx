@@ -12,52 +12,381 @@ export default function ReleaseQualityPanel({ project }) {
   const [builds, setBuilds] = useState([]);
   const [measurements, setMeasurements] = useState([]);
   const [monitoring, setMonitoring] = useState([]);
+  const [members, setMembers] = useState([]);
   const [error, setError] = useState("");
   const { ask, dialog } = useActionDialog();
   const can = (permission) => project.current_permissions?.includes(permission);
   const load = useCallback(async () => {
     try {
-      const [result, releaseValues, buildValues, measurementValues, monitoringValues] = await Promise.all([
-        testingApi.listQualityEvaluations(project._id), testingApi.listReleases(project._id), testingApi.listBuilds(project._id), testingApi.listMeasurementSnapshots(project._id), testingApi.listMonitoringSnapshots(project._id),
+      const [
+        result,
+        releaseValues,
+        buildValues,
+        measurementValues,
+        monitoringValues,
+        memberValues,
+      ] = await Promise.all([
+        testingApi.listQualityEvaluations(project._id),
+        testingApi.listReleases(project._id),
+        testingApi.listBuilds(project._id),
+        testingApi.listMeasurementSnapshots(project._id),
+        testingApi.listMonitoringSnapshots(project._id),
+        testingApi.listMembers(project._id),
       ]);
-      setItems(result.items || []); setReleases(releaseValues); setBuilds(buildValues); setMeasurements(measurementValues.items || []); setMonitoring(monitoringValues || []);
+      setItems(result.items || []);
+      setReleases(releaseValues);
+      setBuilds(buildValues);
+      setMeasurements(measurementValues.items || []);
+      setMonitoring(monitoringValues || []);
+      setMembers(memberValues.filter((item) => item.status === "ACTIVE"));
       if (selected?._id) setSelected(await testingApi.getQualityEvaluation(selected._id));
-    } catch (reason) { setError(messageOf(reason)); }
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
   }, [project._id, selected?._id]);
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    void load();
+  }, [load]);
   const create = async () => {
-    const answer = await ask({ title: "Tạo đánh giá chất lượng bản phát hành", confirmLabel: "Tạo đánh giá", fields: [
-      { name: "release_id", label: "Bản phát hành", required: true, options: [{ value: "", label: "Chọn bản phát hành" }, ...releases.map((item) => ({ value: item._id, label: `${item.key} ${item.name}` }))] },
-      { name: "build_id", label: "Bản dựng", required: true, options: [{ value: "", label: "Chọn bản dựng" }, ...builds.map((item) => ({ value: item._id, label: `${item.identifier} ${item.version}` }))] },
-      { name: "monitoring_snapshot_id", label: "Snapshot giám sát", required: true, options: [{ value: "", label: "Chọn snapshot" }, ...monitoring.map((item) => ({ value: item._id, label: `${item._id} ${item.effective_quality_gate_status || item.quality_gate_status}` }))] },
-      { name: "measurement_snapshot_refs", label: "Mã snapshot đo lường cách nhau bởi dấu phẩy", required: true, initialValue: measurements.map((item) => item._id).join(",") },
-      { name: "recommendation", label: "Khuyến nghị", required: true, options: ["GO", "GO_WITH_RISK", "NO_GO", "MORE_TESTING_REQUIRED"].map((value) => ({ value, label: value })) },
-      { name: "rationale", label: "Lập luận dựa trên bằng chứng", required: true, multiline: true },
-    ] });
+    const answer = await ask({
+      title: "Tạo đánh giá chất lượng bản phát hành",
+      confirmLabel: "Tạo đánh giá",
+      fields: [
+        {
+          name: "release_id",
+          label: "Bản phát hành",
+          required: true,
+          options: [
+            { value: "", label: "Chọn bản phát hành" },
+            ...releases.map((item) => ({ value: item._id, label: `${item.key} ${item.name}` })),
+          ],
+        },
+        {
+          name: "build_id",
+          label: "Bản dựng",
+          required: true,
+          options: [
+            { value: "", label: "Chọn bản dựng" },
+            ...builds.map((item) => ({
+              value: item._id,
+              label: `${item.identifier} ${item.version}`,
+            })),
+          ],
+        },
+        {
+          name: "monitoring_snapshot_id",
+          label: "Ảnh chụp giám sát",
+          required: true,
+          options: [
+            { value: "", label: "Chọn ảnh chụp" },
+            ...monitoring.map((item) => ({
+              value: item._id,
+              label: `${item._id} ${item.effective_quality_gate_status || item.quality_gate_status}`,
+            })),
+          ],
+        },
+        {
+          name: "measurement_snapshot_refs",
+          label: "Mã ảnh chụp đo lường cách nhau bởi dấu phẩy",
+          initialValue: measurements.map((item) => item._id).join(","),
+        },
+        {
+          name: "rationale",
+          label: "Lập luận dựa trên bằng chứng",
+          required: true,
+          multiline: true,
+        },
+      ],
+    });
     if (!answer) return;
-    try { const value = await testingApi.createQualityEvaluation(project._id, { ...answer, idempotency_key: crypto.randomUUID(), measurement_snapshot_refs: answer.measurement_snapshot_refs.split(",").map((item) => item.trim()).filter(Boolean), critical_risks: [], evidence_refs: [] }); setSelected(value); await load(); } catch (reason) { setError(messageOf(reason)); }
+    try {
+      const value = await testingApi.createQualityEvaluation(project._id, {
+        ...answer,
+        idempotency_key: crypto.randomUUID(),
+        measurement_snapshot_refs: answer.measurement_snapshot_refs
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean),
+        critical_risks: [],
+        evidence_refs: [],
+      });
+      setSelected(value);
+      await load();
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
   };
   const act = async (action, extra = {}) => {
-    const answer = await ask({ title: extra.title || "Xác nhận đánh giá", confirmLabel: extra.confirmLabel || "Xác nhận", fields: extra.fields || [{ name: "note", label: "Ghi chú", multiline: true }] });
+    const answer = await ask({
+      title: extra.title || "Xác nhận đánh giá",
+      confirmLabel: extra.confirmLabel || "Xác nhận",
+      fields: extra.fields || [{ name: "note", label: "Ghi chú", multiline: true }],
+    });
     if (!answer) return;
-    try { setSelected(await action(selected._id, { expected_revision: selected.revision, ...answer, ...extra.payload })); await load(); } catch (reason) { setError(messageOf(reason)); }
+    try {
+      setSelected(
+        await action(selected._id, {
+          expected_revision: selected.revision,
+          ...answer,
+          ...extra.payload,
+        }),
+      );
+      await load();
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
   };
   const createWaiver = async () => {
-    const answer = await ask({ title: "Tạo waiver có thời hạn", confirmLabel: "Tạo waiver", fields: [{ name: "metric_or_criterion", label: "Metric hoặc tiêu chí", required: true }, { name: "reason", label: "Lý do", required: true, multiline: true }, { name: "risk", label: "Rủi ro", required: true, multiline: true }, { name: "owner_id", label: "Mã người chịu trách nhiệm", required: true }, { name: "expiry", label: "Thời điểm hết hạn", required: true, type: "datetime-local" }, { name: "evidence", label: "Tham chiếu bằng chứng cách nhau bởi dấu phẩy", required: true }] });
+    const answer = await ask({
+      title: "Tạo miễn trừ có thời hạn",
+      confirmLabel: "Tạo miễn trừ",
+      fields: [
+        { name: "criterion_or_metric", label: "Chỉ số hoặc tiêu chí", required: true },
+        { name: "actual", label: "Giá trị thực tế", required: true },
+        { name: "threshold", label: "Ngưỡng", required: true },
+        { name: "reason", label: "Lý do", required: true, multiline: true },
+        { name: "risk", label: "Rủi ro", required: true, multiline: true },
+        {
+          name: "owner_id",
+          label: "Người chịu trách nhiệm",
+          required: true,
+          options: [
+            { value: "", label: "Chọn thành viên" },
+            ...members.map((item) => ({
+              value: item.user_id,
+              label: item.user_label || item.email || item.user_id,
+            })),
+          ],
+        },
+        { name: "expiry_at", label: "Thời điểm hết hạn", required: true, type: "datetime-local" },
+        {
+          name: "evidence_refs",
+          label: "Tham chiếu bằng chứng cách nhau bởi dấu phẩy",
+          required: true,
+        },
+      ],
+    });
     if (!answer) return;
-    try { setSelected(await testingApi.createQualityWaiver(selected._id, { ...answer, expiry: new Date(answer.expiry).toISOString(), evidence: answer.evidence.split(",").map((item) => item.trim()).filter(Boolean) })); await load(); } catch (reason) { setError(messageOf(reason)); }
+    try {
+      setSelected(
+        await testingApi.createQualityWaiver(selected._id, {
+          ...answer,
+          expected_revision: selected.revision,
+          actual: Number.isNaN(Number(answer.actual)) ? answer.actual : Number(answer.actual),
+          threshold: Number.isNaN(Number(answer.threshold))
+            ? answer.threshold
+            : Number(answer.threshold),
+          expiry_at: new Date(answer.expiry_at).toISOString(),
+          evidence_refs: answer.evidence_refs
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean),
+        }),
+      );
+      await load();
+    } catch (reason) {
+      setError(messageOf(reason));
+    }
   };
   return (
-    <Panel title="Chất lượng bản phát hành" actions={can("qualityevaluation.create") ? <button className="apple-button" type="button" onClick={create}>Tạo đánh giá</button> : null}>
-      {dialog}{error && <div className="p-4"><ErrorState message={error} /></div>}
-      <DataTable items={items} empty="Chưa có đánh giá chất lượng" columns={[
-        { key: "release_id", label: "Bản phát hành" }, { key: "build_id", label: "Bản dựng" }, { key: "quality_gate_status", label: "Gate", render: (item) => <StatusPill value={item.quality_gate_status} /> }, { key: "recommendation", label: "Khuyến nghị", render: (item) => <StatusPill value={item.recommendation} /> }, { key: "status", label: "Trạng thái", render: (item) => <StatusPill value={item.status} /> }, { key: "action", label: "Thao tác", render: (item) => <button className="secondary-button" type="button" onClick={async () => setSelected(await testingApi.getQualityEvaluation(item._id))}>Mở</button> },
-      ]} />
-      {selected && <div className="space-y-4 border-t border-border p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="font-semibold">{selected.recommendation}</p><p className="mt-1 max-w-3xl whitespace-pre-wrap text-sm">{selected.rationale}</p></div><div className="flex flex-wrap gap-2">{["DRAFT", "IN_REVIEW"].includes(selected.status) && can("qualityevaluation.create") && <button className="secondary-button" type="button" onClick={createWaiver}>Tạo waiver</button>}{selected.status === "DRAFT" && can("qualityevaluation.review") && <button className="secondary-button" type="button" onClick={() => act(testingApi.submitQualityEvaluation)}>Gửi rà soát</button>}{selected.status === "IN_REVIEW" && can("qualityevaluation.review") && <button className="secondary-button" type="button" onClick={() => act(testingApi.reviewQualityEvaluation, { title: "Rà soát đánh giá", fields: [{ name: "decision", label: "Quyết định", options: ["ENDORSE", "REQUEST_CHANGES"].map((value) => ({ value, label: value })) }, { name: "note", label: "Ghi chú", multiline: true }] })}>Rà soát</button>}{selected.status === "IN_REVIEW" && can("qualityevaluation.approve") && <button className="apple-button" type="button" onClick={() => act(testingApi.approveQualityEvaluation)}>Phê duyệt</button>}</div></div>
-        <div className="grid gap-3 md:grid-cols-3"><div><p className="field-label">Exit gate</p><StatusPill value={selected.quality_gate_status} /></div><div><p className="field-label">Lỗi chưa xử lý</p><p>{selected.unresolved_defects?.length || 0}</p></div><div><p className="field-label">Rủi ro nghiêm trọng</p><p>{selected.critical_risks?.length || 0}</p></div></div>
-        <DataTable items={selected.waivers || []} empty="Không có waiver" columns={[{ key: "metric_or_criterion", label: "Metric hoặc tiêu chí" }, { key: "risk", label: "Rủi ro" }, { key: "expiry", label: "Hết hạn" }, { key: "status", label: "Trạng thái", render: (item) => <StatusPill value={item.status} /> }, { key: "action", label: "Thao tác", render: (item) => item.status === "PENDING" && can("qualityevaluation.waiver.approve") ? <div className="flex gap-2"><button className="secondary-button" type="button" onClick={async () => { setSelected(await testingApi.decideQualityWaiver(selected._id, item.waiver_id, { expected_revision: selected.revision, decision: "APPROVE", note: "Đã đánh giá rủi ro" })); await load(); }}>Duyệt</button><button className="secondary-button" type="button" onClick={async () => { const answer = await ask({ title: "Từ chối waiver", confirmLabel: "Từ chối", fields: [{ name: "note", label: "Lý do", required: true, multiline: true }] }); if (answer) { setSelected(await testingApi.decideQualityWaiver(selected._id, item.waiver_id, { expected_revision: selected.revision, decision: "REJECT", note: answer.note })); await load(); } }}>Từ chối</button></div> : null }]} />
-      </div>}
+    <Panel
+      title="Chất lượng bản phát hành"
+      actions={
+        can("qualityevaluation.create") ? (
+          <button className="apple-button" type="button" onClick={create}>
+            Tạo đánh giá
+          </button>
+        ) : null
+      }
+    >
+      {dialog}
+      {error && (
+        <div className="p-4">
+          <ErrorState message={error} />
+        </div>
+      )}
+      <DataTable
+        items={items}
+        empty="Chưa có đánh giá chất lượng"
+        columns={[
+          { key: "release_id", label: "Bản phát hành" },
+          { key: "build_id", label: "Bản dựng" },
+          {
+            key: "quality_gate_status",
+            label: "Gate",
+            render: (item) => <StatusPill value={item.quality_gate_status} />,
+          },
+          {
+            key: "recommendation",
+            label: "Khuyến nghị",
+            render: (item) => (
+              <StatusPill value={item.system_recommendation || item.recommendation} />
+            ),
+          },
+          {
+            key: "status",
+            label: "Trạng thái",
+            render: (item) => <StatusPill value={item.status} />,
+          },
+          {
+            key: "action",
+            label: "Thao tác",
+            render: (item) => (
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={async () => setSelected(await testingApi.getQualityEvaluation(item._id))}
+              >
+                Mở
+              </button>
+            ),
+          },
+        ]}
+      />
+      {selected && (
+        <div className="space-y-4 border-t border-border p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="font-semibold">
+                {selected.system_recommendation || selected.recommendation}
+              </p>
+              <p className="mt-1 max-w-3xl whitespace-pre-wrap text-sm">{selected.rationale}</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {["DRAFT", "IN_REVIEW"].includes(selected.status) &&
+                can("qualityevaluation.create") && (
+                  <button className="secondary-button" type="button" onClick={createWaiver}>
+                    Tạo miễn trừ
+                  </button>
+                )}
+              {selected.status === "DRAFT" && can("qualityevaluation.review") && (
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() => act(testingApi.submitQualityEvaluation)}
+                >
+                  Gửi rà soát
+                </button>
+              )}
+              {selected.status === "IN_REVIEW" && can("qualityevaluation.review") && (
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() =>
+                    act(testingApi.reviewQualityEvaluation, {
+                      title: "Rà soát đánh giá",
+                      fields: [
+                        {
+                          name: "decision",
+                          label: "Quyết định",
+                          options: ["ENDORSE", "REQUEST_CHANGES"].map((value) => ({
+                            value,
+                            label: value,
+                          })),
+                        },
+                        { name: "note", label: "Ghi chú", multiline: true },
+                      ],
+                    })
+                  }
+                >
+                  Rà soát
+                </button>
+              )}
+              {selected.status === "IN_REVIEW" && can("qualityevaluation.approve") && (
+                <button
+                  className="apple-button"
+                  type="button"
+                  onClick={() => act(testingApi.approveQualityEvaluation)}
+                >
+                  Phê duyệt
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="grid gap-3 md:grid-cols-3">
+            <div>
+              <p className="field-label">Cổng chất lượng đầu ra</p>
+              <StatusPill value={selected.quality_gate_status} />
+            </div>
+            <div>
+              <p className="field-label">Lỗi chưa xử lý</p>
+              <p>{selected.unresolved_defects?.length || 0}</p>
+            </div>
+            <div>
+              <p className="field-label">Rủi ro nghiêm trọng</p>
+              <p>{selected.critical_risks?.length || 0}</p>
+            </div>
+          </div>
+          <DataTable
+            items={selected.waivers || []}
+            empty="Không có miễn trừ"
+            columns={[
+              {
+                key: "criterion_or_metric",
+                label: "Chỉ số hoặc tiêu chí",
+                render: (item) => item.criterion_or_metric || item.metric_or_criterion,
+              },
+              { key: "risk", label: "Rủi ro" },
+              { key: "expiry", label: "Hết hạn" },
+              {
+                key: "status",
+                label: "Trạng thái",
+                render: (item) => <StatusPill value={item.status} />,
+              },
+              {
+                key: "action",
+                label: "Thao tác",
+                render: (item) =>
+                  item.status === "PENDING" && can("qualityevaluation.waiver.approve") ? (
+                    <div className="flex gap-2">
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={async () => {
+                          setSelected(
+                            await testingApi.decideQualityWaiver(selected._id, item.waiver_id, {
+                              expected_revision: selected.revision,
+                              decision: "APPROVE",
+                              note: "Đã đánh giá rủi ro",
+                            }),
+                          );
+                          await load();
+                        }}
+                      >
+                        Duyệt
+                      </button>
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={async () => {
+                          const answer = await ask({
+                            title: "Từ chối miễn trừ",
+                            confirmLabel: "Từ chối",
+                            fields: [
+                              { name: "note", label: "Lý do", required: true, multiline: true },
+                            ],
+                          });
+                          if (answer) {
+                            setSelected(
+                              await testingApi.decideQualityWaiver(selected._id, item.waiver_id, {
+                                expected_revision: selected.revision,
+                                decision: "REJECT",
+                                note: answer.note,
+                              }),
+                            );
+                            await load();
+                          }
+                        }}
+                      >
+                        Từ chối
+                      </button>
+                    </div>
+                  ) : null,
+              },
+            ]}
+          />
+        </div>
+      )}
     </Panel>
   );
 }

@@ -1,6 +1,7 @@
 import base64
 
 from loguru import logger
+
 from src.services.knowledge import knowledge_service
 
 

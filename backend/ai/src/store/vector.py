@@ -1,4 +1,5 @@
 from typing import Dict, List, Optional
+
 import httpx
 from loguru import logger
 from qdrant_client import AsyncQdrantClient
@@ -13,6 +14,7 @@ from qdrant_client.http.models import (
     PointStruct,
     VectorParams,
 )
+
 from src.core.infrastructure.configuration import settings
 
 
@@ -60,6 +62,7 @@ class VectorStore:
                 "content_type",
                 "conflict_key",
                 "claim_value",
+                "embedding_model",
             ]:
                 await self.client.create_payload_index(
                     collection_name=self.collection_name,
@@ -78,13 +81,16 @@ class VectorStore:
         documents: List[str],
         metadatas: List[Dict],
     ):
-        points = [
-            PointStruct(
-                id=ids[i], vector=embeddings[i], payload={"text": documents[i], **metadatas[i]}
-            )
-            for i in range(len(ids))
-        ]
-        await self.client.upsert(collection_name=self.collection_name, points=points, wait=True)
+        batch_size = 64
+        for batch_start in range(0, len(ids), batch_size):
+            batch_end = min(batch_start + batch_size, len(ids))
+            points = [
+                PointStruct(
+                    id=ids[i], vector=embeddings[i], payload={"text": documents[i], **metadatas[i]}
+                )
+                for i in range(batch_start, batch_end)
+            ]
+            await self.client.upsert(collection_name=self.collection_name, points=points, wait=True)
 
     async def wait_upsert(self):
         return None
@@ -213,7 +219,9 @@ class VectorStore:
         query_filter = Filter(
             must=[
                 FieldCondition(key="project_id", match=MatchValue(value=project_id)),
-                FieldCondition(key="artifact_version_id", match=MatchValue(value=artifact_version_id)),
+                FieldCondition(
+                    key="artifact_version_id", match=MatchValue(value=artifact_version_id)
+                ),
             ]
         )
         while True:

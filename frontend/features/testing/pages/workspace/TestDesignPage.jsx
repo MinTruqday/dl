@@ -96,6 +96,7 @@ export default function TestDesignPage({ project }) {
   const [creatingTest, setCreatingTest] = useState(false);
   const [creatingScenario, setCreatingScenario] = useState(false);
   const [creatingDataSet, setCreatingDataSet] = useState(false);
+  const [aiAction, setAiAction] = useState("");
   const can = (permission) => project.current_permissions?.includes(permission);
   const canReadTestData = project.current_permissions?.includes("testdata.read");
   const load = useCallback(async () => {
@@ -295,6 +296,7 @@ export default function TestDesignPage({ project }) {
   };
   const generate = async () => {
     if (!selectedRequirement) return setError("Cần chọn yêu cầu trước khi tạo ca kiểm thử");
+    setAiAction("testcase");
     try {
       await testingApi.generateTestCases(selectedRequirement, {
         categories: ["happy_path", "negative", "boundary", "validation"],
@@ -304,6 +306,8 @@ export default function TestDesignPage({ project }) {
       await load();
     } catch (reason) {
       setError(messageOf(reason));
+    } finally {
+      setAiAction("");
     }
   };
   const freeze = async (draft) => {
@@ -452,7 +456,7 @@ export default function TestDesignPage({ project }) {
       {(can("ai.generate_testcase") ||
         can("ai.generate_scenario") ||
         can("testcase.duplicate_check")) && (
-        <Panel title="Tạo bằng AI">
+        <Panel title="Hỗ trợ thiết kế kiểm thử">
           <div className="flex flex-wrap gap-3 p-5">
             <select
               aria-label="Yêu cầu nguồn"
@@ -468,16 +472,25 @@ export default function TestDesignPage({ project }) {
               ))}
             </select>
             {can("ai.generate_testcase") && can("testcase.create") && (
-              <button className="apple-button" type="button" onClick={generate}>
-                Tạo 4 nhóm ca kiểm thử
+              <button
+                aria-busy={aiAction === "testcase"}
+                className="apple-button"
+                disabled={Boolean(aiAction)}
+                type="button"
+                onClick={generate}
+              >
+                {aiAction === "testcase" ? "AI đang tạo ca kiểm thử" : "Tạo 4 nhóm ca kiểm thử"}
               </button>
             )}
             {can("ai.generate_scenario") && can("testscenario.create") && (
               <button
                 className="secondary-button"
+                aria-busy={aiAction === "scenario"}
+                disabled={Boolean(aiAction)}
                 type="button"
                 onClick={async () => {
                   if (!selectedRequirement) return;
+                  setAiAction("scenario");
                   try {
                     await testingApi.generateScenarios(selectedRequirement, {
                       categories: ["happy_path", "negative", "boundary", "validation"],
@@ -486,25 +499,34 @@ export default function TestDesignPage({ project }) {
                     await load();
                   } catch (reason) {
                     setError(messageOf(reason));
+                  } finally {
+                    setAiAction("");
                   }
                 }}
               >
-                Tạo kịch bản
+                {aiAction === "scenario" ? "AI đang tạo kịch bản" : "Tạo kịch bản"}
               </button>
             )}
             {can("testcase.duplicate_check") && can("ai.run_duplicate_check") && (
               <button
                 className="secondary-button"
+                aria-busy={aiAction === "duplicates"}
+                disabled={Boolean(aiAction)}
                 type="button"
                 onClick={async () => {
+                  setAiAction("duplicates");
                   try {
                     setDuplicates(await testingApi.findDuplicates(project._id));
                   } catch (reason) {
                     setError(messageOf(reason));
+                  } finally {
+                    setAiAction("");
                   }
                 }}
               >
-                Tìm ca kiểm thử trùng lặp
+                {aiAction === "duplicates"
+                  ? "Đang tìm ca kiểm thử trùng lặp"
+                  : "Tìm ca kiểm thử trùng lặp"}
               </button>
             )}
           </div>
@@ -975,7 +997,17 @@ export default function TestDesignPage({ project }) {
           />
         </Panel>
       )}
-      {selectedTestId && testVersions[0] && project.current_permissions?.includes("reviewsession.read") && <FormalReviewPanel project={project} artifactType="TEST_CASE" artifactId={selectedTestId} artifactVersionId={testVersions[0]._id} reviewType="TEST_CASE_REVIEW" />}
+      {selectedTestId &&
+        testVersions[0] &&
+        project.current_permissions?.includes("reviewsession.read") && (
+          <FormalReviewPanel
+            project={project}
+            artifactType="TEST_CASE"
+            artifactId={selectedTestId}
+            artifactVersionId={testVersions[0]._id}
+            reviewType="TEST_CASE_REVIEW"
+          />
+        )}
       {selectedDraft && draftEdit && (
         <>
           <Panel
@@ -1198,9 +1230,9 @@ export default function TestDesignPage({ project }) {
                 </select>
               </label>
               <label className="field-label">
-                Test condition đã phê duyệt
+                Điều kiện kiểm thử đã phê duyệt
                 <select
-                  aria-label="Test condition của bản nháp"
+                  aria-label="Điều kiện kiểm thử của bản nháp"
                   className="apple-input mt-2 min-h-28"
                   disabled={selectedDraft.status !== "DRAFT" || !can("testcase.update")}
                   multiple
@@ -1471,9 +1503,9 @@ export default function TestDesignPage({ project }) {
                 </select>
               </label>
               <label className="field-label">
-                Test condition đã phê duyệt
+                Điều kiện kiểm thử đã phê duyệt
                 <select
-                  aria-label="Test condition cho ca kiểm thử mới"
+                  aria-label="Điều kiện kiểm thử cho ca kiểm thử mới"
                   className="apple-input mt-2 min-h-28"
                   multiple
                   value={form.testConditionIds}
@@ -1579,9 +1611,9 @@ export default function TestDesignPage({ project }) {
                   ))}
                 </select>
                 <label className="field-label">
-                  Test condition đã phê duyệt
+                  Điều kiện kiểm thử đã phê duyệt
                   <select
-                    aria-label="Test condition cho kịch bản"
+                    aria-label="Điều kiện kiểm thử cho kịch bản"
                     className="apple-input mt-2 min-h-28"
                     multiple
                     value={scenarioForm.testConditionIds}

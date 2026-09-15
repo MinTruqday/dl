@@ -4,8 +4,11 @@ from src.core.dependency import verify_internal_token
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 
-
-router = APIRouter(prefix="/xac-thuc/noi-bo", tags=["Nội bộ xác thực"], dependencies=[Depends(verify_internal_token)])
+router = APIRouter(
+    prefix="/xac-thuc/noi-bo",
+    tags=["Nội bộ xác thực"],
+    dependencies=[Depends(verify_internal_token)],
+)
 
 
 def account_view(credential: dict):
@@ -31,8 +34,7 @@ def account_view(credential: dict):
             "full_name": credential.get("full_name") or "Người dùng Veriq",
             "role": credential.get("role", "reader"),
             "system_role": credential.get(
-                "system_role",
-                "ADMIN" if credential.get("role") == "admin" else "USER",
+                "system_role", "ADMIN" if credential.get("role") == "admin" else "USER"
             ),
             "permissions": credential.get("permissions") or [],
             "is_active": credential.get("is_active", True),

@@ -2,7 +2,7 @@ from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 
 try:
-    from motor.motor_asyncio import AsyncIOMotorCursor, AsyncIOMotorCommandCursor
+    from motor.motor_asyncio import AsyncIOMotorCommandCursor, AsyncIOMotorCursor
 
     def _cursor_await(self):
         return self.to_list(length=None).__await__()

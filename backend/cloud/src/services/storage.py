@@ -1,14 +1,13 @@
-from src.clients.accounts import AccountClient
-from src.core.infrastructure.mongo import mongo
 from datetime import datetime, timezone
 from typing import List, Optional
 
 from fastapi import HTTPException, Query
 from loguru import logger
-from src.schemas.storage import StorageItemCreate, StorageItemInDB, StorageItemUpdate
 
+from src.clients.accounts import AccountClient
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
+from src.schemas.storage import StorageItemCreate, StorageItemInDB, StorageItemUpdate
 
 
 class StorageService:
@@ -284,7 +283,7 @@ class StorageService:
         await database.mongodb[settings.CLOUD_DB_NAME].storage_items.delete_many(
             {"target_id": {"$in": ids}}
         )
-        from src.core.storage import get_bucket, get_storage_client, original_content_length
+        from src.core.storage import get_bucket, get_storage_client
 
         storage_client = await get_storage_client()
         for entry in items:
@@ -384,7 +383,6 @@ class StorageService:
             old_version = FileVersion(url=item.url, size=item.size, created_at=item.updated_at)
             update_op["$push"] = {"versions": {"$each": [old_version.model_dump()], "$slice": -10}}
 
-        size_diff = size - (item.size or 0)
         async with await database.mongodb.start_session() as session:
             async with session.start_transaction():
                 await cloud_db.storage_items.update_one(

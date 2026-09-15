@@ -1,5 +1,6 @@
 from enum import Enum
-from typing import List, Any
+from typing import Any, List
+
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
@@ -10,35 +11,34 @@ class Role(str, Enum):
     ADMIN = "admin"
 
 
+class SystemRole(str, Enum):
+    USER = "USER"
+    ADMIN = "ADMIN"
+
+
 class CurrentUser(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="ignore")
 
-    id: str = Field(
-        alias="_id", description="<input_context>Unique identifier for the user.</input_context>"
-    )
-    email: str = Field(description="<input_context>User's email address.</input_context>")
-    role: Role = Field(
-        default=Role.READER,
-        description="<critical_instructions>The role assigned to the user for access control.</critical_instructions>",
-    )
-    permissions: List[str] = Field(
-        default_factory=list,
-        description="<critical_instructions>List of specific permissions granted.</critical_instructions>",
-    )
-    is_active: bool = Field(
-        default=True,
-        description="<conditional_output>Whether the user account is active.</conditional_output>",
-    )
-    full_name: str = Field(
-        default="", description="<input_context>User's full name.</input_context>"
-    )
-    slug: str = Field(
-        default="", description="<input_context>URL-friendly username or slug.</input_context>"
-    )
+    id: str = Field(alias="_id")
+    email: str
+    role: Role = Role.READER
+    system_role: SystemRole = SystemRole.USER
+    permissions: List[str] = Field(default_factory=list)
+    is_active: bool = True
+    full_name: str = ""
+    slug: str = ""
+    session_id: str = ""
 
     @field_validator("role", mode="before")
     @classmethod
     def validate_role_case(cls, v: Any):
         if isinstance(v, str):
             return v.lower()
+        return v
+
+    @field_validator("system_role", mode="before")
+    @classmethod
+    def validate_system_role_case(cls, v: Any):
+        if isinstance(v, str):
+            return v.upper()
         return v

@@ -75,7 +75,14 @@ FUNCTION_IDS = {
     "update_ai_defaults": ["ADM-AI-04", "ADM-AI-05", "ADM-AI-06"],
     "test_ai_provider": ["ADM-AI-09"],
     "get_ai_versions": ["ADM-AI-10"],
-    "get_integrations": ["ADM-INT-01", "ADM-INT-05", "ADM-INT-06", "ADM-INT-08", "ADM-INT-09", "ADM-INT-10"],
+    "get_integrations": [
+        "ADM-INT-01",
+        "ADM-INT-05",
+        "ADM-INT-06",
+        "ADM-INT-08",
+        "ADM-INT-09",
+        "ADM-INT-10",
+    ],
     "update_integrations": ["ADM-INT-01", "ADM-INT-05", "ADM-INT-06"],
     "test_smtp": ["ADM-INT-02"],
     "get_storage_config": ["ADM-INT-03"],
@@ -105,8 +112,22 @@ FUNCTION_IDS = {
     "runtime_versions": ["ADM-OPS-12"],
     "list_auth_audit": ["ADM-CFG-01"],
     "export_global_audit": ["ADM-CFG-02"],
-    "get_system_config": ["ADM-CFG-03", "ADM-CFG-04", "ADM-CFG-05", "ADM-CFG-06", "ADM-CFG-07", "ADM-CFG-08"],
-    "update_system_config": ["ADM-CFG-03", "ADM-CFG-04", "ADM-CFG-05", "ADM-CFG-06", "ADM-CFG-07", "ADM-CFG-08"],
+    "get_system_config": [
+        "ADM-CFG-03",
+        "ADM-CFG-04",
+        "ADM-CFG-05",
+        "ADM-CFG-06",
+        "ADM-CFG-07",
+        "ADM-CFG-08",
+    ],
+    "update_system_config": [
+        "ADM-CFG-03",
+        "ADM-CFG-04",
+        "ADM-CFG-05",
+        "ADM-CFG-06",
+        "ADM-CFG-07",
+        "ADM-CFG-08",
+    ],
 }
 
 

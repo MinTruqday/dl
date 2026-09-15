@@ -1,17 +1,16 @@
 import asyncio
 import json
 import traceback
-import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Dict, Literal, Optional
 
 from langchain_core.exceptions import OutputParserException
 from loguru import logger
-from src.utils.background import create_background_task
 from pydantic import ValidationError
 
 from src.repositories.agent import AgentRepository
+from src.utils.background import create_background_task
 
 FailureType = Literal[
     "BAD_MODEL_CALL",

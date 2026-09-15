@@ -1,10 +1,13 @@
-import { API_URL, getToken, getAuthHeaders } from "@/shared/services/api-client";
+import {
+  API_URL,
+  authenticatedFetch,
+  getToken,
+  getAuthHeaders,
+} from "@/shared/services/api-client";
 export const getAnnouncementsAPI = async () => {
   const token = getToken();
   if (!token) throw new Error("Yêu cầu xác thực tài khoản để thực hiện thao tác");
-  const res = await fetch(`${API_URL}/thong-bao`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const res = await authenticatedFetch(`${API_URL}/thong-bao`);
   const resultData = await res.json();
   if (!res.ok) throw new Error(resultData.message || "Không thể tải dữ liệu thông báo");
   return resultData;

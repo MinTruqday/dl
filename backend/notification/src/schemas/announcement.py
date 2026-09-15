@@ -31,6 +31,3 @@ class AnnouncementSettings(BaseModel):
     enable_comment_notifications: bool = True
     enable_mention_notifications: bool = True
     enable_system_notifications: bool = True
-
-
-import uuid

@@ -119,9 +119,7 @@ class MaintenanceModeRequest(BaseModel):
 
 
 router = APIRouter(
-    prefix="/quan-tri",
-    tags=["Quản trị nền tảng"],
-    dependencies=[Depends(require_system_admin)],
+    prefix="/quan-tri", tags=["Quản trị nền tảng"], dependencies=[Depends(require_system_admin)]
 )
 
 
@@ -742,7 +740,9 @@ async def queue_overview(current_user: CurrentUser = Depends(get_current_user)):
     )
 
 
-@router.post("/van-hanh/dlq/{job_id}/dua-lai-hang-doi", response_model=APIResponse[Any], status_code=202)
+@router.post(
+    "/van-hanh/dlq/{job_id}/dua-lai-hang-doi", response_model=APIResponse[Any], status_code=202
+)
 async def requeue_dead_letter_job(
     job_id: str, payload: ActionReason, current_user: CurrentUser = Depends(get_current_user)
 ):

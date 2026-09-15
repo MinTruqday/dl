@@ -1,18 +1,19 @@
 import json
-import uuid
 import re
 import unicodedata
+import uuid
 from datetime import datetime, timezone
+
 import httpx
 from fastapi import HTTPException
 from loguru import logger
 
+from src.clients.knowledge import knowledge_client
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.redis import redis
 from src.repositories.document import DocumentRepository
 from src.schemas.document import DocumentContentUpdate, DocumentCreate, DocumentInDB, DocumentStatus
-from src.clients.knowledge import knowledge_client
-from src.services.document.base import serialize_document, is_admin, can_read_full, pwd_context
+from src.services.document.base import can_read_full, is_admin, pwd_context, serialize_document
 
 
 class DocumentCrudService:
@@ -441,7 +442,9 @@ class DocumentCrudService:
             raise HTTPException(
                 status_code=404, detail="Hệ thống không thể tìm thấy tài liệu theo yêu cầu của bạn"
             )
-        await knowledge_client.delete_document(document_id, str(current_user.id), is_admin(current_user))
+        await knowledge_client.delete_document(
+            document_id, str(current_user.id), is_admin(current_user)
+        )
         res = await DocumentRepository.update_one(
             {"_id": document_id, "creator_id": str(current_user.id), "is_deleted": {"$ne": True}},
             {"$set": {"is_deleted": True, "deleted_at": datetime.now(timezone.utc)}},

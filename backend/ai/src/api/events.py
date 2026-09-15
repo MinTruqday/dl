@@ -4,10 +4,15 @@ from typing import Literal
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from loguru import logger
 
-from src.agents.workflow.events import AgentEvent, CronSchedule, EventType, cron_scheduler, event_processor
-
-from src.schemas.events import CreateScheduleRequest, ManualTriggerRequest, WebhookPayload
+from src.agents.workflow.events import (
+    AgentEvent,
+    CronSchedule,
+    EventType,
+    cron_scheduler,
+    event_processor,
+)
 from src.core.dependency import Role, require_role, verify_internal_token
+from src.schemas.events import CreateScheduleRequest, ManualTriggerRequest, WebhookPayload
 
 router = APIRouter(prefix="/su-kien")
 

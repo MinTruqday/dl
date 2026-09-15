@@ -24,6 +24,7 @@ export default function ChangesPage({ project }) {
   const [regression, setRegression] = useState(null);
   const [overrides, setOverrides] = useState({});
   const [changeFacts, setChangeFacts] = useState([]);
+  const [aiAction, setAiAction] = useState("");
   const [filters, setFilters] = useState({
     requirement_id: "",
     status: "",
@@ -74,6 +75,7 @@ export default function ChangesPage({ project }) {
     }
   };
   const analyze = async () => {
+    setAiAction("impact");
     try {
       const result = await testingApi.analyzeImpact(selected._id);
       setSelected(await testingApi.getChangeSet(selected._id));
@@ -85,6 +87,8 @@ export default function ChangesPage({ project }) {
       await load();
     } catch (reason) {
       setError(messageOf(reason));
+    } finally {
+      setAiAction("");
     }
   };
   const decide = async (item, action) => {
@@ -163,6 +167,7 @@ export default function ChangesPage({ project }) {
       ],
     });
     if (!answer) return;
+    setAiAction("review");
     try {
       const items = impact.affected_test_cases || [];
       const payload = items
@@ -185,6 +190,8 @@ export default function ChangesPage({ project }) {
       await load();
     } catch (reason) {
       setError(messageOf(reason));
+    } finally {
+      setAiAction("");
     }
   };
   const rerunImpact = async () => {
@@ -209,6 +216,7 @@ export default function ChangesPage({ project }) {
       ],
     });
     if (!answer) return;
+    setAiAction("rerun");
     try {
       const result = await testingApi.rerunImpact(impact._id, {
         expected_revision: impact.revision,
@@ -223,6 +231,8 @@ export default function ChangesPage({ project }) {
       await load();
     } catch (reason) {
       setError(messageOf(reason));
+    } finally {
+      setAiAction("");
     }
   };
   return (
@@ -316,8 +326,14 @@ export default function ChangesPage({ project }) {
               ) : selected.status === "REVIEWED" &&
                 can("impact.execute") &&
                 can("ai.run_impact") ? (
-                <button className="apple-button" type="button" onClick={analyze}>
-                  Phân tích ảnh hưởng
+                <button
+                  aria-busy={aiAction === "impact"}
+                  className="apple-button"
+                  disabled={Boolean(aiAction)}
+                  type="button"
+                  onClick={analyze}
+                >
+                  {aiAction === "impact" ? "AI đang phân tích ảnh hưởng" : "Phân tích ảnh hưởng"}
                 </button>
               ) : null
             }
@@ -457,15 +473,29 @@ export default function ChangesPage({ project }) {
           actions={
             <div className="flex flex-wrap gap-2">
               {impact.status === "REVIEW_READY" && can("impact.review") && (
-                <button className="apple-button" type="button" onClick={reviewImpact}>
-                  Duyệt phân tích
+                <button
+                  aria-busy={aiAction === "review"}
+                  className="apple-button"
+                  disabled={Boolean(aiAction)}
+                  type="button"
+                  onClick={reviewImpact}
+                >
+                  {aiAction === "review" ? "Đang tạo đề xuất và bộ hồi quy" : "Duyệt phân tích"}
                 </button>
               )}
               {["REVIEW_READY", "REVIEWED"].includes(impact.status) &&
                 can("impact.execute") &&
                 can("ai.run_impact") && (
-                  <button className="secondary-button" type="button" onClick={rerunImpact}>
-                    Chạy lại thành lần phân tích mới
+                  <button
+                    aria-busy={aiAction === "rerun"}
+                    className="secondary-button"
+                    disabled={Boolean(aiAction)}
+                    type="button"
+                    onClick={rerunImpact}
+                  >
+                    {aiAction === "rerun"
+                      ? "AI đang chạy lại phân tích"
+                      : "Chạy lại thành lần phân tích mới"}
                   </button>
                 )}
             </div>

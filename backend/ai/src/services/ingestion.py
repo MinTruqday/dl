@@ -4,15 +4,18 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Dict
 from uuid import NAMESPACE_URL, uuid5
+
 from loguru import logger
-from src.store.vector import vector_store
-from src.store.bm25 import bm25_store
-from src.services.embedding import embedder
-from src.services.chunking import chunker
-from src.services.conversion import document_parser
+
 from src.clients.content import ContentClient
-from src.services.inference import inspect_chunks, summarize_document
+from src.core.infrastructure.configuration import settings
+from src.services.chunking import chunker
 from src.services.content_security import prompt_injection_flags
+from src.services.conversion import document_parser
+from src.services.embedding import embedder
+from src.services.inference import inspect_chunks, summarize_document
+from src.store.bm25 import bm25_store
+from src.store.vector import vector_store
 
 
 async def embed_available_chunks(chunks):
@@ -30,7 +33,7 @@ async def embed_available_chunks(chunks):
         failed_chunks = []
         for chunk in chunks:
             try:
-                vector = await embedder.embed_query(chunk["text"])
+                vector = (await embedder.embed_batch([chunk["text"]]))[0]
                 if not isinstance(vector, list) or not vector:
                     raise ValueError("embedding_shape_invalid")
                 available_chunks.append(chunk)
@@ -72,8 +75,12 @@ class IngestionPipelineService:
             value = artifact_metadata.get(key)
             return doc.get(key, default) if value is None else value
 
-        source_type = doc.get("source_type") or artifact_metadata.get("source_type") or "project_document"
-        authority = doc.get("authority") or artifact_metadata.get("authority") or "reference"
+        source_type = (
+            doc.get("source_type") or artifact_metadata.get("source_type") or "project_document"
+        )
+        authority = (
+            doc.get("authority") or artifact_metadata.get("authority") or "PROJECT_REFERENCE"
+        )
         owner_id = str(doc.get("owner_id") or doc.get("creator_id") or "")
 
         if not file_url:
@@ -194,7 +201,7 @@ class IngestionPipelineService:
         chunks, embeddings, failed_chunks = await embed_available_chunks(chunks)
         texts = [c["text"] for c in chunks]
         ids = [c["id"] for c in chunks]
-        metadatas = [c["metadata"] for c in chunks]
+        metadatas = [{**c["metadata"], "embedding_model": settings.EMBEDDING_MODEL} for c in chunks]
         previous_vector_ids, previous_bm25_ids = await asyncio.gather(
             vector_store.ids_by_document(document_id), bm25_store.ids_by_document(document_id)
         )

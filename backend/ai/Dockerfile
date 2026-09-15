@@ -2,8 +2,6 @@ FROM python:3.11-slim
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    TORCHINDUCTOR_CACHE_DIR=/home/appuser/.cache/torchinductor \
-    TORCH_HOME=/home/appuser/.cache/torch \
     HF_HOME=/home/appuser/.cache/huggingface \
     TMPDIR=/home/appuser/.cache/tmp
 
@@ -32,10 +30,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends chromium \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
-RUN uv pip install --system --no-cache pytest==8.3.5
-
 RUN groupadd --gid 10001 appuser && useradd --uid 10001 --gid appuser -m -s /bin/bash appuser
-RUN mkdir -p /home/appuser/.cache/huggingface /home/appuser/.cache/torchinductor /home/appuser/.cache/torch /home/appuser/.cache/tmp && chown -R appuser:appuser /home/appuser/.cache
+RUN mkdir -p /home/appuser/.cache/huggingface /home/appuser/.cache/tmp && chown -R appuser:appuser /home/appuser/.cache
 
 COPY --chown=appuser:appuser ai/src/ ./src/
 

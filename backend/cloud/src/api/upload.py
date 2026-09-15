@@ -1,5 +1,4 @@
 import json
-import os
 import re
 import shutil
 from datetime import datetime, timedelta, timezone
@@ -11,8 +10,7 @@ import aiofiles
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import RedirectResponse, Response
 
-from src.api.dependency import get_db, require_role
-from src.core.dependency import CurrentUser, Role
+from src.core.dependency import CurrentUser, Role, get_db, require_role
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 from src.core.infrastructure.redis import redis

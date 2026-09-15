@@ -788,7 +788,7 @@ export default function DefectsPage({ project }) {
                         await testingApi.retestDefect(project._id, item._id, {
                           test_result_id: event.target.value,
                           expected_revision: item.revision,
-                          note: "Retest từ giao diện quản lý lỗi",
+                          note: "Kiểm thử lại từ giao diện quản lý lỗi",
                           idempotency_key: crypto.randomUUID(),
                         });
                         await load();
@@ -833,7 +833,9 @@ export default function DefectsPage({ project }) {
         />
         <Pagination value={pageInfo} onChange={setPage} />
       </Panel>
-      {project.current_permissions?.includes("causalanalysis.read") && <CausalAnalysisPanel project={project} />}
+      {project.current_permissions?.includes("causalanalysis.read") && (
+        <CausalAnalysisPanel project={project} />
+      )}
       {dialog}
     </WorkspacePage>
   );

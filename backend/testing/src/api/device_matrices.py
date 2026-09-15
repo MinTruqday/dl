@@ -2,7 +2,15 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pymongo.errors import DuplicateKeyError
 
 from src.core.auth import CurrentUser, get_current_user
-from src.core.common import audit, envelope, get_project, get_project_entity, new_id, now, optimistic_patch
+from src.core.common import (
+    audit,
+    envelope,
+    get_project,
+    get_project_entity,
+    new_id,
+    now,
+    optimistic_patch,
+)
 from src.core.database import database
 from src.domain.schemas import (
     DeviceMatrixArchive,
@@ -11,14 +19,10 @@ from src.domain.schemas import (
     DeviceMatrixPatch,
 )
 
-
 router = APIRouter(prefix="/kiem-thu", tags=["Ma trận thiết bị"])
 
 
-@router.get(
-    "/du-an/{project_id}/ma-tran-thiet-bi",
-    openapi_extra={"x-function-ids": ["DEVMTX-01"]},
-)
+@router.get("/du-an/{project_id}/ma-tran-thiet-bi", openapi_extra={"x-function-ids": ["DEVMTX-01"]})
 async def list_device_matrices(
     project_id: str,
     include_archived: bool = Query(default=False),
@@ -32,17 +36,9 @@ async def list_device_matrices(
     return envelope(items)
 
 
-@router.get(
-    "/ma-tran-thiet-bi/{matrix_id}",
-    openapi_extra={"x-function-ids": ["DEVMTX-01"]},
-)
-async def get_device_matrix(
-    matrix_id: str,
-    user: CurrentUser = Depends(get_current_user),
-):
-    matrix = await get_project_entity(
-        "device_matrices", matrix_id, user, "device_matrix.read"
-    )
+@router.get("/ma-tran-thiet-bi/{matrix_id}", openapi_extra={"x-function-ids": ["DEVMTX-01"]})
+async def get_device_matrix(matrix_id: str, user: CurrentUser = Depends(get_current_user)):
+    matrix = await get_project_entity("device_matrices", matrix_id, user, "device_matrix.read")
     return envelope(matrix, revision=matrix["revision"])
 
 
@@ -52,9 +48,7 @@ async def get_device_matrix(
     openapi_extra={"x-function-ids": ["DEVMTX-02"]},
 )
 async def create_device_matrix(
-    project_id: str,
-    payload: DeviceMatrixCreate,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, payload: DeviceMatrixCreate, user: CurrentUser = Depends(get_current_user)
 ):
     await get_project(project_id, user, "device_matrix.manage")
     timestamp = now()
@@ -76,18 +70,11 @@ async def create_device_matrix(
     return envelope(matrix, revision=1)
 
 
-@router.patch(
-    "/ma-tran-thiet-bi/{matrix_id}",
-    openapi_extra={"x-function-ids": ["DEVMTX-02"]},
-)
+@router.patch("/ma-tran-thiet-bi/{matrix_id}", openapi_extra={"x-function-ids": ["DEVMTX-02"]})
 async def update_device_matrix(
-    matrix_id: str,
-    payload: DeviceMatrixPatch,
-    user: CurrentUser = Depends(get_current_user),
+    matrix_id: str, payload: DeviceMatrixPatch, user: CurrentUser = Depends(get_current_user)
 ):
-    matrix = await get_project_entity(
-        "device_matrices", matrix_id, user, "device_matrix.manage"
-    )
+    matrix = await get_project_entity("device_matrices", matrix_id, user, "device_matrix.manage")
     if matrix.get("status") != "ACTIVE":
         raise HTTPException(status_code=409, detail={"code": "DEVICE_MATRIX_ARCHIVED"})
     try:
@@ -100,28 +87,17 @@ async def update_device_matrix(
         )
     except DuplicateKeyError:
         raise HTTPException(status_code=409, detail={"code": "DEVICE_MATRIX_NAME_EXISTS"})
-    await audit(
-        user.id,
-        "device_matrix_updated",
-        "DeviceMatrix",
-        matrix_id,
-        matrix["project_id"],
-    )
+    await audit(user.id, "device_matrix_updated", "DeviceMatrix", matrix_id, matrix["project_id"])
     return envelope(updated, revision=updated["revision"])
 
 
 @router.post(
-    "/ma-tran-thiet-bi/{matrix_id}/luu-tru",
-    openapi_extra={"x-function-ids": ["DEVMTX-02"]},
+    "/ma-tran-thiet-bi/{matrix_id}/luu-tru", openapi_extra={"x-function-ids": ["DEVMTX-02"]}
 )
 async def archive_device_matrix(
-    matrix_id: str,
-    payload: DeviceMatrixArchive,
-    user: CurrentUser = Depends(get_current_user),
+    matrix_id: str, payload: DeviceMatrixArchive, user: CurrentUser = Depends(get_current_user)
 ):
-    matrix = await get_project_entity(
-        "device_matrices", matrix_id, user, "device_matrix.manage"
-    )
+    matrix = await get_project_entity("device_matrices", matrix_id, user, "device_matrix.manage")
     if matrix.get("status") == "ARCHIVED":
         return envelope(matrix, revision=matrix["revision"])
     updated = await optimistic_patch(
@@ -147,18 +123,11 @@ async def archive_device_matrix(
     return envelope(updated, revision=updated["revision"])
 
 
-@router.post(
-    "/ma-tran-thiet-bi/{matrix_id}/gan",
-    openapi_extra={"x-function-ids": ["DEVMTX-03"]},
-)
+@router.post("/ma-tran-thiet-bi/{matrix_id}/gan", openapi_extra={"x-function-ids": ["DEVMTX-03"]})
 async def assign_device_matrix(
-    matrix_id: str,
-    payload: DeviceMatrixAssignment,
-    user: CurrentUser = Depends(get_current_user),
+    matrix_id: str, payload: DeviceMatrixAssignment, user: CurrentUser = Depends(get_current_user)
 ):
-    matrix = await get_project_entity(
-        "device_matrices", matrix_id, user, "device_matrix.assign"
-    )
+    matrix = await get_project_entity("device_matrices", matrix_id, user, "device_matrix.assign")
     if matrix.get("status") != "ACTIVE":
         raise HTTPException(status_code=409, detail={"code": "DEVICE_MATRIX_ARCHIVED"})
     enabled_profiles = {
@@ -172,10 +141,7 @@ async def assign_device_matrix(
     if target["project_id"] != matrix["project_id"]:
         raise HTTPException(status_code=422, detail={"code": "PROJECT_MISMATCH"})
     if target.get("status") != "DRAFT":
-        raise HTTPException(
-            status_code=409,
-            detail={"code": "DEVICE_MATRIX_TARGET_SCOPE_FROZEN"},
-        )
+        raise HTTPException(status_code=409, detail={"code": "DEVICE_MATRIX_TARGET_SCOPE_FROZEN"})
     snapshot = {
         "matrix_id": matrix_id,
         "matrix_name": matrix["name"],

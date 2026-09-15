@@ -1,38 +1,38 @@
+from src.agents.workflow.reduction import agent_summarize_long_document
 from src.tools.document import (
-    update_document_metadata,
+    delete_document,
+    get_document_analytics,
     get_my_documents,
     get_trash_documents,
-    delete_document,
-    restore_document,
-    get_document_analytics,
     read_document,
     recommend_documents,
+    restore_document,
+    update_document_metadata,
 )
-from src.tools.mindmap import generate_mindmap
 from src.tools.instructions import manage_user_instructions
-from src.agents.workflow.reduction import agent_summarize_long_document
+from src.tools.mindmap import generate_mindmap
 from src.tools.testing import (
-    apply_test_case_revision,
     analyze_change_impact,
+    apply_test_case_revision,
     approve_test_case_version,
     baseline_requirement_version,
-    compare_requirement_versions,
     calculate_coverage,
+    compare_requirement_versions,
     confirm_trace_link,
     create_impact_analysis,
     create_maintenance_proposal,
     create_regression_recommendation,
     create_test_case_draft,
     create_trace_link_suggestion,
-    find_near_duplicates,
     find_duplicate_testcases,
+    find_near_duplicates,
     generate_test_scenarios,
     generate_testcases,
     get_acceptance_criteria,
-    get_historical_defects,
     get_bug_history,
     get_change_facts,
     get_execution_history,
+    get_historical_defects,
     get_project_context,
     get_requirement,
     get_requirement_version,

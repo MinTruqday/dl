@@ -4,12 +4,12 @@ import re
 import zipfile
 from datetime import datetime, timezone
 from typing import List, Optional
-from fastapi import HTTPException
-from loguru import logger
 
-from src.repositories.document import DocumentRepository
-from src.core.infrastructure.mongo import mongo
+from fastapi import HTTPException
+
 from src.clients.knowledge import knowledge_client
+from src.core.infrastructure.mongo import mongo
+from src.repositories.document import DocumentRepository
 from src.services.document.base import can_read_full
 
 
@@ -90,7 +90,6 @@ class DocumentBulkService:
 
     @staticmethod
     async def bulk_export_documents(document_ids: List[str], current_user) -> bytes:
-        user_id = str(current_user.id)
         query = {"_id": {"$in": document_ids}, "is_deleted": {"$ne": True}}
         docs = await DocumentRepository.find(query).to_list(length=100)
         zip_buffer = io.BytesIO()

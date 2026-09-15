@@ -4,14 +4,14 @@ import io
 import json
 import re
 import zipfile
-from defusedxml import ElementTree
 
 import httpx
+from defusedxml import ElementTree
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 from fastapi.responses import Response
-from pypdf import PdfReader
 from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
+from pypdf import PdfReader
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import (
@@ -28,37 +28,39 @@ from src.core.common import (
     sort_spec,
     validate_doc,
 )
-from src.core.database import database
 from src.core.configuration import settings
+from src.core.database import database
 from src.domain.schemas import (
     ImportConfirm,
     ImportCreate,
     KnowledgeSourceCreate,
     ProjectArchiveInput,
+    RequirementAIAnalysisInput,
+    RequirementAISuggestionApply,
     RequirementBaselineInput,
     RequirementCandidateMergeInput,
     RequirementCandidateRejectInput,
     RequirementCandidateSplitInput,
     RequirementCompareInput,
-    RequirementDependencyInput,
-    RequirementDuplicateCheckInput,
-    RequirementDocumentPatch,
     RequirementCreate,
+    RequirementDependencyInput,
+    RequirementDocumentPatch,
     RequirementDraftPatch,
+    RequirementDuplicateCheckInput,
     RequirementExtractionInput,
     RequirementImportReview,
-    RequirementObsoleteInput,
     RequirementMergeInput,
+    RequirementObsoleteInput,
+    RequirementParseRetry,
     RequirementRestoreInput,
     RequirementSplitInput,
-    RequirementParseRetry,
     RequirementVersionCreate,
     ReviewTransitionInput,
 )
 from src.services.change_analysis import semantic_changes
+from src.services.design_assistance import ai_contract_metadata, request_design_assistance
 from src.services.linters import requirement_duplicate_score, requirement_findings
 from src.services.project_knowledge import index_artifact
-
 
 router = APIRouter(prefix="/kiem-thu", tags=["Yêu cầu kiểm thử"])
 
@@ -67,6 +69,21 @@ def serialized_content(content):
     if isinstance(content, str):
         return content
     return json.dumps(content, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
+def requirement_suggestion_changes(version, suggestion):
+    current_title = str(version.get("title") or "").strip()
+    current_content = str(
+        version.get("plain_text_projection") or plain_text(version.get("content_doc", {})) or ""
+    ).strip()
+    revised_title = str(suggestion.get("revised_title") or "").strip()
+    revised_content = str(suggestion.get("revised_content") or "").strip()
+    return bool(
+        revised_title
+        and revised_title != current_title
+        or revised_content
+        and revised_content != current_content
+    )
 
 
 def prepare_requirement_candidates(job_id, candidates):
@@ -148,10 +165,23 @@ async def create_requirement_document_record(project_id, payload, user):
         project_id,
         {"content_hash": content_hash, "format": payload.format},
     )
-    indexed = await index_artifact(project_id, "requirement_document", document["_id"], document["_id"], document["filename"], content, document["status"], document["authority"], document["source_version"])
+    indexed = await index_artifact(
+        project_id,
+        "requirement_document",
+        document["_id"],
+        document["_id"],
+        document["filename"],
+        content,
+        document["status"],
+        document["authority"],
+        document["source_version"],
+    )
     document["index_status"] = "INDEXED" if indexed else "FAILED"
     document["indexed_at"] = now()
-    await database.value.requirement_documents.update_one({"_id": document["_id"], "project_id": project_id}, {"$set": {"index_status": document["index_status"], "indexed_at": document["indexed_at"]}})
+    await database.value.requirement_documents.update_one(
+        {"_id": document["_id"], "project_id": project_id},
+        {"$set": {"index_status": document["index_status"], "indexed_at": document["indexed_at"]}},
+    )
     return document
 
 
@@ -274,9 +304,15 @@ async def create_requirement_record(project_id, payload, user, origin="manual"):
     try:
         await persist_acceptance_criteria(version, payload.acceptance_criteria)
     except Exception:
-        await database.value.acceptance_criteria.delete_many({"requirement_version_id": version["_id"]})
-        await database.value.requirement_versions.delete_one({"_id": version["_id"], "project_id": project_id})
-        await database.value.requirements.delete_one({"_id": requirement_id, "project_id": project_id})
+        await database.value.acceptance_criteria.delete_many(
+            {"requirement_version_id": version["_id"]}
+        )
+        await database.value.requirement_versions.delete_one(
+            {"_id": version["_id"], "project_id": project_id}
+        )
+        await database.value.requirements.delete_one(
+            {"_id": requirement_id, "project_id": project_id}
+        )
         raise
     await index_requirement(version)
     await audit(user.id, "requirement_created", "Requirement", requirement_id, project_id)
@@ -295,7 +331,9 @@ def unique_source_refs(values):
     return result
 
 
-async def load_requirement_baselines(project_id, requirement_ids, expected_version_ids, user, permission):
+async def load_requirement_baselines(
+    project_id, requirement_ids, expected_version_ids, user, permission
+):
     await get_project(project_id, user, permission)
     ordered_ids = list(dict.fromkeys(requirement_ids))
     if len(ordered_ids) != len(requirement_ids):
@@ -314,7 +352,9 @@ async def load_requirement_baselines(project_id, requirement_ids, expected_versi
     ).to_list(len(version_ids))
     versions_by_id = {item["_id"]: item for item in versions}
     if set(versions_by_id) != set(version_ids):
-        raise HTTPException(status_code=404, detail={"code": "SOURCE_REQUIREMENT_VERSION_NOT_FOUND"})
+        raise HTTPException(
+            status_code=404, detail={"code": "SOURCE_REQUIREMENT_VERSION_NOT_FOUND"}
+        )
     sources = []
     for requirement_id in ordered_ids:
         requirement = by_id[requirement_id]
@@ -332,16 +372,23 @@ async def load_requirement_baselines(project_id, requirement_ids, expected_versi
         if requirement.get("status") != "BASELINED" or version.get("status") != "BASELINED":
             raise HTTPException(
                 status_code=409,
-                detail={"code": "SOURCE_REQUIREMENT_NOT_BASELINED", "requirement_id": requirement_id},
+                detail={
+                    "code": "SOURCE_REQUIREMENT_NOT_BASELINED",
+                    "requirement_id": requirement_id,
+                },
             )
         sources.append((requirement, version))
     return sources
 
 
-async def claim_requirement_transformation(project_id, transformation_type, payload, source_requirement_ids, source_version_ids, user):
+async def claim_requirement_transformation(
+    project_id, transformation_type, payload, source_requirement_ids, source_version_ids, user
+):
     request_payload = payload.model_dump(mode="json")
     request_fingerprint = hashlib.sha256(
-        serialized_content({key: value for key, value in request_payload.items() if key != "idempotency_key"}).encode("utf-8")
+        serialized_content(
+            {key: value for key, value in request_payload.items() if key != "idempotency_key"}
+        ).encode("utf-8")
     ).hexdigest()
     existing = await database.value.requirement_transformations.find_one(
         {"project_id": project_id, "idempotency_key": payload.idempotency_key}
@@ -352,7 +399,9 @@ async def claim_requirement_transformation(project_id, transformation_type, payl
         if existing.get("status") == "CONFIRMED":
             return existing, False
         if existing.get("status") == "CONFIRMING":
-            raise HTTPException(status_code=409, detail={"code": "REQUIREMENT_TRANSFORMATION_IN_PROGRESS"})
+            raise HTTPException(
+                status_code=409, detail={"code": "REQUIREMENT_TRANSFORMATION_IN_PROGRESS"}
+            )
         claimed = await database.value.requirement_transformations.find_one_and_update(
             {"_id": existing["_id"], "project_id": project_id, "status": "FAILED"},
             {
@@ -363,7 +412,9 @@ async def claim_requirement_transformation(project_id, transformation_type, payl
             return_document=ReturnDocument.AFTER,
         )
         if not claimed:
-            raise HTTPException(status_code=409, detail={"code": "REQUIREMENT_TRANSFORMATION_CONFLICT"})
+            raise HTTPException(
+                status_code=409, detail={"code": "REQUIREMENT_TRANSFORMATION_CONFLICT"}
+            )
         return claimed, True
     timestamp = now()
     transformation = {
@@ -389,13 +440,19 @@ async def claim_requirement_transformation(project_id, transformation_type, payl
         existing = await database.value.requirement_transformations.find_one(
             {"project_id": project_id, "idempotency_key": payload.idempotency_key}
         )
-        if existing and existing.get("request_fingerprint") == request_fingerprint and existing.get("status") == "CONFIRMED":
+        if (
+            existing
+            and existing.get("request_fingerprint") == request_fingerprint
+            and existing.get("status") == "CONFIRMED"
+        ):
             return existing, False
         raise HTTPException(status_code=409, detail={"code": "REQUIREMENT_TRANSFORMATION_CONFLICT"})
     return transformation, True
 
 
-async def prepare_requirement_output(project_id, draft, user, transformation, index, sources, relation):
+async def prepare_requirement_output(
+    project_id, draft, user, transformation, index, sources, relation
+):
     validate_doc(draft.content_doc)
     keys = [item.key for item in draft.acceptance_criteria]
     if len(keys) != len(set(keys)):
@@ -483,10 +540,16 @@ async def prepare_requirement_output(project_id, draft, user, transformation, in
 
 async def hydrate_requirement_transformation(transformation):
     requirements = await database.value.requirements.find(
-        {"project_id": transformation["project_id"], "_id": {"$in": transformation.get("result_requirement_ids", [])}}
+        {
+            "project_id": transformation["project_id"],
+            "_id": {"$in": transformation.get("result_requirement_ids", [])},
+        }
     ).to_list(100)
     versions = await database.value.requirement_versions.find(
-        {"project_id": transformation["project_id"], "_id": {"$in": transformation.get("result_version_ids", [])}}
+        {
+            "project_id": transformation["project_id"],
+            "_id": {"$in": transformation.get("result_version_ids", [])},
+        }
     ).to_list(100)
     versions_by_id = {item["_id"]: item for item in versions}
     return {
@@ -498,7 +561,9 @@ async def hydrate_requirement_transformation(transformation):
     }
 
 
-async def execute_requirement_transformation(project_id, transformation, sources, drafts, user, relation):
+async def execute_requirement_transformation(
+    project_id, transformation, sources, drafts, user, relation
+):
     output_requirements = []
     output_versions = []
     output_criteria = []
@@ -513,7 +578,9 @@ async def execute_requirement_transformation(project_id, transformation, sources
             output_criteria.extend(criteria)
         keys = [item["requirement_key"] for item in output_requirements]
         if len(keys) != len(set(keys)):
-            raise HTTPException(status_code=422, detail={"code": "DUPLICATE_OUTPUT_REQUIREMENT_KEY"})
+            raise HTTPException(
+                status_code=422, detail={"code": "DUPLICATE_OUTPUT_REQUIREMENT_KEY"}
+            )
         await database.value.requirements.insert_many(output_requirements)
         await database.value.requirement_versions.insert_many(output_versions)
         if output_criteria:
@@ -577,11 +644,17 @@ async def execute_requirement_transformation(project_id, transformation, sources
             return_document=ReturnDocument.AFTER,
         )
         if not transformation:
-            raise HTTPException(status_code=409, detail={"code": "REQUIREMENT_TRANSFORMATION_CONFLICT"})
+            raise HTTPException(
+                status_code=409, detail={"code": "REQUIREMENT_TRANSFORMATION_CONFLICT"}
+            )
     except Exception as error:
         for requirement_id, version_id in updated_sources:
             await database.value.requirements.update_one(
-                {"_id": requirement_id, "project_id": project_id, "superseded_by_transformation_id": transformation["_id"]},
+                {
+                    "_id": requirement_id,
+                    "project_id": project_id,
+                    "superseded_by_transformation_id": transformation["_id"],
+                },
                 {
                     "$set": {"status": "BASELINED", "updated_at": now()},
                     "$unset": {
@@ -593,7 +666,11 @@ async def execute_requirement_transformation(project_id, transformation, sources
                 },
             )
             await database.value.requirement_versions.update_one(
-                {"_id": version_id, "project_id": project_id, "superseded_by_transformation_id": transformation["_id"]},
+                {
+                    "_id": version_id,
+                    "project_id": project_id,
+                    "superseded_by_transformation_id": transformation["_id"],
+                },
                 {
                     "$set": {"status": "BASELINED", "updated_at": now()},
                     "$unset": {
@@ -605,12 +682,24 @@ async def execute_requirement_transformation(project_id, transformation, sources
                     "$inc": {"revision": 1},
                 },
             )
-        await database.value.acceptance_criteria.delete_many({"project_id": project_id, "_id": {"$in": [item["_id"] for item in output_criteria]}})
-        await database.value.requirement_versions.delete_many({"project_id": project_id, "transformation_id": transformation["_id"]})
-        await database.value.requirements.delete_many({"project_id": project_id, "transformation_id": transformation["_id"]})
+        await database.value.acceptance_criteria.delete_many(
+            {"project_id": project_id, "_id": {"$in": [item["_id"] for item in output_criteria]}}
+        )
+        await database.value.requirement_versions.delete_many(
+            {"project_id": project_id, "transformation_id": transformation["_id"]}
+        )
+        await database.value.requirements.delete_many(
+            {"project_id": project_id, "transformation_id": transformation["_id"]}
+        )
         await database.value.requirement_transformations.update_one(
             {"_id": transformation["_id"], "project_id": project_id},
-            {"$set": {"status": "FAILED", "error_code": getattr(error, "detail", {"code": type(error).__name__}), "updated_at": now()}},
+            {
+                "$set": {
+                    "status": "FAILED",
+                    "error_code": getattr(error, "detail", {"code": type(error).__name__}),
+                    "updated_at": now(),
+                }
+            },
         )
         raise
     indexed = [await index_requirement(version) for version in output_versions]
@@ -636,9 +725,7 @@ async def execute_requirement_transformation(project_id, transformation, sources
 
 @router.post("/du-an/{project_id}/yeu-cau", status_code=201)
 async def create_requirement(
-    project_id: str,
-    payload: RequirementCreate,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, payload: RequirementCreate, user: CurrentUser = Depends(get_current_user)
 ):
     return envelope(await create_requirement_record(project_id, payload, user))
 
@@ -665,12 +752,17 @@ async def list_requirements(
     if status:
         query["status"] = status
     requirements = await database.value.requirements.find(query).to_list(20000)
-    version_ids = [item.get("current_version_id") for item in requirements if item.get("current_version_id")]
+    version_ids = [
+        item.get("current_version_id") for item in requirements if item.get("current_version_id")
+    ]
     versions = await database.value.requirement_versions.find(
         {"project_id": project_id, "_id": {"$in": version_ids}}
     ).to_list(20000)
     by_id = {item["_id"]: item for item in versions}
-    items = [{**item, "current_version": by_id.get(item.get("current_version_id"))} for item in requirements]
+    items = [
+        {**item, "current_version": by_id.get(item.get("current_version_id"))}
+        for item in requirements
+    ]
     confirmed_links = await database.value.trace_links.find(
         {
             "project_id": project_id,
@@ -704,10 +796,12 @@ async def list_requirements(
         )
     terms = [value.strip().lower() for value in (q, key, title) if value.strip()]
     if terms:
+
         def matches_requirement(item):
             version = item.get("current_version") or {}
             searchable = f"{item.get('requirement_key', '')} {version.get('title', '')}".lower()
             return all(value in searchable for value in terms)
+
         items = [item for item in items if matches_requirement(item)]
     if owner:
         items = [item for item in items if item.get("owner_id") == owner]
@@ -723,8 +817,7 @@ async def list_requirements(
     if has_pending_impact is not None:
         items = [item for item in items if item.get("has_pending_impact") is has_pending_impact]
     sort_field, direction = sort_spec(
-        sort,
-        {"requirement_key", "status", "updated_at", "created_at", "title", "owner_id"},
+        sort, {"requirement_key", "status", "updated_at", "created_at", "title", "owner_id"}
     )
     items.sort(
         key=lambda item: str(
@@ -739,12 +832,16 @@ async def list_requirements(
 
 @router.get("/yeu-cau/{requirement_id}")
 async def requirement_detail(requirement_id: str, user: CurrentUser = Depends(get_current_user)):
-    requirement = await get_project_entity(
-        "requirements", requirement_id, user, "requirement.read"
+    requirement = await get_project_entity("requirements", requirement_id, user, "requirement.read")
+    version = await database.value.requirement_versions.find_one(
+        {"_id": requirement["current_version_id"]}
     )
-    version = await database.value.requirement_versions.find_one({"_id": requirement["current_version_id"]})
-    criteria = await database.value.acceptance_criteria.find({"requirement_version_id": version["_id"]}).to_list(500)
-    return envelope({**requirement, "current_version": {**version, "acceptance_criteria": criteria}})
+    criteria = await database.value.acceptance_criteria.find(
+        {"requirement_version_id": version["_id"]}
+    ).to_list(500)
+    return envelope(
+        {**requirement, "current_version": {**version, "acceptance_criteria": criteria}}
+    )
 
 
 @router.patch("/du-an/{project_id}/yeu-cau/{requirement_id}")
@@ -754,7 +851,9 @@ async def update_requirement_draft(
     payload: RequirementDraftPatch,
     user: CurrentUser = Depends(get_current_user),
 ):
-    requirement = await get_project_entity("requirements", requirement_id, user, "requirement.update")
+    requirement = await get_project_entity(
+        "requirements", requirement_id, user, "requirement.update"
+    )
     if requirement["project_id"] != project_id:
         raise HTTPException(status_code=422, detail={"code": "PROJECT_MISMATCH"})
     version = await database.value.requirement_versions.find_one(
@@ -763,7 +862,10 @@ async def update_requirement_draft(
     if not version or version.get("status") != "DRAFT":
         raise HTTPException(status_code=409, detail={"code": "IMMUTABLE_REQUIREMENT_VERSION"})
     if version.get("revision") != payload.expected_revision:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT", "current_revision": version.get("revision")})
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "REVISION_CONFLICT", "current_revision": version.get("revision")},
+        )
     changes = payload.model_dump(exclude_unset=True)
     changes.pop("expected_revision", None)
     if "acceptance_criteria" in changes:
@@ -778,7 +880,9 @@ async def update_requirement_draft(
     if criteria is not None:
         keys = [item.get("key") for item in criteria]
         if len(keys) != len(set(keys)):
-            raise HTTPException(status_code=422, detail={"code": "DUPLICATE_ACCEPTANCE_CRITERION_KEY"})
+            raise HTTPException(
+                status_code=422, detail={"code": "DUPLICATE_ACCEPTANCE_CRITERION_KEY"}
+            )
         for item in criteria:
             validate_doc(item["content_doc"])
     if "source_refs" in changes:
@@ -787,34 +891,49 @@ async def update_requirement_draft(
     if content_doc is not None:
         validate_doc(content_doc)
         changes["plain_text_projection"] = plain_text(content_doc)
-    if "requirement_key" in changes and changes["requirement_key"] != requirement.get("requirement_key"):
-        duplicate = await database.value.requirements.find_one({"project_id": project_id, "requirement_key": changes["requirement_key"], "_id": {"$ne": requirement_id}})
+    if "requirement_key" in changes and changes["requirement_key"] != requirement.get(
+        "requirement_key"
+    ):
+        duplicate = await database.value.requirements.find_one(
+            {
+                "project_id": project_id,
+                "requirement_key": changes["requirement_key"],
+                "_id": {"$ne": requirement_id},
+            }
+        )
         if duplicate:
             raise HTTPException(status_code=409, detail={"code": "REQUIREMENT_KEY_EXISTS"})
     updated_version = await database.value.requirement_versions.find_one_and_update(
-        {"_id": version["_id"], "project_id": project_id, "status": "DRAFT", "revision": payload.expected_revision},
+        {
+            "_id": version["_id"],
+            "project_id": project_id,
+            "status": "DRAFT",
+            "revision": payload.expected_revision,
+        },
         {"$set": {**changes, "updated_at": now()}, "$inc": {"revision": 1}},
         return_document=ReturnDocument.AFTER,
     )
     if not updated_version:
         raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
-    identity_changes = {
-        key: changes[key]
-        for key in ("owner_id", "tags")
-        if key in changes
-    }
+    identity_changes = {key: changes[key] for key in ("owner_id", "tags") if key in changes}
     if identity_changes:
         await database.value.requirements.update_one(
             {"_id": requirement_id, "project_id": project_id, "current_version_id": version["_id"]},
             {"$set": {**identity_changes, "updated_at": now()}},
         )
     if criteria is not None:
-        previous_criteria = await database.value.acceptance_criteria.find({"requirement_version_id": version["_id"]}).to_list(500)
-        await database.value.acceptance_criteria.delete_many({"requirement_version_id": version["_id"]})
+        previous_criteria = await database.value.acceptance_criteria.find(
+            {"requirement_version_id": version["_id"]}
+        ).to_list(500)
+        await database.value.acceptance_criteria.delete_many(
+            {"requirement_version_id": version["_id"]}
+        )
         try:
             await persist_acceptance_criteria(updated_version, criteria)
         except Exception:
-            await database.value.acceptance_criteria.delete_many({"requirement_version_id": version["_id"]})
+            await database.value.acceptance_criteria.delete_many(
+                {"requirement_version_id": version["_id"]}
+            )
             if previous_criteria:
                 await database.value.acceptance_criteria.insert_many(previous_criteria)
             await database.value.requirement_versions.update_one(
@@ -822,12 +941,20 @@ async def update_requirement_draft(
                 {"$set": {"acceptance_criterion_ids": [item["_id"] for item in previous_criteria]}},
             )
             raise
-        updated_version = await database.value.requirement_versions.find_one({"_id": version["_id"]})
+        updated_version = await database.value.requirement_versions.find_one(
+            {"_id": version["_id"]}
+        )
     parent_changes = {key: changes[key] for key in ("requirement_key",) if key in changes}
     if parent_changes:
-        await database.value.requirements.update_one({"_id": requirement_id, "project_id": project_id}, {"$set": {**parent_changes, "updated_at": now()}})
+        await database.value.requirements.update_one(
+            {"_id": requirement_id, "project_id": project_id},
+            {"$set": {**parent_changes, "updated_at": now()}},
+        )
     await audit(user.id, "requirement_draft_updated", "Requirement", requirement_id, project_id)
-    return envelope({**requirement, **parent_changes, "current_version": updated_version}, revision=updated_version["revision"])
+    return envelope(
+        {**requirement, **parent_changes, "current_version": updated_version},
+        revision=updated_version["revision"],
+    )
 
 
 @router.post("/yeu-cau/{requirement_id}/phu-thuoc")
@@ -836,32 +963,55 @@ async def add_requirement_dependency(
     payload: RequirementDependencyInput,
     user: CurrentUser = Depends(get_current_user),
 ):
-    requirement = await get_project_entity("requirements", requirement_id, user, "requirement_dependency.manage")
+    requirement = await get_project_entity(
+        "requirements", requirement_id, user, "requirement_dependency.manage"
+    )
     dependency_id = payload.dependency_requirement_id
     if dependency_id == requirement_id:
         raise HTTPException(status_code=422, detail={"code": "REQUIREMENT_DEPENDENCY_CYCLE"})
-    dependency = await database.value.requirements.find_one({"_id": dependency_id, "project_id": requirement["project_id"]})
+    dependency = await database.value.requirements.find_one(
+        {"_id": dependency_id, "project_id": requirement["project_id"]}
+    )
     if not dependency:
         raise HTTPException(status_code=422, detail={"code": "INVALID_REQUIREMENT_DEPENDENCY"})
-    version = await database.value.requirement_versions.find_one({"_id": requirement["current_version_id"], "project_id": requirement["project_id"]})
+    version = await database.value.requirement_versions.find_one(
+        {"_id": requirement["current_version_id"], "project_id": requirement["project_id"]}
+    )
     if not version or version.get("status") != "DRAFT":
         raise HTTPException(status_code=409, detail={"code": "IMMUTABLE_REQUIREMENT_VERSION"})
     if version.get("revision") != payload.expected_revision:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT", "current_revision": version.get("revision")})
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "REVISION_CONFLICT", "current_revision": version.get("revision")},
+        )
     dependencies = list(dict.fromkeys(version.get("dependencies", [])))
     if dependency_id in dependencies:
         return envelope(version, revision=version["revision"])
-    if await requirement_dependency_reaches(dependency_id, requirement_id, requirement["project_id"]):
+    if await requirement_dependency_reaches(
+        dependency_id, requirement_id, requirement["project_id"]
+    ):
         raise HTTPException(status_code=422, detail={"code": "REQUIREMENT_DEPENDENCY_CYCLE"})
     dependencies.append(dependency_id)
     updated = await database.value.requirement_versions.find_one_and_update(
-        {"_id": version["_id"], "project_id": requirement["project_id"], "status": "DRAFT", "revision": payload.expected_revision},
+        {
+            "_id": version["_id"],
+            "project_id": requirement["project_id"],
+            "status": "DRAFT",
+            "revision": payload.expected_revision,
+        },
         {"$set": {"dependencies": dependencies, "updated_at": now()}, "$inc": {"revision": 1}},
         return_document=ReturnDocument.AFTER,
     )
     if not updated:
         raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
-    await audit(user.id, "requirement_dependency_added", "Requirement", requirement_id, requirement["project_id"], {"dependency_requirement_id": dependency_id})
+    await audit(
+        user.id,
+        "requirement_dependency_added",
+        "Requirement",
+        requirement_id,
+        requirement["project_id"],
+        {"dependency_requirement_id": dependency_id},
+    )
     return envelope(updated, revision=updated["revision"])
 
 
@@ -872,21 +1022,45 @@ async def remove_requirement_dependency(
     expected_revision: int = Query(ge=1),
     user: CurrentUser = Depends(get_current_user),
 ):
-    requirement = await get_project_entity("requirements", requirement_id, user, "requirement_dependency.manage")
-    version = await database.value.requirement_versions.find_one({"_id": requirement["current_version_id"], "project_id": requirement["project_id"]})
+    requirement = await get_project_entity(
+        "requirements", requirement_id, user, "requirement_dependency.manage"
+    )
+    version = await database.value.requirement_versions.find_one(
+        {"_id": requirement["current_version_id"], "project_id": requirement["project_id"]}
+    )
     if not version or version.get("status") != "DRAFT":
         raise HTTPException(status_code=409, detail={"code": "IMMUTABLE_REQUIREMENT_VERSION"})
     dependencies = list(dict.fromkeys(version.get("dependencies", [])))
     if dependency_requirement_id not in dependencies:
         return envelope(version, revision=version["revision"])
     updated = await database.value.requirement_versions.find_one_and_update(
-        {"_id": version["_id"], "project_id": requirement["project_id"], "status": "DRAFT", "revision": expected_revision},
-        {"$set": {"dependencies": [item for item in dependencies if item != dependency_requirement_id], "updated_at": now()}, "$inc": {"revision": 1}},
+        {
+            "_id": version["_id"],
+            "project_id": requirement["project_id"],
+            "status": "DRAFT",
+            "revision": expected_revision,
+        },
+        {
+            "$set": {
+                "dependencies": [
+                    item for item in dependencies if item != dependency_requirement_id
+                ],
+                "updated_at": now(),
+            },
+            "$inc": {"revision": 1},
+        },
         return_document=ReturnDocument.AFTER,
     )
     if not updated:
         raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
-    await audit(user.id, "requirement_dependency_removed", "Requirement", requirement_id, requirement["project_id"], {"dependency_requirement_id": dependency_requirement_id})
+    await audit(
+        user.id,
+        "requirement_dependency_removed",
+        "Requirement",
+        requirement_id,
+        requirement["project_id"],
+        {"dependency_requirement_id": dependency_requirement_id},
+    )
     return envelope(updated, revision=updated["revision"])
 
 
@@ -900,10 +1074,15 @@ async def requirement_dependency_reaches(start_id: str, target_id: str, project_
         if current_id in visited:
             continue
         visited.add(current_id)
-        requirement = await database.value.requirements.find_one({"_id": current_id, "project_id": project_id}, {"current_version_id": 1})
+        requirement = await database.value.requirements.find_one(
+            {"_id": current_id, "project_id": project_id}, {"current_version_id": 1}
+        )
         if not requirement:
             continue
-        version = await database.value.requirement_versions.find_one({"_id": requirement.get("current_version_id"), "project_id": project_id}, {"dependencies": 1})
+        version = await database.value.requirement_versions.find_one(
+            {"_id": requirement.get("current_version_id"), "project_id": project_id},
+            {"dependencies": 1},
+        )
         pending.extend((version or {}).get("dependencies", []))
     return False
 
@@ -920,10 +1099,15 @@ async def create_requirement_version(
     if requirement["current_version_id"] != payload.expected_current_version_id:
         raise HTTPException(
             status_code=409,
-            detail={"code": "REVISION_CONFLICT", "current_version_id": requirement["current_version_id"]},
+            detail={
+                "code": "REVISION_CONFLICT",
+                "current_version_id": requirement["current_version_id"],
+            },
         )
     await validate_requirement_sources(requirement["project_id"], payload.source_refs)
-    parent = await database.value.requirement_versions.find_one({"_id": requirement["current_version_id"]})
+    parent = await database.value.requirement_versions.find_one(
+        {"_id": requirement["current_version_id"]}
+    )
     latest = await database.value.requirement_versions.find_one(
         {"requirement_id": requirement_id}, sort=[("version", -1)]
     )
@@ -959,24 +1143,47 @@ async def create_requirement_version(
     try:
         await persist_acceptance_criteria(version, payload.acceptance_criteria)
     except Exception:
-        await database.value.acceptance_criteria.delete_many({"requirement_version_id": version["_id"]})
-        await database.value.requirement_versions.delete_one({"_id": version["_id"], "project_id": requirement["project_id"]})
+        await database.value.acceptance_criteria.delete_many(
+            {"requirement_version_id": version["_id"]}
+        )
+        await database.value.requirement_versions.delete_one(
+            {"_id": version["_id"], "project_id": requirement["project_id"]}
+        )
         raise
     await index_requirement(version)
     await database.value.requirements.update_one(
         {"_id": requirement_id},
-        {"$set": {"current_version_id": version["_id"], "status": "CHANGED", "tags": payload.tags, "owner_id": payload.owner_id or requirement.get("owner_id"), "updated_at": timestamp}},
+        {
+            "$set": {
+                "current_version_id": version["_id"],
+                "status": "CHANGED",
+                "tags": payload.tags,
+                "owner_id": payload.owner_id or requirement.get("owner_id"),
+                "updated_at": timestamp,
+            }
+        },
     )
-    await audit(user.id, "requirement_version_created", "RequirementVersion", version["_id"], requirement["project_id"], {"parent_version_id": parent["_id"]})
+    await audit(
+        user.id,
+        "requirement_version_created",
+        "RequirementVersion",
+        version["_id"],
+        requirement["project_id"],
+        {"parent_version_id": parent["_id"]},
+    )
     return envelope(version, revision=1)
 
 
 @router.get("/yeu-cau/{requirement_id}/phien-ban")
-async def list_requirement_versions(requirement_id: str, user: CurrentUser = Depends(get_current_user)):
-    requirement = await get_project_entity(
-        "requirements", requirement_id, user, "requirement.version.read"
+async def list_requirement_versions(
+    requirement_id: str, user: CurrentUser = Depends(get_current_user)
+):
+    await get_project_entity("requirements", requirement_id, user, "requirement.version.read")
+    versions = (
+        await database.value.requirement_versions.find({"requirement_id": requirement_id})
+        .sort("version", -1)
+        .to_list(500)
     )
-    versions = await database.value.requirement_versions.find({"requirement_id": requirement_id}).sort("version", -1).to_list(500)
     return envelope(versions)
 
 
@@ -1009,12 +1216,16 @@ async def submit_requirement_review(
     lint_blocking = (project.get("settings") or {}).get("requirement_lint_blocking", True)
     if lint_blocking and any(item["severity"] == "error" for item in findings):
         raise HTTPException(
-            status_code=409,
-            detail={"code": "REQUIREMENT_LINT_BLOCKED", "findings": findings},
+            status_code=409, detail={"code": "REQUIREMENT_LINT_BLOCKED", "findings": findings}
         )
     timestamp = now()
     result = await database.value.requirement_versions.update_one(
-        {"_id": version["_id"], "project_id": project_id, "revision": payload.expected_revision, "status": "DRAFT"},
+        {
+            "_id": version["_id"],
+            "project_id": project_id,
+            "revision": payload.expected_revision,
+            "status": "DRAFT",
+        },
         {
             "$set": {
                 "status": "IN_REVIEW",
@@ -1032,8 +1243,17 @@ async def submit_requirement_review(
         {"_id": requirement_id, "project_id": project_id},
         {"$set": {"status": "IN_REVIEW", "updated_at": timestamp}},
     )
-    version = await database.value.requirement_versions.find_one({"_id": version["_id"], "project_id": project_id})
-    await audit(user.id, "requirement_review_submitted", "RequirementVersion", version["_id"], project_id, {"review_note": payload.review_note})
+    version = await database.value.requirement_versions.find_one(
+        {"_id": version["_id"], "project_id": project_id}
+    )
+    await audit(
+        user.id,
+        "requirement_review_submitted",
+        "RequirementVersion",
+        version["_id"],
+        project_id,
+        {"review_note": payload.review_note},
+    )
     return envelope(version, revision=version["revision"])
 
 
@@ -1043,7 +1263,9 @@ async def submit_requirement_review_alias(
     payload: ReviewTransitionInput,
     user: CurrentUser = Depends(get_current_user),
 ):
-    requirement = await get_project_entity("requirements", requirement_id, user, "requirement.submit_review")
+    requirement = await get_project_entity(
+        "requirements", requirement_id, user, "requirement.submit_review"
+    )
     return await submit_requirement_review(requirement["project_id"], requirement_id, payload, user)
 
 
@@ -1065,10 +1287,18 @@ async def request_requirement_changes(
     if version["status"] != "IN_REVIEW":
         raise HTTPException(status_code=409, detail={"code": "INVALID_STATE_TRANSITION"})
     if version["revision"] != payload.expected_revision:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT", "current_revision": version["revision"]})
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "REVISION_CONFLICT", "current_revision": version["revision"]},
+        )
     timestamp = now()
     result = await database.value.requirement_versions.update_one(
-        {"_id": version["_id"], "project_id": project_id, "revision": payload.expected_revision, "status": "IN_REVIEW"},
+        {
+            "_id": version["_id"],
+            "project_id": project_id,
+            "revision": payload.expected_revision,
+            "status": "IN_REVIEW",
+        },
         {
             "$set": {
                 "status": "DRAFT",
@@ -1086,8 +1316,17 @@ async def request_requirement_changes(
         {"_id": requirement_id, "project_id": project_id},
         {"$set": {"status": "DRAFT", "updated_at": timestamp}},
     )
-    version = await database.value.requirement_versions.find_one({"_id": version["_id"], "project_id": project_id})
-    await audit(user.id, "requirement_changes_requested", "RequirementVersion", version["_id"], project_id, {"review_note": payload.review_note})
+    version = await database.value.requirement_versions.find_one(
+        {"_id": version["_id"], "project_id": project_id}
+    )
+    await audit(
+        user.id,
+        "requirement_changes_requested",
+        "RequirementVersion",
+        version["_id"],
+        project_id,
+        {"review_note": payload.review_note},
+    )
     return envelope(version, revision=version["revision"])
 
 
@@ -1105,18 +1344,37 @@ async def baseline_requirement_version(
     if version["status"] != "IN_REVIEW":
         raise HTTPException(status_code=409, detail={"code": "INVALID_STATE_TRANSITION"})
     if version["revision"] != payload.expected_revision:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT", "current_revision": version["revision"]})
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "REVISION_CONFLICT", "current_revision": version["revision"]},
+        )
     findings = requirement_findings(version)
     project = await database.value.projects.find_one(
         {"_id": version["project_id"]}, {"settings": 1}
     )
     lint_blocking = (project.get("settings") or {}).get("requirement_lint_blocking", True)
     if lint_blocking and any(item["severity"] == "error" for item in findings):
-        raise HTTPException(status_code=409, detail={"code": "REQUIREMENT_LINT_BLOCKED", "findings": findings})
+        raise HTTPException(
+            status_code=409, detail={"code": "REQUIREMENT_LINT_BLOCKED", "findings": findings}
+        )
     timestamp = now()
     version = await database.value.requirement_versions.find_one_and_update(
-        {"_id": version_id, "project_id": version["project_id"], "status": "IN_REVIEW", "revision": payload.expected_revision},
-        {"$set": {"status": "BASELINED", "review_note": payload.review_note, "baselined_at": timestamp, "baselined_by": user.id, "updated_at": timestamp}, "$inc": {"revision": 1}},
+        {
+            "_id": version_id,
+            "project_id": version["project_id"],
+            "status": "IN_REVIEW",
+            "revision": payload.expected_revision,
+        },
+        {
+            "$set": {
+                "status": "BASELINED",
+                "review_note": payload.review_note,
+                "baselined_at": timestamp,
+                "baselined_by": user.id,
+                "updated_at": timestamp,
+            },
+            "$inc": {"revision": 1},
+        },
         return_document=ReturnDocument.AFTER,
     )
     if not version:
@@ -1126,7 +1384,13 @@ async def baseline_requirement_version(
         raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
     await database.value.requirements.update_one(
         {"_id": version["requirement_id"]},
-        {"$set": {"current_version_id": version_id, "status": "BASELINED", "updated_at": timestamp}},
+        {
+            "$set": {
+                "current_version_id": version_id,
+                "status": "BASELINED",
+                "updated_at": timestamp,
+            }
+        },
     )
     await database.value.acceptance_criteria.update_many(
         {"requirement_version_id": version_id, "status": "draft"},
@@ -1134,8 +1398,19 @@ async def baseline_requirement_version(
     )
     indexed = await index_requirement(version)
     version = await database.value.requirement_versions.find_one({"_id": version_id})
-    await audit(user.id, "requirement_version_baselined", "RequirementVersion", version_id, version["project_id"])
-    return envelope(version, revision=version["revision"], status="DEGRADED" if not indexed else "SUCCESS", degraded_mode="DEGRADED_VECTOR" if not indexed else None)
+    await audit(
+        user.id,
+        "requirement_version_baselined",
+        "RequirementVersion",
+        version_id,
+        version["project_id"],
+    )
+    return envelope(
+        version,
+        revision=version["revision"],
+        status="DEGRADED" if not indexed else "SUCCESS",
+        degraded_mode="DEGRADED_VECTOR" if not indexed else None,
+    )
 
 
 @router.post("/du-an/{project_id}/yeu-cau/{requirement_id}/phe-duyet")
@@ -1150,11 +1425,7 @@ async def approve_requirement(
     )
     if requirement["project_id"] != project_id:
         raise HTTPException(status_code=422, detail={"code": "PROJECT_MISMATCH"})
-    return await baseline_requirement_version(
-        requirement["current_version_id"],
-        payload,
-        user,
-    )
+    return await baseline_requirement_version(requirement["current_version_id"], payload, user)
 
 
 @router.post("/yeu-cau/{requirement_id}/phe-duyet")
@@ -1163,7 +1434,9 @@ async def approve_requirement_alias(
     payload: RequirementBaselineInput,
     user: CurrentUser = Depends(get_current_user),
 ):
-    requirement = await get_project_entity("requirements", requirement_id, user, "requirement.approve")
+    requirement = await get_project_entity(
+        "requirements", requirement_id, user, "requirement.approve"
+    )
     return await baseline_requirement_version(requirement["current_version_id"], payload, user)
 
 
@@ -1307,11 +1580,11 @@ async def restore_requirement(
         "BASELINED" if version.get("baselined_at") else "DRAFT"
     )
     restored_version_status = version.get("status_before_obsolete") or restored_status
-    if restored_status not in {"DRAFT", "IN_REVIEW", "BASELINED"} or restored_version_status not in {
+    if restored_status not in {
         "DRAFT",
         "IN_REVIEW",
         "BASELINED",
-    }:
+    } or restored_version_status not in {"DRAFT", "IN_REVIEW", "BASELINED"}:
         raise HTTPException(status_code=409, detail={"code": "REQUIREMENT_RESTORE_STATE_INVALID"})
     timestamp = now()
     version_result = await database.value.requirement_versions.update_one(
@@ -1392,33 +1665,229 @@ async def restore_requirement(
 
 
 @router.post("/phien-ban-yeu-cau/{version_id}/ai/kiem-tra")
-async def lint_requirement(version_id: str, user: CurrentUser = Depends(get_current_user)):
-    version = await get_project_entity(
-        "requirement_versions", version_id, user, "ai.run_lint"
+async def lint_requirement(
+    version_id: str,
+    payload: RequirementAIAnalysisInput,
+    user: CurrentUser = Depends(get_current_user),
+):
+    version = await get_project_entity("requirement_versions", version_id, user, "ai.run_lint")
+    existing = await database.value.ai_findings.find_one(
+        {
+            "project_id": version["project_id"],
+            "artifact_id": version_id,
+            "result_type": "REQUIREMENT_QUALITY_ANALYSIS",
+            "idempotency_key": payload.idempotency_key,
+        }
     )
-    findings = requirement_findings(version)
+    if existing:
+        return envelope(existing)
+    deterministic_findings = [
+        {**item, "origin": "RULE", "evidence_refs": [version_id], "reason_codes": [item["rule_id"]]}
+        for item in requirement_findings(version)
+    ]
+    evidence = [
+        {
+            "artifact_type": "requirement_version",
+            "artifact_id": version.get("requirement_id"),
+            "artifact_version_id": version_id,
+            "authority": "PROJECT_BASELINE" if version.get("status") == "BASELINED" else "DRAFT",
+            "text": json.dumps(
+                {
+                    "title": version.get("title"),
+                    "content": version.get("plain_text_projection")
+                    or plain_text(version.get("content_doc", {})),
+                    "actors": version.get("actors", []),
+                    "business_rules": version.get("business_rules", []),
+                    "acceptance_criterion_ids": version.get("acceptance_criterion_ids", []),
+                },
+                ensure_ascii=False,
+            ),
+        }
+    ]
+    instruction = json.dumps(
+        {
+            "task": "Phân tích chất lượng requirement và đề xuất bản sửa bằng tiếng Việt chỉ dựa trên bằng chứng",
+            "user_instruction": payload.instruction,
+            "constraints": [
+                "Không tự áp dụng đề xuất",
+                "Mỗi finding và đề xuất phải có evidence_refs và reason_codes",
+                "Không thêm quy tắc nghiệp vụ không có trong bằng chứng",
+            ],
+        },
+        ensure_ascii=False,
+    )
+    ai_result = await request_design_assistance(
+        "requirement_quality_analysis", version["project_id"], instruction, evidence
+    )
+    ai_findings = [
+        {
+            **item,
+            "rule_id": item.get("reason_codes", [item.get("category", "AI_FINDING")])[0],
+            "origin": "AI",
+            "span": None,
+        }
+        for item in ai_result.get("findings", [])
+    ]
+    suggestions = [
+        {**item, "suggestion_id": f"REQ-SUG-{index}", "status": "CANDIDATE", "candidate_only": True}
+        for index, item in enumerate(
+            [
+                candidate
+                for candidate in ai_result.get("suggestions", [])
+                if requirement_suggestion_changes(version, candidate)
+            ],
+            1,
+        )
+    ]
+    findings = deterministic_findings + ai_findings
     result = {
+        "_id": new_id("AIF"),
+        "project_id": version["project_id"],
+        "artifact_type": "requirement_version",
+        "artifact_id": version_id,
+        "result_type": "REQUIREMENT_QUALITY_ANALYSIS",
         "requirement_version_id": version_id,
         "findings": findings,
+        "suggestions": suggestions,
         "valid": not any(item["severity"] == "error" for item in findings),
-        "model": {"provider": "rules", "model": "requirement-linter-v1", "prompt_version": "qa-v1", "tool_schema_version": "1"},
+        **ai_contract_metadata(ai_result),
+        "idempotency_key": payload.idempotency_key,
+        "human_confirmation_required": True,
+        "created_by": user.id,
+        "created_at": now(),
     }
-    await database.value.ai_findings.insert_one({"_id": new_id("AIF"), "project_id": version["project_id"], "artifact_type": "requirement_version", "artifact_id": version_id, **result, "created_at": now()})
+    try:
+        await database.value.ai_findings.insert_one(result)
+    except DuplicateKeyError:
+        existing = await database.value.ai_findings.find_one(
+            {
+                "project_id": version["project_id"],
+                "artifact_id": version_id,
+                "result_type": "REQUIREMENT_QUALITY_ANALYSIS",
+                "idempotency_key": payload.idempotency_key,
+            }
+        )
+        if existing:
+            return envelope(existing)
+        raise
+    await audit(
+        user.id,
+        "requirement_quality_analyzed",
+        "AIResult",
+        result["_id"],
+        version["project_id"],
+        {"requirement_version_id": version_id, "status": result["status"]},
+    )
     return envelope(result)
 
 
 @router.post("/du-an/{project_id}/yeu-cau/{requirement_id}/kiem-tra")
-async def lint_requirement_draft(project_id: str, requirement_id: str, user: CurrentUser = Depends(get_current_user)):
+async def lint_requirement_draft(
+    project_id: str,
+    requirement_id: str,
+    payload: RequirementAIAnalysisInput,
+    user: CurrentUser = Depends(get_current_user),
+):
     requirement = await get_project_entity("requirements", requirement_id, user, "ai.run_lint")
     if requirement["project_id"] != project_id:
         raise HTTPException(status_code=422, detail={"code": "PROJECT_MISMATCH"})
-    return await lint_requirement(requirement["current_version_id"], user)
+    return await lint_requirement(requirement["current_version_id"], payload, user)
 
 
 @router.post("/yeu-cau/{requirement_id}/kiem-tra")
-async def lint_requirement_alias(requirement_id: str, user: CurrentUser = Depends(get_current_user)):
+async def lint_requirement_alias(
+    requirement_id: str,
+    payload: RequirementAIAnalysisInput,
+    user: CurrentUser = Depends(get_current_user),
+):
     requirement = await get_project_entity("requirements", requirement_id, user, "ai.run_lint")
-    return await lint_requirement(requirement["current_version_id"], user)
+    return await lint_requirement(requirement["current_version_id"], payload, user)
+
+
+@router.post("/phien-ban-yeu-cau/{version_id}/ai/ap-dung-de-xuat")
+async def apply_requirement_ai_suggestion(
+    version_id: str,
+    payload: RequirementAISuggestionApply,
+    user: CurrentUser = Depends(get_current_user),
+):
+    version = await get_project_entity(
+        "requirement_versions", version_id, user, "requirement.update"
+    )
+    if version.get("status") != "DRAFT":
+        raise HTTPException(status_code=409, detail={"code": "IMMUTABLE_REQUIREMENT_VERSION"})
+    if version.get("revision") != payload.expected_revision:
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "REVISION_CONFLICT", "current_revision": version.get("revision")},
+        )
+    ai_result = await database.value.ai_findings.find_one(
+        {
+            "_id": payload.ai_result_id,
+            "project_id": version["project_id"],
+            "artifact_id": version_id,
+            "result_type": "REQUIREMENT_QUALITY_ANALYSIS",
+        }
+    )
+    if not ai_result:
+        raise HTTPException(status_code=404, detail={"code": "AI_SUGGESTION_NOT_FOUND"})
+    suggestion = next(
+        (
+            item
+            for item in ai_result.get("suggestions", [])
+            if item.get("suggestion_id") == payload.suggestion_id
+        ),
+        None,
+    )
+    if not suggestion:
+        raise HTTPException(status_code=404, detail={"code": "AI_SUGGESTION_NOT_FOUND"})
+    if ai_result.get("status") != "SUCCESS" or ai_result.get("degraded_mode"):
+        raise HTTPException(status_code=409, detail={"code": "AI_SUGGESTION_NOT_APPLICABLE"})
+    if not requirement_suggestion_changes(version, suggestion):
+        raise HTTPException(status_code=422, detail={"code": "AI_SUGGESTION_NO_CHANGE"})
+    changes = {"updated_at": now()}
+    revised_title = str(suggestion.get("revised_title") or "").strip()
+    revised_content = str(suggestion.get("revised_content") or "").strip()
+    if revised_title and revised_title != str(version.get("title") or "").strip():
+        changes["title"] = revised_title
+    current_content = str(
+        version.get("plain_text_projection") or plain_text(version.get("content_doc", {})) or ""
+    ).strip()
+    if revised_content and revised_content != current_content:
+        changes["content_doc"] = text_doc(revised_content)
+        changes["plain_text_projection"] = revised_content
+    updated = await database.value.requirement_versions.find_one_and_update(
+        {
+            "_id": version_id,
+            "project_id": version["project_id"],
+            "status": "DRAFT",
+            "revision": payload.expected_revision,
+        },
+        {"$set": changes, "$inc": {"revision": 1}},
+        return_document=ReturnDocument.AFTER,
+    )
+    if not updated:
+        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+    await database.value.ai_findings.update_one(
+        {"_id": ai_result["_id"], "project_id": version["project_id"]},
+        {
+            "$addToSet": {"applied_suggestion_ids": payload.suggestion_id},
+            "$set": {"updated_at": now()},
+        },
+    )
+    await audit(
+        user.id,
+        "requirement_ai_suggestion_applied",
+        "RequirementVersion",
+        version_id,
+        version["project_id"],
+        {
+            "ai_result_id": ai_result["_id"],
+            "suggestion_id": payload.suggestion_id,
+            "reason_codes": suggestion.get("reason_codes", []),
+            "evidence_refs": suggestion.get("evidence_refs", []),
+        },
+    )
+    return envelope(updated, revision=updated["revision"])
 
 
 @router.post("/yeu-cau/{requirement_id}/so-sanh")
@@ -1427,17 +1896,25 @@ async def compare_requirement(
     payload: RequirementCompareInput,
     user: CurrentUser = Depends(get_current_user),
 ):
-    requirement = await get_project_entity(
-        "requirements", requirement_id, user, "requirement.diff.read"
-    )
+    await get_project_entity("requirements", requirement_id, user, "requirement.diff.read")
     versions = await database.value.requirement_versions.find(
-        {"requirement_id": requirement_id, "_id": {"$in": [payload.from_version_id, payload.to_version_id]}}
+        {
+            "requirement_id": requirement_id,
+            "_id": {"$in": [payload.from_version_id, payload.to_version_id]},
+        }
     ).to_list(2)
     by_id = {item["_id"]: item for item in versions}
     if set(by_id) != {payload.from_version_id, payload.to_version_id}:
         raise HTTPException(status_code=404, detail="Không tìm thấy đủ hai phiên bản")
     changes = semantic_changes(by_id[payload.from_version_id], by_id[payload.to_version_id])
-    return envelope({"from_version": by_id[payload.from_version_id], "to_version": by_id[payload.to_version_id], "changes": changes, "comparison_algorithm_version": "semantic-diff-v1"})
+    return envelope(
+        {
+            "from_version": by_id[payload.from_version_id],
+            "to_version": by_id[payload.to_version_id],
+            "changes": changes,
+            "comparison_algorithm_version": "semantic-diff-v1",
+        }
+    )
 
 
 @router.get("/yeu-cau/{requirement_id}/khac-biet")
@@ -1469,45 +1946,25 @@ async def split_requirement(
     sources = None
     if not existing:
         sources = await load_requirement_baselines(
-            project_id,
-            [requirement_id],
-            expected_versions,
-            user,
-            "requirement.split",
+            project_id, [requirement_id], expected_versions, user, "requirement.split"
         )
     transformation, execute = await claim_requirement_transformation(
-        project_id,
-        "SPLIT",
-        payload,
-        [requirement_id],
-        [payload.expected_source_version_id],
-        user,
+        project_id, "SPLIT", payload, [requirement_id], [payload.expected_source_version_id], user
     )
     if not execute:
         return envelope(await hydrate_requirement_transformation(transformation))
     if sources is None:
         sources = await load_requirement_baselines(
-            project_id,
-            [requirement_id],
-            expected_versions,
-            user,
-            "requirement.split",
+            project_id, [requirement_id], expected_versions, user, "requirement.split"
         )
     return await execute_requirement_transformation(
-        project_id,
-        transformation,
-        sources,
-        payload.drafts,
-        user,
-        "split",
+        project_id, transformation, sources, payload.drafts, user, "split"
     )
 
 
 @router.post("/du-an/{project_id}/yeu-cau/gop", status_code=201)
 async def merge_requirements(
-    project_id: str,
-    payload: RequirementMergeInput,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, payload: RequirementMergeInput, user: CurrentUser = Depends(get_current_user)
 ):
     await get_project(project_id, user, "requirement.merge")
     existing = await database.value.requirement_transformations.find_one(
@@ -1541,12 +1998,7 @@ async def merge_requirements(
             "requirement.merge",
         )
     return await execute_requirement_transformation(
-        project_id,
-        transformation,
-        sources,
-        [payload.draft],
-        user,
-        "merge",
+        project_id, transformation, sources, [payload.draft], user, "merge"
     )
 
 
@@ -1571,12 +2023,18 @@ async def find_duplicate_requirements(
         }
     ).to_list(500)
     criteria = await database.value.acceptance_criteria.find(
-        {"project_id": project_id, "requirement_version_id": {"$in": [item["_id"] for item in versions]}}
+        {
+            "project_id": project_id,
+            "requirement_version_id": {"$in": [item["_id"] for item in versions]},
+        }
     ).to_list(10000)
     criteria_by_version = {}
     for criterion in criteria:
         criteria_by_version.setdefault(criterion["requirement_version_id"], []).append(criterion)
-    version_by_id = {item["_id"]: {**item, "acceptance_criteria": criteria_by_version.get(item["_id"], [])} for item in versions}
+    version_by_id = {
+        item["_id"]: {**item, "acceptance_criteria": criteria_by_version.get(item["_id"], [])}
+        for item in versions
+    }
     candidates = []
     ordered = sorted(requirements, key=lambda item: item["_id"])
     for index, left in enumerate(ordered):
@@ -1608,7 +2066,9 @@ async def find_duplicate_requirements(
                     "status": "CANDIDATE",
                 }
             )
-    candidates.sort(key=lambda item: (-item["score"], item["left_requirement_id"], item["right_requirement_id"]))
+    candidates.sort(
+        key=lambda item: (-item["score"], item["left_requirement_id"], item["right_requirement_id"])
+    )
     candidates = candidates[: payload.limit]
     scan = {
         "_id": new_id("RDS"),
@@ -1641,9 +2101,7 @@ async def find_duplicate_requirements(
 
 @router.post("/du-an/{project_id}/tai-lieu-yeu-cau", status_code=201)
 async def create_requirement_document(
-    project_id: str,
-    payload: ImportCreate,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, payload: ImportCreate, user: CurrentUser = Depends(get_current_user)
 ):
     document = await create_requirement_document_record(project_id, payload, user)
     return envelope(document, revision=document["revision"])
@@ -1672,7 +2130,9 @@ async def upload_requirement_document(
     if existing:
         return envelope(existing, revision=existing["revision"])
     document_id = new_id("RDOC")
-    source = await store_raw_requirement_source(project_id, document_id, filename, file.content_type, data)
+    source = await store_raw_requirement_source(
+        project_id, document_id, filename, file.content_type, data
+    )
     timestamp = now()
     document = {
         "_id": document_id,
@@ -1702,27 +2162,85 @@ async def upload_requirement_document(
         if existing:
             return envelope(existing, revision=existing["revision"])
         raise
-    await audit(user.id, "requirement_document_uploaded", "RequirementDocument", document_id, project_id, {"content_hash": source["sha256"], "object_key": source["object_key"], "format": format})
+    await audit(
+        user.id,
+        "requirement_document_uploaded",
+        "RequirementDocument",
+        document_id,
+        project_id,
+        {"content_hash": source["sha256"], "object_key": source["object_key"], "format": format},
+    )
     try:
         content = extract_file_content(data, format)
     except Exception as error:
         await database.value.requirement_documents.update_one(
             {"_id": document_id, "project_id": project_id},
-            {"$set": {"status": "PARSE_FAILED", "parse_error_type": type(error).__name__, "updated_at": now()}, "$inc": {"revision": 1}},
+            {
+                "$set": {
+                    "status": "PARSE_FAILED",
+                    "parse_error_type": type(error).__name__,
+                    "updated_at": now(),
+                },
+                "$inc": {"revision": 1},
+            },
         )
-        document = await database.value.requirement_documents.find_one({"_id": document_id, "project_id": project_id})
-        await audit(user.id, "requirement_document_parse_failed", "RequirementDocument", document_id, project_id, {"error_type": type(error).__name__})
-        return envelope(document, revision=document["revision"], status="DEGRADED", degraded_mode="PARSER_FAILED")
+        document = await database.value.requirement_documents.find_one(
+            {"_id": document_id, "project_id": project_id}
+        )
+        await audit(
+            user.id,
+            "requirement_document_parse_failed",
+            "RequirementDocument",
+            document_id,
+            project_id,
+            {"error_type": type(error).__name__},
+        )
+        return envelope(
+            document,
+            revision=document["revision"],
+            status="DEGRADED",
+            degraded_mode="PARSER_FAILED",
+        )
     normalized = serialized_content(content)
     await database.value.requirement_documents.update_one(
         {"_id": document_id, "project_id": project_id},
-        {"$set": {"normalized_content": content, "normalized_content_hash": hashlib.sha256(normalized.encode("utf-8")).hexdigest(), "status": "READY", "updated_at": now()}, "$inc": {"revision": 1}},
+        {
+            "$set": {
+                "normalized_content": content,
+                "normalized_content_hash": hashlib.sha256(normalized.encode("utf-8")).hexdigest(),
+                "status": "READY",
+                "updated_at": now(),
+            },
+            "$inc": {"revision": 1},
+        },
     )
-    document = await database.value.requirement_documents.find_one({"_id": document_id, "project_id": project_id})
-    indexed = await index_artifact(project_id, "requirement_document", document_id, document_id, filename, normalized, document["status"], document["authority"], document["source_version"])
-    await database.value.requirement_documents.update_one({"_id": document_id, "project_id": project_id}, {"$set": {"index_status": "INDEXED" if indexed else "FAILED", "indexed_at": now()}})
-    document = await database.value.requirement_documents.find_one({"_id": document_id, "project_id": project_id})
-    return envelope(document, revision=document["revision"], status="SUCCESS" if indexed else "DEGRADED", degraded_mode=None if indexed else "DEGRADED_VECTOR")
+    document = await database.value.requirement_documents.find_one(
+        {"_id": document_id, "project_id": project_id}
+    )
+    indexed = await index_artifact(
+        project_id,
+        "requirement_document",
+        document_id,
+        document_id,
+        filename,
+        normalized,
+        document["status"],
+        document["authority"],
+        document["source_version"],
+    )
+    await database.value.requirement_documents.update_one(
+        {"_id": document_id, "project_id": project_id},
+        {"$set": {"index_status": "INDEXED" if indexed else "FAILED", "indexed_at": now()}},
+    )
+    document = await database.value.requirement_documents.find_one(
+        {"_id": document_id, "project_id": project_id}
+    )
+    return envelope(
+        document,
+        revision=document["revision"],
+        status="SUCCESS" if indexed else "DEGRADED",
+        degraded_mode=None if indexed else "DEGRADED_VECTOR",
+    )
 
 
 @router.get("/du-an/{project_id}/tai-lieu-yeu-cau")
@@ -1750,9 +2268,7 @@ async def list_requirement_documents(
 
 @router.post("/du-an/{project_id}/nguon-tri-thuc", status_code=201)
 async def create_knowledge_source(
-    project_id: str,
-    payload: KnowledgeSourceCreate,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, payload: KnowledgeSourceCreate, user: CurrentUser = Depends(get_current_user)
 ):
     await get_project(project_id, user, "knowledge.manage")
     content_hash = hashlib.sha256(payload.content.encode("utf-8")).hexdigest()
@@ -1856,28 +2372,39 @@ async def list_knowledge_sources(
     query = {"project_id": project_id}
     if not include_archived:
         query["status"] = {"$ne": "ARCHIVED"}
-    documents = await database.value.requirement_documents.find(query).sort("updated_at", -1).to_list(1000)
-    order = (await database.value.projects.find_one({"_id": project_id}, {"settings.knowledge_authority_order": 1}) or {}).get("settings", {}).get(
-        "knowledge_authority_order",
-        [
-            "APPROVED_SOURCE",
-            "CONTROLLED_SOURCE",
-            "PROJECT_REFERENCE",
-            "SUPPLEMENTAL",
-            "DRAFT",
-            "UNVERIFIED",
-        ],
+    documents = (
+        await database.value.requirement_documents.find(query).sort("updated_at", -1).to_list(1000)
+    )
+    order = (
+        (
+            await database.value.projects.find_one(
+                {"_id": project_id}, {"settings.knowledge_authority_order": 1}
+            )
+            or {}
+        )
+        .get("settings", {})
+        .get(
+            "knowledge_authority_order",
+            [
+                "APPROVED_SOURCE",
+                "CONTROLLED_SOURCE",
+                "PROJECT_REFERENCE",
+                "SUPPLEMENTAL",
+                "DRAFT",
+                "UNVERIFIED",
+            ],
+        )
     )
     ranks = {value: index for index, value in enumerate(order)}
-    documents.sort(key=lambda item: (ranks.get(item.get("authority"), len(ranks)), item.get("updated_at")))
+    documents.sort(
+        key=lambda item: (ranks.get(item.get("authority"), len(ranks)), item.get("updated_at"))
+    )
     return envelope(documents)
 
 
 @router.post("/nguon-tri-thuc/{document_id}/luu-tru")
 async def archive_knowledge_source(
-    document_id: str,
-    payload: ProjectArchiveInput,
-    user: CurrentUser = Depends(get_current_user),
+    document_id: str, payload: ProjectArchiveInput, user: CurrentUser = Depends(get_current_user)
 ):
     document = await get_project_entity(
         "requirement_documents", document_id, user, "knowledge.manage"
@@ -1920,10 +2447,7 @@ async def archive_knowledge_source(
 
 
 @router.get("/tai-lieu-yeu-cau/{document_id}")
-async def get_requirement_document(
-    document_id: str,
-    user: CurrentUser = Depends(get_current_user),
-):
+async def get_requirement_document(document_id: str, user: CurrentUser = Depends(get_current_user)):
     document = await get_project_entity(
         "requirement_documents", document_id, user, "requirement_document.read"
     )
@@ -1936,7 +2460,9 @@ async def update_requirement_document_metadata(
     payload: RequirementDocumentPatch,
     user: CurrentUser = Depends(get_current_user),
 ):
-    document = await get_project_entity("requirement_documents", document_id, user, "knowledge.manage")
+    document = await get_project_entity(
+        "requirement_documents", document_id, user, "knowledge.manage"
+    )
     changes = payload.model_dump(exclude_unset=True)
     changes.pop("expected_revision", None)
     resulting = {**document, **changes}
@@ -1952,7 +2478,11 @@ async def update_requirement_document_metadata(
             raise HTTPException(status_code=422, detail={"code": "INVALID_RELEASE"})
     changes["index_status"] = "PENDING"
     updated = await database.value.requirement_documents.find_one_and_update(
-        {"_id": document_id, "project_id": document["project_id"], "revision": payload.expected_revision},
+        {
+            "_id": document_id,
+            "project_id": document["project_id"],
+            "revision": payload.expected_revision,
+        },
         {"$set": {**changes, "updated_at": now()}, "$inc": {"revision": 1}},
         return_document=ReturnDocument.AFTER,
     )
@@ -1987,7 +2517,14 @@ async def update_requirement_document_metadata(
     updated = await database.value.requirement_documents.find_one(
         {"_id": document_id, "project_id": document["project_id"]}
     )
-    await audit(user.id, "requirement_document_metadata_updated", "RequirementDocument", document_id, document["project_id"], {"fields": sorted(changes)})
+    await audit(
+        user.id,
+        "requirement_document_metadata_updated",
+        "RequirementDocument",
+        document_id,
+        document["project_id"],
+        {"fields": sorted(changes)},
+    )
     return envelope(
         updated,
         revision=updated["revision"],
@@ -1998,10 +2535,11 @@ async def update_requirement_document_metadata(
 
 @router.post("/tai-lieu-yeu-cau/{document_id}/lap-chi-muc-lai", status_code=202)
 async def reindex_requirement_document(
-    document_id: str,
-    user: CurrentUser = Depends(get_current_user),
+    document_id: str, user: CurrentUser = Depends(get_current_user)
 ):
-    document = await get_project_entity("requirement_documents", document_id, user, "knowledge.manage")
+    document = await get_project_entity(
+        "requirement_documents", document_id, user, "knowledge.manage"
+    )
     if document.get("status") == "ARCHIVED":
         raise HTTPException(status_code=409, detail={"code": "DOCUMENT_ARCHIVED"})
     normalized = serialized_content(document.get("normalized_content") or "")
@@ -2029,23 +2567,40 @@ async def reindex_requirement_document(
     )
     await database.value.requirement_documents.update_one(
         {"_id": document_id, "project_id": document["project_id"]},
-        {"$set": {"index_status": "INDEXED" if indexed else "FAILED", "indexed_at": now(), "updated_at": now()}, "$inc": {"revision": 1}},
+        {
+            "$set": {
+                "index_status": "INDEXED" if indexed else "FAILED",
+                "indexed_at": now(),
+                "updated_at": now(),
+            },
+            "$inc": {"revision": 1},
+        },
     )
-    updated = await database.value.requirement_documents.find_one({"_id": document_id, "project_id": document["project_id"]})
-    await audit(user.id, "requirement_document_reindexed", "RequirementDocument", document_id, document["project_id"], {"indexed": indexed})
-    return envelope(updated, revision=updated["revision"], status="SUCCESS" if indexed else "DEGRADED", degraded_mode=None if indexed else "DEGRADED_VECTOR")
+    updated = await database.value.requirement_documents.find_one(
+        {"_id": document_id, "project_id": document["project_id"]}
+    )
+    await audit(
+        user.id,
+        "requirement_document_reindexed",
+        "RequirementDocument",
+        document_id,
+        document["project_id"],
+        {"indexed": indexed},
+    )
+    return envelope(
+        updated,
+        revision=updated["revision"],
+        status="SUCCESS" if indexed else "DEGRADED",
+        degraded_mode=None if indexed else "DEGRADED_VECTOR",
+    )
 
 
 @router.get("/tai-lieu-yeu-cau/{document_id}/tai-xuong")
 async def download_requirement_document(
-    document_id: str,
-    user: CurrentUser = Depends(get_current_user),
+    document_id: str, user: CurrentUser = Depends(get_current_user)
 ):
     document = await get_project_entity(
-        "requirement_documents",
-        document_id,
-        user,
-        "requirement_document.download",
+        "requirement_documents", document_id, user, "requirement_document.download"
     )
     data = await read_raw_requirement_source(document)
     filename = re.sub(r"[^a-zA-Z0-9._-]", "_", document.get("filename") or "source.bin")
@@ -2058,15 +2613,10 @@ async def download_requirement_document(
 
 @router.post("/tai-lieu-yeu-cau/{document_id}/luu-tru")
 async def archive_requirement_document(
-    document_id: str,
-    payload: ProjectArchiveInput,
-    user: CurrentUser = Depends(get_current_user),
+    document_id: str, payload: ProjectArchiveInput, user: CurrentUser = Depends(get_current_user)
 ):
     document = await get_project_entity(
-        "requirement_documents",
-        document_id,
-        user,
-        "requirement_document.archive",
+        "requirement_documents", document_id, user, "requirement_document.archive"
     )
     if document.get("status") == "ARCHIVED":
         return envelope(document, revision=document["revision"])
@@ -2104,15 +2654,10 @@ async def archive_requirement_document(
 
 @router.post("/tai-lieu-yeu-cau/{document_id}/khoi-phuc")
 async def restore_requirement_document(
-    document_id: str,
-    payload: ProjectArchiveInput,
-    user: CurrentUser = Depends(get_current_user),
+    document_id: str, payload: ProjectArchiveInput, user: CurrentUser = Depends(get_current_user)
 ):
     document = await get_project_entity(
-        "requirement_documents",
-        document_id,
-        user,
-        "requirement_document.restore",
+        "requirement_documents", document_id, user, "requirement_document.restore"
     )
     if document.get("status") != "ARCHIVED":
         return envelope(document, revision=document["revision"])
@@ -2150,9 +2695,7 @@ async def restore_requirement_document(
 
 @router.post("/tai-lieu-yeu-cau/{document_id}/thu-lai-phan-tich")
 async def retry_requirement_document_parse(
-    document_id: str,
-    payload: RequirementParseRetry,
-    user: CurrentUser = Depends(get_current_user),
+    document_id: str, payload: RequirementParseRetry, user: CurrentUser = Depends(get_current_user)
 ):
     document = await get_project_entity(
         "requirement_documents", document_id, user, "requirement_document.extract"
@@ -2171,10 +2714,7 @@ async def retry_requirement_document_parse(
             "status": "PARSE_FAILED",
             "revision": payload.expected_revision,
         },
-        {
-            "$set": {"status": "PARSING", "updated_at": now()},
-            "$inc": {"revision": 1},
-        },
+        {"$set": {"status": "PARSING", "updated_at": now()}, "$inc": {"revision": 1}},
     )
     if claimed.matched_count != 1:
         raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
@@ -2205,10 +2745,7 @@ async def retry_requirement_document_parse(
             {"error_type": type(error).__name__},
         )
         return envelope(
-            failed,
-            revision=failed["revision"],
-            status="DEGRADED",
-            degraded_mode="PARSER_FAILED",
+            failed, revision=failed["revision"], status="DEGRADED", degraded_mode="PARSER_FAILED"
         )
     normalized = serialized_content(content)
     updated = await database.value.requirement_documents.find_one_and_update(
@@ -2249,7 +2786,10 @@ async def extract_requirement_document(
     if document.get("status") == "ARCHIVED":
         raise HTTPException(status_code=409, detail={"code": "DOCUMENT_ARCHIVED"})
     if document.get("normalized_content") is None:
-        raise HTTPException(status_code=409, detail={"code": "DOCUMENT_PARSE_REQUIRED", "status": document.get("status")})
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "DOCUMENT_PARSE_REQUIRED", "status": document.get("status")},
+        )
     existing = await database.value.import_jobs.find_one({"source_document_id": document_id})
     if existing:
         return envelope(existing, revision=existing.get("revision", 1))
@@ -2286,11 +2826,7 @@ async def extract_requirement_document(
     await database.value.requirement_documents.update_one(
         {"_id": document_id, "project_id": document["project_id"]},
         {
-            "$set": {
-                "status": "EXTRACTED",
-                "last_import_job_id": job["_id"],
-                "updated_at": now(),
-            },
+            "$set": {"status": "EXTRACTED", "last_import_job_id": job["_id"], "updated_at": now()},
             "$inc": {"revision": 1},
         },
     )
@@ -2307,9 +2843,7 @@ async def extract_requirement_document(
 
 @router.post("/du-an/{project_id}/nhap-yeu-cau", status_code=201)
 async def create_requirement_import(
-    project_id: str,
-    payload: ImportCreate,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, payload: ImportCreate, user: CurrentUser = Depends(get_current_user)
 ):
     await get_project(project_id, user, "requirement.create")
     job_id = new_id("RIMP")
@@ -2327,7 +2861,14 @@ async def create_requirement_import(
         "created_at": now(),
     }
     await database.value.import_jobs.insert_one(job)
-    await audit(user.id, "requirement_import_previewed", "RequirementImport", job["_id"], project_id, {"count": len(previews)})
+    await audit(
+        user.id,
+        "requirement_import_previewed",
+        "RequirementImport",
+        job["_id"],
+        project_id,
+        {"count": len(previews)},
+    )
     return envelope(job, revision=1)
 
 
@@ -2348,24 +2889,28 @@ async def upload_requirement_import(
     content = extract_file_content(data, format)
     return await create_requirement_import(
         project_id,
-        ImportCreate(filename=file.filename or f"requirements.{format}", format=format, content=content),
+        ImportCreate(
+            filename=file.filename or f"requirements.{format}", format=format, content=content
+        ),
         user,
     )
 
 
 @router.get("/nhap-yeu-cau/{job_id}")
 async def get_requirement_import(job_id: str, user: CurrentUser = Depends(get_current_user)):
-    job = await get_project_entity("import_jobs", job_id, user, "requirement_document.review_extraction")
+    job = await get_project_entity(
+        "import_jobs", job_id, user, "requirement_document.review_extraction"
+    )
     return envelope(job, revision=job.get("revision", 1))
 
 
 @router.patch("/nhap-yeu-cau/{job_id}")
 async def review_requirement_import(
-    job_id: str,
-    payload: RequirementImportReview,
-    user: CurrentUser = Depends(get_current_user),
+    job_id: str, payload: RequirementImportReview, user: CurrentUser = Depends(get_current_user)
 ):
-    job = await get_project_entity("import_jobs", job_id, user, "requirement_document.review_extraction")
+    job = await get_project_entity(
+        "import_jobs", job_id, user, "requirement_document.review_extraction"
+    )
     if job.get("status") != "PREVIEW_READY":
         raise HTTPException(
             status_code=409,
@@ -2373,7 +2918,9 @@ async def review_requirement_import(
         )
     current_preview = prepare_requirement_candidates(job_id, job.get("preview", []))
     submitted = [candidate.model_dump() for candidate in payload.preview]
-    if len(submitted) == len(current_preview) and all(not item.get("candidate_id") for item in submitted):
+    if len(submitted) == len(current_preview) and all(
+        not item.get("candidate_id") for item in submitted
+    ):
         for index, item in enumerate(submitted):
             item["candidate_id"] = current_preview[index]["candidate_id"]
     current_by_id = {item["candidate_id"]: item for item in current_preview}
@@ -2431,7 +2978,9 @@ async def merge_requirement_candidates(
     payload: RequirementCandidateMergeInput,
     user: CurrentUser = Depends(get_current_user),
 ):
-    job = await get_project_entity("import_jobs", job_id, user, "requirement_document.review_extraction")
+    job = await get_project_entity(
+        "import_jobs", job_id, user, "requirement_document.review_extraction"
+    )
     if job.get("status") != "PREVIEW_READY":
         raise HTTPException(status_code=409, detail={"code": "IMPORT_PREVIEW_NOT_EDITABLE"})
     candidate_ids = list(dict.fromkeys(payload.candidate_ids))
@@ -2460,12 +3009,13 @@ async def merge_requirement_candidates(
             "candidate_relation": "merged",
             "parent_candidate_ids": candidate_ids,
             "extraction_confidence": min(
-                (float(item.get("extraction_confidence", 1)) for item in parents),
-                default=1,
+                (float(item.get("extraction_confidence", 1)) for item in parents), default=1
             ),
         }
     )
-    first_index = min(index for index, item in enumerate(preview) if item["candidate_id"] in candidate_ids)
+    first_index = min(
+        index for index, item in enumerate(preview) if item["candidate_id"] in candidate_ids
+    )
     next_preview = [item for item in preview if item["candidate_id"] not in candidate_ids]
     next_preview.insert(first_index, merged)
     event = {
@@ -2507,7 +3057,11 @@ async def merge_requirement_candidates(
         "RequirementImport",
         job_id,
         job["project_id"],
-        {"parent_candidate_ids": candidate_ids, "result_candidate_id": merged_id, "reason": payload.reason},
+        {
+            "parent_candidate_ids": candidate_ids,
+            "result_candidate_id": merged_id,
+            "reason": payload.reason,
+        },
     )
     return envelope(updated, revision=updated["revision"])
 
@@ -2519,7 +3073,9 @@ async def split_requirement_candidate(
     payload: RequirementCandidateSplitInput,
     user: CurrentUser = Depends(get_current_user),
 ):
-    job = await get_project_entity("import_jobs", job_id, user, "requirement_document.review_extraction")
+    job = await get_project_entity(
+        "import_jobs", job_id, user, "requirement_document.review_extraction"
+    )
     if job.get("status") != "PREVIEW_READY":
         raise HTTPException(status_code=409, detail={"code": "IMPORT_PREVIEW_NOT_EDITABLE"})
     preview = prepare_requirement_candidates(job_id, job.get("preview", []))
@@ -2549,7 +3105,9 @@ async def split_requirement_candidate(
             }
         )
         children.append(child)
-    parent_index = next(index for index, item in enumerate(preview) if item["candidate_id"] == candidate_id)
+    parent_index = next(
+        index for index, item in enumerate(preview) if item["candidate_id"] == candidate_id
+    )
     next_preview = list(preview)
     next_preview[parent_index : parent_index + 1] = children
     event = {
@@ -2607,7 +3165,9 @@ async def reject_requirement_candidate(
     payload: RequirementCandidateRejectInput,
     user: CurrentUser = Depends(get_current_user),
 ):
-    job = await get_project_entity("import_jobs", job_id, user, "requirement_document.review_extraction")
+    job = await get_project_entity(
+        "import_jobs", job_id, user, "requirement_document.review_extraction"
+    )
     if job.get("status") != "PREVIEW_READY":
         raise HTTPException(status_code=409, detail={"code": "IMPORT_PREVIEW_NOT_EDITABLE"})
     preview = prepare_requirement_candidates(job_id, job.get("preview", []))
@@ -2668,9 +3228,7 @@ async def reject_requirement_candidate(
 
 @router.post("/nhap-yeu-cau/{job_id}/xac-nhan")
 async def confirm_requirement_import(
-    job_id: str,
-    payload: ImportConfirm,
-    user: CurrentUser = Depends(get_current_user),
+    job_id: str, payload: ImportConfirm, user: CurrentUser = Depends(get_current_user)
 ):
     job = await get_project_entity(
         "import_jobs", job_id, user, "requirement_document.confirm_extraction"
@@ -2683,11 +3241,7 @@ async def confirm_requirement_import(
     for index in indexes:
         if index < 0 or index >= len(job["preview"]):
             raise HTTPException(status_code=422, detail="Chỉ mục preview không hợp lệ")
-    claim_filter = {
-        "_id": job_id,
-        "project_id": job["project_id"],
-        "status": "PREVIEW_READY",
-    }
+    claim_filter = {"_id": job_id, "project_id": job["project_id"], "status": "PREVIEW_READY"}
     if payload.expected_revision is not None:
         claim_filter["revision"] = payload.expected_revision
     claimed = await database.value.import_jobs.update_one(
@@ -2710,10 +3264,7 @@ async def confirm_requirement_import(
             item = job["preview"][index]
             created.append(
                 await create_requirement_record(
-                    job["project_id"],
-                    RequirementCreate(**item),
-                    user,
-                    origin="import",
+                    job["project_id"], RequirementCreate(**item), user, origin="import"
                 )
             )
     except Exception:
@@ -2739,7 +3290,20 @@ async def confirm_requirement_import(
         raise
     await database.value.import_jobs.update_one(
         {"_id": job_id, "project_id": job["project_id"], "status": "CONFIRMING"},
-        {"$set": {"status": "CONFIRMED", "created_requirement_ids": [item["_id"] for item in created], "selected_indexes": indexes, "rejected_indexes": [index for index in range(len(job["preview"])) if index not in indexes], "confirmed_at": now(), "confirmed_by": user.id, "updated_at": now()}, "$inc": {"revision": 1}},
+        {
+            "$set": {
+                "status": "CONFIRMED",
+                "created_requirement_ids": [item["_id"] for item in created],
+                "selected_indexes": indexes,
+                "rejected_indexes": [
+                    index for index in range(len(job["preview"])) if index not in indexes
+                ],
+                "confirmed_at": now(),
+                "confirmed_by": user.id,
+                "updated_at": now(),
+            },
+            "$inc": {"revision": 1},
+        },
     )
     if job.get("source_document_id"):
         await database.value.requirement_documents.update_one(
@@ -2798,11 +3362,7 @@ def atomic_requirement_candidates(document):
     content = document["normalized_content"]
     if document["format"] in {"csv", "xlsx", "openapi", "postman"}:
         candidates = parse_import(
-            ImportCreate(
-                filename=document["filename"],
-                format=document["format"],
-                content=content,
-            )
+            ImportCreate(filename=document["filename"], format=document["format"], content=content)
         )
         for index, candidate in enumerate(candidates):
             candidate["source_refs"] = [
@@ -2879,8 +3439,15 @@ def extract_xlsx_csv(data):
         shared = []
         if "xl/sharedStrings.xml" in names:
             root = ElementTree.fromstring(archive.read("xl/sharedStrings.xml"))
-            shared = ["".join(node.text or "" for node in item.iter() if node.tag.endswith("}t")) for item in root]
-        sheets = sorted(name for name in names if name.startswith("xl/worksheets/sheet") and name.endswith(".xml"))
+            shared = [
+                "".join(node.text or "" for node in item.iter() if node.tag.endswith("}t"))
+                for item in root
+            ]
+        sheets = sorted(
+            name
+            for name in names
+            if name.startswith("xl/worksheets/sheet") and name.endswith(".xml")
+        )
         rows = []
         for sheet in sheets:
             root = ElementTree.fromstring(archive.read(sheet))
@@ -2889,7 +3456,9 @@ def extract_xlsx_csv(data):
                 for cell in (node for node in row if node.tag.endswith("}c")):
                     cell_type = cell.attrib.get("t")
                     if cell_type == "inlineStr":
-                        value = "".join(node.text or "" for node in cell.iter() if node.tag.endswith("}t"))
+                        value = "".join(
+                            node.text or "" for node in cell.iter() if node.tag.endswith("}t")
+                        )
                     else:
                         value_node = next((node for node in cell if node.tag.endswith("}v")), None)
                         value = value_node.text if value_node is not None else ""
@@ -2914,12 +3483,24 @@ def parse_api_artifact(value, artifact_format):
                     {
                         "title": operation.get("summary") or f"{method.upper()} {path}",
                         "type": "api",
-                        "content_doc": text_doc(json.dumps({"path": path, "method": method, "parameters": operation.get("parameters", []), "responses": operation.get("responses", {}), "security": operation.get("security", [])}, ensure_ascii=False)),
+                        "content_doc": text_doc(
+                            json.dumps(
+                                {
+                                    "path": path,
+                                    "method": method,
+                                    "parameters": operation.get("parameters", []),
+                                    "responses": operation.get("responses", {}),
+                                    "security": operation.get("security", []),
+                                },
+                                ensure_ascii=False,
+                            )
+                        ),
                         "source_refs": [{"type": "openapi", "path": path, "method": method}],
                         "acceptance_criteria": [],
                     }
                 )
     else:
+
         def walk(nodes, folder=""):
             for node in nodes:
                 if "item" in node:
@@ -2930,13 +3511,28 @@ def parse_api_artifact(value, artifact_format):
                     raw_url = url.get("raw", "") if isinstance(url, dict) else str(url)
                     items.append(
                         {
-                            "title": node.get("name") or f"{request.get('method', 'GET')} {raw_url}",
+                            "title": node.get("name")
+                            or f"{request.get('method', 'GET')} {raw_url}",
                             "type": "api",
-                            "content_doc": text_doc(json.dumps({"folder": folder, "method": request.get("method"), "url_template": redact_url(raw_url), "header_names": [header.get("key") for header in request.get("header", [])]}, ensure_ascii=False)),
+                            "content_doc": text_doc(
+                                json.dumps(
+                                    {
+                                        "folder": folder,
+                                        "method": request.get("method"),
+                                        "url_template": redact_url(raw_url),
+                                        "header_names": [
+                                            header.get("key")
+                                            for header in request.get("header", [])
+                                        ],
+                                    },
+                                    ensure_ascii=False,
+                                )
+                            ),
                             "source_refs": [{"type": "postman", "folder": folder}],
                             "acceptance_criteria": [],
                         }
                     )
+
         walk(value.get("item", []))
     return items[:1000]
 
@@ -2946,7 +3542,10 @@ def redact_url(value):
 
 
 def text_doc(value):
-    return {"type": "doc", "content": [{"type": "paragraph", "content": [{"type": "text", "text": str(value)}]}]}
+    return {
+        "type": "doc",
+        "content": [{"type": "paragraph", "content": [{"type": "text", "text": str(value)}]}],
+    }
 
 
 async def validate_requirement_sources(project_id, source_refs):
@@ -2954,17 +3553,44 @@ async def validate_requirement_sources(project_id, source_refs):
     if not references:
         return
     document_ids = list(dict.fromkeys(item["requirement_document_id"] for item in references))
-    documents = await database.value.requirement_documents.find({"project_id": project_id, "_id": {"$in": document_ids}}).to_list(len(document_ids))
+    documents = await database.value.requirement_documents.find(
+        {"project_id": project_id, "_id": {"$in": document_ids}}
+    ).to_list(len(document_ids))
     by_id = {item["_id"]: item for item in documents}
     if set(by_id) != set(document_ids):
-        raise HTTPException(status_code=422, detail={"code": "CROSS_PROJECT_OR_MISSING_REQUIREMENT_DOCUMENT"})
+        raise HTTPException(
+            status_code=422, detail={"code": "CROSS_PROJECT_OR_MISSING_REQUIREMENT_DOCUMENT"}
+        )
     for reference in references:
         expected_hash = reference.get("content_hash")
-        if expected_hash and expected_hash != by_id[reference["requirement_document_id"]].get("content_hash"):
-            raise HTTPException(status_code=422, detail={"code": "REQUIREMENT_SOURCE_HASH_MISMATCH"})
+        if expected_hash and expected_hash != by_id[reference["requirement_document_id"]].get(
+            "content_hash"
+        ):
+            raise HTTPException(
+                status_code=422, detail={"code": "REQUIREMENT_SOURCE_HASH_MISMATCH"}
+            )
 
 
 async def index_requirement(version):
-    indexed = await index_artifact(version["project_id"], "requirement_version", version["requirement_id"], version["_id"], version["title"], version.get("plain_text_projection", ""), version.get("status", "DRAFT"), "baseline" if version.get("status") == "BASELINED" else "draft", version.get("version"))
-    await database.value.requirement_versions.update_one({"_id": version["_id"]}, {"$set": {"index_status": "READY" if indexed else "FAILED", "index_error_code": None if indexed else "KNOWLEDGE_INDEX_FAILED", "updated_at": now()}})
+    indexed = await index_artifact(
+        version["project_id"],
+        "requirement_version",
+        version["requirement_id"],
+        version["_id"],
+        version["title"],
+        version.get("plain_text_projection", ""),
+        version.get("status", "DRAFT"),
+        "APPROVED_SOURCE" if version.get("status") == "BASELINED" else "DRAFT",
+        version.get("version"),
+    )
+    await database.value.requirement_versions.update_one(
+        {"_id": version["_id"]},
+        {
+            "$set": {
+                "index_status": "READY" if indexed else "FAILED",
+                "index_error_code": None if indexed else "KNOWLEDGE_INDEX_FAILED",
+                "updated_at": now(),
+            }
+        },
+    )
     return indexed

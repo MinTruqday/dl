@@ -1,9 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException
-from src.core.auth import CurrentUser, get_current_user
-from src.core.common import audit, envelope, get_project, get_project_entity, new_id, now, optimistic_patch
-from src.core.database import database
-from src.domain.schemas import RiskRankingGenerate, RiskRankingPatch, RiskRankingApproval
 
+from src.core.auth import CurrentUser, get_current_user
+from src.core.common import (
+    audit,
+    envelope,
+    get_project,
+    get_project_entity,
+    new_id,
+    now,
+    optimistic_patch,
+)
+from src.core.database import database
+from src.domain.schemas import RiskRankingApproval, RiskRankingGenerate, RiskRankingPatch
 
 router = APIRouter(prefix="/kiem-thu", tags=["Ưu tiên rủi ro"])
 
@@ -23,7 +31,9 @@ async def _build_items(project_id: str):
         {"project_id": project_id, "status": {"$ne": "OBSOLETE"}},
         {"_id": 1, "test_case_key": 1, "current_version_id": 1, "status": 1},
     ).to_list(5000)
-    version_ids = [item.get("current_version_id") for item in cases if item.get("current_version_id")]
+    version_ids = [
+        item.get("current_version_id") for item in cases if item.get("current_version_id")
+    ]
     versions = await database.value.test_case_versions.find(
         {"project_id": project_id, "_id": {"$in": version_ids}},
         {"_id": 1, "test_case_id": 1, "title": 1, "risk": 1, "priority": 1},
@@ -69,24 +79,44 @@ async def get_risk_ranking(project_id: str, user: CurrentUser = Depends(get_curr
         {"project_id": project_id}, sort=[("created_at", -1)]
     )
     if not ranking:
-        return envelope({"project_id": project_id, "status": "DERIVED", "items": await _build_items(project_id)})
+        return envelope(
+            {"project_id": project_id, "status": "DERIVED", "items": await _build_items(project_id)}
+        )
     return envelope(ranking, revision=ranking.get("revision", 1))
 
 
-@router.post("/du-an/{project_id}/uu-tien-rui-ro", status_code=201, openapi_extra={"x-function-ids": ["RISK-02"]})
-async def generate_risk_ranking(project_id: str, payload: RiskRankingGenerate, user: CurrentUser = Depends(get_current_user)):
+@router.post(
+    "/du-an/{project_id}/uu-tien-rui-ro",
+    status_code=201,
+    openapi_extra={"x-function-ids": ["RISK-02"]},
+)
+async def generate_risk_ranking(
+    project_id: str, payload: RiskRankingGenerate, user: CurrentUser = Depends(get_current_user)
+):
     await get_project(project_id, user, "risk.generate")
     items = await _build_items(project_id)
     if payload.max_items:
         items = items[: payload.max_items]
-    ranking = {"_id": new_id("RISK"), "project_id": project_id, "items": items, "status": "PENDING_APPROVAL", "model_version": "risk-score-v1", "revision": 1, "created_by": user.id, "created_at": now(), "updated_at": now()}
+    ranking = {
+        "_id": new_id("RISK"),
+        "project_id": project_id,
+        "items": items,
+        "status": "PENDING_APPROVAL",
+        "model_version": "risk-score-v1",
+        "revision": 1,
+        "created_by": user.id,
+        "created_at": now(),
+        "updated_at": now(),
+    }
     await database.value.risk_rankings.insert_one(ranking)
     await audit(user.id, "risk_ranking_generated", "RiskRanking", ranking["_id"], project_id)
     return envelope(ranking, revision=1)
 
 
 @router.patch("/uu-tien-rui-ro/{ranking_id}", openapi_extra={"x-function-ids": ["RISK-03"]})
-async def review_risk_ranking(ranking_id: str, payload: RiskRankingPatch, user: CurrentUser = Depends(get_current_user)):
+async def review_risk_ranking(
+    ranking_id: str, payload: RiskRankingPatch, user: CurrentUser = Depends(get_current_user)
+):
     ranking = await get_project_entity("risk_rankings", ranking_id, user, "risk.review")
     items = list(ranking.get("items") or [])
     by_version = {item.get("test_case_version_id"): item for item in items}
@@ -94,18 +124,46 @@ async def review_risk_ranking(ranking_id: str, payload: RiskRankingPatch, user: 
     if not target:
         raise HTTPException(status_code=404, detail={"code": "RISK_ITEM_NOT_FOUND"})
     target.update({"included": payload.included, "review_reason": payload.reason})
-    updated = await optimistic_patch("risk_rankings", ranking_id, ranking["project_id"], payload.expected_revision, {"items": list(by_version.values())})
-    await audit(user.id, "risk_ranking_reviewed", "RiskRanking", ranking_id, ranking["project_id"], {"test_case_version_id": payload.test_case_version_id})
+    updated = await optimistic_patch(
+        "risk_rankings",
+        ranking_id,
+        ranking["project_id"],
+        payload.expected_revision,
+        {"items": list(by_version.values())},
+    )
+    await audit(
+        user.id,
+        "risk_ranking_reviewed",
+        "RiskRanking",
+        ranking_id,
+        ranking["project_id"],
+        {"test_case_version_id": payload.test_case_version_id},
+    )
     return envelope(updated, revision=updated["revision"])
 
 
-@router.post("/uu-tien-rui-ro/{ranking_id}/phe-duyet", openapi_extra={"x-function-ids": ["RISK-04"]})
-async def approve_risk_ranking(ranking_id: str, payload: RiskRankingApproval, user: CurrentUser = Depends(get_current_user)):
+@router.post(
+    "/uu-tien-rui-ro/{ranking_id}/phe-duyet", openapi_extra={"x-function-ids": ["RISK-04"]}
+)
+async def approve_risk_ranking(
+    ranking_id: str, payload: RiskRankingApproval, user: CurrentUser = Depends(get_current_user)
+):
     ranking = await get_project_entity("risk_rankings", ranking_id, user, "risk.approve")
     if ranking.get("status") == "APPROVED":
         return envelope(ranking, revision=ranking.get("revision", 1))
     if ranking.get("status") != "PENDING_APPROVAL":
         raise HTTPException(status_code=409, detail={"code": "RISK_RANKING_STATE_INVALID"})
-    updated = await optimistic_patch("risk_rankings", ranking_id, ranking["project_id"], payload.expected_revision, {"status": "APPROVED", "approved_by": user.id, "approved_at": now(), "review_note": payload.review_note})
+    updated = await optimistic_patch(
+        "risk_rankings",
+        ranking_id,
+        ranking["project_id"],
+        payload.expected_revision,
+        {
+            "status": "APPROVED",
+            "approved_by": user.id,
+            "approved_at": now(),
+            "review_note": payload.review_note,
+        },
+    )
     await audit(user.id, "risk_ranking_approved", "RiskRanking", ranking_id, ranking["project_id"])
     return envelope(updated, revision=updated["revision"])

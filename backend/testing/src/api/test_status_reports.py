@@ -3,10 +3,24 @@ from fastapi.responses import StreamingResponse
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope
-from src.domain.test_status_report import TestStatusReportAiDraft, TestStatusReportEvidence, TestStatusReportGenerate, TestStatusReportPatch, TestStatusReportTransition
+from src.domain.test_status_report import (
+    TestStatusReportAiDraft,
+    TestStatusReportEvidence,
+    TestStatusReportGenerate,
+    TestStatusReportPatch,
+    TestStatusReportTransition,
+)
+from src.services.test_status_report import (
+    attach_status_report_evidence,
+    compare_status_reports,
+    generate_status_report,
+    generate_status_report_narrative,
+    get_report_for_user,
+    list_status_reports,
+    transition_status_report,
+    update_status_report,
+)
 from src.services.test_status_report_export import export_status_report
-from src.services.test_status_report import attach_status_report_evidence, compare_status_reports, generate_status_report, generate_status_report_narrative, get_report_for_user, list_status_reports, transition_status_report, update_status_report
-
 
 router = APIRouter(prefix="/kiem-thu", tags=["Báo cáo trạng thái kiểm thử"])
 
@@ -16,14 +30,18 @@ async def list_test_status_reports(
     project_id: str,
     test_plan_id: str = Query(default="", max_length=200),
     release_id: str = Query(default="", max_length=200),
-    status: str = Query(default="", pattern="^(DRAFT|IN_REVIEW|APPROVED|PUBLISHED)?$"),
+    status: str = Query(default="", pattern="^(DRAFT|IN_REVIEW|APPROVED|PUBLISHED|ARCHIVED)?$"),
     limit: int = Query(default=200, ge=1, le=500),
     user: CurrentUser = Depends(get_current_user),
 ):
-    return envelope(await list_status_reports(project_id, test_plan_id or None, release_id or None, status or None, limit, user))
+    return envelope(
+        await list_status_reports(
+            project_id, test_plan_id or None, release_id or None, status or None, limit, user
+        )
+    )
 
 
-@router.post("/du-an/{project_id}/bao-cao-trang-thai/tao-tu-snapshot", status_code=201)
+@router.post("/du-an/{project_id}/bao-cao-trang-thai/tao-tu-anh-chup", status_code=201)
 async def generate_test_status_report(
     project_id: str,
     payload: TestStatusReportGenerate,
@@ -41,9 +59,7 @@ async def get_test_status_report(report_id: str, user: CurrentUser = Depends(get
 
 @router.patch("/bao-cao-trang-thai/{report_id}")
 async def patch_test_status_report(
-    report_id: str,
-    payload: TestStatusReportPatch,
-    user: CurrentUser = Depends(get_current_user),
+    report_id: str, payload: TestStatusReportPatch, user: CurrentUser = Depends(get_current_user)
 ):
     value = await update_status_report(report_id, payload, user)
     return envelope(value, revision=value["revision"])
@@ -51,18 +67,14 @@ async def patch_test_status_report(
 
 @router.post("/bao-cao-trang-thai/{report_id}/ai/ban-nhap")
 async def draft_test_status_report_narrative(
-    report_id: str,
-    payload: TestStatusReportAiDraft,
-    user: CurrentUser = Depends(get_current_user),
+    report_id: str, payload: TestStatusReportAiDraft, user: CurrentUser = Depends(get_current_user)
 ):
     return envelope(await generate_status_report_narrative(report_id, payload, user))
 
 
 @router.post("/bao-cao-trang-thai/{report_id}/bang-chung")
 async def attach_test_status_report_evidence(
-    report_id: str,
-    payload: TestStatusReportEvidence,
-    user: CurrentUser = Depends(get_current_user),
+    report_id: str, payload: TestStatusReportEvidence, user: CurrentUser = Depends(get_current_user)
 ):
     value = await attach_status_report_evidence(report_id, payload, user)
     return envelope(value, revision=value["revision"])
@@ -74,7 +86,15 @@ async def submit_test_status_report_review(
     payload: TestStatusReportTransition,
     user: CurrentUser = Depends(get_current_user),
 ):
-    value = await transition_status_report(report_id, payload, user, "DRAFT", "IN_REVIEW", "teststatusreport.review", "test_status_report_submitted")
+    value = await transition_status_report(
+        report_id,
+        payload,
+        user,
+        "DRAFT",
+        "IN_REVIEW",
+        "teststatusreport.submit_review",
+        "test_status_report_submitted",
+    )
     return envelope(value, revision=value["revision"])
 
 
@@ -84,7 +104,15 @@ async def request_test_status_report_changes(
     payload: TestStatusReportTransition,
     user: CurrentUser = Depends(get_current_user),
 ):
-    value = await transition_status_report(report_id, payload, user, "IN_REVIEW", "DRAFT", "teststatusreport.review", "test_status_report_changes_requested")
+    value = await transition_status_report(
+        report_id,
+        payload,
+        user,
+        "IN_REVIEW",
+        "DRAFT",
+        "teststatusreport.review",
+        "test_status_report_changes_requested",
+    )
     return envelope(value, revision=value["revision"])
 
 
@@ -94,7 +122,15 @@ async def approve_test_status_report(
     payload: TestStatusReportTransition,
     user: CurrentUser = Depends(get_current_user),
 ):
-    value = await transition_status_report(report_id, payload, user, "IN_REVIEW", "APPROVED", "teststatusreport.approve", "test_status_report_approved")
+    value = await transition_status_report(
+        report_id,
+        payload,
+        user,
+        "IN_REVIEW",
+        "APPROVED",
+        "teststatusreport.approve",
+        "status_report_approved",
+    )
     return envelope(value, revision=value["revision"])
 
 
@@ -104,7 +140,33 @@ async def publish_test_status_report(
     payload: TestStatusReportTransition,
     user: CurrentUser = Depends(get_current_user),
 ):
-    value = await transition_status_report(report_id, payload, user, "APPROVED", "PUBLISHED", "teststatusreport.approve", "test_status_report_published")
+    value = await transition_status_report(
+        report_id,
+        payload,
+        user,
+        "APPROVED",
+        "PUBLISHED",
+        "teststatusreport.publish",
+        "status_report_published",
+    )
+    return envelope(value, revision=value["revision"])
+
+
+@router.post("/bao-cao-trang-thai/{report_id}/luu-tru")
+async def archive_test_status_report(
+    report_id: str,
+    payload: TestStatusReportTransition,
+    user: CurrentUser = Depends(get_current_user),
+):
+    value = await transition_status_report(
+        report_id,
+        payload,
+        user,
+        "PUBLISHED",
+        "ARCHIVED",
+        "teststatusreport.archive",
+        "test_status_report_archived",
+    )
     return envelope(value, revision=value["revision"])
 
 
@@ -123,11 +185,17 @@ async def export_test_status_report(
     format: str = Query(default="pdf", pattern="^(pdf|docx|csv)$"),
     user: CurrentUser = Depends(get_current_user),
 ):
-    report = await get_report_for_user(report_id, user, "teststatusreport.export")
+    report = await get_report_for_user(report_id, user, "report.export")
     media_types = {
         "pdf": "application/pdf",
         "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "csv": "text/csv; charset=utf-8",
     }
     content = export_status_report(report, format)
-    return StreamingResponse(iter([content]), media_type=media_types[format], headers={"Content-Disposition": f'attachment; filename="test-status-report-{report_id}.{format}"'})
+    return StreamingResponse(
+        iter([content]),
+        media_type=media_types[format],
+        headers={
+            "Content-Disposition": f'attachment; filename="test-status-report-{report_id}.{format}"'
+        },
+    )

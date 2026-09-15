@@ -7,9 +7,8 @@ from src.core.auth import CurrentUser, get_current_user
 from src.core.common import audit, envelope, get_project, new_id, now
 from src.core.database import database
 from src.domain.schemas import PerformancePlanDraftInput, SecurityTestSuggestionInput
-from src.services.design_assistance import request_design_assistance
-from src.services.generation import SecurityCandidate, PerformanceScenario, validated_suggestions
-
+from src.services.design_assistance import ai_contract_metadata, request_design_assistance
+from src.services.generation import PerformanceScenario, SecurityCandidate, validated_suggestions
 
 router = APIRouter(prefix="/kiem-thu", tags=["Thiết kế kiểm thử chuyên sâu"])
 
@@ -18,9 +17,9 @@ async def requirement_evidence(project_id, requirement_version_ids):
     query = {"project_id": project_id}
     if requirement_version_ids:
         query["_id"] = {"$in": list(dict.fromkeys(requirement_version_ids))}
-    versions = await database.value.requirement_versions.find(query).sort(
-        "created_at", -1
-    ).to_list(500)
+    versions = (
+        await database.value.requirement_versions.find(query).sort("created_at", -1).to_list(500)
+    )
     if requirement_version_ids and len(versions) != len(set(requirement_version_ids)):
         raise HTTPException(status_code=422, detail={"code": "INVALID_REQUIREMENT_VERSION"})
     return versions, [
@@ -32,10 +31,7 @@ async def requirement_evidence(project_id, requirement_version_ids):
             "text": " ".join(
                 filter(
                     None,
-                    [
-                        str(item.get("title") or ""),
-                        str(item.get("plain_text_projection") or ""),
-                    ],
+                    [str(item.get("title") or ""), str(item.get("plain_text_projection") or "")],
                 )
             )[:4000],
         }
@@ -45,20 +41,18 @@ async def requirement_evidence(project_id, requirement_version_ids):
 
 @router.get("/du-an/{project_id}/ai/goi-y-kiem-thu-bao-mat")
 async def list_security_test_suggestions(
-    project_id: str,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, user: CurrentUser = Depends(get_current_user)
 ):
     await get_project(project_id, user, "ai.generate_security_tests")
-    items = await database.value.security_test_suggestions.find(
-        {"project_id": project_id}
-    ).sort("created_at", -1).to_list(200)
+    items = (
+        await database.value.security_test_suggestions.find({"project_id": project_id})
+        .sort("created_at", -1)
+        .to_list(200)
+    )
     return envelope(items)
 
 
-@router.post(
-    "/du-an/{project_id}/ai/goi-y-kiem-thu-bao-mat",
-    status_code=201,
-)
+@router.post("/du-an/{project_id}/ai/goi-y-kiem-thu-bao-mat", status_code=201)
 async def generate_security_test_suggestions(
     project_id: str,
     payload: SecurityTestSuggestionInput,
@@ -70,13 +64,18 @@ async def generate_security_test_suggestions(
     )
     if existing:
         return envelope(existing, revision=existing["revision"])
-    versions, evidence = await requirement_evidence(
-        project_id, payload.requirement_version_ids
-    )
+    versions, evidence = await requirement_evidence(project_id, payload.requirement_version_ids)
     ai_result = await request_design_assistance(
         "security_test_generation",
         project_id,
-        json.dumps({"task": "Sinh kiểm thử bảo mật cụ thể theo bằng chứng bằng tiếng Việt không tuyên bố đã quét lỗ hổng mỗi nhóm có ít nhất một đề xuất", "categories": payload.categories, "suggestion_schema": SecurityCandidate.model_json_schema()}, ensure_ascii=False),
+        json.dumps(
+            {
+                "task": "Sinh kiểm thử bảo mật cụ thể theo bằng chứng bằng tiếng Việt không tuyên bố đã quét lỗ hổng mỗi nhóm có ít nhất một đề xuất",
+                "categories": payload.categories,
+                "suggestion_schema": SecurityCandidate.model_json_schema(),
+            },
+            ensure_ascii=False,
+        ),
         evidence
         + [
             {
@@ -92,10 +91,16 @@ async def generate_security_test_suggestions(
     )
     candidates = validated_suggestions(ai_result, SecurityCandidate)
     version_ids = {item["_id"] for item in versions}
-    if {item["category"] for item in candidates} != set(payload.categories) or any(not set(item["requirement_version_ids"]) <= version_ids for item in candidates):
+    if {item["category"] for item in candidates} != set(payload.categories) or any(
+        not set(item["requirement_version_ids"]) <= version_ids for item in candidates
+    ):
         raise HTTPException(502, detail={"code": "AI_GENERATION_INVALID"})
-    candidates = [{**item, "candidate_id": f"SEC-{index}", "status": "SUGGESTED", "origin": "ai_generated"} for index, item in enumerate(candidates, 1)]
+    candidates = [
+        {**item, "candidate_id": f"SEC-{index}", "status": "SUGGESTED", "origin": "ai_generated"}
+        for index, item in enumerate(candidates, 1)
+    ]
     timestamp = now()
+    ai_contract = ai_contract_metadata(ai_result)
     result = {
         "_id": new_id("SECSUG"),
         "project_id": project_id,
@@ -104,14 +109,12 @@ async def generate_security_test_suggestions(
         "requirement_version_ids": [item["_id"] for item in versions],
         "candidates": candidates,
         "model_suggestions": ai_result.get("suggestions", []),
-        "evidence_refs": ai_result.get("evidence_refs", []),
-        "confidence": ai_result.get("confidence", 0),
-        "warnings": ai_result.get("warnings", []),
-        "model": ai_result.get("model", {}),
+        **ai_contract,
+        "ai_contract": ai_contract,
+        "ai_status": ai_contract["status"],
         "latency_ms": ai_result.get("latency_ms"),
         "status": "PENDING_REVIEW",
         "generation_status": ai_result.get("status", "SUCCESS"),
-        "degraded_mode": ai_result.get("degraded_mode"),
         "candidate_only": True,
         "vulnerability_scan_performed": False,
         "human_confirmation_required": True,
@@ -148,13 +151,14 @@ async def generate_security_test_suggestions(
 
 @router.get("/du-an/{project_id}/ai/ke-hoach-hieu-nang")
 async def list_performance_plan_drafts(
-    project_id: str,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, user: CurrentUser = Depends(get_current_user)
 ):
     await get_project(project_id, user, "ai.generate_performance_plan")
-    items = await database.value.performance_plan_drafts.find(
-        {"project_id": project_id}
-    ).sort("created_at", -1).to_list(200)
+    items = (
+        await database.value.performance_plan_drafts.find({"project_id": project_id})
+        .sort("created_at", -1)
+        .to_list(200)
+    )
     return envelope(items)
 
 
@@ -170,13 +174,22 @@ async def generate_performance_plan_draft(
     )
     if existing:
         return envelope(existing, revision=existing["revision"])
-    versions, evidence = await requirement_evidence(
-        project_id, payload.requirement_version_ids
-    )
+    versions, evidence = await requirement_evidence(project_id, payload.requirement_version_ids)
     ai_result = await request_design_assistance(
         "performance_plan_generation",
         project_id,
-        json.dumps({"task": "Sinh kế hoạch hiệu năng bằng tiếng Việt gắn với hành vi trong bằng chứng mỗi workload có ít nhất một kịch bản không chạy phát tải", "workload_types": payload.workload_types, "target_virtual_users": payload.target_virtual_users, "target_requests_per_second": payload.target_requests_per_second, "duration_minutes": payload.duration_minutes, "objective": payload.objective, "suggestion_schema": PerformanceScenario.model_json_schema()}, ensure_ascii=False),
+        json.dumps(
+            {
+                "task": "Sinh kế hoạch hiệu năng bằng tiếng Việt gắn với hành vi trong bằng chứng mỗi workload có ít nhất một kịch bản không chạy phát tải",
+                "workload_types": payload.workload_types,
+                "target_virtual_users": payload.target_virtual_users,
+                "target_requests_per_second": payload.target_requests_per_second,
+                "duration_minutes": payload.duration_minutes,
+                "objective": payload.objective,
+                "suggestion_schema": PerformanceScenario.model_json_schema(),
+            },
+            ensure_ascii=False,
+        ),
         evidence
         + [
             {
@@ -200,8 +213,11 @@ async def generate_performance_plan_draft(
     scenarios = validated_suggestions(ai_result, PerformanceScenario)
     if {item["workload_type"] for item in scenarios} != set(payload.workload_types):
         raise HTTPException(502, detail={"code": "AI_GENERATION_INVALID"})
-    scenarios = [{**item, "scenario_id": f"PERF-{index}"} for index, item in enumerate(scenarios, 1)]
+    scenarios = [
+        {**item, "scenario_id": f"PERF-{index}"} for index, item in enumerate(scenarios, 1)
+    ]
     timestamp = now()
+    ai_contract = ai_contract_metadata(ai_result)
     result = {
         "_id": new_id("PERFPLAN"),
         "project_id": project_id,
@@ -220,14 +236,12 @@ async def generate_performance_plan_draft(
             {"key": "throughput", "threshold": payload.target_requests_per_second},
         ],
         "model_suggestions": ai_result.get("suggestions", []),
-        "evidence_refs": ai_result.get("evidence_refs", []),
-        "confidence": ai_result.get("confidence", 0),
-        "warnings": ai_result.get("warnings", []),
-        "model": ai_result.get("model", {}),
+        **ai_contract,
+        "ai_contract": ai_contract,
+        "ai_status": ai_contract["status"],
         "latency_ms": ai_result.get("latency_ms"),
         "status": "DRAFT",
         "generation_status": ai_result.get("status", "SUCCESS"),
-        "degraded_mode": ai_result.get("degraded_mode"),
         "load_execution_performed": False,
         "human_confirmation_required": True,
         "idempotency_key": payload.idempotency_key,

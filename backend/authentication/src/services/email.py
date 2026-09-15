@@ -1,5 +1,4 @@
 import asyncio
-import os
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -69,13 +68,13 @@ class EmailService:
                 server.send_message(msg)
                 server.quit()
                 return True
-            except Exception as e:
+            except Exception:
                 logger.exception(
                     "Failed to establish connection with upstream SMTP server for email dispatch"
                 )
                 raise Exception("Quá trình thiết lập kết nối đến máy chủ thư điện tử gặp sự cố")
 
-        success = await asyncio.to_thread(send_sync)
+        await asyncio.to_thread(send_sync)
         logger.info("Password recovery email notification dispatched to upstream server")
 
     @staticmethod
@@ -94,9 +93,7 @@ class EmailService:
 
         def send_sync():
             message = MIMEText(
-                f"Mã xác minh địa chỉ thư điện tử của bạn là {token}",
-                "plain",
-                "utf-8",
+                f"Mã xác minh địa chỉ thư điện tử của bạn là {token}", "plain", "utf-8"
             )
             message["From"] = f"{settings.SENDER_NAME} <{settings.SENDER_EMAIL}>"
             message["To"] = email

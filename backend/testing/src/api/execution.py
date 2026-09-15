@@ -11,7 +11,23 @@ from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
 
 from src.core.auth import CurrentUser, get_current_user
-from src.core.common import audit, envelope, get_project, get_project_entity, load_user_identities, new_id, next_key, now, optimistic_patch, page_payload, plain_text, require_action_policy, sort_spec
+from src.core.common import (
+    audit,
+    envelope,
+    get_project,
+    get_project_entity,
+    get_project_role,
+    load_user_identities,
+    new_id,
+    next_key,
+    now,
+    optimistic_patch,
+    page_payload,
+    plain_text,
+    require_action_policy,
+    sort_spec,
+    visible_defect,
+)
 from src.core.database import database
 from src.domain.schemas import (
     BugTraceSuggestionInput,
@@ -19,24 +35,28 @@ from src.domain.schemas import (
     DefectRetestInput,
     DefectTraceUpdateInput,
     DefectTransition,
+    ProjectArchiveInput,
+    ReviewTransitionInput,
     TestExecutionPatch,
     TestPlanCreate,
     TestPlanPatch,
     TestResultCorrectionInput,
     TestResultInput,
-    TestRunCreate,
     TestRunAssignmentInput,
+    TestRunCreate,
     TestRunPatch,
     TestRunResumeInput,
     TestSuiteCreate,
     TestSuitePatch,
-    ProjectArchiveInput,
-    ReviewTransitionInput,
 )
-from src.services.project_knowledge import index_artifact
 from src.services.execution_context import resolve_execution_context
-from src.services.test_plan import plan_snapshot, plan_snapshot_hash, resolve_strategy_binding
-
+from src.services.project_knowledge import index_artifact
+from src.services.test_plan import (
+    plan_completeness,
+    plan_snapshot,
+    plan_snapshot_hash,
+    resolve_strategy_binding,
+)
 
 router = APIRouter(prefix="/kiem-thu", tags=["Thực thi kiểm thử"])
 
@@ -76,10 +96,7 @@ async def enforce_not_applicable_policy(project_id, status, step_results=None):
     if not project or not (project.get("settings") or {}).get(
         "allow_not_applicable_results", False
     ):
-        raise HTTPException(
-            status_code=409,
-            detail={"code": "NOT_APPLICABLE_POLICY_DISABLED"},
-        )
+        raise HTTPException(status_code=409, detail={"code": "NOT_APPLICABLE_POLICY_DISABLED"})
 
 
 async def select_resume_execution(run, user):
@@ -99,7 +116,9 @@ async def select_resume_execution(run, user):
             eligible_ids = explicit_ids
             assignment_mode = "CASE_ASSIGNMENT"
         elif run.get("assignee_id") == user.id:
-            eligible_ids = [version_id for version_id in version_ids if version_id not in assignments]
+            eligible_ids = [
+                version_id for version_id in version_ids if version_id not in assignments
+            ]
             assignment_mode = "RUN_ASSIGNMENT"
         elif run.get("assignee_id") or assignments:
             raise HTTPException(status_code=403, detail={"code": "TEST_RUN_ASSIGNMENT_REQUIRED"})
@@ -173,7 +192,11 @@ async def replay_resume_event(run, event):
 
 @router.post("/ke-hoach-kiem-thu", status_code=201)
 @router.post("/du-an/{project_id}/ke-hoach-kiem-thu", status_code=201)
-async def create_test_plan(payload: TestPlanCreate, project_id: str | None = None, user: CurrentUser = Depends(get_current_user)):
+async def create_test_plan(
+    payload: TestPlanCreate,
+    project_id: str | None = None,
+    user: CurrentUser = Depends(get_current_user),
+):
     if project_id and project_id != payload.project_id:
         raise HTTPException(status_code=422, detail={"code": "PROJECT_SCOPE_MISMATCH"})
     await get_project(payload.project_id, user, "testplan.create")
@@ -188,14 +211,23 @@ async def create_test_plan(payload: TestPlanCreate, project_id: str | None = Non
         environment=payload.environment,
     )
     if payload.members:
-        await require_action_policy(
-            payload.project_id, user, "testplan.assignments", {"QA_LEAD"}
-        )
+        await require_action_policy(payload.project_id, user, "testplan.assignments", {"QA_LEAD"})
     strategy_binding = await resolve_strategy_binding(
         payload.project_id, payload.strategy_version_id, auto_bind=True
     )
     timestamp = now()
-    plan = {"_id": new_id("TP"), **payload.model_dump(), **context, **strategy_binding, "status": "DRAFT", "approval_history": [], "revision": 1, "created_by": user.id, "created_at": timestamp, "updated_at": timestamp}
+    plan = {
+        "_id": new_id("TP"),
+        **payload.model_dump(),
+        **context,
+        **strategy_binding,
+        "status": "DRAFT",
+        "approval_history": [],
+        "revision": 1,
+        "created_by": user.id,
+        "created_at": timestamp,
+        "updated_at": timestamp,
+    }
     await database.value.test_plans.insert_one(plan)
     await audit(user.id, "test_plan_created", "TestPlan", plan["_id"], payload.project_id)
     return envelope(plan, revision=1)
@@ -232,7 +264,9 @@ async def list_test_plans(
     sort_field, direction = sort_spec(
         sort, {"name", "release", "status", "created_at", "updated_at"}
     )
-    return envelope(await database.value.test_plans.find(query).sort(sort_field, direction).to_list(500))
+    return envelope(
+        await database.value.test_plans.find(query).sort(sort_field, direction).to_list(500)
+    )
 
 
 @router.get("/ke-hoach-kiem-thu/{plan_id}")
@@ -240,15 +274,22 @@ async def get_test_plan(plan_id: str, user: CurrentUser = Depends(get_current_us
     return envelope(await get_project_entity("test_plans", plan_id, user, "testplan.read"))
 
 
+@router.post("/ke-hoach-kiem-thu/{plan_id}/kiem-tra")
+async def validate_test_plan(plan_id: str, user: CurrentUser = Depends(get_current_user)):
+    plan = await get_project_entity("test_plans", plan_id, user, "testplan.review")
+    project = await database.value.projects.find_one({"_id": plan["project_id"]}, {"settings": 1})
+    return envelope(plan_completeness(plan, (project or {}).get("settings")))
+
+
 @router.patch("/ke-hoach-kiem-thu/{plan_id}")
-async def update_test_plan(plan_id: str, payload: TestPlanPatch, user: CurrentUser = Depends(get_current_user)):
+async def update_test_plan(
+    plan_id: str, payload: TestPlanPatch, user: CurrentUser = Depends(get_current_user)
+):
     plan = await get_project_entity("test_plans", plan_id, user, "testplan.update")
     if plan.get("status") != "DRAFT":
         raise HTTPException(status_code=409, detail={"code": "TEST_PLAN_NOT_DRAFT"})
     if payload.members is not None:
-        await require_action_policy(
-            plan["project_id"], user, "testplan.assignments", {"QA_LEAD"}
-        )
+        await require_action_policy(plan["project_id"], user, "testplan.assignments", {"QA_LEAD"})
     changes = payload.model_dump(exclude_unset=True)
     changes.pop("expected_revision", None)
     if "strategy_version_id" in changes:
@@ -257,7 +298,9 @@ async def update_test_plan(plan_id: str, payload: TestPlanPatch, user: CurrentUs
                 plan["project_id"], changes.get("strategy_version_id"), auto_bind=False
             )
         )
-    if {"release_id", "build_id", "environment_id", "release", "build", "environment"} & set(changes):
+    if {"release_id", "build_id", "environment_id", "release", "build", "environment"} & set(
+        changes
+    ):
         changes.update(
             await resolve_execution_context(
                 plan["project_id"],
@@ -270,43 +313,98 @@ async def update_test_plan(plan_id: str, payload: TestPlanPatch, user: CurrentUs
                 environment=changes.get("environment", plan.get("environment", "")),
             )
         )
-    validation_data = {
-        field: changes.get(field, plan.get(field))
-        for field in TestPlanCreate.model_fields
-    }
+    validation_data = {}
+    for field in TestPlanCreate.model_fields:
+        if field in changes:
+            validation_data[field] = changes[field]
+        elif field in plan:
+            validation_data[field] = plan[field]
     TestPlanCreate.model_validate(validation_data)
-    updated = await optimistic_patch("test_plans", plan_id, plan["project_id"], payload.expected_revision, changes)
+    updated = await optimistic_patch(
+        "test_plans", plan_id, plan["project_id"], payload.expected_revision, changes
+    )
     await audit(user.id, "test_plan_updated", "TestPlan", plan_id, plan["project_id"])
     return envelope(updated, revision=updated["revision"])
 
 
 @router.post("/ke-hoach-kiem-thu/{plan_id}/gui-ra-soat")
-async def submit_test_plan(plan_id: str, payload: ReviewTransitionInput, user: CurrentUser = Depends(get_current_user)):
+async def submit_test_plan(
+    plan_id: str, payload: ReviewTransitionInput, user: CurrentUser = Depends(get_current_user)
+):
     plan = await get_project_entity("test_plans", plan_id, user, "testplan.submit_review")
     if plan.get("status") != "DRAFT":
         raise HTTPException(status_code=409, detail={"code": "INVALID_STATE_TRANSITION"})
-    updated = await optimistic_patch("test_plans", plan_id, plan["project_id"], payload.expected_revision, {"status": "IN_REVIEW", "review_note": payload.review_note})
+    updated = await optimistic_patch(
+        "test_plans",
+        plan_id,
+        plan["project_id"],
+        payload.expected_revision,
+        {"status": "IN_REVIEW", "review_note": payload.review_note},
+    )
     await audit(user.id, "test_plan_submitted", "TestPlan", plan_id, plan["project_id"])
     return envelope(updated, revision=updated["revision"])
 
 
 @router.post("/ke-hoach-kiem-thu/{plan_id}/phe-duyet")
-async def approve_test_plan(plan_id: str, payload: ReviewTransitionInput, user: CurrentUser = Depends(get_current_user)):
+async def approve_test_plan(
+    plan_id: str, payload: ReviewTransitionInput, user: CurrentUser = Depends(get_current_user)
+):
     plan = await get_project_entity("test_plans", plan_id, user, "testplan.approve")
     if plan.get("status") not in {"DRAFT", "IN_REVIEW"}:
         raise HTTPException(status_code=409, detail={"code": "INVALID_STATE_TRANSITION"})
+    project = await database.value.projects.find_one({"_id": plan["project_id"]}, {"settings": 1})
+    settings = (project or {}).get("settings") or {}
+    if settings.get("strict_test_plan_approval", False):
+        completeness = plan_completeness(plan, settings)
+        if not completeness["ready_for_approval"]:
+            raise HTTPException(
+                status_code=409, detail={"code": "TEST_PLAN_INCOMPLETE", **completeness}
+            )
     timestamp = now()
     approved_hash = plan_snapshot_hash(plan)
-    approval = {"actor_id": user.id, "action": "APPROVED", "note": payload.review_note, "at": timestamp}
-    updated = await optimistic_patch("test_plans", plan_id, plan["project_id"], payload.expected_revision, {"status": "APPROVED", "approved_by": user.id, "approved_at": timestamp, "approved_snapshot": plan_snapshot(plan), "approved_snapshot_hash": approved_hash, "baseline_hash": approved_hash, "approval_history": [*plan.get("approval_history", []), approval], "review_note": payload.review_note})
+    approval = {
+        "actor_id": user.id,
+        "action": "APPROVED",
+        "note": payload.review_note,
+        "at": timestamp,
+    }
+    updated = await optimistic_patch(
+        "test_plans",
+        plan_id,
+        plan["project_id"],
+        payload.expected_revision,
+        {
+            "status": "APPROVED",
+            "approved_by": user.id,
+            "approved_at": timestamp,
+            "approved_snapshot": plan_snapshot(plan),
+            "approved_snapshot_hash": approved_hash,
+            "baseline_hash": approved_hash,
+            "approval_history": [*plan.get("approval_history", []), approval],
+            "review_note": payload.review_note,
+        },
+    )
     await audit(user.id, "test_plan_approved", "TestPlan", plan_id, plan["project_id"])
     return envelope(updated, revision=updated["revision"])
 
 
 @router.post("/ke-hoach-kiem-thu/{plan_id}/luu-tru")
-async def archive_test_plan(plan_id: str, payload: ProjectArchiveInput, user: CurrentUser = Depends(get_current_user)):
+async def archive_test_plan(
+    plan_id: str, payload: ProjectArchiveInput, user: CurrentUser = Depends(get_current_user)
+):
     plan = await get_project_entity("test_plans", plan_id, user, "testplan.archive")
-    updated = await optimistic_patch("test_plans", plan_id, plan["project_id"], payload.expected_revision, {"status": "ARCHIVED", "archive_reason": payload.reason, "archived_by": user.id, "archived_at": now()})
+    updated = await optimistic_patch(
+        "test_plans",
+        plan_id,
+        plan["project_id"],
+        payload.expected_revision,
+        {
+            "status": "ARCHIVED",
+            "archive_reason": payload.reason,
+            "archived_by": user.id,
+            "archived_at": now(),
+        },
+    )
     await audit(user.id, "test_plan_archived", "TestPlan", plan_id, plan["project_id"])
     return envelope(updated, revision=updated["revision"])
 
@@ -315,24 +413,64 @@ async def archive_test_plan(plan_id: str, payload: ProjectArchiveInput, user: Cu
 async def clone_test_plan(plan_id: str, user: CurrentUser = Depends(get_current_user)):
     plan = await get_project_entity("test_plans", plan_id, user, "testplan.create")
     timestamp = now()
-    cloned = {**plan, "_id": new_id("TP"), "name": f"{plan['name']} bản sao", "status": "DRAFT", "revision": 1, "created_by": user.id, "created_at": timestamp, "updated_at": timestamp}
-    for field in ["approved_at", "approved_by", "approved_snapshot", "approved_snapshot_hash", "baseline_hash", "approval_history", "archived_at", "archived_by", "archive_reason", "reviewed_at", "reviewed_by"]:
+    cloned = {
+        **plan,
+        "_id": new_id("TP"),
+        "name": f"{plan['name']} bản sao",
+        "status": "DRAFT",
+        "revision": 1,
+        "created_by": user.id,
+        "created_at": timestamp,
+        "updated_at": timestamp,
+    }
+    for field in [
+        "approved_at",
+        "approved_by",
+        "approved_snapshot",
+        "approved_snapshot_hash",
+        "baseline_hash",
+        "approval_history",
+        "archived_at",
+        "archived_by",
+        "archive_reason",
+        "reviewed_at",
+        "reviewed_by",
+    ]:
         cloned.pop(field, None)
     cloned["approval_history"] = []
     await database.value.test_plans.insert_one(cloned)
-    await audit(user.id, "test_plan_cloned", "TestPlan", cloned["_id"], plan["project_id"], {"source_plan_id": plan_id})
+    await audit(
+        user.id,
+        "test_plan_cloned",
+        "TestPlan",
+        cloned["_id"],
+        plan["project_id"],
+        {"source_plan_id": plan_id},
+    )
     return envelope(cloned, revision=1)
 
 
 @router.post("/bo-kiem-thu", status_code=201)
 @router.post("/du-an/{project_id}/bo-kiem-thu", status_code=201)
-async def create_test_suite(payload: TestSuiteCreate, project_id: str | None = None, user: CurrentUser = Depends(get_current_user)):
+async def create_test_suite(
+    payload: TestSuiteCreate,
+    project_id: str | None = None,
+    user: CurrentUser = Depends(get_current_user),
+):
     if project_id and project_id != payload.project_id:
         raise HTTPException(status_code=422, detail={"code": "PROJECT_SCOPE_MISMATCH"})
     await get_project(payload.project_id, user, "testsuite.create")
     await validate_test_versions(payload.project_id, payload.test_case_version_ids)
     timestamp = now()
-    suite = {"_id": new_id("TSU"), **payload.model_dump(), "status": "ACTIVE", "revision": 1, "created_by": user.id, "created_at": timestamp, "updated_at": timestamp}
+    suite = {
+        "_id": new_id("TSU"),
+        **payload.model_dump(),
+        "status": "ACTIVE",
+        "revision": 1,
+        "created_by": user.id,
+        "created_at": timestamp,
+        "updated_at": timestamp,
+    }
     await database.value.test_suites.insert_one(suite)
     await audit(user.id, "test_suite_created", "TestSuite", suite["_id"], payload.project_id)
     return envelope(suite, revision=1)
@@ -357,7 +495,9 @@ async def list_test_suites(
     sort_field, direction = sort_spec(
         sort, {"name", "suite_type", "status", "created_at", "updated_at"}
     )
-    return envelope(await database.value.test_suites.find(query).sort(sort_field, direction).to_list(500))
+    return envelope(
+        await database.value.test_suites.find(query).sort(sort_field, direction).to_list(500)
+    )
 
 
 @router.get("/bo-kiem-thu/{suite_id}")
@@ -366,13 +506,21 @@ async def get_test_suite(suite_id: str, user: CurrentUser = Depends(get_current_
 
 
 @router.patch("/bo-kiem-thu/{suite_id}")
-async def update_test_suite(suite_id: str, payload: TestSuitePatch, user: CurrentUser = Depends(get_current_user)):
+async def update_test_suite(
+    suite_id: str, payload: TestSuitePatch, user: CurrentUser = Depends(get_current_user)
+):
     suite = await get_project_entity("test_suites", suite_id, user, "testsuite.update")
     if suite.get("status", "ACTIVE") == "ARCHIVED":
         raise HTTPException(status_code=409, detail={"code": "TEST_SUITE_ARCHIVED"})
     if payload.test_case_version_ids is not None:
         await validate_test_versions(suite["project_id"], payload.test_case_version_ids)
-    updated = await optimistic_patch("test_suites", suite_id, suite["project_id"], payload.expected_revision, payload.model_dump())
+    updated = await optimistic_patch(
+        "test_suites",
+        suite_id,
+        suite["project_id"],
+        payload.expected_revision,
+        payload.model_dump(),
+    )
     await audit(user.id, "test_suite_updated", "TestSuite", suite_id, suite["project_id"])
     return envelope(updated, revision=updated["revision"])
 
@@ -381,25 +529,58 @@ async def update_test_suite(suite_id: str, payload: TestSuitePatch, user: Curren
 async def clone_test_suite(suite_id: str, user: CurrentUser = Depends(get_current_user)):
     suite = await get_project_entity("test_suites", suite_id, user, "testsuite.clone")
     timestamp = now()
-    cloned = {**suite, "_id": new_id("TSU"), "name": f"{suite['name']} bản sao", "status": "ACTIVE", "revision": 1, "created_by": user.id, "created_at": timestamp, "updated_at": timestamp}
+    cloned = {
+        **suite,
+        "_id": new_id("TSU"),
+        "name": f"{suite['name']} bản sao",
+        "status": "ACTIVE",
+        "revision": 1,
+        "created_by": user.id,
+        "created_at": timestamp,
+        "updated_at": timestamp,
+    }
     for field in ["archived_at", "archived_by", "archive_reason"]:
         cloned.pop(field, None)
     await database.value.test_suites.insert_one(cloned)
-    await audit(user.id, "test_suite_cloned", "TestSuite", cloned["_id"], suite["project_id"], {"source_suite_id": suite_id})
+    await audit(
+        user.id,
+        "test_suite_cloned",
+        "TestSuite",
+        cloned["_id"],
+        suite["project_id"],
+        {"source_suite_id": suite_id},
+    )
     return envelope(cloned, revision=1)
 
 
 @router.post("/bo-kiem-thu/{suite_id}/luu-tru")
-async def archive_test_suite(suite_id: str, payload: ProjectArchiveInput, user: CurrentUser = Depends(get_current_user)):
+async def archive_test_suite(
+    suite_id: str, payload: ProjectArchiveInput, user: CurrentUser = Depends(get_current_user)
+):
     suite = await get_project_entity("test_suites", suite_id, user, "testsuite.archive")
-    updated = await optimistic_patch("test_suites", suite_id, suite["project_id"], payload.expected_revision, {"status": "ARCHIVED", "archive_reason": payload.reason, "archived_by": user.id, "archived_at": now()})
+    updated = await optimistic_patch(
+        "test_suites",
+        suite_id,
+        suite["project_id"],
+        payload.expected_revision,
+        {
+            "status": "ARCHIVED",
+            "archive_reason": payload.reason,
+            "archived_by": user.id,
+            "archived_at": now(),
+        },
+    )
     await audit(user.id, "test_suite_archived", "TestSuite", suite_id, suite["project_id"])
     return envelope(updated, revision=updated["revision"])
 
 
 @router.post("/lan-chay-kiem-thu", status_code=201)
 @router.post("/du-an/{project_id}/lan-chay-kiem-thu", status_code=201)
-async def create_test_run(payload: TestRunCreate, project_id: str | None = None, user: CurrentUser = Depends(get_current_user)):
+async def create_test_run(
+    payload: TestRunCreate,
+    project_id: str | None = None,
+    user: CurrentUser = Depends(get_current_user),
+):
     if project_id is not None and payload.project_id != project_id:
         raise HTTPException(status_code=422, detail={"code": "PROJECT_MISMATCH"})
     await get_project(payload.project_id, user, "testrun.create")
@@ -422,7 +603,9 @@ async def create_test_run(payload: TestRunCreate, project_id: str | None = None,
     )
     version_ids = list(dict.fromkeys(payload.test_case_version_ids))
     if payload.test_suite_ids:
-        suites = await database.value.test_suites.find({"project_id": payload.project_id, "_id": {"$in": payload.test_suite_ids}}).to_list(500)
+        suites = await database.value.test_suites.find(
+            {"project_id": payload.project_id, "_id": {"$in": payload.test_suite_ids}}
+        ).to_list(500)
         if len(suites) != len(set(payload.test_suite_ids)):
             raise HTTPException(status_code=422, detail={"code": "INVALID_TEST_SUITE"})
         for suite in suites:
@@ -439,7 +622,18 @@ async def create_test_run(payload: TestRunCreate, project_id: str | None = None,
         if plan and plan.get("device_matrix_id")
         else {}
     )
-    run = {"_id": new_id("TRUN"), **payload.model_dump(), **context, **device_scope, "test_case_version_ids": version_ids, "status": "DRAFT", "revision": 1, "created_by": user.id, "created_at": timestamp, "updated_at": timestamp}
+    run = {
+        "_id": new_id("TRUN"),
+        **payload.model_dump(),
+        **context,
+        **device_scope,
+        "test_case_version_ids": version_ids,
+        "status": "DRAFT",
+        "revision": 1,
+        "created_by": user.id,
+        "created_at": timestamp,
+        "updated_at": timestamp,
+    }
     await database.value.test_runs.insert_one(run)
     if version_ids:
         try:
@@ -473,10 +667,21 @@ async def create_test_run(payload: TestRunCreate, project_id: str | None = None,
                 ]
             )
         except Exception:
-            await database.value.test_results.delete_many({"test_run_id": run["_id"], "project_id": payload.project_id})
-            await database.value.test_runs.delete_one({"_id": run["_id"], "project_id": payload.project_id})
+            await database.value.test_results.delete_many(
+                {"test_run_id": run["_id"], "project_id": payload.project_id}
+            )
+            await database.value.test_runs.delete_one(
+                {"_id": run["_id"], "project_id": payload.project_id}
+            )
             raise
-    await audit(user.id, "test_run_created", "TestRun", run["_id"], payload.project_id, {"test_count": len(version_ids)})
+    await audit(
+        user.id,
+        "test_run_created",
+        "TestRun",
+        run["_id"],
+        payload.project_id,
+        {"test_count": len(version_ids)},
+    )
     return envelope(run, revision=1)
 
 
@@ -496,14 +701,25 @@ async def update_test_run(
     changes.pop("expected_revision", None)
     version_ids = changes.get("test_case_version_ids", run.get("test_case_version_ids", []))
     if "test_suite_ids" in changes:
-        suites = await database.value.test_suites.find({"project_id": project_id, "_id": {"$in": changes["test_suite_ids"]}}).to_list(500)
+        suites = await database.value.test_suites.find(
+            {"project_id": project_id, "_id": {"$in": changes["test_suite_ids"]}}
+        ).to_list(500)
         if len(suites) != len(set(changes["test_suite_ids"])):
             raise HTTPException(status_code=422, detail={"code": "INVALID_TEST_SUITE"})
-        version_ids = list(dict.fromkeys([*version_ids, *[item for suite in suites for item in suite.get("test_case_version_ids", [])]]))
+        version_ids = list(
+            dict.fromkeys(
+                [
+                    *version_ids,
+                    *[item for suite in suites for item in suite.get("test_case_version_ids", [])],
+                ]
+            )
+        )
         changes["test_case_version_ids"] = version_ids
     if "test_case_version_ids" in changes:
         await validate_test_versions(project_id, version_ids)
-    if {"release_id", "build_id", "environment_id", "release", "build", "environment"} & set(changes):
+    if {"release_id", "build_id", "environment_id", "release", "build", "environment"} & set(
+        changes
+    ):
         changes.update(
             await resolve_execution_context(
                 project_id,
@@ -516,7 +732,9 @@ async def update_test_run(
                 environment=changes.get("environment", run.get("environment", "")),
             )
         )
-    updated = await optimistic_patch("test_runs", run_id, project_id, payload.expected_revision, changes)
+    updated = await optimistic_patch(
+        "test_runs", run_id, project_id, payload.expected_revision, changes
+    )
     await audit(user.id, "test_run_updated", "TestRun", run_id, project_id)
     return envelope(updated, revision=updated["revision"])
 
@@ -556,15 +774,31 @@ async def assign_test_run(
             }
         )
         if valid_members != len(assigned_users):
-            raise HTTPException(
-                status_code=422,
-                detail={"code": "INVALID_TEST_CASE_ASSIGNEE"},
-            )
+            raise HTTPException(status_code=422, detail={"code": "INVALID_TEST_CASE_ASSIGNEE"})
     unknown = set(payload.test_case_assignments) - set(run.get("test_case_version_ids", []))
     if unknown:
-        raise HTTPException(status_code=422, detail={"code": "TEST_NOT_IN_RUN_SNAPSHOT", "test_case_version_ids": sorted(unknown)})
-    updated = await optimistic_patch("test_runs", run_id, project_id, payload.expected_revision, {"assignee_id": payload.assignee_id, "test_case_assignments": payload.test_case_assignments})
-    await audit(user.id, "test_run_assigned", "TestRun", run_id, project_id, {"assignee_id": payload.assignee_id})
+        raise HTTPException(
+            status_code=422,
+            detail={"code": "TEST_NOT_IN_RUN_SNAPSHOT", "test_case_version_ids": sorted(unknown)},
+        )
+    updated = await optimistic_patch(
+        "test_runs",
+        run_id,
+        project_id,
+        payload.expected_revision,
+        {
+            "assignee_id": payload.assignee_id,
+            "test_case_assignments": payload.test_case_assignments,
+        },
+    )
+    await audit(
+        user.id,
+        "test_run_assigned",
+        "TestRun",
+        run_id,
+        project_id,
+        {"assignee_id": payload.assignee_id},
+    )
     return envelope(updated, revision=updated["revision"])
 
 
@@ -604,12 +838,25 @@ async def list_test_runs(
             query[field] = value
     sort_field, direction = sort_spec(
         sort,
-        {"name", "release", "build", "environment", "status", "created_by", "created_at", "updated_at"},
+        {
+            "name",
+            "release",
+            "build",
+            "environment",
+            "status",
+            "created_by",
+            "created_at",
+            "updated_at",
+        },
     )
     total = await database.value.test_runs.count_documents(query)
-    items = await database.value.test_runs.find(query).sort(sort_field, direction).skip(
-        (page - 1) * page_size
-    ).limit(page_size).to_list(page_size)
+    items = (
+        await database.value.test_runs.find(query)
+        .sort(sort_field, direction)
+        .skip((page - 1) * page_size)
+        .limit(page_size)
+        .to_list(page_size)
+    )
     return envelope(page_payload(items, page, page_size, total))
 
 
@@ -627,34 +874,81 @@ async def list_test_results(
         if not set(statuses) <= allowed:
             raise HTTPException(status_code=422, detail={"code": "INVALID_TEST_RESULT_STATUS"})
         query["status"] = {"$in": statuses}
-    return envelope(await database.value.test_results.find(query).sort("updated_at", -1).to_list(5000))
+    return envelope(
+        await database.value.test_results.find(query).sort("updated_at", -1).to_list(5000)
+    )
 
 
 @router.get("/lan-chay-kiem-thu/{run_id}")
 async def get_test_run(run_id: str, user: CurrentUser = Depends(get_current_user)):
     run = await get_project_entity("test_runs", run_id, user, "testrun.read")
-    versions = await database.value.test_case_versions.find({"_id": {"$in": run["test_case_version_ids"]}}).to_list(10000)
+    versions = await database.value.test_case_versions.find(
+        {"_id": {"$in": run["test_case_version_ids"]}}
+    ).to_list(10000)
     results = await database.value.test_results.find({"test_run_id": run_id}).to_list(10000)
-    defects = await database.value.defects.find({"project_id": run["project_id"], "linked_test_result_id": {"$in": [item["_id"] for item in results]}}).to_list(10000)
+    defects = await database.value.defects.find(
+        {
+            "project_id": run["project_id"],
+            "linked_test_result_id": {"$in": [item["_id"] for item in results]},
+        }
+    ).to_list(10000)
     return envelope({**run, "test_case_versions": versions, "results": results, "defects": defects})
 
 
 @router.get("/lan-chay-kiem-thu/{run_id}/bao-cao")
 async def export_test_run_report(run_id: str, user: CurrentUser = Depends(get_current_user)):
     run = await get_project_entity("test_runs", run_id, user, "report.export")
-    versions = await database.value.test_case_versions.find({"_id": {"$in": run["test_case_version_ids"]}}).to_list(10000)
+    versions = await database.value.test_case_versions.find(
+        {"_id": {"$in": run["test_case_version_ids"]}}
+    ).to_list(10000)
     results = await database.value.test_results.find({"test_run_id": run_id}).to_list(10000)
     by_result = {item["test_case_version_id"]: item for item in results}
     identities = await load_user_identities(item.get("executed_by") for item in results)
-    fields = ["run_id", "run_name", "environment", "build", "test_case_key", "test_case_version", "title", "result", "executed_by", "executed_by_name", "executed_by_email", "executed_at", "note"]
+    fields = [
+        "run_id",
+        "run_name",
+        "environment",
+        "build",
+        "test_case_key",
+        "test_case_version",
+        "title",
+        "result",
+        "executed_by",
+        "executed_by_name",
+        "executed_by_email",
+        "executed_at",
+        "note",
+    ]
     stream = io.StringIO()
     writer = csv.DictWriter(stream, fieldnames=fields)
     writer.writeheader()
     for version in versions:
         result = by_result.get(version["_id"], {})
         identity = identities.get(result.get("executed_by"), {})
-        writer.writerow({"run_id": run_id, "run_name": run["name"], "environment": run.get("environment"), "build": run.get("build"), "test_case_key": version.get("test_case_key"), "test_case_version": version.get("version"), "title": version.get("title"), "result": result.get("status", "NOT_RUN"), "executed_by": result.get("executed_by"), "executed_by_name": identity.get("full_name"), "executed_by_email": identity.get("email"), "executed_at": result.get("executed_at") or result.get("completed_at") or result.get("updated_at"), "note": result.get("note")})
-    return StreamingResponse(iter([stream.getvalue()]), media_type="text/csv", headers={"Content-Disposition": f'attachment; filename="test-run-{run_id}.csv"'})
+        writer.writerow(
+            {
+                "run_id": run_id,
+                "run_name": run["name"],
+                "environment": run.get("environment"),
+                "build": run.get("build"),
+                "test_case_key": version.get("test_case_key"),
+                "test_case_version": version.get("version"),
+                "title": version.get("title"),
+                "result": result.get("status", "NOT_RUN"),
+                "executed_by": result.get("executed_by"),
+                "executed_by_name": identity.get("full_name"),
+                "executed_by_email": identity.get("email"),
+                "executed_at": result.get("executed_at")
+                or result.get("completed_at")
+                or result.get("updated_at"),
+                "note": result.get("note"),
+            }
+        )
+    return StreamingResponse(
+        iter([stream.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="test-run-{run_id}.csv"'},
+    )
 
 
 @router.post("/lan-chay-kiem-thu/{run_id}/bat-dau")
@@ -665,7 +959,9 @@ async def start_test_run(run_id: str, user: CurrentUser = Depends(get_current_us
     if run["status"] not in {"DRAFT", "READY"}:
         raise HTTPException(status_code=409, detail={"code": "INVALID_STATE_TRANSITION"})
     if run.get("environment_id"):
-        environment = await database.value.test_environments.find_one({"_id": run["environment_id"], "project_id": run["project_id"]})
+        environment = await database.value.test_environments.find_one(
+            {"_id": run["environment_id"], "project_id": run["project_id"]}
+        )
         if environment and environment.get("availability") != "AVAILABLE":
             raise HTTPException(status_code=409, detail={"code": "TEST_ENVIRONMENT_UNAVAILABLE"})
     scope = frozen_run_scope(run)
@@ -790,12 +1086,7 @@ async def resume_test_run(
         },
     )
     return envelope(
-        {
-            "run": updated,
-            "resume_event": event,
-            **selected,
-            "scope_fingerprint": scope_fingerprint,
-        },
+        {"run": updated, "resume_event": event, **selected, "scope_fingerprint": scope_fingerprint},
         revision=updated["revision"],
     )
 
@@ -811,10 +1102,18 @@ async def record_test_result(
     if run["status"] != "IN_PROGRESS":
         raise HTTPException(status_code=409, detail={"code": "TEST_RUN_NOT_IN_PROGRESS"})
     if run.get("execution_paused"):
-        raise HTTPException(status_code=409, detail={"code": "TEST_RUN_PAUSED_BY_ENVIRONMENT_INCIDENT", "incident_id": run.get("paused_by_environment_incident_id")})
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "TEST_RUN_PAUSED_BY_ENVIRONMENT_INCIDENT",
+                "incident_id": run.get("paused_by_environment_incident_id"),
+            },
+        )
     if test_case_version_id not in run["test_case_version_ids"]:
         raise HTTPException(status_code=422, detail={"code": "TEST_NOT_IN_RUN_SNAPSHOT"})
-    existing = await database.value.test_results.find_one({"test_run_id": run_id, "test_case_version_id": test_case_version_id})
+    existing = await database.value.test_results.find_one(
+        {"test_run_id": run_id, "test_case_version_id": test_case_version_id}
+    )
     if existing:
         if existing.get("idempotency_key") == payload.idempotency_key:
             return envelope(existing)
@@ -824,7 +1123,12 @@ async def record_test_result(
             raise HTTPException(status_code=409, detail={"code": "RESULT_ALREADY_RECORDED"})
         timestamp = now()
         result = await database.value.test_results.find_one_and_update(
-            {"_id": existing["_id"], "project_id": run["project_id"], "status": "NOT_RUN", "revision": existing.get("revision", 1)},
+            {
+                "_id": existing["_id"],
+                "project_id": run["project_id"],
+                "status": "NOT_RUN",
+                "revision": existing.get("revision", 1),
+            },
             {
                 "$set": {
                     **payload.model_dump(),
@@ -842,10 +1146,35 @@ async def record_test_result(
         if not result:
             raise HTTPException(status_code=409, detail={"code": "EXECUTION_CONFLICT"})
     else:
-        result = {"_id": new_id("TRES"), "project_id": run["project_id"], "test_run_id": run_id, "test_case_version_id": test_case_version_id, "environment": run.get("environment"), "build": run.get("build"), **payload.model_dump(), "revision": 1, "executor_id": user.id, "executed_by": user.id, "started_at": now(), "completed_at": now(), "executed_at": now(), "created_at": now(), "updated_at": now()}
+        result = {
+            "_id": new_id("TRES"),
+            "project_id": run["project_id"],
+            "test_run_id": run_id,
+            "test_case_version_id": test_case_version_id,
+            "environment": run.get("environment"),
+            "build": run.get("build"),
+            **payload.model_dump(),
+            "revision": 1,
+            "executor_id": user.id,
+            "executed_by": user.id,
+            "started_at": now(),
+            "completed_at": now(),
+            "executed_at": now(),
+            "created_at": now(),
+            "updated_at": now(),
+        }
         await database.value.test_results.insert_one(result)
-    await database.value.test_runs.update_one({"_id": run_id}, {"$set": {"updated_at": now()}, "$inc": {"revision": 1}})
-    await audit(user.id, "test_result_recorded", "TestResult", result["_id"], run["project_id"], {"status": payload.status})
+    await database.value.test_runs.update_one(
+        {"_id": run_id}, {"$set": {"updated_at": now()}, "$inc": {"revision": 1}}
+    )
+    await audit(
+        user.id,
+        "test_result_recorded",
+        "TestResult",
+        result["_id"],
+        run["project_id"],
+        {"status": payload.status},
+    )
     return envelope(result)
 
 
@@ -863,16 +1192,36 @@ async def patch_test_execution(
         {"test_result_id": execution_id, "idempotency_key": payload.idempotency_key}
     )
     if existing_event:
-        return envelope({"execution": await database.value.test_results.find_one({"_id": execution_id}), "update": existing_event})
+        return envelope(
+            {
+                "execution": await database.value.test_results.find_one({"_id": execution_id}),
+                "update": existing_event,
+            }
+        )
     await enforce_not_applicable_policy(project_id, payload.status, payload.step_results)
-    run = await database.value.test_runs.find_one({"_id": result["test_run_id"], "project_id": project_id})
+    run = await database.value.test_runs.find_one(
+        {"_id": result["test_run_id"], "project_id": project_id}
+    )
     if not run or run.get("status") != "IN_PROGRESS":
         raise HTTPException(status_code=409, detail={"code": "TEST_RUN_NOT_IN_PROGRESS"})
     if run.get("execution_paused"):
-        raise HTTPException(status_code=409, detail={"code": "TEST_RUN_PAUSED_BY_ENVIRONMENT_INCIDENT", "incident_id": run.get("paused_by_environment_incident_id")})
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "TEST_RUN_PAUSED_BY_ENVIRONMENT_INCIDENT",
+                "incident_id": run.get("paused_by_environment_incident_id"),
+            },
+        )
     allowed = EXECUTION_TRANSITIONS.get(result.get("status"), set())
     if payload.status not in allowed:
-        raise HTTPException(status_code=409, detail={"code": "INVALID_EXECUTION_TRANSITION", "from": result.get("status"), "to": payload.status})
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "INVALID_EXECUTION_TRANSITION",
+                "from": result.get("status"),
+                "to": payload.status,
+            },
+        )
     expected_revision = payload.expected_revision or result.get("revision", 1)
     timestamp = now()
     terminal = payload.status in {"PASS", "FAIL", "BLOCKED", "SKIPPED", "NOT_APPLICABLE"}
@@ -919,28 +1268,86 @@ async def patch_test_execution(
         {"_id": result["test_run_id"], "project_id": project_id},
         {"$set": {"updated_at": now()}, "$inc": {"revision": 1}},
     )
-    await audit(user.id, "test_execution_updated", "TestExecution", execution_id, project_id, {"status": payload.status})
+    await audit(
+        user.id,
+        "test_execution_updated",
+        "TestExecution",
+        execution_id,
+        project_id,
+        {"status": payload.status},
+    )
     return envelope({"execution": updated, "update": event}, revision=updated["revision"])
 
 
 @router.post("/ket-qua-kiem-thu/{result_id}/hieu-chinh")
-async def correct_test_result(result_id: str, payload: TestResultCorrectionInput, user: CurrentUser = Depends(get_current_user)):
-    result = await get_project_entity(
-        "test_results", result_id, user, "testresult.correct"
+async def correct_test_result(
+    result_id: str,
+    payload: TestResultCorrectionInput,
+    user: CurrentUser = Depends(get_current_user),
+):
+    result = await get_project_entity("test_results", result_id, user, "testresult.correct")
+    existing = await database.value.test_result_corrections.find_one(
+        {"test_result_id": result_id, "idempotency_key": payload.idempotency_key}
     )
-    existing = await database.value.test_result_corrections.find_one({"test_result_id": result_id, "idempotency_key": payload.idempotency_key})
     if existing:
-        return envelope({"result": await database.value.test_results.find_one({"_id": result_id}), "correction": existing})
+        return envelope(
+            {
+                "result": await database.value.test_results.find_one({"_id": result_id}),
+                "correction": existing,
+            }
+        )
     await enforce_not_applicable_policy(result["project_id"], payload.status)
-    event = {"_id": new_id("TRC"), "project_id": result["project_id"], "test_result_id": result_id, "from_status": result.get("status"), "to_status": payload.status, "reason": payload.reason, "idempotency_key": payload.idempotency_key, "corrected_by": user.id, "created_at": now()}
+    event = {
+        "_id": new_id("TRC"),
+        "project_id": result["project_id"],
+        "test_result_id": result_id,
+        "from_status": result.get("status"),
+        "to_status": payload.status,
+        "reason": payload.reason,
+        "idempotency_key": payload.idempotency_key,
+        "corrected_by": user.id,
+        "created_at": now(),
+    }
     try:
         await database.value.test_result_corrections.insert_one(event)
     except DuplicateKeyError:
-        event = await database.value.test_result_corrections.find_one({"test_result_id": result_id, "idempotency_key": payload.idempotency_key})
-        return envelope({"result": await database.value.test_results.find_one({"_id": result_id}), "correction": event})
-    await database.value.test_results.update_one({"_id": result_id}, {"$set": {"status": payload.status, "corrected": True, "last_correction_id": event["_id"], "completed_at": now(), "updated_at": now()}, "$push": {"correction_event_ids": event["_id"]}, "$inc": {"revision": 1}})
-    await audit(user.id, "test_result_corrected", "TestResult", result_id, result["project_id"], {"from": result.get("status"), "to": payload.status, "correction_id": event["_id"]})
-    return envelope({"result": await database.value.test_results.find_one({"_id": result_id}), "correction": event})
+        event = await database.value.test_result_corrections.find_one(
+            {"test_result_id": result_id, "idempotency_key": payload.idempotency_key}
+        )
+        return envelope(
+            {
+                "result": await database.value.test_results.find_one({"_id": result_id}),
+                "correction": event,
+            }
+        )
+    await database.value.test_results.update_one(
+        {"_id": result_id},
+        {
+            "$set": {
+                "status": payload.status,
+                "corrected": True,
+                "last_correction_id": event["_id"],
+                "completed_at": now(),
+                "updated_at": now(),
+            },
+            "$push": {"correction_event_ids": event["_id"]},
+            "$inc": {"revision": 1},
+        },
+    )
+    await audit(
+        user.id,
+        "test_result_corrected",
+        "TestResult",
+        result_id,
+        result["project_id"],
+        {"from": result.get("status"), "to": payload.status, "correction_id": event["_id"]},
+    )
+    return envelope(
+        {
+            "result": await database.value.test_results.find_one({"_id": result_id}),
+            "correction": event,
+        }
+    )
 
 
 @router.post("/lan-chay-kiem-thu/{run_id}/hoan-tat")
@@ -950,34 +1357,83 @@ async def complete_test_run(run_id: str, user: CurrentUser = Depends(get_current
         return envelope(run)
     if run["status"] != "IN_PROGRESS":
         raise HTTPException(status_code=409, detail={"code": "INVALID_STATE_TRANSITION"})
-    result_count = await database.value.test_results.count_documents({"test_run_id": run_id, "status": {"$in": ["PASS", "FAIL", "BLOCKED", "SKIPPED", "NOT_APPLICABLE"]}})
+    result_count = await database.value.test_results.count_documents(
+        {
+            "test_run_id": run_id,
+            "status": {"$in": ["PASS", "FAIL", "BLOCKED", "SKIPPED", "NOT_APPLICABLE"]},
+        }
+    )
     total_count = len(run["test_case_version_ids"])
-    project = await database.value.projects.find_one(
-        {"_id": run["project_id"]}, {"settings": 1}
-    )
-    partial_allowed = bool(
-        (project.get("settings") or {}).get("partial_complete_allowed", False)
-    )
+    project = await database.value.projects.find_one({"_id": run["project_id"]}, {"settings": 1})
+    partial_allowed = bool((project.get("settings") or {}).get("partial_complete_allowed", False))
     if result_count < total_count and not partial_allowed:
-        raise HTTPException(status_code=409, detail={"code": "PARTIAL_EXECUTION", "completed": result_count, "total": len(run["test_case_version_ids"])})
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "PARTIAL_EXECUTION",
+                "completed": result_count,
+                "total": len(run["test_case_version_ids"]),
+            },
+        )
     partial_completion = result_count < total_count
-    await database.value.test_runs.update_one({"_id": run_id}, {"$set": {"status": "COMPLETED", "completed_at": now(), "completed_by": user.id, "completed_result_count": result_count, "total_result_count": total_count, "partial_completion": partial_completion, "updated_at": now()}, "$inc": {"revision": 1}})
-    await audit(user.id, "test_run_completed", "TestRun", run_id, run["project_id"], {"completed": result_count, "total": total_count, "partial_completion": partial_completion})
+    await database.value.test_runs.update_one(
+        {"_id": run_id},
+        {
+            "$set": {
+                "status": "COMPLETED",
+                "completed_at": now(),
+                "completed_by": user.id,
+                "completed_result_count": result_count,
+                "total_result_count": total_count,
+                "partial_completion": partial_completion,
+                "updated_at": now(),
+            },
+            "$inc": {"revision": 1},
+        },
+    )
+    await audit(
+        user.id,
+        "test_run_completed",
+        "TestRun",
+        run_id,
+        run["project_id"],
+        {"completed": result_count, "total": total_count, "partial_completion": partial_completion},
+    )
     return envelope(await database.value.test_runs.find_one({"_id": run_id}))
 
 
 @router.post("/lan-chay-kiem-thu/{run_id}/huy")
-async def abort_test_run(run_id: str, reason: str = Body(embed=True, min_length=2, max_length=2000), user: CurrentUser = Depends(get_current_user)):
+async def abort_test_run(
+    run_id: str,
+    reason: str = Body(embed=True, min_length=2, max_length=2000),
+    user: CurrentUser = Depends(get_current_user),
+):
     run = await get_project_entity("test_runs", run_id, user, "testrun.abort")
     if run["status"] not in {"DRAFT", "READY", "IN_PROGRESS"}:
         raise HTTPException(status_code=409, detail={"code": "INVALID_STATE_TRANSITION"})
-    await database.value.test_runs.update_one({"_id": run_id}, {"$set": {"status": "ABORTED", "abort_reason": reason, "aborted_by": user.id, "aborted_at": now(), "updated_at": now()}, "$inc": {"revision": 1}})
-    await audit(user.id, "test_run_aborted", "TestRun", run_id, run["project_id"], {"reason": reason})
+    await database.value.test_runs.update_one(
+        {"_id": run_id},
+        {
+            "$set": {
+                "status": "ABORTED",
+                "abort_reason": reason,
+                "aborted_by": user.id,
+                "aborted_at": now(),
+                "updated_at": now(),
+            },
+            "$inc": {"revision": 1},
+        },
+    )
+    await audit(
+        user.id, "test_run_aborted", "TestRun", run_id, run["project_id"], {"reason": reason}
+    )
     return envelope(await database.value.test_runs.find_one({"_id": run_id}))
 
 
 @router.post("/du-an/{project_id}/loi", status_code=201)
-async def create_defect(project_id: str, payload: DefectCreate, user: CurrentUser = Depends(get_current_user)):
+async def create_defect(
+    project_id: str, payload: DefectCreate, user: CurrentUser = Depends(get_current_user)
+):
     if project_id != payload.project_id:
         raise HTTPException(status_code=422, detail={"code": "PROJECT_MISMATCH"})
     await get_project(project_id, user, "defect.create")
@@ -992,13 +1448,37 @@ async def create_defect(project_id: str, payload: DefectCreate, user: CurrentUse
         environment=payload.environment,
     )
     if payload.linked_test_result_id:
-        result = await database.value.test_results.find_one({"_id": payload.linked_test_result_id, "project_id": project_id})
+        result = await database.value.test_results.find_one(
+            {"_id": payload.linked_test_result_id, "project_id": project_id}
+        )
         if not result or result["status"] != "FAIL":
             raise HTTPException(status_code=422, detail={"code": "DEFECT_REQUIRES_FAILED_RESULT"})
     timestamp = now()
-    defect = {"_id": new_id("DEF"), **payload.model_dump(), **context, "defect_key": payload.defect_key or await next_key(project_id, "defect", "DEF"), "status": "NEW", "revision": 1, "created_by": user.id, "created_at": timestamp, "updated_at": timestamp}
+    defect = {
+        "_id": new_id("DEF"),
+        **payload.model_dump(),
+        **context,
+        "defect_key": payload.defect_key or await next_key(project_id, "defect", "DEF"),
+        "status": "NEW",
+        "revision": 1,
+        "created_by": user.id,
+        "created_at": timestamp,
+        "updated_at": timestamp,
+    }
     await database.value.defects.insert_one(defect)
-    await index_artifact(project_id, "defect", defect["_id"], defect["_id"], defect["title"], " ".join([defect["title"], str(defect.get("environment", "")), str(defect.get("build", ""))]), defect["status"], "record", 1)
+    await index_artifact(
+        project_id,
+        "defect",
+        defect["_id"],
+        defect["_id"],
+        defect["title"],
+        " ".join(
+            [defect["title"], str(defect.get("environment", "")), str(defect.get("build", ""))]
+        ),
+        defect["status"],
+        "PROJECT_REFERENCE",
+        1,
+    )
     await audit(user.id, "defect_created", "Defect", defect["_id"], project_id)
     return envelope(defect, revision=1)
 
@@ -1075,24 +1555,43 @@ async def list_defects(
         query["linked_test_case_version_id"] = {"$in": version_ids}
     sort_field, direction = sort_spec(
         sort,
-        {"defect_key", "title", "status", "severity", "priority", "assignee", "release", "build", "environment", "created_at", "updated_at"},
+        {
+            "defect_key",
+            "title",
+            "status",
+            "severity",
+            "priority",
+            "assignee",
+            "release",
+            "build",
+            "environment",
+            "created_at",
+            "updated_at",
+        },
     )
     total = await database.value.defects.count_documents(query)
-    items = await database.value.defects.find(query).sort(sort_field, direction).skip(
-        (page - 1) * page_size
-    ).limit(page_size).to_list(page_size)
+    items = (
+        await database.value.defects.find(query)
+        .sort(sort_field, direction)
+        .skip((page - 1) * page_size)
+        .limit(page_size)
+        .to_list(page_size)
+    )
+    role = await get_project_role(project_id, user.id)
+    items = [visible_defect(item, role) for item in items]
     return envelope(page_payload(items, page, page_size, total))
 
 
 @router.get("/du-an/{project_id}/loi/trung-lap")
-async def find_duplicate_defects(
-    project_id: str,
-    user: CurrentUser = Depends(get_current_user),
-):
+async def find_duplicate_defects(project_id: str, user: CurrentUser = Depends(get_current_user)):
     await get_project(project_id, user, "defect.duplicate_check")
-    defects = await database.value.defects.find(
-        {"project_id": project_id, "status": {"$nin": ["REJECTED", "DUPLICATE"]}}
-    ).sort("updated_at", -1).to_list(2000)
+    defects = (
+        await database.value.defects.find(
+            {"project_id": project_id, "status": {"$nin": ["REJECTED", "DUPLICATE"]}}
+        )
+        .sort("updated_at", -1)
+        .to_list(2000)
+    )
     pairs = []
     for index, left in enumerate(defects):
         left_text = " ".join(
@@ -1121,55 +1620,80 @@ async def find_duplicate_defects(
 async def export_defects(project_id: str, user: CurrentUser = Depends(get_current_user)):
     await get_project(project_id, user, "report.export")
     defects = await database.value.defects.find({"project_id": project_id}).to_list(10000)
-    fields = ["defect_key", "title", "severity", "priority", "status", "environment", "build", "assignee"]
+    fields = [
+        "defect_key",
+        "title",
+        "severity",
+        "priority",
+        "status",
+        "environment",
+        "build",
+        "assignee",
+    ]
     stream = io.StringIO()
     writer = csv.DictWriter(stream, fieldnames=fields)
     writer.writeheader()
     for defect in defects:
         writer.writerow({field: defect.get(field) for field in fields})
-    return StreamingResponse(iter([stream.getvalue()]), media_type="text/csv", headers={"Content-Disposition": f'attachment; filename="defects-{project_id}.csv"'})
+    return StreamingResponse(
+        iter([stream.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="defects-{project_id}.csv"'},
+    )
 
 
-@router.get(
-    "/du-an/{project_id}/loi/{defect_id}",
-    openapi_extra={"x-function-ids": ["DEF-02"]},
-)
+@router.get("/du-an/{project_id}/loi/{defect_id}", openapi_extra={"x-function-ids": ["DEF-02"]})
 @router.get("/loi/{defect_id}", openapi_extra={"x-function-ids": ["DEF-02"]})
 async def defect_detail(
-    defect_id: str,
-    project_id: str | None = None,
-    user: CurrentUser = Depends(get_current_user),
+    defect_id: str, project_id: str | None = None, user: CurrentUser = Depends(get_current_user)
 ):
     defect = await get_project_entity("defects", defect_id, user, "defect.read")
     if project_id is not None and defect["project_id"] != project_id:
         raise HTTPException(status_code=422, detail={"code": "PROJECT_MISMATCH"})
-    trace_links = await database.value.trace_links.find(
-        {
-            "project_id": defect["project_id"],
-            "$or": [
-                {"source_type": "defect", "source_id": defect_id},
-                {"target_type": "defect", "target_id": defect_id},
-            ],
-        }
-    ).sort("created_at", -1).to_list(500)
-    comments = await database.value.review_comments.find(
-        {
-            "project_id": defect["project_id"],
-            "artifact_type": "defect",
-            "artifact_id": defect_id,
-        }
-    ).sort("created_at", 1).to_list(500)
-    attachments = await database.value.attachments.find(
-        {
-            "project_id": defect["project_id"],
-            "artifact_type": "defect",
-            "artifact_id": defect_id,
-            "status": "ACTIVE",
-        }
-    ).sort("created_at", -1).to_list(500)
+    role = await get_project_role(defect["project_id"], user.id)
+    trace_links = (
+        await database.value.trace_links.find(
+            {
+                "project_id": defect["project_id"],
+                "$or": [
+                    {"source_type": "defect", "source_id": defect_id},
+                    {"target_type": "defect", "target_id": defect_id},
+                ],
+            }
+        )
+        .sort("created_at", -1)
+        .to_list(500)
+    )
+    comments = (
+        []
+        if role == "VIEWER"
+        else await database.value.review_comments.find(
+            {
+                "project_id": defect["project_id"],
+                "artifact_type": "defect",
+                "artifact_id": defect_id,
+            }
+        )
+        .sort("created_at", 1)
+        .to_list(500)
+    )
+    attachments = (
+        []
+        if role == "VIEWER"
+        else await database.value.attachments.find(
+            {
+                "project_id": defect["project_id"],
+                "artifact_type": "defect",
+                "artifact_id": defect_id,
+                "status": "ACTIVE",
+            }
+        )
+        .sort("created_at", -1)
+        .to_list(500)
+    )
     return envelope(
         {
-            **defect,
+            **visible_defect(defect, role),
             "trace_links": trace_links,
             "comments": comments,
             "attachments": attachments,
@@ -1197,22 +1721,22 @@ async def build_defect_trace_candidates(defect):
         {"project_id": defect["project_id"], "_id": {"$in": requirement_version_ids}}
     ).to_list(2000)
     requirement_by_version = {
-        item.get("current_version_id"): item for item in requirements if item.get("current_version_id")
+        item.get("current_version_id"): item
+        for item in requirements
+        if item.get("current_version_id")
     }
     test_cases = await database.value.test_cases.find(
         {"project_id": defect["project_id"], "status": {"$ne": "OBSOLETE"}}
     ).to_list(2000)
-    current_ids = [item.get("current_version_id") for item in test_cases if item.get("current_version_id")]
+    current_ids = [
+        item.get("current_version_id") for item in test_cases if item.get("current_version_id")
+    ]
     versions = await database.value.test_case_versions.find(
         {"project_id": defect["project_id"], "_id": {"$in": current_ids}}
     ).to_list(2000)
     linked_requirements = set(defect.get("linked_requirement_version_ids", []))
     linked_test_version = next(
-        (
-            item
-            for item in versions
-            if item["_id"] == defect.get("linked_test_case_version_id")
-        ),
+        (item for item in versions if item["_id"] == defect.get("linked_test_case_version_id")),
         None,
     )
     linked_test_requirements = set(
@@ -1272,7 +1796,9 @@ async def build_defect_trace_candidates(defect):
         similarity = SequenceMatcher(None, text, version_text).ratio()
         shared_requirements = linked_requirements & set(version.get("requirement_version_ids", []))
         direct = defect.get("linked_test_case_version_id") == version["_id"]
-        score = min(1, similarity * 0.7 + (0.25 if shared_requirements else 0) + (0.3 if direct else 0))
+        score = min(
+            1, similarity * 0.7 + (0.25 if shared_requirements else 0) + (0.3 if direct else 0)
+        )
         if score < 0.3:
             continue
         reasons = []
@@ -1310,10 +1836,7 @@ async def build_defect_trace_candidates(defect):
     return requirement_candidates[:50], test_case_candidates[:50]
 
 
-@router.post(
-    "/du-an/{project_id}/ai/loi/{defect_id}/goi-y-truy-vet",
-    status_code=201,
-)
+@router.post("/du-an/{project_id}/ai/loi/{defect_id}/goi-y-truy-vet", status_code=201)
 async def suggest_defect_trace(
     project_id: str,
     defect_id: str,
@@ -1327,7 +1850,10 @@ async def suggest_defect_trace(
         {"project_id": project_id, "idempotency_key": payload.idempotency_key}
     )
     if existing:
-        if existing.get("subject_id") != defect_id or existing.get("result_type") != "BUG_TRACE_SUGGESTION":
+        if (
+            existing.get("subject_id") != defect_id
+            or existing.get("result_type") != "BUG_TRACE_SUGGESTION"
+        ):
             raise HTTPException(status_code=409, detail={"code": "IDEMPOTENCY_KEY_REUSED"})
         return envelope(existing)
     requirement_candidates, test_case_candidates = await build_defect_trace_candidates(defect)
@@ -1364,7 +1890,10 @@ async def suggest_defect_trace(
         )
         if not existing:
             raise
-        if existing.get("subject_id") != defect_id or existing.get("result_type") != "BUG_TRACE_SUGGESTION":
+        if (
+            existing.get("subject_id") != defect_id
+            or existing.get("result_type") != "BUG_TRACE_SUGGESTION"
+        ):
             raise HTTPException(status_code=409, detail={"code": "IDEMPOTENCY_KEY_REUSED"})
         return envelope(existing)
     await audit(
@@ -1384,8 +1913,7 @@ async def suggest_defect_trace(
 
 @router.get("/loi/{defect_id}/ung-vien-truy-vet", deprecated=True)
 async def find_defect_trace_candidates(
-    defect_id: str,
-    user: CurrentUser = Depends(get_current_user),
+    defect_id: str, user: CurrentUser = Depends(get_current_user)
 ):
     defect = await get_project_entity("defects", defect_id, user, "ai.suggest_bug_trace")
     _, test_case_candidates = await build_defect_trace_candidates(defect)
@@ -1414,14 +1942,12 @@ async def update_defect_trace(
     if "linked_test_result_id" in fields:
         if payload.linked_test_result_id:
             result = await database.value.test_results.find_one(
-                {
-                    "_id": payload.linked_test_result_id,
-                    "project_id": project_id,
-                    "status": "FAIL",
-                }
+                {"_id": payload.linked_test_result_id, "project_id": project_id, "status": "FAIL"}
             )
             if not result:
-                raise HTTPException(status_code=422, detail={"code": "DEFECT_REQUIRES_FAILED_RESULT"})
+                raise HTTPException(
+                    status_code=422, detail={"code": "DEFECT_REQUIRES_FAILED_RESULT"}
+                )
         changes["linked_test_result_id"] = payload.linked_test_result_id
     if "linked_test_case_version_id" in fields:
         if payload.linked_test_case_version_id:
@@ -1455,7 +1981,10 @@ async def update_defect_trace(
             "test_case_candidates", []
         )
         candidate_ids = {item.get("candidate_id") for item in candidates}
-        if not payload.accepted_candidate_ids or not set(payload.accepted_candidate_ids) <= candidate_ids:
+        if (
+            not payload.accepted_candidate_ids
+            or not set(payload.accepted_candidate_ids) <= candidate_ids
+        ):
             raise HTTPException(status_code=422, detail={"code": "INVALID_AI_CANDIDATE"})
         accepted = {
             item["candidate_id"]: item
@@ -1518,7 +2047,12 @@ async def update_defect_trace(
 
 @router.patch("/loi/{defect_id}")
 @router.patch("/du-an/{project_id}/loi/{defect_id}")
-async def update_defect(defect_id: str, payload: dict = Body(), project_id: str | None = None, user: CurrentUser = Depends(get_current_user)):
+async def update_defect(
+    defect_id: str,
+    payload: dict = Body(),
+    project_id: str | None = None,
+    user: CurrentUser = Depends(get_current_user),
+):
     defect = await get_project_entity(
         "defects",
         defect_id,
@@ -1532,15 +2066,72 @@ async def update_defect(defect_id: str, payload: dict = Body(), project_id: str 
     expected_revision = payload.get("expected_revision")
     if not isinstance(expected_revision, int):
         raise HTTPException(status_code=422, detail="Thiếu expected_revision")
-    allowed = {"title", "description_doc", "steps_to_reproduce", "actual_result_doc", "expected_result_doc", "severity", "priority", "environment", "environment_id", "release", "release_id", "build", "build_id", "assignee", "attachments", "linked_test_result_id", "linked_test_case_version_id", "linked_requirement_version_ids", "root_cause_category", "root_cause_detail", "injected_phase", "detected_phase", "escape_reason", "prevention_candidate"}
-    if "root_cause_category" in payload and payload["root_cause_category"] not in {"REQUIREMENT", "DESIGN", "IMPLEMENTATION", "CONFIGURATION", "TEST_DATA", "TEST_CASE_GAP", "ENVIRONMENT", "INTEGRATION", "DEPLOYMENT", "PROCESS", "UNKNOWN"}:
+    allowed = {
+        "title",
+        "description_doc",
+        "steps_to_reproduce",
+        "actual_result_doc",
+        "expected_result_doc",
+        "severity",
+        "priority",
+        "environment",
+        "environment_id",
+        "release",
+        "release_id",
+        "build",
+        "build_id",
+        "assignee",
+        "attachments",
+        "linked_test_result_id",
+        "linked_test_case_version_id",
+        "linked_requirement_version_ids",
+        "root_cause_category",
+        "root_cause_detail",
+        "injected_phase",
+        "detected_phase",
+        "escape_reason",
+        "prevention_candidate",
+    }
+    if "root_cause_category" in payload and payload["root_cause_category"] not in {
+        "REQUIREMENT",
+        "DESIGN",
+        "IMPLEMENTATION",
+        "CONFIGURATION",
+        "TEST_DATA",
+        "TEST_CASE_GAP",
+        "ENVIRONMENT",
+        "INTEGRATION",
+        "DEPLOYMENT",
+        "PROCESS",
+        "THIRD_PARTY",
+        "UNKNOWN",
+    }:
         raise HTTPException(status_code=422, detail={"code": "INVALID_ROOT_CAUSE_CATEGORY"})
     if "assignee" in payload:
         await get_project(defect["project_id"], user, "defect.assign")
-    if any(field in payload for field in {"linked_test_result_id", "linked_test_case_version_id", "linked_requirement_version_ids"}):
-        await get_project(defect["project_id"], user, "defect.trace.manage", assigned_role="DEVELOPER", assigned_user_id=defect.get("assignee"))
+    if any(
+        field in payload
+        for field in {
+            "linked_test_result_id",
+            "linked_test_case_version_id",
+            "linked_requirement_version_ids",
+        }
+    ):
+        await get_project(
+            defect["project_id"],
+            user,
+            "defect.trace.manage",
+            assigned_role="DEVELOPER",
+            assigned_user_id=defect.get("assignee"),
+        )
     if "attachments" in payload:
-        await get_project(defect["project_id"], user, "attachment.manage", assigned_role="DEVELOPER", assigned_user_id=defect.get("assignee"))
+        await get_project(
+            defect["project_id"],
+            user,
+            "attachment.manage",
+            assigned_role="DEVELOPER",
+            assigned_user_id=defect.get("assignee"),
+        )
     if "linked_test_result_id" in payload and payload["linked_test_result_id"]:
         result = await database.value.test_results.find_one(
             {"_id": payload["linked_test_result_id"], "project_id": defect["project_id"]}
@@ -1561,7 +2152,9 @@ async def update_defect(defect_id: str, payload: dict = Body(), project_id: str 
         if count != len(requirement_ids):
             raise HTTPException(status_code=422, detail={"code": "INVALID_REQUIREMENT_VERSION"})
     changes = {key: value for key, value in payload.items() if key in allowed}
-    if {"release_id", "build_id", "environment_id", "release", "build", "environment"} & set(changes):
+    if {"release_id", "build_id", "environment_id", "release", "build", "environment"} & set(
+        changes
+    ):
         changes.update(
             await resolve_execution_context(
                 defect["project_id"],
@@ -1574,13 +2167,17 @@ async def update_defect(defect_id: str, payload: dict = Body(), project_id: str 
                 environment=changes.get("environment", defect.get("environment", "")),
             )
         )
-    updated = await optimistic_patch("defects", defect_id, defect["project_id"], expected_revision, changes)
+    updated = await optimistic_patch(
+        "defects", defect_id, defect["project_id"], expected_revision, changes
+    )
     await audit(user.id, "defect_updated", "Defect", defect_id, defect["project_id"])
     return envelope(updated, revision=updated["revision"])
 
 
 @router.post("/loi/{defect_id}/chuyen-trang-thai")
-async def transition_defect(defect_id: str, payload: DefectTransition, user: CurrentUser = Depends(get_current_user)):
+async def transition_defect(
+    defect_id: str, payload: DefectTransition, user: CurrentUser = Depends(get_current_user)
+):
     if payload.to_status in {"CONFIRMED", "REJECTED", "DUPLICATE"}:
         permission = "defect.triage"
     elif payload.to_status in {"IN_PROGRESS", "RESOLVED"}:
@@ -1600,18 +2197,47 @@ async def transition_defect(defect_id: str, payload: DefectTransition, user: Cur
         assigned_user_field="assignee" if permission == "defect.transition.developer" else None,
     )
     if payload.to_status in {"REJECTED", "DUPLICATE"}:
-        await require_action_policy(defect["project_id"], user, f"defect.{payload.to_status.lower()}", {"QA_LEAD"})
+        await require_action_policy(
+            defect["project_id"], user, f"defect.{payload.to_status.lower()}", {"QA_LEAD"}
+        )
     allowed = DEFECT_TRANSITIONS.get(defect["status"], set())
     if payload.to_status not in allowed:
-        raise HTTPException(status_code=409, detail={"code": "INVALID_STATE_TRANSITION", "from": defect["status"], "to": payload.to_status})
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "INVALID_STATE_TRANSITION",
+                "from": defect["status"],
+                "to": payload.to_status,
+            },
+        )
     updated = await database.value.defects.find_one_and_update(
-        {"_id": defect_id, "project_id": defect["project_id"], "status": defect["status"], "revision": payload.expected_revision},
-        {"$set": {"status": payload.to_status, "transition_reason": payload.reason, "transitioned_by": user.id, "updated_at": now()}, "$inc": {"revision": 1}},
+        {
+            "_id": defect_id,
+            "project_id": defect["project_id"],
+            "status": defect["status"],
+            "revision": payload.expected_revision,
+        },
+        {
+            "$set": {
+                "status": payload.to_status,
+                "transition_reason": payload.reason,
+                "transitioned_by": user.id,
+                "updated_at": now(),
+            },
+            "$inc": {"revision": 1},
+        },
         return_document=ReturnDocument.AFTER,
     )
     if not updated:
         raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
-    await audit(user.id, "defect_transitioned", "Defect", defect_id, defect["project_id"], {"from": defect["status"], "to": payload.to_status, "reason": payload.reason})
+    await audit(
+        user.id,
+        "defect_transitioned",
+        "Defect",
+        defect_id,
+        defect["project_id"],
+        {"from": defect["status"], "to": payload.to_status, "reason": payload.reason},
+    )
     return envelope(updated, revision=updated["revision"])
 
 
@@ -1719,19 +2345,19 @@ async def retest_defect(
         "Defect",
         defect_id,
         project_id,
-        {
-            "test_result_id": result["_id"],
-            "outcome": result["status"],
-            "to": target_status,
-        },
+        {"test_result_id": result["_id"], "outcome": result["status"], "to": target_status},
     )
     return envelope({"defect": updated, "retest": event}, revision=updated["revision"])
 
 
 async def validate_test_versions(project_id, version_ids):
-    count = await database.value.test_case_versions.count_documents({"project_id": project_id, "_id": {"$in": version_ids}})
+    count = await database.value.test_case_versions.count_documents(
+        {"project_id": project_id, "_id": {"$in": version_ids}}
+    )
     if count != len(set(version_ids)):
-        raise HTTPException(status_code=422, detail={"code": "CROSS_PROJECT_OR_MISSING_TEST_VERSION"})
+        raise HTTPException(
+            status_code=422, detail={"code": "CROSS_PROJECT_OR_MISSING_TEST_VERSION"}
+        )
 
 
 DEFECT_TRANSITIONS = {

@@ -1,10 +1,10 @@
+import ast
 import hashlib
 import json
 from datetime import datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
-
 
 StrategyStatus = Literal["DRAFT", "IN_REVIEW", "APPROVED", "SUPERSEDED", "ARCHIVED"]
 
@@ -16,6 +16,66 @@ class RiskModel(BaseModel):
     thresholds: list[dict[str, Any]] = Field(min_length=1, max_length=50)
     mandatory_test_depth: dict[str, Any] = Field(default_factory=dict)
     regression_priority_rules: list[str] = Field(default_factory=list, max_length=100)
+
+    @model_validator(mode="after")
+    def validate_risk_model(self):
+        formula = self.risk_exposure_formula.strip()
+        expression = (
+            formula.split("=", 1)[1].strip()
+            if formula.lower().startswith("risk_exposure") and "=" in formula
+            else formula
+        )
+        try:
+            tree = ast.parse(expression, mode="eval")
+        except SyntaxError as error:
+            raise ValueError("INVALID_RISK_MODEL") from error
+        allowed_nodes = (
+            ast.Expression,
+            ast.BinOp,
+            ast.UnaryOp,
+            ast.Name,
+            ast.Load,
+            ast.Constant,
+            ast.Add,
+            ast.Sub,
+            ast.Mult,
+            ast.Div,
+            ast.Pow,
+            ast.Mod,
+            ast.UAdd,
+            ast.USub,
+        )
+        if any(not isinstance(node, allowed_nodes) for node in ast.walk(tree)):
+            raise ValueError("INVALID_RISK_MODEL")
+        names = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
+        if (
+            not names
+            or not names <= {"probability", "impact"}
+            or not {"probability", "impact"} <= names
+        ):
+            raise ValueError("INVALID_RISK_MODEL")
+        if any(
+            isinstance(node, ast.Constant)
+            and (not isinstance(node.value, (int, float)) or isinstance(node.value, bool))
+            for node in ast.walk(tree)
+        ):
+            raise ValueError("INVALID_RISK_MODEL")
+        for scale in (self.probability_scale, self.impact_scale):
+            values = [item.get("value") for item in scale]
+            if any(
+                not isinstance(value, (int, float)) or isinstance(value, bool) for value in values
+            ) or len(set(values)) != len(values):
+                raise ValueError("INVALID_RISK_MODEL")
+        if any(
+            not item.get("level")
+            or not any(
+                isinstance(item.get(bound), (int, float)) and not isinstance(item.get(bound), bool)
+                for bound in ("min", "max")
+            )
+            for item in self.thresholds
+        ):
+            raise ValueError("INVALID_RISK_MODEL")
+        return self
 
 
 class TestStrategyFields(BaseModel):
@@ -106,7 +166,10 @@ def strategy_completeness(strategy):
         ("STRATEGY_EXIT_CRITERIA_MISSING", bool(strategy.get("exit_criteria_defaults"))),
         ("STRATEGY_SUSPENSION_CRITERIA_MISSING", bool(strategy.get("suspension_criteria"))),
         ("STRATEGY_RESUMPTION_CRITERIA_MISSING", bool(strategy.get("resumption_criteria"))),
-        ("STRATEGY_REPORTING_CADENCE_MISSING", bool(strategy.get("reporting_policy", {}).get("cadence"))),
+        (
+            "STRATEGY_REPORTING_CADENCE_MISSING",
+            bool(strategy.get("reporting_policy", {}).get("cadence")),
+        ),
         ("STRATEGY_QUALITY_OBJECTIVE_MISSING", bool(strategy.get("quality_objectives"))),
     )
     findings = [{"code": code, "severity": "MAJOR"} for code, passed in checks if not passed]
@@ -148,7 +211,13 @@ def strategy_snapshot(strategy):
 
 
 def strategy_hash(strategy):
-    value = json.dumps(strategy_snapshot(strategy), ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
+    value = json.dumps(
+        strategy_snapshot(strategy),
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+        default=str,
+    )
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 

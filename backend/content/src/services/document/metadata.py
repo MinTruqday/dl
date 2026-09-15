@@ -1,8 +1,8 @@
 import json
 from datetime import datetime, timezone
 from typing import List
+
 from fastapi import HTTPException, Query
-from loguru import logger
 
 from src.core.infrastructure.mongo import mongo
 from src.repositories.document import DocumentRepository

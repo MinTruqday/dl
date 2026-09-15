@@ -1,5 +1,7 @@
 from typing import List
-from fastapi import HTTPException, Query
+
+from fastapi import Query
+
 from src.repositories.document import DocumentRepository
 
 

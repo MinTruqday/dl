@@ -23,6 +23,7 @@ export default function SpecializedDesignPanel({ project, requirements }) {
     maximumErrorRate: 0.01,
   });
   const [error, setError] = useState("");
+  const [aiAction, setAiAction] = useState("");
   const canGenerateSecurity = project.current_permissions?.includes("ai.generate_security_tests");
   const canGeneratePerformance = project.current_permissions?.includes(
     "ai.generate_performance_plan",
@@ -58,6 +59,7 @@ export default function SpecializedDesignPanel({ project, requirements }) {
       setError("Phải chọn ít nhất một nhóm kiểm thử bảo mật");
       return;
     }
+    setAiAction("security");
     try {
       await testingApi.generateSecurityTestSuggestions(project._id, {
         requirement_version_ids: requirementVersionIds,
@@ -68,10 +70,13 @@ export default function SpecializedDesignPanel({ project, requirements }) {
       await load();
     } catch (reason) {
       setError(messageOf(reason));
+    } finally {
+      setAiAction("");
     }
   };
   const generatePerformance = async (event) => {
     event.preventDefault();
+    setAiAction("performance");
     try {
       await testingApi.generatePerformancePlanDraft(project._id, {
         name: performance.name,
@@ -90,6 +95,8 @@ export default function SpecializedDesignPanel({ project, requirements }) {
       await load();
     } catch (reason) {
       setError(messageOf(reason));
+    } finally {
+      setAiAction("");
     }
   };
   if (!canGenerateSecurity && !canGeneratePerformance) return null;
@@ -146,8 +153,14 @@ export default function SpecializedDesignPanel({ project, requirements }) {
                 </label>
               ))}
             </div>
-            <button className="apple-button" type="button" onClick={generateSecurity}>
-              Tạo bản nháp bảo mật
+            <button
+              aria-busy={aiAction === "security"}
+              className="apple-button"
+              disabled={Boolean(aiAction)}
+              type="button"
+              onClick={generateSecurity}
+            >
+              {aiAction === "security" ? "AI đang tạo bản nháp bảo mật" : "Tạo bản nháp bảo mật"}
             </button>
             <div className="space-y-3">
               {securityResults.map((result) => (
@@ -256,8 +269,15 @@ export default function SpecializedDesignPanel({ project, requirements }) {
                   }
                 />
               </label>
-              <button className="apple-button" type="submit">
-                Tạo bản nháp hiệu năng
+              <button
+                aria-busy={aiAction === "performance"}
+                className="apple-button"
+                disabled={Boolean(aiAction)}
+                type="submit"
+              >
+                {aiAction === "performance"
+                  ? "AI đang tạo bản nháp hiệu năng"
+                  : "Tạo bản nháp hiệu năng"}
               </button>
             </form>
             <div className="space-y-3">

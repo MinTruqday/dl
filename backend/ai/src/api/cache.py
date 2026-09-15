@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends
+
 from src.core.dependency import verify_internal_token
-from src.schemas.response import APIResponse
 from src.schemas.cache import CacheGetRequest, CacheGetResponse, CacheSetRequest
+from src.schemas.response import APIResponse
 from src.services.cache import cache_service
 
 router = APIRouter(dependencies=[Depends(verify_internal_token)])
@@ -18,9 +19,7 @@ async def get_cache(req: CacheGetRequest):
 
 
 @router.post(
-    "/ghi",
-    response_model=APIResponse[dict],
-    description="Ghi bộ nhớ đệm ngữ nghĩa của tri thức",
+    "/ghi", response_model=APIResponse[dict], description="Ghi bộ nhớ đệm ngữ nghĩa của tri thức"
 )
 async def set_cache(req: CacheSetRequest):
     await cache_service.set_response(req.query_text, req.response_text, req.query_vector)

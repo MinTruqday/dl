@@ -16,7 +16,6 @@ from src.domain.schemas import (
     ProposalAction,
 )
 
-
 router = APIRouter(prefix="/kiem-thu", tags=["Tác vụ kiểm thử hàng loạt"])
 
 
@@ -88,7 +87,7 @@ async def finish_operation(
 
 
 def operation_key(payload):
-    return payload.idempotency_key or new_id("LEGACY")
+    return payload.idempotency_key or new_id("OP")
 
 
 async def replay_operation(project_id, idempotency_key):
@@ -121,11 +120,11 @@ async def fresh_proposal(proposal):
 
 @router.post("/du-an/{project_id}/hang-loat/nhan")
 async def bulk_tags(
-    project_id: str,
-    payload: BulkTagInput,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, payload: BulkTagInput, user: CurrentUser = Depends(get_current_user)
 ):
-    permission = "requirement.update" if payload.artifact_type == "requirement" else "testcase.bulk.update"
+    permission = (
+        "requirement.update" if payload.artifact_type == "requirement" else "testcase.bulk.update"
+    )
     await get_project(project_id, user, permission)
     idempotency_key = operation_key(payload)
     replay = await replay_operation(project_id, idempotency_key)
@@ -180,15 +179,17 @@ async def bulk_tags(
         idempotency_key=idempotency_key,
         preview=payload.preview,
         results=results,
-        details={"artifact_type": payload.artifact_type, "add_tags": sorted(add_tags), "remove_tags": sorted(remove_tags)},
+        details={
+            "artifact_type": payload.artifact_type,
+            "add_tags": sorted(add_tags),
+            "remove_tags": sorted(remove_tags),
+        },
     )
 
 
 @router.post("/du-an/{project_id}/hang-loat/ca-kiem-thu/them-vao-bo-kiem-thu")
 async def bulk_add_to_suite(
-    project_id: str,
-    payload: BulkSuiteInput,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, payload: BulkSuiteInput, user: CurrentUser = Depends(get_current_user)
 ):
     await get_project(project_id, user, "testcase.bulk.update")
     idempotency_key = operation_key(payload)
@@ -216,11 +217,23 @@ async def bulk_add_to_suite(
             continue
         version_ids.add(test_case["current_version_id"])
         succeeded.append(test_case_id)
-        results.append(item_result(test_case_id, "PREVIEW" if payload.preview else "SUCCEEDED", version_id=test_case["current_version_id"]))
+        results.append(
+            item_result(
+                test_case_id,
+                "PREVIEW" if payload.preview else "SUCCEEDED",
+                version_id=test_case["current_version_id"],
+            )
+        )
     if payload.preview:
         return await finish_operation(
-            project_id, "BULK_ADD_TO_SUITE", succeeded, failed, user,
-            idempotency_key=idempotency_key, preview=True, results=results,
+            project_id,
+            "BULK_ADD_TO_SUITE",
+            succeeded,
+            failed,
+            user,
+            idempotency_key=idempotency_key,
+            preview=True,
+            results=results,
             details={"suite_id": payload.suite_id, "resulting_version_ids": sorted(version_ids)},
         )
     updated = await database.value.test_suites.find_one_and_update(
@@ -234,17 +247,20 @@ async def bulk_add_to_suite(
     if not updated:
         raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
     return await finish_operation(
-        project_id, "BULK_ADD_TO_SUITE", succeeded, failed, user,
-        idempotency_key=idempotency_key, results=results,
+        project_id,
+        "BULK_ADD_TO_SUITE",
+        succeeded,
+        failed,
+        user,
+        idempotency_key=idempotency_key,
+        results=results,
         details={"suite_id": payload.suite_id, "resulting_version_ids": sorted(version_ids)},
     )
 
 
 @router.post("/du-an/{project_id}/hang-loat/ca-kiem-thu/danh-dau-can-ra-soat")
 async def bulk_mark_review_required(
-    project_id: str,
-    payload: BulkReviewRequiredInput,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, payload: BulkReviewRequiredInput, user: CurrentUser = Depends(get_current_user)
 ):
     await get_project(project_id, user, "testcase.bulk.update")
     idempotency_key = operation_key(payload)
@@ -259,16 +275,20 @@ async def bulk_mark_review_required(
             {"_id": test_case_id, "project_id": project_id, "status": {"$ne": "OBSOLETE"}},
             {"_id": 1},
         )
-        result = None if payload.preview else await database.value.test_cases.update_one(
-            {"_id": test_case_id, "project_id": project_id, "status": {"$ne": "OBSOLETE"}},
-            {
-                "$set": {
-                    "status": "NEEDS_UPDATE",
-                    "review_required_reason": payload.reason,
-                    "review_required_by": user.id,
-                    "updated_at": now(),
-                }
-            },
+        result = (
+            None
+            if payload.preview
+            else await database.value.test_cases.update_one(
+                {"_id": test_case_id, "project_id": project_id, "status": {"$ne": "OBSOLETE"}},
+                {
+                    "$set": {
+                        "status": "NEEDS_UPDATE",
+                        "review_required_reason": payload.reason,
+                        "review_required_by": user.id,
+                        "updated_at": now(),
+                    }
+                },
+            )
         )
         if (payload.preview and test_case) or (result and result.matched_count):
             succeeded.append(test_case_id)
@@ -277,19 +297,25 @@ async def bulk_mark_review_required(
             failed.append({"id": test_case_id, "code": "ENTITY_NOT_FOUND"})
             results.append(item_result(test_case_id, "FAILED", "ENTITY_NOT_FOUND"))
     return await finish_operation(
-        project_id, "BULK_MARK_REVIEW_REQUIRED", succeeded, failed, user,
-        idempotency_key=idempotency_key, preview=payload.preview, results=results,
+        project_id,
+        "BULK_MARK_REVIEW_REQUIRED",
+        succeeded,
+        failed,
+        user,
+        idempotency_key=idempotency_key,
+        preview=payload.preview,
+        results=results,
         details={"reason": payload.reason},
     )
 
 
 @router.post("/du-an/{project_id}/hang-loat/luu-tru")
 async def bulk_archive(
-    project_id: str,
-    payload: BulkArchiveInput,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, payload: BulkArchiveInput, user: CurrentUser = Depends(get_current_user)
 ):
-    permission = "requirement.archive" if payload.artifact_type == "requirement" else "testcase.bulk.archive"
+    permission = (
+        "requirement.archive" if payload.artifact_type == "requirement" else "testcase.bulk.archive"
+    )
     await get_project(project_id, user, permission)
     idempotency_key = operation_key(payload)
     replay = await replay_operation(project_id, idempotency_key)
@@ -326,10 +352,21 @@ async def bulk_archive(
                 continue
         if payload.preview:
             succeeded.append(artifact_id)
-            results.append(item_result(artifact_id, "PREVIEW", current_status=artifact.get("status", "ACTIVE"), target_status="OBSOLETE"))
+            results.append(
+                item_result(
+                    artifact_id,
+                    "PREVIEW",
+                    current_status=artifact.get("status", "ACTIVE"),
+                    target_status="OBSOLETE",
+                )
+            )
             continue
         result = await database.value[collection].update_one(
-            {"_id": artifact_id, "project_id": project_id, "current_version_id": artifact.get("current_version_id")},
+            {
+                "_id": artifact_id,
+                "project_id": project_id,
+                "current_version_id": artifact.get("current_version_id"),
+            },
             {
                 "$set": {
                     "status": "OBSOLETE",
@@ -347,8 +384,14 @@ async def bulk_archive(
             failed.append({"id": artifact_id, "code": "REVISION_CONFLICT"})
             results.append(item_result(artifact_id, "FAILED", "REVISION_CONFLICT"))
     return await finish_operation(
-        project_id, "BULK_ARCHIVE", succeeded, failed, user,
-        idempotency_key=idempotency_key, preview=payload.preview, results=results,
+        project_id,
+        "BULK_ARCHIVE",
+        succeeded,
+        failed,
+        user,
+        idempotency_key=idempotency_key,
+        preview=payload.preview,
+        results=results,
         details={"artifact_type": payload.artifact_type, "reason": payload.reason},
     )
 
@@ -377,7 +420,16 @@ async def bulk_generate_proposals(
             continue
         if payload.preview:
             succeeded.append(analysis_id)
-            results.append(item_result(analysis_id, "PREVIEW", analysis_status=analysis.get("status"), proposal_count=await database.value.maintenance_proposals.count_documents({"impact_analysis_id": analysis_id})))
+            results.append(
+                item_result(
+                    analysis_id,
+                    "PREVIEW",
+                    analysis_status=analysis.get("status"),
+                    proposal_count=await database.value.maintenance_proposals.count_documents(
+                        {"impact_analysis_id": analysis_id}
+                    ),
+                )
+            )
             continue
         try:
             await create_maintenance_proposals(analysis_id, user)
@@ -388,8 +440,14 @@ async def bulk_generate_proposals(
             failed.append({"id": analysis_id, "code": detail.get("code", "REQUEST_FAILED")})
             results.append(item_result(analysis_id, "FAILED", detail.get("code", "REQUEST_FAILED")))
     return await finish_operation(
-        project_id, "BULK_GENERATE_PROPOSALS", succeeded, failed, user,
-        idempotency_key=idempotency_key, preview=payload.preview, results=results,
+        project_id,
+        "BULK_GENERATE_PROPOSALS",
+        succeeded,
+        failed,
+        user,
+        idempotency_key=idempotency_key,
+        preview=payload.preview,
+        results=results,
     )
 
 
@@ -422,38 +480,84 @@ async def bulk_approve_proposals(
             continue
         if not proposal.get("last_reviewed_by"):
             failed.append({"id": proposal_id, "code": "PROPOSAL_REVIEW_REQUIRED"})
-            results.append(item_result(proposal_id, "FAILED", "PROPOSAL_REVIEW_REQUIRED", target_artifact_id=proposal.get("target_artifact_id")))
+            results.append(
+                item_result(
+                    proposal_id,
+                    "FAILED",
+                    "PROPOSAL_REVIEW_REQUIRED",
+                    target_artifact_id=proposal.get("target_artifact_id"),
+                )
+            )
             continue
         if float(proposal.get("confidence", 0)) < threshold:
             failed.append({"id": proposal_id, "code": "POLICY_THRESHOLD_NOT_MET"})
-            results.append(item_result(proposal_id, "FAILED", "POLICY_THRESHOLD_NOT_MET", confidence=proposal.get("confidence", 0), threshold=threshold))
+            results.append(
+                item_result(
+                    proposal_id,
+                    "FAILED",
+                    "POLICY_THRESHOLD_NOT_MET",
+                    confidence=proposal.get("confidence", 0),
+                    threshold=threshold,
+                )
+            )
             continue
         if not await fresh_proposal(proposal):
             failed.append({"id": proposal_id, "code": "STALE_PROPOSAL"})
-            results.append(item_result(proposal_id, "FAILED", "STALE_PROPOSAL", target_artifact_id=proposal.get("target_artifact_id"), base_version_id=proposal.get("base_version_id")))
+            results.append(
+                item_result(
+                    proposal_id,
+                    "FAILED",
+                    "STALE_PROPOSAL",
+                    target_artifact_id=proposal.get("target_artifact_id"),
+                    base_version_id=proposal.get("base_version_id"),
+                )
+            )
             continue
         if payload.preview:
             succeeded.append(proposal_id)
-            results.append(item_result(proposal_id, "PREVIEW", target_artifact_id=proposal.get("target_artifact_id"), base_version_id=proposal.get("base_version_id")))
+            results.append(
+                item_result(
+                    proposal_id,
+                    "PREVIEW",
+                    target_artifact_id=proposal.get("target_artifact_id"),
+                    base_version_id=proposal.get("base_version_id"),
+                )
+            )
             continue
         try:
             await apply_proposal(
                 proposal_id,
                 ProposalAction(
-                    expected_revision=proposal["revision"],
-                    review_note=payload.review_note,
+                    expected_revision=proposal["revision"], review_note=payload.review_note
                 ),
                 user,
                 "ACCEPTED",
             )
             succeeded.append(proposal_id)
-            results.append(item_result(proposal_id, "SUCCEEDED", target_artifact_id=proposal.get("target_artifact_id")))
+            results.append(
+                item_result(
+                    proposal_id, "SUCCEEDED", target_artifact_id=proposal.get("target_artifact_id")
+                )
+            )
         except HTTPException as error:
             detail = error.detail if isinstance(error.detail, dict) else {}
             failed.append({"id": proposal_id, "code": detail.get("code", "REQUEST_FAILED")})
-            results.append(item_result(proposal_id, "FAILED", detail.get("code", "REQUEST_FAILED"), target_artifact_id=proposal.get("target_artifact_id")))
+            results.append(
+                item_result(
+                    proposal_id,
+                    "FAILED",
+                    detail.get("code", "REQUEST_FAILED"),
+                    target_artifact_id=proposal.get("target_artifact_id"),
+                )
+            )
     return await finish_operation(
-        project_id, "BULK_APPROVE_PROPOSALS", succeeded, failed, user,
-        idempotency_key=idempotency_key, preview=payload.preview, results=results,
+        project_id,
+        "BULK_APPROVE_PROPOSALS",
+        succeeded,
+        failed,
+        user,
+        idempotency_key=idempotency_key,
+        preview=payload.preview,
+        results=results,
         details={"review_note": payload.review_note, "confidence_threshold": threshold},
     )

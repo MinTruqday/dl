@@ -1,14 +1,15 @@
-import sys
 import hmac
-import re
+import sys
 from contextlib import asynccontextmanager
+
 from fastapi import Depends, FastAPI, Request
 from loguru import logger
+
+from src.core.dependency import Role, require_role
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
-from src.core.middleware import add_trace_id_header, trace_id_filter
 from src.core.metrics import PrometheusMiddleware, metrics_endpoint
-from src.core.dependency import Role, require_role
+from src.core.middleware import add_trace_id_header, trace_id_filter
 
 logger.remove()
 
@@ -29,21 +30,18 @@ logger.add(
     diagnose=False,
 )
 from fastapi.middleware.cors import CORSMiddleware
+
+from src.agents.workflow.sessions import orchestration
+from src.api.cache import router as cache_router
+from src.api.embedding import router as embedding_router
+from src.api.events import router as events
+from src.api.indexing import indexing_router
+from src.api.indexing import router as ingest
+from src.api.inference import router as inference
+from src.api.projects import router as projects_router
+from src.api.retrieval import router as retrieval_router
 from src.services.agent_metrics import agentops
 from src.services.evaluation import evaluation
-from src.agents.workflow.sessions import orchestration
-from src.api.interaction import router as chat
-from src.api.feedback import router as feedback
-from src.api.history import router as history
-from src.api.inference import router as inference
-from src.api.indexing import router as ingest
-from src.api.events import router as events
-from src.api.interrupt import router as interrupt_router
-from src.api.retrieval import router as retrieval_router
-from src.api.embedding import router as embedding_router
-from src.api.indexing import indexing_router
-from src.api.cache import router as cache_router
-from src.api.projects import router as projects_router
 from src.services.retrieval import initialize_retrieval
 
 retrieval_ready = False
@@ -82,12 +80,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(inference)
-app.include_router(chat)
 app.include_router(ingest)
-app.include_router(feedback)
-app.include_router(history)
 app.include_router(events)
-app.include_router(interrupt_router)
 app.include_router(retrieval_router, prefix="/tri-thuc")
 app.include_router(embedding_router, prefix="/tri-thuc/bieu-dien-vector")
 app.include_router(indexing_router, prefix="/tri-thuc")
@@ -132,17 +126,17 @@ async def readiness_check():
         checks["qdrant"] = "unavailable"
     checks["knowledge"] = "ready" if retrieval_ready else "unavailable"
     try:
-        import httpx
+        from src.services.conversion import document_parser
 
-        async with httpx.AsyncClient(timeout=3) as client:
-            response = await client.get(f"{settings.MINIO_ENDPOINT.rstrip('/')}/minio/health/ready")
-            checks["object_storage"] = "ready" if response.status_code == 200 else "unavailable"
+        checks["object_storage"] = (
+            "ready" if await document_parser.storage_ready() else "unavailable"
+        )
     except Exception:
         checks["object_storage"] = "unavailable"
     try:
-        from src.utils.local_models import local_model_client
+        from src.utils.model_provider import model_client
 
-        checks.update(await local_model_client.readiness())
+        checks.update(await model_client.readiness())
     except Exception:
         checks["model"] = "unavailable"
     required_checks = {key: value for key, value in checks.items() if key != "model"}
@@ -190,9 +184,7 @@ async def startup_event():
     try:
         from src.utils.background import create_background_task
 
-        create_background_task(
-            initialize_retrieval_background(), "retrieval-model-warmup"
-        )
+        create_background_task(initialize_ai_runtime_background(), "ai-runtime-warmup")
     except Exception:
         logger.exception("AI retrieval capability startup error")
     try:
@@ -203,13 +195,6 @@ async def startup_event():
         logger.info("Event processor started")
     except Exception:
         logger.exception("Event processor startup error")
-    try:
-        from src.utils.background import create_background_task
-        from src.utils.local_models import local_model_client
-
-        create_background_task(local_model_client.warm_primary(), "primary-model-warmup")
-    except Exception:
-        logger.exception("Primary model warmup startup error")
 
 
 async def initialize_retrieval_background():
@@ -221,6 +206,19 @@ async def initialize_retrieval_background():
     except Exception:
         retrieval_ready = False
         logger.exception("AI retrieval capability startup error")
+
+
+async def initialize_ai_runtime_background():
+    try:
+        from src.utils.model_provider import model_client
+
+        if await model_client.warm_primary():
+            logger.info("Primary model warmup completed")
+        else:
+            logger.warning("Primary model unavailable")
+    except Exception:
+        logger.exception("Primary model readiness startup error")
+    await initialize_retrieval_background()
 
 
 async def shutdown_event():

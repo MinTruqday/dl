@@ -7,8 +7,12 @@ from src.core.database import database
 
 async def ensure_release_completion_gate(project_id: str, release_id: str):
     project = await database.value.projects.find_one({"_id": project_id}, {"settings": 1})
-    if not (project or {}).get("settings", {}).get("require_completion_report_before_release_close", False):
-        return
+    if (
+        not (project or {})
+        .get("settings", {})
+        .get("require_completion_report_before_release_close", False)
+    ):
+        return False
     completion = await database.value.test_completion_reports.find_one(
         {
             "project_id": project_id,
@@ -18,7 +22,8 @@ async def ensure_release_completion_gate(project_id: str, release_id: str):
         {"_id": 1},
     )
     if not completion:
-        raise HTTPException(status_code=409, detail={"code": "COMPLETION_REPORT_REQUIRED"})
+        raise HTTPException(status_code=409, detail={"code": "RELEASE_COMPLETION_GATE_FAILED"})
+    return True
 
 
 async def resolve_execution_context(

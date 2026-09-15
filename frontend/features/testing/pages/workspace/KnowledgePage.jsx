@@ -50,6 +50,7 @@ export default function KnowledgePage({ project, initialQuery = "", useGlobalSea
   const [sources, setSources] = useState([]);
   const [error, setError] = useState("");
   const [creatingSource, setCreatingSource] = useState(false);
+  const [askingAi, setAskingAi] = useState(false);
   const canAsk = project.current_permissions?.includes("ai.ask_project");
   const canManage = project.current_permissions?.includes("knowledge.manage");
   const loadSources = useCallback(async () => {
@@ -92,6 +93,7 @@ export default function KnowledgePage({ project, initialQuery = "", useGlobalSea
             onSubmit={async (event) => {
               event.preventDefault();
               setError("");
+              setAskingAi(true);
               try {
                 setAnswer(
                   await testingApi.askProject(project._id, {
@@ -102,6 +104,8 @@ export default function KnowledgePage({ project, initialQuery = "", useGlobalSea
                 );
               } catch (reason) {
                 setError(messageOf(reason));
+              } finally {
+                setAskingAi(false);
               }
             }}
           >
@@ -113,8 +117,8 @@ export default function KnowledgePage({ project, initialQuery = "", useGlobalSea
               onChange={(event) => setQuestion(event.target.value)}
               placeholder="Nhập câu hỏi cần trả lời từ yêu cầu tài liệu ca kiểm thử và lỗi của dự án"
             />
-            <button className="apple-button" type="submit">
-              Trả lời
+            <button aria-busy={askingAi} className="apple-button" disabled={askingAi} type="submit">
+              {askingAi ? "AI đang tìm bằng chứng và trả lời" : "Trả lời"}
             </button>
           </form>
           {answer && (
@@ -262,21 +266,25 @@ export default function KnowledgePage({ project, initialQuery = "", useGlobalSea
               </label>
               <label className="field-label">
                 Loại nguồn
-                <select
-                  className="apple-input mt-2"
-                  name="source_type"
-                  defaultValue="REFERENCE"
-                >
+                <select className="apple-input mt-2" name="source_type" defaultValue="REFERENCE">
                   {sourceTypes.map(([value, label]) => (
-                    <option key={value} value={value}>{label}</option>
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
                   ))}
                 </select>
               </label>
               <label className="field-label">
                 Mức thẩm quyền
-                <select className="apple-input mt-2" name="authority" defaultValue="PROJECT_REFERENCE">
+                <select
+                  className="apple-input mt-2"
+                  name="authority"
+                  defaultValue="PROJECT_REFERENCE"
+                >
                   {authorityLevels.map(([value, label]) => (
-                    <option key={value} value={value}>{label}</option>
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
                   ))}
                 </select>
               </label>
@@ -315,7 +323,12 @@ export default function KnowledgePage({ project, initialQuery = "", useGlobalSea
               </label>
               <label className="field-label">
                 Phiên bản nguồn
-                <input className="apple-input mt-2" name="source_version" defaultValue="1" required />
+                <input
+                  className="apple-input mt-2"
+                  name="source_version"
+                  defaultValue="1"
+                  required
+                />
               </label>
               <label className="field-label">
                 Người phê duyệt
@@ -367,7 +380,8 @@ export default function KnowledgePage({ project, initialQuery = "", useGlobalSea
               key: "module",
               label: "Phạm vi",
               render: (item) =>
-                [item.product_area, item.module, item.component].filter(Boolean).join(" · ") || "Chưa khai báo",
+                [item.product_area, item.module, item.component].filter(Boolean).join(" · ") ||
+                "Chưa khai báo",
             },
             {
               key: "index_status",

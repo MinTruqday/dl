@@ -1,8 +1,4 @@
-from datetime import datetime, timezone
-from typing import Optional
 from fastapi import HTTPException
-from fastapi.responses import StreamingResponse
-from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database

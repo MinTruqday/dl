@@ -2,9 +2,9 @@ import math
 import re
 from hashlib import sha256
 from typing import Dict, List, Optional, Sequence
+from uuid import NAMESPACE_URL, uuid5
 
 from loguru import logger
-from uuid import NAMESPACE_URL, uuid5
 
 from src.services.embedding import embedder
 

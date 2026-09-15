@@ -1,5 +1,4 @@
 import asyncio
-from uuid6 import uuid7
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -7,6 +6,8 @@ from enum import Enum
 from typing import Any, Callable, Coroutine, Dict, List, Optional
 
 from loguru import logger
+from uuid6 import uuid7
+
 from src.utils.background import create_background_task
 
 
@@ -158,7 +159,8 @@ class CronScheduler:
 
                 if self._event_processor_ref:
                     create_background_task(
-                        self._event_processor_ref.handle_event(event), f"cron-event-{event.event_id}"
+                        self._event_processor_ref.handle_event(event),
+                        f"cron-event-{event.event_id}",
                     )
                 else:
                     logger.warning(

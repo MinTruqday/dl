@@ -89,11 +89,7 @@ class ContentClient:
         extraction_method: str = "",
     ):
         return await cls.update_index(
-            document_id,
-            chunks_count,
-            extraction_method,
-            index_report,
-            extracted_text,
+            document_id, chunks_count, extraction_method, index_report, extracted_text
         )
 
     @classmethod

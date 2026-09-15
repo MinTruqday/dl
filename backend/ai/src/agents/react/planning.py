@@ -3,10 +3,11 @@ from typing import Any, Dict, List
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.output_parsers import JsonOutputParser
 from loguru import logger
+
+from src.agents.memory.management import memory_manager
+from src.core.infrastructure.configuration import settings
 from src.schemas.planning import ExecutionPlan
 from src.utils.huggingface import create_chat_model
-from src.core.infrastructure.configuration import settings
-from src.agents.memory.management import memory_manager
 
 llm = create_chat_model()
 
@@ -156,8 +157,9 @@ class PlanAgent:
         self, current_plan: Dict[str, Any], failed_step: Dict[str, Any], error_message: str
     ) -> Dict[str, Any]:
         logger.info(f"Generating revised plan due to failure in step: {failed_step.get('action')}")
-        from src.core.registry import PromptType, registry
         import json
+
+        from src.core.registry import PromptType, registry
 
         system_prompt = registry.get(PromptType.BRAIN_SYSTEM)
         format_instructions = self.parser.get_format_instructions()
@@ -206,6 +208,7 @@ class CriticAgent:
         logger.info("Critic Agent is reviewing the generated plan")
         try:
             import json
+
             from src.core.registry import PromptType, registry
 
             messages = [

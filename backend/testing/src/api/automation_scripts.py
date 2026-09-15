@@ -5,15 +5,22 @@ from fastapi.responses import Response
 from pymongo.errors import DuplicateKeyError
 
 from src.core.auth import CurrentUser, get_current_user
-from src.core.common import audit, envelope, get_project, get_project_entity, new_id, now, optimistic_patch
+from src.core.common import (
+    audit,
+    envelope,
+    get_project,
+    get_project_entity,
+    new_id,
+    now,
+    optimistic_patch,
+)
 from src.core.database import database
 from src.domain.schemas import (
     AutomationScriptApproval,
     AutomationScriptGenerateInput,
     AutomationScriptPatch,
 )
-from src.services.design_assistance import request_design_assistance
-
+from src.services.design_assistance import ai_contract_metadata, request_design_assistance
 
 router = APIRouter(prefix="/kiem-thu", tags=["Kịch bản tự động hóa"])
 RAW_SECRET_PATTERN = re.compile(
@@ -31,13 +38,25 @@ def generated_script(result):
     if result.get("status") != "SUCCESS" or result.get("degraded_mode"):
         raise HTTPException(503, detail={"code": "AI_PROVIDER_UNAVAILABLE", "retryable": True})
     suggestions = result.get("suggestions")
-    if not isinstance(suggestions, list) or len(suggestions) != 1 or not isinstance(suggestions[0], dict):
+    if (
+        not isinstance(suggestions, list)
+        or len(suggestions) != 1
+        or not isinstance(suggestions[0], dict)
+    ):
         raise HTTPException(502, detail={"code": "AI_SCRIPT_INVALID"})
     source = suggestions[0].get("source")
     placeholders = suggestions[0].get("secret_placeholders", [])
-    if not isinstance(source, str) or not source.strip() or len(source) > 100000 or source.lstrip().startswith("```"):
+    if (
+        not isinstance(source, str)
+        or not source.strip()
+        or len(source) > 100000
+        or source.lstrip().startswith("```")
+    ):
         raise HTTPException(502, detail={"code": "AI_SCRIPT_INVALID"})
-    if not isinstance(placeholders, list) or any(not isinstance(item, str) or not re.fullmatch(r"[A-Z][A-Z0-9_]{0,99}", item) for item in placeholders):
+    if not isinstance(placeholders, list) or any(
+        not isinstance(item, str) or not re.fullmatch(r"[A-Z][A-Z0-9_]{0,99}", item)
+        for item in placeholders
+    ):
         raise HTTPException(502, detail={"code": "AI_SCRIPT_PLACEHOLDERS_INVALID"})
     return validate_source(source), list(dict.fromkeys(placeholders))
 
@@ -50,21 +69,19 @@ def default_filename(framework, language, version):
 
 @router.get("/du-an/{project_id}/ban-nhap-kich-ban-tu-dong")
 async def list_automation_script_drafts(
-    project_id: str,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, user: CurrentUser = Depends(get_current_user)
 ):
     await get_project(project_id, user, "automation.script.export")
-    items = await database.value.automation_script_drafts.find(
-        {"project_id": project_id}
-    ).sort("updated_at", -1).to_list(500)
+    items = (
+        await database.value.automation_script_drafts.find({"project_id": project_id})
+        .sort("updated_at", -1)
+        .to_list(500)
+    )
     return envelope(items)
 
 
 @router.get("/ban-nhap-kich-ban-tu-dong/{draft_id}")
-async def get_automation_script_draft(
-    draft_id: str,
-    user: CurrentUser = Depends(get_current_user),
-):
+async def get_automation_script_draft(draft_id: str, user: CurrentUser = Depends(get_current_user)):
     value = await get_project_entity(
         "automation_script_drafts", draft_id, user, "automation.script.export"
     )
@@ -108,6 +125,7 @@ async def generate_automation_script_draft(
     )
     source, placeholders = generated_script(ai_result)
     timestamp = now()
+    ai_contract = ai_contract_metadata(ai_result)
     value = {
         "_id": new_id("AUTOSCR"),
         "project_id": project_id,
@@ -120,11 +138,10 @@ async def generate_automation_script_draft(
         "source": source,
         "secret_placeholders": placeholders,
         "model_suggestions": ai_result.get("suggestions", []),
-        "evidence_refs": ai_result.get("evidence_refs", [version["_id"]]),
-        "model": ai_result.get("model", {}),
-        "warnings": ai_result.get("warnings", []),
+        **ai_contract,
+        "ai_contract": ai_contract,
+        "ai_status": ai_contract["status"],
         "generation_status": ai_result.get("status", "SUCCESS"),
-        "degraded_mode": ai_result.get("degraded_mode"),
         "status": "DRAFT",
         "candidate_only": True,
         "repository_write_performed": False,
@@ -162,9 +179,7 @@ async def generate_automation_script_draft(
 
 @router.patch("/ban-nhap-kich-ban-tu-dong/{draft_id}")
 async def update_automation_script_draft(
-    draft_id: str,
-    payload: AutomationScriptPatch,
-    user: CurrentUser = Depends(get_current_user),
+    draft_id: str, payload: AutomationScriptPatch, user: CurrentUser = Depends(get_current_user)
 ):
     draft = await get_project_entity(
         "automation_script_drafts", draft_id, user, "automation.script.update"
@@ -193,9 +208,7 @@ async def update_automation_script_draft(
 
 @router.post("/ban-nhap-kich-ban-tu-dong/{draft_id}/phe-duyet")
 async def approve_automation_script_draft(
-    draft_id: str,
-    payload: AutomationScriptApproval,
-    user: CurrentUser = Depends(get_current_user),
+    draft_id: str, payload: AutomationScriptApproval, user: CurrentUser = Depends(get_current_user)
 ):
     draft = await get_project_entity(
         "automation_script_drafts", draft_id, user, "automation.script.approve"
@@ -229,8 +242,7 @@ async def approve_automation_script_draft(
 
 @router.get("/ban-nhap-kich-ban-tu-dong/{draft_id}/xuat")
 async def export_automation_script_draft(
-    draft_id: str,
-    user: CurrentUser = Depends(get_current_user),
+    draft_id: str, user: CurrentUser = Depends(get_current_user)
 ):
     draft = await get_project_entity(
         "automation_script_drafts", draft_id, user, "automation.script.export"

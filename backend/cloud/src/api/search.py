@@ -1,7 +1,8 @@
 from typing import Any, List
+
 from fastapi import APIRouter, Body, Depends
-from src.api.dependency import require_role
-from src.core.dependency import CurrentUser, Role
+
+from src.core.dependency import CurrentUser, Role, require_role
 from src.core.response import APIResponse
 from src.services.search import SearchService
 

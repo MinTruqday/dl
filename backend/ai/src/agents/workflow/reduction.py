@@ -6,7 +6,6 @@ from langgraph.graph import END, StateGraph
 from langgraph.types import Send
 from pydantic import Field
 
-
 BATCH_SIZE = 5
 MAX_CHUNKS = 40
 
@@ -33,9 +32,9 @@ class SummarizeState(TypedDict):
 
 async def summarize_node(state: SummarizeState):
     from langchain_core.messages import HumanMessage
-    from src.agents.react.planning import llm
 
-    from src.core.registry import registry, PromptType
+    from src.agents.react.planning import llm
+    from src.core.registry import PromptType, registry
 
     prompt = registry.get(PromptType.REDUCTION_SEGMENT_SUMMARY).format(chunk=state["chunk"])
     res = await llm.ainvoke([HumanMessage(content=prompt)])
@@ -44,6 +43,7 @@ async def summarize_node(state: SummarizeState):
 
 async def hierarchical_reduce_node(state: MapReduceState):
     from langchain_core.messages import HumanMessage
+
     from src.agents.react.planning import llm
 
     summaries = state["summaries"]
@@ -52,7 +52,7 @@ async def hierarchical_reduce_node(state: MapReduceState):
     mid_summaries = []
     for batch in batches:
         combined = "\n\n---\n\n".join(batch)
-        from src.core.registry import registry, PromptType
+        from src.core.registry import PromptType, registry
 
         prompt = registry.get(PromptType.REDUCTION_FINAL_SUMMARY).format(combined=combined)
         try:
@@ -62,7 +62,7 @@ async def hierarchical_reduce_node(state: MapReduceState):
             mid_summaries.extend(batch[:2])
 
     final_combined = "\n\n---\n\n".join(mid_summaries)
-    from src.core.registry import registry, PromptType
+    from src.core.registry import PromptType, registry
 
     final_prompt = registry.get(PromptType.REDUCTION_SYNTHESIS_SUMMARY).format(
         final_combined=final_combined

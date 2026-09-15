@@ -1,21 +1,15 @@
-import json
-from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Request
 from loguru import logger
 
-from src.agents.react.routing import semantic_router
-from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import database
-from src.core.registry import PromptType, registry
-from src.services.agent_metrics import agentops
 from src.agents.memory.context import context
-from src.agents.workflow.sessions import orchestration
+from src.agents.react.routing import semantic_router
+from src.agents.workflow.orchestration import supervisor
+from src.core.dependency import CurrentUser, get_current_user
+from src.core.registry import PromptType, registry
 from src.core.security.scanning import security
 from src.schemas.interaction import ChatRequest
-from src.core.dependency import CurrentUser, get_current_user
-from src.agents.workflow.orchestration import supervisor
-from src.services.workspace import workspace
 from src.services.token_accounting import start_accounting
+from src.services.workspace import workspace
 
 router = APIRouter()
 
@@ -130,10 +124,8 @@ async def chat_endpoint(
             "user_preferences": ctx.user_preferences,
         }
         if req.document_ids:
-            from src.tools.http_client import (
-                INTERNAL_API_URL,
-                make_api_request as _make_api_request,
-            )
+            from src.tools.http_client import INTERNAL_API_URL
+            from src.tools.http_client import make_api_request as _make_api_request
 
             for doc_id in req.document_ids:
                 try:
@@ -187,6 +179,7 @@ async def chat_endpoint(
             final_answer = route_data.get("answer", "")
             if not final_answer:
                 from langchain_core.messages import HumanMessage
+
                 from src.utils.huggingface import create_chat_model
 
                 chat_llm = create_chat_model()

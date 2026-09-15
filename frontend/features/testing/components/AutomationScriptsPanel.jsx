@@ -21,6 +21,7 @@ export default function AutomationScriptsPanel({ project, tests }) {
   const [filename, setFilename] = useState("");
   const [source, setSource] = useState("");
   const [error, setError] = useState("");
+  const [generating, setGenerating] = useState(false);
   const canGenerate = project.current_permissions?.includes("ai.generate_automation_script");
   const canUpdate = project.current_permissions?.includes("automation.script.update");
   const canApprove = project.current_permissions?.includes("automation.script.approve");
@@ -76,6 +77,7 @@ export default function AutomationScriptsPanel({ project, tests }) {
       setError("Phải chọn một phiên bản ca kiểm thử đã phê duyệt");
       return;
     }
+    setGenerating(true);
     try {
       const value = await testingApi.generateAutomationScriptDraft(project._id, {
         framework,
@@ -91,6 +93,8 @@ export default function AutomationScriptsPanel({ project, tests }) {
       setError("");
     } catch (reason) {
       setError(messageOf(reason));
+    } finally {
+      setGenerating(false);
     }
   };
 
@@ -193,8 +197,14 @@ export default function AutomationScriptsPanel({ project, tests }) {
                 </option>
               ))}
             </select>
-            <button className="apple-button" type="button" onClick={generate}>
-              Tạo bản nháp
+            <button
+              aria-busy={generating}
+              className="apple-button"
+              disabled={generating}
+              type="button"
+              onClick={generate}
+            >
+              {generating ? "AI đang tạo kịch bản" : "Tạo bản nháp"}
             </button>
           </div>
         )}

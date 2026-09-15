@@ -3,7 +3,8 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Literal, Optional
 
 from loguru import logger
-from src.schemas.evaluation import HallucinationGrade, ErrorMessageJudgment
+
+from src.schemas.evaluation import ErrorMessageJudgment, HallucinationGrade
 
 CheckStatus = Literal["passed", "failed", "skipped"]
 
@@ -49,7 +50,7 @@ async def _check_no_hallucination_markers(response: str) -> CheckResult:
 
     try:
         evaluator = llm.with_structured_output(HallucinationGrade)
-        from src.core.registry import registry, PromptType
+        from src.core.registry import PromptType, registry
 
         prompt = registry.get(PromptType.VERIFICATION_HALLUCINATION).format(response=response[:500])
         result = await evaluator.ainvoke(prompt)
@@ -106,7 +107,7 @@ async def _check_no_error_prefix(response: str) -> CheckResult:
 
     try:
         evaluator = llm.with_structured_output(ErrorMessageJudgment)
-        from src.core.registry import registry, PromptType
+        from src.core.registry import PromptType, registry
 
         prompt = registry.get(PromptType.VERIFICATION_ERROR_JUDGE).format(response=response[:500])
         result = await evaluator.ainvoke(prompt)

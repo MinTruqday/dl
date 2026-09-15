@@ -15,7 +15,6 @@ from src.core.infrastructure.database import database, record_job
 from src.core.infrastructure.mq import mq
 from src.core.metrics import metrics_collector
 
-
 IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{1,128}$")
 
 
@@ -34,7 +33,9 @@ async def handle_testing_job(payload: dict):
     requester_email = str(payload.get("requester_email") or "")
     validate_identifier(job_id, "job identifier")
     validate_identifier(requester_id, "requester identifier")
-    job = await database.mongodb[settings.WORKER_DB_NAME].worker_jobs.find_one({"_id": job_id}, {"status": 1})
+    job = await database.mongodb[settings.WORKER_DB_NAME].worker_jobs.find_one(
+        {"_id": job_id}, {"status": 1}
+    )
     if job and job.get("status") == "canceled":
         return
     job_payload = payload.get("payload")
@@ -43,7 +44,11 @@ async def handle_testing_job(payload: dict):
     await record_job(
         job_id,
         {"status": "running", "attempt_started_at": datetime.now(timezone.utc)},
-        {"kind": payload.get("event"), "project_id": payload.get("project_id"), "requester_id": requester_id},
+        {
+            "kind": payload.get("event"),
+            "project_id": payload.get("project_id"),
+            "requester_id": requester_id,
+        },
     )
     if payload.get("event") == "automation.newman.requested":
         result = await run_newman(job_id, payload, job_payload)
@@ -66,7 +71,13 @@ async def handle_testing_job(payload: dict):
                 "X-Requester-Id": requester_id,
                 "X-Requester-Email": requester_email,
             },
-            json={"job_id": job_id, "project_id": payload.get("project_id"), "artifact_version_id": payload.get("artifact_version_id"), "model_version": payload.get("model_version"), "payload": job_payload},
+            json={
+                "job_id": job_id,
+                "project_id": payload.get("project_id"),
+                "artifact_version_id": payload.get("artifact_version_id"),
+                "model_version": payload.get("model_version"),
+                "payload": job_payload,
+            },
         )
     response.raise_for_status()
     result = response.json()
@@ -125,7 +136,9 @@ async def run_newman(job_id, payload, job_payload):
     for execution in executions[:100000]:
         item = execution.get("item") if isinstance(execution.get("item"), dict) else {}
         response = execution.get("response") if isinstance(execution.get("response"), dict) else {}
-        assertions = execution.get("assertions") if isinstance(execution.get("assertions"), list) else []
+        assertions = (
+            execution.get("assertions") if isinstance(execution.get("assertions"), list) else []
+        )
         results.append(
             {
                 "name": str(item.get("name") or "")[:500],

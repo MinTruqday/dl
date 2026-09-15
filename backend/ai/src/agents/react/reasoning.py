@@ -1,10 +1,9 @@
 from typing import Dict, List
 
 from loguru import logger
-from src.core.registry import PromptType, registry
 
 from src.core.infrastructure.configuration import settings
-
+from src.core.registry import PromptType, registry
 from src.schemas.evaluation import QualityEvaluation
 
 
@@ -30,6 +29,7 @@ class ReasoningAgent:
         prompt = registry.get(PromptType.ANALYTICAL_ENGINE).format(task=task)
         try:
             from langchain_core.messages import HumanMessage
+
             from src.utils.huggingface import create_chat_model
 
             llm = create_chat_model(self._model)
@@ -54,6 +54,7 @@ class ReasoningAgent:
         )
         try:
             from langchain_core.messages import HumanMessage
+
             from src.utils.huggingface import create_chat_model
 
             llm = create_chat_model(self._model).with_structured_output(QualityEvaluation)

@@ -57,8 +57,8 @@ class ContextHarness:
         if not user_id:
             return ""
         try:
-            from src.core.infrastructure.database import database
             from src.agents.memory.management import memory_manager
+            from src.core.infrastructure.database import database
 
             db = database.mongodb[settings.AI_DB_NAME]
             instruction_doc, memories = await asyncio.gather(

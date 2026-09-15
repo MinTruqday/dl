@@ -1,6 +1,5 @@
 import re
 
-
 PATTERNS = [
     re.compile(r"ignore\s+(all\s+)?previous\s+instructions", re.I),
     re.compile(r"system\s+prompt", re.I),

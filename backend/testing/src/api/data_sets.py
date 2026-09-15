@@ -16,7 +16,6 @@ from src.domain.schemas import (
     DataSetVersionCreate,
 )
 
-
 router = APIRouter(prefix="/kiem-thu", tags=["Dữ liệu kiểm thử"])
 
 
@@ -26,9 +25,7 @@ router = APIRouter(prefix="/kiem-thu", tags=["Dữ liệu kiểm thử"])
     openapi_extra={"x-function-ids": ["DATA-02"]},
 )
 async def create_data_set(
-    project_id: str,
-    payload: DataSetCreate,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, payload: DataSetCreate, user: CurrentUser = Depends(get_current_user)
 ):
     await get_project(project_id, user, "testdata.create")
     timestamp = now()
@@ -63,15 +60,10 @@ async def create_data_set(
         )
         raise HTTPException(status_code=409, detail={"code": "DATA_SET_NAME_EXISTS"})
     await audit(user.id, "data_set_created", "DataSet", data_set_id, project_id)
-    return envelope(
-        {**data_set, "current_version": public_data_set_version(version)}, revision=1
-    )
+    return envelope({**data_set, "current_version": public_data_set_version(version)}, revision=1)
 
 
-@router.get(
-    "/du-an/{project_id}/du-lieu-kiem-thu",
-    openapi_extra={"x-function-ids": ["DATA-01"]},
-)
+@router.get("/du-an/{project_id}/du-lieu-kiem-thu", openapi_extra={"x-function-ids": ["DATA-01"]})
 async def list_data_sets(
     project_id: str,
     q: str = Query(default="", max_length=300),
@@ -92,9 +84,7 @@ async def list_data_sets(
         [
             {
                 **item,
-                "current_version": public_data_set_version(
-                    by_id.get(item["current_version_id"])
-                ),
+                "current_version": public_data_set_version(by_id.get(item["current_version_id"])),
             }
             for item in items
         ]
@@ -102,10 +92,7 @@ async def list_data_sets(
 
 
 @router.get("/du-lieu-kiem-thu/{data_set_id}", openapi_extra={"x-function-ids": ["DATA-01"]})
-async def get_data_set(
-    data_set_id: str,
-    user: CurrentUser = Depends(get_current_user),
-):
+async def get_data_set(data_set_id: str, user: CurrentUser = Depends(get_current_user)):
     data_set = await get_project_entity("data_sets", data_set_id, user, "testdata.read")
     version = await database.value.data_set_versions.find_one(
         {
@@ -121,17 +108,17 @@ async def get_data_set(
 
 
 @router.get(
-    "/du-lieu-kiem-thu/{data_set_id}/phien-ban",
-    openapi_extra={"x-function-ids": ["DATA-01"]},
+    "/du-lieu-kiem-thu/{data_set_id}/phien-ban", openapi_extra={"x-function-ids": ["DATA-01"]}
 )
-async def list_data_set_versions(
-    data_set_id: str,
-    user: CurrentUser = Depends(get_current_user),
-):
+async def list_data_set_versions(data_set_id: str, user: CurrentUser = Depends(get_current_user)):
     data_set = await get_project_entity("data_sets", data_set_id, user, "testdata.read")
-    versions = await database.value.data_set_versions.find(
-        {"project_id": data_set["project_id"], "data_set_id": data_set_id}
-    ).sort("version", -1).to_list(500)
+    versions = (
+        await database.value.data_set_versions.find(
+            {"project_id": data_set["project_id"], "data_set_id": data_set_id}
+        )
+        .sort("version", -1)
+        .to_list(500)
+    )
     return envelope([public_data_set_version(version) for version in versions])
 
 
@@ -141,9 +128,7 @@ async def list_data_set_versions(
     openapi_extra={"x-function-ids": ["DATA-03"]},
 )
 async def create_data_set_version(
-    data_set_id: str,
-    payload: DataSetVersionCreate,
-    user: CurrentUser = Depends(get_current_user),
+    data_set_id: str, payload: DataSetVersionCreate, user: CurrentUser = Depends(get_current_user)
 ):
     data_set = await get_project_entity("data_sets", data_set_id, user, "testdata.update")
     if data_set.get("current_version_id") != payload.expected_current_version_id:
@@ -201,7 +186,9 @@ async def create_data_set_version(
         await database.value.data_set_versions.delete_one(
             {"_id": version["_id"], "project_id": data_set["project_id"]}
         )
-        raise HTTPException(status_code=409, detail={"code": "DATA_SET_VERSION_CONFLICT"}) from error
+        raise HTTPException(
+            status_code=409, detail={"code": "DATA_SET_VERSION_CONFLICT"}
+        ) from error
     except Exception:
         await database.value.data_set_versions.delete_one(
             {"_id": version["_id"], "project_id": data_set["project_id"]}
@@ -215,9 +202,7 @@ async def create_data_set_version(
         data_set["project_id"],
         {"data_set_id": data_set_id, "version": version["version"]},
     )
-    return envelope(
-        public_data_set_version(version), revision=data_set["revision"] + 1
-    )
+    return envelope(public_data_set_version(version), revision=data_set["revision"] + 1)
 
 
 def public_data_set_version(version):
@@ -357,11 +342,7 @@ async def archive_data_set(
             "revision": payload.expected_revision,
         },
         {
-            "$set": {
-                "status": "ARCHIVED",
-                "archive_reason": payload.reason,
-                "updated_at": now(),
-            },
+            "$set": {"status": "ARCHIVED", "archive_reason": payload.reason, "updated_at": now()},
             "$inc": {"revision": 1},
         },
         return_document=ReturnDocument.AFTER,
@@ -369,11 +350,6 @@ async def archive_data_set(
     if not updated:
         raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
     await audit(
-        user.id,
-        "data_set_archived",
-        "DataSet",
-        data_set_id,
-        project_id,
-        {"reason": payload.reason},
+        user.id, "data_set_archived", "DataSet", data_set_id, project_id, {"reason": payload.reason}
     )
     return envelope(updated, revision=updated["revision"])

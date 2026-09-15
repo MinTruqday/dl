@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import AliasChoices, BaseModel, Field, model_validator
 
 
 class NonFunctionalTestPlanCreate(BaseModel):
@@ -13,15 +13,47 @@ class NonFunctionalTestPlanCreate(BaseModel):
     approach: str = Field(min_length=2, max_length=10000)
     entry_criteria: list[str] = Field(default_factory=list, max_length=200)
     exit_criteria: list[str] = Field(default_factory=list, max_length=200)
-    test_condition_ids: list[str] = Field(default_factory=list, max_length=1000)
-    test_case_version_ids: list[str] = Field(default_factory=list, max_length=5000)
-    requirement_version_ids: list[str] = Field(default_factory=list, max_length=5000)
+    test_conditions: list[str] = Field(
+        default_factory=list,
+        max_length=1000,
+        validation_alias=AliasChoices("test_conditions", "test_condition_ids"),
+    )
+    test_cases: list[str] = Field(
+        default_factory=list,
+        max_length=5000,
+        validation_alias=AliasChoices("test_cases", "test_case_version_ids"),
+    )
+    requirement_refs: list[str] = Field(
+        default_factory=list,
+        max_length=5000,
+        validation_alias=AliasChoices("requirement_refs", "requirement_version_ids"),
+    )
     source_ai_result_ids: list[str] = Field(default_factory=list, max_length=100)
-    tools: list[str] = Field(default_factory=list, max_length=100)
+    tool_refs: list[str] = Field(
+        default_factory=list, max_length=100, validation_alias=AliasChoices("tool_refs", "tools")
+    )
+    risk_refs: list[str] = Field(default_factory=list, max_length=500)
+    categories: list[str] = Field(default_factory=list, max_length=100)
+    environment: dict[str, Any] = Field(default_factory=dict)
+    evidence: list[dict[str, Any] | str] = Field(default_factory=list, max_length=1000)
+    result_summary: dict[str, Any] = Field(default_factory=dict)
+    residual_risk: list[dict[str, Any] | str] = Field(default_factory=list, max_length=500)
+    workload_model: dict[str, Any] = Field(default_factory=dict)
+    baseline: dict[str, Any] = Field(default_factory=dict)
+    load: dict[str, Any] = Field(default_factory=dict)
+    stress: dict[str, Any] = Field(default_factory=dict)
+    spike: dict[str, Any] = Field(default_factory=dict)
+    soak: dict[str, Any] = Field(default_factory=dict)
+    concurrency: int | dict[str, Any] | None = None
+    throughput_target: float | None = Field(default=None, ge=0)
+    response_time_target: float | dict[str, Any] | None = None
+    error_rate_target: float | None = Field(default=None, ge=0, le=100)
+    data: dict[str, Any] = Field(default_factory=dict)
+    external_tool_ref: str | None = Field(default=None, max_length=1000)
 
     @model_validator(mode="after")
     def validate_trace(self):
-        if not self.test_condition_ids and not self.test_case_version_ids:
+        if not self.test_conditions and not self.test_cases:
             raise ValueError("Kế hoạch NFR phải truy vết tới TestCondition hoặc TestCase")
         return self
 
@@ -34,10 +66,42 @@ class NonFunctionalTestPlanPatch(BaseModel):
     approach: str | None = Field(default=None, min_length=2, max_length=10000)
     entry_criteria: list[str] | None = Field(default=None, max_length=200)
     exit_criteria: list[str] | None = Field(default=None, max_length=200)
-    test_condition_ids: list[str] | None = Field(default=None, max_length=1000)
-    test_case_version_ids: list[str] | None = Field(default=None, max_length=5000)
-    requirement_version_ids: list[str] | None = Field(default=None, max_length=5000)
-    tools: list[str] | None = Field(default=None, max_length=100)
+    test_conditions: list[str] | None = Field(
+        default=None,
+        max_length=1000,
+        validation_alias=AliasChoices("test_conditions", "test_condition_ids"),
+    )
+    test_cases: list[str] | None = Field(
+        default=None,
+        max_length=5000,
+        validation_alias=AliasChoices("test_cases", "test_case_version_ids"),
+    )
+    requirement_refs: list[str] | None = Field(
+        default=None,
+        max_length=5000,
+        validation_alias=AliasChoices("requirement_refs", "requirement_version_ids"),
+    )
+    tool_refs: list[str] | None = Field(
+        default=None, max_length=100, validation_alias=AliasChoices("tool_refs", "tools")
+    )
+    risk_refs: list[str] | None = Field(default=None, max_length=500)
+    categories: list[str] | None = Field(default=None, max_length=100)
+    environment: dict[str, Any] | None = None
+    evidence: list[dict[str, Any] | str] | None = Field(default=None, max_length=1000)
+    result_summary: dict[str, Any] | None = None
+    residual_risk: list[dict[str, Any] | str] | None = Field(default=None, max_length=500)
+    workload_model: dict[str, Any] | None = None
+    baseline: dict[str, Any] | None = None
+    load: dict[str, Any] | None = None
+    stress: dict[str, Any] | None = None
+    spike: dict[str, Any] | None = None
+    soak: dict[str, Any] | None = None
+    concurrency: int | dict[str, Any] | None = None
+    throughput_target: float | None = Field(default=None, ge=0)
+    response_time_target: float | dict[str, Any] | None = None
+    error_rate_target: float | None = Field(default=None, ge=0, le=100)
+    data: dict[str, Any] | None = None
+    external_tool_ref: str | None = Field(default=None, max_length=1000)
 
 
 class NonFunctionalTransition(BaseModel):

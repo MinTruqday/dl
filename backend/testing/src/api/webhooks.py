@@ -4,7 +4,15 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from pymongo.errors import DuplicateKeyError
 
 from src.core.auth import CurrentUser, get_current_user
-from src.core.common import audit, envelope, get_project, get_project_entity, new_id, now, optimistic_patch
+from src.core.common import (
+    audit,
+    envelope,
+    get_project,
+    get_project_entity,
+    new_id,
+    now,
+    optimistic_patch,
+)
 from src.core.configuration import settings
 from src.core.database import database
 from src.domain.schemas import (
@@ -13,7 +21,6 @@ from src.domain.schemas import (
     WebhookSubscriptionCreate,
     WebhookSubscriptionPatch,
 )
-
 
 router = APIRouter(prefix="/kiem-thu", tags=["Móc gọi dự án"])
 internal_router = APIRouter(prefix="/noi-bo/kiem-thu/moc-goi", tags=["Móc gọi nội bộ"])
@@ -64,9 +71,9 @@ async def list_webhook_subscriptions(
     query = {"project_id": project_id}
     if not include_disabled:
         query["enabled"] = True
-    items = await database.value.webhook_subscriptions.find(query).sort(
-        "updated_at", -1
-    ).to_list(500)
+    items = (
+        await database.value.webhook_subscriptions.find(query).sort("updated_at", -1).to_list(500)
+    )
     return envelope([public_subscription(item) for item in items])
 
 
@@ -147,9 +154,7 @@ async def list_webhook_deliveries(
         if status not in {"QUEUED", "DELIVERED", "FAILED"}:
             raise HTTPException(status_code=422, detail={"code": "WEBHOOK_STATUS_INVALID"})
         query["status"] = status
-    items = await database.value.webhook_deliveries.find(query).sort(
-        "created_at", -1
-    ).to_list(1000)
+    items = await database.value.webhook_deliveries.find(query).sort("created_at", -1).to_list(1000)
     return envelope([public_delivery(item) for item in items])
 
 
@@ -176,11 +181,7 @@ async def replay_webhook_delivery(
     if delivery.get("status") != "FAILED":
         raise HTTPException(status_code=409, detail={"code": "WEBHOOK_DELIVERY_NOT_REPLAYABLE"})
     subscription = await database.value.webhook_subscriptions.find_one(
-        {
-            "_id": delivery["subscription_id"],
-            "project_id": project_id,
-            "enabled": True,
-        }
+        {"_id": delivery["subscription_id"], "project_id": project_id, "enabled": True}
     )
     if not subscription:
         raise HTTPException(status_code=409, detail={"code": "WEBHOOK_SUBSCRIPTION_INACTIVE"})
@@ -213,11 +214,7 @@ async def replay_webhook_delivery(
     await database.value.webhook_deliveries.update_one(
         {"_id": delivery_id, "project_id": project_id, "status": "FAILED"},
         {
-            "$set": {
-                "status": "QUEUED",
-                "operation_id": job["_id"],
-                "updated_at": timestamp,
-            },
+            "$set": {"status": "QUEUED", "operation_id": job["_id"], "updated_at": timestamp},
             "$inc": {"attempt": 1},
         },
     )
@@ -235,8 +232,7 @@ async def replay_webhook_delivery(
 
 @internal_router.post("/ket-qua", include_in_schema=False)
 async def record_webhook_delivery(
-    payload: WebhookDeliveryRecordInput,
-    x_internal_token: str = Header(default=""),
+    payload: WebhookDeliveryRecordInput, x_internal_token: str = Header(default="")
 ):
     if not hmac.compare_digest(x_internal_token, settings.SECRET_KEY):
         raise HTTPException(status_code=403, detail={"code": "INVALID_INTERNAL_TOKEN"})
@@ -254,8 +250,6 @@ async def record_webhook_delivery(
         "updated_at": timestamp,
     }
     await database.value.webhook_deliveries.update_one(
-        {"_id": payload.delivery_id, "project_id": payload.project_id},
-        {"$set": value},
-        upsert=True,
+        {"_id": payload.delivery_id, "project_id": payload.project_id}, {"$set": value}, upsert=True
     )
     return envelope(public_delivery(value))

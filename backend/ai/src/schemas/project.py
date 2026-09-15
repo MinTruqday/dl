@@ -1,6 +1,15 @@
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+KNOWLEDGE_AUTHORITIES = {
+    "APPROVED_SOURCE",
+    "CONTROLLED_SOURCE",
+    "PROJECT_REFERENCE",
+    "SUPPLEMENTAL",
+    "DRAFT",
+    "UNVERIFIED",
+}
 
 
 class ProjectArtifactIndexRequest(BaseModel):
@@ -10,10 +19,17 @@ class ProjectArtifactIndexRequest(BaseModel):
     title: str = Field(default="", max_length=500)
     text: str = Field(min_length=1, max_length=50000)
     status: str = Field(default="ACTIVE", max_length=50)
-    authority: str = Field(default="record", max_length=100)
+    authority: str = Field(default="PROJECT_REFERENCE", max_length=100)
     version: Any = None
     module: str = Field(default="", max_length=200)
     metadata: dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("authority")
+    @classmethod
+    def validate_authority(cls, value: str) -> str:
+        if value not in KNOWLEDGE_AUTHORITIES:
+            raise ValueError("AUTHORITY_INVALID")
+        return value
 
 
 class ProjectKnowledgeSearchRequest(BaseModel):

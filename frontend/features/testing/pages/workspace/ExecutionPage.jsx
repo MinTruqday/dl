@@ -53,6 +53,7 @@ export default function ExecutionPage({ project, section }) {
   const [tests, setTests] = useState([]);
   const [run, setRun] = useState(null);
   const [error, setError] = useState("");
+  const [planValidation, setPlanValidation] = useState(null);
   const [creatingPlan, setCreatingPlan] = useState(false);
   const [creatingSuite, setCreatingSuite] = useState(false);
   const [creatingRun, setCreatingRun] = useState(false);
@@ -932,7 +933,7 @@ export default function ExecutionPage({ project, section }) {
                 </select>
               </label>
               <p className="text-[12px] text-ink-muted">
-                Snapshot {runForm.versionIds.length} phiên bản được chọn cùng các phiên bản trong bộ
+                Ảnh chụp {runForm.versionIds.length} phiên bản được chọn cùng các phiên bản trong bộ
                 kiểm thử
               </p>
               <div className="flex justify-end gap-3">
@@ -955,6 +956,13 @@ export default function ExecutionPage({ project, section }) {
         <DeviceMatricesPanel project={project} plans={plans} runs={runs} onChanged={load} />
         <AutomationExecutionPanel project={project} />
         <Panel title="Kế hoạch kiểm thử">
+          {planValidation && (
+            <div className="border-b border-border p-4 text-sm">
+              {planValidation.ready_for_approval
+                ? "Kế hoạch đã đủ điều kiện phê duyệt"
+                : planValidation.findings.map((item) => item.code).join(" · ")}
+            </div>
+          )}
           <details className="border-b border-border p-4">
             <summary className="cursor-pointer text-sm font-medium">
               Tìm kiếm bộ lọc và sắp xếp
@@ -1018,6 +1026,21 @@ export default function ExecutionPage({ project, section }) {
                 label: "Thao tác",
                 render: (item) => (
                   <span className="flex flex-wrap gap-2">
+                    {can("testplan.review") && (
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            setPlanValidation(await testingApi.validatePlan(item._id));
+                          } catch (reason) {
+                            setError(messageOf(reason));
+                          }
+                        }}
+                      >
+                        Kiểm tra đầy đủ
+                      </button>
+                    )}
                     {item.status === "DRAFT" && can("testplan.update") && (
                       <button
                         className="secondary-button"
@@ -1276,8 +1299,12 @@ export default function ExecutionPage({ project, section }) {
         />
         <Pagination value={runPageInfo} onChange={setRunPage} />
       </Panel>
-      {project.current_permissions?.includes("environmentincident.read") && <EnvironmentIncidentPanel project={project} />}
-      {project.current_permissions?.includes("nfrtest.read") && <NonFunctionalTestPanel project={project} />}
+      {project.current_permissions?.includes("environmentincident.read") && (
+        <EnvironmentIncidentPanel project={project} />
+      )}
+      {project.current_permissions?.includes("nfrtest.read") && (
+        <NonFunctionalTestPanel project={project} />
+      )}
       {dialog}
     </WorkspacePage>
   );

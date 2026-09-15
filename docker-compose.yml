@@ -11,14 +11,14 @@ x-service-environment: &service-environment
   PLATFORM_SYSTEM_ID: ${PLATFORM_SYSTEM_ID:?PLATFORM_SYSTEM_ID is required}
   INTERNAL_API_URL: ${INTERNAL_API_URL:?INTERNAL_API_URL is required}
 
-x-minio-environment: &minio-environment
-  MINIO_ENDPOINT: http://minio:9000
-  MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:?MINIO_ROOT_USER is required}
-  MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
-  MINIO_PRIVATE_BUCKET: ${MINIO_PRIVATE_BUCKET:?MINIO_PRIVATE_BUCKET is required}
-  MINIO_PUBLIC_BUCKET: ${MINIO_PUBLIC_BUCKET:?MINIO_PUBLIC_BUCKET is required}
-  MINIO_PUBLIC_URL: http://localhost:9000
-  MINIO_REGION: us-east-1
+x-object-storage-environment: &object-storage-environment
+  OBJECT_STORAGE_ENDPOINT: ${OBJECT_STORAGE_ENDPOINT:?OBJECT_STORAGE_ENDPOINT is required}
+  OBJECT_STORAGE_ACCESS_KEY: ${OBJECT_STORAGE_ACCESS_KEY:?OBJECT_STORAGE_ACCESS_KEY is required}
+  OBJECT_STORAGE_SECRET_KEY: ${OBJECT_STORAGE_SECRET_KEY:?OBJECT_STORAGE_SECRET_KEY is required}
+  OBJECT_STORAGE_PRIVATE_BUCKET: ${OBJECT_STORAGE_PRIVATE_BUCKET:?OBJECT_STORAGE_PRIVATE_BUCKET is required}
+  OBJECT_STORAGE_PUBLIC_BUCKET: ${OBJECT_STORAGE_PUBLIC_BUCKET:?OBJECT_STORAGE_PUBLIC_BUCKET is required}
+  OBJECT_STORAGE_PUBLIC_URL: ${OBJECT_STORAGE_PUBLIC_URL:?OBJECT_STORAGE_PUBLIC_URL is required}
+  OBJECT_STORAGE_REGION: ${OBJECT_STORAGE_REGION:?OBJECT_STORAGE_REGION is required}
 
 x-app-healthcheck: &app-healthcheck
   test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/san-sang', timeout=15)"]
@@ -31,6 +31,7 @@ services:
   mongodb:
     image: mongo:7.0@sha256:35a5926f71f8b6cb19206bee928c5a85f241a8be99f20c81abe35ae78a73415d
     container_name: veriq_mongodb
+    init: true
     restart: always
     command:
       - --replSet
@@ -41,9 +42,9 @@ services:
     volumes:
       - mongodb_data:/data/db
     healthcheck:
-      test: ["CMD-SHELL", "mongosh --quiet --eval 'try { const state = rs.status(); quit(state.ok == 1 ? 0 : 1) } catch (error) { try { quit(rs.initiate({_id:\"rs0\",members:[{_id:0,host:\"mongodb:27017\"}]}).ok == 1 ? 0 : 1) } catch (retryError) { quit(retryError.codeName == \"AlreadyInitialized\" ? 0 : 1) } }'"]
+      test: ["CMD-SHELL", "if [ -f /data/db/.replica-set-ready ]; then timeout 5s bash -c 'exec 3<>/dev/tcp/127.0.0.1/27017'; else timeout 60s mongosh --quiet --eval 'try { const state = rs.status(); quit(state.ok == 1 ? 0 : 1) } catch (error) { try { quit(rs.initiate({_id:\"rs0\",members:[{_id:0,host:\"mongodb:27017\"}]}).ok == 1 ? 0 : 1) } catch (retryError) { quit(retryError.codeName == \"AlreadyInitialized\" ? 0 : 1) } }' && touch /data/db/.replica-set-ready; fi"]
       interval: 30s
-      timeout: 45s
+      timeout: 70s
       start_period: 60s
       retries: 20
     networks:
@@ -63,38 +64,24 @@ services:
   rabbitmq:
     image: rabbitmq:3-management-alpine@sha256:606d8c0d6b3c18d1da9afc53bc7cdb2a8d5486df91b5a9830e9e07626c9ae281
     container_name: veriq_rabbitmq
+    init: true
     restart: always
     ports:
       - 5672:5672
       - 15672:15672
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+      - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
     healthcheck:
       test:
         - CMD
         - rabbitmq-diagnostics
         - -q
         - ping
-      interval: 5s
+      interval: 30s
       timeout: 45s
       start_period: 60s
       retries: 12
-    networks:
-      - veriq_network
-
-  minio:
-    image: minio/minio:RELEASE.2025-09-07T16-13-09Z@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
-    container_name: veriq_minio
-    restart: always
-    ports:
-      - 9000:9000
-      - 9001:9001
-    environment:
-      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
-      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
-    command: server /data --console-address ":9001"
-    volumes:
-      - minio_data:/data
     networks:
       - veriq_network
 
@@ -146,22 +133,16 @@ services:
     build:
       context: .
       dockerfile: ./frontend/Dockerfile
-      target: deps
+      target: runner
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_NOTIFICATION_ENABLED: "true"
     container_name: veriq_frontend
     restart: always
     ports:
       - 3000:3000
-    working_dir: /app
-    command: ./node_modules/.bin/next dev --hostname 0.0.0.0 -p 3000
-    volumes:
-      - ./frontend:/app
-      - frontend_node_modules:/app/node_modules
-      - frontend_next_cache:/app/.next-dev
     environment:
-      WATCHPACK_POLLING: "true"
-      CHOKIDAR_USEPOLLING: "true"
       NEXT_TELEMETRY_DISABLED: "1"
-      NEXT_DIST_DIR: .next-dev
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
       NEXT_PUBLIC_NOTIFICATION_ENABLED: "true"
     healthcheck:
@@ -196,8 +177,6 @@ services:
       - mongodb
       - redis
     volumes:
-      - ./backend/notification/src:/app/src
-      - ./backend/notification/tests:/app/tests:ro
       - ./backend/logs/notification:/app/logs
     networks:
       - veriq_network
@@ -207,8 +186,8 @@ services:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/suc-khoe', timeout=15)"]
       interval: 30s
       timeout: 20s
-      start_period: 30s
-      retries: 3
+      start_period: 180s
+      retries: 6
     build:
       context: ./backend
       dockerfile: ./ai/Dockerfile
@@ -219,23 +198,21 @@ services:
       - 38470-38479:38470-38479
     labels:
       - traefik.enable=true
-      - traefik.http.routers.ai.rule=PathPrefix(`/lich-su`) || PathPrefix(`/phan-hoi`) || PathPrefix(`/suy-luan`) || PathPrefix(`/tro-chuyen`) || PathPrefix(`/su-kien`) || PathPrefix(`/tiep-nap`) || PathPrefix(`/ngat-qua-trinh`) || PathPrefix(`/tri-thuc`) || PathPrefix(`/danh-gia`)
+      - traefik.http.routers.ai.rule=PathPrefix(`/suy-luan`) || PathPrefix(`/su-kien`) || PathPrefix(`/tiep-nap`) || PathPrefix(`/tri-thuc`) || PathPrefix(`/danh-gia`)
       - traefik.http.services.ai.loadbalancer.server.port=8000
     environment:
-      <<: [*service-environment, *minio-environment]
+      <<: [*service-environment, *object-storage-environment]
       AI_DB_NAME: ${AI_DB_NAME:?AI_DB_NAME is required}
       RABBITMQ_URI: ${RABBITMQ_URI:?RABBITMQ_URI is required}
       QDRANT_URL: ${QDRANT_URL:?QDRANT_URL is required}
       DOCKER_HOST: ${DOCKER_HOST:?DOCKER_HOST is required}
       MIN_FILE_SIZE_BYTES: ${MIN_FILE_SIZE_BYTES:?MIN_FILE_SIZE_BYTES is required}
       HF_TOKEN: ${HF_TOKEN:?HF_TOKEN is required}
+      HF_INFERENCE_URL: ${HF_INFERENCE_URL:?HF_INFERENCE_URL is required}
       LLM_MODEL: ${LLM_MODEL:?LLM_MODEL is required}
-      PRIMARY_MODEL_STYLE: ${PRIMARY_MODEL_STYLE:?PRIMARY_MODEL_STYLE is required}
       PRIMARY_MODEL_URL: ${PRIMARY_MODEL_URL:?PRIMARY_MODEL_URL is required}
       PRIMARY_MODEL_HEALTH_URL: ${PRIMARY_MODEL_HEALTH_URL:?PRIMARY_MODEL_HEALTH_URL is required}
-      PRIMARY_MODEL_API_TOKEN: ${PRIMARY_MODEL_API_TOKEN}
       MODEL_TIMEOUT_SECONDS: ${MODEL_TIMEOUT_SECONDS:?MODEL_TIMEOUT_SECONDS is required}
-      MODEL_KEEP_ALIVE: ${MODEL_KEEP_ALIVE:-30m}
       RERANKER_MODEL: ${RERANKER_MODEL:?RERANKER_MODEL is required}
       EMBEDDING_MODEL: ${EMBEDDING_MODEL:?EMBEDDING_MODEL is required}
       NLI_MODEL_NAME: ${NLI_MODEL_NAME:?NLI_MODEL_NAME is required}
@@ -262,13 +239,9 @@ services:
         condition: service_started
       rabbitmq:
         condition: service_started
-      minio:
-        condition: service_started
       qdrant:
         condition: service_started
     volumes:
-      - ./backend/ai/src:/app/src
-      - ./backend/ai/tests:/app/tests
       - hf_cache:/home/appuser/.cache/huggingface
     networks:
       - veriq_network
@@ -291,9 +264,9 @@ services:
       <<: *service-environment
       TESTING_DB_NAME: ${TESTING_DB_NAME:-testing}
       AUTHENTICATION_DB_NAME: ${AUTHENTICATION_DB_NAME:?AUTHENTICATION_DB_NAME is required}
-      TESTING_ALLOW_TEST_IDENTITY: ${TESTING_ALLOW_TEST_IDENTITY:-false}
       WORKER_URL: http://worker:8000
       AI_URL: http://ai:8000
+      AI_REQUEST_TIMEOUT_SECONDS: ${AI_REQUEST_TIMEOUT_SECONDS:?AI_REQUEST_TIMEOUT_SECONDS is required}
       CONTENT_URL: http://content:8000
       CLOUD_URL: http://cloud:8000
     depends_on:
@@ -302,51 +275,9 @@ services:
       - content
       - cloud
       - worker
-    volumes:
-      - ./scripts:/app/scripts:ro
-      - ./backend/testing/src:/app/src
-      - ./backend/testing/tests:/app/tests
     networks:
       - veriq_network
 
-  ollama:
-    image: ollama/ollama@sha256:b88c73ace3e115f8ec53dc8761ae1c0aabfa675406e3681786b98757ce050f42
-    container_name: veriq_ollama
-    restart: unless-stopped
-    ports:
-      - 127.0.0.1:11434:11434
-    environment:
-      OLLAMA_KEEP_ALIVE: ${MODEL_KEEP_ALIVE:-24h}
-      OLLAMA_LOAD_TIMEOUT: 15m
-      OLLAMA_MAX_LOADED_MODELS: "1"
-      OLLAMA_NUM_PARALLEL: "1"
-      OLLAMA_CONTEXT_LENGTH: "8192"
-      OLLAMA_MODELS: /models
-    volumes:
-      - ollama_data:/models
-    healthcheck:
-      test: ["CMD", "ollama", "list"]
-      interval: 10s
-      timeout: 20s
-      retries: 12
-    networks:
-      - veriq_network
-
-  ollama_models:
-    image: ollama/ollama@sha256:b88c73ace3e115f8ec53dc8761ae1c0aabfa675406e3681786b98757ce050f42
-    restart: "no"
-    environment:
-      OLLAMA_HOST: http://ollama:11434
-      LLM_MODEL: ${LLM_MODEL:?LLM_MODEL is required}
-    entrypoint: ["/bin/sh", "/bootstrap_ollama.sh"]
-    volumes:
-      - ./scripts/bootstrap_ollama.sh:/bootstrap_ollama.sh:ro
-      - ollama_data:/models
-    depends_on:
-      ollama:
-        condition: service_healthy
-    networks:
-      - veriq_network
   qdrant:
     image: qdrant/qdrant:v1.18.2@sha256:75eab8c4ba42096724fdcfde8b4de0b5713d529dde32f285a1f86fdcb2c9e50c
     container_name: veriq_qdrant
@@ -423,6 +354,9 @@ services:
       TESTING_DB_NAME: ${TESTING_DB_NAME:?TESTING_DB_NAME is required}
       WORKER_DB_NAME: ${WORKER_DB_NAME:?WORKER_DB_NAME is required}
       AI_INTERNAL_URL: http://ai:8000
+      AI_PROVIDER: huggingface
+      AI_PROVIDER_CONFIGURED: "true"
+      LLM_MODEL: ${LLM_MODEL:?LLM_MODEL is required}
       WORKER_INTERNAL_URL: http://worker:8000
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:?ACCESS_TOKEN_EXPIRE_MINUTES is required}
       REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:?REFRESH_TOKEN_EXPIRE_DAYS is required}
@@ -445,8 +379,6 @@ services:
       - mongodb
       - redis
     volumes:
-      - ./backend/authentication/src:/app/src
-      - ./backend/authentication/tests:/app/tests
       - ./backend/logs/authentication:/app/logs
     networks:
       - veriq_network
@@ -466,17 +398,15 @@ services:
     environment:
       <<: *service-environment
       CONTENT_DB_NAME: ${CONTENT_DB_NAME:?CONTENT_DB_NAME is required}
-      MINIO_ENDPOINT: http://minio:9000
-      MINIO_PUBLIC_URL: http://localhost:9000
+      OBJECT_STORAGE_ENDPOINT: ${OBJECT_STORAGE_ENDPOINT:?OBJECT_STORAGE_ENDPOINT is required}
+      OBJECT_STORAGE_PUBLIC_URL: ${OBJECT_STORAGE_PUBLIC_URL:?OBJECT_STORAGE_PUBLIC_URL is required}
       RABBITMQ_URI: ${RABBITMQ_URI:?RABBITMQ_URI is required}
     depends_on:
       - authentication
       - mongodb
       - redis
-      - minio
       - rabbitmq
     volumes:
-      - ./backend/content/src:/app/src
       - ./backend/logs/content:/app/logs
     networks:
       - veriq_network
@@ -495,18 +425,16 @@ services:
       - traefik.http.routers.cloud.rule=PathPrefix(`/luu-tru`) || PathPrefix(`/tai-len`) || PathPrefix(`/tep-tin`) || PathPrefix(`/thu-muc`) || PathPrefix(`/phan-doan`) || PathPrefix(`/tai-ve`)
       - traefik.http.services.cloud.loadbalancer.server.port=8000
     environment:
-      <<: [*service-environment, *minio-environment]
+      <<: [*service-environment, *object-storage-environment]
       CLOUD_DB_NAME: ${CLOUD_DB_NAME:?CLOUD_DB_NAME is required}
-      MINIO_LEGACY_BUCKET: ${MINIO_LEGACY_BUCKET:?MINIO_LEGACY_BUCKET is required}
+      OBJECT_STORAGE_LEGACY_BUCKET: ${OBJECT_STORAGE_LEGACY_BUCKET:?OBJECT_STORAGE_LEGACY_BUCKET is required}
       MIN_FILE_SIZE_BYTES: ${MIN_FILE_SIZE_BYTES:?MIN_FILE_SIZE_BYTES is required}
       MAX_UPLOAD_SIZE_BYTES: ${MAX_UPLOAD_SIZE_BYTES:?MAX_UPLOAD_SIZE_BYTES is required}
     depends_on:
       - authentication
       - mongodb
       - redis
-      - minio
     volumes:
-      - ./backend/cloud/src:/app/src
       - ./backend/logs/cloud:/app/logs
     networks:
       - veriq_network
@@ -538,8 +466,6 @@ services:
         condition: service_started
       rabbitmq:
         condition: service_healthy
-    volumes:
-      - ./backend/worker/src:/app/src
     networks:
       - veriq_network
 
@@ -552,19 +478,9 @@ volumes:
   mongodb_data: null
   redis_data: null
   rabbitmq_data: null
-  minio_data: null
   qdrant_data: null
   prometheus_data: null
   grafana_data: null
   hf_cache:
     name: ${VERIQ_HF_CACHE_VOLUME:?VERIQ_HF_CACHE_VOLUME is required}
-    external: true
-  frontend_node_modules:
-    name: ${VERIQ_FRONTEND_NODE_MODULES_VOLUME:?VERIQ_FRONTEND_NODE_MODULES_VOLUME is required}
-    external: true
-  frontend_next_cache:
-    name: ${VERIQ_FRONTEND_NEXT_CACHE_VOLUME:?VERIQ_FRONTEND_NEXT_CACHE_VOLUME is required}
-    external: true
-  ollama_data:
-    name: ${VERIQ_OLLAMA_VOLUME:?VERIQ_OLLAMA_VOLUME is required}
     external: true

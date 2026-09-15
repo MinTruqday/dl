@@ -18,7 +18,12 @@ async def list_reports(project_id, test_plan_id=None, release_id=None, status=No
         query["release_id"] = release_id
     if status:
         query["status"] = status
-    return await database.value.test_status_reports.find(query).sort([("created_at", -1), ("sequence", -1)]).limit(limit).to_list(limit)
+    return (
+        await database.value.test_status_reports.find(query)
+        .sort([("created_at", -1), ("sequence", -1)])
+        .limit(limit)
+        .to_list(limit)
+    )
 
 
 async def update_report(report_id, project_id, expected_revision, allowed_statuses, changes):

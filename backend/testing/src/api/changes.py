@@ -20,15 +20,19 @@ from src.services.change_analysis import (
     semantic_changes,
     technique_candidate,
 )
-from src.services.impact_assistance import apply_ai_impact_suggestions, request_impact_classification
+from src.services.impact_assistance import (
+    apply_ai_impact_suggestions,
+    request_impact_classification,
+)
 from src.services.project_knowledge import index_artifact
-
 
 router = APIRouter(prefix="/kiem-thu", tags=["Bảo trì thay đổi kiểm thử"])
 
 
 async def enrich_change_sets(items, project_id):
-    requirement_ids = sorted({item.get("requirement_id") for item in items if item.get("requirement_id")})
+    requirement_ids = sorted(
+        {item.get("requirement_id") for item in items if item.get("requirement_id")}
+    )
     version_ids = sorted(
         {
             version_id
@@ -42,8 +46,7 @@ async def enrich_change_sets(items, project_id):
         {"_id": 1, "requirement_key": 1, "title": 1},
     ).to_list(len(requirement_ids))
     versions = await database.value.requirement_versions.find(
-        {"project_id": project_id, "_id": {"$in": version_ids}},
-        {"_id": 1, "version": 1},
+        {"project_id": project_id, "_id": {"$in": version_ids}}, {"_id": 1, "version": 1}
     ).to_list(len(version_ids))
     requirements_by_id = {item["_id"]: item for item in requirements}
     versions_by_id = {item["_id"]: item for item in versions}
@@ -59,7 +62,9 @@ async def enrich_change_sets(items, project_id):
                 or requirement.get("title")
                 or item.get("requirement_id"),
                 "from_version_label": (
-                    f"v{from_version['version']}" if from_version.get("version") is not None else None
+                    f"v{from_version['version']}"
+                    if from_version.get("version") is not None
+                    else None
                 ),
                 "to_version_label": (
                     f"v{to_version['version']}" if to_version.get("version") is not None else None
@@ -75,16 +80,21 @@ async def create_change_set(
     payload: RequirementCompareInput,
     user: CurrentUser = Depends(get_current_user),
 ):
-    requirement = await get_project_entity(
-        "requirements", requirement_id, user, "changeset.create"
-    )
-    versions = await database.value.requirement_versions.find({"requirement_id": requirement_id, "_id": {"$in": [payload.from_version_id, payload.to_version_id]}}).to_list(2)
+    requirement = await get_project_entity("requirements", requirement_id, user, "changeset.create")
+    versions = await database.value.requirement_versions.find(
+        {
+            "requirement_id": requirement_id,
+            "_id": {"$in": [payload.from_version_id, payload.to_version_id]},
+        }
+    ).to_list(2)
     by_id = {item["_id"]: item for item in versions}
     if set(by_id) != {payload.from_version_id, payload.to_version_id}:
         raise HTTPException(status_code=422, detail={"code": "INVALID_REQUIREMENT_VERSION_PAIR"})
     if by_id[payload.to_version_id].get("status") != "BASELINED":
         raise HTTPException(status_code=409, detail={"code": "TARGET_VERSION_NOT_BASELINED"})
-    existing = await database.value.requirement_change_sets.find_one({"requirement_id": requirement_id, "to_version_id": payload.to_version_id})
+    existing = await database.value.requirement_change_sets.find_one(
+        {"requirement_id": requirement_id, "to_version_id": payload.to_version_id}
+    )
     if existing:
         return envelope(existing)
     changes = semantic_changes(by_id[payload.from_version_id], by_id[payload.to_version_id])
@@ -103,7 +113,14 @@ async def create_change_set(
     }
     await database.value.requirement_change_sets.insert_one(change_set)
     await mark_previous_traces_stale(change_set)
-    await audit(user.id, "requirement_change_set_created", "RequirementChangeSet", change_set["_id"], requirement["project_id"], {"change_count": len(changes)})
+    await audit(
+        user.id,
+        "requirement_change_set_created",
+        "RequirementChangeSet",
+        change_set["_id"],
+        requirement["project_id"],
+        {"change_count": len(changes)},
+    )
     return envelope(change_set)
 
 
@@ -124,7 +141,11 @@ async def list_change_sets(
     sort_field, direction = sort_spec(
         sort, {"requirement_id", "status", "created_at", "updated_at"}, "-created_at"
     )
-    items = await database.value.requirement_change_sets.find(query).sort(sort_field, direction).to_list(limit)
+    items = (
+        await database.value.requirement_change_sets.find(query)
+        .sort(sort_field, direction)
+        .to_list(limit)
+    )
     return envelope(await enrich_change_sets(items, project_id))
 
 
@@ -138,9 +159,7 @@ async def get_change_set(change_set_id: str, user: CurrentUser = Depends(get_cur
 
 @router.post("/bo-thay-doi/{change_set_id}/ra-soat")
 async def review_change_set(
-    change_set_id: str,
-    payload: ChangeSetReviewInput,
-    user: CurrentUser = Depends(get_current_user),
+    change_set_id: str, payload: ChangeSetReviewInput, user: CurrentUser = Depends(get_current_user)
 ):
     change_set = await get_project_entity(
         "requirement_change_sets", change_set_id, user, "changeset.review"
@@ -184,7 +203,9 @@ async def review_change_set(
 
 @router.post("/bo-thay-doi/{change_set_id}/phan-tich-anh-huong", status_code=201)
 @router.post("/du-an/{project_id}/bo-thay-doi/{change_set_id}/phan-tich-anh-huong", status_code=201)
-async def analyze_impact(change_set_id: str, project_id: str | None = None, user: CurrentUser = Depends(get_current_user)):
+async def analyze_impact(
+    change_set_id: str, project_id: str | None = None, user: CurrentUser = Depends(get_current_user)
+):
     return await create_impact_analysis_snapshot(change_set_id, project_id, user)
 
 
@@ -220,11 +241,33 @@ async def create_impact_analysis_snapshot(
             }
         }
     ).to_list(10000)
-    source_ids = {change_set["from_version_id"], change_set["to_version_id"], *[item["_id"] for item in criteria]}
-    links = await database.value.trace_links.find({"project_id": change_set["project_id"], "source_id": {"$in": list(source_ids)}, "status": {"$in": ["CONFIRMED", "STALE"]}}).to_list(50000)
+    source_ids = {
+        change_set["from_version_id"],
+        change_set["to_version_id"],
+        *[item["_id"] for item in criteria],
+    }
+    links = await database.value.trace_links.find(
+        {
+            "project_id": change_set["project_id"],
+            "source_id": {"$in": list(source_ids)},
+            "status": {"$in": ["CONFIRMED", "STALE"]},
+        }
+    ).to_list(50000)
     direct_targets = {link["target_id"] for link in links}
-    current_tests = await database.value.test_cases.find({"project_id": change_set["project_id"], "status": {"$in": ["ACTIVE", "NEEDS_UPDATE"]}}).to_list(20000)
-    versions = await database.value.test_case_versions.find({"_id": {"$in": [item["current_version_id"] for item in current_tests if item.get("current_version_id")]}}).to_list(20000)
+    current_tests = await database.value.test_cases.find(
+        {"project_id": change_set["project_id"], "status": {"$in": ["ACTIVE", "NEEDS_UPDATE"]}}
+    ).to_list(20000)
+    versions = await database.value.test_case_versions.find(
+        {
+            "_id": {
+                "$in": [
+                    item["current_version_id"]
+                    for item in current_tests
+                    if item.get("current_version_id")
+                ]
+            }
+        }
+    ).to_list(20000)
     from_version = await database.value.requirement_versions.find_one(
         {"_id": change_set["from_version_id"], "project_id": change_set["project_id"]}
     )
@@ -248,8 +291,12 @@ async def create_impact_analysis_snapshot(
         item = classify_test_impact(version, change_set["changes"], direct_trace)
         if not direct_trace and semantic_score >= 0.2:
             item["classification"] = "POTENTIALLY_AFFECTED"
-            item["confidence"] = max(item["confidence"], round(min(0.9, 0.55 + semantic_score * 0.35), 4))
-            item["reasons"].append("Ứng viên semantic có nội dung giao nhau với Requirement thay đổi")
+            item["confidence"] = max(
+                item["confidence"], round(min(0.9, 0.55 + semantic_score * 0.35), 4)
+            )
+            item["reasons"].append(
+                "Ứng viên semantic có nội dung giao nhau với Requirement thay đổi"
+            )
         if technique_matches:
             item["reasons"].append("Kỹ thuật kiểm thử phù hợp với loại thay đổi")
         item["evidence"].append(
@@ -263,11 +310,25 @@ async def create_impact_analysis_snapshot(
         impacted.append(item)
     ai_result = await request_impact_classification(change_set["project_id"], change_set, versions)
     ai_applied_version_ids = apply_ai_impact_suggestions(impacted, ai_result)
-    affected = [item for item in impacted if item["classification"] != "STILL_VALID" or item["test_case_version_id"] in direct_targets]
+    affected = [
+        item
+        for item in impacted
+        if item["classification"] != "STILL_VALID" or item["test_case_version_id"] in direct_targets
+    ]
     new_test_requirements = []
-    if any(change["type"] in {"ADDED_BEHAVIOR", "MODIFIED_BOUNDARY", "MODIFIED_PERMISSION", "MODIFIED_ERROR"} for change in change_set["changes"]):
+    if any(
+        change["type"]
+        in {"ADDED_BEHAVIOR", "MODIFIED_BOUNDARY", "MODIFIED_PERMISSION", "MODIFIED_ERROR"}
+        for change in change_set["changes"]
+    ):
         if not any(item["classification"] == "NEEDS_UPDATE" for item in affected):
-            new_test_requirements.append({"classification": "NEW_TEST_REQUIRED", "reason": "Thay đổi hành vi chưa có Test Case trực tiếp chứng minh", "evidence": change_set["changes"]})
+            new_test_requirements.append(
+                {
+                    "classification": "NEW_TEST_REQUIRED",
+                    "reason": "Thay đổi hành vi chưa có Test Case trực tiếp chứng minh",
+                    "evidence": change_set["changes"],
+                }
+            )
     analysis = {
         "_id": new_id("IMP"),
         "project_id": change_set["project_id"],
@@ -281,15 +342,18 @@ async def create_impact_analysis_snapshot(
         "algorithm_version": (
             rerun_input.algorithm_version if rerun_input else "impact-pipeline-v1"
         ),
-        "knowledge_index_version": (
-            rerun_input.knowledge_index_version if rerun_input else None
-        ),
+        "knowledge_index_version": (rerun_input.knowledge_index_version if rerun_input else None),
         "snapshot_number": int((supersedes or {}).get("snapshot_number", 1)) + 1
         if supersedes
         else 1,
         "supersedes_analysis_id": (supersedes or {}).get("_id"),
         "rerun_reason": rerun_input.reason if rerun_input else None,
-        "pipeline": ["direct_trace", "semantic_candidate", "deterministic_check", "evidence_classification"],
+        "pipeline": [
+            "direct_trace",
+            "semantic_candidate",
+            "deterministic_check",
+            "evidence_classification",
+        ],
         "ai_result": ai_result,
         "ai_applied_version_ids": ai_applied_version_ids,
         "created_by": user.id,
@@ -300,14 +364,20 @@ async def create_impact_analysis_snapshot(
         {"_id": change_set_id, "project_id": change_set["project_id"]},
         {"$set": {"status": "ANALYZED", "updated_at": now()}},
     )
-    await audit(user.id, "impact_analysis_created", "ImpactAnalysis", analysis["_id"], change_set["project_id"], {"affected_count": len(affected)})
+    await audit(
+        user.id,
+        "impact_analysis_created",
+        "ImpactAnalysis",
+        analysis["_id"],
+        change_set["project_id"],
+        {"affected_count": len(affected)},
+    )
     return envelope(analysis)
 
 
 @router.get("/bo-thay-doi/{change_set_id}/phan-tich-anh-huong")
 async def get_change_set_impact_analysis(
-    change_set_id: str,
-    user: CurrentUser = Depends(get_current_user),
+    change_set_id: str, user: CurrentUser = Depends(get_current_user)
 ):
     change_set = await get_project_entity(
         "requirement_change_sets", change_set_id, user, "impact.read"
@@ -323,20 +393,14 @@ async def get_change_set_impact_analysis(
 
 @router.get("/phan-tich-anh-huong/{analysis_id}")
 async def get_impact_analysis(analysis_id: str, user: CurrentUser = Depends(get_current_user)):
-    return envelope(
-        await get_project_entity("impact_analyses", analysis_id, user, "impact.read")
-    )
+    return envelope(await get_project_entity("impact_analyses", analysis_id, user, "impact.read"))
 
 
 @router.post("/phan-tich-anh-huong/{analysis_id}/chay-lai", status_code=201)
 async def rerun_impact_analysis(
-    analysis_id: str,
-    payload: ImpactRerunInput,
-    user: CurrentUser = Depends(get_current_user),
+    analysis_id: str, payload: ImpactRerunInput, user: CurrentUser = Depends(get_current_user)
 ):
-    analysis = await get_project_entity(
-        "impact_analyses", analysis_id, user, "impact.execute"
-    )
+    analysis = await get_project_entity("impact_analyses", analysis_id, user, "impact.execute")
     await get_project(analysis["project_id"], user, "ai.run_impact")
     if analysis.get("status") not in {"REVIEW_READY", "REVIEWED"}:
         raise HTTPException(status_code=409, detail={"code": "IMPACT_NOT_RERUNNABLE"})
@@ -399,11 +463,7 @@ async def rerun_impact_analysis(
             raise HTTPException(status_code=409, detail={"code": "IMPACT_RERUN_CONFLICT"})
     except Exception:
         await database.value.impact_analyses.update_one(
-            {
-                "_id": analysis_id,
-                "project_id": analysis["project_id"],
-                "status": "RERUNNING",
-            },
+            {"_id": analysis_id, "project_id": analysis["project_id"], "status": "RERUNNING"},
             {
                 "$set": {"status": previous_status, "updated_at": now()},
                 "$unset": {"rerun_requested_by": "", "rerun_requested_at": ""},
@@ -438,25 +498,23 @@ async def rerun_impact_analysis(
 
 @router.post("/phan-tich-anh-huong/{analysis_id}/ra-soat")
 async def review_impact_analysis(
-    analysis_id: str,
-    payload: ImpactReviewInput,
-    user: CurrentUser = Depends(get_current_user),
+    analysis_id: str, payload: ImpactReviewInput, user: CurrentUser = Depends(get_current_user)
 ):
-    analysis = await get_project_entity(
-        "impact_analyses", analysis_id, user, "impact.close"
-    )
+    analysis = await get_project_entity("impact_analyses", analysis_id, user, "impact.close")
     await get_project(analysis["project_id"], user, "impact.review")
     if analysis["status"] == "REVIEWED":
         return envelope(analysis, revision=analysis["revision"])
     if analysis["status"] != "REVIEW_READY":
         raise HTTPException(status_code=409, detail={"code": "INVALID_STATE_TRANSITION"})
     if analysis["revision"] != payload.expected_revision:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT", "current_revision": analysis["revision"]})
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "REVISION_CONFLICT", "current_revision": analysis["revision"]},
+        )
     if payload.overrides:
         await get_project(analysis["project_id"], user, "impact.override")
     by_version = {
-        item["test_case_version_id"]: dict(item)
-        for item in analysis["affected_test_cases"]
+        item["test_case_version_id"]: dict(item) for item in analysis["affected_test_cases"]
     }
     unknown = [
         item.test_case_version_id
@@ -464,7 +522,10 @@ async def review_impact_analysis(
         if item.test_case_version_id not in by_version
     ]
     if unknown:
-        raise HTTPException(status_code=422, detail={"code": "IMPACT_OVERRIDE_TARGET_INVALID", "test_case_version_ids": unknown})
+        raise HTTPException(
+            status_code=422,
+            detail={"code": "IMPACT_OVERRIDE_TARGET_INVALID", "test_case_version_ids": unknown},
+        )
     override_events = []
     for item in payload.overrides:
         target = by_version[item.test_case_version_id]
@@ -483,7 +544,12 @@ async def review_impact_analysis(
         target["overridden_by"] = user.id
     timestamp = now()
     result = await database.value.impact_analyses.update_one(
-        {"_id": analysis_id, "project_id": analysis["project_id"], "revision": payload.expected_revision, "status": "REVIEW_READY"},
+        {
+            "_id": analysis_id,
+            "project_id": analysis["project_id"],
+            "revision": payload.expected_revision,
+            "status": "REVIEW_READY",
+        },
         {
             "$set": {
                 "status": "REVIEWED",
@@ -503,43 +569,69 @@ async def review_impact_analysis(
         {"_id": analysis["change_set_id"], "project_id": analysis["project_id"]},
         {"$set": {"status": "REVIEWED", "updated_at": timestamp}},
     )
-    analysis = await database.value.impact_analyses.find_one({"_id": analysis_id, "project_id": analysis["project_id"]})
-    await audit(user.id, "impact_analysis_reviewed", "ImpactAnalysis", analysis_id, analysis["project_id"], {"override_count": len(override_events), "review_note": payload.review_note})
+    analysis = await database.value.impact_analyses.find_one(
+        {"_id": analysis_id, "project_id": analysis["project_id"]}
+    )
+    await audit(
+        user.id,
+        "impact_analysis_reviewed",
+        "ImpactAnalysis",
+        analysis_id,
+        analysis["project_id"],
+        {"override_count": len(override_events), "review_note": payload.review_note},
+    )
     return envelope(analysis, revision=analysis["revision"])
 
 
 @router.post("/phan-tich-anh-huong/{analysis_id}/goc-nhin", status_code=201)
 async def add_impact_review_perspective(
-    analysis_id: str,
-    payload: dict,
-    user: CurrentUser = Depends(get_current_user),
+    analysis_id: str, payload: dict, user: CurrentUser = Depends(get_current_user)
 ):
     analysis = await get_project_entity("impact_analyses", analysis_id, user, "impact.review")
     note = str(payload.get("review_note") or "").strip()
     if len(note) < 2 or len(note) > 5000:
         raise HTTPException(status_code=422, detail={"code": "IMPACT_REVIEW_NOTE_REQUIRED"})
-    perspective = {"_id": new_id("IMPR"), "project_id": analysis["project_id"], "impact_analysis_id": analysis_id, "review_note": note, "reviewed_by": user.id, "created_at": now()}
+    perspective = {
+        "_id": new_id("IMPR"),
+        "project_id": analysis["project_id"],
+        "impact_analysis_id": analysis_id,
+        "review_note": note,
+        "reviewed_by": user.id,
+        "created_at": now(),
+    }
     await database.value.impact_review_perspectives.insert_one(perspective)
-    await audit(user.id, "impact_review_perspective_added", "ImpactAnalysis", analysis_id, analysis["project_id"])
+    await audit(
+        user.id,
+        "impact_review_perspective_added",
+        "ImpactAnalysis",
+        analysis_id,
+        analysis["project_id"],
+    )
     return envelope(perspective)
 
 
 @router.post("/phan-tich-anh-huong/{analysis_id}/de-xuat-bao-tri", status_code=201)
-async def create_maintenance_proposals(analysis_id: str, user: CurrentUser = Depends(get_current_user)):
-    analysis = await get_project_entity(
-        "impact_analyses", analysis_id, user, "ai.create_proposal"
-    )
+async def create_maintenance_proposals(
+    analysis_id: str, user: CurrentUser = Depends(get_current_user)
+):
+    analysis = await get_project_entity("impact_analyses", analysis_id, user, "ai.create_proposal")
     if analysis.get("status") != "REVIEWED":
         raise HTTPException(status_code=409, detail={"code": "IMPACT_REVIEW_REQUIRED"})
-    existing = await database.value.maintenance_proposals.find({"impact_analysis_id": analysis_id, "status": "PENDING"}).to_list(10000)
+    existing = await database.value.maintenance_proposals.find(
+        {"impact_analysis_id": analysis_id, "status": "PENDING"}
+    ).to_list(10000)
     if existing:
         return envelope(existing)
     proposals = []
-    change_set = await database.value.requirement_change_sets.find_one({"_id": analysis["change_set_id"]})
+    change_set = await database.value.requirement_change_sets.find_one(
+        {"_id": analysis["change_set_id"]}
+    )
     for item in analysis.get("reviewed_affected_test_cases", analysis["affected_test_cases"]):
         if item["classification"] != "NEEDS_UPDATE":
             continue
-        base = await database.value.test_case_versions.find_one({"_id": item["test_case_version_id"]})
+        base = await database.value.test_case_versions.find_one(
+            {"_id": item["test_case_version_id"]}
+        )
         patch = proposed_patch(base, change_set["changes"])
         proposal = {
             "_id": new_id("MP"),
@@ -562,10 +654,40 @@ async def create_maintenance_proposals(analysis_id: str, user: CurrentUser = Dep
         }
         proposals.append(proposal)
     for item in analysis.get("new_test_requirements", []):
-        proposals.append({"_id": new_id("MP"), "project_id": analysis["project_id"], "impact_analysis_id": analysis_id, "proposal_type": "CREATE_TEST_CASE", "target_artifact_id": None, "base_version_id": None, "patch": {"title": "Test Case mới cho hành vi thay đổi", "type": "boundary", "requirement_version_ids": [change_set["to_version_id"]]}, "reason": item["reason"], "confidence": item.get("confidence", 0), "evidence": item["evidence"], "status": "PENDING", "revision": 1, "model_version": "maintenance-agent-v1", "created_by": user.id, "created_at": now(), "updated_at": now()})
+        proposals.append(
+            {
+                "_id": new_id("MP"),
+                "project_id": analysis["project_id"],
+                "impact_analysis_id": analysis_id,
+                "proposal_type": "CREATE_TEST_CASE",
+                "target_artifact_id": None,
+                "base_version_id": None,
+                "patch": {
+                    "title": "Test Case mới cho hành vi thay đổi",
+                    "type": "boundary",
+                    "requirement_version_ids": [change_set["to_version_id"]],
+                },
+                "reason": item["reason"],
+                "confidence": item.get("confidence", 0),
+                "evidence": item["evidence"],
+                "status": "PENDING",
+                "revision": 1,
+                "model_version": "maintenance-agent-v1",
+                "created_by": user.id,
+                "created_at": now(),
+                "updated_at": now(),
+            }
+        )
     if proposals:
         await database.value.maintenance_proposals.insert_many(proposals)
-    await audit(user.id, "maintenance_proposals_created", "ImpactAnalysis", analysis_id, analysis["project_id"], {"count": len(proposals)})
+    await audit(
+        user.id,
+        "maintenance_proposals_created",
+        "ImpactAnalysis",
+        analysis_id,
+        analysis["project_id"],
+        {"count": len(proposals)},
+    )
     return envelope(proposals)
 
 
@@ -591,7 +713,11 @@ async def list_proposals(
     sort_field, direction = sort_spec(
         sort, {"status", "proposal_type", "confidence", "created_at", "updated_at"}, "-created_at"
     )
-    proposals = await database.value.maintenance_proposals.find(query).sort(sort_field, direction).to_list(limit)
+    proposals = (
+        await database.value.maintenance_proposals.find(query)
+        .sort(sort_field, direction)
+        .to_list(limit)
+    )
     base_ids = [item.get("base_version_id") for item in proposals if item.get("base_version_id")]
     bases = await database.value.test_case_versions.find(
         {"project_id": project_id, "_id": {"$in": base_ids}}
@@ -619,7 +745,9 @@ async def list_proposals(
 
 @router.get("/de-xuat-bao-tri/{proposal_id}")
 async def get_maintenance_proposal(proposal_id: str, user: CurrentUser = Depends(get_current_user)):
-    return envelope(await get_project_entity("maintenance_proposals", proposal_id, user, "proposal.read"))
+    return envelope(
+        await get_project_entity("maintenance_proposals", proposal_id, user, "proposal.read")
+    )
 
 
 @router.post("/du-an/{project_id}/de-xuat-ai/{proposal_id}/ra-soat")
@@ -629,29 +757,45 @@ async def review_project_proposal(
     payload: ProposalAction,
     user: CurrentUser = Depends(get_current_user),
 ):
-    proposal = await get_project_entity("maintenance_proposals", proposal_id, user, "proposal.review")
+    proposal = await get_project_entity(
+        "maintenance_proposals", proposal_id, user, "proposal.review"
+    )
     if proposal["project_id"] != project_id:
         raise HTTPException(status_code=422, detail={"code": "PROJECT_MISMATCH"})
     if proposal.get("status") != "PENDING":
         raise HTTPException(status_code=409, detail={"code": "PROPOSAL_NOT_REVIEWABLE"})
     if proposal.get("revision") != payload.expected_revision:
         raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
-    changes = {"review_note": payload.review_note, "updated_at": now(), "last_reviewed_by": user.id, "last_reviewed_at": now()}
+    changes = {
+        "review_note": payload.review_note,
+        "updated_at": now(),
+        "last_reviewed_by": user.id,
+        "last_reviewed_at": now(),
+    }
     if payload.patch is not None:
         changes["patch"] = payload.patch
     updated = await database.value.maintenance_proposals.find_one_and_update(
-        {"_id": proposal_id, "project_id": project_id, "status": "PENDING", "revision": payload.expected_revision},
+        {
+            "_id": proposal_id,
+            "project_id": project_id,
+            "status": "PENDING",
+            "revision": payload.expected_revision,
+        },
         {"$set": changes, "$inc": {"revision": 1}},
         return_document=ReturnDocument.AFTER,
     )
     if not updated:
         raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
-    await audit(user.id, "maintenance_proposal_reviewed", "MaintenanceProposal", proposal_id, project_id)
+    await audit(
+        user.id, "maintenance_proposal_reviewed", "MaintenanceProposal", proposal_id, project_id
+    )
     return envelope(updated, revision=updated["revision"])
 
 
 @router.post("/de-xuat-bao-tri/{proposal_id}/chap-nhan", status_code=201)
-async def accept_proposal(proposal_id: str, payload: ProposalAction, user: CurrentUser = Depends(get_current_user)):
+async def accept_proposal(
+    proposal_id: str, payload: ProposalAction, user: CurrentUser = Depends(get_current_user)
+):
     return await apply_proposal(proposal_id, payload, user, "ACCEPTED")
 
 
@@ -662,19 +806,27 @@ async def approve_project_proposal(
     payload: ProposalAction,
     user: CurrentUser = Depends(get_current_user),
 ):
-    proposal = await get_project_entity("maintenance_proposals", proposal_id, user, "proposal.approve")
+    proposal = await get_project_entity(
+        "maintenance_proposals", proposal_id, user, "proposal.approve"
+    )
     if proposal["project_id"] != project_id:
         raise HTTPException(status_code=422, detail={"code": "PROJECT_MISMATCH"})
-    return await apply_proposal(proposal_id, payload, user, "EDITED_ACCEPTED" if payload.patch is not None else "ACCEPTED")
+    return await apply_proposal(
+        proposal_id, payload, user, "EDITED_ACCEPTED" if payload.patch is not None else "ACCEPTED"
+    )
 
 
 @router.post("/de-xuat-bao-tri/{proposal_id}/chap-nhan-co-chinh-sua", status_code=201)
-async def accept_proposal_with_edit(proposal_id: str, payload: ProposalAction, user: CurrentUser = Depends(get_current_user)):
+async def accept_proposal_with_edit(
+    proposal_id: str, payload: ProposalAction, user: CurrentUser = Depends(get_current_user)
+):
     return await apply_proposal(proposal_id, payload, user, "EDITED_ACCEPTED")
 
 
 @router.post("/de-xuat-bao-tri/{proposal_id}/tu-choi")
-async def reject_proposal(proposal_id: str, payload: ProposalAction, user: CurrentUser = Depends(get_current_user)):
+async def reject_proposal(
+    proposal_id: str, payload: ProposalAction, user: CurrentUser = Depends(get_current_user)
+):
     proposal = await get_project_entity(
         "maintenance_proposals", proposal_id, user, "proposal.reject"
     )
@@ -682,14 +834,34 @@ async def reject_proposal(proposal_id: str, payload: ProposalAction, user: Curre
         return envelope(proposal)
     require_pending_revision(proposal, payload)
     proposal = await database.value.maintenance_proposals.find_one_and_update(
-        {"_id": proposal_id, "project_id": proposal["project_id"], "status": "PENDING", "revision": payload.expected_revision},
-        {"$set": {"status": "REJECTED", "review_note": payload.review_note, "reviewed_by": user.id, "reviewed_at": now(), "updated_at": now()}, "$inc": {"revision": 1}},
+        {
+            "_id": proposal_id,
+            "project_id": proposal["project_id"],
+            "status": "PENDING",
+            "revision": payload.expected_revision,
+        },
+        {
+            "$set": {
+                "status": "REJECTED",
+                "review_note": payload.review_note,
+                "reviewed_by": user.id,
+                "reviewed_at": now(),
+                "updated_at": now(),
+            },
+            "$inc": {"revision": 1},
+        },
         return_document=ReturnDocument.AFTER,
     )
     if not proposal:
         raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
     await update_proposal_acceptance_rate(proposal["project_id"])
-    await audit(user.id, "maintenance_proposal_rejected", "MaintenanceProposal", proposal_id, proposal["project_id"])
+    await audit(
+        user.id,
+        "maintenance_proposal_rejected",
+        "MaintenanceProposal",
+        proposal_id,
+        proposal["project_id"],
+    )
     return envelope(proposal)
 
 
@@ -700,7 +872,9 @@ async def reject_project_proposal(
     payload: ProposalAction,
     user: CurrentUser = Depends(get_current_user),
 ):
-    proposal = await get_project_entity("maintenance_proposals", proposal_id, user, "proposal.reject")
+    proposal = await get_project_entity(
+        "maintenance_proposals", proposal_id, user, "proposal.reject"
+    )
     if proposal["project_id"] != project_id:
         raise HTTPException(status_code=422, detail={"code": "PROJECT_MISMATCH"})
     return await reject_proposal(proposal_id, payload, user)
@@ -767,7 +941,11 @@ async def regenerate_proposal(
         await database.value.maintenance_proposals.insert_one(replacement)
     except Exception:
         await database.value.maintenance_proposals.update_one(
-            {"_id": proposal_id, "project_id": proposal["project_id"], "superseded_by": replacement["_id"]},
+            {
+                "_id": proposal_id,
+                "project_id": proposal["project_id"],
+                "superseded_by": replacement["_id"],
+            },
             {
                 "$set": {"status": "PENDING", "updated_at": now()},
                 "$unset": {"superseded_by": ""},
@@ -790,20 +968,42 @@ async def apply_proposal(proposal_id, payload, user, final_status):
     proposal = await get_project_entity(
         "maintenance_proposals", proposal_id, user, "proposal.approve"
     )
-    if proposal.get("status") in {"ACCEPTED", "EDITED_ACCEPTED"} and proposal.get("applied_artifact_id"):
-        result = await database.value.test_case_versions.find_one({"_id": proposal["applied_artifact_id"], "project_id": proposal["project_id"]}) or await database.value.test_case_drafts.find_one({"_id": proposal["applied_artifact_id"], "project_id": proposal["project_id"]})
+    if proposal.get("status") in {"ACCEPTED", "EDITED_ACCEPTED"} and proposal.get(
+        "applied_artifact_id"
+    ):
+        result = await database.value.test_case_versions.find_one(
+            {"_id": proposal["applied_artifact_id"], "project_id": proposal["project_id"]}
+        ) or await database.value.test_case_drafts.find_one(
+            {"_id": proposal["applied_artifact_id"], "project_id": proposal["project_id"]}
+        )
         return envelope({"proposal": proposal, "result": result})
     require_pending_revision(proposal, payload, allow_partial=True)
     previous_status = proposal["status"]
     proposal = await database.value.maintenance_proposals.find_one_and_update(
-        {"_id": proposal_id, "project_id": proposal["project_id"], "status": previous_status, "revision": payload.expected_revision},
-        {"$set": {"status": "APPLYING", "applying_by": user.id, "updated_at": now()}, "$inc": {"revision": 1}},
+        {
+            "_id": proposal_id,
+            "project_id": proposal["project_id"],
+            "status": previous_status,
+            "revision": payload.expected_revision,
+        },
+        {
+            "$set": {"status": "APPLYING", "applying_by": user.id, "updated_at": now()},
+            "$inc": {"revision": 1},
+        },
         return_document=ReturnDocument.AFTER,
     )
     if not proposal:
         current = await database.value.maintenance_proposals.find_one({"_id": proposal_id})
-        if current and current.get("status") in {"ACCEPTED", "EDITED_ACCEPTED"} and current.get("applied_artifact_id"):
-            result = await database.value.test_case_versions.find_one({"_id": current["applied_artifact_id"], "project_id": current["project_id"]}) or await database.value.test_case_drafts.find_one({"_id": current["applied_artifact_id"], "project_id": current["project_id"]})
+        if (
+            current
+            and current.get("status") in {"ACCEPTED", "EDITED_ACCEPTED"}
+            and current.get("applied_artifact_id")
+        ):
+            result = await database.value.test_case_versions.find_one(
+                {"_id": current["applied_artifact_id"], "project_id": current["project_id"]}
+            ) or await database.value.test_case_drafts.find_one(
+                {"_id": current["applied_artifact_id"], "project_id": current["project_id"]}
+            )
             return envelope({"proposal": current, "result": result})
         raise HTTPException(status_code=409, detail={"code": "PROPOSAL_APPLY_IN_PROGRESS"})
     patch = {**proposal.get("patch", {}), **(payload.patch or {})}
@@ -829,35 +1029,120 @@ async def apply_proposal(proposal_id, payload, user, final_status):
         if partial and partial.get("partial_version_id"):
             await database.value.maintenance_proposals.update_one(
                 {"_id": proposal_id},
-                {"$set": {"status": "APPLY_PARTIAL", "recovery_error": str(error)[:500], "updated_at": now()}, "$inc": {"revision": 1}},
+                {
+                    "$set": {
+                        "status": "APPLY_PARTIAL",
+                        "recovery_error": str(error)[:500],
+                        "updated_at": now(),
+                    },
+                    "$inc": {"revision": 1},
+                },
             )
-            raise HTTPException(status_code=503, detail={"code": "PROPOSAL_APPLY_PARTIAL", "retryable": True, "state_after_failure": "APPLY_PARTIAL", "user_action_required": True}) from error
+            raise HTTPException(
+                status_code=503,
+                detail={
+                    "code": "PROPOSAL_APPLY_PARTIAL",
+                    "retryable": True,
+                    "state_after_failure": "APPLY_PARTIAL",
+                    "user_action_required": True,
+                },
+            ) from error
         await database.value.maintenance_proposals.update_one(
             {"_id": proposal_id, "status": "APPLYING"},
-            {"$set": {"status": "PENDING", "recovery_error": str(error)[:500], "updated_at": now()}, "$inc": {"revision": 1}},
+            {
+                "$set": {
+                    "status": "PENDING",
+                    "recovery_error": str(error)[:500],
+                    "updated_at": now(),
+                },
+                "$inc": {"revision": 1},
+            },
         )
-        raise HTTPException(status_code=503, detail={"code": "PROPOSAL_APPLY_FAILED", "retryable": True, "state_after_failure": "UNCHANGED", "user_action_required": True}) from error
-    finalized = await database.value.maintenance_proposals.update_one({"_id": proposal_id, "project_id": proposal["project_id"], "status": "APPLYING"}, {"$set": {"status": final_status, "applied_artifact_id": result.get("_id"), "review_note": payload.review_note, "reviewed_by": user.id, "reviewed_at": now(), "updated_at": now()}, "$inc": {"revision": 1}})
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "code": "PROPOSAL_APPLY_FAILED",
+                "retryable": True,
+                "state_after_failure": "UNCHANGED",
+                "user_action_required": True,
+            },
+        ) from error
+    finalized = await database.value.maintenance_proposals.update_one(
+        {"_id": proposal_id, "project_id": proposal["project_id"], "status": "APPLYING"},
+        {
+            "$set": {
+                "status": final_status,
+                "applied_artifact_id": result.get("_id"),
+                "review_note": payload.review_note,
+                "reviewed_by": user.id,
+                "reviewed_at": now(),
+                "updated_at": now(),
+            },
+            "$inc": {"revision": 1},
+        },
+    )
     if finalized.matched_count != 1:
-        await database.value.maintenance_proposals.update_one({"_id": proposal_id, "project_id": proposal["project_id"]}, {"$set": {"status": "APPLY_PARTIAL", "partial_version_id": result.get("_id"), "updated_at": now()}, "$inc": {"revision": 1}})
-        raise HTTPException(status_code=503, detail={"code": "PROPOSAL_APPLY_PARTIAL", "retryable": True, "state_after_failure": "APPLY_PARTIAL", "user_action_required": True})
+        await database.value.maintenance_proposals.update_one(
+            {"_id": proposal_id, "project_id": proposal["project_id"]},
+            {
+                "$set": {
+                    "status": "APPLY_PARTIAL",
+                    "partial_version_id": result.get("_id"),
+                    "updated_at": now(),
+                },
+                "$inc": {"revision": 1},
+            },
+        )
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "code": "PROPOSAL_APPLY_PARTIAL",
+                "retryable": True,
+                "state_after_failure": "APPLY_PARTIAL",
+                "user_action_required": True,
+            },
+        )
     await update_proposal_acceptance_rate(proposal["project_id"])
-    await audit(user.id, "maintenance_proposal_applied", "MaintenanceProposal", proposal_id, proposal["project_id"], {"result_id": result.get("_id")})
-    return envelope({"proposal": await database.value.maintenance_proposals.find_one({"_id": proposal_id}), "result": result})
+    await audit(
+        user.id,
+        "maintenance_proposal_applied",
+        "MaintenanceProposal",
+        proposal_id,
+        proposal["project_id"],
+        {"result_id": result.get("_id")},
+    )
+    return envelope(
+        {
+            "proposal": await database.value.maintenance_proposals.find_one({"_id": proposal_id}),
+            "result": result,
+        }
+    )
 
 
 async def update_proposal_acceptance_rate(project_id):
-    reviewed = await database.value.maintenance_proposals.count_documents({"project_id": project_id, "status": {"$in": ["ACCEPTED", "EDITED_ACCEPTED", "REJECTED"]}})
-    accepted = await database.value.maintenance_proposals.count_documents({"project_id": project_id, "status": {"$in": ["ACCEPTED", "EDITED_ACCEPTED"]}})
+    reviewed = await database.value.maintenance_proposals.count_documents(
+        {"project_id": project_id, "status": {"$in": ["ACCEPTED", "EDITED_ACCEPTED", "REJECTED"]}}
+    )
+    accepted = await database.value.maintenance_proposals.count_documents(
+        {"project_id": project_id, "status": {"$in": ["ACCEPTED", "EDITED_ACCEPTED"]}}
+    )
     PROPOSAL_ACCEPTANCE_RATE.set(accepted / reviewed if reviewed else 0)
 
 
 async def create_test_version_from_proposal(proposal, patch, user):
     from src.api.test_design import project_test_text
 
-    test_case = await database.value.test_cases.find_one({"_id": proposal["target_artifact_id"], "project_id": proposal["project_id"]})
+    test_case = await database.value.test_cases.find_one(
+        {"_id": proposal["target_artifact_id"], "project_id": proposal["project_id"]}
+    )
     if not test_case or test_case.get("current_version_id") != proposal["base_version_id"]:
-        raise HTTPException(status_code=409, detail={"code": "STALE_PROPOSAL", "current_version_id": test_case.get("current_version_id") if test_case else None})
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "STALE_PROPOSAL",
+                "current_version_id": test_case.get("current_version_id") if test_case else None,
+            },
+        )
     base = await database.value.test_case_versions.find_one({"_id": proposal["base_version_id"]})
     allowed = {
         "title",
@@ -880,44 +1165,186 @@ async def create_test_version_from_proposal(proposal, patch, user):
     }
     merged = {**base, **{key: value for key, value in patch.items() if key in allowed}}
     merged["plain_text_projection"] = project_test_text(merged)
-    version = {**{key: value for key, value in merged.items() if key not in {"_id", "version", "created_at", "approved_by", "parent_version_id", "change_reason"}}, "_id": new_id("TCV"), "version": int(base["version"]) + 1, "parent_version_id": base["_id"], "change_reason": proposal["reason"], "approved_by": user.id, "created_at": now()}
+    version = {
+        **{
+            key: value
+            for key, value in merged.items()
+            if key
+            not in {
+                "_id",
+                "version",
+                "created_at",
+                "approved_by",
+                "parent_version_id",
+                "change_reason",
+            }
+        },
+        "_id": new_id("TCV"),
+        "version": int(base["version"]) + 1,
+        "parent_version_id": base["_id"],
+        "change_reason": proposal["reason"],
+        "approved_by": user.id,
+        "created_at": now(),
+    }
     await database.value.test_case_versions.insert_one(version)
-    await database.value.maintenance_proposals.update_one({"_id": proposal["_id"]}, {"$set": {"partial_version_id": version["_id"], "apply_state": "VERSION_CREATED", "updated_at": now()}})
+    await database.value.maintenance_proposals.update_one(
+        {"_id": proposal["_id"]},
+        {
+            "$set": {
+                "partial_version_id": version["_id"],
+                "apply_state": "VERSION_CREATED",
+                "updated_at": now(),
+            }
+        },
+    )
     updated = await database.value.test_cases.update_one(
-        {"_id": test_case["_id"], "project_id": proposal["project_id"], "current_version_id": proposal["base_version_id"]},
+        {
+            "_id": test_case["_id"],
+            "project_id": proposal["project_id"],
+            "current_version_id": proposal["base_version_id"],
+        },
         {"$set": {"current_version_id": version["_id"], "status": "ACTIVE", "updated_at": now()}},
     )
     if updated.matched_count != 1:
         raise RuntimeError("TEST_CASE_VERSION_CONFLICT")
-    await database.value.trace_links.update_many({"project_id": proposal["project_id"], "target_id": base["_id"], "status": {"$in": ["CONFIRMED", "STALE"]}}, {"$set": {"status": "STALE", "updated_at": now()}})
-    change_set = await database.value.requirement_change_sets.find_one({"_id": (await database.value.impact_analyses.find_one({"_id": proposal["impact_analysis_id"]}))["change_set_id"]})
-    await database.value.trace_links.insert_one({"_id": new_id("TL"), "project_id": proposal["project_id"], "source_type": "requirement_version", "source_id": change_set["to_version_id"], "target_type": "test_case_version", "target_id": version["_id"], "link_type": "verifies", "confidence": 1, "origin": "manual", "status": "CONFIRMED", "revision": 1, "evidence": proposal["evidence"], "created_by": user.id, "created_at": now(), "updated_at": now()})
-    await index_artifact(version["project_id"], "test_case_version", version["test_case_id"], version["_id"], version["title"], version["plain_text_projection"], version["status"], "approved", version["version"])
+    await database.value.trace_links.update_many(
+        {
+            "project_id": proposal["project_id"],
+            "target_id": base["_id"],
+            "status": {"$in": ["CONFIRMED", "STALE"]},
+        },
+        {"$set": {"status": "STALE", "updated_at": now()}},
+    )
+    change_set = await database.value.requirement_change_sets.find_one(
+        {
+            "_id": (
+                await database.value.impact_analyses.find_one(
+                    {"_id": proposal["impact_analysis_id"]}
+                )
+            )["change_set_id"]
+        }
+    )
+    await database.value.trace_links.insert_one(
+        {
+            "_id": new_id("TL"),
+            "project_id": proposal["project_id"],
+            "source_type": "requirement_version",
+            "source_id": change_set["to_version_id"],
+            "target_type": "test_case_version",
+            "target_id": version["_id"],
+            "link_type": "verifies",
+            "confidence": 1,
+            "origin": "manual",
+            "status": "CONFIRMED",
+            "revision": 1,
+            "evidence": proposal["evidence"],
+            "created_by": user.id,
+            "created_at": now(),
+            "updated_at": now(),
+        }
+    )
+    await index_artifact(
+        version["project_id"],
+        "test_case_version",
+        version["test_case_id"],
+        version["_id"],
+        version["title"],
+        version["plain_text_projection"],
+        version["status"],
+        "APPROVED_SOURCE",
+        version["version"],
+    )
     return version
 
 
 async def recover_partial_proposal(proposal, user):
-    version = await database.value.test_case_versions.find_one({"_id": proposal["partial_version_id"], "project_id": proposal["project_id"]})
+    version = await database.value.test_case_versions.find_one(
+        {"_id": proposal["partial_version_id"], "project_id": proposal["project_id"]}
+    )
     if not version:
-        draft = await database.value.test_case_drafts.find_one({"_id": proposal["partial_version_id"], "project_id": proposal["project_id"]})
+        draft = await database.value.test_case_drafts.find_one(
+            {"_id": proposal["partial_version_id"], "project_id": proposal["project_id"]}
+        )
         if draft:
             return draft
-        test_case = await database.value.test_cases.find_one({"_id": proposal["partial_version_id"], "project_id": proposal["project_id"]})
+        test_case = await database.value.test_cases.find_one(
+            {"_id": proposal["partial_version_id"], "project_id": proposal["project_id"]}
+        )
         if test_case and proposal.get("proposal_type") == "MARK_OBSOLETE":
-            await database.value.test_cases.update_one({"_id": test_case["_id"], "project_id": proposal["project_id"]}, {"$set": {"status": "OBSOLETE", "updated_at": now()}})
-            return await database.value.test_cases.find_one({"_id": test_case["_id"], "project_id": proposal["project_id"]})
+            await database.value.test_cases.update_one(
+                {"_id": test_case["_id"], "project_id": proposal["project_id"]},
+                {"$set": {"status": "OBSOLETE", "updated_at": now()}},
+            )
+            return await database.value.test_cases.find_one(
+                {"_id": test_case["_id"], "project_id": proposal["project_id"]}
+            )
     if not version:
-        raise HTTPException(status_code=409, detail={"code": "PARTIAL_ARTIFACT_NOT_FOUND", "state_after_failure": "APPLY_PARTIAL"})
-    test_case = await database.value.test_cases.find_one({"_id": proposal["target_artifact_id"], "project_id": proposal["project_id"]})
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "PARTIAL_ARTIFACT_NOT_FOUND", "state_after_failure": "APPLY_PARTIAL"},
+        )
+    test_case = await database.value.test_cases.find_one(
+        {"_id": proposal["target_artifact_id"], "project_id": proposal["project_id"]}
+    )
     if test_case and test_case.get("current_version_id") != version["_id"]:
-        await database.value.test_cases.update_one({"_id": test_case["_id"]}, {"$set": {"current_version_id": version["_id"], "status": "ACTIVE", "updated_at": now()}})
-    analysis = await database.value.impact_analyses.find_one({"_id": proposal["impact_analysis_id"]})
-    change_set = await database.value.requirement_change_sets.find_one({"_id": analysis["change_set_id"]}) if analysis else None
+        await database.value.test_cases.update_one(
+            {"_id": test_case["_id"]},
+            {
+                "$set": {
+                    "current_version_id": version["_id"],
+                    "status": "ACTIVE",
+                    "updated_at": now(),
+                }
+            },
+        )
+    analysis = await database.value.impact_analyses.find_one(
+        {"_id": proposal["impact_analysis_id"]}
+    )
+    change_set = (
+        await database.value.requirement_change_sets.find_one({"_id": analysis["change_set_id"]})
+        if analysis
+        else None
+    )
     if change_set:
-        trace = await database.value.trace_links.find_one({"project_id": proposal["project_id"], "source_id": change_set["to_version_id"], "target_id": version["_id"], "status": "CONFIRMED"})
+        trace = await database.value.trace_links.find_one(
+            {
+                "project_id": proposal["project_id"],
+                "source_id": change_set["to_version_id"],
+                "target_id": version["_id"],
+                "status": "CONFIRMED",
+            }
+        )
         if not trace:
-            await database.value.trace_links.insert_one({"_id": new_id("TL"), "project_id": proposal["project_id"], "source_type": "requirement_version", "source_id": change_set["to_version_id"], "target_type": "test_case_version", "target_id": version["_id"], "link_type": "verifies", "confidence": 1, "origin": "manual", "status": "CONFIRMED", "revision": 1, "evidence": proposal.get("evidence", []), "created_by": user.id, "created_at": now(), "updated_at": now()})
-    await index_artifact(version["project_id"], "test_case_version", version["test_case_id"], version["_id"], version["title"], version["plain_text_projection"], version["status"], "approved", version["version"])
+            await database.value.trace_links.insert_one(
+                {
+                    "_id": new_id("TL"),
+                    "project_id": proposal["project_id"],
+                    "source_type": "requirement_version",
+                    "source_id": change_set["to_version_id"],
+                    "target_type": "test_case_version",
+                    "target_id": version["_id"],
+                    "link_type": "verifies",
+                    "confidence": 1,
+                    "origin": "manual",
+                    "status": "CONFIRMED",
+                    "revision": 1,
+                    "evidence": proposal.get("evidence", []),
+                    "created_by": user.id,
+                    "created_at": now(),
+                    "updated_at": now(),
+                }
+            )
+    await index_artifact(
+        version["project_id"],
+        "test_case_version",
+        version["test_case_id"],
+        version["_id"],
+        version["title"],
+        version["plain_text_projection"],
+        version["status"],
+        "APPROVED_SOURCE",
+        version["version"],
+    )
     return version
 
 
@@ -925,17 +1352,41 @@ async def create_test_draft_from_proposal(proposal, patch, user):
     from src.api.test_design import create_test_case_draft, text_doc
     from src.domain.schemas import TestCaseDraftCreate
 
-    payload = TestCaseDraftCreate(title=patch.get("title", "Test Case từ đề xuất bảo trì"), type=patch.get("type", "custom"), preconditions_doc=text_doc("Project sẵn sàng"), steps=[{"id": "step-1", "order": 1, "action_doc": text_doc("Thực hiện hành vi mới"), "test_data": {}, "expected_doc": text_doc("Kết quả khớp Requirement baseline")}], test_data={}, expected_result_doc=text_doc("Kết quả khớp Requirement baseline"), requirement_version_ids=patch.get("requirement_version_ids", []), origin="maintenance", source_evidence=proposal["evidence"])
+    payload = TestCaseDraftCreate(
+        title=patch.get("title", "Test Case từ đề xuất bảo trì"),
+        type=patch.get("type", "custom"),
+        preconditions_doc=text_doc("Project sẵn sàng"),
+        steps=[
+            {
+                "id": "step-1",
+                "order": 1,
+                "action_doc": text_doc("Thực hiện hành vi mới"),
+                "test_data": {},
+                "expected_doc": text_doc("Kết quả khớp Requirement baseline"),
+            }
+        ],
+        test_data={},
+        expected_result_doc=text_doc("Kết quả khớp Requirement baseline"),
+        requirement_version_ids=patch.get("requirement_version_ids", []),
+        origin="maintenance",
+        source_evidence=proposal["evidence"],
+    )
     response = await create_test_case_draft(proposal["project_id"], payload, user)
     return response["data"]
 
 
 async def mark_test_obsolete(proposal, user):
-    test_case = await database.value.test_cases.find_one({"_id": proposal["target_artifact_id"], "project_id": proposal["project_id"]})
+    test_case = await database.value.test_cases.find_one(
+        {"_id": proposal["target_artifact_id"], "project_id": proposal["project_id"]}
+    )
     if not test_case or test_case.get("current_version_id") != proposal["base_version_id"]:
         raise HTTPException(status_code=409, detail={"code": "STALE_PROPOSAL"})
     updated = await database.value.test_cases.update_one(
-        {"_id": test_case["_id"], "project_id": proposal["project_id"], "current_version_id": proposal["base_version_id"]},
+        {
+            "_id": test_case["_id"],
+            "project_id": proposal["project_id"],
+            "current_version_id": proposal["base_version_id"],
+        },
         {"$set": {"status": "OBSOLETE", "updated_at": now()}},
     )
     if updated.matched_count != 1:
@@ -944,15 +1395,21 @@ async def mark_test_obsolete(proposal, user):
 
 
 @router.post("/bo-thay-doi/{change_set_id}/de-xuat-hoi-quy", status_code=201)
-async def regression_recommendation(change_set_id: str, user: CurrentUser = Depends(get_current_user)):
+async def regression_recommendation(
+    change_set_id: str, user: CurrentUser = Depends(get_current_user)
+):
     change_set = await get_project_entity(
         "requirement_change_sets", change_set_id, user, "regression.generate"
     )
     await get_project(change_set["project_id"], user, "ai.generate_regression")
-    existing = await database.value.regression_recommendations.find_one({"change_set_id": change_set_id})
+    existing = await database.value.regression_recommendations.find_one(
+        {"change_set_id": change_set_id}
+    )
     if existing:
         return envelope(existing)
-    analysis = await database.value.impact_analyses.find_one({"change_set_id": change_set_id}, sort=[("created_at", -1)])
+    analysis = await database.value.impact_analyses.find_one(
+        {"change_set_id": change_set_id}, sort=[("created_at", -1)]
+    )
     if not analysis:
         raise HTTPException(status_code=409, detail={"code": "IMPACT_ANALYSIS_REQUIRED"})
     if analysis.get("status") != "REVIEWED":
@@ -960,24 +1417,62 @@ async def regression_recommendation(change_set_id: str, user: CurrentUser = Depe
     recent_failures = await recent_failure_versions(change_set["project_id"])
     items = []
     for impact in analysis.get("reviewed_affected_test_cases", analysis["affected_test_cases"]):
-        test_case = await database.value.test_cases.find_one({"_id": impact["test_case_id"], "project_id": change_set["project_id"]})
-        current_version_id = test_case.get("current_version_id") if test_case else impact["test_case_version_id"]
+        test_case = await database.value.test_cases.find_one(
+            {"_id": impact["test_case_id"], "project_id": change_set["project_id"]}
+        )
+        current_version_id = (
+            test_case.get("current_version_id") if test_case else impact["test_case_version_id"]
+        )
         direct_trace = any(item.get("direct_trace") for item in impact.get("evidence", []))
-        level = "MUST_RUN" if direct_trace or impact["classification"] == "NEEDS_UPDATE" or current_version_id in recent_failures else "SHOULD_RUN" if impact["classification"] == "POTENTIALLY_AFFECTED" else "OPTIONAL"
+        level = (
+            "MUST_RUN"
+            if direct_trace
+            or impact["classification"] == "NEEDS_UPDATE"
+            or current_version_id in recent_failures
+            else "SHOULD_RUN"
+            if impact["classification"] == "POTENTIALLY_AFFECTED"
+            else "OPTIONAL"
+        )
         reasons = list(impact["reasons"])
         if current_version_id in recent_failures:
             reasons.append("Test Case có kết quả FAIL gần đây")
-        items.append({"test_case_id": impact["test_case_id"], "test_case_version_id": current_version_id, "test_case_key": impact.get("test_case_key"), "level": level, "reasons": reasons, "evidence": impact["evidence"]})
-    recommendation = {"_id": new_id("REG"), "project_id": change_set["project_id"], "change_set_id": change_set_id, "impact_analysis_id": analysis["_id"], "items": items, "status": "PENDING_APPROVAL", "revision": 1, "model_version": "risk-score-v1", "created_by": user.id, "created_at": now(), "updated_at": now()}
+        items.append(
+            {
+                "test_case_id": impact["test_case_id"],
+                "test_case_version_id": current_version_id,
+                "test_case_key": impact.get("test_case_key"),
+                "level": level,
+                "reasons": reasons,
+                "evidence": impact["evidence"],
+            }
+        )
+    recommendation = {
+        "_id": new_id("REG"),
+        "project_id": change_set["project_id"],
+        "change_set_id": change_set_id,
+        "impact_analysis_id": analysis["_id"],
+        "items": items,
+        "status": "PENDING_APPROVAL",
+        "revision": 1,
+        "model_version": "risk-score-v1",
+        "created_by": user.id,
+        "created_at": now(),
+        "updated_at": now(),
+    }
     await database.value.regression_recommendations.insert_one(recommendation)
-    await audit(user.id, "regression_recommendation_created", "RegressionRecommendation", recommendation["_id"], change_set["project_id"])
+    await audit(
+        user.id,
+        "regression_recommendation_created",
+        "RegressionRecommendation",
+        recommendation["_id"],
+        change_set["project_id"],
+    )
     return envelope(recommendation)
 
 
 @router.get("/bo-thay-doi/{change_set_id}/de-xuat-hoi-quy")
 async def get_change_set_regression_recommendation(
-    change_set_id: str,
-    user: CurrentUser = Depends(get_current_user),
+    change_set_id: str, user: CurrentUser = Depends(get_current_user)
 ):
     change_set = await get_project_entity(
         "requirement_change_sets", change_set_id, user, "regression.read"
@@ -993,12 +1488,12 @@ async def get_change_set_regression_recommendation(
 
 @router.post("/du-an/{project_id}/hoi-quy/sinh", status_code=201)
 async def generate_project_regression(
-    project_id: str,
-    payload: dict,
-    user: CurrentUser = Depends(get_current_user),
+    project_id: str, payload: dict, user: CurrentUser = Depends(get_current_user)
 ):
     change_set_id = str(payload.get("change_set_id") or "")
-    change_set = await get_project_entity("requirement_change_sets", change_set_id, user, "regression.generate")
+    change_set = await get_project_entity(
+        "requirement_change_sets", change_set_id, user, "regression.generate"
+    )
     if change_set["project_id"] != project_id:
         raise HTTPException(status_code=422, detail={"code": "PROJECT_MISMATCH"})
     return await regression_recommendation(change_set_id, user)
@@ -1006,15 +1501,11 @@ async def generate_project_regression(
 
 @router.get("/de-xuat-hoi-quy/{recommendation_id}")
 async def get_regression_recommendation(
-    recommendation_id: str,
-    user: CurrentUser = Depends(get_current_user),
+    recommendation_id: str, user: CurrentUser = Depends(get_current_user)
 ):
     return envelope(
         await get_project_entity(
-            "regression_recommendations",
-            recommendation_id,
-            user,
-            "regression.read",
+            "regression_recommendations", recommendation_id, user, "regression.read"
         )
     )
 
@@ -1025,7 +1516,9 @@ async def edit_regression_recommendation(
     payload: RegressionApprovalInput,
     user: CurrentUser = Depends(get_current_user),
 ):
-    recommendation = await get_project_entity("regression_recommendations", recommendation_id, user, "regression.generate")
+    recommendation = await get_project_entity(
+        "regression_recommendations", recommendation_id, user, "regression.generate"
+    )
     if recommendation.get("status") != "PENDING_APPROVAL":
         raise HTTPException(status_code=409, detail={"code": "INVALID_STATE_TRANSITION"})
     selected = payload.selected_test_case_version_ids
@@ -1034,16 +1527,43 @@ async def edit_regression_recommendation(
         by_id = {item["test_case_version_id"]: item for item in items}
         unknown = set(selected) - set(by_id)
         if unknown:
-            raise HTTPException(status_code=422, detail={"code": "INVALID_REGRESSION_SCOPE", "test_case_version_ids": sorted(unknown)})
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "INVALID_REGRESSION_SCOPE",
+                    "test_case_version_ids": sorted(unknown),
+                },
+            )
         items = [by_id[item] for item in selected]
     updated = await database.value.regression_recommendations.find_one_and_update(
-        {"_id": recommendation_id, "project_id": recommendation["project_id"], "status": "PENDING_APPROVAL", "revision": payload.expected_revision},
-        {"$set": {"items": items, "name": payload.name or recommendation.get("name"), "review_note": payload.review_note, "candidate_edited_by": user.id, "candidate_edited_at": now(), "updated_at": now()}, "$inc": {"revision": 1}},
+        {
+            "_id": recommendation_id,
+            "project_id": recommendation["project_id"],
+            "status": "PENDING_APPROVAL",
+            "revision": payload.expected_revision,
+        },
+        {
+            "$set": {
+                "items": items,
+                "name": payload.name or recommendation.get("name"),
+                "review_note": payload.review_note,
+                "candidate_edited_by": user.id,
+                "candidate_edited_at": now(),
+                "updated_at": now(),
+            },
+            "$inc": {"revision": 1},
+        },
         return_document=ReturnDocument.AFTER,
     )
     if not updated:
         raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
-    await audit(user.id, "regression_recommendation_edited", "RegressionRecommendation", recommendation_id, recommendation["project_id"])
+    await audit(
+        user.id,
+        "regression_recommendation_edited",
+        "RegressionRecommendation",
+        recommendation_id,
+        recommendation["project_id"],
+    )
     return envelope(updated, revision=updated["revision"])
 
 
@@ -1054,10 +1574,7 @@ async def approve_regression_recommendation(
     user: CurrentUser = Depends(get_current_user),
 ):
     recommendation = await get_project_entity(
-        "regression_recommendations",
-        recommendation_id,
-        user,
-        "regression.approve",
+        "regression_recommendations", recommendation_id, user, "regression.approve"
     )
     if recommendation.get("status") == "APPROVED" and recommendation.get("test_suite_id"):
         suite = await database.value.test_suites.find_one(
@@ -1067,11 +1584,11 @@ async def approve_regression_recommendation(
     if recommendation.get("status") != "PENDING_APPROVAL":
         raise HTTPException(status_code=409, detail={"code": "INVALID_STATE_TRANSITION"})
     if recommendation["revision"] != payload.expected_revision:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT", "current_revision": recommendation["revision"]})
-    recommended_ids = {
-        item["test_case_version_id"]
-        for item in recommendation["items"]
-    }
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "REVISION_CONFLICT", "current_revision": recommendation["revision"]},
+        )
+    recommended_ids = {item["test_case_version_id"] for item in recommendation["items"]}
     selected_ids = payload.selected_test_case_version_ids
     if selected_ids is None:
         selected_ids = [
@@ -1107,7 +1624,12 @@ async def approve_regression_recommendation(
     }
     await database.value.test_suites.insert_one(suite)
     result = await database.value.regression_recommendations.update_one(
-        {"_id": recommendation_id, "project_id": recommendation["project_id"], "revision": payload.expected_revision, "status": "PENDING_APPROVAL"},
+        {
+            "_id": recommendation_id,
+            "project_id": recommendation["project_id"],
+            "revision": payload.expected_revision,
+            "status": "PENDING_APPROVAL",
+        },
         {
             "$set": {
                 "status": "APPROVED",
@@ -1121,11 +1643,29 @@ async def approve_regression_recommendation(
         },
     )
     if result.matched_count != 1:
-        await database.value.test_suites.delete_one({"_id": suite["_id"], "project_id": recommendation["project_id"]})
+        await database.value.test_suites.delete_one(
+            {"_id": suite["_id"], "project_id": recommendation["project_id"]}
+        )
         raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
-    recommendation = await database.value.regression_recommendations.find_one({"_id": recommendation_id, "project_id": recommendation["project_id"]})
-    await audit(user.id, "regression_approved", "RegressionRecommendation", recommendation_id, recommendation["project_id"], {"test_suite_id": suite["_id"], "test_count": len(selected_ids)})
-    await audit(user.id, "test_suite_created", "TestSuite", suite["_id"], recommendation["project_id"], {"source_regression_recommendation_id": recommendation_id})
+    recommendation = await database.value.regression_recommendations.find_one(
+        {"_id": recommendation_id, "project_id": recommendation["project_id"]}
+    )
+    await audit(
+        user.id,
+        "regression_approved",
+        "RegressionRecommendation",
+        recommendation_id,
+        recommendation["project_id"],
+        {"test_suite_id": suite["_id"], "test_count": len(selected_ids)},
+    )
+    await audit(
+        user.id,
+        "test_suite_created",
+        "TestSuite",
+        suite["_id"],
+        recommendation["project_id"],
+        {"source_regression_recommendation_id": recommendation_id},
+    )
     return envelope({"recommendation": recommendation, "test_suite": suite})
 
 
@@ -1136,21 +1676,40 @@ async def approve_project_regression(
     payload: RegressionApprovalInput,
     user: CurrentUser = Depends(get_current_user),
 ):
-    recommendation = await get_project_entity("regression_recommendations", recommendation_id, user, "regression.approve")
+    recommendation = await get_project_entity(
+        "regression_recommendations", recommendation_id, user, "regression.approve"
+    )
     if recommendation["project_id"] != project_id:
         raise HTTPException(status_code=422, detail={"code": "PROJECT_MISMATCH"})
     return await approve_regression_recommendation(recommendation_id, payload, user)
 
 
 async def recent_failure_versions(project_id):
-    runs = await database.value.test_runs.find({"project_id": project_id}).sort("created_at", -1).to_list(20)
-    results = await database.value.test_results.find({"test_run_id": {"$in": [item["_id"] for item in runs]}, "status": "FAIL"}).to_list(10000)
+    runs = (
+        await database.value.test_runs.find({"project_id": project_id})
+        .sort("created_at", -1)
+        .to_list(20)
+    )
+    results = await database.value.test_results.find(
+        {"test_run_id": {"$in": [item["_id"] for item in runs]}, "status": "FAIL"}
+    ).to_list(10000)
     return {item["test_case_version_id"] for item in results}
 
 
 async def mark_previous_traces_stale(change_set):
-    criteria = await database.value.acceptance_criteria.find({"requirement_version_id": change_set["from_version_id"]}).to_list(10000)
-    await database.value.trace_links.update_many({"project_id": change_set["project_id"], "source_id": {"$in": [change_set["from_version_id"], *[item["_id"] for item in criteria]]}, "status": "CONFIRMED"}, {"$set": {"status": "STALE", "updated_at": now()}})
+    criteria = await database.value.acceptance_criteria.find(
+        {"requirement_version_id": change_set["from_version_id"]}
+    ).to_list(10000)
+    await database.value.trace_links.update_many(
+        {
+            "project_id": change_set["project_id"],
+            "source_id": {
+                "$in": [change_set["from_version_id"], *[item["_id"] for item in criteria]]
+            },
+            "status": "CONFIRMED",
+        },
+        {"$set": {"status": "STALE", "updated_at": now()}},
+    )
 
 
 def proposed_patch(base, changes):
@@ -1159,7 +1718,20 @@ def proposed_patch(base, changes):
     if boundary:
         values = boundary.get("after", {}).get("values", [])
         patch["test_data"] = {**base.get("test_data", {}), "changed_boundary_values": values}
-        patch["expected_result_doc"] = {"type": "doc", "content": [{"type": "paragraph", "content": [{"type": "text", "text": f"Hệ thống chấp nhận các giá trị biên mới {', '.join(map(str, values))}"}]}]}
+        patch["expected_result_doc"] = {
+            "type": "doc",
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": f"Hệ thống chấp nhận các giá trị biên mới {', '.join(map(str, values))}",
+                        }
+                    ],
+                }
+            ],
+        }
     return patch
 
 
@@ -1168,4 +1740,7 @@ def require_pending_revision(proposal, payload, allow_partial=False):
     if proposal["status"] not in allowed:
         raise HTTPException(status_code=409, detail={"code": "PROPOSAL_ALREADY_REVIEWED"})
     if proposal["revision"] != payload.expected_revision:
-        raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT", "current_revision": proposal["revision"]})
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "REVISION_CONFLICT", "current_revision": proposal["revision"]},
+        )

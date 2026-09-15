@@ -4,12 +4,12 @@ from datetime import datetime, timedelta, timezone
 
 from fastapi import HTTPException
 from loguru import logger
-from src.repositories.identity import IdentityRepository as IdentityRepository
-from src.services.email import EmailService
 
 from src.core.infrastructure.configuration import settings
-from src.schemas.identity import UserCreate, UserInDB
 from src.core.security.access import create_access_token, get_password_hash, verify_password
+from src.repositories.identity import IdentityRepository as IdentityRepository
+from src.schemas.identity import UserCreate, UserInDB
+from src.services.email import EmailService
 
 
 class SessionService:
@@ -25,8 +25,7 @@ class SessionService:
                 "sid": session_id,
                 "role": user_doc.get("role", "reader"),
                 "system_role": user_doc.get(
-                    "system_role",
-                    "ADMIN" if user_doc.get("role") == "admin" else "USER",
+                    "system_role", "ADMIN" if user_doc.get("role") == "admin" else "USER"
                 ),
                 "uid": str(user_doc["_id"]),
                 "permissions": user_doc.get("permissions", []),
@@ -130,8 +129,7 @@ class SessionService:
         token_doc = await IdentityRepository.consume_email_verification_token(token)
         if not token_doc:
             raise HTTPException(
-                status_code=400,
-                detail="Mã xác minh thư điện tử không hợp lệ hoặc đã hết hạn",
+                status_code=400, detail="Mã xác minh thư điện tử không hợp lệ hoặc đã hết hạn"
             )
         account = await IdentityRepository.mark_email_verified(
             str(token_doc["user_id"]), token_doc["email"]
@@ -311,7 +309,10 @@ class SessionService:
 
     @staticmethod
     async def issue_token_for_user(user_doc: dict, client_ip: str):
-        if not user_doc.get("is_active", True) or user_doc.get("account_status", "ACTIVE") != "ACTIVE":
+        if (
+            not user_doc.get("is_active", True)
+            or user_doc.get("account_status", "ACTIVE") != "ACTIVE"
+        ):
             raise HTTPException(
                 status_code=403,
                 detail="Tài khoản hiện đang bị khóa hoặc ở trạng thái không hoạt động",

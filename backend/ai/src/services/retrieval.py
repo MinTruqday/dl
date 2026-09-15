@@ -1,11 +1,14 @@
 import asyncio
 from typing import Dict, List, Optional
+
 from loguru import logger
+
 from src.core.infrastructure.configuration import settings
-from src.store.vector import vector_store
-from src.store.bm25 import bm25_store
 from src.services.embedding import embedder
 from src.services.inference import decompose_retrieval, expand_retrieval
+from src.store.bm25 import bm25_store
+from src.store.vector import vector_store
+from src.utils.model_provider import auxiliary_client
 
 
 class RetrievalUnavailableError(RuntimeError):
@@ -17,29 +20,47 @@ async def initialize_retrieval():
     if len(embedding) != embedder._dimensions:
         raise RuntimeError("Embedding model dimension does not match the retrieval index")
     await vector_store.ensure_collection()
-    await bm25_store.initialize(await vector_store.scroll_all())
+    documents = await vector_store.scroll_all()
+    stale_documents = [
+        document
+        for document in documents
+        if document.get("metadata", {}).get("embedding_model") != settings.EMBEDDING_MODEL
+    ]
+    if stale_documents:
+        embeddings = await embedder.embed_batch(
+            [document.get("text", "") for document in stale_documents]
+        )
+        metadatas = [
+            {**document.get("metadata", {}), "embedding_model": settings.EMBEDDING_MODEL}
+            for document in stale_documents
+        ]
+        await vector_store.upsert(
+            ids=[document["id"] for document in stale_documents],
+            embeddings=embeddings,
+            documents=[document.get("text", "") for document in stale_documents],
+            metadatas=metadatas,
+        )
+        for document, metadata in zip(stale_documents, metadatas):
+            document["metadata"] = metadata
+        logger.info("AI vector index migrated to hosted embedding model")
+    await bm25_store.initialize(documents)
     await retriever.initialize()
     logger.info("AI retrieval capability initialized and ready")
 
 
 class RetrievalService:
     def __init__(self):
-        self._reranker = None
-
-    @property
-    def reranker(self):
-        if self._reranker is None:
-            raise RuntimeError("Reranker model is not initialized")
-        return self._reranker
+        self._reranker_ready = False
 
     async def initialize(self):
         try:
-            from sentence_transformers import CrossEncoder
-
-            self._reranker = await asyncio.to_thread(CrossEncoder, settings.RERANKER_MODEL)
+            scores = await auxiliary_client.rerank(
+                [["readiness", "readiness"], ["readiness", "unrelated"]]
+            )
+            self._reranker_ready = len(scores) == 2
         except Exception:
             logger.exception("AI ranking model loading error")
-            self._reranker = False
+            self._reranker_ready = False
 
     def get_citations(self, results: List[Dict]) -> List[Dict]:
         seen = set()
@@ -143,7 +164,6 @@ class RetrievalService:
         is_admin: bool = False,
         metadata_filters: Optional[Dict] = None,
     ) -> List[Dict]:
-        current_reranker = self.reranker
         fetch_limit = min(max(k * 3, k), 100)
 
         async def dense_search():
@@ -187,14 +207,12 @@ class RetrievalService:
         if not documents:
             return []
 
-        if not current_reranker:
+        if not self._reranker_ready:
             return documents[:k]
 
         try:
             pairs = [[query, doc.get("text", "")] for doc in documents]
-            scores = await asyncio.wait_for(
-                asyncio.to_thread(current_reranker.predict, pairs), timeout=1.0
-            )
+            scores = await asyncio.wait_for(auxiliary_client.rerank(pairs), timeout=30.0)
             scored_documents = sorted(zip(documents, scores), key=lambda x: x[1], reverse=True)
             return [doc for doc, _ in scored_documents[:k]]
         except Exception:

@@ -1,12 +1,12 @@
-import httpx
 import re
+
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from src.core.auth import CurrentUser, get_current_user
 from src.core.common import envelope, load_user_identities, now
 from src.core.configuration import settings
 from src.core.database import database
-
 
 router = APIRouter(prefix="/kiem-thu", tags=["Vận hành kiểm thử"])
 
@@ -20,7 +20,9 @@ def attachment_size(value):
     if isinstance(value, dict):
         total = 0
         for key, item in value.items():
-            if key in {"size", "size_bytes", "bytes", "byte_size"} and isinstance(item, (int, float)):
+            if key in {"size", "size_bytes", "bytes", "byte_size"} and isinstance(
+                item, (int, float)
+            ):
                 total += int(item)
             elif isinstance(item, (dict, list)):
                 total += attachment_size(item)
@@ -31,7 +33,9 @@ def attachment_size(value):
 
 
 async def project_storage_usage():
-    projects = await database.value.projects.find({}, {"_id": 1, "key": 1, "name": 1}).to_list(10000)
+    projects = await database.value.projects.find({}, {"_id": 1, "key": 1, "name": 1}).to_list(
+        10000
+    )
     collections = [
         ("requirement_documents", "raw_source"),
         ("test_case_drafts", "attachments"),
@@ -45,7 +49,11 @@ async def project_storage_usage():
         total = 0
         file_count = 0
         for collection_name, field in collections:
-            rows = await getattr(database.value, collection_name).find({"project_id": project_id}, {field: 1}).to_list(10000)
+            rows = (
+                await getattr(database.value, collection_name)
+                .find({"project_id": project_id}, {field: 1})
+                .to_list(10000)
+            )
             for row in rows:
                 value = row.get(field)
                 total += attachment_size(value)
@@ -53,7 +61,15 @@ async def project_storage_usage():
                     file_count += len(value)
                 elif isinstance(value, dict) and value:
                     file_count += 1
-        usage.append({"project_id": project_id, "project_key": project.get("key"), "project_name": project.get("name"), "bytes": total, "files": file_count})
+        usage.append(
+            {
+                "project_id": project_id,
+                "project_key": project.get("key"),
+                "project_name": project.get("name"),
+                "bytes": total,
+                "files": file_count,
+            }
+        )
     usage.sort(key=lambda item: item["bytes"], reverse=True)
     return usage
 
@@ -80,9 +96,7 @@ async def ai_request_metrics():
             "degraded": impact_degraded,
             "success_rate": round(impact_success / measured, 4) if measured else 0,
             "error_rate": round(impact_degraded / measured, 4) if measured else 0,
-            "average_latency_ms": round(latency_rows[0]["average_ms"], 3)
-            if latency_rows
-            else 0,
+            "average_latency_ms": round(latency_rows[0]["average_ms"], 3) if latency_rows else 0,
         },
         "proposals": await database.value.maintenance_proposals.count_documents({}),
     }
@@ -97,15 +111,21 @@ async def operations(
     user: CurrentUser = Depends(get_current_user),
 ):
     await require_system_admin(user)
-    failed_ingestion = await database.value.import_jobs.find(
-        {"status": {"$in": ["FAILED", "PARSE_FAILED"]}}
-    ).sort("created_at", -1).to_list(limit)
-    failed_impact = await database.value.impact_analyses.find(
-        {"status": {"$in": ["FAILED", "DEGRADED"]}}
-    ).sort("updated_at", -1).to_list(limit)
-    worker_failures = await database.value.worker_events.find(
-        {"status": "FAILED"}
-    ).sort("completed_at", -1).to_list(limit)
+    failed_ingestion = (
+        await database.value.import_jobs.find({"status": {"$in": ["FAILED", "PARSE_FAILED"]}})
+        .sort("created_at", -1)
+        .to_list(limit)
+    )
+    failed_impact = (
+        await database.value.impact_analyses.find({"status": {"$in": ["FAILED", "DEGRADED"]}})
+        .sort("updated_at", -1)
+        .to_list(limit)
+    )
+    worker_failures = (
+        await database.value.worker_events.find({"status": "FAILED"})
+        .sort("completed_at", -1)
+        .to_list(limit)
+    )
     indexing_backlog = await database.value.requirement_versions.count_documents(
         {"index_status": {"$in": ["PENDING", "FAILED"]}}
     ) + await database.value.test_case_versions.count_documents(
@@ -129,7 +149,9 @@ async def operations(
             {"entity_id": {"$regex": pattern, "$options": "i"}},
             {"actor_id": {"$regex": pattern, "$options": "i"}},
         ]
-    audit_events = await database.value.audit_events.find(audit_filter).sort("created_at", -1).to_list(limit)
+    audit_events = (
+        await database.value.audit_events.find(audit_filter).sort("created_at", -1).to_list(limit)
+    )
     identities = await load_user_identities(event.get("actor_id") for event in audit_events)
     for event in audit_events:
         identity = identities.get(str(event.get("actor_id")))
@@ -168,6 +190,8 @@ async def retry_failed_job(job_id: str, user: CurrentUser = Depends(get_current_
             code = "JOB_NOT_FOUND"
         elif error.response.status_code == 409:
             code = "JOB_RETRY_NOT_ALLOWED"
-        raise HTTPException(status_code=error.response.status_code, detail={"code": code}) from error
+        raise HTTPException(
+            status_code=error.response.status_code, detail={"code": code}
+        ) from error
     except httpx.HTTPError as error:
         raise HTTPException(status_code=503, detail={"code": "WORKER_UNAVAILABLE"}) from error

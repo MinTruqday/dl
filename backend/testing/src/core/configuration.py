@@ -10,7 +10,6 @@ class Settings(BaseModel):
     CORS_ALLOWED_ORIGINS: str = os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:3000")
     MONGODB_URI: str = os.getenv("MONGODB_URI", "mongodb://mongodb:27017")
     TESTING_DB_NAME: str = os.getenv("TESTING_DB_NAME", "testing")
-    TESTING_ALLOW_TEST_IDENTITY: bool = os.getenv("TESTING_ALLOW_TEST_IDENTITY", "false").lower() == "true"
     PROJECT_CREATION_POLICY: str = os.getenv("PROJECT_CREATION_POLICY", "AUTHENTICATED")
     AI_URL: str = os.getenv("AI_URL", "http://ai:8000")
     AI_REQUEST_TIMEOUT_SECONDS: float = float(os.getenv("AI_REQUEST_TIMEOUT_SECONDS", "900"))

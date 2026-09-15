@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import Optional
+
 import httpx
 from fastapi import HTTPException
 from loguru import logger
@@ -7,7 +8,6 @@ from loguru import logger
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.mongo import mongo
 from src.repositories.document import DocumentRepository
-from src.services.document.base import is_admin
 
 
 class DocumentHierarchyService:

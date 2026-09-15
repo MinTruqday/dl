@@ -1,4 +1,5 @@
 import time
+from datetime import datetime, timezone
 
 import httpx
 
@@ -47,7 +48,11 @@ async def request_impact_classification(project_id, change_set, candidates):
         latency_ms = round((time.perf_counter() - started_at) * 1000, 3)
         result["latency_ms"] = latency_ms
         AI_GENERATION_LATENCY.labels("impact_classification").observe(latency_ms / 1000)
-        outcome = "success" if result.get("status") == "SUCCESS" and not result.get("degraded_mode") else "degraded"
+        outcome = (
+            "success"
+            if result.get("status") == "SUCCESS" and not result.get("degraded_mode")
+            else "degraded"
+        )
         AI_REQUESTS.labels("impact_classification", outcome).inc()
         return result
     except Exception as error:
@@ -57,12 +62,26 @@ async def request_impact_classification(project_id, change_set, candidates):
         return {
             "capability": "impact_analysis",
             "suggestions": [],
-            "evidence_refs": [item["artifact_version_id"] for item in evidence if item.get("artifact_version_id")],
+            "evidence_refs": [
+                item["artifact_version_id"] for item in evidence if item.get("artifact_version_id")
+            ],
             "confidence": 0,
             "warnings": ["AI_PROVIDER_UNAVAILABLE", "MANUAL_REVIEW_REQUIRED"],
+            "reason_codes": ["AI_PROVIDER_UNAVAILABLE", "MANUAL_REVIEW_REQUIRED"],
             "status": "DEGRADED",
             "degraded_mode": "DEGRADED_AI",
-            "model": {"provider": "deterministic-fallback", "model": "qa-rules-v2"},
+            "provider": "deterministic-fallback",
+            "model": {
+                "provider": "deterministic-fallback",
+                "model": "qa-rules-v2",
+                "prompt_version": "qa-v2",
+                "tool_schema_version": "1",
+                "retrieval_version": "project-filter-v1",
+            },
+            "prompt_version": "qa-v2",
+            "tool_schema_version": "1",
+            "retrieval_version": "project-filter-v1",
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "error_type": type(error).__name__,
             "latency_ms": latency_ms,
         }
@@ -79,7 +98,9 @@ def apply_ai_impact_suggestions(items, ai_result):
             continue
         target = by_version[version_id]
         target["ai_classification"] = classification
-        target["ai_confidence"] = max(0, min(1, float(suggestion.get("confidence", ai_result.get("confidence", 0)))))
+        target["ai_confidence"] = max(
+            0, min(1, float(suggestion.get("confidence", ai_result.get("confidence", 0))))
+        )
         target["ai_reason"] = str(suggestion.get("reason") or "AI evidence classification")[:2000]
         target["evidence"].append(
             {
@@ -89,7 +110,7 @@ def apply_ai_impact_suggestions(items, ai_result):
                 "confidence": target["ai_confidence"],
             }
         )
-        if target["ai_confidence"] >= 0.7:
+        if target["ai_confidence"] >= 0.7 and target["confidence"] < 0.9:
             target["classification"] = classification
             target["confidence"] = max(target["confidence"], target["ai_confidence"])
             target["reasons"].append(target["ai_reason"])

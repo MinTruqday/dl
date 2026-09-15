@@ -1,23 +1,24 @@
-from datetime import datetime, timezone
 import hashlib
 import hmac
+from datetime import datetime, timezone
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from src.schemas.response import APIResponse
+
 from src.core.dependency import CurrentUser, get_current_user_optional, verify_internal_token
+from src.core.infrastructure.configuration import settings
+from src.core.infrastructure.mongo import mongo
+from src.core.metrics import metrics_collector
+from src.schemas.response import APIResponse
 from src.schemas.retrieval import (
-    RetrieveRequest,
-    MultiQueryRetrieveRequest,
-    CrossDocRetrieveRequest,
-    RetrieveResponse,
-    RetrievedDocument,
     CitationItem,
+    CrossDocRetrieveRequest,
+    MultiQueryRetrieveRequest,
+    RetrievedDocument,
+    RetrieveRequest,
+    RetrieveResponse,
 )
 from src.services.retrieval import RetrievalUnavailableError, retriever
-from src.core.metrics import metrics_collector
-from src.core.infrastructure.mongo import mongo
-from src.core.infrastructure.configuration import settings
 
 router = APIRouter(dependencies=[Depends(verify_internal_token)])
 
@@ -53,7 +54,9 @@ async def record_retrieval_access(operation, query, requester_id, is_admin, docs
     )
 
 
-@router.get("/nhat-ky/truy-cap-truy-xuat", description="Truy vấn audit access của knowledge retrieval")
+@router.get(
+    "/nhat-ky/truy-cap-truy-xuat", description="Truy vấn audit access của knowledge retrieval"
+)
 async def list_retrieval_access_audit(
     requester_id: str | None = None,
     project_id: str | None = None,
@@ -68,14 +71,19 @@ async def list_retrieval_access_audit(
     if document_id:
         query["document_ids"] = document_id
     return (
-        await mongo.get_db().retrieval_audit.find(query)
+        await mongo.get_db()
+        .retrieval_audit.find(query)
         .sort("created_at", -1)
         .limit(limit)
         .to_list(limit)
     )
 
 
-@router.post("/truy-xuat", response_model=APIResponse[RetrieveResponse], description="Truy xuất knowledge bằng dense sparse fusion và rerank")
+@router.post(
+    "/truy-xuat",
+    response_model=APIResponse[RetrieveResponse],
+    description="Truy xuất knowledge bằng dense sparse fusion và rerank",
+)
 async def retrieve_documents(
     req: RetrieveRequest, user: CurrentUser = Depends(get_current_user_optional)
 ):
@@ -122,7 +130,11 @@ async def retrieve_documents(
     )
 
 
-@router.post("/truy-xuat-da-truy-van", response_model=APIResponse[RetrieveResponse], description="Truy xuất knowledge bằng mở rộng truy vấn")
+@router.post(
+    "/truy-xuat-da-truy-van",
+    response_model=APIResponse[RetrieveResponse],
+    description="Truy xuất knowledge bằng mở rộng truy vấn",
+)
 async def multi_query_retrieve(
     req: MultiQueryRetrieveRequest, user: CurrentUser = Depends(get_current_user_optional)
 ):
@@ -139,7 +151,9 @@ async def multi_query_retrieve(
         )
     except RetrievalUnavailableError as error:
         raise HTTPException(status_code=503, detail={"code": str(error)}) from error
-    await record_retrieval_access("multi_query_retrieve", req.question, requester_id, is_admin, docs)
+    await record_retrieval_access(
+        "multi_query_retrieve", req.question, requester_id, is_admin, docs
+    )
     metrics_collector.record_artifact_retrieval(docs, req.metadata_filters.artifact_type)
     citations_data = retriever.get_citations(docs)
     retrieved_docs = [
@@ -168,7 +182,11 @@ async def multi_query_retrieve(
     )
 
 
-@router.post("/truy-xuat-lien-tai-lieu", response_model=APIResponse[RetrieveResponse], description="Truy xuất knowledge liên tài liệu")
+@router.post(
+    "/truy-xuat-lien-tai-lieu",
+    response_model=APIResponse[RetrieveResponse],
+    description="Truy xuất knowledge liên tài liệu",
+)
 async def cross_document_retrieve(
     req: CrossDocRetrieveRequest, user: CurrentUser = Depends(get_current_user_optional)
 ):

@@ -1,10 +1,12 @@
 import asyncio
+import uuid
 from typing import Optional
+from urllib.parse import urlsplit
+
 import httpx
 import jwt
-import uuid
 from loguru import logger
-from urllib.parse import urlsplit
+
 from src.core.infrastructure.configuration import settings
 
 INTERNAL_API_URL = settings.INTERNAL_API_URL

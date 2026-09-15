@@ -5,6 +5,7 @@ import TestStatusReportPanel from "../../components/TestStatusReportPanel";
 import CompletionPage from "./CompletionPage";
 import MetricDefinitionPanel from "../../components/MetricDefinitionPanel";
 import ReleaseQualityPanel from "../../components/ReleaseQualityPanel";
+import ProcessImprovementPanel from "../../components/ProcessImprovementPanel";
 import {
   ErrorState,
   LoadingState,
@@ -71,10 +72,21 @@ export default function ReportsPage({ project }) {
   return (
     <WorkspacePage title="Báo cáo" actions={<ProjectCrumb projectId={project._id} />}>
       {error && <ErrorState message={error} />}
-      {project.current_permissions?.includes("teststatusreport.read") && <TestStatusReportPanel project={project} />}
-      {project.current_permissions?.includes("testcompletion.read") && <CompletionPage project={project} />}
-      {project.current_permissions?.includes("qualityevaluation.read") && <ReleaseQualityPanel project={project} />}
-      {project.current_permissions?.includes("measurement.read") && <MetricDefinitionPanel project={project} />}
+      {project.current_permissions?.includes("teststatusreport.read") && (
+        <TestStatusReportPanel project={project} />
+      )}
+      {project.current_permissions?.includes("testcompletion.read") && (
+        <CompletionPage project={project} />
+      )}
+      {project.current_permissions?.includes("qualityevaluation.read") && (
+        <ReleaseQualityPanel project={project} />
+      )}
+      {project.current_permissions?.includes("measurement.read") && (
+        <MetricDefinitionPanel project={project} />
+      )}
+      {project.current_permissions?.includes("processimprovement.read") && (
+        <ProcessImprovementPanel project={project} />
+      )}
       <Panel
         title="Phạm vi báo cáo"
         actions={

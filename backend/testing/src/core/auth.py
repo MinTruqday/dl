@@ -1,8 +1,8 @@
-from enum import Enum
 import os
+from enum import Enum
 
 import jwt
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel, Field
 
@@ -33,18 +33,22 @@ requirement.read requirement.create requirement.update requirement.review requir
 requirement.approve requirement.archive requirement.restore requirement.version.create
 requirement.version.read requirement.diff.read acceptance_criteria.manage business_rule.manage
 requirement_dependency.manage requirement.split requirement.merge requirement.duplicate_check
-    testplan.read testplan.create testplan.update testplan.submit_review testplan.approve testplan.archive
+    testplan.read testplan.create testplan.update testplan.review testplan.submit_review testplan.approve testplan.archive
     teststrategy.read teststrategy.create teststrategy.update teststrategy.submit_review
     teststrategy.review teststrategy.approve teststrategy.version.create teststrategy.version.read teststrategy.archive
     testcondition.read testcondition.create testcondition.update testcondition.review
-    testcondition.approve testcondition.archive testanalysis.run_ai testanalysis.resolve_finding
+    testcondition.approve testcondition.archive testcondition.bulk.update
+    testanalysis.read testanalysis.execute testanalysis.run_ai testanalysis.finding.create
+    testanalysis.finding.assign testanalysis.resolve_finding testanalysis.verify_finding
     testmonitor.read testmonitor.snapshot.create testmonitor.control.create
     testmonitor.control.assign testmonitor.control.update testmonitor.exit_criteria.override
     testmonitor.report.create
-    teststatusreport.read teststatusreport.create teststatusreport.update
-    teststatusreport.review teststatusreport.approve teststatusreport.export
+    qualitygate.read qualitygate.decide qualitygate.accept_risk qualitygate.override
+    teststatusreport.read teststatusreport.create teststatusreport.update teststatusreport.submit_review
+    teststatusreport.review teststatusreport.approve teststatusreport.publish teststatusreport.archive teststatusreport.export
     testcompletion.read testcompletion.create testcompletion.update
-    testcompletion.review testcompletion.approve testcompletion.close
+    testcompletion.risk.manage testcompletion.lesson.create testcompletion.handover.manage
+    testcompletion.submit_review testcompletion.review testcompletion.approve testcompletion.close
     reviewsession.read reviewsession.create reviewsession.update
     reviewsession.finding.manage reviewsession.complete
     measurement.read measurement.manage measurement.snapshot.create
@@ -54,6 +58,9 @@ requirement_dependency.manage requirement.split requirement.merge requirement.du
     preventionaction.manage
     environmentincident.read environmentincident.create environmentincident.update environmentincident.close
     nfrtest.read nfrtest.manage nfrtest.review nfrtest.approve nfrtest.evidence.import
+    processimprovement.read processimprovement.create processimprovement.update
+    processimprovement.approve processimprovement.measure processimprovement.evaluate processimprovement.decide
+    statisticalquality.read statisticalquality.manage statisticalquality.annotate
 testscenario.read testscenario.create testscenario.update testscenario.clone testscenario.archive
 testcase.read testcase.create testcase.update testcase.review testcase.clone testcase.import
 testcase.export testcase.lint testcase.duplicate_check testcase.submit_review testcase.approve
@@ -107,7 +114,9 @@ READ_ONLY_PERMISSIONS = {
     "teststrategy.read",
     "teststrategy.version.read",
     "testcondition.read",
+    "testanalysis.read",
     "testmonitor.read",
+    "qualitygate.read",
     "teststatusreport.read",
     "testcompletion.read",
     "reviewsession.read",
@@ -116,6 +125,8 @@ READ_ONLY_PERMISSIONS = {
     "causalanalysis.read",
     "environmentincident.read",
     "nfrtest.read",
+    "processimprovement.read",
+    "statisticalquality.read",
     "testscenario.read",
     "testcase.read",
     "testcase.version.read",
@@ -168,20 +179,25 @@ COLLABORATOR_PERMISSIONS = COMMENT_COLLABORATOR_PERMISSIONS | {
     "attachment.delete_own_unreferenced",
 }
 
-TESTER_PERMISSIONS = READ_ONLY_PERMISSIONS | COLLABORATOR_PERMISSIONS | set(
-    """
-    testplan.create testplan.update testplan.submit_review
+TESTER_PERMISSIONS = (
+    READ_ONLY_PERMISSIONS
+    | COLLABORATOR_PERMISSIONS
+    | set(
+        """
+    testplan.create testplan.update testplan.review testplan.submit_review
     teststrategy.create teststrategy.update teststrategy.submit_review teststrategy.review
-    testcondition.create testcondition.update testcondition.review testanalysis.run_ai testanalysis.resolve_finding
+    testcondition.create testcondition.update testcondition.review testcondition.bulk.update
+    testanalysis.execute testanalysis.run_ai testanalysis.finding.create testanalysis.resolve_finding testanalysis.verify_finding
     testmonitor.control.create testmonitor.control.update
-    teststatusreport.create teststatusreport.update teststatusreport.review teststatusreport.export
-    testcompletion.create testcompletion.update testcompletion.review
+    teststatusreport.create teststatusreport.update teststatusreport.submit_review teststatusreport.review teststatusreport.export
+    testcompletion.update testcompletion.lesson.create testcompletion.review
     reviewsession.create reviewsession.update reviewsession.finding.manage reviewsession.complete
-    measurement.snapshot.create
     qualityevaluation.create qualityevaluation.review
     causalanalysis.create causalanalysis.update preventionaction.manage
     environmentincident.create environmentincident.update
     nfrtest.manage nfrtest.review nfrtest.evidence.import
+    processimprovement.create processimprovement.update processimprovement.measure processimprovement.evaluate
+    statisticalquality.annotate
 testscenario.create testscenario.update testscenario.clone testscenario.archive
 testcase.create testcase.update testcase.review testcase.clone testcase.import testcase.export
 testcase.lint testcase.duplicate_check testcase.submit_review testcase.version.create
@@ -208,10 +224,14 @@ automation.read automation.create automation.execute
 cicd.read cicd.retry
 collaboration.conflict.resolve
 """.split()
+    )
 )
 
-BA_PERMISSIONS = READ_ONLY_PERMISSIONS | COLLABORATOR_PERMISSIONS | set(
-    """
+BA_PERMISSIONS = (
+    READ_ONLY_PERMISSIONS
+    | COLLABORATOR_PERMISSIONS
+    | set(
+        """
 requirement_document.download requirement_document.upload requirement_document.extract
 requirement_document.review_extraction requirement_document.confirm_extraction
 requirement_document.archive requirement_document.restore
@@ -219,38 +239,52 @@ requirement.create requirement.update requirement.review requirement.submit_revi
 requirement.version.create acceptance_criteria.manage business_rule.manage requirement_dependency.manage
     requirement.split requirement.merge requirement.duplicate_check
     teststrategy.review
-    testcondition.create testcondition.update testcondition.review testanalysis.run_ai testanalysis.resolve_finding
+    testcondition.create testcondition.update testcondition.review
+    testanalysis.execute testanalysis.run_ai testanalysis.finding.create testanalysis.resolve_finding testanalysis.verify_finding
 trace.create trace.review trace.recover changeset.create changeset.review impact.review proposal.review
 testcase.export testcase.lint testcase.duplicate_check testcase.review defect.create defect.trace.manage
 knowledge.manage ai.ask_project ai.run_lint ai.run_duplicate_check ai.suggest_bug_trace analytics.ai.read report.export
     teststatusreport.export
-    testcompletion.review
+    testcompletion.lesson.create testcompletion.review
     reviewsession.create reviewsession.update reviewsession.finding.manage reviewsession.complete
     qualityevaluation.review
+    processimprovement.create processimprovement.update processimprovement.measure processimprovement.evaluate
 attachment.manage
 apiartifact.import apiartifact.review apiartifact.confirm apiartifact.archive
 project.connector.sync project.connector.review
 collaboration.conflict.resolve
 """.split()
+    )
 )
 
-DEVELOPER_PERMISSIONS = READ_ONLY_PERMISSIONS | COMMENT_COLLABORATOR_PERMISSIONS | {
-    "requirement_document.download",
-    "impact.review",
-    "proposal.review",
-    "defect.create",
-    "defect.duplicate_check",
-    "testcase.review",
-    "reviewsession.create",
-    "reviewsession.update",
-    "reviewsession.finding.manage",
-    "causalanalysis.create",
-    "causalanalysis.update",
-    "preventionaction.manage",
-    "environmentincident.create",
-    "environmentincident.update",
-    "ai.ask_project",
-}
+DEVELOPER_PERMISSIONS = (
+    READ_ONLY_PERMISSIONS
+    | COMMENT_COLLABORATOR_PERMISSIONS
+    | {
+        "requirement_document.download",
+        "impact.review",
+        "proposal.review",
+        "defect.create",
+        "defect.duplicate_check",
+        "testcase.review",
+        "reviewsession.create",
+        "reviewsession.update",
+        "reviewsession.finding.manage",
+        "causalanalysis.create",
+        "causalanalysis.update",
+        "preventionaction.manage",
+        "testcompletion.lesson.create",
+        "testcompletion.review",
+        "environmentincident.create",
+        "environmentincident.update",
+        "processimprovement.create",
+        "processimprovement.update",
+        "processimprovement.measure",
+        "processimprovement.evaluate",
+        "qualityevaluation.review",
+        "ai.ask_project",
+    }
+)
 
 ROLE_PERMISSIONS = {
     ProjectRole.QA_LEAD: PROJECT_PERMISSIONS,
@@ -339,7 +373,10 @@ def permissions_for_role(role: ProjectRole | str, settings_value: dict | None = 
         permissions.update({"report.export", "testcase.export"})
     if normalized == ProjectRole.BA and project_settings.get("ba_can_create_defect") is False:
         permissions.discard("defect.create")
-    if normalized == ProjectRole.DEVELOPER and project_settings.get("developer_can_create_defect") is False:
+    if (
+        normalized == ProjectRole.DEVELOPER
+        and project_settings.get("developer_can_create_defect") is False
+    ):
         permissions.discard("defect.create")
     overrides = project_settings.get("permission_overrides", {}).get(normalized.value, {})
     permissions.update(item for item in overrides.get("allow", []) if item in PROJECT_PERMISSIONS)
@@ -347,25 +384,10 @@ def permissions_for_role(role: ProjectRole | str, settings_value: dict | None = 
     return permissions
 
 
-async def get_current_user(
-    token: str | None = Depends(oauth2_scheme),
-    x_test_user_id: str | None = Header(default=None),
-    x_test_system_role: str = Header(default="USER"),
-):
-    if settings.TESTING_ALLOW_TEST_IDENTITY and x_test_user_id:
-        try:
-            system_role = SystemRole(x_test_system_role.upper())
-        except ValueError:
-            system_role = SystemRole.USER
-        return CurrentUser(
-            _id=x_test_user_id,
-            email=f"{x_test_user_id}@test.local",
-            system_role=system_role,
-        )
+async def get_current_user(token: str | None = Depends(oauth2_scheme)):
     if not token:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"code": "AUTH_REQUIRED"},
+            status_code=status.HTTP_401_UNAUTHORIZED, detail={"code": "AUTH_REQUIRED"}
         )
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
@@ -391,8 +413,7 @@ async def get_current_user(
                 {"_id": str(user_id)}, {"is_active": 1, "account_status": 1}
             )
             session = await auth_db.sessions.find_one(
-                {"_id": str(session_id), "user_id": str(user_id), "revoked_at": None},
-                {"_id": 1},
+                {"_id": str(session_id), "user_id": str(user_id), "revoked_at": None}, {"_id": 1}
             )
             if (
                 not account
@@ -401,23 +422,18 @@ async def get_current_user(
                 or not session
             ):
                 raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail={"code": "SESSION_REVOKED"},
+                    status_code=status.HTTP_401_UNAUTHORIZED, detail={"code": "SESSION_REVOKED"}
                 )
         return CurrentUser(
-            _id=str(user_id),
-            email=str(email),
-            system_role=SystemRole(str(role_value).upper()),
+            _id=str(user_id), email=str(email), system_role=SystemRole(str(role_value).upper())
         )
     except jwt.ExpiredSignatureError:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"code": "TOKEN_EXPIRED"},
+            status_code=status.HTTP_401_UNAUTHORIZED, detail={"code": "TOKEN_EXPIRED"}
         )
     except (jwt.PyJWTError, ValueError):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"code": "TOKEN_INVALID"},
+            status_code=status.HTTP_401_UNAUTHORIZED, detail={"code": "TOKEN_INVALID"}
         )
 
 
