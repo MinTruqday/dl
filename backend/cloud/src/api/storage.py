@@ -3,25 +3,23 @@ from typing import Any, List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query
 from loguru import logger
-from src.api.dependency import get_db, require_role
+
+from src.core.dependency import CurrentUser, Role, get_db, require_role
+from src.core.response import APIResponse
 from src.schemas.storage import (
+    BulkActionRequest,
+    FileVersionResponse,
+    InternalShareRequest,
+    ItemActivityResponse,
+    QuotaAnalyticsResponse,
+    StarredUpdateRequest,
     StorageItemCreate,
     StorageItemResponse,
     StorageItemUpdate,
-    BulkActionRequest,
-    ItemActivityResponse,
-    StarredUpdateRequest,
     TagColorUpdateRequest,
-    InternalShareRequest,
-    QuotaAnalyticsResponse,
-    FileVersionResponse,
 )
-from src.services.storage import StorageService
 from src.services.activity import ActivityService
-
-from src.core.infrastructure.configuration import settings
-from src.core.response import APIResponse
-from src.core.dependency import CurrentUser, Role
+from src.services.storage import StorageService
 
 router = APIRouter(prefix="/luu-tru")
 

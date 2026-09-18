@@ -1,13 +1,15 @@
 from typing import Any, List, Optional
+
 from fastapi import APIRouter, Body, Depends, Header, Query
-from src.core.response import APIResponse
-from src.api.dependency import (
+
+from src.core.dependency import (
+    CurrentUser,
+    Role,
     get_current_user,
     get_current_user_optional,
     require_role,
-    CurrentUser,
-    Role,
 )
+from src.core.response import APIResponse
 from src.schemas.document import (
     DocumentContentUpdate,
     DocumentCreate,

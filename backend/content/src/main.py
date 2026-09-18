@@ -1,8 +1,10 @@
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from loguru import logger
+
 from src.api.document import router as document
 from src.api.version import router as version
 from src.core.infrastructure.configuration import settings
@@ -20,9 +22,9 @@ async def lifespan(app: FastAPI):
     await close_db()
 
 
-app = FastAPI(title="DocLib Content", version=settings.VERSION, lifespan=lifespan)
+app = FastAPI(title="Veriq Content", version=settings.VERSION, lifespan=lifespan)
 app.add_middleware(PrometheusMiddleware, service_name="content")
-app.add_route("/metrics", metrics_endpoint("content"))
+app.add_route("/so-lieu", metrics_endpoint("content"))
 
 app.add_middleware(
     CORSMiddleware,
@@ -38,12 +40,12 @@ app.include_router(document)
 app.include_router(version)
 
 
-@app.get("/health", include_in_schema=False)
+@app.get("/suc-khoe", include_in_schema=False)
 async def health_check():
     return {"status": "healthy", "service": "content"}
 
 
-@app.get("/ready", include_in_schema=False)
+@app.get("/san-sang", include_in_schema=False)
 async def readiness_check():
     if database.mongodb is None:
         return JSONResponse(status_code=503, content={"status": "not_ready"})

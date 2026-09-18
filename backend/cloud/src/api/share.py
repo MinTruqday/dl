@@ -1,15 +1,16 @@
 from typing import Any, Optional
+
 from fastapi import APIRouter, Depends, Query
-from src.api.dependency import require_role
-from src.core.dependency import CurrentUser, Role
+
+from src.core.dependency import CurrentUser, Role, require_role
 from src.core.response import APIResponse
-from src.services.share import ShareService
 from src.schemas.storage import ProtectedShareCreate
+from src.services.share import ShareService
 
 router = APIRouter(prefix="/luu-tru")
 
 
-@router.post("/link-chia-se/tao", response_model=APIResponse[Any], status_code=201)
+@router.post("/lien-ket-chia-se/tao", response_model=APIResponse[Any], status_code=201)
 async def create_protected_share_link(
     req: ProtectedShareCreate,
     current_user: CurrentUser = Depends(require_role([Role.AUTHOR, Role.ADMIN, Role.READER])),
@@ -20,7 +21,7 @@ async def create_protected_share_link(
     return APIResponse(data=result, message="Tạo link chia sẻ bảo mật hoàn tất", status=201)
 
 
-@router.get("/link-chia-se/xac-thuc/{token}", response_model=APIResponse[Any])
+@router.get("/lien-ket-chia-se/xac-thuc/{token}", response_model=APIResponse[Any])
 async def validate_protected_share_link(
     token: str, password: Optional[str] = Query(default=None, max_length=128)
 ):

@@ -1,15 +1,9 @@
-from src.core.infrastructure.mongo import mongo
-import json
-import re
-import uuid
 from datetime import datetime, timezone
 
-from bson import ObjectId
 from fastapi import HTTPException
 from loguru import logger
 
-from src.core.infrastructure.database import database
-from src.repositories.document import DocumentRepository
+from src.core.infrastructure.mongo import mongo
 from src.repositories.document import DocumentRepository
 
 

@@ -1,11 +1,10 @@
 from typing import Any
 
 from fastapi import APIRouter, Depends
-from src.api.dependency import get_current_user, get_db
-from src.services.version import VersionService
 
+from src.core.dependency import CurrentUser, get_current_user, get_db
 from src.core.response import APIResponse
-from src.core.dependency import CurrentUser, Role
+from src.services.version import VersionService
 
 router = APIRouter(prefix="/phien-ban")
 

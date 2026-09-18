@@ -1,9 +1,9 @@
-from src.services.document.base import serialize_document, is_admin, can_read_full
+from src.services.document.base import can_read_full, is_admin, serialize_document
+from src.services.document.bulk import DocumentBulkService
 from src.services.document.crud import DocumentCrudService
 from src.services.document.hierarchy import DocumentHierarchyService
 from src.services.document.metadata import DocumentMetadataService
 from src.services.document.tag import DocumentTagService
-from src.services.document.bulk import DocumentBulkService
 
 
 class DocumentService(

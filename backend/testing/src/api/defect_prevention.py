@@ -1,0 +1,175 @@
+from fastapi import APIRouter, Depends
+
+from src.core.auth import CurrentUser, get_current_user
+from src.core.common import envelope
+from src.core.database import database
+from src.domain.causal_analysis import (
+    CausalAiRequest,
+    CausalAnalysisCreate,
+    CausalAnalysisPatch,
+    CausalApproval,
+    CausalDefectLink,
+    CausalEffectivenessInput,
+    CausalFiveWhyInput,
+    CausalReviewInput,
+    CausalRootCauseInput,
+    PreventionActionAssign,
+    PreventionActionCreate,
+    PreventionActionPatch,
+)
+from src.services.causal_analysis import (
+    add_five_why,
+    approve_analysis,
+    assign_action,
+    close_analysis,
+    create_action,
+    create_analysis,
+    generate_hypotheses,
+    get_analysis,
+    link_defects,
+    list_analyses,
+    record_root_cause,
+    review_effectiveness,
+    submit_review,
+    suggest_candidates,
+    update_action,
+    update_analysis,
+)
+
+router = APIRouter(prefix="/kiem-thu", tags=["Phòng ngừa lỗi"])
+
+
+@router.get("/du-an/{project_id}/phan-tich-nguyen-nhan")
+async def list_causal_analyses(project_id: str, user: CurrentUser = Depends(get_current_user)):
+    return envelope(await list_analyses(database.value, project_id, user))
+
+
+@router.get("/du-an/{project_id}/phan-tich-nguyen-nhan/ung-vien")
+async def suggest_causal_analysis_candidates(
+    project_id: str, user: CurrentUser = Depends(get_current_user)
+):
+    return envelope(await suggest_candidates(database.value, project_id, user))
+
+
+@router.post("/du-an/{project_id}/phan-tich-nguyen-nhan", status_code=201)
+async def create_causal_analysis(
+    project_id: str, payload: CausalAnalysisCreate, user: CurrentUser = Depends(get_current_user)
+):
+    value = await create_analysis(database.value, project_id, payload, user)
+    return envelope(value, revision=value["revision"])
+
+
+@router.get("/phan-tich-nguyen-nhan/{analysis_id}")
+async def get_causal_analysis(analysis_id: str, user: CurrentUser = Depends(get_current_user)):
+    value = await get_analysis(database.value, analysis_id, user)
+    value["actions"] = (
+        await database.value.preventive_actions.find({"causal_analysis_id": analysis_id})
+        .sort("created_at", 1)
+        .to_list(1000)
+    )
+    return envelope(value, revision=value["revision"])
+
+
+@router.patch("/phan-tich-nguyen-nhan/{analysis_id}")
+async def patch_causal_analysis(
+    analysis_id: str, payload: CausalAnalysisPatch, user: CurrentUser = Depends(get_current_user)
+):
+    value = await update_analysis(database.value, analysis_id, payload, user)
+    return envelope(value, revision=value["revision"])
+
+
+@router.post("/phan-tich-nguyen-nhan/{analysis_id}/lien-ket-loi")
+async def link_causal_analysis_defects(
+    analysis_id: str, payload: CausalDefectLink, user: CurrentUser = Depends(get_current_user)
+):
+    value = await link_defects(database.value, analysis_id, payload, user)
+    return envelope(value, revision=value["revision"])
+
+
+@router.post("/phan-tich-nguyen-nhan/{analysis_id}/nam-tai-sao")
+async def add_causal_analysis_five_why(
+    analysis_id: str, payload: CausalFiveWhyInput, user: CurrentUser = Depends(get_current_user)
+):
+    value = await add_five_why(database.value, analysis_id, payload, user)
+    return envelope(value, revision=value["revision"])
+
+
+@router.post("/phan-tich-nguyen-nhan/{analysis_id}/nguyen-nhan-goc")
+async def record_causal_analysis_root_cause(
+    analysis_id: str, payload: CausalRootCauseInput, user: CurrentUser = Depends(get_current_user)
+):
+    value = await record_root_cause(database.value, analysis_id, payload, user)
+    return envelope(value, revision=value["revision"])
+
+
+@router.post("/phan-tich-nguyen-nhan/{analysis_id}/hanh-dong-khac-phuc", status_code=201)
+async def create_corrective_action(
+    analysis_id: str, payload: PreventionActionCreate, user: CurrentUser = Depends(get_current_user)
+):
+    value = await create_action(database.value, analysis_id, payload, user, "CORRECTIVE")
+    return envelope(value, revision=value["revision"])
+
+
+@router.post("/phan-tich-nguyen-nhan/{analysis_id}/hanh-dong-phong-ngua", status_code=201)
+async def create_preventive_action(
+    analysis_id: str, payload: PreventionActionCreate, user: CurrentUser = Depends(get_current_user)
+):
+    value = await create_action(database.value, analysis_id, payload, user, "PREVENTIVE")
+    return envelope(value, revision=value["revision"])
+
+
+@router.post("/hanh-dong-phong-ngua/{action_id}/phan-cong")
+async def assign_prevention_action(
+    action_id: str, payload: PreventionActionAssign, user: CurrentUser = Depends(get_current_user)
+):
+    value = await assign_action(database.value, action_id, payload, user)
+    return envelope(value, revision=value["revision"])
+
+
+@router.patch("/hanh-dong-phong-ngua/{action_id}")
+async def patch_prevention_action(
+    action_id: str, payload: PreventionActionPatch, user: CurrentUser = Depends(get_current_user)
+):
+    value = await update_action(database.value, action_id, payload, user)
+    return envelope(value, revision=value["revision"])
+
+
+@router.post("/phan-tich-nguyen-nhan/{analysis_id}/gui-ra-soat")
+async def submit_causal_analysis_review(
+    analysis_id: str, payload: CausalReviewInput, user: CurrentUser = Depends(get_current_user)
+):
+    value = await submit_review(database.value, analysis_id, payload, user)
+    return envelope(value, revision=value["revision"])
+
+
+@router.post("/phan-tich-nguyen-nhan/{analysis_id}/phe-duyet")
+async def approve_causal_analysis(
+    analysis_id: str, payload: CausalApproval, user: CurrentUser = Depends(get_current_user)
+):
+    value = await approve_analysis(database.value, analysis_id, payload, user)
+    return envelope(value, revision=value["revision"])
+
+
+@router.post("/phan-tich-nguyen-nhan/{analysis_id}/danh-gia-hieu-luc")
+async def review_causal_analysis_effectiveness(
+    analysis_id: str,
+    payload: CausalEffectivenessInput,
+    user: CurrentUser = Depends(get_current_user),
+):
+    value = await review_effectiveness(database.value, analysis_id, payload, user)
+    return envelope(value, revision=value["revision"])
+
+
+@router.post("/phan-tich-nguyen-nhan/{analysis_id}/dong")
+async def close_causal_analysis(
+    analysis_id: str, payload: CausalReviewInput, user: CurrentUser = Depends(get_current_user)
+):
+    value = await close_analysis(database.value, analysis_id, payload, user)
+    return envelope(value, revision=value["revision"])
+
+
+@router.post("/phan-tich-nguyen-nhan/{analysis_id}/ai/goi-y")
+async def generate_causal_analysis_hypotheses(
+    analysis_id: str, payload: CausalAiRequest, user: CurrentUser = Depends(get_current_user)
+):
+    return envelope(await generate_hypotheses(database.value, analysis_id, payload, user))

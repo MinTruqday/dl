@@ -1,7 +1,6 @@
 from contextvars import ContextVar
 from typing import Any
 
-
 _usage: ContextVar[dict[str, int] | None] = ContextVar("model_usage", default=None)
 
 

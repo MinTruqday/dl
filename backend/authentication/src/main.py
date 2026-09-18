@@ -6,10 +6,12 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 
 from src.api.google import router as google_router
-from src.api.passkey import router as passkey_router
-from src.api.session import router as session_router
 from src.api.internal import router as internal_router
-from src.api.admin import router as admin_router
+from src.api.passkey import router as passkey_router
+from src.api.platform import router as platform_router
+from src.api.platform_controls import router as platform_controls_router
+from src.api.session import router as session_router
+from src.core.function_ids import apply_function_ids
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import close_db, database, init_db
 from src.core.infrastructure.redis import redis
@@ -28,9 +30,9 @@ async def lifespan(app: FastAPI):
         await close_db()
 
 
-app = FastAPI(title="DocLib Authentication", version=settings.VERSION, lifespan=lifespan)
+app = FastAPI(title="Veriq Authentication", version=settings.VERSION, lifespan=lifespan)
 app.add_middleware(PrometheusMiddleware, service_name="authentication")
-app.add_route("/metrics", metrics_endpoint("authentication"))
+app.add_route("/so-lieu", metrics_endpoint("authentication"))
 origins = [origin.strip() for origin in settings.CORS_ALLOWED_ORIGINS.split(",") if origin.strip()]
 app.add_middleware(
     CORSMiddleware,
@@ -43,15 +45,17 @@ app.include_router(session_router)
 app.include_router(passkey_router)
 app.include_router(google_router)
 app.include_router(internal_router)
-app.include_router(admin_router)
+app.include_router(platform_router)
+app.include_router(platform_controls_router)
+apply_function_ids(app)
 
 
-@app.get("/health")
+@app.get("/suc-khoe")
 async def health_check():
     return {"status": "healthy"}
 
 
-@app.get("/ready")
+@app.get("/san-sang")
 async def readiness_check():
     checks = {}
     try:

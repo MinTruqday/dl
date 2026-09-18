@@ -1,589 +1,186 @@
-x-service-environment: &service-environment
-  PYTHONDONTWRITEBYTECODE: "1"
-  PROJECT_NAME: ${PROJECT_NAME:?PROJECT_NAME is required}
-  VERSION: ${VERSION:?VERSION is required}
-  SECRET_KEY: ${SECRET_KEY:?SECRET_KEY is required}
-  CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS is required}
-  MONGODB_URI: ${MONGODB_URI:?MONGODB_URI is required}
-  REDIS_URI: ${REDIS_URI:?REDIS_URI is required}
-  PLATFORM_SYSTEM_ID: ${PLATFORM_SYSTEM_ID:?PLATFORM_SYSTEM_ID is required}
-  INTERNAL_API_URL: ${INTERNAL_API_URL:?INTERNAL_API_URL is required}
-
-x-minio-environment: &minio-environment
-  MINIO_ENDPOINT: http://minio:9000
-  MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:?MINIO_ROOT_USER is required}
-  MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
-  MINIO_PRIVATE_BUCKET: ${MINIO_PRIVATE_BUCKET:?MINIO_PRIVATE_BUCKET is required}
-  MINIO_PUBLIC_BUCKET: ${MINIO_PUBLIC_BUCKET:?MINIO_PUBLIC_BUCKET is required}
-  MINIO_PUBLIC_URL: http://localhost:9000
-  MINIO_REGION: us-east-1
-
-x-app-healthcheck: &app-healthcheck
-  test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ready', timeout=15)"]
-  interval: 30s
-  timeout: 20s
-  start_period: 30s
-  retries: 3
+name: veriq
 
 services:
   mongodb:
-    image: mongo:7.0@sha256:35a5926f71f8b6cb19206bee928c5a85f241a8be99f20c81abe35ae78a73415d
-    container_name: doclib_mongodb
-    restart: always
-    command:
-      - --replSet
-      - rs0
-      - --bind_ip_all
-    ports:
-      - 27017:27017
+    # The existing local volume uses MongoDB 7 feature compatibility.
+    image: mongo:7
+    restart: unless-stopped
     volumes:
       - mongodb_data:/data/db
     healthcheck:
-      test: ["CMD-SHELL", "mongosh --quiet --eval 'try { quit(rs.status().ok == 1 ? 0 : 1) } catch (error) { quit(rs.initiate({_id:\"rs0\",members:[{_id:0,host:\"mongodb:27017\"}]}).ok == 1 ? 0 : 1) }'"]
-      interval: 3s
-      timeout: 10s
-      start_period: 3s
-      retries: 20
-    networks:
-      - doclib_network
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
 
   redis:
-    image: redis:7-alpine@sha256:e7723ff73d963f5cc6d9c4643ea3d989527a402a319239054e9472a7fb9219a2
-    container_name: doclib_redis
-    restart: always
-    ports:
-      - 6379:6379
+    image: redis:7-alpine
+    restart: unless-stopped
     volumes:
       - redis_data:/data
-    networks:
-      - doclib_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
 
   rabbitmq:
-    image: rabbitmq:3-management-alpine@sha256:606d8c0d6b3c18d1da9afc53bc7cdb2a8d5486df91b5a9830e9e07626c9ae281
-    container_name: doclib_rabbitmq
-    restart: always
+    image: rabbitmq:4-management
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
     ports:
-      - 5672:5672
-      - 15672:15672
+      - "15672:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
-      test:
-        - CMD
-        - rabbitmq-diagnostics
-        - -q
-        - ping
-      interval: 5s
-      timeout: 20s
-      start_period: 10s
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
       retries: 12
-    networks:
-      - doclib_network
 
   minio:
-    image: minio/minio:RELEASE.2025-09-07T16-13-09Z@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
-    container_name: doclib_minio
-    restart: always
-    ports:
-      - 9000:9000
-      - 9001:9001
-    environment:
-      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
-      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    image: quay.io/minio/minio:RELEASE.2025-02-07T23-21-09Z
+    restart: unless-stopped
     command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
     volumes:
       - minio_data:/data
-    networks:
-      - doclib_network
 
-  traefik:
-    image: traefik:v3.7.6@sha256:21a3d83696379bac6434bb32e1dde0aff0e84ef2abd053ed3db87d3f45e749b2
-    container_name: doclib_traefik
-    restart: always
-    command:
-      - --api.dashboard=false
-      - --providers.docker=true
-      - --providers.docker.exposedbydefault=false
-      - --entrypoints.web.address=:8000
-      - --ping=true
-      - --ping.entrypoint=web
+  qdrant:
+    image: qdrant/qdrant:v1.15.5
+    restart: unless-stopped
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  mailpit:
+    image: axllent/mailpit:v1.27
+    profiles: ["email"]
+    restart: unless-stopped
     ports:
-      - 8000:8000
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8000/ping"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    networks:
-      - doclib_network
+      - "8025:8025"
 
-  nginx:
-    image: fholzer/nginx-brotli@sha256:e0aa855b74b7cdd0bb13a8cb1599e3af9b6210a98fb6234081b551899bfb924c
-    container_name: doclib_nginx
-    restart: always
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.frontend.rule=PathPrefix(`/`)
-      - traefik.http.routers.frontend.priority=1
-      - traefik.http.services.frontend.loadbalancer.server.port=80
-    networks:
-      - doclib_network
+  authentication:
+    build:
+      context: ./backend
+      dockerfile: authentication/Dockerfile
+    restart: unless-stopped
+    env_file: .env
     depends_on:
-      - frontend
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/nginx-health"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  testing:
+    build:
+      context: ./backend
+      dockerfile: testing/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+  ai:
+    build:
+      context: ./backend
+      dockerfile: ai/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+  notification:
+    build:
+      context: ./backend
+      dockerfile: notification/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  content:
+    build:
+      context: ./backend
+      dockerfile: content/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  cloud:
+    build:
+      context: ./backend
+      dockerfile: cloud/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_started
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: worker/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  gateway:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      - authentication
+      - testing
+      - notification
+      - content
+      - cloud
+      - worker
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./gateway.nginx.conf:/etc/nginx/conf.d/default.conf:ro
 
   frontend:
     build:
       context: .
-      dockerfile: ./frontend/Dockerfile
-      target: deps
-    container_name: doclib_frontend
-    restart: always
-    ports:
-      - 3000:3000
-    working_dir: /app
-    command: pnpm dev --turbo --hostname 0.0.0.0 -p 3000
-    volumes:
-      - ./frontend:/app
-      - frontend_node_modules:/app/node_modules
-      - ./packages:/packages
-      - frontend_next_cache:/app/.next-dev
-    environment:
-      WATCHPACK_POLLING: "true"
-      CHOKIDAR_USEPOLLING: "true"
-      NEXT_TELEMETRY_DISABLED: "1"
-      NEXT_DIST_DIR: .next-dev
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-    healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
-      interval: 30s
-      timeout: 20s
-      start_period: 30s
-      retries: 3
-    depends_on:
-      - traefik
-    networks:
-      - doclib_network
-
-  notification:
-    profiles: ["optional"]
-    healthcheck: *app-healthcheck
-    build:
-      context: ./backend
-      dockerfile: ./notification/Dockerfile
-    container_name: doclib_notification
-    restart: always
-    ports:
-      - 8004:8000
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.notification.rule=PathPrefix(`/thong-bao`)
-      - traefik.http.services.notification.loadbalancer.server.port=8000
-    environment:
-      <<: *service-environment
-      NOTIFICATION_DB_NAME: ${NOTIFICATION_DB_NAME:?NOTIFICATION_DB_NAME is required}
-    depends_on:
-      - authentication
-      - mongodb
-      - redis
-    volumes:
-      - ./backend/notification/src:/app/src
-      - ./backend/logs/notification:/app/logs
-    networks:
-      - doclib_network
-
-  ai:
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=15)"]
-      interval: 30s
-      timeout: 20s
-      start_period: 30s
-      retries: 3
-    build:
-      context: ./backend
-      dockerfile: ./ai/Dockerfile
-    container_name: doclib_ai
-    restart: always
-    ports:
-      - 8015:8000
-      - 38470-38479:38470-38479
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.ai.rule=PathPrefix(`/lich-su`) || PathPrefix(`/phan-hoi`) || PathPrefix(`/suy-luan`) || PathPrefix(`/tro-chuyen`) || PathPrefix(`/su-kien`) || PathPrefix(`/tiep-nap`) || PathPrefix(`/ngat-qua-trinh`)
-      - traefik.http.services.ai.loadbalancer.server.port=8000
-    environment:
-      <<: [*service-environment, *minio-environment]
-      AI_DB_NAME: ${AI_DB_NAME:?AI_DB_NAME is required}
-      RABBITMQ_URI: ${RABBITMQ_URI:?RABBITMQ_URI is required}
-      QDRANT_URL: ${QDRANT_URL:?QDRANT_URL is required}
-      DOCKER_HOST: ${DOCKER_HOST:?DOCKER_HOST is required}
-      MIN_FILE_SIZE_BYTES: ${MIN_FILE_SIZE_BYTES:?MIN_FILE_SIZE_BYTES is required}
-      HF_TOKEN: ${HF_TOKEN:?HF_TOKEN is required}
-      LLM_MODEL: ${LLM_MODEL:?LLM_MODEL is required}
-      PRIMARY_MODEL_STYLE: ${PRIMARY_MODEL_STYLE:?PRIMARY_MODEL_STYLE is required}
-      PRIMARY_MODEL_URL: ${PRIMARY_MODEL_URL:?PRIMARY_MODEL_URL is required}
-      PRIMARY_MODEL_HEALTH_URL: ${PRIMARY_MODEL_HEALTH_URL:?PRIMARY_MODEL_HEALTH_URL is required}
-      PRIMARY_MODEL_API_TOKEN: ${PRIMARY_MODEL_API_TOKEN}
-      MODEL_TIMEOUT_SECONDS: ${MODEL_TIMEOUT_SECONDS:?MODEL_TIMEOUT_SECONDS is required}
-      MODEL_KEEP_ALIVE: ${MODEL_KEEP_ALIVE:-30m}
-      RERANKER_MODEL: ${RERANKER_MODEL:?RERANKER_MODEL is required}
-      NLI_MODEL_NAME: ${NLI_MODEL_NAME:?NLI_MODEL_NAME is required}
-      TAVILY_API_KEY: ${TAVILY_API_KEY:?TAVILY_API_KEY is required}
-      AGENT_SLOW_DURATION_MS_THRESHOLD: ${AGENT_SLOW_DURATION_MS_THRESHOLD:?AGENT_SLOW_DURATION_MS_THRESHOLD is required}
-      AGENT_ROUTE_CONFIDENCE_THRESHOLD: ${AGENT_ROUTE_CONFIDENCE_THRESHOLD:?AGENT_ROUTE_CONFIDENCE_THRESHOLD is required}
-      AGENT_EXECUTION_TIMEOUT_SECONDS: ${AGENT_EXECUTION_TIMEOUT_SECONDS:?AGENT_EXECUTION_TIMEOUT_SECONDS is required}
-      AGENT_RECURSION_LIMIT: ${AGENT_RECURSION_LIMIT:?AGENT_RECURSION_LIMIT is required}
-      AGENT_MAX_CONTEXT_TOKENS: ${AGENT_MAX_CONTEXT_TOKENS:?AGENT_MAX_CONTEXT_TOKENS is required}
-      AGENT_HISTORY_MAX_TURNS: ${AGENT_HISTORY_MAX_TURNS:?AGENT_HISTORY_MAX_TURNS is required}
-      AGENT_DEFAULT_MAX_OUTPUT_TOKENS: ${AGENT_DEFAULT_MAX_OUTPUT_TOKENS:?AGENT_DEFAULT_MAX_OUTPUT_TOKENS is required}
-      AGENT_FILE_ROOT: ${AGENT_FILE_ROOT:?AGENT_FILE_ROOT is required}
-      AGENT_ARCHIVE_MAX_FILES: ${AGENT_ARCHIVE_MAX_FILES:?AGENT_ARCHIVE_MAX_FILES is required}
-      AGENT_ARCHIVE_MAX_UNCOMPRESSED_BYTES: ${AGENT_ARCHIVE_MAX_UNCOMPRESSED_BYTES:?AGENT_ARCHIVE_MAX_UNCOMPRESSED_BYTES is required}
-      AGENT_ARCHIVE_MAX_COMPRESSION_RATIO: ${AGENT_ARCHIVE_MAX_COMPRESSION_RATIO:?AGENT_ARCHIVE_MAX_COMPRESSION_RATIO is required}
-      LANGSMITH_TRACING: ${LANGSMITH_TRACING:-false}
-      LANGSMITH_ENDPOINT: ${LANGSMITH_ENDPOINT:-https://api.smith.langchain.com}
-      LANGSMITH_API_KEY: ${LANGSMITH_API_KEY:-}
-      LANGSMITH_PROJECT: ${LANGSMITH_PROJECT:-DocLib}
-    depends_on:
-      mongodb:
-        condition: service_started
-      redis:
-        condition: service_started
-      rabbitmq:
-        condition: service_started
-      minio:
-        condition: service_started
-      qdrant:
-        condition: service_started
-      rag:
-        condition: service_started
-    volumes:
-      - ./backend/ai/src:/app/src
-      - ./backend/ai/tests:/app/tests
-      - hf_cache:/home/appuser/.cache/huggingface
-    networks:
-      - doclib_network
-
-  qa:
-    healthcheck: *app-healthcheck
-    build:
-      context: ./backend
-      dockerfile: ./qa/Dockerfile
-    container_name: doclib_qa
-    restart: always
-    ports:
-      - 8017:8000
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.qa.rule=PathPrefix(`/api/qa`)
-      - traefik.http.routers.qa.priority=110
-      - traefik.http.services.qa.loadbalancer.server.port=8000
-    environment:
-      <<: *service-environment
-      QA_DB_NAME: ${QA_DB_NAME:-qa}
-      QA_ALLOW_TEST_IDENTITY: ${QA_ALLOW_TEST_IDENTITY:-false}
-      WORKER_URL: http://worker:8000
-      RAG_URL: http://rag:8000
-      QDRANT_URL: http://qdrant:6333
-      AI_URL: http://ai:8000
-      CONTENT_URL: http://content:8000
-    depends_on:
-      - mongodb
-      - rag
-      - ai
-      - content
-      - worker
-    volumes:
-      - ./backend/qa/src:/app/src
-      - ./backend/qa/tests:/app/tests
-    networks:
-      - doclib_network
-
-  ollama:
-    profiles: ["optional"]
-    image: ollama/ollama@sha256:b88c73ace3e115f8ec53dc8761ae1c0aabfa675406e3681786b98757ce050f42
-    container_name: doclib_ollama
+      dockerfile: frontend/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_NOTIFICATION_ENABLED: ${NEXT_PUBLIC_NOTIFICATION_ENABLED}
     restart: unless-stopped
-    ports:
-      - 127.0.0.1:11434:11434
-    environment:
-      OLLAMA_KEEP_ALIVE: ${MODEL_KEEP_ALIVE:-24h}
-      OLLAMA_LOAD_TIMEOUT: 15m
-      OLLAMA_MAX_LOADED_MODELS: "1"
-      OLLAMA_NUM_PARALLEL: "1"
-      OLLAMA_CONTEXT_LENGTH: "1024"
-      OLLAMA_MODELS: /models
-    volumes:
-      - ollama_data:/models
-    healthcheck:
-      test: ["CMD", "ollama", "list"]
-      interval: 10s
-      timeout: 20s
-      retries: 12
-    networks:
-      - doclib_network
-
-  ollama_models:
-    profiles: ["optional"]
-    image: ollama/ollama@sha256:b88c73ace3e115f8ec53dc8761ae1c0aabfa675406e3681786b98757ce050f42
-    restart: "no"
-    environment:
-      OLLAMA_HOST: http://ollama:11434
-      LLM_MODEL: ${LLM_MODEL:?LLM_MODEL is required}
-    entrypoint: ["/bin/sh", "/bootstrap_ollama.sh"]
-    volumes:
-      - ./scripts/bootstrap_ollama.sh:/bootstrap_ollama.sh:ro
-      - ollama_data:/models
     depends_on:
-      ollama:
-        condition: service_healthy
-    networks:
-      - doclib_network
-  qdrant:
-    image: qdrant/qdrant:v1.18.2@sha256:75eab8c4ba42096724fdcfde8b4de0b5713d529dde32f285a1f86fdcb2c9e50c
-    container_name: doclib_qdrant
-    restart: always
+      - gateway
     ports:
-      - 6333:6333
-      - 6334:6334
-    volumes:
-      - qdrant_data:/qdrant/storage
-    networks:
-      - doclib_network
-
-  prometheus:
-    image: prom/prometheus:v3.13.0@sha256:c6b27ea434f8389bfe233fbc7be381cf50587c286e871bc842008f5a1b1908a7
-    container_name: doclib_prometheus
-    restart: always
-    ports:
-      - 127.0.0.1:9090:9090
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/prometheus
-    networks:
-      - doclib_network
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:9090/-/healthy"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
-
-  grafana:
-    image: grafana/grafana:13.1.0@sha256:121a7a9ece6dc10b969f1f96eed64b4f07dfac0d0b8abc070f7cb83bbde86f63
-    container_name: doclib_grafana
-    restart: always
-    ports:
-      - 127.0.0.1:3001:3000
-    environment:
-      - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER}
-      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
-      - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_AUTH_ANONYMOUS_ENABLED=false
-      - GF_SECURITY_DISABLE_GRAVATAR=true
-      - GF_ANALYTICS_REPORTING_ENABLED=false
-      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./grafana_provisioning:/etc/grafana/provisioning
-    depends_on:
-      - prometheus
-    networks:
-      - doclib_network
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3000/api/health"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
-
-  authentication:
-    healthcheck: *app-healthcheck
-    build:
-      context: ./backend
-      dockerfile: ./authentication/Dockerfile
-    container_name: doclib_authentication
-    restart: always
-    ports:
-      - 8007:8000
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.authentication.rule=PathPrefix(`/xac-thuc/`) || PathPrefix(`/google`)
-      - traefik.http.services.authentication.loadbalancer.server.port=8000
-    environment:
-      <<: *service-environment
-      AUTHENTICATION_DB_NAME: ${AUTHENTICATION_DB_NAME:?AUTHENTICATION_DB_NAME is required}
-      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:?ACCESS_TOKEN_EXPIRE_MINUTES is required}
-      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:?REFRESH_TOKEN_EXPIRE_DAYS is required}
-      GOOGLE_AUTH_URL: ${GOOGLE_AUTH_URL:?GOOGLE_AUTH_URL is required}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?GOOGLE_CLIENT_ID is required}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:?GOOGLE_CLIENT_SECRET is required}
-      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:?GOOGLE_REDIRECT_URI is required}
-      GOOGLE_TOKEN_URL: ${GOOGLE_TOKEN_URL:?GOOGLE_TOKEN_URL is required}
-      GOOGLE_USERINFO_URL: ${GOOGLE_USERINFO_URL:?GOOGLE_USERINFO_URL is required}
-      PASSKEY_ALLOWED_ORIGINS: ${PASSKEY_ALLOWED_ORIGINS:?PASSKEY_ALLOWED_ORIGINS is required}
-      PASSKEY_RP_ID: ${PASSKEY_RP_ID:?PASSKEY_RP_ID is required}
-      PASSKEY_RP_NAME: ${PASSKEY_RP_NAME:?PASSKEY_RP_NAME is required}
-      SENDER_EMAIL: ${SENDER_EMAIL:?SENDER_EMAIL is required}
-      SENDER_NAME: ${SENDER_NAME:?SENDER_NAME is required}
-      SMTP_HOST: ${SMTP_HOST:?SMTP_HOST is required}
-      SMTP_PASS: ${SMTP_PASS:?SMTP_PASS is required}
-      SMTP_PORT: ${SMTP_PORT:?SMTP_PORT is required}
-      SMTP_USER: ${SMTP_USER:?SMTP_USER is required}
-    depends_on:
-      - mongodb
-      - redis
-    volumes:
-      - ./backend/authentication/src:/app/src
-      - ./backend/authentication/tests:/app/tests
-      - ./backend/logs/authentication:/app/logs
-    networks:
-      - doclib_network
-  content:
-    healthcheck: *app-healthcheck
-    build:
-      context: ./backend
-      dockerfile: ./content/Dockerfile
-    container_name: doclib_content
-    restart: always
-    ports:
-      - 8010:8000
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.content.rule=PathPrefix(`/tai-lieu`) || PathPrefix(`/phien-ban`)
-      - traefik.http.services.content.loadbalancer.server.port=8000
-    environment:
-      <<: *service-environment
-      CONTENT_DB_NAME: ${CONTENT_DB_NAME:?CONTENT_DB_NAME is required}
-      MINIO_ENDPOINT: http://minio:9000
-      MINIO_PUBLIC_URL: http://localhost:9000
-      RABBITMQ_URI: ${RABBITMQ_URI:?RABBITMQ_URI is required}
-    depends_on:
-      - authentication
-      - mongodb
-      - redis
-      - minio
-      - rabbitmq
-    volumes:
-      - ./backend/content/src:/app/src
-      - ./backend/logs/content:/app/logs
-    networks:
-      - doclib_network
-
-  cloud:
-    healthcheck: *app-healthcheck
-    build:
-      context: ./backend
-      dockerfile: ./cloud/Dockerfile
-    container_name: doclib_cloud
-    restart: always
-    ports:
-      - 8008:8000
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.cloud.rule=PathPrefix(`/luu-tru`) || PathPrefix(`/tai-len`) || PathPrefix(`/tep-tin`) || PathPrefix(`/thu-muc`) || PathPrefix(`/phan-doan`) || PathPrefix(`/tai-ve`)
-      - traefik.http.services.cloud.loadbalancer.server.port=8000
-    environment:
-      <<: [*service-environment, *minio-environment]
-      CLOUD_DB_NAME: ${CLOUD_DB_NAME:?CLOUD_DB_NAME is required}
-      MINIO_LEGACY_BUCKET: ${MINIO_LEGACY_BUCKET:?MINIO_LEGACY_BUCKET is required}
-      MIN_FILE_SIZE_BYTES: ${MIN_FILE_SIZE_BYTES:?MIN_FILE_SIZE_BYTES is required}
-      MAX_UPLOAD_SIZE_BYTES: ${MAX_UPLOAD_SIZE_BYTES:?MAX_UPLOAD_SIZE_BYTES is required}
-    depends_on:
-      - authentication
-      - mongodb
-      - redis
-      - minio
-    volumes:
-      - ./backend/cloud/src:/app/src
-      - ./backend/logs/cloud:/app/logs
-    networks:
-      - doclib_network
-
-  worker:
-    healthcheck: *app-healthcheck
-    build:
-      context: ./backend
-      dockerfile: ./worker/Dockerfile
-    container_name: doclib_worker
-    restart: always
-    ports:
-      - 8009:8000
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.worker.rule=PathPrefix(`/worker`)
-      - traefik.http.services.worker.loadbalancer.server.port=8000
-    environment:
-      PROJECT_NAME: ${PROJECT_NAME:?PROJECT_NAME is required}
-      VERSION: ${VERSION:?VERSION is required}
-      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY is required}
-      MONGODB_URI: ${MONGODB_URI:?MONGODB_URI is required}
-      RABBITMQ_URI: ${RABBITMQ_URI:?RABBITMQ_URI is required}
-      WORKER_DB_NAME: ${WORKER_DB_NAME:?WORKER_DB_NAME is required}
-      WORKER_MAX_RETRIES: ${WORKER_MAX_RETRIES:?WORKER_MAX_RETRIES is required}
-      QA_URL: http://qa:8000
-    depends_on:
-      mongodb:
-        condition: service_started
-      rabbitmq:
-        condition: service_healthy
-    volumes:
-      - ./backend/worker/src:/app/src
-    networks:
-      - doclib_network
-
-  rag:
-    healthcheck: *app-healthcheck
-    build:
-      context: ./backend
-      dockerfile: ./rag/Dockerfile
-    container_name: doclib_rag
-    restart: always
-    ports:
-      - 8014:8000
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.rag.rule=PathPrefix(`/rag`)
-      - traefik.http.services.rag.loadbalancer.server.port=8000
-    environment:
-      <<: [*service-environment, *minio-environment]
-      RAG_DB_NAME: ${RAG_DB_NAME:?RAG_DB_NAME is required}
-      RABBITMQ_URI: ${RABBITMQ_URI:?RABBITMQ_URI is required}
-      QDRANT_URL: ${QDRANT_URL:?QDRANT_URL is required}
-      EMBEDDING_MODEL: ${EMBEDDING_MODEL:?EMBEDDING_MODEL is required}
-      RERANKER_MODEL: ${RERANKER_MODEL:?RERANKER_MODEL is required}
-    depends_on:
-      - mongodb
-      - redis
-      - qdrant
-      - content
-    volumes:
-      - ./backend/rag/src:/app/src
-      - ./backend/logs/rag:/app/logs
-      - hf_cache:/home/appuser/.cache/huggingface
-    networks:
-      - doclib_network
-
-
-networks:
-  doclib_network:
-    driver: bridge
+      - "3000:3000"
 
 volumes:
-  mongodb_data: null
-  redis_data: null
-  rabbitmq_data: null
-  minio_data: null
-  qdrant_data: null
-  prometheus_data: null
-  grafana_data: null
-  hf_cache: null
-  frontend_node_modules: null
-  frontend_next_cache: null
-  ollama_data: null
+  mongodb_data:
+  redis_data:
+  rabbitmq_data:
+  minio_data:
+  qdrant_data:

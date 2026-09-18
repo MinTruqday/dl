@@ -1,2 +1,2 @@
-import TermsPage from "@/features/content/pages/TermsPage";
+import TermsPage from "@/features/legal/pages/TermsPage";
 export default TermsPage;

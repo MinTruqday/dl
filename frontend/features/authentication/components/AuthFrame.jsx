@@ -1,24 +1,36 @@
 import Link from "next/link";
+import Image from "next/image";
 export default function AuthFrame({ title, description, children, footer, width = "sm" }) {
   return (
-    <main className="flex min-h-[100dvh] flex-col bg-canvas px-4 py-6 sm:px-6">
-      <div className="mx-auto flex w-full max-w-[1280px] items-center justify-between">
-        <Link href="/" className="text-[19px] font-semibold tracking-[-0.035em] text-ink">
-          DocLib
+    <main className="min-h-[100dvh] bg-[#eef3ef] px-4 py-5 sm:px-6 md:px-10 md:py-8">
+      <div className="mx-auto flex w-full max-w-[1180px] items-center justify-between">
+        <Link
+          href="/"
+          className="flex items-center gap-3 text-[19px] font-semibold tracking-[-0.035em] text-ink"
+        >
+          <Image
+            src="/brand/veriq-logo.png"
+            alt="Veriq"
+            width={36}
+            height={36}
+            className="h-9 w-9 rounded-xl object-cover"
+            priority
+          />
+          <span>Veriq</span>
         </Link>
         <Link
           href="/"
           className="rounded-control px-3 py-2 text-[14px] font-semibold text-ink-muted hover:bg-surface-quiet hover:text-ink"
         >
-          Khám phá
+          Về trang chủ
         </Link>
       </div>
-      <div className="flex flex-1 items-center justify-center py-10">
+      <div className="mx-auto flex min-h-[calc(100dvh-104px)] w-full max-w-[1180px] items-center justify-center py-8">
         <section
-          className={`w-full ${width === "md" ? "max-w-[520px]" : "max-w-[420px]"} rounded-workspace border border-border bg-surface p-6 shadow-[0_20px_60px_rgba(48,47,42,0.08)] sm:p-8`}
+          className={`w-full ${width === "md" ? "max-w-[520px]" : "max-w-[500px]"} rounded-3xl border border-border bg-surface p-6 shadow-[0_24px_70px_rgba(48,47,42,0.12)] sm:p-9`}
         >
           <header className="mb-6">
-            <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.02em] text-ink">
+            <h1 className="text-[28px] font-semibold leading-tight tracking-[-0.035em] text-ink">
               {title}
             </h1>
             {description && (

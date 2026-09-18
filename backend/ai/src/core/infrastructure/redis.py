@@ -1,5 +1,6 @@
 import redis.asyncio as aioredis
 from loguru import logger
+
 from src.core.infrastructure.configuration import settings
 
 

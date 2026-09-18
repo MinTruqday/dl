@@ -1,9 +1,11 @@
 from typing import Any, List
+
 from fastapi import APIRouter, Depends, Query
+
+from src.core.dependency import get_current_user
 from src.core.response import APIResponse
-from src.services.document import DocumentService
-from src.api.dependency import get_current_user
 from src.schemas.document import DocumentUpdate, TagsUpdate
+from src.services.document import DocumentService
 
 router = APIRouter()
 

@@ -4,15 +4,20 @@ from typing import Literal
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from loguru import logger
 
-from src.loop.event import AgentEvent, CronSchedule, EventType, cron_scheduler, event_driven_loop
-
-from src.schemas.events import CreateScheduleRequest, ManualTriggerRequest, WebhookPayload
+from src.agents.workflow.events import (
+    AgentEvent,
+    CronSchedule,
+    EventType,
+    cron_scheduler,
+    event_processor,
+)
 from src.core.dependency import Role, require_role, verify_internal_token
+from src.schemas.events import CreateScheduleRequest, ManualTriggerRequest, WebhookPayload
 
 router = APIRouter(prefix="/su-kien")
 
 
-@router.post("/webhook", dependencies=[Depends(verify_internal_token)])
+@router.post("/moc-goi", dependencies=[Depends(verify_internal_token)])
 async def receive_webhook(body: WebhookPayload):
     """Validate and enqueue an internal agent event webhook"""
     try:
@@ -35,7 +40,7 @@ async def receive_webhook(body: WebhookPayload):
         )
 
         try:
-            await event_driven_loop.emit_event(event)
+            await event_processor.emit_event(event)
         except asyncio.QueueFull:
             raise HTTPException(status_code=503, detail={"code": "event_queue_full"})
         logger.info(f"Webhook received event_id={event.event_id}, type={event_type.value}")
@@ -48,7 +53,7 @@ async def receive_webhook(body: WebhookPayload):
         raise HTTPException(status_code=500, detail={"code": "webhook_processing_failed"})
 
 
-@router.post("/webhook/tai-lieu-dang-tai", dependencies=[Depends(verify_internal_token)])
+@router.post("/moc-goi/tai-lieu-dang-tai", dependencies=[Depends(verify_internal_token)])
 async def document_uploaded_webhook(
     document_id: str, user_id: str = "", superseded_document_id: str = ""
 ):
@@ -64,7 +69,7 @@ async def document_uploaded_webhook(
         source="content_service",
     )
     try:
-        await event_driven_loop.emit_event(event)
+        await event_processor.emit_event(event)
     except asyncio.QueueFull:
         raise HTTPException(status_code=503, detail={"code": "event_queue_full"})
     return {"status": "accepted", "event_id": event.event_id}
@@ -135,19 +140,19 @@ async def toggle_schedule(schedule_id: str):
 @router.get("/trang-thai", dependencies=[Depends(require_role([Role.ADMIN]))])
 async def event_loop_status():
     """Return event queue and worker runtime statistics"""
-    return event_driven_loop.get_stats()
+    return event_processor.get_stats()
 
 
 @router.get("/lich-su", dependencies=[Depends(require_role([Role.ADMIN]))])
 async def event_history(limit: int = Query(default=20, ge=1, le=200)):
     """Return recently processed agent events"""
-    return {"events": event_driven_loop.get_recent_events(limit=limit)}
+    return {"events": event_processor.get_recent_events(limit=limit)}
 
 
 @router.get("/cap-nhat", dependencies=[Depends(require_role([Role.ADMIN]))])
 async def system_updates(limit: int = Query(default=20, ge=1, le=200)):
     """Return recent state updates emitted by agent events"""
-    updates = event_driven_loop.update_registry.get_recent(limit=limit)
+    updates = event_processor.update_registry.get_recent(limit=limit)
     return {
         "updates": [
             {
@@ -160,7 +165,7 @@ async def system_updates(limit: int = Query(default=20, ge=1, le=200)):
             }
             for u in updates
         ],
-        "stats": event_driven_loop.update_registry.get_stats(),
+        "stats": event_processor.update_registry.get_stats(),
     }
 
 
@@ -179,7 +184,7 @@ async def manual_trigger(
     event = AgentEvent(
         event_id=str(uuid.uuid4()), event_type=et, payload=req.payload, source="manual_trigger"
     )
-    result = await event_driven_loop.handle_event(event)
+    result = await event_processor.handle_event(event)
     return {"status": "triggered", "event_id": event.event_id, "result": result}
 
 

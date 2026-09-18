@@ -4,8 +4,11 @@ from src.core.dependency import verify_internal_token
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 
-
-router = APIRouter(prefix="/xac-thuc/noi-bo", dependencies=[Depends(verify_internal_token)])
+router = APIRouter(
+    prefix="/xac-thuc/noi-bo",
+    tags=["Nội bộ xác thực"],
+    dependencies=[Depends(verify_internal_token)],
+)
 
 
 def account_view(credential: dict):
@@ -17,6 +20,7 @@ def account_view(credential: dict):
             "slug",
             "full_name",
             "role",
+            "system_role",
             "permissions",
             "is_active",
             "storage_limit",
@@ -27,8 +31,11 @@ def account_view(credential: dict):
     account.update(
         {
             "slug": credential.get("slug") or str(credential.get("email", "")).split("@", 1)[0],
-            "full_name": credential.get("full_name") or "Người dùng DocLib",
+            "full_name": credential.get("full_name") or "Người dùng Veriq",
             "role": credential.get("role", "reader"),
+            "system_role": credential.get(
+                "system_role", "ADMIN" if credential.get("role") == "admin" else "USER"
+            ),
             "permissions": credential.get("permissions") or [],
             "is_active": credential.get("is_active", True),
             "storage_limit": credential.get("storage_limit") or 20 * 1024 * 1024 * 1024,
@@ -47,7 +54,7 @@ async def get_account_by_id(user_id: str):
     return {"data": account_view(credential)}
 
 
-@router.get("/tai-khoan/email/{email}", include_in_schema=False)
+@router.get("/tai-khoan/thu-dien-tu/{email}", include_in_schema=False)
 async def get_account_by_email(email: str):
     credential = await database.mongodb[settings.AUTHENTICATION_DB_NAME].auth_credentials.find_one(
         {"email": email.lower()}

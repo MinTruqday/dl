@@ -1,8 +1,10 @@
-from datetime import datetime, timezone
 import re
 import uuid
+from datetime import datetime, timezone
 from typing import List
+
 from fastapi import HTTPException
+
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 

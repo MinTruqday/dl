@@ -7,13 +7,13 @@ import {
 export { API_URL, getAuthHeaders, getToken };
 export function setToken(token) {
   if (typeof window !== "undefined") {
-    localStorage.setItem("doclib_token", token);
+    localStorage.setItem("veriq_token", token);
     userMePromise = null;
   }
 }
 export function removeToken() {
   if (typeof window !== "undefined") {
-    localStorage.removeItem("doclib_token");
+    localStorage.removeItem("veriq_token");
     userMePromise = null;
   }
 }
@@ -119,6 +119,82 @@ export async function getUserMe() {
   })();
   return userMePromise;
 }
+async function authenticatedJson(path, options = {}, fallback = "Yêu cầu không thành công") {
+  const response = await authenticatedFetch(`${API_URL}${path}`, options);
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(errorMessage(body, fallback));
+  return body.data ?? body;
+}
+export function updateMyProfile(payload) {
+  return authenticatedJson(
+    "/xac-thuc/ca-nhan",
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    },
+    "Không thể cập nhật thông tin cá nhân",
+  );
+}
+export function changeMyPassword(payload) {
+  return authenticatedJson(
+    "/xac-thuc/doi-mat-khau",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    },
+    "Không thể đổi mật khẩu",
+  );
+}
+export function changeMyEmail(payload) {
+  return authenticatedJson(
+    "/xac-thuc/doi-thu-dien-tu",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    },
+    "Không thể đổi email",
+  );
+}
+export function getMySettings() {
+  return authenticatedJson("/xac-thuc/cai-dat", {}, "Không thể tải cài đặt cá nhân");
+}
+export function updateMySettings(payload) {
+  return authenticatedJson(
+    "/xac-thuc/cai-dat",
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    },
+    "Không thể cập nhật cài đặt cá nhân",
+  );
+}
+export function updateMyNotifications(payload) {
+  return authenticatedJson(
+    "/xac-thuc/thong-bao",
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    },
+    "Không thể cập nhật cài đặt thông báo",
+  );
+}
+export function listMySessions() {
+  return authenticatedJson("/xac-thuc/phien", {}, "Không thể tải danh sách phiên đăng nhập");
+}
+export function revokeMySession(sessionId) {
+  return authenticatedJson(
+    `/xac-thuc/phien/${encodeURIComponent(sessionId)}`,
+    {
+      method: "DELETE",
+    },
+    "Không thể thu hồi phiên đăng nhập",
+  );
+}
 export const forgotPasswordAPI = async (email) => {
   const res = await fetch(`${API_URL}/xac-thuc/quen-mat-khau`, {
     method: "POST",
@@ -190,7 +266,7 @@ export const passkeyRegisterFinishAPI = async (email, credential) => {
   return data.data || data;
 };
 export const getGoogleLoginUrlAPI = async () => {
-  const res = await fetch(`${API_URL}/google/dang-nhap`);
+  const res = await fetch(`${API_URL}/xac-thuc/google/dang-nhap`);
   const data = await res.json();
   if (!res.ok || !data.data?.url)
     throw new Error("Không thể tải điểm cuối xác thực định danh Google");
@@ -198,7 +274,7 @@ export const getGoogleLoginUrlAPI = async () => {
 };
 export const completeGoogleLoginAPI = async (code, state) => {
   const res = await fetch(
-    `${API_URL}/google/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`,
+    `${API_URL}/xac-thuc/google/chuyen-huong?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`,
     { credentials: "include" },
   );
   const data = await res.json();

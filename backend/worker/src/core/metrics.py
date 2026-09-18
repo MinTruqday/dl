@@ -1,9 +1,9 @@
 import time
 from collections import defaultdict
+
 from fastapi import Request
 from fastapi.responses import PlainTextResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.routing import Router
 
 
 class MetricsCollector:
@@ -46,7 +46,7 @@ class MetricsCollector:
             lines.append(
                 f'http_errors_total{{service="{service_name}",method="{method}",path="{path}"}} {count}'
             )
-        lines.append("# HELP worker_queue_depth Number of queued QA jobs")
+        lines.append("# HELP worker_queue_depth Number of queued testing jobs")
         lines.append("# TYPE worker_queue_depth gauge")
         for queue_name, depth in self._queue_depth.items():
             lines.append(f'worker_queue_depth{{queue="{queue_name}"}} {depth}')
@@ -62,7 +62,7 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
         self.service_name = service_name
 
     async def dispatch(self, request: Request, call_next):
-        if request.url.path == "/metrics":
+        if request.url.path == "/so-lieu":
             return await call_next(request)
         start = time.perf_counter()
         response = await call_next(request)

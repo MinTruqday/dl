@@ -3,7 +3,6 @@ from datetime import datetime, timezone
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import database
 
-
 MODE_DIRECTIVES = {
     "chat": "",
     "work": "Create a verifiable plan then execute each step and report only observed status",

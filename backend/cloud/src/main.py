@@ -1,27 +1,27 @@
 import sys
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
-from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import close_db, init_db
-from src.api.storage import router as storage
-from src.api.upload import router as upload
-from src.api.folder import router as folder
-from src.api.file import router as file_router
+
 from src.api.chunk import router as chunk
 from src.api.download import router as download
-from src.api.version import router as version
-from src.api.trash import router as trash
+from src.api.file import router as file_router
+from src.api.file_request import router as file_request
+from src.api.folder import router as folder
+from src.api.internal import router as internal
+from src.api.search import router as search
 from src.api.share import router as share
 from src.api.star import router as star
-from src.api.search import router as search
-from src.api.file_request import router as file_request
-from src.api.internal import router as internal
-
-from src.core.metrics import PrometheusMiddleware, metrics_endpoint
-from src.core.infrastructure.database import database
+from src.api.storage import router as storage
+from src.api.trash import router as trash
+from src.api.upload import router as upload
+from src.api.version import router as version
+from src.core.infrastructure.configuration import settings
+from src.core.infrastructure.database import close_db, database, init_db
 from src.core.infrastructure.redis import redis
+from src.core.metrics import PrometheusMiddleware, metrics_endpoint
 from src.core.storage import close_storage_client, get_storage_client, initialize_bucket
 
 logger.remove()
@@ -38,9 +38,9 @@ async def lifespan(app: FastAPI):
     await close_db()
 
 
-app = FastAPI(title="DocLib Cloud", version=settings.VERSION, lifespan=lifespan)
+app = FastAPI(title="Veriq Cloud", version=settings.VERSION, lifespan=lifespan)
 app.add_middleware(PrometheusMiddleware, service_name="cloud")
-app.add_route("/metrics", metrics_endpoint("cloud"))
+app.add_route("/so-lieu", metrics_endpoint("cloud"))
 
 from fastapi.responses import JSONResponse
 
@@ -68,12 +68,12 @@ app.include_router(file_request)
 app.include_router(internal)
 
 
-@app.get("/health", include_in_schema=False)
+@app.get("/suc-khoe", include_in_schema=False)
 async def health_check():
     return {"status": "healthy", "service": "cloud"}
 
 
-@app.get("/ready", include_in_schema=False)
+@app.get("/san-sang", include_in_schema=False)
 async def readiness_check():
     if database.mongodb is None:
         return JSONResponse(status_code=503, content={"status": "not_ready"})
@@ -81,7 +81,7 @@ async def readiness_check():
         await database.mongodb.admin.command("ping")
         await redis.ping()
         storage = await get_storage_client()
-        await storage.head_bucket(Bucket=settings.MINIO_PRIVATE_BUCKET)
+        await storage.head_bucket(Bucket=settings.OBJECT_STORAGE_PRIVATE_BUCKET)
     except Exception:
         logger.exception("Cloud readiness check failed")
         return JSONResponse(status_code=503, content={"status": "not_ready"})

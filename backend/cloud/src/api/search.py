@@ -1,7 +1,8 @@
 from typing import Any, List
+
 from fastapi import APIRouter, Body, Depends
-from src.api.dependency import require_role
-from src.core.dependency import CurrentUser, Role
+
+from src.core.dependency import CurrentUser, Role, require_role
 from src.core.response import APIResponse
 from src.services.search import SearchService
 
@@ -27,7 +28,7 @@ async def set_folder_color(
     return APIResponse(data=result, message="Cập nhật màu sắc thư mục hoàn tất")
 
 
-@router.post("/phieu-tag/{item_id}", response_model=APIResponse[Any])
+@router.post("/phieu-nhan/{item_id}", response_model=APIResponse[Any])
 async def update_item_tags(
     item_id: str,
     tags: List[str] = Body(..., embed=True),

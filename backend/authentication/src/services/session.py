@@ -4,12 +4,12 @@ from datetime import datetime, timedelta, timezone
 
 from fastapi import HTTPException
 from loguru import logger
-from src.repositories.identity import IdentityRepository as IdentityRepository
-from src.services.email import EmailService
 
 from src.core.infrastructure.configuration import settings
-from src.schemas.identity import UserCreate, UserInDB
 from src.core.security.access import create_access_token, get_password_hash, verify_password
+from src.repositories.identity import IdentityRepository as IdentityRepository
+from src.schemas.identity import UserCreate, UserInDB
+from src.services.email import EmailService
 
 
 class SessionService:
@@ -24,6 +24,9 @@ class SessionService:
                 "sub": user_doc["email"],
                 "sid": session_id,
                 "role": user_doc.get("role", "reader"),
+                "system_role": user_doc.get(
+                    "system_role", "ADMIN" if user_doc.get("role") == "admin" else "USER"
+                ),
                 "uid": str(user_doc["_id"]),
                 "permissions": user_doc.get("permissions", []),
                 "full_name": user_doc.get("full_name", ""),
@@ -56,14 +59,18 @@ class SessionService:
             "slug": user_in.slug.lower(),
             "full_name": user_in.full_name,
             "role": "reader",
+            "system_role": "USER",
             "permissions": [],
             "is_active": True,
+            "is_verified": False,
+            "email_verified": False,
             "password_hash": get_password_hash(user_in.password),
             "passkeys": [],
             "created_at": created_at,
             "updated_at": created_at,
         }
         await IdentityRepository.create_auth_credential(auth_cred)
+        await SessionService.issue_email_verification(user_id, user_in.email, client_ip)
         await IdentityRepository.insert_audit_log(
             {
                 "action": "REGISTER_USER",
@@ -78,9 +85,70 @@ class SessionService:
             "full_name": user_in.full_name,
             "slug": user_in.slug.lower(),
             "role": "reader",
+            "system_role": "USER",
             "id": user_id,
             "created_at": created_at,
         }
+
+    @staticmethod
+    async def issue_email_verification(user_id: str, email: str, client_ip: str):
+        token = secrets.token_urlsafe(32)
+        timestamp = datetime.now(timezone.utc)
+        await IdentityRepository.create_email_verification_token(
+            {
+                "_id": secrets.token_hex(16),
+                "user_id": user_id,
+                "email": email,
+                "token": token,
+                "used": False,
+                "expires_at": timestamp + timedelta(minutes=30),
+                "created_at": timestamp,
+                "requested_ip": client_ip,
+            }
+        )
+        delivered = True
+        try:
+            await EmailService.send_email_verification(email, token)
+        except Exception:
+            delivered = False
+            logger.exception("Failed to dispatch email verification notification")
+        await IdentityRepository.insert_audit_log(
+            {
+                "action": "EMAIL_VERIFICATION_REQUESTED",
+                "actor_email": email.lower(),
+                "target_user_id": user_id,
+                "ip": client_ip,
+                "delivery_status": "SENT" if delivered else "FAILED",
+                "timestamp": timestamp,
+            }
+        )
+        return {"status": "ok", "delivery_status": "SENT" if delivered else "FAILED"}
+
+    @staticmethod
+    async def verify_email(token: str, client_ip: str):
+        token_doc = await IdentityRepository.consume_email_verification_token(token)
+        if not token_doc:
+            raise HTTPException(
+                status_code=400, detail="Mã xác minh thư điện tử không hợp lệ hoặc đã hết hạn"
+            )
+        account = await IdentityRepository.mark_email_verified(
+            str(token_doc["user_id"]), token_doc["email"]
+        )
+        if not account:
+            raise HTTPException(
+                status_code=409,
+                detail="Địa chỉ thư điện tử của tài khoản đã thay đổi hoặc tài khoản không khả dụng",
+            )
+        await IdentityRepository.insert_audit_log(
+            {
+                "action": "EMAIL_VERIFIED",
+                "actor_email": token_doc["email"],
+                "target_user_id": str(token_doc["user_id"]),
+                "ip": client_ip,
+                "timestamp": datetime.now(timezone.utc),
+            }
+        )
+        return {"verified": True, "email": token_doc["email"]}
 
     @staticmethod
     async def login_user(username: str, password: str, client_ip: str):
@@ -122,7 +190,8 @@ class SessionService:
         user_id_str = str(auth_cred["_id"])
 
         is_active = auth_cred.get("is_active", True)
-        if not is_active:
+        account_status = auth_cred.get("account_status", "ACTIVE" if is_active else "DISABLED")
+        if not is_active or account_status != "ACTIVE":
             raise HTTPException(
                 status_code=403,
                 detail="Tài khoản hiện đang bị khóa hoặc ở trạng thái không hoạt động",
@@ -240,7 +309,10 @@ class SessionService:
 
     @staticmethod
     async def issue_token_for_user(user_doc: dict, client_ip: str):
-        if not user_doc.get("is_active", True):
+        if (
+            not user_doc.get("is_active", True)
+            or user_doc.get("account_status", "ACTIVE") != "ACTIVE"
+        ):
             raise HTTPException(
                 status_code=403,
                 detail="Tài khoản hiện đang bị khóa hoặc ở trạng thái không hoạt động",

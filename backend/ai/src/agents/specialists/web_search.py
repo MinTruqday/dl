@@ -4,11 +4,11 @@ import json
 import re
 from typing import List, Optional
 
-
 import redis
 from loguru import logger
 
 from src.core.infrastructure.configuration import settings
+from src.utils.model_provider import auxiliary_client
 
 
 def _is_ssrf_attempt(query: str) -> bool:
@@ -54,7 +54,7 @@ def _is_ssrf_attempt(query: str) -> bool:
 class WebSearchAgent:
     """
     <module_purpose>
-    DocLib Engine Agent for real-time external information retrieval with caching and semantic re-ranking.
+    Veriq Engine Agent for real-time external information retrieval with caching and semantic re-ranking.
     </module_purpose>
     <contract>
     - Precondition: Tavily API key and Redis connection configured.
@@ -82,20 +82,6 @@ class WebSearchAgent:
             logger.exception("Search engine Redis connection failed")
             self._redis = None
 
-        self._reranker = None
-
-    @property
-    def reranker(self):
-        if self._reranker is None:
-            try:
-                from sentence_transformers import CrossEncoder
-
-                self._reranker = CrossEncoder(settings.RERANKER_MODEL)
-            except Exception:
-                logger.exception("Search engine reranker loading failed")
-                self._reranker = False
-        return self._reranker
-
     def _cache_key(self, query: str) -> str:
         return f"search:{hashlib.sha256(query.encode()).hexdigest()}"
 
@@ -115,13 +101,12 @@ class WebSearchAgent:
         except Exception:
             logger.exception("Search cache write failed")
 
-    def _rerank_results(self, query: str, results: List[dict]) -> List[dict]:
-        current_reranker = self.reranker
-        if not current_reranker or len(results) < 2:
+    async def _rerank_results(self, query: str, results: List[dict]) -> List[dict]:
+        if len(results) < 2:
             return results
         try:
             pairs = [[query, r.get("content", "")] for r in results]
-            scores = current_reranker.predict(pairs)
+            scores = await auxiliary_client.rerank(pairs)
             ranked = sorted(zip(results, scores), key=lambda x: x[1], reverse=True)
             return [r for r, _ in ranked]
         except Exception:
@@ -144,7 +129,7 @@ class WebSearchAgent:
         if not results:
             return []
 
-        reranked = self._rerank_results(query, results)
+        reranked = await self._rerank_results(query, results)
         normalized = [
             {
                 "title": result.get("title", ""),
@@ -201,9 +186,10 @@ class WebSearchAgent:
 
         try:
             from langchain_core.messages import HumanMessage
-            from src.utils.huggingface import create_chat_model
+
+            from src.core.registry import PromptType, registry
             from src.schemas.engine import SearchEvaluation, SubQueries
-            from src.core.registry import registry, PromptType
+            from src.utils.huggingface import create_chat_model
 
             llm = create_chat_model()
             structured_llm = llm.with_structured_output(SubQueries)
@@ -222,7 +208,7 @@ class WebSearchAgent:
                     search_queries.append(current_query)
 
                 search_queries = search_queries[:3]
-                logger.info(f"AI RAG Iteration {i + 1} - Sub-queries: {search_queries}")
+                logger.info(f"Knowledge search iteration {i + 1} - sub-queries: {search_queries}")
 
                 tasks = [self._tavily_search(q) for q in search_queries]
                 results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -268,7 +254,7 @@ class WebSearchAgent:
                 )
 
         except Exception:
-            logger.exception("AI RAG search system encountered an issue")
+            logger.exception("Knowledge search system encountered an issue")
 
         return json.dumps({"status": "search_results_unavailable"})
 

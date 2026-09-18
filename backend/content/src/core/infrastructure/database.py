@@ -1,10 +1,9 @@
-from src.core.infrastructure.redis import redis
 import asyncio
-import os
 
 from loguru import logger
 
 from src.core.infrastructure.configuration import settings
+from src.core.infrastructure.redis import redis
 
 
 class DatabaseInfrastructure:
@@ -39,7 +38,7 @@ async def init_db():
                 break
             else:
                 raise Exception("MQ health check failed")
-        except Exception as e:
+        except Exception:
             if i == max_retries - 1:
                 logger.exception("RabbitMQ connection error")
                 raise

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect } from "react";
-const RECOVERY_KEY = "doclib:chunk-recovery";
+const RECOVERY_KEY = "veriq:chunk-recovery";
 function needsRecovery(reason) {
   const message = String(reason instanceof Error ? reason.message : reason).toLowerCase();
   return (

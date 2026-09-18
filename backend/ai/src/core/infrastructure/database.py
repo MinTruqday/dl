@@ -64,9 +64,13 @@ async def setup_indexes():
                 IndexModel([("session_id", ASCENDING), ("created_at", ASCENDING)]),
                 IndexModel([("user_id", ASCENDING), ("created_at", DESCENDING)]),
             ],
-            "rag_feedback": [
+            "knowledge_feedback": [
                 IndexModel([("user_id", ASCENDING), ("vote_type", ASCENDING)]),
                 IndexModel([("session_id", ASCENDING), ("message_id", ASCENDING)]),
+            ],
+            "retrieval_audit": [
+                IndexModel([("requester_id", ASCENDING), ("created_at", DESCENDING)]),
+                IndexModel([("document_ids", ASCENDING), ("created_at", DESCENDING)]),
             ],
             "ai_workspaces": [
                 IndexModel([("user_id", ASCENDING), ("updated_at", DESCENDING)]),

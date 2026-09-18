@@ -25,14 +25,14 @@ export function useGoogleCallback() {
         if (!active) return;
         if (!data.user?.has_passkey && data.user?.email) setEmailForPasskey(data.user.email);
         else {
-          const requested = sessionStorage.getItem("doclib_return_path") || "";
-          sessionStorage.removeItem("doclib_return_path");
+          const requested = sessionStorage.getItem("veriq_return_path") || "";
+          sessionStorage.removeItem("veriq_return_path");
           router.replace(
             requested.startsWith("/") &&
               !requested.startsWith("//") &&
               !requested.startsWith("/dang-nhap")
               ? requested
-              : "/qa/projects",
+              : "/du-an",
           );
         }
       } catch (reason) {
@@ -49,14 +49,14 @@ export function useGoogleCallback() {
     emailForPasskey,
     error,
     finish: () => {
-      const requested = sessionStorage.getItem("doclib_return_path") || "";
-      sessionStorage.removeItem("doclib_return_path");
+      const requested = sessionStorage.getItem("veriq_return_path") || "";
+      sessionStorage.removeItem("veriq_return_path");
       router.replace(
         requested.startsWith("/") &&
           !requested.startsWith("//") &&
           !requested.startsWith("/dang-nhap")
           ? requested
-          : "/qa/projects",
+          : "/du-an",
       );
     },
     back: () => router.replace("/dang-nhap"),

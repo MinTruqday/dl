@@ -1,7 +1,7 @@
-import hmac
 import hashlib
-import uuid
+import hmac
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 
 from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.responses import JSONResponse
@@ -35,15 +35,17 @@ async def lifespan(app: FastAPI):
         await close_db()
 
 
-app = FastAPI(title="DocLib Worker", version=settings.VERSION, lifespan=lifespan)
+app = FastAPI(title="Veriq Worker", version=settings.VERSION, lifespan=lifespan)
 app.add_middleware(PrometheusMiddleware, service_name="worker")
-app.add_route("/metrics", metrics_endpoint("worker"))
+app.add_route("/so-lieu", metrics_endpoint("worker"))
 
 
-class QAJobRequest(BaseModel):
+class TestingJobRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", protected_namespaces=())
 
-    event: str = Field(pattern=r"^(document\.parse|requirement\.extract|requirement\.semantic_diff|test\.generate|duplicate\.scan|impact\.analysis|rag\.index)\.requested$")
+    event: str = Field(
+        pattern=r"^(document\.parse|requirement\.extract|requirement\.semantic_diff|test\.generate|duplicate\.scan|impact\.analysis|knowledge\.index|automation\.newman)\.requested$"
+    )
     project_id: str = Field(min_length=1, max_length=128)
     artifact_version_id: str = Field(min_length=1, max_length=128)
     model_version: str = Field(min_length=1, max_length=128)
@@ -52,12 +54,12 @@ class QAJobRequest(BaseModel):
     payload: dict
 
 
-@app.get("/health", include_in_schema=False)
+@app.get("/suc-khoe", include_in_schema=False)
 async def health():
     return {"status": "healthy", "service": "worker"}
 
 
-@app.get("/ready", include_in_schema=False)
+@app.get("/san-sang", include_in_schema=False)
 async def ready():
     checks = {}
     try:
@@ -83,12 +85,14 @@ async def ready():
 
 
 @app.post(
-    "/worker/internal/qa/jobs",
+    "/xu-ly-nen/noi-bo/kiem-thu/tac-vu",
     dependencies=[Depends(require_internal_token)],
     status_code=202,
 )
-async def enqueue_qa_job(payload: QAJobRequest):
-    idempotency_key = ":".join([payload.project_id, payload.artifact_version_id, payload.event, payload.model_version])
+async def enqueue_testing_job(payload: TestingJobRequest):
+    idempotency_key = ":".join(
+        [payload.project_id, payload.artifact_version_id, payload.event, payload.model_version]
+    )
     job_id = f"qa-{hashlib.sha256(idempotency_key.encode()).hexdigest()[:40]}"
     existing = await database.mongodb[settings.WORKER_DB_NAME].worker_jobs.find_one({"_id": job_id})
     if existing:
@@ -97,7 +101,12 @@ async def enqueue_qa_job(payload: QAJobRequest):
     await record_job(
         job_id,
         {"status": "queued"},
-        {"kind": payload.event, "project_id": payload.project_id, "requester_id": payload.requester_id},
+        {
+            "kind": payload.event,
+            "project_id": payload.project_id,
+            "requester_id": payload.requester_id,
+            "request": task_payload,
+        },
     )
     try:
         await mq.publish("qa_job_queue", task_payload)
@@ -108,7 +117,57 @@ async def enqueue_qa_job(payload: QAJobRequest):
     return {"job_id": job_id, "status": "queued"}
 
 
-@app.get("/worker/internal/jobs/{job_id}", dependencies=[Depends(require_internal_token)])
+@app.post(
+    "/xu-ly-nen/noi-bo/tac-vu/{job_id}/thu-lai",
+    dependencies=[Depends(require_internal_token)],
+    status_code=202,
+)
+async def retry_job(job_id: str):
+    if len(job_id) > 128:
+        raise HTTPException(status_code=422, detail="Invalid job identifier")
+    jobs = database.mongodb[settings.WORKER_DB_NAME].worker_jobs
+    job = await jobs.find_one({"_id": job_id})
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    if job.get("status") != "failed":
+        raise HTTPException(status_code=409, detail="Only failed jobs can be retried")
+    request = job.get("request")
+    if not isinstance(request, dict):
+        raise HTTPException(status_code=422, detail="Job payload is unavailable for retry")
+    retry_count = int(job.get("manual_retry_count", 0))
+    if retry_count >= settings.WORKER_MAX_RETRIES * 3:
+        raise HTTPException(status_code=409, detail="Manual retry limit reached")
+    await record_job(
+        job_id,
+        {
+            "status": "queued",
+            "manual_retry_count": retry_count + 1,
+            "error": None,
+            "error_code": None,
+        },
+    )
+    await mq.publish("qa_job_queue", request)
+    metrics_collector.change_queue_depth("qa_job_queue", 1)
+    return {"job_id": job_id, "status": "queued", "manual_retry_count": retry_count + 1}
+
+
+@app.post("/xu-ly-nen/noi-bo/tac-vu/{job_id}/huy", dependencies=[Depends(require_internal_token)])
+async def cancel_job(job_id: str):
+    if len(job_id) > 128:
+        raise HTTPException(status_code=422, detail="Invalid job identifier")
+    jobs = database.mongodb[settings.WORKER_DB_NAME].worker_jobs
+    job = await jobs.find_one({"_id": job_id})
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    if job.get("status") == "canceled":
+        return {"job_id": job_id, "status": "canceled"}
+    if job.get("status") != "queued":
+        raise HTTPException(status_code=409, detail="Only queued jobs can be canceled")
+    await record_job(job_id, {"status": "canceled", "canceled_at": datetime.now(timezone.utc)})
+    return {"job_id": job_id, "status": "canceled"}
+
+
+@app.get("/xu-ly-nen/noi-bo/tac-vu/{job_id}", dependencies=[Depends(require_internal_token)])
 async def get_job(job_id: str):
     if len(job_id) > 128:
         raise HTTPException(status_code=422, detail="Invalid job identifier")

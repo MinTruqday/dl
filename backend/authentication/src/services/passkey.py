@@ -6,7 +6,6 @@ from datetime import datetime, timezone
 
 from fastapi import HTTPException
 from loguru import logger
-from src.repositories.identity import IdentityRepository as AuthenticationRepository
 from webauthn import (
     generate_authentication_options,
     generate_registration_options,
@@ -16,16 +15,15 @@ from webauthn import (
 )
 from webauthn.helpers.exceptions import InvalidAuthenticationResponse, InvalidRegistrationResponse
 from webauthn.helpers.structs import (
-    AuthenticationCredential,
     AuthenticatorAttachment,
     AuthenticatorSelectionCriteria,
     PublicKeyCredentialDescriptor,
     PublicKeyCredentialType,
-    RegistrationCredential,
     UserVerificationRequirement,
 )
 
 from src.core.infrastructure.configuration import settings
+from src.repositories.identity import IdentityRepository as AuthenticationRepository
 
 RP_ID = settings.PASSKEY_RP_ID
 RP_NAME = settings.PASSKEY_RP_NAME
@@ -58,7 +56,7 @@ class PasskeyService:
         )
         try:
             await AuthenticationRepository.set_redis_passkey_challenge(email, options.challenge)
-        except Exception as e:
+        except Exception:
             logger.exception("Failed to persist temporary authentication challenge to cache layer")
         await AuthenticationRepository.upsert_passkey_challenge(email, options.challenge)
         return json.loads(options_to_json(options))
@@ -146,7 +144,7 @@ class PasskeyService:
 
         try:
             await AuthenticationRepository.set_redis_passkey_challenge(email, options.challenge)
-        except Exception as e:
+        except Exception:
             logger.exception("Failed to persist temporary authentication challenge to cache layer")
 
         await AuthenticationRepository.upsert_passkey_challenge(email, options.challenge)

@@ -14,8 +14,8 @@ class ContextQuery(StructuredRouting):
 
 
 class GraphRoute(StructuredRouting):
-    route: Literal["rag", "direct"] = Field(
-        description="<critical_instructions>MUST be 'rag' if the user needs factual knowledge, documents, or data retrieval. MUST be 'direct' if it's a casual conversation, greeting, or can be answered strictly from generic knowledge without external context.</critical_instructions>"
+    route: Literal["knowledge", "direct"] = Field(
+        description="<critical_instructions>MUST be 'knowledge' if the user needs factual knowledge, documents, or data retrieval. MUST be 'direct' if it's a casual conversation, greeting, or can be answered strictly from generic knowledge without external context.</critical_instructions>"
     )
 
 
@@ -39,7 +39,7 @@ class RouteDecision(StructuredRouting):
         description="<routing_logic>A concise route justification without private reasoning.</routing_logic>"
     )
     route: Literal["action", "knowledge", "chat"] = Field(
-        description="<routing_logic>Selected route. 'action': execute tools/modify state. 'knowledge': factual question needing RAG. 'chat': casual greeting or generic conversational filler.</routing_logic>"
+        description="<routing_logic>Selected route. 'action': execute tools/modify state. 'knowledge': factual question needing project knowledge. 'chat': casual greeting or generic conversational filler.</routing_logic>"
     )
     answer: str = Field(
         default="",

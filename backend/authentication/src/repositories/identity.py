@@ -159,6 +159,46 @@ class IdentityRepository:
         )
 
     @staticmethod
+    async def create_email_verification_token(document: dict):
+        token = document.pop("token")
+        document["token_hash"] = IdentityRepository._token_hash(token)
+        document["email"] = document["email"].lower()
+        await mongo.update_many(
+            "email_verification_tokens",
+            {"user_id": document["user_id"], "used": False},
+            {"$set": {"used": True, "invalidated_at": datetime.now(timezone.utc)}},
+        )
+        return await mongo.insert_one("email_verification_tokens", document)
+
+    @staticmethod
+    async def consume_email_verification_token(token: str):
+        return await mongo.get_db()["email_verification_tokens"].find_one_and_update(
+            {
+                "token_hash": IdentityRepository._token_hash(token),
+                "used": False,
+                "expires_at": {"$gt": datetime.now(timezone.utc)},
+            },
+            {"$set": {"used": True, "used_at": datetime.now(timezone.utc)}},
+            return_document=ReturnDocument.BEFORE,
+        )
+
+    @staticmethod
+    async def mark_email_verified(user_id: str, email: str):
+        timestamp = datetime.now(timezone.utc)
+        return await mongo.get_db()["auth_credentials"].find_one_and_update(
+            {"_id": user_id, "email": email.lower(), "is_active": True},
+            {
+                "$set": {
+                    "is_verified": True,
+                    "email_verified": True,
+                    "email_verified_at": timestamp,
+                    "updated_at": timestamp,
+                }
+            },
+            return_document=ReturnDocument.AFTER,
+        )
+
+    @staticmethod
     async def set_redis_passkey_challenge(email: str, challenge: bytes):
         await redis.setex(
             f"passkey_challenge:{email.lower()}", 300, base64.b64encode(challenge).decode("ascii")

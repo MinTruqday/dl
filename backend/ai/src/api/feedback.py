@@ -1,12 +1,11 @@
 from datetime import datetime, timezone
 
-from src.core.infrastructure.mongo import mongo
 from fastapi import APIRouter, Depends
 from loguru import logger
 
-from src.schemas.feedback import FeedbackRequest
-
 from src.core.dependency import CurrentUser, get_current_user
+from src.core.infrastructure.mongo import mongo
+from src.schemas.feedback import FeedbackRequest
 
 router = APIRouter(prefix="/phan-hoi")
 
@@ -26,7 +25,7 @@ async def submit_feedback(
             "created_at": datetime.now(timezone.utc),
         }
 
-        await mongo.insert_one(collection="rag_feedback", document=feedback_doc)
+        await mongo.insert_one(collection="knowledge_feedback", document=feedback_doc)
         logger.info("User feedback persisted")
         return {"status": "success", "message_code": "feedback_recorded"}
     except Exception:

@@ -1,13 +1,12 @@
 from typing import Any
 
 from fastapi import APIRouter, Depends, Query
+
+from src.core.dependency import CurrentUser, get_current_user, get_db, verify_internal_token
+from src.core.response import APIResponse
+from src.repositories.announcement import AnnouncementRepository
 from src.schemas.announcement import AnnouncementCreate, AnnouncementSettings
 from src.services.announcement import AnnouncementService
-
-from src.core.dependency import get_current_user, get_db
-from src.core.response import APIResponse
-from src.core.dependency import CurrentUser, verify_internal_token
-from src.repositories.announcement import AnnouncementRepository
 
 router = APIRouter(prefix="/thong-bao")
 

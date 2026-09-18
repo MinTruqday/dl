@@ -1,21 +1,15 @@
-import json
-from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Request
 from loguru import logger
 
+from src.agents.memory.context import context
 from src.agents.react.routing import semantic_router
-from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import database
-from src.core.registry import PromptType, registry
-from src.harness.agentops import agentops
-from src.harness.context import context
-from src.harness.orchestration import orchestration
-from src.harness.security import security
-from src.schemas.interaction import ChatRequest
+from src.agents.workflow.orchestration import supervisor
 from src.core.dependency import CurrentUser, get_current_user
-from src.workflow.orchestration import supervisor
-from src.services.workspace import workspace
+from src.core.registry import PromptType, registry
+from src.core.security.scanning import security
+from src.schemas.interaction import ChatRequest
 from src.services.token_accounting import start_accounting
+from src.services.workspace import workspace
 
 router = APIRouter()
 
@@ -48,7 +42,7 @@ async def _persist_conversation_turns(
     if not session_id:
         return
     try:
-        from src.memory.management import memory_manager
+        from src.agents.memory.management import memory_manager
         from src.services.history import HistoryService
         from src.utils.background import create_background_task
 
@@ -130,10 +124,8 @@ async def chat_endpoint(
             "user_preferences": ctx.user_preferences,
         }
         if req.document_ids:
-            from src.tools.http_client import (
-                INTERNAL_API_URL,
-                make_api_request as _make_api_request,
-            )
+            from src.tools.http_client import INTERNAL_API_URL
+            from src.tools.http_client import make_api_request as _make_api_request
 
             for doc_id in req.document_ids:
                 try:
@@ -187,6 +179,7 @@ async def chat_endpoint(
             final_answer = route_data.get("answer", "")
             if not final_answer:
                 from langchain_core.messages import HumanMessage
+
                 from src.utils.huggingface import create_chat_model
 
                 chat_llm = create_chat_model()

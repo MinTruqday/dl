@@ -1,8 +1,9 @@
+import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
-import uuid
 
 from fastapi import HTTPException
+
 from src.repositories.chat import ChatRepository
 
 
@@ -113,7 +114,9 @@ class HistoryService:
         title = fallback
         try:
             import asyncio
+
             from langchain_core.messages import HumanMessage
+
             from src.utils.huggingface import create_chat_model
 
             prompt = (

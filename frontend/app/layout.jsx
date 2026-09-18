@@ -7,8 +7,12 @@ const manrope = Manrope({
   display: "swap",
 });
 export const metadata = {
-  title: "Nền tảng kiểm định bài đánh giá",
-  description: "Soạn thảo kiểm định và hiệu chỉnh bài đánh giá bằng bằng chứng thực nghiệm",
+  title: "Veriq",
+  icons: {
+    icon: [{ url: "/brand/veriq-logo.png", type: "image/png" }],
+    shortcut: "/brand/veriq-logo.png",
+    apple: "/brand/veriq-logo.png",
+  },
 };
 import { AuthProvider } from "@/features/authentication/contexts/AuthContext";
 import { ToastProvider } from "@/shared/contexts/ToastContext";

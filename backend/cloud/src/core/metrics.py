@@ -1,9 +1,9 @@
 import time
 from collections import defaultdict
+
 from fastapi import Request
 from fastapi.responses import PlainTextResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.routing import Router
 
 
 class MetricsCollector:
@@ -54,7 +54,7 @@ class PrometheusMiddleware(BaseHTTPMiddleware):
         self.service_name = service_name
 
     async def dispatch(self, request: Request, call_next):
-        if request.url.path == "/metrics":
+        if request.url.path == "/so-lieu":
             return await call_next(request)
         start = time.perf_counter()
         response = await call_next(request)

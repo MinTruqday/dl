@@ -1,9 +1,11 @@
 import asyncio
 import json
-from uuid6 import uuid7
+from typing import Any, Dict, Optional
+
 import aio_pika
 from loguru import logger
-from typing import Any, Dict, Optional
+from uuid6 import uuid7
+
 from src.core.infrastructure.configuration import settings
 from src.utils.background import create_background_task
 

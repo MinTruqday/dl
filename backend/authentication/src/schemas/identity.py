@@ -1,11 +1,9 @@
 import uuid
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
-
-from src.core.infrastructure.configuration import settings
 
 
 class KYC(str, Enum):
@@ -30,6 +28,11 @@ class Role(str, Enum):
     ADMIN = "admin"
 
 
+class SystemRole(str, Enum):
+    USER = "USER"
+    ADMIN = "ADMIN"
+
+
 class UserBase(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
@@ -37,6 +40,7 @@ class UserBase(BaseModel):
     full_name: str = Field(min_length=2, max_length=100)
     slug: str = Field(min_length=3, max_length=50, pattern=r"^[a-zA-Z0-9_-]+$")
     role: Role = Role.READER
+    system_role: SystemRole = SystemRole.USER
     bio: Optional[str] = None
     avatar_url: Optional[str] = None
     social_links: Optional[Dict[str, str]] = Field(default_factory=dict)
@@ -108,6 +112,23 @@ class ProfileUpdate(BaseModel):
     cover_url: Optional[str] = None
     location: Optional[str] = None
     website: Optional[str] = None
+    locale: Optional[str] = Field(default=None, min_length=2, max_length=20)
+    timezone: Optional[str] = Field(default=None, min_length=2, max_length=100)
+
+
+class PasswordChange(BaseModel):
+    current_password: str = Field(min_length=1, max_length=128)
+    new_password: str = Field(min_length=12, max_length=128)
+
+
+class EmailChange(BaseModel):
+    current_password: str = Field(min_length=1, max_length=128)
+    new_email: EmailStr
+
+
+class AccountDeactivate(BaseModel):
+    current_password: str = Field(min_length=1, max_length=128)
+    confirmation: str = Field(pattern="^DEACTIVATE$")
 
 
 class SettingsUpdate(BaseModel):
@@ -127,6 +148,10 @@ class ResetPasswordRequest(BaseModel):
 
 class VerifyCodeRequest(BaseModel):
     token: str = Field(min_length=6, max_length=128)
+
+
+class EmailVerificationInput(BaseModel):
+    token: str = Field(min_length=16, max_length=256)
 
 
 class NotificationSettingsUpdate(BaseModel):

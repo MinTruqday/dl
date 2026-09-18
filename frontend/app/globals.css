@@ -133,8 +133,20 @@
     @apply min-h-11 rounded-control border border-border-strong bg-surface px-3.5 py-2.5 text-[15px] text-ink outline-none transition duration-150 placeholder:text-ink-faint focus:border-brand focus:ring-2 focus:ring-brand-soft disabled:cursor-not-allowed disabled:bg-surface-quiet;
   }
 
+  .field-label {
+    @apply block min-w-0 text-[12px] font-semibold text-ink-muted;
+  }
+
+  .field-label > .apple-input {
+    @apply w-full;
+  }
+
   .apple-button {
     @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand px-4 py-2.5 text-[14px] font-semibold text-white transition hover:bg-brand-hover active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .danger-button {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-danger px-4 py-2.5 text-[14px] font-semibold text-white transition active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .apple-button-secondary {
@@ -161,7 +173,7 @@
     @apply cursor-not-allowed opacity-35;
   }
 
-  .qa-editor-toolbar {
+  .testing-editor-toolbar {
     @apply flex flex-wrap items-center gap-1 border-b border-border bg-surface-quiet px-2 py-2;
   }
 
@@ -173,121 +185,215 @@
     @apply h-9 max-w-32 rounded-control border border-border bg-surface px-2 text-[12px] text-ink outline-none focus:border-brand;
   }
 
-  .qa-tiptap {
+  .testing-bubble-menu,
+  .testing-floating-menu {
+    @apply flex items-center gap-1 rounded-control border border-border bg-surface p-1 shadow-lg;
+  }
+
+  .testing-bubble-menu .editor-tool,
+  .testing-floating-menu .editor-tool {
+    @apply h-7 w-7;
+  }
+
+  .tiptap-drag-handle {
+    @apply cursor-grab rounded-control border border-border bg-surface px-1.5 py-0.5 text-xs text-ink-muted opacity-0 shadow-lg hover:bg-surface-quiet active:cursor-grabbing;
+  }
+
+  .tippy-box[data-state="visible"] .tiptap-drag-handle {
+    @apply opacity-100;
+  }
+
+  .tiptap-mention {
+    @apply rounded bg-brand-soft px-1 font-semibold text-brand;
+  }
+
+  .testing-tiptap .has-focus {
+    @apply outline outline-1 outline-brand/30;
+  }
+
+  .testing-table-of-contents {
+    @apply border-b border-border bg-surface-quiet px-3.5 py-2.5 text-xs text-ink-muted;
+  }
+
+  .testing-table-of-contents-title {
+    @apply mb-1 block font-semibold text-ink;
+  }
+
+  .testing-table-of-contents ol {
+    @apply m-0 grid list-none gap-1 p-0;
+  }
+
+  .testing-table-of-contents button {
+    @apply text-left text-ink-muted hover:text-brand hover:underline focus-visible:text-brand;
+  }
+
+  .testing-tiptap {
     @apply px-5 py-4 text-[15px] leading-7 text-ink outline-none;
   }
 
-  .qa-tiptap > * + * {
+  .testing-tiptap > * + * {
     margin-top: 0.7rem;
   }
 
-  .qa-tiptap h1 {
+  .testing-tiptap h1 {
     @apply text-[26px] font-semibold tracking-[-0.025em];
   }
 
-  .qa-tiptap h2 {
+  .testing-tiptap h2 {
     @apply text-[21px] font-semibold tracking-[-0.02em];
   }
 
-  .qa-tiptap h3 {
+  .testing-tiptap h3 {
     @apply text-[18px] font-semibold tracking-[-0.01em];
   }
 
-  .qa-tiptap ul {
+  .testing-tiptap ul {
     @apply list-disc pl-6;
   }
 
-  .qa-tiptap ol {
+  .testing-tiptap ol {
     @apply list-decimal pl-6;
   }
 
-  .qa-tiptap blockquote {
+  .testing-tiptap blockquote {
     @apply border-l-4 border-brand pl-4 italic text-ink-muted;
   }
 
-  .qa-tiptap code {
+  .testing-tiptap code {
     @apply rounded bg-surface-quiet px-1.5 py-0.5 font-mono text-[0.9em];
   }
 
-  .qa-tiptap pre {
+  .testing-tiptap pre {
     @apply overflow-x-auto rounded-control bg-[#1d1d1f] p-4 text-[#f5f5f7];
   }
 
-  .qa-tiptap pre code {
+  .testing-tiptap pre code {
     @apply bg-transparent p-0 text-inherit;
   }
 
-  .qa-tiptap a {
+  .testing-tiptap pre .hljs-keyword,
+  .testing-tiptap pre .hljs-selector-tag,
+  .testing-tiptap pre .hljs-literal {
+    color: #ff7ab2;
+  }
+
+  .testing-tiptap pre .hljs-string,
+  .testing-tiptap pre .hljs-title,
+  .testing-tiptap pre .hljs-section {
+    color: #a8ff60;
+  }
+
+  .testing-tiptap pre .hljs-number,
+  .testing-tiptap pre .hljs-symbol,
+  .testing-tiptap pre .hljs-bullet {
+    color: #d7b8ff;
+  }
+
+  .testing-tiptap pre .hljs-comment,
+  .testing-tiptap pre .hljs-quote {
+    color: #a1a1aa;
+  }
+
+  .testing-tiptap a {
     @apply text-brand underline decoration-brand/40 underline-offset-2 hover:decoration-brand;
   }
 
-  .qa-tiptap mark {
+  .testing-tiptap mark {
     @apply rounded px-0.5;
   }
 
-  .qa-tiptap ul[data-type="taskList"] {
+  .testing-tiptap ul[data-type="taskList"] {
     @apply list-none pl-0;
   }
 
-  .qa-tiptap ul[data-type="taskList"] li {
+  .testing-tiptap ul[data-type="taskList"] li {
     @apply flex items-start gap-2;
   }
 
-  .qa-tiptap ul[data-type="taskList"] li > div {
+  .testing-tiptap ul[data-type="taskList"] li > div {
     @apply min-w-0 flex-1;
   }
 
-  .qa-tiptap details {
+  .testing-tiptap details {
     @apply rounded-control border border-border bg-surface-quiet px-4 py-3;
   }
 
-  .qa-tiptap summary {
+  .testing-tiptap summary {
     @apply cursor-pointer font-semibold text-ink;
   }
 
-  .qa-tiptap div[data-youtube-video] {
+  .testing-tiptap div[data-youtube-video] {
     @apply overflow-hidden rounded-control;
   }
 
-  .qa-tiptap div[data-youtube-video] iframe {
+  .testing-tiptap div[data-youtube-video] iframe {
     @apply aspect-video h-auto max-w-full;
   }
 
-  .qa-tiptap p.is-editor-empty:first-child::before {
+  .testing-tiptap p.is-editor-empty:first-child::before {
     @apply pointer-events-none float-left h-0 text-ink-faint;
     content: attr(data-placeholder);
   }
 
-  .qa-tiptap table {
+  .testing-tiptap table {
     @apply w-full border-collapse overflow-hidden rounded-control;
   }
 
-  .qa-tiptap th,
-  .qa-tiptap td {
+  .testing-tiptap .tableWrapper {
+    @apply overflow-x-auto;
+  }
+
+  .testing-tiptap th,
+  .testing-tiptap td {
     @apply min-w-20 border border-border px-3 py-2 align-top;
   }
 
-  .qa-tiptap th {
+  .testing-tiptap th {
     @apply bg-surface-quiet text-left font-semibold;
   }
 
-  .qa-tiptap img {
+  .testing-tiptap .selectedCell {
+    @apply relative;
+  }
+
+  .testing-tiptap .selectedCell::after {
+    @apply pointer-events-none absolute inset-0 bg-brand-soft/60;
+    content: "";
+  }
+
+  .testing-tiptap .column-resize-handle {
+    @apply pointer-events-none absolute -bottom-px -right-px top-0 w-0.5 bg-brand;
+  }
+
+  .resize-cursor {
+    cursor: col-resize;
+  }
+
+  .testing-tiptap .Tiptap-mathematics-render {
+    @apply rounded bg-surface-quiet px-1.5 py-0.5;
+  }
+
+  .testing-tiptap .Tiptap-mathematics-render--editable {
+    @apply cursor-pointer hover:bg-brand-soft;
+  }
+
+  .testing-tiptap img {
     @apply max-h-[520px] max-w-full rounded-control border border-border object-contain;
   }
 
-  .qa-artifact-ref {
+  .testing-artifact-ref {
     @apply rounded-control border border-dashed border-brand bg-brand-soft px-4 py-3 text-[13px] font-semibold text-brand;
   }
 
-  .qa-section {
+  .testing-section {
     @apply rounded-panel border border-border p-4;
   }
 
-  .qa-page-break {
+  .testing-page-break {
     @apply my-6 border-t border-dashed border-border-strong;
   }
 
-  .qa-page-break::after {
+  .testing-page-break::after {
     content: "Ngắt trang";
     @apply relative -top-3 mx-auto block w-fit bg-surface px-2 text-[11px] text-ink-faint;
   }

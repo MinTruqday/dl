@@ -1,18 +1,16 @@
-from src.core.infrastructure.redis import redis
-import time
-from typing import List, Optional
+import hmac
+from enum import Enum
+from typing import Any, List, Optional
 
 import jwt
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, Header, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from loguru import logger
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from src.core.infrastructure.configuration import settings
-from src.core.infrastructure.database import database
-
-from enum import Enum
-from pydantic import BaseModel, ConfigDict, Field
-from typing import Optional, List, Dict, Any
+from src.core.infrastructure.mongo import mongo
+from src.core.infrastructure.redis import redis
 
 
 class Role(str, Enum):
@@ -22,24 +20,36 @@ class Role(str, Enum):
     ADMIN = "admin"
 
 
+class SystemRole(str, Enum):
+    USER = "USER"
+    ADMIN = "ADMIN"
+
+
 class CurrentUser(BaseModel):
     model_config = ConfigDict(populate_by_name=True, extra="ignore")
 
     id: str = Field(alias="_id")
     email: str
     role: Role = Role.READER
+    system_role: SystemRole = SystemRole.USER
     permissions: List[str] = Field(default_factory=list)
     is_active: bool = True
     full_name: str = ""
     slug: str = ""
-
-    from pydantic import field_validator
+    session_id: str = ""
 
     @field_validator("role", mode="before")
     @classmethod
     def validate_role_case(cls, v: Any):
         if isinstance(v, str):
             return v.lower()
+        return v
+
+    @field_validator("system_role", mode="before")
+    @classmethod
+    def validate_system_role_case(cls, v: Any):
+        if isinstance(v, str):
+            return v.upper()
         return v
 
 
@@ -80,7 +90,9 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
         "_id": uid,
         "email": email,
         "role": payload.get("role", "reader"),
+        "system_role": payload.get("system_role", "USER"),
         "permissions": payload.get("permissions", []),
+        "session_id": session_id,
         "full_name": payload.get("full_name", ""),
         "slug": payload.get("slug", ""),
         "is_active": True,
@@ -107,7 +119,7 @@ async def get_current_user_token_param(token: str) -> CurrentUser:
 
 def require_role(required_roles: List[Role]):
     async def role_checker(current_user: CurrentUser = Depends(get_current_user)) -> CurrentUser:
-        if current_user.role == Role.ADMIN:
+        if current_user.system_role == SystemRole.ADMIN or current_user.role == Role.ADMIN:
             return current_user
         if current_user.role not in required_roles:
             logger.warning("Access denied due to insufficient authorization privileges")
@@ -144,7 +156,7 @@ def require_permissions(required_permissions: List[str]):
         current_user: CurrentUser = Depends(get_current_user),
     ) -> CurrentUser:
         user_perms = current_user.permissions or []
-        if current_user.role == Role.ADMIN:
+        if current_user.system_role == SystemRole.ADMIN or current_user.role == Role.ADMIN:
             return current_user
         missing = [p for p in required_permissions if p not in user_perms]
         if missing:
@@ -157,33 +169,9 @@ def require_permissions(required_permissions: List[str]):
     return permission_checker
 
 
-from fastapi import Header
-import hmac
-
-
-async def verify_internal_token(x_internal_token: str = Header(default="")):
-    if not settings.SECRET_KEY or not hmac.compare_digest(
-        x_internal_token.encode("utf-8"), settings.SECRET_KEY.encode("utf-8")
-    ):
+async def verify_internal_token(x_internal_token: str = Header(default="")) -> None:
+    if not settings.SECRET_KEY or not hmac.compare_digest(x_internal_token, settings.SECRET_KEY):
         raise HTTPException(status_code=403, detail="Mã xác thực nội bộ không hợp lệ")
-
-
-class AuthenticatedUser:
-    def __init__(self, user_id: str, user_name: str = "User"):
-        self.id = user_id
-        self.full_name = user_name
-
-
-def get_current_user_from_header(x_user_id: str = Header(None), x_user_name: str = Header("User")):
-    if not x_user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Không tìm thấy thông tin định danh người dùng hợp lệ",
-        )
-    return AuthenticatedUser(x_user_id, x_user_name)
-
-
-from src.core.infrastructure.mongo import mongo
 
 
 async def get_db():

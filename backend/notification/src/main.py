@@ -7,12 +7,12 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 
 from src.api.announcement import router as announcement_router
+from src.core.function_ids import apply_function_ids
 from src.core.infrastructure.configuration import settings
 from src.core.infrastructure.database import close_db, database, init_db
 from src.core.infrastructure.redis import redis
 from src.core.metrics import PrometheusMiddleware, metrics_endpoint
 from src.core.middleware import add_trace_id_header, trace_id_filter
-
 
 logger.remove()
 logger.add(
@@ -35,9 +35,9 @@ async def lifespan(app: FastAPI):
         await close_db()
 
 
-app = FastAPI(title="DocLib Notification", version=settings.VERSION, lifespan=lifespan)
+app = FastAPI(title="Veriq Notification", version=settings.VERSION, lifespan=lifespan)
 app.add_middleware(PrometheusMiddleware, service_name="notification")
-app.add_route("/metrics", metrics_endpoint("notification"))
+app.add_route("/so-lieu", metrics_endpoint("notification"))
 app.middleware("http")(add_trace_id_header)
 origins = [origin.strip() for origin in settings.CORS_ALLOWED_ORIGINS.split(",") if origin.strip()]
 app.add_middleware(
@@ -48,14 +48,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(announcement_router)
+apply_function_ids(app)
 
 
-@app.get("/health")
+@app.get("/suc-khoe")
 async def health_check():
     return {"status": "healthy"}
 
 
-@app.get("/ready")
+@app.get("/san-sang")
 async def readiness_check():
     checks = {}
     try:

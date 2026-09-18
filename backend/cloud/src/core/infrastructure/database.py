@@ -1,7 +1,7 @@
-from src.core.infrastructure.redis import redis
 from loguru import logger
 
 from src.core.infrastructure.configuration import settings
+from src.core.infrastructure.redis import redis
 
 
 class DatabaseInfrastructure:

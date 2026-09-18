@@ -1,7 +1,6 @@
-from src.core.infrastructure.mongo import mongo
-from typing import Optional, Dict, Any, List
-from src.core.infrastructure.database import database
 from src.core.infrastructure.configuration import settings
+from src.core.infrastructure.database import database
+from src.core.infrastructure.mongo import mongo
 
 
 class DocumentRepository:

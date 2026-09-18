@@ -1,4 +1,3 @@
-import os
 import asyncio
 
 import aioboto3
@@ -8,14 +7,15 @@ from loguru import logger
 
 from src.core.infrastructure.configuration import settings
 
-MINIO_ENDPOINT = settings.MINIO_ENDPOINT
-MINIO_ACCESS_KEY = settings.MINIO_ACCESS_KEY
-MINIO_SECRET_KEY = settings.MINIO_SECRET_KEY
-MINIO_PRIVATE_BUCKET = settings.MINIO_PRIVATE_BUCKET
-MINIO_PUBLIC_BUCKET = settings.MINIO_PUBLIC_BUCKET
-MINIO_LEGACY_BUCKET = settings.MINIO_LEGACY_BUCKET
-MINIO_PUBLIC_URL = settings.MINIO_PUBLIC_URL
-TEXT_EXTENSIONS = {"txt", "csv", "json", "md", "doclib", "doclibx"}
+OBJECT_STORAGE_ENDPOINT = settings.OBJECT_STORAGE_ENDPOINT
+OBJECT_STORAGE_ACCESS_KEY = settings.OBJECT_STORAGE_ACCESS_KEY
+OBJECT_STORAGE_SECRET_KEY = settings.OBJECT_STORAGE_SECRET_KEY
+OBJECT_STORAGE_PRIVATE_BUCKET = settings.OBJECT_STORAGE_PRIVATE_BUCKET
+OBJECT_STORAGE_PUBLIC_BUCKET = settings.OBJECT_STORAGE_PUBLIC_BUCKET
+OBJECT_STORAGE_LEGACY_BUCKET = settings.OBJECT_STORAGE_LEGACY_BUCKET
+OBJECT_STORAGE_PUBLIC_URL = settings.OBJECT_STORAGE_PUBLIC_URL
+OBJECT_STORAGE_REGION = settings.OBJECT_STORAGE_REGION
+TEXT_EXTENSIONS = {"txt", "csv", "json", "md", "veriq", "veriqx"}
 MIN_BROTLI_BYTES = 1024
 
 
@@ -45,8 +45,8 @@ def original_content_length(metadata: dict) -> int:
 
 def get_bucket(path: str) -> str:
     if path.startswith(("system/", "users/", "client/", "temp/")):
-        return MINIO_PRIVATE_BUCKET
-    return MINIO_PUBLIC_BUCKET
+        return OBJECT_STORAGE_PRIVATE_BUCKET
+    return OBJECT_STORAGE_PUBLIC_BUCKET
 
 
 session = aioboto3.Session()
@@ -58,9 +58,10 @@ async def get_storage_client():
     if _storage_client is None:
         _storage_client = await session.client(
             "s3",
-            endpoint_url=MINIO_ENDPOINT,
-            aws_access_key_id=MINIO_ACCESS_KEY,
-            aws_secret_access_key=MINIO_SECRET_KEY,
+            endpoint_url=OBJECT_STORAGE_ENDPOINT,
+            aws_access_key_id=OBJECT_STORAGE_ACCESS_KEY,
+            aws_secret_access_key=OBJECT_STORAGE_SECRET_KEY,
+            region_name=OBJECT_STORAGE_REGION,
         ).__aenter__()
     return _storage_client
 
@@ -74,17 +75,17 @@ async def close_storage_client():
 
 async def initialize_bucket():
     storage_client = await get_storage_client()
-    for bucket in [MINIO_PRIVATE_BUCKET, MINIO_PUBLIC_BUCKET]:
+    for bucket in dict.fromkeys([OBJECT_STORAGE_PRIVATE_BUCKET, OBJECT_STORAGE_PUBLIC_BUCKET]):
         try:
             await storage_client.head_bucket(Bucket=bucket)
-        except ClientError as e:
+        except ClientError:
             logger.info(f"Initializing storage bucket {bucket}")
             await storage_client.create_bucket(Bucket=bucket)
             logger.info(f"Storage bucket {bucket} initialized")
-    if "r2.cloudflarestorage.com" in MINIO_ENDPOINT:
+    if "r2.cloudflarestorage.com" in OBJECT_STORAGE_ENDPOINT:
         return
     await storage_client.put_bucket_lifecycle_configuration(
-        Bucket=MINIO_PRIVATE_BUCKET,
+        Bucket=OBJECT_STORAGE_PRIVATE_BUCKET,
         LifecycleConfiguration={
             "Rules": [
                 {
@@ -128,7 +129,9 @@ async def download_file(object_name: str) -> tuple[bytes, str]:
     except ClientError as error:
         if error.response.get("Error", {}).get("Code") not in {"NoSuchKey", "404"}:
             raise
-        response = await storage_client.get_object(Bucket=MINIO_LEGACY_BUCKET, Key=object_name)
+        response = await storage_client.get_object(
+            Bucket=OBJECT_STORAGE_LEGACY_BUCKET, Key=object_name
+        )
     content = await response["Body"].read()
 
     if response.get("ContentEncoding") == "br":
@@ -144,8 +147,8 @@ async def generate_presigned_url(object_name: str, expiration: int = 3600) -> st
     response = await storage_client.generate_presigned_url(
         "get_object", Params=params, ExpiresIn=expiration
     )
-    if MINIO_PUBLIC_URL and MINIO_ENDPOINT in response:
-        response = response.replace(MINIO_ENDPOINT, MINIO_PUBLIC_URL)
+    if OBJECT_STORAGE_PUBLIC_URL and OBJECT_STORAGE_ENDPOINT in response:
+        response = response.replace(OBJECT_STORAGE_ENDPOINT, OBJECT_STORAGE_PUBLIC_URL)
     return response
 
 
@@ -158,6 +161,6 @@ async def generate_presigned_put_url(
     response = await storage_client.generate_presigned_url(
         "put_object", Params=params, ExpiresIn=expiration
     )
-    if MINIO_PUBLIC_URL and MINIO_ENDPOINT in response:
-        response = response.replace(MINIO_ENDPOINT, MINIO_PUBLIC_URL)
+    if OBJECT_STORAGE_PUBLIC_URL and OBJECT_STORAGE_ENDPOINT in response:
+        response = response.replace(OBJECT_STORAGE_ENDPOINT, OBJECT_STORAGE_PUBLIC_URL)
     return response
