@@ -17,11 +17,11 @@ import { Modal, ModalHeader, ModalTitle } from "@/shared/components/ui/Modal";
 const sourceTypes = [
   ["SRS", "Đặc tả yêu cầu phần mềm"],
   ["BRD", "Tài liệu yêu cầu nghiệp vụ"],
-  ["USER_STORY", "User story"],
+  ["USER_STORY", "Câu chuyện người dùng"],
   ["ACCEPTANCE_CRITERIA", "Tiêu chí chấp nhận"],
   ["BUSINESS_RULE", "Quy tắc nghiệp vụ"],
-  ["API_SPEC", "Đặc tả API"],
-  ["UI_SPEC", "Đặc tả giao diện"],
+  ["API_SPEC", "Đặc tả giao diện lập trình ứng dụng"],
+  ["UI_SPEC", "Đặc tả giao diện người dùng"],
   ["ARCHITECTURE", "Kiến trúc"],
   ["MEETING_NOTE", "Biên bản họp"],
   ["RELEASE_NOTE", "Ghi chú phát hành"],
@@ -33,10 +33,10 @@ const sourceTypes = [
 ];
 
 const authorityLevels = [
-  ["APPROVED_SOURCE", "Nguồn đã phê duyệt"],
-  ["CONTROLLED_SOURCE", "Nguồn được kiểm soát"],
-  ["PROJECT_REFERENCE", "Tham chiếu dự án"],
-  ["SUPPLEMENTAL", "Nguồn bổ trợ"],
+  ["APPROVED_SOURCE", "Đã được phê duyệt"],
+  ["CONTROLLED_SOURCE", "Được quản lý chính thức"],
+  ["PROJECT_REFERENCE", "Tài liệu tham chiếu của dự án"],
+  ["SUPPLEMENTAL", "Tài liệu bổ sung"],
   ["DRAFT", "Bản nháp"],
   ["UNVERIFIED", "Chưa xác minh"],
 ];
@@ -72,13 +72,13 @@ export default function KnowledgePage({ project, initialQuery = "", useGlobalSea
   }, [initialQuery, project._id, useGlobalSearch]);
   return (
     <WorkspacePage
-      title="Kho tri thức"
+      title="Tài liệu và bằng chứng"
       actions={
         <div className="flex flex-wrap items-center gap-3">
           <ProjectCrumb projectId={project._id} />
           {canManage && (
             <button className="apple-button" type="button" onClick={() => setCreatingSource(true)}>
-              Thêm nguồn tri thức
+              Thêm tài liệu tham chiếu
             </button>
           )}
         </div>
@@ -87,7 +87,7 @@ export default function KnowledgePage({ project, initialQuery = "", useGlobalSea
       {error && <ErrorState message={error} />}
       <DegradedBanner mode={result?.degraded_mode} />
       {canAsk && (
-        <Panel title="Hỏi đáp theo tri thức dự án">
+        <Panel title="Hỏi AI về dữ liệu dự án">
           <form
             className="space-y-3 p-5"
             onSubmit={async (event) => {
@@ -147,7 +147,7 @@ export default function KnowledgePage({ project, initialQuery = "", useGlobalSea
           )}
         </Panel>
       )}
-      <Panel title="Tìm trong yêu cầu ca kiểm thử lỗi và kế hoạch kiểm thử">
+      <Panel title="Tìm trong dữ liệu dự án">
         <form
           className="flex gap-3 p-5"
           onSubmit={async (event) => {
@@ -168,7 +168,7 @@ export default function KnowledgePage({ project, initialQuery = "", useGlobalSea
           }}
         >
           <input
-            aria-label="Tìm tri thức dự án"
+            aria-label="Tìm trong dữ liệu dự án"
             className="apple-input flex-1"
             required
             value={query}
@@ -181,7 +181,7 @@ export default function KnowledgePage({ project, initialQuery = "", useGlobalSea
         </form>
       </Panel>
       {result && (
-        <Panel title={`Kết quả từ ${result.retrieval_version || "nguồn tri thức"}`}>
+        <Panel title="Kết quả tìm kiếm">
           <DataTable
             items={result.items}
             empty="Không tìm thấy dữ liệu phù hợp"
@@ -199,7 +199,7 @@ export default function KnowledgePage({ project, initialQuery = "", useGlobalSea
               },
               {
                 key: "authority",
-                label: "Mức thẩm quyền",
+                label: "Độ tin cậy",
                 render: (item) => valueLabel(item.authority),
               },
               { key: "score", label: "Điểm" },
@@ -212,16 +212,16 @@ export default function KnowledgePage({ project, initialQuery = "", useGlobalSea
           />
         </Panel>
       )}
-      <Panel title="Nguồn tri thức kiểm thử của dự án">
+      <Panel title="Tài liệu tham chiếu của dự án">
         {canManage && (
           <Modal
             isOpen={creatingSource}
             onClose={() => setCreatingSource(false)}
-            ariaLabel="Thêm nguồn tri thức"
+            ariaLabel="Thêm tài liệu tham chiếu"
             className="max-w-3xl max-h-[90dvh] overflow-y-auto"
           >
             <ModalHeader>
-              <ModalTitle>Thêm nguồn tri thức</ModalTitle>
+              <ModalTitle>Thêm tài liệu tham chiếu</ModalTitle>
             </ModalHeader>
             <form
               className="grid gap-3 p-5 md:grid-cols-2"
@@ -275,7 +275,7 @@ export default function KnowledgePage({ project, initialQuery = "", useGlobalSea
                 </select>
               </label>
               <label className="field-label">
-                Mức thẩm quyền
+                Độ tin cậy của nguồn
                 <select
                   className="apple-input mt-2"
                   name="authority"
@@ -293,11 +293,11 @@ export default function KnowledgePage({ project, initialQuery = "", useGlobalSea
                 <input className="apple-input mt-2" name="owner_id" />
               </label>
               <label className="field-label">
-                Module
+                Phân hệ
                 <input className="apple-input mt-2" name="module" />
               </label>
               <label className="field-label">
-                Component
+                Thành phần
                 <input className="apple-input mt-2" name="component" />
               </label>
               <label className="field-label">
@@ -363,7 +363,7 @@ export default function KnowledgePage({ project, initialQuery = "", useGlobalSea
                   Hủy
                 </button>
                 <button className="apple-button" type="submit">
-                  Thêm nguồn tri thức
+                  Thêm tài liệu tham chiếu
                 </button>
               </div>
             </form>
@@ -371,11 +371,15 @@ export default function KnowledgePage({ project, initialQuery = "", useGlobalSea
         )}
         <DataTable
           items={sources}
-          empty="Chưa có nguồn tri thức"
+          empty="Chưa có tài liệu tham chiếu"
           columns={[
-            { key: "title", label: "Nguồn" },
+            { key: "title", label: "Tài liệu" },
             { key: "source_type", label: "Loại", render: (item) => valueLabel(item.source_type) },
-            { key: "authority", label: "Thẩm quyền", render: (item) => valueLabel(item.authority) },
+            {
+              key: "authority",
+              label: "Độ tin cậy",
+              render: (item) => valueLabel(item.authority),
+            },
             {
               key: "module",
               label: "Phạm vi",
@@ -414,7 +418,7 @@ export default function KnowledgePage({ project, initialQuery = "", useGlobalSea
                           type="button"
                           onClick={async () => {
                             const answer = await ask({
-                              title: "Lưu trữ nguồn tri thức",
+                              title: "Lưu trữ tài liệu tham chiếu",
                               description: item.title || item.filename,
                               confirmLabel: "Lưu trữ",
                               danger: true,

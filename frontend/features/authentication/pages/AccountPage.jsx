@@ -124,11 +124,7 @@ export default function AccountPage() {
           <div>
             <span className="field-label">Vai trò hệ thống</span>
             <p className="mt-2 font-semibold">
-              {{
-                admin: "Quản trị viên",
-                user: "Người dùng",
-                author: "Người đóng góp",
-              }[String(user?.role || "").toLowerCase()] || user?.role}
+              {user?.system_role === "ADMIN" ? "Quản trị viên" : "Người dùng"}
             </p>
           </div>
           <div>

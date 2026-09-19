@@ -1211,7 +1211,10 @@ async def submit_requirement_review(
             status_code=409,
             detail={"code": "REVISION_CONFLICT", "current_revision": version["revision"]},
         )
-    findings = requirement_findings(version)
+    acceptance_criteria = await database.value.acceptance_criteria.find(
+        {"requirement_version_id": version["_id"]}
+    ).to_list(200)
+    findings = requirement_findings(version, acceptance_criteria)
     project = await database.value.projects.find_one({"_id": project_id}, {"settings": 1})
     lint_blocking = (project.get("settings") or {}).get("requirement_lint_blocking", True)
     if lint_blocking and any(item["severity"] == "error" for item in findings):
@@ -1348,7 +1351,10 @@ async def baseline_requirement_version(
             status_code=409,
             detail={"code": "REVISION_CONFLICT", "current_revision": version["revision"]},
         )
-    findings = requirement_findings(version)
+    acceptance_criteria = await database.value.acceptance_criteria.find(
+        {"requirement_version_id": version["_id"]}
+    ).to_list(200)
+    findings = requirement_findings(version, acceptance_criteria)
     project = await database.value.projects.find_one(
         {"_id": version["project_id"]}, {"settings": 1}
     )
@@ -1681,9 +1687,12 @@ async def lint_requirement(
     )
     if existing:
         return envelope(existing)
+    acceptance_criteria = await database.value.acceptance_criteria.find(
+        {"requirement_version_id": version_id}
+    ).to_list(200)
     deterministic_findings = [
         {**item, "origin": "RULE", "evidence_refs": [version_id], "reason_codes": [item["rule_id"]]}
-        for item in requirement_findings(version)
+        for item in requirement_findings(version, acceptance_criteria)
     ]
     evidence = [
         {
@@ -1698,7 +1707,13 @@ async def lint_requirement(
                     or plain_text(version.get("content_doc", {})),
                     "actors": version.get("actors", []),
                     "business_rules": version.get("business_rules", []),
-                    "acceptance_criterion_ids": version.get("acceptance_criterion_ids", []),
+                    "acceptance_criteria": [
+                        str(item.get("plain_text") or "").strip()
+                        for item in acceptance_criteria
+                        if str(item.get("plain_text") or "").strip()
+                    ],
+                    "dependencies": version.get("dependencies", []),
+                    "tags": version.get("tags", []),
                 },
                 ensure_ascii=False,
             ),

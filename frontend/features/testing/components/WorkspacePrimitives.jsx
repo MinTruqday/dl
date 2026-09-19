@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { statusLabel } from "../lib/testing";
+import { statusLabel, valueLabel } from "../lib/testing";
 
 export function useActionDialog() {
   const titleId = useId();
@@ -241,7 +241,7 @@ export function DegradedBanner({ mode, message }) {
       className="rounded-control border border-warning/30 bg-warning-soft p-4 text-[13px] text-warning"
     >
       {message ||
-        `Hệ thống đang ở chế độ ${mode} các thao tác lõi vẫn được lưu và có thể cần kiểm tra thủ công`}
+        `Hệ thống đang hoạt động giới hạn do ${valueLabel(mode)} các thao tác vẫn được lưu và có thể cần kiểm tra thủ công`}
     </p>
   );
 }

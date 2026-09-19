@@ -39,7 +39,9 @@ export function getUserFromToken(token = getToken()) {
       email: payload.sub,
       full_name: payload.full_name || payload.sub,
       slug: payload.slug || "",
-      role: payload.role || "reader",
+      system_role:
+        payload.system_role ||
+        (String(payload.role || "").toLowerCase() === "admin" ? "ADMIN" : "USER"),
     };
   } catch {
     return null;

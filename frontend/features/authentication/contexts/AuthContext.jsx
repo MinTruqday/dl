@@ -16,7 +16,6 @@ export function AuthProvider({ children }) {
   const clearAuth = useCallback(() => {
     removeToken();
     document.cookie = "token=; path=/; max-age=0; SameSite=Lax";
-    document.cookie = "role=; path=/; max-age=0; SameSite=Lax";
     setUser(null);
   }, []);
   const fetchUser = useCallback(async () => {
@@ -31,7 +30,6 @@ export function AuthProvider({ children }) {
       if (data) {
         setUser(data);
         document.cookie = `token=${token}; path=/; max-age=604800; SameSite=Lax`;
-        document.cookie = `role=${data.role}; path=/; max-age=604800; SameSite=Lax`;
       } else {
         clearAuth();
       }
@@ -40,7 +38,6 @@ export function AuthProvider({ children }) {
       if (sessionUser) {
         setUser(sessionUser);
         document.cookie = `token=${token}; path=/; max-age=604800; SameSite=Lax`;
-        document.cookie = `role=${sessionUser.role}; path=/; max-age=604800; SameSite=Lax`;
       }
     } finally {
       setIsLoading(false);

@@ -226,7 +226,7 @@ export default function AppShell({ children, requireAuth }) {
                 <Search aria-hidden="true" size={18} strokeWidth={1.75} />
               </button>
               <label htmlFor="workspace-search" className="sr-only">
-                Tìm trong tri thức dự án
+                Tìm trong dữ liệu dự án
               </label>
               <input
                 id="workspace-search"

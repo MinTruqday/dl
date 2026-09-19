@@ -126,7 +126,7 @@ export function navigationGroupsFor(pathname) {
         resources: [
           {
             id: "knowledge",
-            label: "Kho tri thức",
+            label: "Tài liệu tham chiếu",
             href: `${root}/${PROJECT_SECTION_SLUGS.knowledge}`,
             icon: Search,
             permission: "knowledge.read",

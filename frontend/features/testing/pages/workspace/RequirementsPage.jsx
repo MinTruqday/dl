@@ -1694,14 +1694,23 @@ export default function RequirementsPage({ project, section }) {
                                       options: [
                                         { value: "SRS", label: "Đặc tả yêu cầu phần mềm" },
                                         { value: "BRD", label: "Tài liệu yêu cầu nghiệp vụ" },
-                                        { value: "USER_STORY", label: "User story" },
+                                        {
+                                          value: "USER_STORY",
+                                          label: "Câu chuyện người dùng",
+                                        },
                                         {
                                           value: "ACCEPTANCE_CRITERIA",
                                           label: "Tiêu chí chấp nhận",
                                         },
                                         { value: "BUSINESS_RULE", label: "Quy tắc nghiệp vụ" },
-                                        { value: "API_SPEC", label: "Đặc tả API" },
-                                        { value: "UI_SPEC", label: "Đặc tả giao diện" },
+                                        {
+                                          value: "API_SPEC",
+                                          label: "Đặc tả giao diện lập trình ứng dụng",
+                                        },
+                                        {
+                                          value: "UI_SPEC",
+                                          label: "Đặc tả giao diện người dùng",
+                                        },
                                         { value: "ARCHITECTURE", label: "Kiến trúc" },
                                         { value: "MEETING_NOTE", label: "Biên bản họp" },
                                         { value: "RELEASE_NOTE", label: "Ghi chú phát hành" },
@@ -1714,16 +1723,22 @@ export default function RequirementsPage({ project, section }) {
                                     },
                                     {
                                       name: "authority",
-                                      label: "Mức thẩm quyền",
+                                      label: "Độ tin cậy của nguồn",
                                       initialValue: item.authority || "PROJECT_REFERENCE",
                                       options: [
-                                        { value: "APPROVED_SOURCE", label: "Nguồn đã phê duyệt" },
+                                        {
+                                          value: "APPROVED_SOURCE",
+                                          label: "Đã được phê duyệt",
+                                        },
                                         {
                                           value: "CONTROLLED_SOURCE",
-                                          label: "Nguồn được kiểm soát",
+                                          label: "Được quản lý chính thức",
                                         },
-                                        { value: "PROJECT_REFERENCE", label: "Tham chiếu dự án" },
-                                        { value: "SUPPLEMENTAL", label: "Nguồn bổ trợ" },
+                                        {
+                                          value: "PROJECT_REFERENCE",
+                                          label: "Tài liệu tham chiếu của dự án",
+                                        },
+                                        { value: "SUPPLEMENTAL", label: "Tài liệu bổ sung" },
                                         { value: "DRAFT", label: "Bản nháp" },
                                         { value: "UNVERIFIED", label: "Chưa xác minh" },
                                       ],
@@ -1735,12 +1750,12 @@ export default function RequirementsPage({ project, section }) {
                                     },
                                     {
                                       name: "module",
-                                      label: "Module",
+                                      label: "Phân hệ",
                                       initialValue: item.module || "",
                                     },
                                     {
                                       name: "component",
-                                      label: "Component",
+                                      label: "Thành phần",
                                       initialValue: item.component || "",
                                     },
                                     {

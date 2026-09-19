@@ -46,7 +46,7 @@ const toggleSettings = [
   ["ba_can_revoke_trace", "Cho phép chuyên viên phân tích thu hồi liên kết truy vết"],
   ["tester_can_override_impact", "Cho phép kiểm thử viên điều chỉnh phân tích ảnh hưởng"],
   ["tester_can_close_impact", "Cho phép kiểm thử viên đóng phân tích ảnh hưởng"],
-  ["tester_can_manage_knowledge", "Cho phép kiểm thử viên quản lý kho tri thức"],
+  ["tester_can_manage_knowledge", "Cho phép kiểm thử viên quản lý tài liệu tham chiếu"],
   ["tester_can_archive_testcase_templates", "Cho phép kiểm thử viên lưu trữ mẫu ca kiểm thử"],
   ["viewer_can_export", "Cho phép người xem xuất báo cáo"],
   ["developer_can_export", "Cho phép lập trình viên xuất báo cáo"],

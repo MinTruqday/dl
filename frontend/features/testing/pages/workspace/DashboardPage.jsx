@@ -75,10 +75,10 @@ export default function DashboardPage({ project }) {
                 ))}
               </div>
             </Panel>
-            <Panel title="Tri thức dự án">
+            <Panel title="Tài liệu tham chiếu">
               <div className="space-y-3 p-5">
                 <Link className="apple-button w-full" href={`${base}/tri-thuc`}>
-                  Mở kho tri thức
+                  Xem tài liệu tham chiếu
                 </Link>
               </div>
             </Panel>

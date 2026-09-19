@@ -626,7 +626,12 @@ export default function TestAnalysisPage({ project }) {
         </ModalHeader>
         <TestConditionEditor
           initialValue={
-            selected ? { ...selected, description: docText(selected.description_doc) } : null
+            selected
+              ? {
+                  ...selected,
+                  description: docText(selected.description_doc) || selected.description || "",
+                }
+              : null
           }
           requirements={requirements}
           onCancel={() => setEditing(false)}

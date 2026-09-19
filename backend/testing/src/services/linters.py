@@ -7,10 +7,20 @@ AMBIGUOUS_TERMS = ("nhanh", "dễ dùng", "hợp lý", "tối ưu", "kịp thờ
 NON_DETERMINISTIC = ("thích hợp", "đầy đủ", "chính xác", "ổn định", "thân thiện")
 
 
-def requirement_findings(version):
+def requirement_findings(version, acceptance_criteria=None):
     text = version.get("plain_text_projection") or plain_text(version.get("content_doc", {}))
     lowered = text.lower()
     findings = []
+    if not text.strip():
+        findings.append(
+            {
+                "rule_id": "MISSING_REQUIREMENT_CONTENT",
+                "severity": "error",
+                "span": None,
+                "message": "Nội dung yêu cầu đang để trống",
+                "suggestion": "Nhập mô tả phạm vi hoặc chức năng mà hệ thống phải đáp ứng",
+            }
+        )
     for term in AMBIGUOUS_TERMS:
         start = lowered.find(term)
         if start >= 0:
@@ -37,7 +47,30 @@ def requirement_findings(version):
                 "suggestion": "Bổ sung tác nhân thực hiện hoặc chịu tác động",
             }
         )
-    if not version.get("acceptance_criterion_ids"):
+    if re.match(r"^\s*(khi|nếu|trong trường hợp)\b", lowered):
+        findings.append(
+            {
+                "rule_id": "CONDITION_IN_CONTENT",
+                "severity": "warning",
+                "span": None,
+                "message": "Nội dung yêu cầu đang chứa điều kiện kiểm thử",
+                "suggestion": "Giữ nội dung ở mức chức năng chung và chuyển điều kiện sang Tiêu chí chấp nhận",
+            }
+        )
+    criteria_text = "\n".join(
+        (
+            str(item.get("plain_text") or plain_text(item.get("content_doc", {})) or "")
+            if isinstance(item, dict)
+            else str(item or "")
+        ).strip()
+        for item in (acceptance_criteria or [])
+    ).strip()
+    has_criteria = (
+        bool(criteria_text)
+        if acceptance_criteria is not None
+        else bool(version.get("acceptance_criterion_ids"))
+    )
+    if not has_criteria:
         findings.append(
             {
                 "rule_id": "MISSING_ACCEPTANCE_CRITERIA",
@@ -47,24 +80,29 @@ def requirement_findings(version):
                 "suggestion": "Bổ sung ít nhất một điều kiện chấp nhận có thể kiểm thử",
             }
         )
-    if not re.search(r"(khi|nếu|given|when|trong trường hợp)", lowered):
+    criteria_lowered = criteria_text.lower()
+    if has_criteria and not re.search(
+        r"(khi|nếu|given|when|trong trường hợp)", criteria_lowered
+    ):
         findings.append(
             {
                 "rule_id": "MISSING_CONDITION",
                 "severity": "warning",
                 "span": None,
-                "message": "Chưa nhận diện được điều kiện kích hoạt",
-                "suggestion": "Nêu rõ điều kiện hoặc trạng thái trước hành vi",
+                "message": "Tiêu chí chấp nhận chưa nêu điều kiện kích hoạt",
+                "suggestion": "Nêu điều kiện hoặc trạng thái trước hành vi trong Tiêu chí chấp nhận",
             }
         )
-    if not re.search(r"(thì|then|phải|hiển thị|trả về|cho phép|từ chối)", lowered):
+    if has_criteria and not re.search(
+        r"(thì|then|phải|hiển thị|trả về|cho phép|từ chối|không được)", criteria_lowered
+    ):
         findings.append(
             {
                 "rule_id": "MISSING_EXPECTED_BEHAVIOR",
                 "severity": "error",
                 "span": None,
-                "message": "Chưa nhận diện được hành vi mong đợi",
-                "suggestion": "Mô tả kết quả quan sát được của hệ thống",
+                "message": "Tiêu chí chấp nhận chưa mô tả hành vi mong đợi",
+                "suggestion": "Mô tả kết quả quan sát được của hệ thống trong Tiêu chí chấp nhận",
             }
         )
     return findings

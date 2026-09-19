@@ -66,6 +66,21 @@ async def resolve_basis(project_id, refs):
                     "artifact_id": identifier,
                 },
             )
+        text = basis_text(value)
+        if ref.artifact_type == "REQUIREMENT_VERSION":
+            criteria = await database.value.acceptance_criteria.find(
+                {"requirement_version_id": identifier, "project_id": project_id}
+            ).to_list(200)
+            parts = [text]
+            parts.extend(
+                str(item.get("plain_text") or "").strip()
+                for item in criteria
+                if str(item.get("plain_text") or "").strip()
+            )
+            parts.extend(
+                str(item).strip() for item in value.get("business_rules", []) if str(item).strip()
+            )
+            text = "\n".join(part for part in parts if part)
         snapshots.append(
             {
                 **ref.model_dump(),
@@ -76,7 +91,7 @@ async def resolve_basis(project_id, refs):
                 or identifier,
                 "status": value.get("status"),
                 "source_hash": value.get("normalized_content_hash") or value.get("content_hash"),
-                "text": basis_text(value),
+                "text": text,
             }
         )
     return snapshots
