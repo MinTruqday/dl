@@ -118,10 +118,10 @@ class EvaluationHarness:
     ) -> EvaluationReport:
         retrieval_precision = 0.0
         if contexts and expected_answer:
-            significant_words = [w for w in expected_answer.lower().split() if len(w) > 4]
-            if significant_words:
+            expected_tokens = set(expected_answer.casefold().split())
+            if expected_tokens:
                 matched = sum(
-                    1 for ctx in contexts if any(word in ctx.lower() for word in significant_words)
+                    1 for ctx in contexts if expected_tokens & set(ctx.casefold().split())
                 )
                 retrieval_precision = min(matched / len(contexts), 1.0)
 

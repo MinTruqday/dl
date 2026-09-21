@@ -44,7 +44,7 @@ class TestingJobRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", protected_namespaces=())
 
     event: str = Field(
-        pattern=r"^(document\.parse|requirement\.extract|requirement\.semantic_diff|test\.generate|duplicate\.scan|impact\.analysis|knowledge\.index|automation\.newman)\.requested$"
+        pattern=r"^(document\.parse|requirement\.extract|requirement\.semantic_diff|test\.generate|duplicate\.scan|impact\.analysis|knowledge\.index|automation\.(newman|playwright))\.requested$"
     )
     project_id: str = Field(min_length=1, max_length=128)
     artifact_version_id: str = Field(min_length=1, max_length=128)

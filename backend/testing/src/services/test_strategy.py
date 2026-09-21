@@ -119,6 +119,10 @@ async def submit_strategy(strategy_id, payload, user):
         )
     if not strategy.get("reviewer_ids"):
         raise HTTPException(status_code=422, detail={"code": "STRATEGY_REVIEWERS_REQUIRED"})
+    if not any(reviewer_id != user.id for reviewer_id in strategy.get("reviewer_ids", [])):
+        raise HTTPException(
+            status_code=422, detail={"code": "INDEPENDENT_STRATEGY_REVIEWER_REQUIRED"}
+        )
     updated = await test_strategy_repository.update(
         strategy_id,
         strategy["project_id"],
@@ -149,6 +153,8 @@ async def request_strategy_changes(strategy_id, payload, user):
     strategy = await get_strategy_for_user(strategy_id, user, "teststrategy.review")
     if user.id not in strategy.get("reviewer_ids", []):
         raise HTTPException(status_code=403, detail={"code": "STRATEGY_REVIEW_ASSIGNMENT_REQUIRED"})
+    if user.id == strategy.get("created_by"):
+        raise HTTPException(status_code=403, detail={"code": "STRATEGY_SELF_REVIEW_NOT_ALLOWED"})
     updated = await test_strategy_repository.update(
         strategy_id,
         strategy["project_id"],
@@ -185,6 +191,8 @@ async def approve_strategy(strategy_id, payload, user):
         raise HTTPException(
             status_code=409, detail={"code": "TEST_STRATEGY_INCOMPLETE", **completeness}
         )
+    if not strategy.get("reviewed_by"):
+        raise HTTPException(status_code=409, detail={"code": "STRATEGY_REVIEW_REQUIRED"})
     timestamp = now()
     existing = await test_strategy_repository.active_approved(strategy["project_id"], strategy_id)
     if existing:
@@ -313,6 +321,8 @@ async def review_strategy(strategy_id, payload, user):
         raise HTTPException(status_code=409, detail={"code": "TEST_STRATEGY_NOT_IN_REVIEW"})
     if user.id not in strategy.get("reviewer_ids", []):
         raise HTTPException(status_code=403, detail={"code": "STRATEGY_REVIEW_ASSIGNMENT_REQUIRED"})
+    if user.id == strategy.get("created_by"):
+        raise HTTPException(status_code=403, detail={"code": "STRATEGY_SELF_REVIEW_NOT_ALLOWED"})
     entry = {"reviewer_id": user.id, "note": payload.note, "at": now()}
     updated = await test_strategy_repository.update(
         strategy_id,

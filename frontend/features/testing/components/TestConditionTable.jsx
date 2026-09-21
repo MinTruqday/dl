@@ -1,5 +1,6 @@
 import DataTable from "./DataTable";
 import { StatusPill } from "./WorkspacePrimitives";
+import { valueLabel } from "../lib/testing";
 
 export default function TestConditionTable({ items, onSelect }) {
   return (
@@ -9,6 +10,11 @@ export default function TestConditionTable({ items, onSelect }) {
       columns={[
         { key: "condition_key", label: "Mã" },
         { key: "title", label: "Điều kiện" },
+        {
+          key: "category",
+          label: "Nhóm",
+          render: (item) => (item.category ? valueLabel(item.category) : "Chưa phân loại"),
+        },
         { key: "coverage_item", label: "Hạng mục độ phủ" },
         { key: "risk", label: "Rủi ro", render: (item) => <StatusPill value={item.risk} /> },
         {

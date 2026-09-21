@@ -1,10 +1,17 @@
+import json
 import time
+from contextvars import ContextVar
 from datetime import datetime, timezone
+from typing import Awaitable, Callable
 
 import httpx
 
 from src.core.configuration import settings
 from src.core.metrics import AI_GENERATION_LATENCY, AI_REQUESTS
+
+stream_sink: ContextVar[Callable[[str], Awaitable[None]] | None] = ContextVar(
+    "stream_sink", default=None
+)
 
 
 def ai_contract_metadata(result):
@@ -35,19 +42,43 @@ def ai_contract_metadata(result):
 async def request_design_assistance(capability, project_id, instruction, evidence):
     started_at = time.perf_counter()
     try:
+        sink = stream_sink.get()
         async with httpx.AsyncClient(timeout=settings.AI_REQUEST_TIMEOUT_SECONDS) as client:
-            response = await client.post(
-                f"{settings.AI_URL.rstrip('/')}/suy-luan/noi-bo/kiem-thu/ho-tro",
-                headers={"X-Internal-Token": settings.SECRET_KEY},
-                json={
-                    "capability": capability,
-                    "project_id": project_id,
-                    "instruction": instruction,
-                    "evidence": evidence,
-                },
-            )
-        response.raise_for_status()
-        result = response.json()
+            payload = {
+                "capability": capability,
+                "project_id": project_id,
+                "instruction": instruction,
+                "evidence": evidence,
+            }
+            if sink:
+                async with client.stream(
+                    "POST",
+                    f"{settings.AI_URL.rstrip('/')}/suy-luan/noi-bo/kiem-thu/ho-tro/stream",
+                    headers={"X-Internal-Token": settings.SECRET_KEY},
+                    json=payload,
+                ) as response:
+                    response.raise_for_status()
+                    result = None
+                    async for line in response.aiter_lines():
+                        if not line.startswith("data: "):
+                            continue
+                        event = json.loads(line[6:])
+                        if event.get("type") == "delta":
+                            await sink(str(event.get("delta") or ""))
+                        elif event.get("type") == "result":
+                            result = event.get("data")
+                        elif event.get("type") == "error":
+                            raise RuntimeError(str(event.get("code") or "AI_STREAM_FAILED"))
+                if not isinstance(result, dict):
+                    raise RuntimeError("AI_STREAM_RESULT_MISSING")
+            else:
+                response = await client.post(
+                    f"{settings.AI_URL.rstrip('/')}/suy-luan/noi-bo/kiem-thu/ho-tro",
+                    headers={"X-Internal-Token": settings.SECRET_KEY},
+                    json=payload,
+                )
+                response.raise_for_status()
+                result = response.json()
         if result.get("capability") != capability:
             raise ValueError("AI capability mismatch")
         result["latency_ms"] = round((time.perf_counter() - started_at) * 1000, 3)
@@ -76,15 +107,11 @@ async def request_design_assistance(capability, project_id, instruction, evidenc
             "reason_codes": ["AI_PROVIDER_UNAVAILABLE", "MANUAL_REVIEW_REQUIRED"],
             "status": "DEGRADED",
             "degraded_mode": "DEGRADED_AI",
-            "provider": "deterministic-fallback",
+            "provider": "unavailable",
             "model": {
-                "provider": "deterministic-fallback",
-                "model": "qa-design-rules-v1",
-                "prompt_version": "qa-design-v1",
-                "tool_schema_version": "1",
-                "retrieval_version": "project-filter-v1",
+                "provider": "unavailable",
             },
-            "prompt_version": "qa-design-v1",
+            "prompt_version": "unavailable",
             "tool_schema_version": "1",
             "retrieval_version": "project-filter-v1",
             "created_at": datetime.now(timezone.utc).isoformat(),

@@ -52,6 +52,39 @@ function acceptanceCriteria(value) {
     }));
 }
 
+function requirementSuggestionPreview(item) {
+  const values = [];
+  if (item.revised_title) values.push(["Tên", item.revised_title]);
+  if (item.revised_content) values.push(["Nội dung", item.revised_content]);
+  if (item.patch?.actors) values.push(["Tác nhân", item.patch.actors.join(" · ")]);
+  if (item.patch?.business_rules) {
+    values.push(["Quy tắc nghiệp vụ", item.patch.business_rules.join(" · ")]);
+  }
+  if (item.patch?.acceptance_criteria) {
+    values.push([
+      "Tiêu chí chấp nhận",
+      item.patch.acceptance_criteria
+        .map((criterion) => `${criterion.key} ${docText(criterion.content_doc)}`)
+        .join(" · "),
+    ]);
+  }
+  if (item.patch?.dependencies) {
+    values.push(["Phụ thuộc", item.patch.dependencies.join(" · ")]);
+  }
+  return values;
+}
+
+function requirementFieldLabel(value) {
+  return {
+    title: "Tên",
+    content: "Nội dung",
+    actors: "Tác nhân",
+    business_rules: "Quy tắc nghiệp vụ",
+    acceptance_criteria: "Tiêu chí chấp nhận",
+    dependencies: "Phụ thuộc",
+  }[value];
+}
+
 export default function RequirementsPage({ project, section }) {
   const { ask, dialog } = useActionDialog();
   const requirementId = section[0] && !["new", "import"].includes(section[0]) ? section[0] : "";
@@ -1170,9 +1203,11 @@ export default function RequirementsPage({ project, section }) {
           {lint && (
             <Panel
               title={
-                lint.valid
-                  ? "Kiểm tra chất lượng không có lỗi chặn"
-                  : "Kiểm tra chất lượng phát hiện vấn đề"
+                lint.degraded_mode
+                  ? "Chưa thể xác minh chất lượng"
+                  : lint.valid
+                    ? "Kiểm tra chất lượng không có lỗi chặn"
+                    : "Kiểm tra chất lượng phát hiện vấn đề"
               }
             >
               <DataTable
@@ -1198,10 +1233,31 @@ export default function RequirementsPage({ project, section }) {
               <div className="mt-4">
                 <DataTable
                   items={lint.suggestions || []}
-                  empty="AI chưa tạo đề xuất chỉnh sửa"
+                  empty="Chưa có đề xuất chỉnh sửa có đủ căn cứ"
                   columns={[
-                    { key: "revised_title", label: "Tên đề xuất" },
-                    { key: "revised_content", label: "Nội dung đề xuất" },
+                    {
+                      key: "suggestion",
+                      label: "Bản vá đề xuất",
+                      render: (item) => (
+                        <dl className="space-y-2">
+                          {requirementSuggestionPreview(item).map(([label, value]) => (
+                            <div key={label}>
+                              <dt className="field-label">{label}</dt>
+                              <dd className="mt-1 whitespace-pre-wrap text-sm">{value}</dd>
+                            </div>
+                          ))}
+                        </dl>
+                      ),
+                    },
+                    {
+                      key: "target_fields",
+                      label: "Trường được cập nhật",
+                      render: (item) =>
+                        item.target_fields
+                          ?.map(requirementFieldLabel)
+                          .filter(Boolean)
+                          .join(" · ") || "Nội dung",
+                    },
                     { key: "rationale", label: "Cơ sở" },
                     {
                       key: "actions",

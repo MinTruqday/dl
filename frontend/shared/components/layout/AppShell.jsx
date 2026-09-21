@@ -63,9 +63,21 @@ export default function AppShell({ children, requireAuth }) {
   const [accountOpen, setAccountOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState(routeQuery);
   const [projectPermissions, setProjectPermissions] = useState(null);
+  const [aiStream, setAiStream] = useState(null);
   const accountRef = useRef(null);
   const mobileTriggerRef = useRef(null);
   const mobileDrawerRef = useRef(null);
+  useEffect(() => {
+    const updateAiStream = (event) => {
+      if (event.detail?.status === "streaming") {
+        setAiStream(event.detail);
+      } else {
+        setAiStream((value) => (value?.id === event.detail?.id ? null : value));
+      }
+    };
+    window.addEventListener("veriq-ai-stream", updateAiStream);
+    return () => window.removeEventListener("veriq-ai-stream", updateAiStream);
+  }, []);
   useEffect(() => {
     setSearchQuery(routeQuery);
   }, [routeQuery]);
@@ -180,6 +192,18 @@ export default function AppShell({ children, requireAuth }) {
     .toUpperCase();
   return (
     <div className="min-h-[100dvh] bg-canvas text-ink">
+      {aiStream && (
+        <div
+          className="fixed bottom-5 right-5 z-[70] min-w-56 rounded-control border border-border bg-surface px-4 py-3 shadow-lg"
+          aria-live="polite"
+        >
+          <p className="text-sm font-semibold text-ink">AI đang tạo nội dung</p>
+          <p className="mt-1 text-xs text-ink-muted">Đã nhận {aiStream.received} ký tự</p>
+          <div className="mt-2 h-1 overflow-hidden rounded-full bg-surface-quiet">
+            <div className="h-full w-2/3 animate-pulse rounded-full bg-brand" />
+          </div>
+        </div>
+      )}
       <a
         href="#main-content"
         className="fixed left-3 top-3 z-[60] -translate-y-20 rounded-control bg-brand px-4 py-2 text-[14px] font-semibold text-white transition focus:translate-y-0"

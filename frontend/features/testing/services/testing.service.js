@@ -20,6 +20,72 @@ export async function testingRequest(path, options = {}) {
   return body?.data;
 }
 
+export async function testingStreamRequest(path, options = {}) {
+  const { onDelta, ...requestOptions } = options;
+  const streamId = crypto.randomUUID();
+  let received = 0;
+  const notify = (status) => {
+    window.dispatchEvent(
+      new CustomEvent("veriq-ai-stream", {
+        detail: { id: streamId, path, received, status },
+      }),
+    );
+  };
+  const response = await authenticatedFetch(`${API_URL}/kiem-thu${path}`, {
+    ...requestOptions,
+    headers: {
+      ...(requestOptions.body instanceof FormData ? {} : { "Content-Type": "application/json" }),
+      Accept: "text/event-stream",
+      ...requestOptions.headers,
+    },
+  });
+  if (!response.ok || !response.body) {
+    const body = await response.json().catch(() => null);
+    const error = new Error(body?.error?.message || "Không thể hoàn tất yêu cầu AI");
+    error.status = response.status;
+    error.code = body?.error?.code;
+    throw error;
+  }
+  notify("streaming");
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let result;
+  while (true) {
+    const { done, value } = await reader.read();
+    buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+    const events = buffer.split("\n\n");
+    buffer = events.pop() || "";
+    for (const rawEvent of events) {
+      const dataLine = rawEvent.split("\n").find((line) => line.startsWith("data: "));
+      if (!dataLine) continue;
+      const event = JSON.parse(dataLine.slice(6));
+      if (event.type === "delta") {
+        const delta = event.delta || "";
+        received += delta.length;
+        onDelta?.(delta);
+        notify("streaming");
+      }
+      if (event.type === "result") result = event.data;
+      if (event.type === "error") {
+        const body = event.data;
+        const error = new Error(body?.error?.message || "Không thể hoàn tất yêu cầu AI");
+        error.status = event.status;
+        error.code = body?.error?.code || event.code;
+        notify("failed");
+        throw error;
+      }
+    }
+    if (done) break;
+  }
+  if (!result) {
+    notify("failed");
+    throw new Error("Luồng AI kết thúc nhưng không trả về kết quả");
+  }
+  notify("complete");
+  return result?.data;
+}
+
 export async function downloadTestingFile(path, filename) {
   const response = await authenticatedFetch(`${API_URL}/kiem-thu${path}`);
   if (!response.ok) {
@@ -201,7 +267,7 @@ export const testingApi = {
       body: JSON.stringify(payload),
     }),
   runTestAnalysisAi: (projectId, payload) =>
-    testingRequest(`/du-an/${projectId}/phan-tich-kiem-thu/ai`, {
+    testingStreamRequest(`/du-an/${projectId}/phan-tich-kiem-thu/ai`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
@@ -306,7 +372,7 @@ export const testingApi = {
       body: JSON.stringify(payload),
     }),
   draftTestStatusReportNarrative: (reportId, payload) =>
-    testingRequest(`/bao-cao-trang-thai/${reportId}/ai/ban-nhap`, {
+    testingStreamRequest(`/bao-cao-trang-thai/${reportId}/ai/ban-nhap`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
@@ -365,12 +431,12 @@ export const testingApi = {
       body: JSON.stringify(payload),
     }),
   draftTestCompletionNarrative: (reportId, payload) =>
-    testingRequest(`/hoan-tat-kiem-thu/${reportId}/ai/ban-nhap`, {
+    testingStreamRequest(`/hoan-tat-kiem-thu/${reportId}/ai/ban-nhap`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   clusterTestCompletionLessons: (reportId, payload) =>
-    testingRequest(`/hoan-tat-kiem-thu/${reportId}/ai/gom-bai-hoc`, {
+    testingStreamRequest(`/hoan-tat-kiem-thu/${reportId}/ai/gom-bai-hoc`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
@@ -446,7 +512,7 @@ export const testingApi = {
       body: JSON.stringify({ expected_revision: revision }),
     }),
   lintRequirement: (id, payload) =>
-    testingRequest(`/phien-ban-yeu-cau/${id}/ai/kiem-tra`, {
+    testingStreamRequest(`/phien-ban-yeu-cau/${id}/ai/kiem-tra`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
@@ -687,7 +753,7 @@ export const testingApi = {
       body: JSON.stringify(payload),
     }),
   generateScenarios: (versionId, payload) =>
-    testingRequest(`/phien-ban-yeu-cau/${versionId}/ai/sinh-kich-ban`, {
+    testingStreamRequest(`/phien-ban-yeu-cau/${versionId}/ai/sinh-kich-ban`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
@@ -729,12 +795,12 @@ export const testingApi = {
       body: JSON.stringify(payload),
     }),
   generateTestCases: (versionId, payload) =>
-    testingRequest(`/phien-ban-yeu-cau/${versionId}/ai/sinh-ca-kiem-thu`, {
+    testingStreamRequest(`/phien-ban-yeu-cau/${versionId}/ai/sinh-ca-kiem-thu`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   generateProjectTestCases: (projectId, payload) =>
-    testingRequest(`/du-an/${projectId}/ca-kiem-thu/sinh`, {
+    testingStreamRequest(`/du-an/${projectId}/ca-kiem-thu/sinh`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
@@ -789,7 +855,9 @@ export const testingApi = {
     }),
   listApiOperations: (id) => testingRequest(`/du-an/${id}/dac-ta-giao-dien/thao-tac`),
   generateApiTests: (id) =>
-    testingRequest(`/dac-ta-giao-dien/thao-tac/${id}/sinh-ca-kiem-thu`, { method: "POST" }),
+    testingStreamRequest(`/dac-ta-giao-dien/thao-tac/${id}/sinh-ca-kiem-thu`, {
+      method: "POST",
+    }),
   traceability: (id) => testingRequest(`/du-an/${id}/truy-vet`),
   exportTraceability: (id) =>
     downloadTestingFile(`/du-an/${id}/truy-vet/xuat`, `traceability-${id}.csv`),
@@ -842,7 +910,7 @@ export const testingApi = {
       body: JSON.stringify(payload),
     }),
   analyzeImpact: (id) =>
-    testingRequest(`/bo-thay-doi/${id}/phan-tich-anh-huong`, { method: "POST" }),
+    testingStreamRequest(`/bo-thay-doi/${id}/phan-tich-anh-huong`, { method: "POST" }),
   getChangeSetImpact: (id) => testingRequest(`/bo-thay-doi/${id}/phan-tich-anh-huong`),
   getImpact: (id) => testingRequest(`/phan-tich-anh-huong/${id}`),
   reviewImpact: (id, payload) =>
@@ -851,7 +919,7 @@ export const testingApi = {
       body: JSON.stringify(payload),
     }),
   rerunImpact: (id, payload) =>
-    testingRequest(`/phan-tich-anh-huong/${id}/chay-lai`, {
+    testingStreamRequest(`/phan-tich-anh-huong/${id}/chay-lai`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
@@ -936,7 +1004,8 @@ export const testingApi = {
       method: "POST",
       body: JSON.stringify({ ...payload, preview: true }),
     }),
-  regression: (id) => testingRequest(`/bo-thay-doi/${id}/de-xuat-hoi-quy`, { method: "POST" }),
+  regression: (id) =>
+    testingStreamRequest(`/bo-thay-doi/${id}/de-xuat-hoi-quy`, { method: "POST" }),
   getChangeSetRegression: (id) => testingRequest(`/bo-thay-doi/${id}/de-xuat-hoi-quy`),
   approveRegression: (id, payload) =>
     testingRequest(`/de-xuat-hoi-quy/${id}/phe-duyet`, {
@@ -1030,14 +1099,14 @@ export const testingApi = {
   listSecurityTestSuggestions: (projectId) =>
     testingRequest(`/du-an/${projectId}/ai/goi-y-kiem-thu-bao-mat`),
   generateSecurityTestSuggestions: (projectId, payload) =>
-    testingRequest(`/du-an/${projectId}/ai/goi-y-kiem-thu-bao-mat`, {
+    testingStreamRequest(`/du-an/${projectId}/ai/goi-y-kiem-thu-bao-mat`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
   listPerformancePlanDrafts: (projectId) =>
     testingRequest(`/du-an/${projectId}/ai/ke-hoach-hieu-nang`),
   generatePerformancePlanDraft: (projectId, payload) =>
-    testingRequest(`/du-an/${projectId}/ai/ke-hoach-hieu-nang`, {
+    testingStreamRequest(`/du-an/${projectId}/ai/ke-hoach-hieu-nang`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
@@ -1045,7 +1114,7 @@ export const testingApi = {
     testingRequest(`/du-an/${projectId}/ban-nhap-kich-ban-tu-dong`),
   getAutomationScriptDraft: (draftId) => testingRequest(`/ban-nhap-kich-ban-tu-dong/${draftId}`),
   generateAutomationScriptDraft: (projectId, payload) =>
-    testingRequest(`/du-an/${projectId}/ai/ban-nhap-kich-ban-tu-dong`, {
+    testingStreamRequest(`/du-an/${projectId}/ai/ban-nhap-kich-ban-tu-dong`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
@@ -1218,7 +1287,7 @@ export const testingApi = {
     listPage(`/du-an/${id}/loi`, query).then((result) => result.items),
   findDuplicateDefects: (id) => testingRequest(`/du-an/${id}/loi/trung-lap`),
   suggestDefectTrace: (projectId, defectId, payload) =>
-    testingRequest(`/du-an/${projectId}/ai/loi/${defectId}/goi-y-truy-vet`, {
+    testingStreamRequest(`/du-an/${projectId}/ai/loi/${defectId}/goi-y-truy-vet`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
@@ -1248,7 +1317,7 @@ export const testingApi = {
       body: JSON.stringify(payload),
     }),
   askProject: (id, payload) =>
-    testingRequest(`/du-an/${id}/ai/hoi-dap`, {
+    testingStreamRequest(`/du-an/${id}/ai/hoi-dap`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
@@ -1486,7 +1555,7 @@ export const testingApi = {
       body: JSON.stringify(payload),
     }),
   generateCausalHypotheses: (analysisId, payload) =>
-    testingRequest(`/phan-tich-nguyen-nhan/${analysisId}/ai/goi-y`, {
+    testingStreamRequest(`/phan-tich-nguyen-nhan/${analysisId}/ai/goi-y`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),

@@ -3,127 +3,51 @@ from difflib import SequenceMatcher
 
 
 def semantic_candidate_score(requirement_text, test_text):
-    requirement_tokens = {
-        token
-        for token in re.findall(r"[\w-]{3,}", requirement_text.lower())
-        if token not in {"the", "and", "with", "when", "then", "must", "should"}
-    }
-    test_tokens = set(re.findall(r"[\w-]{3,}", test_text.lower()))
+    requirement_tokens = set(re.findall(r"[\w-]+", requirement_text.casefold()))
+    test_tokens = set(re.findall(r"[\w-]+", test_text.casefold()))
     if not requirement_tokens or not test_tokens:
         return 0.0
     return len(requirement_tokens & test_tokens) / max(1, len(requirement_tokens))
 
 
-def technique_candidate(test_version, change_types):
-    text = " ".join(
-        [
-            str(test_version.get("type", "")),
-            str(test_version.get("title", "")),
-            str(test_version.get("plain_text_projection", "")),
-        ]
-    ).lower()
-    mapping = {
-        "MODIFIED_BOUNDARY": ("boundary", "range", "limit", "min", "max"),
-        "MODIFIED_PERMISSION": ("permission", "role", "admin", "tester", "viewer", "access"),
-        "MODIFIED_ERROR": ("error", "invalid", "exception", "reject"),
-        "ADDED_BEHAVIOR": ("happy_path", "functional", "integration", "workflow"),
-    }
-    matched = [
-        change_type
-        for change_type in change_types
-        if any(term in text for term in mapping.get(change_type, ()))
-    ]
-    return matched
-
-
 def semantic_changes(before, after):
     before_text = before.get("plain_text_projection", "")
     after_text = after.get("plain_text_projection", "")
-    if before_text.strip() == after_text.strip():
+    tracked_fields = ("title", "actors", "business_rules", "dependencies")
+    changed_fields = [field for field in tracked_fields if before.get(field) != after.get(field)]
+    content_changed = before_text.strip() != after_text.strip()
+    if not content_changed and not changed_fields:
         return []
-    before_numbers = [int(value) for value in re.findall(r"\b\d+\b", before_text)]
-    after_numbers = [int(value) for value in re.findall(r"\b\d+\b", after_text)]
-    changes = []
-    if before_numbers != after_numbers:
-        changes.append(
-            {
-                "type": "MODIFIED_BOUNDARY",
-                "subject": infer_subject(after_text),
-                "before": {"values": before_numbers},
-                "after": {"values": after_numbers},
-                "confidence": 0.94,
-                "evidence": [
-                    {"artifact_version_id": before["_id"], "text": before_text[:500]},
-                    {"artifact_version_id": after["_id"], "text": after_text[:500]},
-                ],
-            }
-        )
-    permission_words = {"quyền", "vai trò", "admin", "tester", "viewer", "permission", "role"}
-    if permission_words & set((before_text + " " + after_text).lower().split()):
-        changes.append(
-            {
-                "type": "MODIFIED_PERMISSION",
-                "subject": infer_subject(after_text),
-                "before": {"text": before_text[:500]},
-                "after": {"text": after_text[:500]},
-                "confidence": 0.78,
-                "evidence": [],
-            }
-        )
     ratio = SequenceMatcher(None, before_text.lower(), after_text.lower()).ratio()
-    if not changes:
-        changes.append(
-            {
-                "type": "TEXT_ONLY" if ratio > 0.9 else "MODIFIED_INPUT",
-                "subject": infer_subject(after_text),
-                "before": {"text": before_text[:500]},
-                "after": {"text": after_text[:500]},
-                "confidence": round(max(0.55, 1 - ratio / 2), 4),
-                "evidence": [],
-            }
-        )
-    return changes
+    return [
+        {
+            "type": "MODIFIED_INPUT" if content_changed else "TEXT_ONLY",
+            "subject": "content" if content_changed else ",".join(changed_fields),
+            "before": {
+                "text": before_text[:500],
+                "fields": {field: before.get(field) for field in changed_fields},
+            },
+            "after": {
+                "text": after_text[:500],
+                "fields": {field: after.get(field) for field in changed_fields},
+            },
+            "confidence": round(max(0.55, 1 - ratio / 2), 4),
+            "evidence": [
+                {"artifact_version_id": before["_id"], "text": before_text[:500]},
+                {"artifact_version_id": after["_id"], "text": after_text[:500]},
+            ],
+        }
+    ]
 
 
 def classify_test_impact(test_version, changes, direct_trace):
-    projection = test_version.get("plain_text_projection", "").lower()
-    classifications = []
-    reasons = []
-    confidence = 0.45
-    for change in changes:
-        before_values = change.get("before", {}).get("values", [])
-        after_values = change.get("after", {}).get("values", [])
-        newly_allowed = set(after_values) - set(before_values)
-        if change.get("type") == "MODIFIED_BOUNDARY":
-            if any(re.search(rf"\b{value}\b", projection) for value in newly_allowed):
-                classifications.append("NEEDS_UPDATE")
-                reasons.append("Test Case chứa giá trị biên vừa thay đổi")
-                confidence = max(confidence, 0.93)
-            elif direct_trace:
-                classifications.append("STILL_VALID")
-                reasons.append("Giá trị kiểm thử không thuộc tập biên mới thay đổi")
-                confidence = max(confidence, 0.9)
-        elif change.get("type") == "TEXT_ONLY":
-            classifications.append("STILL_VALID")
-            reasons.append("Thay đổi chỉ ảnh hưởng cách diễn đạt")
-            confidence = max(confidence, 0.88)
-        elif direct_trace:
-            classifications.append("POTENTIALLY_AFFECTED")
-            reasons.append("Test Case có liên kết truy vết trực tiếp tới Requirement thay đổi")
-            confidence = max(confidence, 0.78)
-    if "NEEDS_UPDATE" in classifications:
-        classification = "NEEDS_UPDATE"
-    elif "POTENTIALLY_AFFECTED" in classifications:
-        classification = "POTENTIALLY_AFFECTED"
-    elif "STILL_VALID" in classifications:
-        classification = "STILL_VALID"
-    else:
-        classification = "POTENTIALLY_AFFECTED" if direct_trace else "STILL_VALID"
-        reasons.append(
-            "Có liên kết trực tiếp nhưng chưa đủ bằng chứng cấu trúc"
-            if direct_trace
-            else "Không tìm thấy bằng chứng Requirement thay đổi tác động Test Case"
-        )
+    classification = "POTENTIALLY_AFFECTED" if direct_trace else "STILL_VALID"
+    confidence = 0.78 if direct_trace else 0.45
+    reasons = [
+        "Có liên kết truy vết trực tiếp tới Requirement thay đổi"
+        if direct_trace
+        else "Không có liên kết truy vết trực tiếp tới Requirement thay đổi"
+    ]
     return {
         "test_case_id": test_version["test_case_id"],
         "test_case_version_id": test_version["_id"],
@@ -138,13 +62,5 @@ def classify_test_impact(test_version, changes, direct_trace):
                 "direct_trace": direct_trace,
             }
         ],
-        "proposed_actions": ["update_expected_result"] if classification == "NEEDS_UPDATE" else [],
+        "proposed_actions": [],
     }
-
-
-def infer_subject(text):
-    lowered = text.lower()
-    for candidate in ("phone", "password", "email", "permission", "status", "response", "input"):
-        if candidate in lowered:
-            return candidate
-    return "requirement.behavior"

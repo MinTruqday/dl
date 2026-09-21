@@ -4,6 +4,7 @@ import { textDoc, valueLabel } from "../lib/testing";
 
 const defaults = {
   title: "",
+  category: "",
   description: "",
   basis_refs: [],
   coverage_item: "",
@@ -23,7 +24,12 @@ export default function TestConditionEditor({ initialValue, requirements, onSave
     () =>
       setValue(
         initialValue
-          ? { ...defaults, ...initialValue, description: initialValue.description || "" }
+          ? {
+              ...defaults,
+              ...initialValue,
+              description:
+                initialValue.description || initialValue.coverage_item || initialValue.title || "",
+            }
           : defaults,
       ),
     [initialValue],
@@ -38,6 +44,7 @@ export default function TestConditionEditor({ initialValue, requirements, onSave
         try {
           const payload = {
             title: value.title,
+            category: value.category || null,
             description_doc: textDoc(value.description || value.title),
             basis_refs: value.basis_refs,
             coverage_item: value.coverage_item,
@@ -89,6 +96,20 @@ export default function TestConditionEditor({ initialValue, requirements, onSave
             value={value.description}
             onChange={(event) => setField("description", event.target.value)}
           />
+        </label>
+        <label className="field-label">
+          Nhóm điều kiện
+          <select
+            className="apple-input mt-2"
+            value={value.category}
+            onChange={(event) => setField("category", event.target.value)}
+            required
+          >
+            <option value="">Chọn nhóm điều kiện</option>
+            <option value="POSITIVE">Dương</option>
+            <option value="NEGATIVE">Âm</option>
+            <option value="BOUNDARY">Biên</option>
+          </select>
         </label>
         <label className="field-label">
           Cấp kiểm thử
@@ -166,19 +187,6 @@ export default function TestConditionEditor({ initialValue, requirements, onSave
                   .filter(Boolean),
               )
             }
-          />
-        </label>
-        <label className="field-label md:col-span-2">
-          Phát hiện dạng JSON
-          <textarea
-            className="apple-input mt-2 min-h-40 font-mono text-xs"
-            value={value.analysis_findings_text ?? JSON.stringify(value.analysis_findings, null, 2)}
-            onChange={(event) => {
-              setField("analysis_findings_text", event.target.value);
-              try {
-                setField("analysis_findings", JSON.parse(event.target.value));
-              } catch {}
-            }}
           />
         </label>
       </div>

@@ -75,18 +75,34 @@ async def create_automation_execution(
     )
     if existing:
         return envelope(public_execution(existing), revision=existing["revision"])
-    artifact = await database.value.api_imports.find_one(
-        {
-            "_id": payload.postman_artifact_id,
-            "project_id": project_id,
-            "format": "postman",
-            "status": "CONFIRMED",
-        }
-    )
-    if not artifact or not artifact.get("raw_content"):
-        raise HTTPException(
-            status_code=422, detail={"code": "CONFIRMED_POSTMAN_COLLECTION_REQUIRED"}
+    artifact = None
+    script = None
+    if payload.runner == "newman":
+        artifact = await database.value.api_imports.find_one(
+            {
+                "_id": payload.postman_artifact_id,
+                "project_id": project_id,
+                "format": "postman",
+                "status": "CONFIRMED",
+            }
         )
+        if not artifact or not artifact.get("raw_content"):
+            raise HTTPException(
+                status_code=422, detail={"code": "CONFIRMED_POSTMAN_COLLECTION_REQUIRED"}
+            )
+    else:
+        script = await database.value.automation_script_drafts.find_one(
+            {
+                "_id": payload.automation_script_id,
+                "project_id": project_id,
+                "framework": "playwright",
+                "status": "APPROVED",
+            }
+        )
+        if not script or not str(script.get("source") or "").strip():
+            raise HTTPException(
+                status_code=422, detail={"code": "APPROVED_PLAYWRIGHT_SCRIPT_REQUIRED"}
+            )
     environment = None
     if payload.environment_id:
         environment = await database.value.test_environments.find_one(
@@ -99,17 +115,35 @@ async def create_automation_execution(
         "_id": new_id("AUTOEX"),
         "project_id": project_id,
         "name": payload.name,
-        "runner": "newman",
-        "postman_artifact_id": artifact["_id"],
+        "runner": payload.runner,
+        "postman_artifact_id": artifact["_id"] if artifact else None,
+        "automation_script_id": script["_id"] if script else None,
         "environment_id": payload.environment_id,
         "environment_snapshot": {
             "name": environment.get("name"),
-            "variable_names": sorted((environment.get("variables") or {}).keys()),
-            "secret_reference_names": sorted((environment.get("secret_references") or {}).keys()),
+            "base_url_configured": bool(environment.get("base_url")),
+            "secret_reference_names": sorted((environment.get("secret_refs") or {}).keys()),
         }
         if environment
         else None,
-        "runner_payload": {"collection": artifact["raw_content"]},
+        "runner_payload": {
+            **({"collection": artifact["raw_content"]} if artifact else {}),
+            **(
+                {
+                    "source": script["source"],
+                    "filename": script["filename"],
+                    "language": script["language"],
+                }
+                if script
+                else {}
+            ),
+            "environment": {
+                "BASE_URL": environment.get("base_url"),
+                "baseUrl": environment.get("base_url"),
+            }
+            if environment and environment.get("base_url")
+            else {},
+        },
         "status": "CREATED",
         "summary": {},
         "results": [],
@@ -136,7 +170,11 @@ async def create_automation_execution(
         "AutomationExecution",
         value["_id"],
         project_id,
-        {"postman_artifact_id": artifact["_id"], "runner": "newman"},
+        {
+            "postman_artifact_id": artifact["_id"] if artifact else None,
+            "automation_script_id": script["_id"] if script else None,
+            "runner": payload.runner,
+        },
     )
     return envelope(public_execution(value), revision=1)
 
@@ -160,29 +198,27 @@ async def start_automation_execution(
         or execution.get("revision") != payload.expected_revision
     ):
         raise HTTPException(status_code=409, detail={"code": "AUTOMATION_STATE_CONFLICT"})
+    runner = execution.get("runner")
+    if runner not in {"newman", "playwright"}:
+        raise HTTPException(status_code=422, detail={"code": "UNSUPPORTED_AUTOMATION_RUNNER"})
     request = {
-        "event": "automation.newman.requested",
+        "event": f"automation.{runner}.requested",
         "project_id": execution["project_id"],
         "artifact_version_id": execution_id,
-        "model_version": "newman-v1",
+        "model_version": f"{runner}-v1",
         "requester_id": user.id,
         "requester_email": user.email,
-        "payload": {
-            "execution_id": execution_id,
-            "collection": execution["runner_payload"]["collection"],
-        },
+        "payload": {"execution_id": execution_id, **execution["runner_payload"]},
     }
-    try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            response = await client.post(
-                f"{settings.WORKER_URL}/xu-ly-nen/noi-bo/kiem-thu/tac-vu",
-                headers={"X-Internal-Token": settings.SECRET_KEY},
-                json=request,
-            )
-            response.raise_for_status()
-            operation_id = response.json()["job_id"]
-    except httpx.HTTPError as error:
-        raise HTTPException(status_code=503, detail={"code": "WORKER_UNAVAILABLE"}) from error
+    idempotency_value = ":".join(
+        [
+            request["project_id"],
+            request["artifact_version_id"],
+            request["event"],
+            request["model_version"],
+        ]
+    )
+    operation_id = f"qa-{hashlib.sha256(idempotency_value.encode()).hexdigest()[:40]}"
     updated = await database.value.automation_executions.find_one_and_update(
         {"_id": execution_id, "revision": payload.expected_revision, "status": "CREATED"},
         {
@@ -199,6 +235,34 @@ async def start_automation_execution(
     )
     if not updated:
         raise HTTPException(status_code=409, detail={"code": "AUTOMATION_STATE_CONFLICT"})
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            response = await client.post(
+                f"{settings.WORKER_URL}/xu-ly-nen/noi-bo/kiem-thu/tac-vu",
+                headers={"X-Internal-Token": settings.SECRET_KEY},
+                json=request,
+            )
+            response.raise_for_status()
+            if response.json().get("job_id") != operation_id:
+                raise httpx.HTTPError("worker_job_identifier_mismatch")
+    except (httpx.HTTPError, ValueError) as error:
+        await database.value.automation_executions.update_one(
+            {
+                "_id": execution_id,
+                "revision": payload.expected_revision + 1,
+                "status": "QUEUED",
+                "operation_id": operation_id,
+            },
+            {
+                "$set": {
+                    "status": "CREATED",
+                    "revision": payload.expected_revision,
+                    "updated_at": now(),
+                },
+                "$unset": {"operation_id": "", "start_idempotency_key": "", "queued_at": ""},
+            },
+        )
+        raise HTTPException(status_code=503, detail={"code": "WORKER_UNAVAILABLE"}) from error
     await audit(
         user.id,
         "automation_execution_queued",

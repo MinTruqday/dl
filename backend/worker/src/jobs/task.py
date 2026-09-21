@@ -2,6 +2,7 @@ import asyncio
 import hashlib
 import hmac
 import json
+import os
 import re
 import tempfile
 from contextlib import suppress
@@ -50,8 +51,13 @@ async def handle_testing_job(payload: dict):
             "requester_id": requester_id,
         },
     )
-    if payload.get("event") == "automation.newman.requested":
-        result = await run_newman(job_id, payload, job_payload)
+    if payload.get("event") in {"automation.newman.requested", "automation.playwright.requested"}:
+        runner = payload["event"].split(".")[1]
+        result = (
+            await run_newman(job_id, payload, job_payload)
+            if runner == "newman"
+            else await run_playwright(job_id, payload, job_payload)
+        )
         completed_at = datetime.now(timezone.utc)
         await record_job(
             job_id,
@@ -105,7 +111,7 @@ async def run_newman(job_id, payload, job_payload):
         report_path = f"{directory}/report.json"
         with open(collection_path, "w", encoding="utf-8") as stream:
             json.dump(collection, stream, ensure_ascii=False)
-        process = await asyncio.create_subprocess_exec(
+        command = [
             "newman",
             "run",
             collection_path,
@@ -115,8 +121,29 @@ async def run_newman(job_id, payload, job_payload):
             report_path,
             "--timeout-request",
             "30000",
+        ]
+        environment = job_payload.get("environment")
+        if isinstance(environment, dict) and environment:
+            environment_path = f"{directory}/environment.json"
+            with open(environment_path, "w", encoding="utf-8") as stream:
+                json.dump(
+                    {
+                        "name": "Veriq",
+                        "values": [
+                            {"key": str(key), "value": str(value), "enabled": True}
+                            for key, value in environment.items()
+                            if value is not None
+                        ],
+                    },
+                    stream,
+                    ensure_ascii=False,
+                )
+            command.extend(["--environment", environment_path])
+        process = await asyncio.create_subprocess_exec(
+            *command,
             stdout=asyncio.subprocess.DEVNULL,
             stderr=asyncio.subprocess.DEVNULL,
+            env=automation_environment(directory, environment),
         )
         try:
             return_code = await asyncio.wait_for(process.wait(), timeout=900)
@@ -155,19 +182,50 @@ async def run_newman(job_id, payload, job_payload):
             }
         )
     status = "COMPLETED" if return_code == 0 else "FAILED"
+    callback = automation_callback(
+        execution_id,
+        job_id,
+        status,
+        {"runner": "newman", "return_code": return_code, "stats": stats},
+        results,
+        ["Newman hoàn tất" if return_code == 0 else "Newman kết thúc với lỗi"],
+    )
+    await send_automation_result(callback)
+    return {"execution_id": execution_id, "status": status, "summary": callback["summary"]}
+
+
+def automation_environment(directory, values=None):
+    environment = {
+        "PATH": "/usr/local/bin:/usr/bin:/bin",
+        "HOME": directory,
+        "TMPDIR": directory,
+        "NODE_PATH": "/usr/local/lib/node_modules",
+        "PLAYWRIGHT_BROWSERS_PATH": "/ms-playwright",
+    }
+    if isinstance(values, dict):
+        for key, value in values.items():
+            if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,127}", str(key)) and value is not None:
+                environment[str(key)] = str(value)
+    return environment
+
+
+def automation_callback(execution_id, job_id, status, summary, results, logs):
     signature_value = f"{execution_id}:{job_id}:{status}"
-    callback = {
+    return {
         "execution_id": execution_id,
         "operation_id": job_id,
         "status": status,
-        "summary": {"return_code": return_code, "stats": stats},
+        "summary": summary,
         "results": results,
-        "logs": ["Newman hoàn tất" if return_code == 0 else "Newman kết thúc với lỗi"],
+        "logs": logs,
         "artifact_refs": [],
         "context_signature": hmac.new(
             settings.SECRET_KEY.encode(), signature_value.encode(), hashlib.sha256
         ).hexdigest(),
     }
+
+
+async def send_automation_result(callback):
     async with httpx.AsyncClient(timeout=120) as client:
         response = await client.post(
             f"{settings.TESTING_URL}/noi-bo/kiem-thu/thuc-thi-tu-dong/ket-qua",
@@ -175,6 +233,87 @@ async def run_newman(job_id, payload, job_payload):
             json=callback,
         )
         response.raise_for_status()
+
+
+def playwright_results(report):
+    output = []
+
+    def visit_suite(suite):
+        for spec in suite.get("specs", []) if isinstance(suite, dict) else []:
+            for test in spec.get("tests", []) if isinstance(spec, dict) else []:
+                attempts = test.get("results", []) if isinstance(test, dict) else []
+                last = attempts[-1] if attempts else {}
+                output.append(
+                    {
+                        "name": str(spec.get("title") or test.get("title") or "")[:500],
+                        "status": str(last.get("status") or test.get("status") or "unknown")[:100],
+                        "duration_ms": last.get("duration"),
+                        "retry": last.get("retry"),
+                    }
+                )
+        for child in suite.get("suites", []) if isinstance(suite, dict) else []:
+            visit_suite(child)
+
+    for suite in report.get("suites", []) if isinstance(report, dict) else []:
+        visit_suite(suite)
+    return output[:100000]
+
+
+async def run_playwright(job_id, payload, job_payload):
+    execution_id = str(job_payload.get("execution_id") or "")
+    source = job_payload.get("source")
+    language = str(job_payload.get("language") or "typescript")
+    validate_identifier(execution_id, "automation execution identifier")
+    if not isinstance(source, str) or not source.strip() or len(source) > 500000:
+        raise PermanentTaskError("Approved Playwright source is required")
+    suffix = "js" if language == "javascript" else "ts"
+    with tempfile.TemporaryDirectory(prefix="veriq-playwright-") as directory:
+        script_path = f"{directory}/veriq.spec.{suffix}"
+        output_path = f"{directory}/test-results"
+        with open(script_path, "w", encoding="utf-8") as stream:
+            stream.write(source)
+        os.symlink("/usr/local/lib/node_modules", f"{directory}/node_modules")
+        process = await asyncio.create_subprocess_exec(
+            "playwright",
+            "test",
+            script_path,
+            "--reporter=json",
+            "--workers=1",
+            f"--output={output_path}",
+            cwd=directory,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            env=automation_environment(directory, job_payload.get("environment")),
+        )
+        try:
+            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=900)
+            return_code = process.returncode
+        except TimeoutError:
+            process.kill()
+            stdout, stderr = await process.communicate()
+            return_code = 124
+        try:
+            report = json.loads(stdout.decode("utf-8", errors="replace"))
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            report = {}
+        results = playwright_results(report)
+        stats = report.get("stats") if isinstance(report.get("stats"), dict) else {}
+        error_present = bool(stderr.strip())
+    status = "COMPLETED" if return_code == 0 else "FAILED"
+    callback = automation_callback(
+        execution_id,
+        job_id,
+        status,
+        {
+            "runner": "playwright",
+            "return_code": return_code,
+            "stats": stats,
+            "runner_error_present": error_present,
+        },
+        results,
+        ["Playwright hoàn tất" if return_code == 0 else "Playwright kết thúc với lỗi"],
+    )
+    await send_automation_result(callback)
     return {"execution_id": execution_id, "status": status, "summary": callback["summary"]}
 
 

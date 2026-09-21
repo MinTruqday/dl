@@ -336,18 +336,12 @@ async def run_ai_analysis(project_id, payload, user):
     ]
     instruction = json.dumps(
         {
-            "task": "Đề xuất test condition và finding về khả năng kiểm thử chỉ từ bằng chứng không phê duyệt hay sửa artifact",
+            "task": "Chỉ đề xuất test condition dương âm và biên từ bằng chứng không đánh giá chất lượng Requirement không tạo finding không phê duyệt hay sửa artifact",
             "user_instruction": payload.instruction,
-            "required_finding_fields": [
-                "category",
-                "severity",
-                "statement",
-                "evidence_refs",
-                "reason_codes",
-                "suggestion",
-            ],
             "required_condition_fields": [
                 "title",
+                "description",
+                "category",
                 "coverage_item",
                 "test_level",
                 "test_type",
@@ -362,6 +356,11 @@ async def run_ai_analysis(project_id, payload, user):
     ai_result = await request_design_assistance(
         "test_condition_generation", project_id, instruction, evidence
     )
+    raw_candidates = [
+        item
+        for item in ai_result.get("suggestions", [])
+        if isinstance(item, dict) and str(item.get("title") or "").strip()
+    ]
     candidates = [
         {
             **item,
@@ -370,23 +369,13 @@ async def run_ai_analysis(project_id, payload, user):
             "candidate_only": True,
             "basis_refs": [ref.model_dump() for ref in payload.basis_refs],
         }
-        for index, item in enumerate(ai_result.get("suggestions", []), 1)
-    ]
-    findings = [
-        {
-            **item,
-            "candidate_id": f"TFIND-CAND-{index}",
-            "status": "CANDIDATE",
-            "candidate_only": True,
-        }
-        for index, item in enumerate(ai_result.get("findings", []), 1)
+        for index, item in enumerate(raw_candidates, 1)
     ]
     value = {
         "_id": new_id("AIR"),
         "project_id": project_id,
         "result_type": "TEST_CONDITION_CANDIDATES",
         "candidates": candidates,
-        "findings": findings,
         "basis_snapshots": basis_snapshots,
         "candidate_only": True,
         "human_confirmation_required": True,
@@ -498,7 +487,6 @@ def deterministic_testability_findings(basis_snapshots):
     findings = []
     for snapshot in basis_snapshots:
         text = str(snapshot.get("text") or "").strip()
-        lowered = text.lower()
         evidence = [
             {
                 "artifact_type": snapshot["artifact_type"],
@@ -511,68 +499,6 @@ def deterministic_testability_findings(basis_snapshots):
         if not text:
             rules.append(
                 ("UNTESTABLE", "BLOCKER", "Nội dung kiểm thử đang trống", "EMPTY_EXPECTED_BEHAVIOR")
-            )
-        if re.search(r"\b(todo|tbd|fixme|chưa xác định)\b", lowered):
-            rules.append(
-                (
-                    "OMISSION",
-                    "MAJOR",
-                    "Nội dung còn placeholder chưa được giải quyết",
-                    "UNRESOLVED_PLACEHOLDER",
-                )
-            )
-        if any(word in lowered for word in ("quyền", "permission", "vai trò", "role")) and not any(
-            word in lowered
-            for word in (
-                "người dùng",
-                "quản trị",
-                "kiểm thử",
-                "developer",
-                "tester",
-                "admin",
-                "actor",
-            )
-        ):
-            rules.append(
-                (
-                    "MISSING_PERMISSION_RULE",
-                    "MAJOR",
-                    "Quy tắc quyền chưa xác định actor",
-                    "PERMISSION_ACTOR_MISSING",
-                )
-            )
-        if re.search(r"\d", text) and not any(
-            word in lowered
-            for word in (
-                "tối đa",
-                "tối thiểu",
-                "lớn hơn",
-                "nhỏ hơn",
-                "không quá",
-                "ít nhất",
-                "maximum",
-                "minimum",
-            )
-        ):
-            rules.append(
-                (
-                    "MISSING_BOUNDARY",
-                    "MINOR",
-                    "Giá trị số chưa mô tả điều kiện biên",
-                    "NUMERIC_BOUNDARY_MISSING",
-                )
-            )
-        if any(
-            word in lowered
-            for word in ("hiệu năng", "performance", "thời gian phản hồi", "throughput")
-        ) and not re.search(r"\d", text):
-            rules.append(
-                (
-                    "MISSING_NON_FUNCTIONAL_CRITERIA",
-                    "MAJOR",
-                    "Yêu cầu phi chức năng chưa có mục tiêu đo được",
-                    "NFR_TARGET_MISSING",
-                )
             )
         for index, (category, severity, description, reason_code) in enumerate(rules, 1):
             findings.append(

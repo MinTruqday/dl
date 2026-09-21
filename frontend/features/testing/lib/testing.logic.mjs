@@ -100,6 +100,9 @@ const labels = {
 };
 
 const valueLabels = {
+  POSITIVE: "Dương",
+  NEGATIVE: "Âm",
+  BOUNDARY: "Biên",
   authorization: "Phân quyền",
   authentication: "Xác thực",
   input_validation: "Kiểm tra đầu vào",

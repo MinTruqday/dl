@@ -1,14 +1,55 @@
-import time
-from datetime import datetime, timezone
+from src.services.design_assistance import request_design_assistance
 
-import httpx
 
-from src.core.configuration import settings
-from src.core.metrics import AI_GENERATION_LATENCY, AI_REQUESTS
+def document(value):
+    return {
+        "type": "doc",
+        "content": [{"type": "paragraph", "content": [{"type": "text", "text": value}]}],
+    }
+
+
+def normalize_maintenance_patch(value):
+    if not isinstance(value, dict):
+        return {}
+    patch = {
+        key: value[key]
+        for key in ("title", "type", "test_data")
+        if value.get(key) is not None
+    }
+    for source, target in (
+        ("objective", "objective_doc"),
+        ("preconditions", "preconditions_doc"),
+        ("expected", "expected_result_doc"),
+    ):
+        text = value.get(source)
+        if isinstance(text, str) and text.strip():
+            patch[target] = document(text.strip())
+    steps = value.get("steps")
+    if isinstance(steps, list) and steps:
+        normalized_steps = []
+        for index, step in enumerate(steps, 1):
+            if not isinstance(step, dict):
+                return {}
+            action = str(step.get("action") or "").strip()
+            expected = str(step.get("expected") or "").strip()
+            if not action or not expected:
+                return {}
+            normalized_steps.append(
+                {
+                    "id": f"step-{index}",
+                    "order": index,
+                    "action_doc": document(action),
+                    "expected_doc": document(expected),
+                    "test_data": step.get("test_data")
+                    if isinstance(step.get("test_data"), dict)
+                    else {},
+                }
+            )
+        patch["steps"] = normalized_steps
+    return patch
 
 
 async def request_impact_classification(project_id, change_set, candidates):
-    started_at = time.perf_counter()
     evidence = [
         {
             "artifact_type": "requirement_change_set",
@@ -28,63 +69,12 @@ async def request_impact_classification(project_id, change_set, candidates):
         }
         for item in candidates[:99]
     )
-    request = {
-        "capability": "impact_analysis",
-        "project_id": project_id,
-        "instruction": "Phân loại từng candidate thành STILL_VALID POTENTIALLY_AFFECTED NEEDS_UPDATE hoặc OBSOLETE và chỉ dùng artifact_version_id đã cung cấp",
-        "evidence": evidence,
-    }
-    try:
-        async with httpx.AsyncClient(timeout=settings.AI_REQUEST_TIMEOUT_SECONDS) as client:
-            response = await client.post(
-                f"{settings.AI_URL.rstrip('/')}/suy-luan/noi-bo/kiem-thu/ho-tro",
-                headers={"X-Internal-Token": settings.SECRET_KEY},
-                json=request,
-            )
-        response.raise_for_status()
-        result = response.json()
-        if result.get("capability") != "impact_analysis":
-            raise ValueError("AI capability mismatch")
-        latency_ms = round((time.perf_counter() - started_at) * 1000, 3)
-        result["latency_ms"] = latency_ms
-        AI_GENERATION_LATENCY.labels("impact_classification").observe(latency_ms / 1000)
-        outcome = (
-            "success"
-            if result.get("status") == "SUCCESS" and not result.get("degraded_mode")
-            else "degraded"
-        )
-        AI_REQUESTS.labels("impact_classification", outcome).inc()
-        return result
-    except Exception as error:
-        latency_ms = round((time.perf_counter() - started_at) * 1000, 3)
-        AI_GENERATION_LATENCY.labels("impact_classification").observe(latency_ms / 1000)
-        AI_REQUESTS.labels("impact_classification", "degraded").inc()
-        return {
-            "capability": "impact_analysis",
-            "suggestions": [],
-            "evidence_refs": [
-                item["artifact_version_id"] for item in evidence if item.get("artifact_version_id")
-            ],
-            "confidence": 0,
-            "warnings": ["AI_PROVIDER_UNAVAILABLE", "MANUAL_REVIEW_REQUIRED"],
-            "reason_codes": ["AI_PROVIDER_UNAVAILABLE", "MANUAL_REVIEW_REQUIRED"],
-            "status": "DEGRADED",
-            "degraded_mode": "DEGRADED_AI",
-            "provider": "deterministic-fallback",
-            "model": {
-                "provider": "deterministic-fallback",
-                "model": "qa-rules-v2",
-                "prompt_version": "qa-v2",
-                "tool_schema_version": "1",
-                "retrieval_version": "project-filter-v1",
-            },
-            "prompt_version": "qa-v2",
-            "tool_schema_version": "1",
-            "retrieval_version": "project-filter-v1",
-            "created_at": datetime.now(timezone.utc).isoformat(),
-            "error_type": type(error).__name__,
-            "latency_ms": latency_ms,
-        }
+    return await request_design_assistance(
+        "impact_analysis",
+        project_id,
+        "Phân loại từng candidate thành STILL_VALID POTENTIALLY_AFFECTED NEEDS_UPDATE hoặc OBSOLETE và chỉ dùng artifact_version_id đã cung cấp",
+        evidence,
+    )
 
 
 def apply_ai_impact_suggestions(items, ai_result):
@@ -101,7 +91,10 @@ def apply_ai_impact_suggestions(items, ai_result):
         target["ai_confidence"] = max(
             0, min(1, float(suggestion.get("confidence", ai_result.get("confidence", 0))))
         )
-        target["ai_reason"] = str(suggestion.get("reason") or "AI evidence classification")[:2000]
+        target["ai_reason"] = str(suggestion.get("reason") or "")[:2000]
+        patch = normalize_maintenance_patch(suggestion.get("maintenance_patch"))
+        if patch:
+            target["ai_maintenance_patch"] = patch
         target["evidence"].append(
             {
                 "artifact_type": "ai_impact_classification",
@@ -116,3 +109,22 @@ def apply_ai_impact_suggestions(items, ai_result):
             target["reasons"].append(target["ai_reason"])
         applied.append(version_id)
     return applied
+
+
+def ai_new_test_requirements(ai_result, requirement_version_id):
+    items = []
+    for candidate in ai_result.get("new_test_candidates", []):
+        patch = normalize_maintenance_patch(candidate.get("patch"))
+        if not patch or not patch.get("title") or not patch.get("steps"):
+            continue
+        patch["requirement_version_ids"] = [requirement_version_id]
+        items.append(
+            {
+                "classification": "NEW_TEST_REQUIRED",
+                "reason": str(candidate.get("reason") or "")[:5000],
+                "confidence": max(0, min(1, float(candidate.get("confidence", 0)))),
+                "patch": patch,
+                "evidence": ai_result.get("evidence_refs", []),
+            }
+        )
+    return items

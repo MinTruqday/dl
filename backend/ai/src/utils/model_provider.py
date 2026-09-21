@@ -118,7 +118,7 @@ class HostedModelClient:
     ):
         effective_model = model or settings.LLM_MODEL
         if stream:
-            return self._stream(effective_model, messages, max_tokens, temperature)
+            return self._stream(effective_model, messages, max_tokens, temperature, response_schema)
         try:
             return await self._completion(
                 effective_model, messages, max_tokens, temperature, response_schema
@@ -143,9 +143,14 @@ class HostedModelClient:
             return False
 
     async def _stream(
-        self, model: str, messages: list[dict[str, Any]], max_tokens: int, temperature: float
+        self,
+        model: str,
+        messages: list[dict[str, Any]],
+        max_tokens: int,
+        temperature: float,
+        response_schema: dict[str, Any] | None = None,
     ) -> AsyncIterator[Any]:
-        payload = self._payload(model, messages, max_tokens, temperature)
+        payload = self._payload(model, messages, max_tokens, temperature, response_schema)
         payload["stream"] = True
         payload["stream_options"] = {"include_usage": True}
         emitted = False
@@ -221,8 +226,7 @@ class HostedModelClient:
                 str(item.get("id", "")).lower() == target
                 for item in response.json().get("data", [])
             )
-            if available:
-                self._runtime_status = "ready"
+            if available and self._runtime_status == "ready":
                 checks["model"] = "ready"
         except Exception:
             self._runtime_status = "unavailable"

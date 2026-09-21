@@ -48,6 +48,7 @@ from src.api.test_strategy import router as test_strategy_router
 from src.api.traceability import router as traceability_router
 from src.api.webhooks import internal_router as internal_webhooks_router
 from src.api.webhooks import router as webhooks_router
+from src.core.ai_streaming import AIStreamingMiddleware
 from src.core.common import failure_metadata, new_id
 from src.core.configuration import settings
 from src.core.database import close_database, connect_database, database
@@ -63,6 +64,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Veriq", version=settings.VERSION, lifespan=lifespan)
+app.add_middleware(AIStreamingMiddleware)
 app.add_middleware(PrometheusMiddleware)
 app.add_route("/so-lieu", metrics_endpoint)
 origins = [origin.strip() for origin in settings.CORS_ALLOWED_ORIGINS.split(",") if origin.strip()]

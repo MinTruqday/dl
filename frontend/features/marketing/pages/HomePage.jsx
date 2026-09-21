@@ -88,7 +88,7 @@ export default function HomePage() {
                 <p className="text-[11px] font-bold uppercase tracking-[0.17em] text-white/60">
                   Tổng quan dự án
                 </p>
-                <h2 className="mt-2 text-[22px] font-semibold">Dự án thanh toán</h2>
+                <h2 className="mt-2 text-[22px] font-semibold">Dự án mẫu</h2>
               </div>
               <span className="rounded-full bg-white/10 px-3 py-1 text-[12px] font-semibold">
                 Đang hoạt động

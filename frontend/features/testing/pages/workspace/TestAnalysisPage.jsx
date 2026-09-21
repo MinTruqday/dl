@@ -28,7 +28,6 @@ export default function TestAnalysisPage({ project }) {
   const [basisRefs, setBasisRefs] = useState([]);
   const [aiResult, setAiResult] = useState(null);
   const [aiRunning, setAiRunning] = useState(false);
-  const [deterministicResult, setDeterministicResult] = useState(null);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
@@ -130,26 +129,6 @@ export default function TestAnalysisPage({ project }) {
         <Panel title="Đề xuất điều kiện bằng AI">
           <div className="space-y-4 p-5">
             <TestBasisPanel refs={basisRefs} onChange={setBasisRefs} requirements={requirements} />
-            {can("testanalysis.execute") && (
-              <button
-                className="secondary-button"
-                type="button"
-                disabled={!basisRefs.length}
-                onClick={async () => {
-                  try {
-                    setDeterministicResult(
-                      await testingApi.runDeterministicTestAnalysis(project._id, {
-                        basis_refs: basisRefs,
-                      }),
-                    );
-                  } catch (reason) {
-                    setError(messageOf(reason));
-                  }
-                }}
-              >
-                Kiểm tra xác định
-              </button>
-            )}
             <button
               className="secondary-button"
               type="button"
@@ -173,126 +152,21 @@ export default function TestAnalysisPage({ project }) {
                 }
               }}
             >
-              {aiRunning ? "AI đang phân tích" : "Phân tích và tạo ứng viên"}
+              {aiRunning ? "AI đang tạo điều kiện" : "Tạo ứng viên điều kiện"}
             </button>
             {aiResult?.degraded_mode && (
               <p className="text-sm text-warning">AI chưa sẵn sàng và chưa tạo condition nào</p>
             )}
             <DataTable
-              items={deterministicResult?.findings || []}
-              empty="Chưa có phát hiện xác định"
-              columns={[
-                { key: "title", label: "Phát hiện xác định" },
-                {
-                  key: "severity",
-                  label: "Mức độ",
-                  render: (item) => <StatusPill value={item.severity} />,
-                },
-                {
-                  key: "reason_codes",
-                  label: "Mã lý do",
-                  render: (item) => item.reason_codes.join(" · "),
-                },
-                ...(can("testanalysis.finding.create")
-                  ? [
-                      {
-                        key: "actions",
-                        label: "Thao tác",
-                        render: (item) => (
-                          <button
-                            className="secondary-button"
-                            type="button"
-                            onClick={async () => {
-                              const evidence = item.evidence_refs[0];
-                              try {
-                                await testingApi.createTestAnalysisFinding(project._id, {
-                                  artifact_type: evidence.artifact_type,
-                                  artifact_id: evidence.artifact_id,
-                                  artifact_version_id: evidence.artifact_version_id,
-                                  category: item.category,
-                                  severity: item.severity,
-                                  title: item.title,
-                                  description: item.description,
-                                  suggestion: item.suggestion,
-                                });
-                                await load();
-                              } catch (reason) {
-                                setError(messageOf(reason));
-                              }
-                            }}
-                          >
-                            Ghi nhận phát hiện
-                          </button>
-                        ),
-                      },
-                    ]
-                  : []),
-              ]}
-            />
-            <DataTable
-              items={aiResult?.findings || []}
-              empty="AI chưa đề xuất phát hiện"
-              columns={[
-                { key: "statement", label: "Phát hiện của AI" },
-                { key: "category", label: "Phân loại" },
-                {
-                  key: "severity",
-                  label: "Mức độ",
-                  render: (item) => <StatusPill value={item.severity} />,
-                },
-                {
-                  key: "reason_codes",
-                  label: "Mã lý do",
-                  render: (item) => item.reason_codes?.join(" · "),
-                },
-                ...(can("testanalysis.finding.create")
-                  ? [
-                      {
-                        key: "actions",
-                        label: "Thao tác",
-                        render: (item) => (
-                          <button
-                            className="secondary-button"
-                            type="button"
-                            onClick={async () => {
-                              const evidenceRef = item.evidence_refs?.[0];
-                              const source =
-                                basisRefs.find(
-                                  (ref) =>
-                                    ref.artifact_version_id === evidenceRef ||
-                                    ref.artifact_id === evidenceRef,
-                                ) || basisRefs[0];
-                              if (!source) return;
-                              try {
-                                await testingApi.createTestAnalysisFinding(project._id, {
-                                  artifact_type: source.artifact_type,
-                                  artifact_id: source.artifact_id,
-                                  artifact_version_id: source.artifact_version_id,
-                                  category: item.category,
-                                  severity: item.severity,
-                                  title: item.statement.slice(0, 300),
-                                  description: item.statement,
-                                  suggestion: item.suggestion,
-                                });
-                                await load();
-                              } catch (reason) {
-                                setError(messageOf(reason));
-                              }
-                            }}
-                          >
-                            Ghi nhận phát hiện
-                          </button>
-                        ),
-                      },
-                    ]
-                  : []),
-              ]}
-            />
-            <DataTable
               items={aiResult?.candidates || []}
               empty="Chưa có ứng viên"
               columns={[
                 { key: "title", label: "Ứng viên" },
+                {
+                  key: "category",
+                  label: "Nhóm",
+                  render: (item) => valueLabel(item.category),
+                },
                 { key: "coverage_item", label: "Hạng mục độ phủ" },
                 {
                   key: "risk",
@@ -415,6 +289,12 @@ export default function TestAnalysisPage({ project }) {
               </p>
             </div>
             <div>
+              <p className="field-label">Nhóm điều kiện</p>
+              <p className="mt-2 text-sm">
+                {selected.category ? valueLabel(selected.category) : "Chưa phân loại"}
+              </p>
+            </div>
+            <div>
               <p className="field-label">Cơ sở kiểm thử</p>
               <p className="mt-2 text-sm">
                 {selected.basis_refs
@@ -463,7 +343,7 @@ export default function TestAnalysisPage({ project }) {
           />
         </Panel>
       )}
-      <Panel title="Phát hiện về khả năng kiểm thử">
+      <Panel title="Phát hiện kiểm thử đã được ghi nhận">
         <DataTable
           items={findings}
           empty="Chưa có phát hiện được ghi nhận"

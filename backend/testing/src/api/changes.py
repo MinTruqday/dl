@@ -18,9 +18,9 @@ from src.services.change_analysis import (
     classify_test_impact,
     semantic_candidate_score,
     semantic_changes,
-    technique_candidate,
 )
 from src.services.impact_assistance import (
+    ai_new_test_requirements,
     apply_ai_impact_suggestions,
     request_impact_classification,
 )
@@ -280,14 +280,12 @@ async def create_impact_analysis_snapshot(
             str((to_version or {}).get("plain_text_projection", "")),
         ]
     )
-    change_types = [item.get("type", "") for item in change_set["changes"]]
     impacted = []
     for version in versions:
         direct_trace = version["_id"] in direct_targets
         semantic_score = semantic_candidate_score(
             requirement_text, str(version.get("plain_text_projection", ""))
         )
-        technique_matches = technique_candidate(version, change_types)
         item = classify_test_impact(version, change_set["changes"], direct_trace)
         if not direct_trace and semantic_score >= 0.2:
             item["classification"] = "POTENTIALLY_AFFECTED"
@@ -297,13 +295,10 @@ async def create_impact_analysis_snapshot(
             item["reasons"].append(
                 "Ứng viên semantic có nội dung giao nhau với Requirement thay đổi"
             )
-        if technique_matches:
-            item["reasons"].append("Kỹ thuật kiểm thử phù hợp với loại thay đổi")
         item["evidence"].append(
             {
                 "artifact_type": "semantic_candidate",
                 "semantic_score": round(semantic_score, 4),
-                "technique_matches": technique_matches,
                 "direct_trace": direct_trace,
             }
         )
@@ -315,20 +310,7 @@ async def create_impact_analysis_snapshot(
         for item in impacted
         if item["classification"] != "STILL_VALID" or item["test_case_version_id"] in direct_targets
     ]
-    new_test_requirements = []
-    if any(
-        change["type"]
-        in {"ADDED_BEHAVIOR", "MODIFIED_BOUNDARY", "MODIFIED_PERMISSION", "MODIFIED_ERROR"}
-        for change in change_set["changes"]
-    ):
-        if not any(item["classification"] == "NEEDS_UPDATE" for item in affected):
-            new_test_requirements.append(
-                {
-                    "classification": "NEW_TEST_REQUIRED",
-                    "reason": "Thay đổi hành vi chưa có Test Case trực tiếp chứng minh",
-                    "evidence": change_set["changes"],
-                }
-            )
+    new_test_requirements = ai_new_test_requirements(ai_result, change_set["to_version_id"])
     analysis = {
         "_id": new_id("IMP"),
         "project_id": change_set["project_id"],
@@ -629,10 +611,9 @@ async def create_maintenance_proposals(
     for item in analysis.get("reviewed_affected_test_cases", analysis["affected_test_cases"]):
         if item["classification"] != "NEEDS_UPDATE":
             continue
-        base = await database.value.test_case_versions.find_one(
-            {"_id": item["test_case_version_id"]}
-        )
-        patch = proposed_patch(base, change_set["changes"])
+        patch = item.get("ai_maintenance_patch", {})
+        if not patch:
+            continue
         proposal = {
             "_id": new_id("MP"),
             "project_id": analysis["project_id"],
@@ -654,6 +635,9 @@ async def create_maintenance_proposals(
         }
         proposals.append(proposal)
     for item in analysis.get("new_test_requirements", []):
+        patch = item.get("patch", {})
+        if not patch:
+            continue
         proposals.append(
             {
                 "_id": new_id("MP"),
@@ -662,11 +646,7 @@ async def create_maintenance_proposals(
                 "proposal_type": "CREATE_TEST_CASE",
                 "target_artifact_id": None,
                 "base_version_id": None,
-                "patch": {
-                    "title": "Test Case mới cho hành vi thay đổi",
-                    "type": "boundary",
-                    "requirement_version_ids": [change_set["to_version_id"]],
-                },
+                "patch": patch,
                 "reason": item["reason"],
                 "confidence": item.get("confidence", 0),
                 "evidence": item["evidence"],
@@ -1349,24 +1329,20 @@ async def recover_partial_proposal(proposal, user):
 
 
 async def create_test_draft_from_proposal(proposal, patch, user):
-    from src.api.test_design import create_test_case_draft, text_doc
+    from src.api.test_design import create_test_case_draft
     from src.domain.schemas import TestCaseDraftCreate
 
+    required = {"title", "steps", "expected_result_doc"}
+    if not required.issubset(patch):
+        raise HTTPException(status_code=422, detail={"code": "INCOMPLETE_MAINTENANCE_PATCH"})
     payload = TestCaseDraftCreate(
-        title=patch.get("title", "Test Case từ đề xuất bảo trì"),
+        title=patch["title"],
         type=patch.get("type", "custom"),
-        preconditions_doc=text_doc("Project sẵn sàng"),
-        steps=[
-            {
-                "id": "step-1",
-                "order": 1,
-                "action_doc": text_doc("Thực hiện hành vi mới"),
-                "test_data": {},
-                "expected_doc": text_doc("Kết quả khớp Requirement baseline"),
-            }
-        ],
-        test_data={},
-        expected_result_doc=text_doc("Kết quả khớp Requirement baseline"),
+        objective_doc=patch.get("objective_doc", {"type": "doc", "content": []}),
+        preconditions_doc=patch.get("preconditions_doc", {"type": "doc", "content": []}),
+        steps=patch["steps"],
+        test_data=patch.get("test_data", {}),
+        expected_result_doc=patch["expected_result_doc"],
         requirement_version_ids=patch.get("requirement_version_ids", []),
         origin="maintenance",
         source_evidence=proposal["evidence"],
@@ -1710,29 +1686,6 @@ async def mark_previous_traces_stale(change_set):
         },
         {"$set": {"status": "STALE", "updated_at": now()}},
     )
-
-
-def proposed_patch(base, changes):
-    patch = {}
-    boundary = next((item for item in changes if item["type"] == "MODIFIED_BOUNDARY"), None)
-    if boundary:
-        values = boundary.get("after", {}).get("values", [])
-        patch["test_data"] = {**base.get("test_data", {}), "changed_boundary_values": values}
-        patch["expected_result_doc"] = {
-            "type": "doc",
-            "content": [
-                {
-                    "type": "paragraph",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": f"Hệ thống chấp nhận các giá trị biên mới {', '.join(map(str, values))}",
-                        }
-                    ],
-                }
-            ],
-        }
-    return patch
 
 
 def require_pending_revision(proposal, payload, allow_partial=False):

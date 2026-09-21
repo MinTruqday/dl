@@ -3,68 +3,67 @@ from difflib import SequenceMatcher
 
 from src.core.common import plain_text
 
-AMBIGUOUS_TERMS = ("nhanh", "dễ dùng", "hợp lý", "tối ưu", "kịp thời", "bảo mật tốt")
-NON_DETERMINISTIC = ("thích hợp", "đầy đủ", "chính xác", "ổn định", "thân thiện")
+
+def requirement_finding(rule_id, severity, message, suggestion, target_field, **values):
+    return {
+        "rule_id": rule_id,
+        "severity": severity,
+        "span": None,
+        "message": message,
+        "suggestion": suggestion,
+        "target_field": target_field,
+        **values,
+    }
 
 
 def requirement_findings(version, acceptance_criteria=None):
     text = version.get("plain_text_projection") or plain_text(version.get("content_doc", {}))
-    lowered = text.lower()
     findings = []
     if not text.strip():
         findings.append(
-            {
-                "rule_id": "MISSING_REQUIREMENT_CONTENT",
-                "severity": "error",
-                "span": None,
-                "message": "Nội dung yêu cầu đang để trống",
-                "suggestion": "Nhập mô tả phạm vi hoặc chức năng mà hệ thống phải đáp ứng",
-            }
-        )
-    for term in AMBIGUOUS_TERMS:
-        start = lowered.find(term)
-        if start >= 0:
-            findings.append(
-                {
-                    "rule_id": "AMBIGUOUS_TERM",
-                    "severity": "warning",
-                    "span": {
-                        "start": start,
-                        "end": start + len(term),
-                        "text": text[start : start + len(term)],
-                    },
-                    "message": f"Thuật ngữ {term} chưa có tiêu chí đo lường",
-                    "suggestion": "Thay bằng ngưỡng hoặc hành vi có thể kiểm thử",
-                }
+            requirement_finding(
+                "MISSING_REQUIREMENT_CONTENT",
+                "error",
+                "Nội dung yêu cầu đang để trống",
+                "Nhập mô tả phạm vi hoặc chức năng mà hệ thống phải đáp ứng",
+                "content",
             )
-    if not version.get("actors"):
-        findings.append(
-            {
-                "rule_id": "MISSING_ACTOR",
-                "severity": "warning",
-                "span": None,
-                "message": "Yêu cầu chưa xác định tác nhân",
-                "suggestion": "Bổ sung tác nhân thực hiện hoặc chịu tác động",
-            }
         )
-    if re.match(r"^\s*(khi|nếu|trong trường hợp)\b", lowered):
+    if not any(str(item).strip() for item in version.get("actors", [])):
         findings.append(
-            {
-                "rule_id": "CONDITION_IN_CONTENT",
-                "severity": "warning",
-                "span": None,
-                "message": "Nội dung yêu cầu đang chứa điều kiện kiểm thử",
-                "suggestion": "Giữ nội dung ở mức chức năng chung và chuyển điều kiện sang Tiêu chí chấp nhận",
-            }
+            requirement_finding(
+                "MISSING_ACTOR",
+                "error",
+                "Yêu cầu chưa xác định tác nhân",
+                "Bổ sung tác nhân thực hiện hoặc chịu tác động",
+                "actors",
+            )
         )
-    criteria_text = "\n".join(
-        (
+    if not any(str(item).strip() for item in version.get("business_rules", [])):
+        findings.append(
+            requirement_finding(
+                "MISSING_BUSINESS_RULE",
+                "error",
+                "Yêu cầu chưa có quy tắc nghiệp vụ",
+                "Bổ sung quy tắc có căn cứ hoặc xác nhận rõ yêu cầu không có quy tắc nghiệp vụ",
+                "business_rules",
+            )
+        )
+    criteria = []
+    for index, item in enumerate(acceptance_criteria or []):
+        content = (
             str(item.get("plain_text") or plain_text(item.get("content_doc", {})) or "")
             if isinstance(item, dict)
             else str(item or "")
         ).strip()
-        for item in (acceptance_criteria or [])
-    ).strip()
+        criteria.append(
+            {
+                "id": item.get("_id") if isinstance(item, dict) else None,
+                "key": item.get("key") if isinstance(item, dict) else f"AC-{index + 1:02d}",
+                "text": content,
+            }
+        )
+    criteria_text = "\n".join(item["text"] for item in criteria).strip()
     has_criteria = (
         bool(criteria_text)
         if acceptance_criteria is not None
@@ -72,39 +71,28 @@ def requirement_findings(version, acceptance_criteria=None):
     )
     if not has_criteria:
         findings.append(
-            {
-                "rule_id": "MISSING_ACCEPTANCE_CRITERIA",
-                "severity": "error",
-                "span": None,
-                "message": "Yêu cầu chưa có tiêu chí chấp nhận",
-                "suggestion": "Bổ sung ít nhất một điều kiện chấp nhận có thể kiểm thử",
-            }
+            requirement_finding(
+                "MISSING_ACCEPTANCE_CRITERIA",
+                "error",
+                "Yêu cầu chưa có tiêu chí chấp nhận",
+                "Bổ sung ít nhất một điều kiện chấp nhận có thể kiểm thử",
+                "acceptance_criteria",
+            )
         )
-    criteria_lowered = criteria_text.lower()
-    if has_criteria and not re.search(
-        r"(khi|nếu|given|when|trong trường hợp)", criteria_lowered
-    ):
-        findings.append(
-            {
-                "rule_id": "MISSING_CONDITION",
-                "severity": "warning",
-                "span": None,
-                "message": "Tiêu chí chấp nhận chưa nêu điều kiện kích hoạt",
-                "suggestion": "Nêu điều kiện hoặc trạng thái trước hành vi trong Tiêu chí chấp nhận",
-            }
-        )
-    if has_criteria and not re.search(
-        r"(thì|then|phải|hiển thị|trả về|cho phép|từ chối|không được)", criteria_lowered
-    ):
-        findings.append(
-            {
-                "rule_id": "MISSING_EXPECTED_BEHAVIOR",
-                "severity": "error",
-                "span": None,
-                "message": "Tiêu chí chấp nhận chưa mô tả hành vi mong đợi",
-                "suggestion": "Mô tả kết quả quan sát được của hệ thống trong Tiêu chí chấp nhận",
-            }
-        )
+    for criterion in criteria:
+        identity = {"criterion_id": criterion["id"], "criterion_key": criterion["key"]}
+        if not criterion["text"]:
+            findings.append(
+                requirement_finding(
+                    "EMPTY_ACCEPTANCE_CRITERION",
+                    "error",
+                    f"Tiêu chí {criterion['key']} đang để trống",
+                    "Nhập điều kiện kích hoạt và hành vi quan sát được",
+                    "acceptance_criteria",
+                    **identity,
+                )
+            )
+            continue
     return findings
 
 
@@ -158,14 +146,6 @@ def lint_test_case(draft):
     ):
         findings.append(_finding("TCQ-009", "warning", "Thiếu dữ liệu kiểm thử"))
     for step in draft.get("steps", []):
-        action = plain_text(step.get("action_doc", {}))
-        if len(re.findall(r"\b(và|sau đó|then|and)\b", action.lower())) >= 2:
-            findings.append(
-                {
-                    **_finding("TCQ-003", "warning", "Một bước đang chứa nhiều hành động"),
-                    "step_id": step.get("id"),
-                }
-            )
         if not plain_text(step.get("expected_doc", {})):
             findings.append(
                 {
@@ -173,9 +153,6 @@ def lint_test_case(draft):
                     "step_id": step.get("id"),
                 }
             )
-    lowered = expected.lower()
-    if any(term in lowered for term in AMBIGUOUS_TERMS + NON_DETERMINISTIC):
-        findings.append(_finding("TCQ-004", "warning", "Kết quả mong đợi còn mơ hồ"))
     return findings
 
 

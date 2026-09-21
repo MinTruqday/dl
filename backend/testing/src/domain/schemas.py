@@ -1034,9 +1034,21 @@ class ConnectorConflictResolution(BaseModel):
 
 class AutomationExecutionCreate(BaseModel):
     name: str = Field(min_length=2, max_length=300)
-    postman_artifact_id: str = Field(min_length=1, max_length=200)
+    runner: Literal["newman", "playwright"] = "newman"
+    postman_artifact_id: str | None = Field(default=None, min_length=1, max_length=200)
+    automation_script_id: str | None = Field(default=None, min_length=1, max_length=200)
     environment_id: str | None = Field(default=None, max_length=200)
     idempotency_key: str = Field(min_length=8, max_length=200)
+
+    @model_validator(mode="after")
+    def validate_runner_artifact(self):
+        if self.runner == "newman" and (not self.postman_artifact_id or self.automation_script_id):
+            raise ValueError("Newman yêu cầu đúng một collection Postman")
+        if self.runner == "playwright" and (
+            not self.automation_script_id or self.postman_artifact_id
+        ):
+            raise ValueError("Playwright yêu cầu đúng một kịch bản đã phê duyệt")
+        return self
 
 
 class AutomationExecutionAction(BaseModel):

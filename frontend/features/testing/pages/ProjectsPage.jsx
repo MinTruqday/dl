@@ -126,7 +126,7 @@ export default function ProjectsPage() {
               maxLength={200}
               value={form.name}
               onChange={(event) => setForm({ ...form, name: event.target.value })}
-              placeholder="Nền tảng thanh toán"
+              placeholder="Tên dự án"
             />
           </label>
           <label className="field-label block min-w-0">

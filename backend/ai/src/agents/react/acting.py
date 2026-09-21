@@ -95,19 +95,7 @@ class ActingAgent:
         self.tools_prompt = "\n".join(tool_descriptions)
 
     def _candidate_tools(self, action: str):
-        normalized = action.casefold()
-        intent_tools = {
-            "read_document": ("read_document", "đọc tài liệu"),
-            "get_my_documents": ("get_my_documents", "tài liệu của tôi"),
-            "delete_document": ("delete_document", "xóa tài liệu"),
-            "restore_document": ("restore_document", "khôi phục tài liệu"),
-        }
-        names = {
-            tool_name
-            for tool_name, markers in intent_tools.items()
-            if any(marker in normalized for marker in markers)
-        }
-        return [tool for tool in tools if tool.name in names] or tools
+        return tools
 
     async def execute(
         self,

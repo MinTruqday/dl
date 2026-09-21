@@ -1,5 +1,7 @@
 import asyncio
-from typing import List
+import json
+from contextvars import ContextVar
+from typing import Awaitable, Callable, List
 
 from src.core.infrastructure.configuration import settings
 from src.core.model_runtime import run_chat_completion
@@ -10,6 +12,10 @@ from src.schemas.routing import CrossDocumentQueries, MultiQueryOutput
 from src.utils.model_provider import model_client
 from src.utils.structured_output import validate_structured_output
 
+stream_sink: ContextVar[Callable[[str], Awaitable[None]] | None] = ContextVar(
+    "stream_sink", default=None
+)
+
 
 async def chat(
     messages: List[dict],
@@ -19,6 +25,25 @@ async def chat(
     timeout_seconds: int = 60,
     response_schema: dict | None = None,
 ):
+    sink = stream_sink.get()
+    if sink:
+        chunks = []
+        async with asyncio.timeout(timeout_seconds):
+            response = await model_client.chat_completion(
+                messages=messages,
+                model=settings.LLM_MODEL,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                stream=True,
+                response_schema=response_schema,
+            )
+            async for item in response:
+                choices = getattr(item, "choices", [])
+                piece = str(getattr(choices[0].delta, "content", "")) if choices else ""
+                if piece:
+                    chunks.append(piece)
+                    await sink(piece)
+        return "".join(chunks)
     return await run_chat_completion(
         client=model_client,
         messages=messages,
@@ -31,30 +56,52 @@ async def chat(
     )
 
 
-async def structured(prompt, schema, max_tokens=1200, timeout_seconds=90):
+async def structured(
+    prompt,
+    schema,
+    max_tokens=1200,
+    timeout_seconds=90,
+    provider_schema=True,
+):
     response_schema = schema.model_json_schema()
+    schema_rules = [
+        "OUTPUT_JSON_SCHEMA",
+        json.dumps(response_schema, ensure_ascii=False, separators=(",", ":")),
+        "Mọi thuộc tính trong required phải xuất hiện",
+        "Thuộc tính nullable không sử dụng phải là null",
+    ]
+    if "target_fields" in json.dumps(response_schema, ensure_ascii=False):
+        schema_rules.append(
+            "Không được khai báo target field nếu revised field tương ứng là null"
+        )
+    schema_instruction = "\n".join(schema_rules)
+    constrained_prompt = f"{prompt}\n{schema_instruction}"
     raw = await chat(
-        [{"role": "user", "content": prompt}],
+        [{"role": "user", "content": constrained_prompt}],
         max_tokens=max_tokens,
         temperature=0.1,
         attempts=1,
         timeout_seconds=timeout_seconds,
-        response_schema=response_schema,
+        response_schema=response_schema if provider_schema else None,
     )
     try:
         return validate_structured_output(raw, schema)
-    except Exception:
+    except Exception as error:
         corrected = await chat(
             [
-                {"role": "user", "content": prompt},
+                {"role": "user", "content": constrained_prompt},
                 {"role": "assistant", "content": raw[:4000]},
-                {"role": "user", "content": "Return one corrected strictly valid JSON object only"},
+                {
+                    "role": "user",
+                    "content": "Return one corrected strictly valid JSON object only The previous response failed schema validation "
+                    + str(error)[:2000],
+                },
             ],
             max_tokens=max_tokens,
             temperature=0,
             attempts=1,
             timeout_seconds=timeout_seconds,
-            response_schema=response_schema,
+            response_schema=response_schema if provider_schema else None,
         )
         return validate_structured_output(corrected, schema)
 

@@ -56,6 +56,7 @@ class AnalysisFinding(BaseModel):
 class TestConditionCreate(BaseModel):
     condition_key: str | None = Field(default=None, max_length=80, pattern=r"^[A-Z][A-Z0-9_-]+$")
     title: str = Field(min_length=2, max_length=300)
+    category: Literal["POSITIVE", "NEGATIVE", "BOUNDARY"] | None = None
     description_doc: dict[str, Any]
     basis_refs: list[TestBasisRef] = Field(min_length=1, max_length=200)
     coverage_item: str = Field(min_length=1, max_length=500)
@@ -85,6 +86,7 @@ class TestConditionCreate(BaseModel):
 class TestConditionPatch(BaseModel):
     expected_revision: int = Field(ge=1)
     title: str | None = Field(default=None, min_length=2, max_length=300)
+    category: Literal["POSITIVE", "NEGATIVE", "BOUNDARY"] | None = None
     description_doc: dict[str, Any] | None = None
     basis_refs: list[TestBasisRef] | None = Field(default=None, min_length=1, max_length=200)
     coverage_item: str | None = Field(default=None, min_length=1, max_length=500)

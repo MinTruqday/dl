@@ -110,6 +110,20 @@ export default function TestGovernancePage({ project }) {
     >
       {dialog}
       {error && <ErrorState message={error} />}
+      <div className="grid gap-3 rounded-xl border border-border bg-surface p-4 text-sm md:grid-cols-3">
+        <div>
+          <p className="field-label">Soạn thảo</p>
+          <p className="mt-1">QA Lead hoặc Tester có quyền tạo và cập nhật bản nháp</p>
+        </div>
+        <div>
+          <p className="field-label">Rà soát độc lập</p>
+          <p className="mt-1">Người được phân công rà soát không được tự rà soát bản mình tạo</p>
+        </div>
+        <div>
+          <p className="field-label">Phê duyệt</p>
+          <p className="mt-1">QA Lead chỉ phê duyệt sau khi đã có kết quả rà soát</p>
+        </div>
+      </div>
       <Panel title="Kho chiến lược kiểm thử">
         <form
           className="grid gap-3 p-5 sm:grid-cols-[1fr_220px_auto]"
@@ -149,6 +163,7 @@ export default function TestGovernancePage({ project }) {
             { key: "key", label: "Mã" },
             { key: "name", label: "Tên" },
             { key: "version", label: "Phiên bản" },
+            { key: "created_by", label: "Người soạn" },
             {
               key: "status",
               label: "Trạng thái",
@@ -310,6 +325,12 @@ export default function TestGovernancePage({ project }) {
             <div>
               <p className="field-label">Công thức rủi ro</p>
               <p className="mt-2 text-sm">{selected.risk_model?.risk_exposure_formula}</p>
+            </div>
+            <div>
+              <p className="field-label">Người rà soát được phân công</p>
+              <p className="mt-2 text-sm">
+                {selected.reviewer_ids?.join(" · ") || "Chưa phân công"}
+              </p>
             </div>
             <div>
               <p className="field-label">Dấu vân tay nội dung</p>

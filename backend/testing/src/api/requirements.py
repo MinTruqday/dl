@@ -71,18 +71,80 @@ def serialized_content(content):
     return json.dumps(content, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
-def requirement_suggestion_changes(version, suggestion):
+def acceptance_criterion_text(item):
+    return str(item.get("plain_text") or plain_text(item.get("content_doc", {})) or "").strip()
+
+
+def normalized_business_rule_lines(values):
+    normalized = []
+    for index, value in enumerate(values or [], 1):
+        text = str(value).strip()
+        if not text:
+            continue
+        prefix, separator, remainder = text.partition(":")
+        identity = prefix.upper()
+        if separator and identity.startswith("BR-") and identity[3:].isdigit():
+            normalized.append(f"{identity}: {remainder.strip()}")
+        else:
+            normalized.append(f"BR-{index:02d}: {text}")
+    return normalized
+
+
+def prepare_requirement_ai_suggestion(candidate, acceptance_criteria):
+    suggestion = dict(candidate)
+    patch = {}
+    mappings = {
+        "revised_actors": "actors",
+        "revised_business_rules": "business_rules",
+        "revised_dependencies": "dependencies",
+    }
+    for source, target in mappings.items():
+        if suggestion.get(source) is not None:
+            patch[target] = (
+                normalized_business_rule_lines(suggestion[source])
+                if source == "revised_business_rules"
+                else suggestion[source]
+            )
+    if suggestion.get("revised_acceptance_criteria") is not None:
+        existing = {item.get("key"): item for item in acceptance_criteria}
+        patch["acceptance_criteria"] = [
+            {
+                "key": item["key"],
+                "content_doc": text_doc(item["content"]),
+                "status": existing.get(item["key"], {}).get("status", "draft"),
+                "source_span": existing.get(item["key"], {}).get("source_span"),
+            }
+            for item in suggestion["revised_acceptance_criteria"]
+        ]
+    suggestion["patch"] = patch
+    return suggestion
+
+
+def requirement_suggestion_changes(version, suggestion, acceptance_criteria=None):
     current_title = str(version.get("title") or "").strip()
     current_content = str(
         version.get("plain_text_projection") or plain_text(version.get("content_doc", {})) or ""
     ).strip()
     revised_title = str(suggestion.get("revised_title") or "").strip()
     revised_content = str(suggestion.get("revised_content") or "").strip()
+    patch = suggestion.get("patch") if isinstance(suggestion.get("patch"), dict) else {}
+    current_criteria = [acceptance_criterion_text(item) for item in (acceptance_criteria or [])]
+    proposed_criteria = [
+        acceptance_criterion_text(item) for item in patch.get("acceptance_criteria", [])
+    ]
     return bool(
         revised_title
         and revised_title != current_title
         or revised_content
         and revised_content != current_content
+        or "actors" in patch
+        and patch["actors"] != version.get("actors", [])
+        or "business_rules" in patch
+        and patch["business_rules"] != version.get("business_rules", [])
+        or "dependencies" in patch
+        and patch["dependencies"] != version.get("dependencies", [])
+        or "acceptance_criteria" in patch
+        and proposed_criteria != current_criteria
     )
 
 
@@ -1743,17 +1805,31 @@ async def lint_requirement(
         }
         for item in ai_result.get("findings", [])
     ]
-    suggestions = [
-        {**item, "suggestion_id": f"REQ-SUG-{index}", "status": "CANDIDATE", "candidate_only": True}
-        for index, item in enumerate(
-            [
-                candidate
-                for candidate in ai_result.get("suggestions", [])
-                if requirement_suggestion_changes(version, candidate)
-            ],
-            1,
+    aggregate = {"patch": {}, "target_fields": [], "evidence_refs": [], "reason_codes": []}
+    for candidate in ai_result.get("suggestions", []):
+        ai_suggestion = prepare_requirement_ai_suggestion(candidate, acceptance_criteria)
+        if not requirement_suggestion_changes(version, ai_suggestion, acceptance_criteria):
+            continue
+        for field in ("revised_title", "revised_content", "rationale"):
+            if ai_suggestion.get(field):
+                aggregate[field] = ai_suggestion[field]
+        if isinstance(ai_suggestion.get("patch"), dict):
+            aggregate["patch"].update(ai_suggestion["patch"])
+        for field in ("target_fields", "evidence_refs", "reason_codes"):
+            aggregate[field] = list(
+                dict.fromkeys([*aggregate[field], *ai_suggestion.get(field, [])])
+            )
+    aggregate["origin"] = "AI"
+    suggestions = []
+    if aggregate and requirement_suggestion_changes(version, aggregate, acceptance_criteria):
+        suggestions.append(
+            {
+                **aggregate,
+                "suggestion_id": "REQ-SUG-1",
+                "status": "CANDIDATE",
+                "candidate_only": True,
+            }
         )
-    ]
     findings = deterministic_findings + ai_findings
     result = {
         "_id": new_id("AIF"),
@@ -1764,7 +1840,9 @@ async def lint_requirement(
         "requirement_version_id": version_id,
         "findings": findings,
         "suggestions": suggestions,
-        "valid": not any(item["severity"] == "error" for item in findings),
+        "valid": ai_result.get("status") == "SUCCESS"
+        and not ai_result.get("degraded_mode")
+        and not any(item["severity"] == "error" for item in findings),
         **ai_contract_metadata(ai_result),
         "idempotency_key": payload.idempotency_key,
         "human_confirmation_required": True,
@@ -1857,7 +1935,10 @@ async def apply_requirement_ai_suggestion(
         raise HTTPException(status_code=404, detail={"code": "AI_SUGGESTION_NOT_FOUND"})
     if ai_result.get("status") != "SUCCESS" or ai_result.get("degraded_mode"):
         raise HTTPException(status_code=409, detail={"code": "AI_SUGGESTION_NOT_APPLICABLE"})
-    if not requirement_suggestion_changes(version, suggestion):
+    acceptance_criteria = await database.value.acceptance_criteria.find(
+        {"requirement_version_id": version_id}
+    ).to_list(200)
+    if not requirement_suggestion_changes(version, suggestion, acceptance_criteria):
         raise HTTPException(status_code=422, detail={"code": "AI_SUGGESTION_NO_CHANGE"})
     changes = {"updated_at": now()}
     revised_title = str(suggestion.get("revised_title") or "").strip()
@@ -1870,6 +1951,24 @@ async def apply_requirement_ai_suggestion(
     if revised_content and revised_content != current_content:
         changes["content_doc"] = text_doc(revised_content)
         changes["plain_text_projection"] = revised_content
+    patch = suggestion.get("patch") if isinstance(suggestion.get("patch"), dict) else {}
+    if "business_rules" in patch:
+        await get_project(version["project_id"], user, "business_rule.manage")
+    if "dependencies" in patch:
+        await get_project(version["project_id"], user, "requirement_dependency.manage")
+    for field in ("actors", "business_rules", "dependencies"):
+        if field in patch:
+            changes[field] = patch[field]
+    proposed_criteria = patch.get("acceptance_criteria")
+    if proposed_criteria is not None:
+        await get_project(version["project_id"], user, "acceptance_criteria.manage")
+        keys = [item.get("key") for item in proposed_criteria]
+        if len(keys) != len(set(keys)) or any(not key for key in keys):
+            raise HTTPException(
+                status_code=422, detail={"code": "INVALID_ACCEPTANCE_CRITERION_PATCH"}
+            )
+        for item in proposed_criteria:
+            validate_doc(item.get("content_doc", {}))
     updated = await database.value.requirement_versions.find_one_and_update(
         {
             "_id": version_id,
@@ -1882,6 +1981,45 @@ async def apply_requirement_ai_suggestion(
     )
     if not updated:
         raise HTTPException(status_code=409, detail={"code": "REVISION_CONFLICT"})
+    if proposed_criteria is not None:
+        previous_criteria = acceptance_criteria
+        await database.value.acceptance_criteria.delete_many({"requirement_version_id": version_id})
+        try:
+            await persist_acceptance_criteria(updated, proposed_criteria)
+        except Exception:
+            await database.value.acceptance_criteria.delete_many(
+                {"requirement_version_id": version_id}
+            )
+            if previous_criteria:
+                await database.value.acceptance_criteria.insert_many(previous_criteria)
+            rollback_values = {
+                field: version[field]
+                for field in changes
+                if field in version and field != "revision"
+            }
+            rollback_values.update(
+                {
+                    "acceptance_criterion_ids": [item["_id"] for item in previous_criteria],
+                    "revision": payload.expected_revision,
+                }
+            )
+            rollback_update = {"$set": rollback_values}
+            missing_fields = [
+                field for field in changes if field not in version and field != "revision"
+            ]
+            if missing_fields:
+                rollback_update["$unset"] = {field: "" for field in missing_fields}
+            await database.value.requirement_versions.update_one(
+                {
+                    "_id": version_id,
+                    "project_id": version["project_id"],
+                    "status": "DRAFT",
+                    "revision": payload.expected_revision + 1,
+                },
+                rollback_update,
+            )
+            raise
+        updated = await database.value.requirement_versions.find_one({"_id": version_id})
     await database.value.ai_findings.update_one(
         {"_id": ai_result["_id"], "project_id": version["project_id"]},
         {
