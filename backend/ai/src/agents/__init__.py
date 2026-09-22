@@ -1,1 +1,3 @@
-"""Agent implementations grouped into ReAct core and specialists."""
+from src.agents.supervisor import canonical_workflow
+
+__all__ = ["canonical_workflow"]

@@ -802,7 +802,7 @@ async def request_rag_reindex(
                 "event": "knowledge.index.requested",
                 "project_id": payload.project_id,
                 "artifact_version_id": artifact_id,
-                "model_version": "admin-reindex-v1",
+                "model_version": "admin_reindex",
                 "requester_id": current_user.id,
                 "requester_email": current_user.email,
                 "payload": {},
@@ -968,7 +968,7 @@ async def runtime_versions(current_user: CurrentUser = Depends(get_current_user)
     return APIResponse(
         data={
             "services": results,
-            "schema_version": "v4.3",
+            "schema_version": os.environ.get("VERSION", "unknown"),
             "platform_version": os.environ.get("VERSION", "unknown"),
         },
         message="Tải phiên bản vận hành hoàn tất",

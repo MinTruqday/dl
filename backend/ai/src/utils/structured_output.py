@@ -2,6 +2,8 @@ import json
 import re
 from typing import Any, Type
 
+from src.runtime.output import output_policy
+
 
 class StructuredOutputError(ValueError):
     pass
@@ -44,7 +46,12 @@ def extract_json_values(text: Any) -> list[Any]:
         return [text]
     if not isinstance(text, str) or not text.strip():
         raise StructuredOutputError("Model output is empty")
-    cleaned = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
+    cleaned = re.sub(
+        output_policy()["hidden_reasoning_pattern"],
+        "",
+        text,
+        flags=re.IGNORECASE | re.DOTALL,
+    ).strip()
     candidates = [cleaned]
     candidates.extend(
         match.group(1).strip()

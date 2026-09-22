@@ -1,0 +1,78 @@
+{
+  "project_question": {
+    "specialists": ["reporting"],
+    "maximum_tasks": 1,
+    "fallback": {
+      "specialist": "reporting",
+      "tool_name": "project_question",
+      "arguments": {"project_id": "$project_id", "instruction": "$objective"}
+    }
+  },
+  "status_report": {
+    "specialists": ["reporting"],
+    "maximum_tasks": 1,
+    "fallback": {
+      "specialist": "reporting",
+      "tool_name": "status_report_narrative",
+      "arguments": {"project_id": "$project_id", "instruction": "$objective"}
+    }
+  },
+  "completion_report": {
+    "specialists": ["reporting"],
+    "maximum_tasks": 1,
+    "fallback": {
+      "specialist": "reporting",
+      "tool_name": "completion_report_narrative",
+      "arguments": {"project_id": "$project_id", "instruction": "$objective"}
+    }
+  },
+  "requirement_analysis": {
+    "specialists": ["requirement"],
+    "maximum_tasks": 2,
+    "fallback": {
+      "specialist": "requirement",
+      "tool_name": "requirement_quality_analysis",
+      "arguments": {"project_id": "$project_id", "instruction": "$objective"}
+    }
+  },
+  "generate_test_cases": {
+    "specialists": ["requirement", "test_design"],
+    "maximum_tasks": 4,
+    "fallback": {
+      "specialist": "test_design",
+      "tool_name": "test_generation",
+      "arguments": {"project_id": "$project_id", "instruction": "$objective"}
+    }
+  },
+  "change_impact": {
+    "specialists": ["requirement", "analysis", "test_design"],
+    "maximum_tasks": 5,
+    "fallback": {
+      "specialist": "analysis",
+      "tool_name": "impact_analysis",
+      "arguments": {"project_id": "$project_id", "instruction": "$objective"}
+    }
+  },
+  "regression_recommendation": {
+    "specialists": ["analysis", "test_design"],
+    "maximum_tasks": 3,
+    "fallback": {
+      "specialist": "analysis",
+      "tool_name": "retrieve_project_evidence",
+      "arguments": {
+        "project_id": "$project_id",
+        "query": "$objective",
+        "artifact_types": ""
+      }
+    }
+  },
+  "execution_failure_analysis": {
+    "specialists": ["execution", "analysis"],
+    "maximum_tasks": 4,
+    "fallback": {
+      "specialist": "execution",
+      "tool_name": "get_execution_history",
+      "arguments": {"project_id": "$project_id"}
+    }
+  }
+}

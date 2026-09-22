@@ -16,6 +16,12 @@ from pydantic import Field
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from src.core.infrastructure.configuration import settings
+from src.prompts.structured import (
+    correction_instruction,
+    schema_instruction,
+    tool_selection_correction_instruction,
+    tool_selection_instruction,
+)
 from src.utils.structured_output import (
     extract_json_value,
     extract_json_values,
@@ -49,13 +55,6 @@ def _merge_system_messages(messages: List[dict]) -> List[dict]:
 
 
 class HFInferenceChat(BaseChatModel):
-    """
-    <module_purpose>
-    <purpose>LangChain wrapper for connecting to HuggingFace Inference Endpoints.</purpose>
-    <metis_behavior>Manages token streaming and retry logic robustly. Never leaks the HF_TOKEN to logs.</metis_behavior>
-    </module_purpose>
-    """
-
     client: Any = Field(default=None)
     model: str = Field(default="")
 
@@ -74,7 +73,7 @@ class HFInferenceChat(BaseChatModel):
         return asyncio.run(self._agenerate(messages, stop, run_manager, **kwargs))
 
     @retry(
-        stop=stop_after_attempt(3),
+        stop=stop_after_attempt(max(1, settings.AGENT_MAX_RETRIES + 1)),
         wait=wait_exponential(multiplier=1, min=2, max=10),
         retry=retry_if_exception_type(Exception),
         reraise=True,
@@ -133,7 +132,7 @@ class HFInferenceChat(BaseChatModel):
         )
 
     @retry(
-        stop=stop_after_attempt(3),
+        stop=stop_after_attempt(max(1, settings.AGENT_MAX_RETRIES + 1)),
         wait=wait_exponential(multiplier=1, min=2, max=10),
         retry=retry_if_exception_type(Exception),
         reraise=True,
@@ -195,15 +194,10 @@ class HFInferenceChat(BaseChatModel):
                 if hasattr(schema, "model_json_schema")
                 else schema.schema()
             )
-            sys_msg = SystemMessage(
-                content=(
-                    "Return exactly one valid JSON value matching the schema\n"
-                    "Do not include analysis prose markdown or code fences\n"
-                    f"Schema: {schema_json}"
-                )
-            )
+            sys_msg = SystemMessage(content=schema_instruction(schema_json))
             msgs = [sys_msg] + (messages if isinstance(messages, list) else [messages])
-            for attempt in range(3):
+            maximum_attempts = max(1, settings.AGENT_MAX_RETRIES + 1)
+            for attempt in range(maximum_attempts):
                 res = await self.ainvoke(msgs, **kwargs_inner)
                 try:
                     return validate_structured_output(res.content, schema)
@@ -213,18 +207,12 @@ class HFInferenceChat(BaseChatModel):
                         attempt + 1,
                         type(error).__name__,
                     )
-                    if attempt == 2:
+                    if attempt == maximum_attempts - 1:
                         raise
                     msgs.extend(
                         [
                             AIMessage(content=str(res.content)[:4000]),
-                            HumanMessage(
-                                content=(
-                                    "The previous value failed schema validation\n"
-                                    f"Validation error: {str(error)[:1000]}\n"
-                                    "Return one corrected JSON value only"
-                                )
-                            ),
+                            HumanMessage(content=correction_instruction(error)),
                         ]
                     )
             raise RuntimeError("structured_output_retry_exhausted")
@@ -235,15 +223,10 @@ class HFInferenceChat(BaseChatModel):
                 if hasattr(schema, "model_json_schema")
                 else schema.schema()
             )
-            sys_msg = SystemMessage(
-                content=(
-                    "Return exactly one valid JSON value matching the schema\n"
-                    "Do not include analysis prose markdown or code fences\n"
-                    f"Schema: {schema_json}"
-                )
-            )
+            sys_msg = SystemMessage(content=schema_instruction(schema_json))
             msgs = [sys_msg] + (messages if isinstance(messages, list) else [messages])
-            for attempt in range(3):
+            maximum_attempts = max(1, settings.AGENT_MAX_RETRIES + 1)
+            for attempt in range(maximum_attempts):
                 res = self.invoke(msgs, **kwargs_inner)
                 try:
                     return validate_structured_output(res.content, schema)
@@ -253,18 +236,12 @@ class HFInferenceChat(BaseChatModel):
                         attempt + 1,
                         type(error).__name__,
                     )
-                    if attempt == 2:
+                    if attempt == maximum_attempts - 1:
                         raise
                     msgs.extend(
                         [
                             AIMessage(content=str(res.content)[:4000]),
-                            HumanMessage(
-                                content=(
-                                    "The previous value failed schema validation\n"
-                                    f"Validation error: {str(error)[:1000]}\n"
-                                    "Return one corrected JSON value only"
-                                )
-                            ),
+                            HumanMessage(content=correction_instruction(error)),
                         ]
                     )
             raise RuntimeError("structured_output_retry_exhausted")
@@ -284,14 +261,7 @@ class HFInferenceChat(BaseChatModel):
             else None
         )
         selection_prompt = SystemMessage(
-            content=(
-                "Select exactly one tool for the request\n"
-                "Return one JSON object with keys name and arguments\n"
-                "name must match a registered tool\n"
-                "arguments must be one JSON object matching that tool schema\n"
-                + (f"You MUST use the exact tool name {forced_name}\n" if forced_name else "")
-                + f"Registered tools: {tool_definitions}"
-            )
+            content=tool_selection_instruction(tool_definitions, forced_name)
         )
 
         def parse_tool_call(content):
@@ -349,7 +319,8 @@ class HFInferenceChat(BaseChatModel):
         async def _ainvoke(messages, **kwargs_inner):
             source_messages = messages if isinstance(messages, list) else [messages]
             corrective_messages = [selection_prompt, *source_messages]
-            for attempt in range(3):
+            maximum_attempts = max(1, settings.AGENT_MAX_RETRIES + 1)
+            for attempt in range(maximum_attempts):
                 result = await self.ainvoke(corrective_messages, **kwargs_inner)
                 try:
                     return parse_tool_call(result.content)
@@ -359,17 +330,13 @@ class HFInferenceChat(BaseChatModel):
                         attempt + 1,
                         type(error).__name__,
                     )
-                    if attempt == 2:
+                    if attempt == maximum_attempts - 1:
                         raise
                     corrective_messages.extend(
                         [
                             AIMessage(content=str(result.content)[:4000]),
                             HumanMessage(
-                                content=(
-                                    "The previous tool selection was invalid\n"
-                                    f"Validation error: {str(error)[:1000]}\n"
-                                    "Return one corrected JSON tool call only"
-                                )
+                                content=tool_selection_correction_instruction(error)
                             ),
                         ]
                     )
@@ -378,7 +345,8 @@ class HFInferenceChat(BaseChatModel):
         def _invoke(messages, **kwargs_inner):
             source_messages = messages if isinstance(messages, list) else [messages]
             corrective_messages = [selection_prompt, *source_messages]
-            for attempt in range(3):
+            maximum_attempts = max(1, settings.AGENT_MAX_RETRIES + 1)
+            for attempt in range(maximum_attempts):
                 result = self.invoke(corrective_messages, **kwargs_inner)
                 try:
                     return parse_tool_call(result.content)
@@ -388,17 +356,13 @@ class HFInferenceChat(BaseChatModel):
                         attempt + 1,
                         type(error).__name__,
                     )
-                    if attempt == 2:
+                    if attempt == maximum_attempts - 1:
                         raise
                     corrective_messages.extend(
                         [
                             AIMessage(content=str(result.content)[:4000]),
                             HumanMessage(
-                                content=(
-                                    "The previous tool selection was invalid\n"
-                                    f"Validation error: {str(error)[:1000]}\n"
-                                    "Return one corrected JSON tool call only"
-                                )
+                                content=tool_selection_correction_instruction(error)
                             ),
                         ]
                     )

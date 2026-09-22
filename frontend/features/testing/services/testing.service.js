@@ -20,6 +20,25 @@ export async function testingRequest(path, options = {}) {
   return body?.data;
 }
 
+export async function agentRequest(path, options = {}) {
+  const response = await authenticatedFetch(`${API_URL}/tac-tu${path}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+  const body = await response.json().catch(() => null);
+  if (!response.ok) {
+    const detail = body?.detail;
+    const error = new Error(detail?.message || detail?.code || "Không thể hoàn tất yêu cầu AI");
+    error.status = response.status;
+    error.code = detail?.code;
+    throw error;
+  }
+  return body;
+}
+
 export async function testingStreamRequest(path, options = {}) {
   const { onDelta, ...requestOptions } = options;
   const streamId = crypto.randomUUID();
@@ -127,6 +146,14 @@ async function listPage(path, value) {
 }
 
 export const testingApi = {
+  runAgent: (payload) =>
+    agentRequest("/luot-chay", { method: "POST", body: JSON.stringify(payload) }),
+  getAgentRun: (runId) => agentRequest(`/luot-chay/${runId}`),
+  decideAgentRun: (runId, payload) =>
+    agentRequest(`/luot-chay/${runId}/quyet-dinh`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   listProjects: (query = "", status = "active") => {
     const params = new URLSearchParams();
     if (query) params.set("q", query);

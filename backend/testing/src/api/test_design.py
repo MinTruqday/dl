@@ -33,6 +33,7 @@ from src.domain.schemas import TestCaseDraftCreate as CaseDraftCreate
 from src.domain.schemas import TestCaseDraftPatch as CaseDraftPatch
 from src.domain.schemas import TestCaseFreezeInput as CaseFreezeInput
 from src.services.design_assistance import ai_contract_metadata
+from src.services.domain_policy import domain_policy
 from src.services.generation import generate_requirement_drafts
 from src.services.linters import duplicate_score, lint_test_case
 from src.services.project_knowledge import index_artifact
@@ -345,7 +346,7 @@ async def lint_test_case_draft(
         "test_case_draft_id": draft_id,
         "findings": findings,
         "valid": not any(item["severity"] == "error" for item in findings),
-        "model": model_metadata("test-quality-linter-v1"),
+        "model": model_metadata("test_case_quality"),
     }
     await database.value.ai_findings.insert_one(
         {
@@ -437,7 +438,7 @@ async def request_test_case_changes(
     user: CurrentUser = Depends(get_current_user),
 ):
     draft = await get_project_entity("test_case_drafts", draft_id, user, "testcase.review")
-    await require_action_policy(draft["project_id"], user, "testcase.request_changes", {"QA_LEAD"})
+    await require_action_policy(draft["project_id"], user, "testcase.request_changes", {"QA"})
     if draft["project_id"] != project_id:
         raise HTTPException(status_code=422, detail={"code": "PROJECT_MISMATCH"})
     if draft["status"] != "IN_REVIEW":
@@ -687,6 +688,8 @@ async def freeze_test_case_draft(
         version["status"],
         "APPROVED_SOURCE",
         version["version"],
+        requirement_version_ids=version.get("requirement_version_ids", []),
+        acceptance_criterion_ids=version.get("acceptance_criterion_ids", []),
     )
     await audit(
         user.id,
@@ -1214,17 +1217,23 @@ async def find_duplicates(project_id: str, user: CurrentUser = Depends(get_curre
         {"project_id": project_id, "status": "ACTIVE"}
     ).to_list(2000)
     pairs = []
+    policy = domain_policy("duplicate_detection")
     for index, left in enumerate(versions):
         for right in versions[index + 1 :]:
             score, reasons = duplicate_score(left, right)
-            if score >= 0.72:
+            if score >= policy["test_case_minimum"]:
                 pairs.append(
                     {"left": left, "right": right, "similarity": score, "reasons": reasons}
                 )
-    return envelope(sorted(pairs, key=lambda item: item["similarity"], reverse=True)[:100])
+    return envelope(
+        sorted(pairs, key=lambda item: item["similarity"], reverse=True)[
+            : policy["maximum_pairs"]
+        ]
+    )
 
 
 async def create_suggested_traces(draft, version, user):
+    trace_policy = domain_policy("trace_suggestion")
     sources = [
         ("requirement_version", source_id) for source_id in draft.get("requirement_version_ids", [])
     ] + [
@@ -1252,7 +1261,11 @@ async def create_suggested_traces(draft, version, user):
                 "target_type": "test_case_version",
                 "target_id": version["_id"],
                 "link_type": "verifies",
-                "confidence": 0.9 if draft.get("origin") == "ai_generated" else 1,
+                "confidence": (
+                    trace_policy["ai_confidence"]
+                    if draft.get("origin") == "ai_generated"
+                    else trace_policy["manual_confidence"]
+                ),
                 "origin": "ai_suggested" if draft.get("origin") == "ai_generated" else "manual",
                 "status": "SUGGESTED" if draft.get("origin") == "ai_generated" else "CONFIRMED",
                 "revision": 1,
@@ -1381,7 +1394,7 @@ def model_metadata(model):
     return {
         "provider": "deterministic",
         "model": model,
-        "prompt_version": "qa-v1",
+        "prompt_version": "testing_assistance",
         "tool_schema_version": "1",
-        "retrieval_version": "project-filter-v1",
+        "retrieval_version": "project_evidence",
     }

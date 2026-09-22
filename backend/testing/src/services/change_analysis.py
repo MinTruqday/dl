@@ -1,6 +1,8 @@
 import re
 from difflib import SequenceMatcher
 
+from src.services.domain_policy import domain_policy
+
 
 def semantic_candidate_score(requirement_text, test_text):
     requirement_tokens = set(re.findall(r"[\w-]+", requirement_text.casefold()))
@@ -11,9 +13,10 @@ def semantic_candidate_score(requirement_text, test_text):
 
 
 def semantic_changes(before, after):
+    policy = domain_policy("change_analysis")
     before_text = before.get("plain_text_projection", "")
     after_text = after.get("plain_text_projection", "")
-    tracked_fields = ("title", "actors", "business_rules", "dependencies")
+    tracked_fields = policy["tracked_fields"]
     changed_fields = [field for field in tracked_fields if before.get(field) != after.get(field)]
     content_changed = before_text.strip() != after_text.strip()
     if not content_changed and not changed_fields:
@@ -24,25 +27,42 @@ def semantic_changes(before, after):
             "type": "MODIFIED_INPUT" if content_changed else "TEXT_ONLY",
             "subject": "content" if content_changed else ",".join(changed_fields),
             "before": {
-                "text": before_text[:500],
+                "text": before_text[: policy["evidence_text_limit"]],
                 "fields": {field: before.get(field) for field in changed_fields},
             },
             "after": {
-                "text": after_text[:500],
+                "text": after_text[: policy["evidence_text_limit"]],
                 "fields": {field: after.get(field) for field in changed_fields},
             },
-            "confidence": round(max(0.55, 1 - ratio / 2), 4),
+            "confidence": round(
+                max(
+                    policy["content_confidence_minimum"],
+                    1 - ratio / policy["content_confidence_ratio_divisor"],
+                ),
+                4,
+            ),
             "evidence": [
-                {"artifact_version_id": before["_id"], "text": before_text[:500]},
-                {"artifact_version_id": after["_id"], "text": after_text[:500]},
+                {
+                    "artifact_version_id": before["_id"],
+                    "text": before_text[: policy["evidence_text_limit"]],
+                },
+                {
+                    "artifact_version_id": after["_id"],
+                    "text": after_text[: policy["evidence_text_limit"]],
+                },
             ],
         }
     ]
 
 
 def classify_test_impact(test_version, changes, direct_trace):
+    policy = domain_policy("change_analysis")
     classification = "POTENTIALLY_AFFECTED" if direct_trace else "STILL_VALID"
-    confidence = 0.78 if direct_trace else 0.45
+    confidence = (
+        policy["direct_trace_confidence"]
+        if direct_trace
+        else policy["indirect_trace_confidence"]
+    )
     reasons = [
         "Có liên kết truy vết trực tiếp tới Requirement thay đổi"
         if direct_trace

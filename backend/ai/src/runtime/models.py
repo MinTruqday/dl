@@ -1,0 +1,151 @@
+from datetime import datetime, timezone
+from typing import Any, Literal
+from uuid import uuid4
+
+from pydantic import BaseModel, Field
+
+
+SpecialistName = Literal["requirement", "test_design", "analysis", "execution", "reporting"]
+TaskStatus = Literal["COMPLETED", "INSUFFICIENT_EVIDENCE", "FAILED", "LIMIT_REACHED"]
+RunStatus = Literal[
+    "PLANNING",
+    "RUNNING",
+    "APPROVAL_REQUIRED",
+    "APPLYING",
+    "VERIFYING",
+    "COMPLETED",
+    "FAILED",
+]
+
+
+def utc_now():
+    return datetime.now(timezone.utc)
+
+
+class EvidenceItem(BaseModel):
+    artifact_type: str
+    artifact_id: str
+    artifact_version_id: str | None = None
+    source: Literal["database", "document", "vector", "graph", "memory", "tool"]
+    authority: str
+    score: float = Field(default=1, ge=0, le=1)
+    text: str = ""
+    relationship_path: list[str] = Field(default_factory=list)
+    project_id: str
+
+
+class EvidencePackage(BaseModel):
+    project_id: str
+    query: str
+    items: list[EvidenceItem] = Field(default_factory=list)
+    degraded_flags: list[str] = Field(default_factory=list)
+
+
+class ToolCall(BaseModel):
+    tool_name: str
+    arguments: dict[str, Any] = Field(default_factory=dict)
+
+
+class AgentTask(BaseModel):
+    task_id: str = Field(default_factory=lambda: f"TASK-{uuid4().hex}")
+    run_id: str
+    project_id: str
+    specialist: SpecialistName
+    objective: str
+    evidence_refs: list[str] = Field(default_factory=list)
+    constraints: dict[str, Any] = Field(default_factory=dict)
+    tool_calls: list[ToolCall] = Field(default_factory=list)
+
+
+class PlannedTask(BaseModel):
+    specialist: SpecialistName
+    objective: str
+    evidence_refs: list[str] = Field(default_factory=list)
+    constraints: dict[str, Any] = Field(default_factory=dict)
+    tool_calls: list[ToolCall] = Field(default_factory=list)
+
+
+class AgentResult(BaseModel):
+    task_id: str
+    status: TaskStatus
+    summary: str
+    evidence_refs: list[str] = Field(default_factory=list)
+    reason_codes: list[str] = Field(default_factory=list)
+    proposals: list[dict[str, Any]] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+
+
+class SpecialistReview(BaseModel):
+    continue_execution: bool
+    reason_codes: list[str] = Field(default_factory=list)
+
+
+class SupervisorPlan(BaseModel):
+    intent: str
+    success_criteria: list[str] = Field(default_factory=list)
+    tasks: list[PlannedTask] = Field(default_factory=list)
+
+
+class SupervisorReview(BaseModel):
+    goal_complete: bool
+    success_criteria: list[str] = Field(default_factory=list)
+    tasks: list[PlannedTask] = Field(default_factory=list)
+    reason_codes: list[str] = Field(default_factory=list)
+
+
+class SupervisorProposal(BaseModel):
+    summary: str
+    evidence_refs: list[str] = Field(default_factory=list)
+    actions: list[dict[str, Any]] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    success_criteria_met: list[str] = Field(default_factory=list)
+
+
+class VeriqRunState(BaseModel):
+    run_id: str = Field(default_factory=lambda: f"RUN-{uuid4().hex}")
+    project_id: str
+    user_id: str
+    role: str
+    permissions: list[str] = Field(default_factory=list)
+    objective: str
+    intent: str = ""
+    supervisor_plan: list[dict[str, Any]] = Field(default_factory=list)
+    active_task: dict[str, Any] | None = None
+    completed_tasks: list[dict[str, Any]] = Field(default_factory=list)
+    specialist_results: list[dict[str, Any]] = Field(default_factory=list)
+    observations: list[dict[str, Any]] = Field(default_factory=list)
+    evidence_refs: list[str] = Field(default_factory=list)
+    tool_calls: list[dict[str, Any]] = Field(default_factory=list)
+    proposal: dict[str, Any] | None = None
+    approval_status: str | None = None
+    approval_decision: dict[str, Any] | None = None
+    model_metadata: dict[str, Any] = Field(default_factory=dict)
+    token_usage: dict[str, int] = Field(default_factory=dict)
+    current_step: int = 0
+    status: RunStatus = "PLANNING"
+    error_code: str | None = None
+    revision: int = 1
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
+
+
+class AgentRunRequest(BaseModel):
+    project_id: str
+    objective: str = Field(min_length=3, max_length=4000)
+    intent: str = Field(default="", max_length=100)
+    target_artifact_ids: list[str] = Field(default_factory=list, max_length=100)
+    evidence: list[EvidenceItem] = Field(default_factory=list, max_length=100)
+    constraints: dict[str, Any] = Field(default_factory=dict)
+
+
+class ApprovalActionEdit(BaseModel):
+    task_id: str = Field(min_length=1, max_length=200)
+    tool_name: str = Field(min_length=1, max_length=200)
+    arguments: dict[str, Any]
+
+
+class ApprovalDecision(BaseModel):
+    decision: Literal["APPROVE", "EDIT", "REJECT"]
+    expected_revision: int = Field(ge=1)
+    note: str = Field(default="", max_length=2000)
+    action_edits: list[ApprovalActionEdit] = Field(default_factory=list, max_length=100)

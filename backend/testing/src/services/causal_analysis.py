@@ -6,6 +6,7 @@ from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, now
 from src.services.design_assistance import ai_contract_metadata, request_design_assistance
+from src.services.domain_policy import domain_policy
 
 
 async def validate_member(db, project_id, user_id):
@@ -36,8 +37,23 @@ async def list_analyses(db, project_id, user):
 async def suggest_candidates(db, project_id, user):
     project = await get_project(project_id, user, "causalanalysis.read")
     project_settings = project.get("settings") or {}
-    reopen_threshold = max(int(project_settings.get("rca_reopen_threshold", 2)), 1)
-    duplicate_threshold = max(int(project_settings.get("rca_duplicate_threshold", 3)), 2)
+    policy = domain_policy("causal_analysis")
+    reopen_threshold = max(
+        int(
+            project_settings.get(
+                "rca_reopen_threshold", policy["reopen_threshold_default"]
+            )
+        ),
+        policy["reopen_threshold_minimum"],
+    )
+    duplicate_threshold = max(
+        int(
+            project_settings.get(
+                "rca_duplicate_threshold", policy["duplicate_threshold_default"]
+            )
+        ),
+        policy["duplicate_threshold_minimum"],
+    )
     defects = await db.defects.find({"project_id": project_id}).sort("updated_at", -1).to_list(2000)
     existing = await db.causal_analyses.find(
         {"project_id": project_id, "status": {"$ne": "CLOSED"}}, {"defect_ids": 1}
@@ -57,7 +73,7 @@ async def suggest_candidates(db, project_id, user):
         if defect["_id"] in linked:
             continue
         reason_codes = []
-        if str(defect.get("severity", "")).upper() in {"BLOCKER", "CRITICAL"}:
+        if str(defect.get("severity", "")).upper() in set(policy["trigger_severities"]):
             reason_codes.append("SEVERITY_TRIGGER")
         if (
             int(defect.get("reopen_count", 0) or 0) >= reopen_threshold
@@ -213,7 +229,7 @@ async def add_five_why(db, analysis_id, payload, user):
     if value["status"] != "DRAFT":
         raise HTTPException(status_code=409, detail={"code": "CAUSAL_ANALYSIS_NOT_DRAFT"})
     five_whys = list(value.get("five_whys", []))
-    if len(five_whys) >= 5:
+    if len(five_whys) >= domain_policy("causal_analysis")["maximum_five_whys"]:
         raise HTTPException(status_code=409, detail={"code": "FIVE_WHYS_LIMIT_REACHED"})
     five_whys.append(payload.why)
     updated = await db.causal_analyses.find_one_and_update(
@@ -601,7 +617,6 @@ async def generate_hypotheses(db, analysis_id, payload, user):
     ]
     instruction = json.dumps(
         {
-            "task": "Đề xuất giả thuyết nguyên nhân gốc cụm lỗi, yếu tố đóng góp và TestCondition hoặc TestCase còn thiếu; không xác nhận nguyên nhân và không phê duyệt CAPA",
             "problem_statement": value["problem_statement"],
             "user_instruction": payload.instruction,
         },

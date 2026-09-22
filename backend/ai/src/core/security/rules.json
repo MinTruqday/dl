@@ -1,0 +1,48 @@
+{
+  "secret_detection": {
+    "uuid_pattern": "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}",
+    "domain_identifier_pattern": "[A-Z][A-Z0-9]{0,15}-[0-9a-fA-F]{32}",
+    "candidate_pattern": "(?<![\\w])[^\\s]{20,}(?![\\w])",
+    "identifier_strip_characters": "\"'`,;:[]{}()",
+    "long_candidate_minimum_length": 32,
+    "compact_ratio_threshold": 0.85,
+    "fixed_uppercase_length": 20,
+    "entropy_threshold": 3.5,
+    "uri_scheme_marker": "://",
+    "uri_identity_marker": "@",
+    "redaction": "[REDACTED]"
+  },
+  "prompt_injection_markers": [
+    "ignore previous",
+    "ignore all previous",
+    "reveal secret credentials",
+    "system prompt",
+    "developer message",
+    "bỏ qua chỉ dẫn",
+    "bỏ qua hướng dẫn",
+    "tiết lộ prompt",
+    "hiển thị prompt hệ thống"
+  ],
+  "prompt_injection_patterns": [
+    "ignore\\s+(all\\s+)?previous\\s+instructions",
+    "system\\s+prompt",
+    "reveal\\s+(your\\s+)?(secret|token|credential)",
+    "execute\\s+(this\\s+)?tool",
+    "bỏ\\s+qua\\s+(mọi\\s+)?chỉ\\s+dẫn\\s+trước",
+    "tiết\\s+lộ\\s+(khóa|mật\\s+khẩu|token)"
+  ],
+  "pii": {
+    "entities": ["EMAIL_ADDRESS", "PHONE_NUMBER", "CREDIT_CARD", "CRYPTO"],
+    "language": "en",
+    "nlp_engine": "spacy",
+    "model": "en_core_web_sm"
+  },
+  "anomaly": {
+    "length_scale": 10000,
+    "length_penalty_cap": 0.3,
+    "special_character_weight": 0.5,
+    "anomaly_weight": 0.2,
+    "injection_violation_weight": 0.4
+  },
+  "hidden_reasoning_pattern": "<(think|thought)>.*?</\\1>"
+}

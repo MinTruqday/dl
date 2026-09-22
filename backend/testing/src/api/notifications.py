@@ -48,7 +48,7 @@ def default_rules(project_id):
         "project_id": project_id,
         "enabled_events": [],
         "channels": ["in_app"],
-        "target_roles": ["QA_LEAD"],
+        "target_roles": ["QA"],
         "escalation_minutes": None,
         "revision": 0,
     }

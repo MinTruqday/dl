@@ -7,6 +7,7 @@ from src.core.common import envelope, get_project, load_user_identities, now
 from src.core.database import database
 from src.domain.schemas import ProjectQuestionInput, SearchInput
 from src.services.design_assistance import ai_contract_metadata, request_design_assistance
+from src.services.domain_policy import domain_policy
 from src.services.project_knowledge import search_project_with_status
 
 router = APIRouter(prefix="/kiem-thu", tags=["Phân tích kiểm thử"])
@@ -173,6 +174,7 @@ async def search_knowledge(
         project_id, payload.query, payload.artifact_types, payload.limit
     )
     dense = dense_result["items"]
+    retrieval_policy = domain_policy("knowledge_retrieval")
     pattern = re.escape(payload.query)
     requested = set(payload.artifact_types)
     results = []
@@ -213,7 +215,9 @@ async def search_knowledge(
                     or item["_id"],
                     "artifact_version_id": item["_id"],
                     "title": item.get("title") or item.get("name") or item.get("filename"),
-                    "text": str(item.get(text_field, ""))[:1000],
+                    "text": str(item.get(text_field, ""))[
+                        : retrieval_policy["snippet_character_limit"]
+                    ],
                     "status": item.get("status"),
                     "authority": authority,
                     "source_type": item.get("source_type"),
@@ -240,12 +244,36 @@ async def search_knowledge(
                     ),
                 }
             )
+    dense_ids_by_type = {}
+    for item in dense:
+        reference = item.get("artifact_version_id") or item.get("artifact_id")
+        if reference:
+            dense_ids_by_type.setdefault(item.get("artifact_type"), set()).add(reference)
+    valid_dense_ids = set()
+    for artifact_type, collection, _ in sources:
+        if requested and artifact_type not in requested:
+            continue
+        references = dense_ids_by_type.get(artifact_type, set())
+        if not references:
+            continue
+        documents = await database.value[collection].find(
+            {"project_id": project_id, "_id": {"$in": list(references)}},
+            {"_id": 1},
+        ).to_list(len(references))
+        valid_dense_ids.update(item["_id"] for item in documents)
+    dense = [
+        item
+        for item in dense
+        if (item.get("artifact_version_id") or item.get("artifact_id")) in valid_dense_ids
+    ]
     by_version = {item.get("artifact_version_id"): item for item in results}
     for item in dense:
         version_id = item.get("artifact_version_id")
         if version_id in by_version:
             by_version[version_id]["score"] = round(
-                0.45 * by_version[version_id]["score"] + 0.55 * item["score"], 4
+                retrieval_policy["lexical_weight"] * by_version[version_id]["score"]
+                + retrieval_policy["semantic_weight"] * item["score"],
+                4,
             )
             by_version[version_id]["retrieval_source"] = "hybrid_fusion"
         else:
@@ -273,7 +301,7 @@ async def search_knowledge(
         {
             "items": results[: payload.limit],
             "filters": {"project_id": project_id, "artifact_types": list(requested)},
-            "retrieval_version": "project-hybrid-knowledge-v1",
+            "retrieval_version": "hybrid_project_evidence",
             "degraded_mode": dense_result["degraded_mode"],
             "fallback": dense_result["degraded_mode"] != "NORMAL",
             "error_code": dense_result["error_code"],

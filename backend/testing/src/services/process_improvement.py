@@ -5,6 +5,11 @@ from pymongo import ReturnDocument
 from pymongo.errors import DuplicateKeyError
 
 from src.core.common import audit, get_project, new_id, now
+from src.services.domain_policy import domain_policy
+
+
+def round_measurement(value):
+    return round(value, domain_policy("process_control")["measurement_precision"])
 
 
 async def require_member(db, project_id, user_id, code):
@@ -273,12 +278,12 @@ def compare_metric_results(baseline_metrics, result_metrics):
             isinstance(item, (int, float)) and not isinstance(item, bool) for item in after_values
         )
         before_value = (
-            round(sum(before_values) / len(before_values), 6)
+            round_measurement(sum(before_values) / len(before_values))
             if before_numeric
             else (before_values[-1] if before_values else None)
         )
         after_value = (
-            round(sum(after_values) / len(after_values), 6)
+            round_measurement(sum(after_values) / len(after_values))
             if after_numeric
             else (after_values[-1] if after_values else None)
         )
@@ -288,7 +293,7 @@ def compare_metric_results(baseline_metrics, result_metrics):
                 "unit": (after_items or before_items)[-1].get("unit"),
                 "baseline_value": before_value,
                 "result_value": after_value,
-                "delta": round(after_value - before_value, 6)
+                "delta": round_measurement(after_value - before_value)
                 if before_numeric and after_numeric
                 else None,
                 "changed": before_value != after_value,
@@ -349,15 +354,18 @@ async def evaluate_proposal(db, proposal_id, payload, user):
 
 
 def control_statistics(values):
-    if len(values) < 5:
+    policy = domain_policy("process_control")
+    if len(values) < policy["minimum_baseline_points"]:
         raise ValueError("STATISTICAL_BASELINE_INSUFFICIENT")
     center = sum(values) / len(values)
     variance = sum((value - center) ** 2 for value in values) / len(values)
     deviation = math.sqrt(variance)
     return (
-        round(center, 6),
-        round(max(0, center - 3 * deviation), 6),
-        round(center + 3 * deviation, 6),
+        round_measurement(center),
+        round_measurement(
+            max(0, center - policy["standard_deviation_multiplier"] * deviation)
+        ),
+        round_measurement(center + policy["standard_deviation_multiplier"] * deviation),
     )
 
 
@@ -534,12 +542,14 @@ async def compare_statistical_analyses(db, project_id, payload, user):
         "before_analysis_id": before["_id"],
         "after_analysis_id": after["_id"],
         "process_improvement_id": proposal.get("_id") if proposal else None,
-        "center_line_delta": round(after["center_line"] - before["center_line"], 6),
-        "control_width_before": round(
-            before["upper_control_limit"] - before["lower_control_limit"], 6
+        "center_line_delta": round_measurement(
+            after["center_line"] - before["center_line"]
         ),
-        "control_width_after": round(
-            after["upper_control_limit"] - after["lower_control_limit"], 6
+        "control_width_before": round_measurement(
+            before["upper_control_limit"] - before["lower_control_limit"]
+        ),
+        "control_width_after": round_measurement(
+            after["upper_control_limit"] - after["lower_control_limit"]
         ),
         "outlier_count_before": len(before.get("outlier_snapshot_refs", [])),
         "outlier_count_after": len(after.get("outlier_snapshot_refs", [])),

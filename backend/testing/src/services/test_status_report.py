@@ -296,10 +296,7 @@ async def generate_status_report_narrative(report_id, payload, user):
         }
     ]
     instruction = json.dumps(
-        {
-            "task": "Soạn bản nháp diễn giải báo cáo trạng thái chỉ từ số liệu và bằng chứng đã cung cấp không tự thay đổi số liệu không tự phê duyệt",
-            "user_instruction": payload.instruction,
-        },
+        {"user_instruction": payload.instruction},
         ensure_ascii=False,
     )
     ai = await request_design_assistance(

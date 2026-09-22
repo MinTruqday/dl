@@ -84,11 +84,11 @@ export default function DefectsPage({ project }) {
       if (!can("defect.triage")) return false;
       if (status === "REJECTED") {
         const configured = project.settings?.action_policies?.["defect.rejected"];
-        return Array.isArray(configured) ? configured.includes(role) : role === "QA_LEAD";
+        return Array.isArray(configured) ? configured.includes(role) : role === "QA";
       }
       if (status === "DUPLICATE") {
         const configured = project.settings?.action_policies?.["defect.duplicate"];
-        return Array.isArray(configured) ? configured.includes(role) : role === "QA_LEAD";
+        return Array.isArray(configured) ? configured.includes(role) : role === "QA";
       }
       return true;
     }

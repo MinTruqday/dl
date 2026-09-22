@@ -20,6 +20,17 @@ _SEARCH_CACHE_TTL_SECONDS = 30
 _SEARCH_CACHE_MAX_SIZE = 512
 
 
+def graph_metadata(metadata):
+    primitive = (str, int, float, bool)
+    return {
+        key: value
+        for key, value in metadata.items()
+        if value is None
+        or isinstance(value, primitive)
+        or (isinstance(value, list) and all(isinstance(item, primitive) for item in value))
+    }
+
+
 def project_artifact_metadata(project_id: str, req: ProjectArtifactIndexRequest):
     return {
         **req.metadata,
@@ -73,6 +84,26 @@ async def index_project_artifact(project_id: str, req: ProjectArtifactIndexReque
             for point_id, text, item_metadata in zip(ids, documents, metadatas)
         ]
     )
+    graph_status = {"status": "UNAVAILABLE", "reason_code": "GRAPH_UNAVAILABLE"}
+    try:
+        from src.knowledge.graph.sync import sync_indexed_artifact
+
+        graph_status = await sync_indexed_artifact(
+            project_id,
+            req.artifact_type,
+            req.artifact_id,
+            req.artifact_version_id,
+            {
+                **graph_metadata(req.metadata),
+                "artifact_version_id": req.artifact_version_id,
+                "title": req.title,
+                "text": req.text[:50000],
+                "status": req.status,
+                "authority": req.authority,
+            },
+        )
+    except Exception:
+        graph_status = {"status": "UNAVAILABLE", "reason_code": "GRAPH_UNAVAILABLE"}
     for key in tuple(_SEARCH_CACHE):
         if key[0] == project_id:
             _SEARCH_CACHE.pop(key, None)
@@ -81,6 +112,7 @@ async def index_project_artifact(project_id: str, req: ProjectArtifactIndexReque
         "project_id": project_id,
         "artifact_version_id": req.artifact_version_id,
         "chunks_count": len(chunks),
+        "graph": graph_status,
     }
 
 

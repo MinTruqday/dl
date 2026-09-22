@@ -61,6 +61,7 @@ from src.services.change_analysis import semantic_changes
 from src.services.design_assistance import ai_contract_metadata, request_design_assistance
 from src.services.linters import requirement_duplicate_score, requirement_findings
 from src.services.project_knowledge import index_artifact
+from src.services.quality_policy import quality_policy
 
 router = APIRouter(prefix="/kiem-thu", tags=["Yêu cầu kiểm thử"])
 
@@ -1481,6 +1482,15 @@ async def baseline_requirement_version(
     )
 
 
+@router.get("/phien-ban-yeu-cau/{version_id}")
+async def get_requirement_version(version_id: str, user: CurrentUser = Depends(get_current_user)):
+    return envelope(
+        await get_project_entity(
+            "requirement_versions", version_id, user, "requirement.version.read"
+        )
+    )
+
+
 @router.post("/du-an/{project_id}/yeu-cau/{requirement_id}/phe-duyet")
 async def approve_requirement(
     project_id: str,
@@ -1782,15 +1792,7 @@ async def lint_requirement(
         }
     ]
     instruction = json.dumps(
-        {
-            "task": "Phân tích chất lượng requirement và đề xuất bản sửa bằng tiếng Việt chỉ dựa trên bằng chứng",
-            "user_instruction": payload.instruction,
-            "constraints": [
-                "Không tự áp dụng đề xuất",
-                "Mỗi finding và đề xuất phải có evidence_refs và reason_codes",
-                "Không thêm quy tắc nghiệp vụ không có trong bằng chứng",
-            ],
-        },
+        {"user_instruction": payload.instruction},
         ensure_ascii=False,
     )
     ai_result = await request_design_assistance(
@@ -2065,7 +2067,7 @@ async def compare_requirement(
             "from_version": by_id[payload.from_version_id],
             "to_version": by_id[payload.to_version_id],
             "changes": changes,
-            "comparison_algorithm_version": "semantic-diff-v1",
+            "comparison_algorithm_version": "semantic_diff",
         }
     )
 
@@ -2223,6 +2225,7 @@ async def find_duplicate_requirements(
         key=lambda item: (-item["score"], item["left_requirement_id"], item["right_requirement_id"])
     )
     candidates = candidates[: payload.limit]
+    scoring = quality_policy()["duplicate_scoring"]["requirement"]
     scan = {
         "_id": new_id("RDS"),
         "project_id": project_id,
@@ -2231,10 +2234,10 @@ async def find_duplicate_requirements(
         "candidate_count": len(candidates),
         "candidates": candidates,
         "algorithm": {
-            "name": "requirement-duplicate-v1",
-            "lexical_weight": 0.65,
-            "term_weight": 0.25,
-            "business_rule_weight": 0.1,
+            "name": scoring["algorithm_name"],
+            "lexical_weight": scoring["lexical_weight"],
+            "term_weight": scoring["semantic_weight"],
+            "business_rule_weight": scoring["rule_weight"],
         },
         "status": "COMPLETED",
         "created_by": user.id,
@@ -2563,7 +2566,7 @@ async def archive_knowledge_source(
         "requirement_documents", document_id, user, "knowledge.manage"
     )
     await require_action_policy(
-        document["project_id"], user, "knowledge.archive", {"QA_LEAD", "BA"}
+        document["project_id"], user, "knowledge.archive", {"QA", "BA"}
     )
     if document.get("status") == "ARCHIVED":
         return envelope(document, revision=document["revision"])
@@ -3725,6 +3728,20 @@ async def validate_requirement_sources(project_id, source_refs):
 
 
 async def index_requirement(version):
+    criteria = await database.value.acceptance_criteria.find(
+        {
+            "project_id": version["project_id"],
+            "requirement_version_id": version["_id"],
+        },
+        {"_id": 1},
+    ).to_list(1000)
+    source_document_ids = list(
+        dict.fromkeys(
+            item.get("requirement_document_id")
+            for item in version.get("source_refs", [])
+            if item.get("requirement_document_id")
+        )
+    )
     indexed = await index_artifact(
         version["project_id"],
         "requirement_version",
@@ -3735,6 +3752,8 @@ async def index_requirement(version):
         version.get("status", "DRAFT"),
         "APPROVED_SOURCE" if version.get("status") == "BASELINED" else "DRAFT",
         version.get("version"),
+        acceptance_criterion_ids=[item["_id"] for item in criteria],
+        source_document_ids=source_document_ids,
     )
     await database.value.requirement_versions.update_one(
         {"_id": version["_id"]},

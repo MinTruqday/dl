@@ -7,6 +7,7 @@ from langchain_core.tools import tool
 from pydantic import Field
 
 from src.core.infrastructure.configuration import settings
+from src.prompts.testing import LINT_REQUIREMENT_INSTRUCTION
 from src.tools.http_client import INTERNAL_API_URL, make_api_request
 
 
@@ -351,7 +352,7 @@ async def lint_requirement(
         config,
         {
             "idempotency_key": f"agent-requirement-analysis-{uuid4().hex}",
-            "instruction": "Phân tích chất lượng và đề xuất bản sửa có căn cứ",
+            "instruction": LINT_REQUIREMENT_INSTRUCTION,
         },
     )
 

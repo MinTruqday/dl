@@ -18,7 +18,7 @@ const DEFAULT_RULES = {
   revision: 0,
   enabled_events: [],
   channels: ["in_app"],
-  target_roles: ["QA_LEAD"],
+  target_roles: ["QA"],
   escalation_minutes: "",
 };
 

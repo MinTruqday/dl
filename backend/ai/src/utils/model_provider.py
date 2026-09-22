@@ -71,7 +71,8 @@ class HostedModelClient:
         response_schema: dict[str, Any] | None = None,
     ):
         payload = self._payload(model, messages, max_tokens, temperature, response_schema)
-        for attempt in range(3):
+        maximum_attempts = max(1, settings.AGENT_MAX_RETRIES + 1)
+        for attempt in range(maximum_attempts):
             try:
                 async with httpx.AsyncClient(timeout=settings.MODEL_TIMEOUT_SECONDS) as client:
                     response = await client.post(
@@ -80,7 +81,7 @@ class HostedModelClient:
                 response.raise_for_status()
                 break
             except Exception as provider_error:
-                if attempt == 2 or not self._can_retry(provider_error):
+                if attempt == maximum_attempts - 1 or not self._can_retry(provider_error):
                     raise
                 logger.warning(
                     "Hosted model request retry attempt={} error_type={}",
@@ -156,7 +157,8 @@ class HostedModelClient:
         emitted = False
         prompt_tokens = 0
         completion_tokens = 0
-        for attempt in range(3):
+        maximum_attempts = max(1, settings.AGENT_MAX_RETRIES + 1)
+        for attempt in range(maximum_attempts):
             try:
                 async with httpx.AsyncClient(timeout=settings.MODEL_TIMEOUT_SECONDS) as client:
                     async with client.stream(
@@ -190,7 +192,11 @@ class HostedModelClient:
                                 yield SimpleNamespace(choices=[SimpleNamespace(delta=delta)])
                 break
             except Exception as provider_error:
-                if emitted or attempt == 2 or not self._can_retry(provider_error):
+                if (
+                    emitted
+                    or attempt == maximum_attempts - 1
+                    or not self._can_retry(provider_error)
+                ):
                     self._runtime_status = "unavailable"
                     raise ModelProviderUnavailable(
                         "configured_model_unavailable"
@@ -252,7 +258,8 @@ class HostedAuxiliaryClient:
         return False
 
     async def _post(self, model: str, payload: dict[str, Any]) -> Any:
-        for attempt in range(3):
+        maximum_attempts = max(1, settings.AGENT_MAX_RETRIES + 1)
+        for attempt in range(maximum_attempts):
             try:
                 async with httpx.AsyncClient(timeout=settings.MODEL_TIMEOUT_SECONDS) as client:
                     response = await client.post(
@@ -264,7 +271,7 @@ class HostedAuxiliaryClient:
                     raise ModelProviderUnavailable("hosted_auxiliary_model_error")
                 return body
             except Exception as provider_error:
-                if attempt == 2 or not self._can_retry(provider_error):
+                if attempt == maximum_attempts - 1 or not self._can_retry(provider_error):
                     raise ModelProviderUnavailable(
                         "hosted_auxiliary_model_unavailable"
                     ) from provider_error

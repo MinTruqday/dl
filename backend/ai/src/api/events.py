@@ -1,17 +1,18 @@
 import asyncio
 from typing import Literal
+from uuid import uuid4
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from loguru import logger
 
-from src.agents.workflow.events import (
+from src.core.dependency import Role, require_role, verify_internal_token
+from src.runtime.events import (
     AgentEvent,
     CronSchedule,
     EventType,
     cron_scheduler,
     event_processor,
 )
-from src.core.dependency import Role, require_role, verify_internal_token
 from src.schemas.events import CreateScheduleRequest, ManualTriggerRequest, WebhookPayload
 
 router = APIRouter(prefix="/su-kien")
@@ -19,7 +20,6 @@ router = APIRouter(prefix="/su-kien")
 
 @router.post("/moc-goi", dependencies=[Depends(verify_internal_token)])
 async def receive_webhook(body: WebhookPayload):
-    """Validate and enqueue an internal agent event webhook"""
     try:
         event_type_str = body.event_type.lower()
         event_type_map = {
@@ -33,7 +33,7 @@ async def receive_webhook(body: WebhookPayload):
         event_type = event_type_map[event_type_str]
 
         event = AgentEvent(
-            event_id=str(uuid.uuid4()),
+            event_id=str(uuid4()),
             event_type=event_type,
             payload=body.payload,
             source=body.source,
@@ -57,9 +57,8 @@ async def receive_webhook(body: WebhookPayload):
 async def document_uploaded_webhook(
     document_id: str, user_id: str = "", superseded_document_id: str = ""
 ):
-    """Enqueue a document upload event for indexing and verification"""
     event = AgentEvent(
-        event_id=str(uuid.uuid4()),
+        event_id=str(uuid4()),
         event_type=EventType.DOCUMENT_UPLOADED,
         payload={
             "document_id": document_id,
@@ -77,13 +76,11 @@ async def document_uploaded_webhook(
 
 @router.get("/lich-trinh", dependencies=[Depends(require_role([Role.ADMIN]))])
 async def list_schedules():
-    """List every registered recurring agent schedule"""
     return {"schedules": cron_scheduler.list_schedules(), "total": len(cron_scheduler._schedules)}
 
 
 @router.post("/lich-trinh", dependencies=[Depends(require_role([Role.ADMIN]))])
 async def create_schedule(req: CreateScheduleRequest):
-    """Create and activate an administrator managed recurring event"""
     event_type_map = {
         "system_heartbeat": EventType.SYSTEM_HEARTBEAT,
         "document_uploaded": EventType.DOCUMENT_UPLOADED,
@@ -93,7 +90,7 @@ async def create_schedule(req: CreateScheduleRequest):
     event_type = event_type_map.get(req.event_type, EventType.SYSTEM_HEARTBEAT)
 
     schedule = CronSchedule(
-        schedule_id=str(uuid.uuid4()),
+        schedule_id=str(uuid4()),
         name=req.name,
         cron_expression=f"*/{req.interval_seconds // 60 or 1} * * * *",
         interval_seconds=req.interval_seconds,
@@ -118,7 +115,6 @@ async def create_schedule(req: CreateScheduleRequest):
 
 @router.delete("/lich-trinh/{schedule_id}", dependencies=[Depends(require_role([Role.ADMIN]))])
 async def delete_schedule(schedule_id: str):
-    """Delete one recurring agent schedule"""
     if schedule_id not in cron_scheduler._schedules:
         raise HTTPException(status_code=404, detail={"code": "schedule_not_found"})
     cron_scheduler.unregister(schedule_id)
@@ -129,7 +125,6 @@ async def delete_schedule(schedule_id: str):
     "/lich-trinh/{schedule_id}/trang-thai", dependencies=[Depends(require_role([Role.ADMIN]))]
 )
 async def toggle_schedule(schedule_id: str):
-    """Enable or disable one recurring agent schedule"""
     schedule = cron_scheduler._schedules.get(schedule_id)
     if not schedule:
         raise HTTPException(status_code=404, detail={"code": "schedule_not_found"})
@@ -139,19 +134,16 @@ async def toggle_schedule(schedule_id: str):
 
 @router.get("/trang-thai", dependencies=[Depends(require_role([Role.ADMIN]))])
 async def event_loop_status():
-    """Return event queue and worker runtime statistics"""
     return event_processor.get_stats()
 
 
 @router.get("/lich-su", dependencies=[Depends(require_role([Role.ADMIN]))])
 async def event_history(limit: int = Query(default=20, ge=1, le=200)):
-    """Return recently processed agent events"""
     return {"events": event_processor.get_recent_events(limit=limit)}
 
 
 @router.get("/cap-nhat", dependencies=[Depends(require_role([Role.ADMIN]))])
 async def system_updates(limit: int = Query(default=20, ge=1, le=200)):
-    """Return recent state updates emitted by agent events"""
     updates = event_processor.update_registry.get_recent(limit=limit)
     return {
         "updates": [
@@ -174,7 +166,6 @@ async def manual_trigger(
     event_type: Literal["heartbeat", "document_uploaded", "user_query"],
     req: ManualTriggerRequest = Body(default_factory=ManualTriggerRequest),
 ):
-    """Trigger a supported agent event immediately"""
     event_type_map = {
         "heartbeat": EventType.SYSTEM_HEARTBEAT,
         "document_uploaded": EventType.DOCUMENT_UPLOADED,
@@ -182,10 +173,7 @@ async def manual_trigger(
     }
     et = event_type_map[event_type]
     event = AgentEvent(
-        event_id=str(uuid.uuid4()), event_type=et, payload=req.payload, source="manual_trigger"
+        event_id=str(uuid4()), event_type=et, payload=req.payload, source="manual_trigger"
     )
     result = await event_processor.handle_event(event)
     return {"status": "triggered", "event_id": event.event_id, "result": result}
-
-
-import uuid

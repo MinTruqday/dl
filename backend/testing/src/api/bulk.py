@@ -15,6 +15,7 @@ from src.domain.schemas import (
     BulkTagInput,
     ProposalAction,
 )
+from src.services.domain_policy import domain_policy
 
 router = APIRouter(prefix="/kiem-thu", tags=["Tác vụ kiểm thử hàng loạt"])
 
@@ -462,7 +463,12 @@ async def bulk_approve_proposals(
     replay = await replay_operation(project_id, idempotency_key)
     if replay:
         return replay
-    threshold = float(project.get("settings", {}).get("impact_confidence_threshold", 0.75))
+    policy = domain_policy("proposal_approval")
+    threshold = float(
+        project.get("settings", {}).get(
+            "impact_confidence_threshold", policy["impact_confidence_default"]
+        )
+    )
     succeeded = []
     failed = []
     results = []

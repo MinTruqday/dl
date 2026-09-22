@@ -152,7 +152,7 @@ export default function MetricDefinitionPanel({ project }) {
         target: answer.target === "" ? null : Number(answer.target),
         warning_threshold: answer.warning === "" ? null : Number(answer.warning),
         critical_threshold: answer.critical === "" ? null : Number(answer.critical),
-        owner_role: "QA_LEAD",
+        owner_role: "QA",
       });
       await load();
     } catch (reason) {

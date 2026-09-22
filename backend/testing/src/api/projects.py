@@ -54,7 +54,7 @@ async def create_project(payload: ProjectCreate, user: CurrentUser = Depends(get
         "_id": new_id("PM"),
         "project_id": project["_id"],
         "user_id": user.id,
-        "project_role": "QA_LEAD",
+        "project_role": "QA",
         "status": "ACTIVE",
         "membership_revision": 1,
         "created_by": user.id,
@@ -82,7 +82,7 @@ async def create_project(payload: ProjectCreate, user: CurrentUser = Depends(get
         {
             **project,
             "current_membership": membership,
-            "current_permissions": sorted(permissions_for_role("QA_LEAD", project["settings"])),
+            "current_permissions": sorted(permissions_for_role("QA", project["settings"])),
         },
         revision=1,
     )
@@ -571,16 +571,16 @@ async def update_project_member(
     }
     desired_role = changes.get("project_role", previous.get("project_role"))
     desired_status = changes.get("status", previous.get("status"))
-    was_active_lead = (
-        previous.get("project_role") == "QA_LEAD" and previous.get("status") == "ACTIVE"
+    was_active_qa = (
+        previous.get("project_role") == "QA" and previous.get("status") == "ACTIVE"
     )
-    remains_active_lead = desired_role == "QA_LEAD" and desired_status == "ACTIVE"
-    if was_active_lead and not remains_active_lead:
-        lead_count = await database.value.project_members.count_documents(
-            {"project_id": project_id, "project_role": "QA_LEAD", "status": "ACTIVE"}
+    remains_active_qa = desired_role == "QA" and desired_status == "ACTIVE"
+    if was_active_qa and not remains_active_qa:
+        qa_count = await database.value.project_members.count_documents(
+            {"project_id": project_id, "project_role": "QA", "status": "ACTIVE"}
         )
-        if lead_count <= 1:
-            raise HTTPException(status_code=422, detail={"code": "PROJECT_LAST_QA_LEAD_REQUIRED"})
+        if qa_count <= 1:
+            raise HTTPException(status_code=422, detail={"code": "PROJECT_LAST_QA_REQUIRED"})
     changes["updated_at"] = now()
     membership = await database.value.project_members.find_one_and_update(
         {
@@ -604,14 +604,14 @@ async def update_project_member(
                 "current_revision": existing["membership_revision"],
             },
         )
-    remains_active_lead = (
-        membership.get("project_role") == "QA_LEAD" and membership.get("status") == "ACTIVE"
+    remains_active_qa = (
+        membership.get("project_role") == "QA" and membership.get("status") == "ACTIVE"
     )
-    if was_active_lead and not remains_active_lead:
-        lead_count = await database.value.project_members.count_documents(
-            {"project_id": project_id, "project_role": "QA_LEAD", "status": "ACTIVE"}
+    if was_active_qa and not remains_active_qa:
+        qa_count = await database.value.project_members.count_documents(
+            {"project_id": project_id, "project_role": "QA", "status": "ACTIVE"}
         )
-        if lead_count == 0:
+        if qa_count == 0:
             await database.value.project_members.update_one(
                 {
                     "_id": membership["_id"],
@@ -627,7 +627,7 @@ async def update_project_member(
                     "$inc": {"membership_revision": 1},
                 },
             )
-            raise HTTPException(status_code=422, detail={"code": "PROJECT_LAST_QA_LEAD_REQUIRED"})
+            raise HTTPException(status_code=422, detail={"code": "PROJECT_LAST_QA_REQUIRED"})
     await audit(
         user.id,
         "project_member_updated",
@@ -649,12 +649,12 @@ async def remove_project_member(
     )
     if not membership:
         raise HTTPException(status_code=404, detail={"code": "ENTITY_NOT_FOUND"})
-    if membership.get("project_role") == "QA_LEAD" and membership.get("status") == "ACTIVE":
-        lead_count = await database.value.project_members.count_documents(
-            {"project_id": project_id, "project_role": "QA_LEAD", "status": "ACTIVE"}
+    if membership.get("project_role") == "QA" and membership.get("status") == "ACTIVE":
+        qa_count = await database.value.project_members.count_documents(
+            {"project_id": project_id, "project_role": "QA", "status": "ACTIVE"}
         )
-        if lead_count <= 1:
-            raise HTTPException(status_code=422, detail={"code": "PROJECT_LAST_QA_LEAD_REQUIRED"})
+        if qa_count <= 1:
+            raise HTTPException(status_code=422, detail={"code": "PROJECT_LAST_QA_REQUIRED"})
     await database.value.project_members.delete_one(
         {"project_id": project_id, "user_id": member_user_id}
     )

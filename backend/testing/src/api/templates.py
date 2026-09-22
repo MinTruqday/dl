@@ -154,7 +154,7 @@ async def archive_template(
         "test_case_templates", template_id, user, "testcase.template.manage"
     )
     await require_action_policy(
-        template["project_id"], user, "testcase.template.archive", {"QA_LEAD"}
+        template["project_id"], user, "testcase.template.archive", {"QA"}
     )
     if template.get("status") == "ARCHIVED":
         return envelope(template, revision=template.get("revision", 1))

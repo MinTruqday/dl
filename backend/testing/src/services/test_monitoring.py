@@ -553,7 +553,7 @@ async def create_monitoring_snapshot(project_id, payload: MonitoringSnapshotCrea
             if item.get("status") in {"WARN", "INSUFFICIENT_DATA", "MANUAL_REQUIRED"}
         ],
         "evaluated_at": timestamp,
-        "engine_version": "exit-criteria-v1",
+        "engine_version": "exit_criteria",
     }
     snapshot["gate_evaluation_id"] = gate_evaluation["_id"]
     try:
@@ -818,7 +818,7 @@ async def get_quality_gate(snapshot_id, user):
                 if item.get("status") in {"WARN", "INSUFFICIENT_DATA", "MANUAL_REQUIRED"}
             ],
             "evaluated_at": snapshot.get("snapshot_at"),
-            "engine_version": "exit-criteria-v1",
+            "engine_version": "exit_criteria",
         }
     return gate
 

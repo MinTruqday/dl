@@ -31,7 +31,7 @@ async def make_api_request(method: str, url: str, **kwargs) -> httpx.Response:
             headers["Idempotency-Key"] = str(uuid.uuid4())
         kwargs["headers"] = headers
 
-    max_retries = 3 if method.upper() == "GET" else 1
+    max_retries = max(1, settings.AGENT_MAX_RETRIES + 1) if method.upper() == "GET" else 1
     client = get_client()
     parsed_url = urlsplit(url)
     target = f"{parsed_url.hostname or 'unknown'}{parsed_url.path}"

@@ -64,10 +64,6 @@ async def setup_indexes():
                 IndexModel([("session_id", ASCENDING), ("created_at", ASCENDING)]),
                 IndexModel([("user_id", ASCENDING), ("created_at", DESCENDING)]),
             ],
-            "knowledge_feedback": [
-                IndexModel([("user_id", ASCENDING), ("vote_type", ASCENDING)]),
-                IndexModel([("session_id", ASCENDING), ("message_id", ASCENDING)]),
-            ],
             "retrieval_audit": [
                 IndexModel([("requester_id", ASCENDING), ("created_at", DESCENDING)]),
                 IndexModel([("document_ids", ASCENDING), ("created_at", DESCENDING)]),
@@ -75,6 +71,16 @@ async def setup_indexes():
             "ai_workspaces": [
                 IndexModel([("user_id", ASCENDING), ("updated_at", DESCENDING)]),
                 IndexModel([("user_id", ASCENDING), ("status", ASCENDING)]),
+            ],
+            "agent_runs": [
+                IndexModel([("project_id", ASCENDING), ("updated_at", DESCENDING)]),
+                IndexModel([("user_id", ASCENDING), ("updated_at", DESCENDING)]),
+                IndexModel([("status", ASCENDING), ("updated_at", DESCENDING)]),
+            ],
+            "project_memory": [
+                IndexModel([("project_id", ASCENDING), ("created_at", DESCENDING)]),
+                IndexModel([("project_id", ASCENDING), ("trusted", ASCENDING)]),
+                IndexModel([("run_id", ASCENDING)], unique=True),
             ],
         }
         for collection_name, indexes in index_sets.items():

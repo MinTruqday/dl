@@ -1,0 +1,80 @@
+{
+  "duplicate_detection": {
+    "test_case_minimum": 0.72,
+    "defect_minimum": 0.65,
+    "maximum_pairs": 100
+  },
+  "trace_recovery": {
+    "minimum_score": 0.18,
+    "maximum_candidates_per_test": 3
+  },
+  "trace_suggestion": {
+    "ai_confidence": 0.9,
+    "manual_confidence": 1.0
+  },
+  "knowledge_retrieval": {
+    "lexical_weight": 0.45,
+    "semantic_weight": 0.55,
+    "snippet_character_limit": 1000
+  },
+  "change_analysis": {
+    "tracked_fields": ["title", "actors", "business_rules", "dependencies"],
+    "content_confidence_minimum": 0.55,
+    "content_confidence_ratio_divisor": 2.0,
+    "direct_trace_confidence": 0.78,
+    "indirect_trace_confidence": 0.45,
+    "evidence_text_limit": 500
+  },
+  "risk_scoring": {
+    "levels": {"critical": 1.0, "high": 0.8, "medium": 0.5, "low": 0.25},
+    "default_level": 0.5,
+    "risk_weight": 0.45,
+    "priority_weight": 0.25,
+    "stale_increment": 0.2,
+    "failure_increment": 0.1,
+    "failure_maximum": 0.4
+  },
+  "defect_trace": {
+    "text_weight": 0.7,
+    "requirement_direct_increment": 0.35,
+    "requirement_test_trace_increment": 0.2,
+    "requirement_minimum": 0.25,
+    "requirement_text_reason_minimum": 0.3,
+    "test_shared_requirement_increment": 0.25,
+    "test_direct_increment": 0.3,
+    "test_minimum": 0.3,
+    "test_text_reason_minimum": 0.35,
+    "high_confidence_minimum": 0.75,
+    "medium_confidence_minimum": 0.5,
+    "maximum_candidates": 50
+  },
+  "impact_analysis": {
+    "semantic_candidate_minimum": 0.2,
+    "semantic_confidence_base": 0.55,
+    "semantic_confidence_weight": 0.35,
+    "semantic_confidence_maximum": 0.9,
+    "ai_confidence_minimum": 0.7,
+    "combined_confidence_target": 0.9
+  },
+  "causal_analysis": {
+    "reopen_threshold_default": 2,
+    "reopen_threshold_minimum": 1,
+    "duplicate_threshold_default": 3,
+    "duplicate_threshold_minimum": 2,
+    "trigger_severities": ["BLOCKER", "CRITICAL"],
+    "maximum_five_whys": 5
+  },
+  "proposal_approval": {
+    "impact_confidence_default": 0.75
+  },
+  "process_control": {
+    "minimum_baseline_points": 5,
+    "standard_deviation_multiplier": 3,
+    "measurement_precision": 6
+  },
+  "secret_detection": {
+    "field_name_pattern": "token|secret|password|authorization|cookie|api[-_]?key",
+    "raw_assignment_pattern": "(password|secret|token|api[_-]?key)\\s*[:=]\\s*['\\\"](?!\\$\\{|<)[^'\\\"]{4,}['\\\"]",
+    "placeholder_pattern": "[A-Z][A-Z0-9_]{0,99}"
+  }
+}

@@ -1,0 +1,133 @@
+{
+  "requirement": [
+    {
+      "rule_id": "MISSING_REQUIREMENT_CONTENT",
+      "severity": "error",
+      "condition": {"text_empty": "content"},
+      "message": "Nội dung yêu cầu đang để trống",
+      "suggestion": "Nhập mô tả phạm vi hoặc chức năng mà hệ thống phải đáp ứng",
+      "target_field": "content"
+    },
+    {
+      "rule_id": "MISSING_ACTOR",
+      "severity": "error",
+      "condition": {"values_empty": "actors"},
+      "message": "Yêu cầu chưa xác định tác nhân",
+      "suggestion": "Bổ sung tác nhân thực hiện hoặc chịu tác động",
+      "target_field": "actors"
+    },
+    {
+      "rule_id": "MISSING_BUSINESS_RULE",
+      "severity": "error",
+      "condition": {"values_empty": "business_rules"},
+      "message": "Yêu cầu chưa có quy tắc nghiệp vụ",
+      "suggestion": "Bổ sung quy tắc có căn cứ hoặc xác nhận rõ yêu cầu không có quy tắc nghiệp vụ",
+      "target_field": "business_rules"
+    },
+    {
+      "rule_id": "MISSING_ACCEPTANCE_CRITERIA",
+      "severity": "error",
+      "condition": {"values_empty": "acceptance_criteria"},
+      "message": "Yêu cầu chưa có tiêu chí chấp nhận",
+      "suggestion": "Bổ sung ít nhất một điều kiện chấp nhận có thể kiểm thử",
+      "target_field": "acceptance_criteria"
+    }
+  ],
+  "acceptance_criterion": [
+    {
+      "rule_id": "EMPTY_ACCEPTANCE_CRITERION",
+      "severity": "error",
+      "condition": {"text_empty": "text"},
+      "message": "Tiêu chí {key} đang để trống",
+      "suggestion": "Nhập điều kiện kích hoạt và hành vi quan sát được",
+      "target_field": "acceptance_criteria"
+    }
+  ],
+  "test_case": [
+    {
+      "rule_id": "TCQ-001",
+      "severity": "error",
+      "condition": {"text_empty": "expected_result_doc"},
+      "message": "Thiếu kết quả mong đợi",
+      "suggestion": "Cập nhật kết quả mong đợi rồi chạy kiểm tra lại"
+    },
+    {
+      "rule_id": "TCQ-002",
+      "severity": "warning",
+      "condition": {"text_empty": "preconditions_doc"},
+      "message": "Thiếu điều kiện tiên quyết",
+      "suggestion": "Cập nhật điều kiện tiên quyết rồi chạy kiểm tra lại"
+    },
+    {
+      "rule_id": "TCQ-005",
+      "severity": "error",
+      "condition": {
+        "all": [
+          {"values_empty": "requirement_version_ids"},
+          {"values_empty": "acceptance_criterion_ids"}
+        ]
+      },
+      "message": "Ca kiểm thử chưa có liên kết truy vết",
+      "suggestion": "Liên kết yêu cầu hoặc tiêu chí chấp nhận rồi chạy kiểm tra lại"
+    },
+    {
+      "rule_id": "TCQ-009",
+      "severity": "warning",
+      "condition": {
+        "all": [
+          {"values_empty": "test_data"},
+          {"collection_values_empty": {"path": "steps", "field": "test_data"}}
+        ]
+      },
+      "message": "Thiếu dữ liệu kiểm thử",
+      "suggestion": "Bổ sung dữ liệu kiểm thử cho ca hoặc từng bước"
+    }
+  ],
+  "test_step": [
+    {
+      "rule_id": "TCQ-001",
+      "severity": "warning",
+      "condition": {"text_empty": "expected_doc"},
+      "message": "Bước chưa có kết quả mong đợi",
+      "suggestion": "Bổ sung kết quả mong đợi cho bước rồi chạy kiểm tra lại"
+    }
+  ],
+  "test_basis": [
+    {
+      "rule_id": "EMPTY_EXPECTED_BEHAVIOR",
+      "severity": "BLOCKER",
+      "condition": {"text_empty": "text"},
+      "message": "Nội dung kiểm thử đang trống",
+      "suggestion": "Bổ sung tiêu chí quan sát được và có thể kiểm chứng",
+      "category": "UNTESTABLE"
+    }
+  ],
+  "duplicate_scoring": {
+    "precision": 4,
+    "term_pattern": "[\\wÀ-ỹ]+",
+    "requirement": {
+      "algorithm_name": "requirement_duplicate",
+      "lexical_weight": 0.65,
+      "semantic_weight": 0.25,
+      "rule_weight": 0.1,
+      "lexical_reason_threshold": 0.75,
+      "semantic_reason_threshold": 0.55,
+      "rule_reason_threshold": 0,
+      "exact_reason": "Nội dung yêu cầu trùng khớp hoàn toàn",
+      "lexical_reason": "Tiêu đề và nội dung gần giống",
+      "semantic_reason": "Có nhiều thuật ngữ nghiệp vụ chung",
+      "rule_reason": "Có quy tắc nghiệp vụ trùng nhau"
+    },
+    "test_case": {
+      "lexical_weight": 0.6,
+      "trace_weight": 0.25,
+      "structure_weight": 0.15,
+      "lexical_reason_threshold": 0.75,
+      "trace_reason_threshold": 0,
+      "structure_reason_threshold": 0.8,
+      "lexical_reason": "Nội dung và kết quả mong đợi gần giống",
+      "trace_reason": "Cùng liên kết yêu cầu hoặc tiêu chí chấp nhận",
+      "structure_reason": "Cấu trúc bước tương đồng"
+    }
+  }
+}

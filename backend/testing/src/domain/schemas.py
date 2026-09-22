@@ -63,12 +63,12 @@ class ProjectArchiveInput(BaseModel):
 
 class ProjectMemberCreate(BaseModel):
     user_id: str = Field(min_length=1, max_length=200)
-    project_role: Literal["QA_LEAD", "TESTER", "BA", "DEVELOPER", "VIEWER"]
+    project_role: Literal["QA", "TESTER", "BA", "DEVELOPER", "VIEWER"]
 
 
 class ProjectMemberPatch(BaseModel):
     expected_revision: int = Field(ge=1)
-    project_role: Literal["QA_LEAD", "TESTER", "BA", "DEVELOPER", "VIEWER"] | None = None
+    project_role: Literal["QA", "TESTER", "BA", "DEVELOPER", "VIEWER"] | None = None
     status: Literal["ACTIVE", "INACTIVE"] | None = None
 
 
@@ -581,7 +581,7 @@ class ImpactRerunInput(BaseModel):
     expected_revision: int = Field(ge=1)
     reason: str = Field(min_length=2, max_length=2000)
     knowledge_index_version: str | None = Field(default=None, max_length=200)
-    algorithm_version: Literal["impact-pipeline-v1"] = "impact-pipeline-v1"
+    algorithm_version: Literal["impact_pipeline"] = "impact_pipeline"
 
 
 class ChangeSetReviewInput(BaseModel):
@@ -848,8 +848,8 @@ class ProjectNotificationRulePatch(BaseModel):
     channels: list[Literal["in_app", "email", "webhook"]] = Field(
         default_factory=lambda: ["in_app"], max_length=3
     )
-    target_roles: list[Literal["QA_LEAD", "TESTER", "BA", "DEVELOPER", "VIEWER"]] = Field(
-        default_factory=lambda: ["QA_LEAD"], max_length=5
+    target_roles: list[Literal["QA", "TESTER", "BA", "DEVELOPER", "VIEWER"]] = Field(
+        default_factory=lambda: ["QA"], max_length=5
     )
     escalation_minutes: int | None = Field(default=None, ge=1, le=10080)
 

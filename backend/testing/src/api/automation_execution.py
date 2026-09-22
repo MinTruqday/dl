@@ -16,18 +16,22 @@ from src.domain.schemas import (
     AutomationExecutionCreate,
     AutomationExecutionResultInput,
 )
+from src.services.domain_policy import domain_policy
 
 router = APIRouter(prefix="/kiem-thu", tags=["Thực thi tự động"])
 internal_router = APIRouter(
     prefix="/noi-bo/kiem-thu/thuc-thi-tu-dong", tags=["Thực thi tự động nội bộ"]
 )
-SECRET_PATTERN = re.compile(r"(?i)(token|secret|password|authorization|cookie|api[-_]?key)")
+
+
+def secret_pattern():
+    return re.compile(domain_policy("secret_detection")["field_name_pattern"], re.I)
 
 
 def redact(value):
     if isinstance(value, dict):
         return {
-            key: "Đã ẩn" if SECRET_PATTERN.search(str(key)) else redact(item)
+            key: "Đã ẩn" if secret_pattern().search(str(key)) else redact(item)
             for key, item in value.items()
         }
     if isinstance(value, list):
@@ -205,7 +209,7 @@ async def start_automation_execution(
         "event": f"automation.{runner}.requested",
         "project_id": execution["project_id"],
         "artifact_version_id": execution_id,
-        "model_version": f"{runner}-v1",
+        "model_version": runner,
         "requester_id": user.id,
         "requester_email": user.email,
         "payload": {"execution_id": execution_id, **execution["runner_payload"]},

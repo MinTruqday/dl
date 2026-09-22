@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import DataTable from "../../components/DataTable";
+import AgentRunPanel from "../../components/AgentRunPanel";
 import ProposalDiffPanel from "../../components/ProposalDiffPanel";
 import {
   ErrorState,
@@ -118,6 +119,7 @@ export default function ReviewQueuePage({ project }) {
   return (
     <WorkspacePage title="Rà soát đề xuất AI" actions={<ProjectCrumb projectId={project._id} />}>
       {error && <ErrorState message={error} />}
+      <AgentRunPanel project={project} />
       <Panel
         title="Đề xuất đang chờ"
         actions={

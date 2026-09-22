@@ -72,6 +72,19 @@ async def run_chat_completion(
                 len(content),
                 int((time.monotonic() - started_at) * 1000),
             )
+            from src.services.agent_metrics import agentops
+            from src.services.token_accounting import record_usage
+
+            usage = record_usage(response, input_chars, len(content))
+            session_id = agentops.current_session_id()
+            if session_id:
+                agentops.record_llm_call(
+                    session_id,
+                    model,
+                    usage["input_tokens"],
+                    usage["output_tokens"],
+                    int((time.monotonic() - attempt_started_at) * 1000),
+                )
             return content
         except asyncio.CancelledError:
             logger.warning(

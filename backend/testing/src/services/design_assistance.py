@@ -113,7 +113,7 @@ async def request_design_assistance(capability, project_id, instruction, evidenc
             },
             "prompt_version": "unavailable",
             "tool_schema_version": "1",
-            "retrieval_version": "project-filter-v1",
+            "retrieval_version": "project_evidence",
             "created_at": datetime.now(timezone.utc).isoformat(),
             "error_type": type(error).__name__,
             "latency_ms": latency_ms,

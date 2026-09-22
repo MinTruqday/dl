@@ -19,6 +19,7 @@ from src.services.change_analysis import (
     semantic_candidate_score,
     semantic_changes,
 )
+from src.services.domain_policy import domain_policy
 from src.services.impact_assistance import (
     ai_new_test_requirements,
     apply_ai_impact_suggestions,
@@ -105,7 +106,7 @@ async def create_change_set(
         "from_version_id": payload.from_version_id,
         "to_version_id": payload.to_version_id,
         "changes": changes,
-        "model_version": "semantic-diff-v1",
+        "model_version": "semantic_diff",
         "status": "READY",
         "revision": 1,
         "created_by": user.id,
@@ -120,6 +121,23 @@ async def create_change_set(
         change_set["_id"],
         requirement["project_id"],
         {"change_count": len(changes)},
+    )
+    await index_artifact(
+        requirement["project_id"],
+        "change",
+        change_set["_id"],
+        change_set["_id"],
+        change_set["_id"],
+        " ".join(
+            [
+                change_set["_id"],
+                *[str(item.get("subject") or item.get("type") or "") for item in changes],
+            ]
+        ),
+        change_set["status"],
+        "PROJECT_REFERENCE",
+        change_set["revision"],
+        requirement_version_ids=[payload.from_version_id, payload.to_version_id],
     )
     return envelope(change_set)
 
@@ -213,7 +231,7 @@ async def create_impact_analysis_snapshot(
     change_set_id,
     project_id,
     user,
-    model_version="agentic-hybrid-v1",
+    model_version="evidence_impact_analysis",
     allow_existing=True,
     supersedes=None,
     rerun_input=None,
@@ -281,16 +299,25 @@ async def create_impact_analysis_snapshot(
         ]
     )
     impacted = []
+    impact_policy = domain_policy("impact_analysis")
     for version in versions:
         direct_trace = version["_id"] in direct_targets
         semantic_score = semantic_candidate_score(
             requirement_text, str(version.get("plain_text_projection", ""))
         )
         item = classify_test_impact(version, change_set["changes"], direct_trace)
-        if not direct_trace and semantic_score >= 0.2:
+        if not direct_trace and semantic_score >= impact_policy["semantic_candidate_minimum"]:
             item["classification"] = "POTENTIALLY_AFFECTED"
             item["confidence"] = max(
-                item["confidence"], round(min(0.9, 0.55 + semantic_score * 0.35), 4)
+                item["confidence"],
+                round(
+                    min(
+                        impact_policy["semantic_confidence_maximum"],
+                        impact_policy["semantic_confidence_base"]
+                        + semantic_score * impact_policy["semantic_confidence_weight"],
+                    ),
+                    4,
+                ),
             )
             item["reasons"].append(
                 "Ứng viên semantic có nội dung giao nhau với Requirement thay đổi"
@@ -322,7 +349,7 @@ async def create_impact_analysis_snapshot(
         "mode": "AI_ASSISTED" if ai_result.get("status") == "SUCCESS" else "DEGRADED_AI",
         "model_version": model_version,
         "algorithm_version": (
-            rerun_input.algorithm_version if rerun_input else "impact-pipeline-v1"
+            rerun_input.algorithm_version if rerun_input else "impact_pipeline"
         ),
         "knowledge_index_version": (rerun_input.knowledge_index_version if rerun_input else None),
         "snapshot_number": int((supersedes or {}).get("snapshot_number", 1)) + 1
@@ -413,7 +440,7 @@ async def rerun_impact_analysis(
             analysis["change_set_id"],
             analysis["project_id"],
             user,
-            model_version=f"agentic-hybrid-v1-rerun-{snapshot_number}",
+            model_version=f"evidence_impact_analysis-rerun-{snapshot_number}",
             allow_existing=False,
             supersedes=analysis,
             rerun_input=payload,
@@ -628,7 +655,7 @@ async def create_maintenance_proposals(
             "evidence": item["evidence"] + change_set["changes"],
             "status": "PENDING",
             "revision": 1,
-            "model_version": "maintenance-agent-v1",
+            "model_version": "maintenance_analysis",
             "created_by": user.id,
             "created_at": now(),
             "updated_at": now(),
@@ -652,7 +679,7 @@ async def create_maintenance_proposals(
                 "evidence": item["evidence"],
                 "status": "PENDING",
                 "revision": 1,
-                "model_version": "maintenance-agent-v1",
+                "model_version": "maintenance_analysis",
                 "created_by": user.id,
                 "created_at": now(),
                 "updated_at": now(),
@@ -893,7 +920,7 @@ async def regenerate_proposal(
         "regeneration_instruction": payload.instruction,
         "status": "PENDING",
         "revision": 1,
-        "model_version": "maintenance-agent-v2",
+        "model_version": "maintenance_analysis",
         "created_by": user.id,
         "created_at": now(),
         "updated_at": now(),
@@ -1233,6 +1260,8 @@ async def create_test_version_from_proposal(proposal, patch, user):
         version["status"],
         "APPROVED_SOURCE",
         version["version"],
+        requirement_version_ids=version.get("requirement_version_ids", []),
+        acceptance_criterion_ids=version.get("acceptance_criterion_ids", []),
     )
     return version
 
@@ -1324,6 +1353,8 @@ async def recover_partial_proposal(proposal, user):
         version["status"],
         "APPROVED_SOURCE",
         version["version"],
+        requirement_version_ids=version.get("requirement_version_ids", []),
+        acceptance_criterion_ids=version.get("acceptance_criterion_ids", []),
     )
     return version
 
@@ -1430,7 +1461,7 @@ async def regression_recommendation(
         "items": items,
         "status": "PENDING_APPROVAL",
         "revision": 1,
-        "model_version": "risk-score-v1",
+        "model_version": "risk_scoring",
         "created_by": user.id,
         "created_at": now(),
         "updated_at": now(),

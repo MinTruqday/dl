@@ -713,7 +713,7 @@ async def manage_completion_handover(report_id, payload, user):
     return updated
 
 
-async def completion_ai_result(report, payload, user, capability, result_type, task):
+async def completion_ai_result(report, payload, user, capability, result_type):
     if report["status"] != "DRAFT":
         raise HTTPException(status_code=409, detail={"code": "COMPLETION_REPORT_IMMUTABLE"})
     existing = await database.value.ai_results.find_one(
@@ -755,7 +755,7 @@ async def completion_ai_result(report, payload, user, capability, result_type, t
         }
     ]
     instruction = json.dumps(
-        {"task": task, "user_instruction": payload.instruction}, ensure_ascii=False
+        {"user_instruction": payload.instruction}, ensure_ascii=False
     )
     ai = await request_design_assistance(capability, report["project_id"], instruction, evidence)
     result = {
@@ -796,7 +796,6 @@ async def generate_completion_narrative(report_id, payload, user):
         user,
         "completion_report_narrative",
         "COMPLETION_REPORT_NARRATIVE",
-        "Soạn bản nháp diễn giải hoàn tất kiểm thử chỉ từ số liệu và bằng chứng không tự đổi quality gate recommendation hay phê duyệt báo cáo",
     )
 
 
@@ -810,7 +809,6 @@ async def cluster_completion_lessons(report_id, payload, user):
         user,
         "lessons_learned_clustering",
         "LESSONS_LEARNED_CLUSTERS",
-        "Gom nhóm bài học kinh nghiệm theo chủ đề giữ nguyên căn cứ bằng source_indices và chỉ đề xuất ứng viên cải tiến không tự áp dụng",
     )
 
 
@@ -826,7 +824,7 @@ async def decide_residual_risk(report_id, risk_id, payload, user):
     if not risk:
         raise HTTPException(status_code=404, detail={"code": "RESIDUAL_RISK_NOT_FOUND"})
     if risk.get("owner_id") != user.id and (membership or {}).get("project_role") not in {
-        "QA_LEAD",
+        "QA",
         "BA",
     }:
         raise HTTPException(status_code=403, detail={"code": "RESIDUAL_RISK_DECISION_DENIED"})
@@ -982,11 +980,11 @@ async def transition_completion(report_id, payload, user, source, target, permis
     if target == "APPROVED":
         await validate_completion_readiness(report)
         qa_approved = any(
-            item.get("role") == "QA_LEAD" and item.get("decision") == "APPROVE"
+            item.get("role") == "QA" and item.get("decision") == "APPROVE"
             for item in report.get("sign_offs", [])
         )
         if not qa_approved:
-            raise HTTPException(status_code=409, detail={"code": "QA_LEAD_SIGN_OFF_REQUIRED"})
+            raise HTTPException(status_code=409, detail={"code": "QA_SIGN_OFF_REQUIRED"})
         if any(
             item.get("treatment", item.get("acceptance")) == "PENDING"
             for item in report.get("residual_risks", [])

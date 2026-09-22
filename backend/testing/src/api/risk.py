@@ -12,18 +12,32 @@ from src.core.common import (
 )
 from src.core.database import database
 from src.domain.schemas import RiskRankingApproval, RiskRankingGenerate, RiskRankingPatch
+from src.services.domain_policy import domain_policy
 
 router = APIRouter(prefix="/kiem-thu", tags=["Ưu tiên rủi ro"])
 
 
 def _score(test_case, version, failure_count):
-    risk_weight = {"critical": 1.0, "high": 0.8, "medium": 0.5, "low": 0.25}
-    priority_weight = {"critical": 1.0, "high": 0.8, "medium": 0.5, "low": 0.25}
-    risk = risk_weight.get(str(version.get("risk", "medium")).lower(), 0.5)
-    priority = priority_weight.get(str(version.get("priority", "medium")).lower(), 0.5)
-    stale = 0.2 if test_case.get("status") == "NEEDS_UPDATE" else 0
-    failures = min(0.4, failure_count * 0.1)
-    return round(min(1.0, risk * 0.45 + priority * 0.25 + stale + failures), 4)
+    policy = domain_policy("risk_scoring")
+    levels = policy["levels"]
+    default = policy["default_level"]
+    risk = levels.get(str(version.get("risk", "medium")).lower(), default)
+    priority = levels.get(str(version.get("priority", "medium")).lower(), default)
+    stale = policy["stale_increment"] if test_case.get("status") == "NEEDS_UPDATE" else 0
+    failures = min(
+        policy["failure_maximum"],
+        failure_count * policy["failure_increment"],
+    )
+    return round(
+        min(
+            1,
+            risk * policy["risk_weight"]
+            + priority * policy["priority_weight"]
+            + stale
+            + failures,
+        ),
+        4,
+    )
 
 
 async def _build_items(project_id: str):
@@ -102,7 +116,7 @@ async def generate_risk_ranking(
         "project_id": project_id,
         "items": items,
         "status": "PENDING_APPROVAL",
-        "model_version": "risk-score-v1",
+        "model_version": "risk_scoring",
         "revision": 1,
         "created_by": user.id,
         "created_at": now(),

@@ -57,7 +57,7 @@ Reporting Agent
 Actual project roles:
 
 ```text
-QA_LEAD
+QA
 TESTER
 BA
 DEVELOPER
@@ -80,7 +80,7 @@ Human roles are RBAC identities, not AI-agent identities.
 ```text
 ┌──────────────────────────────────────────────┐
 │ 1. USER INTERFACE                           │
-│ QA_LEAD / TESTER / BA / DEVELOPER / VIEWER │
+│ QA / TESTER / BA / DEVELOPER / VIEWER │
 │                                              │
 │ Generate Test Cases                         │
 │ Analyze Requirement                         │

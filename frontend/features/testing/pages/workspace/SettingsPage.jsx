@@ -132,11 +132,11 @@ export default function SettingsPage({ project, onProjectChange }) {
     ),
   });
   const [error, setError] = useState("");
-  const activeLeadCount = members.filter(
-    (item) => item.project_role === "QA_LEAD" && item.status === "ACTIVE",
+  const activeQaCount = members.filter(
+    (item) => item.project_role === "QA" && item.status === "ACTIVE",
   ).length;
-  const isOnlyActiveLead = (item) =>
-    item.project_role === "QA_LEAD" && item.status === "ACTIVE" && activeLeadCount === 1;
+  const isOnlyActiveQa = (item) =>
+    item.project_role === "QA" && item.status === "ACTIVE" && activeQaCount === 1;
   useEffect(() => {
     Promise.all([
       testingApi.audit(project._id),
@@ -174,17 +174,17 @@ export default function SettingsPage({ project, onProjectChange }) {
                     action_policies: {
                       ...(project.settings?.action_policies || {}),
                       "defect.rejected": settings.tester_can_reject_defect
-                        ? ["QA_LEAD", "TESTER"]
-                        : ["QA_LEAD"],
+                        ? ["QA", "TESTER"]
+                        : ["QA"],
                       "defect.duplicate": settings.tester_can_mark_duplicate_defect
-                        ? ["QA_LEAD", "TESTER"]
-                        : ["QA_LEAD"],
+                        ? ["QA", "TESTER"]
+                        : ["QA"],
                       "testplan.assignments": settings.tester_can_assign_testplans
-                        ? ["QA_LEAD", "TESTER"]
-                        : ["QA_LEAD"],
+                        ? ["QA", "TESTER"]
+                        : ["QA"],
                       "testcase.template.archive": settings.tester_can_archive_testcase_templates
-                        ? ["QA_LEAD", "TESTER"]
-                        : ["QA_LEAD"],
+                        ? ["QA", "TESTER"]
+                        : ["QA"],
                     },
                   },
                 });
@@ -369,7 +369,7 @@ export default function SettingsPage({ project, onProjectChange }) {
                 <option value="BA">Phân tích nghiệp vụ</option>
                 <option value="DEVELOPER">Lập trình viên</option>
                 <option value="VIEWER">Người xem</option>
-                <option value="QA_LEAD">Trưởng nhóm kiểm thử</option>
+                <option value="QA">QA</option>
               </select>
               <button className="secondary-button" type="submit">
                 Gửi lời mời
@@ -401,7 +401,7 @@ export default function SettingsPage({ project, onProjectChange }) {
                       aria-label={`Vai trò ${item.user_label || item.user_id}`}
                       className="apple-input"
                       value={item.project_role}
-                      disabled={item.status !== "ACTIVE" || isOnlyActiveLead(item)}
+                      disabled={item.status !== "ACTIVE" || isOnlyActiveQa(item)}
                       onChange={async (event) => {
                         try {
                           await testingApi.updateMember(project._id, item.user_id, {
@@ -414,11 +414,11 @@ export default function SettingsPage({ project, onProjectChange }) {
                         }
                       }}
                     >
-                      {["QA_LEAD", "TESTER", "BA", "DEVELOPER", "VIEWER"].map((role) => (
+                      {["QA", "TESTER", "BA", "DEVELOPER", "VIEWER"].map((role) => (
                         <option key={role} value={role}>
                           {
                             {
-                              QA_LEAD: "Trưởng nhóm kiểm thử",
+                              QA: "QA",
                               TESTER: "Kiểm thử viên",
                               BA: "Phân tích nghiệp vụ",
                               DEVELOPER: "Lập trình viên",
@@ -440,7 +440,7 @@ export default function SettingsPage({ project, onProjectChange }) {
                   key: "actions",
                   label: "Thao tác",
                   render: (item) =>
-                    isOnlyActiveLead(item) ? (
+                    isOnlyActiveQa(item) ? (
                       <span className="text-[12px] text-ink-muted">
                         Bổ nhiệm thêm trưởng nhóm trước khi thay đổi hoặc xóa
                       </span>

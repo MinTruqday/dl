@@ -113,7 +113,7 @@ export default function TestGovernancePage({ project }) {
       <div className="grid gap-3 rounded-xl border border-border bg-surface p-4 text-sm md:grid-cols-3">
         <div>
           <p className="field-label">Soạn thảo</p>
-          <p className="mt-1">QA Lead hoặc Tester có quyền tạo và cập nhật bản nháp</p>
+          <p className="mt-1">QA hoặc Tester có quyền tạo và cập nhật bản nháp</p>
         </div>
         <div>
           <p className="field-label">Rà soát độc lập</p>
@@ -121,7 +121,7 @@ export default function TestGovernancePage({ project }) {
         </div>
         <div>
           <p className="field-label">Phê duyệt</p>
-          <p className="mt-1">QA Lead chỉ phê duyệt sau khi đã có kết quả rà soát</p>
+          <p className="mt-1">QA chỉ phê duyệt sau khi đã có kết quả rà soát</p>
         </div>
       </div>
       <Panel title="Kho chiến lược kiểm thử">

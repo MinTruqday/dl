@@ -24,9 +24,13 @@ from src.domain.schemas import (
     ImportCreate,
     TestCaseDraftCreate,
 )
+from src.services.domain_policy import domain_policy
 
 router = APIRouter(prefix="/kiem-thu", tags=["Kiểm thử API và khôi phục"])
-SECRET_PATTERN = re.compile(r"token|secret|password|authorization|cookie|api[-_]?key", re.I)
+
+
+def secret_pattern():
+    return re.compile(domain_policy("secret_detection")["field_name_pattern"], re.I)
 
 
 def public_api_import(value, include_preview=False):
@@ -357,7 +361,7 @@ async def generate_api_tests(operation_id: str, user: CurrentUser = Depends(get_
         {"count": len(created)},
     )
     return envelope(
-        {"items": created, "model": model_metadata("api-test-generator-v1"), "evidence": operation}
+        {"items": created, "model": model_metadata("api_test_generation"), "evidence": operation}
     )
 
 
@@ -573,6 +577,7 @@ async def recover_trace_links(project_id: str, user: CurrentUser = Depends(get_c
         {"project_id": project_id, "status": {"$in": ["CONFIRMED", "SUGGESTED"]}}
     ).to_list(50000)
     pairs = {(item["source_id"], item["target_id"]) for item in existing}
+    recovery_policy = domain_policy("trace_recovery")
     suggestions = []
     for test in tests:
         ranked = sorted(
@@ -588,8 +593,11 @@ async def recover_trace_links(project_id: str, user: CurrentUser = Depends(get_c
             key=lambda item: item[0],
             reverse=True,
         )
-        for score, requirement in ranked[:3]:
-            if score < 0.18 or (requirement["_id"], test["_id"]) in pairs:
+        for score, requirement in ranked[: recovery_policy["maximum_candidates_per_test"]]:
+            if (
+                score < recovery_policy["minimum_score"]
+                or (requirement["_id"], test["_id"]) in pairs
+            ):
                 continue
             link = {
                 "_id": new_id("TL"),
@@ -625,7 +633,7 @@ async def recover_trace_links(project_id: str, user: CurrentUser = Depends(get_c
         project_id,
         {"suggestion_count": len(suggestions)},
     )
-    return envelope({"items": suggestions, "model": model_metadata("trace-recovery-v1")})
+    return envelope({"items": suggestions, "model": model_metadata("trace_recovery")})
 
 
 @router.post("/du-an/{project_id}/nhap-ca-kiem-thu", status_code=201)
@@ -852,7 +860,7 @@ def parse_postman(value):
     variable_names = [
         item.get("key")
         for item in value.get("variable", [])
-        if item.get("key") and not SECRET_PATTERN.search(item.get("key", ""))
+        if item.get("key") and not secret_pattern().search(item.get("key", ""))
     ]
 
     def walk(nodes, folder=""):
@@ -876,7 +884,7 @@ def parse_postman(value):
                     "header_names": [
                         item.get("key")
                         for item in request.get("header", [])
-                        if item.get("key") and not SECRET_PATTERN.search(item.get("key", ""))
+                        if item.get("key") and not secret_pattern().search(item.get("key", ""))
                     ],
                     "body": sanitize(request.get("body", {})),
                     "script_events": [item.get("listen") for item in node.get("event", [])],
@@ -947,7 +955,7 @@ def sanitize(value):
         return {
             key: sanitize(item)
             for key, item in value.items()
-            if not SECRET_PATTERN.search(str(key))
+            if not secret_pattern().search(str(key))
         }
     if isinstance(value, list):
         return [sanitize(item) for item in value]
@@ -959,13 +967,13 @@ def sanitize_postman(value):
         return [sanitize_postman(item) for item in value]
     if isinstance(value, dict):
         marker = str(value.get("key") or value.get("name") or "")
-        sensitive_entry = bool(SECRET_PATTERN.search(marker))
+        sensitive_entry = bool(secret_pattern().search(marker))
         result = {}
         for key, item in value.items():
             if sensitive_entry and key in {"value", "current", "initial"}:
                 suffix = re.sub(r"[^A-Za-z0-9]+", "_", marker).upper() or "VALUE"
                 result[key] = f"{{{{VERIQ_SECRET_{suffix}}}}}"
-            elif SECRET_PATTERN.search(str(key)) and key not in {"key", "name"}:
+            elif secret_pattern().search(str(key)) and key not in {"key", "name"}:
                 result[key] = "{{VERIQ_SECRET_VALUE}}"
             else:
                 result[key] = sanitize_postman(item)
@@ -999,8 +1007,8 @@ def model_metadata(model):
     return {
         "provider": "hybrid-deterministic",
         "model": model,
-        "prompt_version": "qa-v1",
+        "prompt_version": "testing_assistance",
         "tool_schema_version": "1",
-        "retrieval_version": "project-filter-v1",
+        "retrieval_version": "project_evidence",
         "created_at": now(),
     }

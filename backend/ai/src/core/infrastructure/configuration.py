@@ -26,6 +26,9 @@ class Settings(BaseModel):
     REDIS_URI: str = os.environ["REDIS_URI"]
     RABBITMQ_URI: str = os.environ["RABBITMQ_URI"]
     QDRANT_URL: str = os.environ["QDRANT_URL"]
+    NEO4J_URI: str = os.getenv("NEO4J_URI", "bolt://neo4j:7687")
+    NEO4J_USER: str = os.getenv("NEO4J_USER", "neo4j")
+    NEO4J_PASSWORD: str = os.getenv("NEO4J_PASSWORD", "")
     EMBEDDING_MODEL: str = os.environ["EMBEDDING_MODEL"]
     DOCKER_HOST: str = os.environ["DOCKER_HOST"]
     OBJECT_STORAGE_ENDPOINT: str = os.environ["OBJECT_STORAGE_ENDPOINT"]
@@ -56,6 +59,13 @@ class Settings(BaseModel):
     AGENT_MAX_CONTEXT_TOKENS: int = int(os.environ["AGENT_MAX_CONTEXT_TOKENS"])
     AGENT_HISTORY_MAX_TURNS: int = int(os.environ["AGENT_HISTORY_MAX_TURNS"])
     AGENT_DEFAULT_MAX_OUTPUT_TOKENS: int = int(os.environ["AGENT_DEFAULT_MAX_OUTPUT_TOKENS"])
+    AGENT_MAX_SUPERVISOR_STEPS: int = int(os.getenv("AGENT_MAX_SUPERVISOR_STEPS", "12"))
+    AGENT_MAX_SPECIALIST_STEPS: int = int(os.getenv("AGENT_MAX_SPECIALIST_STEPS", "8"))
+    AGENT_MAX_TOOL_CALLS_PER_TASK: int = int(os.getenv("AGENT_MAX_TOOL_CALLS_PER_TASK", "6"))
+    AGENT_MAX_TOOL_ERRORS: int = int(os.getenv("AGENT_MAX_TOOL_ERRORS", "2"))
+    AGENT_MAX_RETRIES: int = int(os.getenv("AGENT_MAX_RETRIES", "2"))
+    AGENT_TASK_TIMEOUT_SECONDS: int = int(os.getenv("AGENT_TASK_TIMEOUT_SECONDS", "300"))
+    AGENT_MAX_EVIDENCE_ITEMS: int = int(os.getenv("AGENT_MAX_EVIDENCE_ITEMS", "100"))
     AGENT_FILE_ROOT: str = os.environ["AGENT_FILE_ROOT"]
     AGENT_ARCHIVE_MAX_FILES: int = int(os.environ["AGENT_ARCHIVE_MAX_FILES"])
     AGENT_ARCHIVE_MAX_UNCOMPRESSED_BYTES: int = int(

@@ -21,15 +21,17 @@ from src.domain.schemas import (
     AutomationScriptPatch,
 )
 from src.services.design_assistance import ai_contract_metadata, request_design_assistance
+from src.services.domain_policy import domain_policy
 
 router = APIRouter(prefix="/kiem-thu", tags=["Kịch bản tự động hóa"])
-RAW_SECRET_PATTERN = re.compile(
-    r"(?i)(password|secret|token|api[_-]?key)\s*[:=]\s*['\"](?!\$\{|<)[^'\"]{4,}['\"]"
-)
+
+
+def secret_policy():
+    return domain_policy("secret_detection")
 
 
 def validate_source(source):
-    if RAW_SECRET_PATTERN.search(source):
+    if re.search(secret_policy()["raw_assignment_pattern"], source, re.I):
         raise HTTPException(status_code=422, detail={"code": "RAW_SECRET_IN_SCRIPT"})
     return source
 
@@ -54,7 +56,8 @@ def generated_script(result):
     ):
         raise HTTPException(502, detail={"code": "AI_SCRIPT_INVALID"})
     if not isinstance(placeholders, list) or any(
-        not isinstance(item, str) or not re.fullmatch(r"[A-Z][A-Z0-9_]{0,99}", item)
+        not isinstance(item, str)
+        or not re.fullmatch(secret_policy()["placeholder_pattern"], item)
         for item in placeholders
     ):
         raise HTTPException(502, detail={"code": "AI_SCRIPT_PLACEHOLDERS_INVALID"})
@@ -119,7 +122,10 @@ async def generate_automation_script_draft(
     ai_result = await request_design_assistance(
         "automation_script_generation",
         project_id,
-        f"Tạo bản nháp {payload.framework} {payload.language} thực hiện các bước và kiểm tra kết quả trong evidence chỉ dùng secret placeholder và không ghi repository Trả suggestions có đúng một object gồm source là toàn bộ mã nguồn không có markdown và secret_placeholders là danh sách tên biến môi trường Nếu thiếu locator hoặc URL thì dùng biến môi trường và nêu rõ trong warnings Không tạo bài kiểm thử chỉ mở trang và kiểm tra URL",
+        json.dumps(
+            {"framework": payload.framework, "language": payload.language},
+            ensure_ascii=False,
+        ),
         evidence
         + ([{"artifact_type": "user_context", "text": payload.context}] if payload.context else []),
     )

@@ -9,47 +9,47 @@ class StructuredRouting(BaseModel):
 
 class ContextQuery(StructuredRouting):
     question: str = Field(
-        description="<critical_instructions>The rewritten, fully self-contained version of the user's question. Metis MUST resolve ALL pronouns (it, they, that) and implicit references into explicit subject names drawn from the conversation history.</critical_instructions>"
+        description="Câu hỏi độc lập đã làm rõ các tham chiếu từ ngữ cảnh"
     )
 
 
 class GraphRoute(StructuredRouting):
     route: Literal["knowledge", "direct"] = Field(
-        description="<critical_instructions>MUST be 'knowledge' if the user needs factual knowledge, documents, or data retrieval. MUST be 'direct' if it's a casual conversation, greeting, or can be answered strictly from generic knowledge without external context.</critical_instructions>"
+        description="knowledge khi cần dữ liệu và direct khi không cần truy xuất"
     )
 
 
 class RetrievalStrategy(StructuredRouting):
     is_simple: bool = Field(
-        description="<critical_instructions>Set to True ONLY if a single vector search query is sufficient to retrieve the answer. Set to False if the question is multi-part, comparative, or requires aggregating from multiple distinct topics.</critical_instructions>"
+        description="Đúng khi một truy vấn vector đủ để tìm câu trả lời"
     )
     queries: List[str] = Field(
-        description="<constraints>A list of 1 to 5 highly optimized search queries. MUST be concise (3-8 keywords) and focused for vector similarity search. Do NOT use full conversational sentences.</constraints>"
+        description="Một đến năm truy vấn ngắn cho tìm kiếm vector"
     )
 
 
 class QueryOptimization(StructuredRouting):
     question: str = Field(
-        description="<input_context>The optimal, search-engine-friendly query string stripped of conversational fluff.</input_context>"
+        description="Truy vấn tìm kiếm ngắn gọn giữ nguyên ý định"
     )
 
 
 class RouteDecision(StructuredRouting):
     reasoning: str = Field(
-        description="<routing_logic>A concise route justification without private reasoning.</routing_logic>"
+        description="Lý do ngắn gọn cho tuyến đã chọn"
     )
     route: Literal["action", "knowledge", "chat"] = Field(
-        description="<routing_logic>Selected route. 'action': execute tools/modify state. 'knowledge': factual question needing project knowledge. 'chat': casual greeting or generic conversational filler.</routing_logic>"
+        description="action để dùng công cụ knowledge để truy xuất và chat để trả lời trực tiếp"
     )
     answer: str = Field(
         default="",
-        description="<conditional_output>If route is 'chat', provide the direct response here. Otherwise, return an empty string.</conditional_output>",
+        description="Câu trả lời trực tiếp cho tuyến chat và để trống với tuyến khác",
     )
 
 
 class MultiQueryOutput(StructuredRouting):
     queries: List[str] = Field(
-        description="<critical_instructions>Exactly 3 diverse, distinct phrasings of the original query to maximize retrieval recall from the vector database.</critical_instructions>"
+        description="Đúng ba cách diễn đạt khác nhau của truy vấn"
     )
 
 
@@ -57,5 +57,5 @@ class CrossDocumentQueries(StructuredRouting):
     queries: List[str] = Field(
         min_length=2,
         max_length=100,
-        description="<critical_instructions>One focused retrieval query for each supplied document in the original document order.</critical_instructions>",
+        description="Một truy vấn tập trung cho mỗi tài liệu theo đúng thứ tự đầu vào",
     )

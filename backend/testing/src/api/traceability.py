@@ -87,6 +87,11 @@ async def confirm_trace_link(
     return await review_link(link_id, "CONFIRMED", user)
 
 
+@router.get("/lien-ket-truy-vet/{link_id}")
+async def get_trace_link(link_id: str, user: CurrentUser = Depends(get_current_user)):
+    return envelope(await get_project_entity("trace_links", link_id, user, "trace.read"))
+
+
 @router.post("/lien-ket-truy-vet/{link_id}/tu-choi")
 @router.post("/du-an/{project_id}/lien-ket-truy-vet/{link_id}/tu-choi")
 async def reject_trace_link(

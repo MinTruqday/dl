@@ -31,8 +31,9 @@ logger.add(
 )
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.agents.workflow.sessions import orchestration
 from src.api.cache import router as cache_router
+from src.api.agents import router as agents_router
+from src.api.approvals import router as approvals_router
 from src.api.embedding import router as embedding_router
 from src.api.events import router as events
 from src.api.indexing import indexing_router
@@ -80,6 +81,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(inference)
+app.include_router(agents_router)
+app.include_router(approvals_router)
 app.include_router(ingest)
 app.include_router(events)
 app.include_router(retrieval_router, prefix="/tri-thuc")
@@ -124,6 +127,12 @@ async def readiness_check():
         checks["qdrant"] = "ready" if response.status_code == 200 else "unavailable"
     except Exception:
         checks["qdrant"] = "unavailable"
+    try:
+        from src.knowledge.graph.client import graph_client
+
+        checks["neo4j"] = "ready" if await graph_client.ready() else "unavailable"
+    except Exception:
+        checks["neo4j"] = "unavailable"
     checks["knowledge"] = "ready" if retrieval_ready else "unavailable"
     try:
         from src.services.conversion import document_parser
@@ -161,11 +170,15 @@ async def agent_metrics():
 
 @app.get("/danh-gia/trang-thai", dependencies=[Depends(require_role([Role.ADMIN]))])
 async def agent_status():
-    """Return orchestration circuit and evaluation status for administrators"""
+    db = database.mongodb[settings.AI_DB_NAME]
     return {
         "orchestration": {
-            "active_sessions": orchestration.get_active_sessions(),
-            "circuit": orchestration.get_circuit_status(),
+            "active_runs": await db.agent_runs.count_documents(
+                {"status": {"$in": ["PLANNING", "RUNNING", "APPLYING", "VERIFYING"]}}
+            ),
+            "approval_required": await db.agent_runs.count_documents(
+                {"status": "APPROVAL_REQUIRED"}
+            ),
         },
         "evaluation": evaluation.get_dashboard_metrics(),
     }
@@ -188,7 +201,7 @@ async def startup_event():
     except Exception:
         logger.exception("AI retrieval capability startup error")
     try:
-        from src.agents.workflow.events import cron_scheduler, event_processor
+        from src.runtime.events import cron_scheduler, event_processor
 
         await event_processor.start_worker()
         await cron_scheduler.start()
@@ -209,6 +222,13 @@ async def initialize_retrieval_background():
 
 
 async def initialize_ai_runtime_background():
+    try:
+        from src.knowledge.graph.repository import graph_repository
+
+        await graph_repository.ensure_schema()
+        logger.info("Graph schema initialized")
+    except Exception:
+        logger.exception("Graph schema initialization error")
     try:
         from src.utils.model_provider import model_client
 
@@ -231,7 +251,13 @@ async def shutdown_event():
     except Exception:
         logger.exception("Background task shutdown failed")
     try:
-        from src.agents.workflow.events import cron_scheduler, event_processor
+        from src.knowledge.graph.client import graph_client
+
+        await graph_client.close()
+    except Exception:
+        logger.exception("Graph shutdown failed")
+    try:
+        from src.runtime.events import cron_scheduler, event_processor
 
         await cron_scheduler.stop()
         await event_processor.stop_worker()
@@ -255,21 +281,6 @@ async def shutdown_event():
         await close_db()
     except Exception:
         logger.exception("Database shutdown failed")
-    try:
-        from src.agents.memory.management import memory_manager
-
-        await memory_manager.close()
-    except Exception:
-        logger.exception("Memory manager shutdown failed")
-    try:
-        from src.agents.workflow.orchestration import supervisor
-
-        if supervisor.checkpointer is not None:
-            supervisor.checkpointer.close()
-        if supervisor.sync_client is not None:
-            supervisor.sync_client.close()
-    except Exception:
-        logger.exception("Workflow checkpointer shutdown failed")
 
 
 @asynccontextmanager

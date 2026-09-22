@@ -15,7 +15,7 @@ class SystemRole(str, Enum):
 
 
 class ProjectRole(str, Enum):
-    QA_LEAD = "QA_LEAD"
+    QA = "QA"
     TESTER = "TESTER"
     BA = "BA"
     DEVELOPER = "DEVELOPER"
@@ -287,7 +287,7 @@ DEVELOPER_PERMISSIONS = (
 )
 
 ROLE_PERMISSIONS = {
-    ProjectRole.QA_LEAD: PROJECT_PERMISSIONS,
+    ProjectRole.QA: PROJECT_PERMISSIONS,
     ProjectRole.TESTER: TESTER_PERMISSIONS,
     ProjectRole.BA: BA_PERMISSIONS,
     ProjectRole.DEVELOPER: DEVELOPER_PERMISSIONS,

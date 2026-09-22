@@ -4,13 +4,6 @@ from src.core.infrastructure.mongo import mongo
 
 
 class AgentRepository:
-    """
-    <module_purpose>
-    <purpose>Persists agent execution traces for evaluation and auditing.</purpose>
-    <metis_behavior>Ensures high-throughput async inserts to prevent blocking the main orchestration loop.</metis_behavior>
-    </module_purpose>
-    """
-
     @staticmethod
     def _get_db():
         db_name = settings.AI_DB_NAME

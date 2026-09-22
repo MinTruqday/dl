@@ -1,4 +1,5 @@
 from src.services.design_assistance import request_design_assistance
+from src.services.domain_policy import domain_policy
 
 
 def document(value):
@@ -72,12 +73,13 @@ async def request_impact_classification(project_id, change_set, candidates):
     return await request_design_assistance(
         "impact_analysis",
         project_id,
-        "Phân loại từng candidate thành STILL_VALID POTENTIALLY_AFFECTED NEEDS_UPDATE hoặc OBSOLETE và chỉ dùng artifact_version_id đã cung cấp",
+        "",
         evidence,
     )
 
 
 def apply_ai_impact_suggestions(items, ai_result):
+    policy = domain_policy("impact_analysis")
     allowed = {"STILL_VALID", "POTENTIALLY_AFFECTED", "NEEDS_UPDATE", "OBSOLETE"}
     by_version = {item["test_case_version_id"]: item for item in items}
     applied = []
@@ -103,7 +105,10 @@ def apply_ai_impact_suggestions(items, ai_result):
                 "confidence": target["ai_confidence"],
             }
         )
-        if target["ai_confidence"] >= 0.7 and target["confidence"] < 0.9:
+        if (
+            target["ai_confidence"] >= policy["ai_confidence_minimum"]
+            and target["confidence"] < policy["combined_confidence_target"]
+        ):
             target["classification"] = classification
             target["confidence"] = max(target["confidence"], target["ai_confidence"])
             target["reasons"].append(target["ai_reason"])

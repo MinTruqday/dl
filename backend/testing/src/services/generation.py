@@ -93,11 +93,9 @@ async def generate_requirement_drafts(version, criteria, payload, scenario=False
     )
     instruction = json.dumps(
         {
-            "task": "Sinh các tình huống cụ thể bằng tiếng Việt từ bằng chứng với dữ liệu đầu vào và kết quả có thể kiểm chứng không dùng câu mẫu chung chung",
             "categories": categories,
             "count_per_category": payload.count_per_category,
             "user_instruction": payload.instruction,
-            "suggestion_schema": GeneratedCase.model_json_schema(),
         },
         ensure_ascii=False,
     )

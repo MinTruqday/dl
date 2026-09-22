@@ -8,10 +8,7 @@ def start_accounting() -> None:
     _usage.set({"input_tokens": 0, "output_tokens": 0, "cached_tokens": 0, "tool_tokens": 0})
 
 
-def record_usage(response: Any, input_chars: int, output_chars: int) -> None:
-    current = _usage.get()
-    if current is None:
-        return
+def usage_values(response: Any, input_chars: int, output_chars: int) -> dict[str, int]:
     usage = getattr(response, "usage", None)
     if isinstance(usage, dict):
         get_value = usage.get
@@ -20,9 +17,20 @@ def record_usage(response: Any, input_chars: int, output_chars: int) -> None:
     prompt = int(get_value("prompt_tokens", 0) or get_value("input_tokens", 0) or 0)
     completion = int(get_value("completion_tokens", 0) or get_value("output_tokens", 0) or 0)
     cached = int(get_value("cached_tokens", 0) or get_value("cache_read_input_tokens", 0) or 0)
-    current["input_tokens"] += prompt or max(1, input_chars // 4)
-    current["output_tokens"] += completion or max(1, output_chars // 4)
-    current["cached_tokens"] += cached
+    return {
+        "input_tokens": prompt or max(1, input_chars // 4),
+        "output_tokens": completion or max(1, output_chars // 4),
+        "cached_tokens": cached,
+    }
+
+
+def record_usage(response: Any, input_chars: int, output_chars: int) -> dict[str, int]:
+    values = usage_values(response, input_chars, output_chars)
+    current = _usage.get()
+    if current is not None:
+        for key, value in values.items():
+            current[key] += value
+    return values
 
 
 def add_tool_usage(tokens: int) -> None:

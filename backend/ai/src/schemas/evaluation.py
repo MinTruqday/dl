@@ -5,20 +5,20 @@ from pydantic import BaseModel, Field
 
 class TaskEvaluation(BaseModel):
     status: Literal["PASS", "FAIL"] = Field(
-        description="<critical_instructions>MUST be exactly 'PASS' if the agent's output is flawlessly coherent, usable, and safe. MUST be 'FAIL' if it contains ANY errors, hallucinations, violations of system rules, or is clearly suboptimal.</critical_instructions>"
+        description="PASS khi kết quả đúng đủ có căn cứ và an toàn ngược lại là FAIL"
     )
     feedback: str = Field(
-        description="<metis_behavior>Brutally objective, highly specific actionable feedback explaining the PASS/FAIL verdict. If FAIL, pinpoint the exact logical flaw or line number. Do not use polite conversational filler. MUST NOT be empty.</metis_behavior>"
+        description="Nhận xét cụ thể có căn cứ cho kết quả đánh giá"
     )
     revised_task: str = Field(
         default="",
-        description="<conditional_output>If status is 'FAIL', provide a meticulously revised, corrected version of the task instruction to strictly guide the next retry. Leave completely empty if status is 'PASS'.</conditional_output>",
+        description="Task đã sửa khi trạng thái là FAIL và để trống khi trạng thái là PASS",
     )
 
 
 class DocumentGrade(BaseModel):
     is_relevant: bool = Field(
-        description="<critical_instructions>Set to True ONLY if the document explicitly and directly contains factual information that resolves the user's query. Set to False if it is only tangentially related or lacks concrete answers.</critical_instructions>"
+        description="Đúng khi tài liệu chứa thông tin trực tiếp giải quyết truy vấn"
     )
 
 
@@ -26,74 +26,74 @@ class QualityEvaluation(BaseModel):
     relevance: float = Field(
         ge=0.0,
         le=1.0,
-        description="<constraints>Score from 0.0 to 1.0 for how directly the response addresses the query.</constraints>",
+        description="Mức độ trả lời trực tiếp truy vấn từ 0 đến 1",
     )
     grounding: float = Field(
         ge=0.0,
         le=1.0,
-        description="<constraints>Score from 0.0 to 1.0 for how fully the response is supported by the supplied context.</constraints>",
+        description="Mức độ được ngữ cảnh cung cấp hỗ trợ từ 0 đến 1",
     )
     completeness: float = Field(
         ge=0.0,
         le=1.0,
-        description="<constraints>Score from 0.0 to 1.0 for coverage of every material part of the query.</constraints>",
+        description="Mức độ bao phủ các phần quan trọng của truy vấn từ 0 đến 1",
     )
     overall: float = Field(
         ge=0.0,
         le=1.0,
-        description="<constraints>Calibrated overall quality score from 0.0 to 1.0.</constraints>",
+        description="Điểm chất lượng tổng hợp từ 0 đến 1",
     )
     should_retry: bool = Field(
-        description="<critical_instructions>Set to True when the response is unsafe, ungrounded, incomplete, or has an overall score below 0.6.</critical_instructions>"
+        description="Đúng khi kết quả không an toàn thiếu căn cứ không đầy đủ hoặc dưới ngưỡng chất lượng"
     )
     feedback: str = Field(
-        description="<output_format>Specific, actionable feedback pointing out exactly which part of the response is flawed and outlining the explicit logical steps required to fix it.</output_format>"
+        description="Nhận xét cụ thể về phần chưa đạt và cách sửa"
     )
 
 
 class ErrorMessageJudgment(BaseModel):
     is_error_message: bool = Field(
-        description="<critical_instructions>Set to True if the text contains a raw stack trace, HTTP error code, unhandled exception, Python/JS traceback, or a system failure message. Set to False if it is a natural language response (even if it politely apologizes).</critical_instructions>"
+        description="Đúng khi văn bản là lỗi hệ thống hoặc lỗi kỹ thuật thô"
     )
     reason: str = Field(
-        description="<critical_instructions>A specific, 1-2 sentence explanation of why this was classified as an error message or a valid output.</critical_instructions>"
+        description="Lý do ngắn gọn cho phân loại"
     )
 
 
 class HallucinationJudgment(BaseModel):
     is_hallucination_or_refusal: bool = Field(
-        description="Set to True if the response refuses the prompt, states 'I do not know', uses AI-identity disclaimers, or contains hallucinated unverified facts."
+        description="Đúng khi kết quả từ chối hoặc chứa thông tin không được xác minh"
     )
     confidence: float = Field(
         ge=0.0,
         le=1.0,
-        description="<critical_instructions>Confidence score between 0.0 and 1.0 representing how certain you are of this judgment.</critical_instructions>",
+        description="Độ tin cậy của đánh giá từ 0 đến 1",
     )
     explanation: str = Field(
-        description="<critical_instructions>Detailed explanation of the exact claims that are hallucinated or why the refusal was detected.</critical_instructions>"
+        description="Giải thích cụ thể tuyên bố thiếu căn cứ hoặc lý do phát hiện từ chối"
     )
 
 
 class RelevanceJudgment(BaseModel):
     is_relevant: bool = Field(
-        description="<critical_instructions>Set to True if the response directly addresses the core intent of the user's query without unnecessary pivoting.</critical_instructions>"
+        description="Đúng khi kết quả trả lời trực tiếp ý định chính của truy vấn"
     )
     relevance_score: float = Field(
         ge=0.0,
         le=1.0,
-        description="<critical_instructions>A continuous score from 0.0 to 1.0. Use 1.0 for perfect answers, 0.5 for partial answers, and 0.0 for completely unrelated garbage.</critical_instructions>",
+        description="Điểm liên quan từ 0 đến 1",
     )
     feedback: str = Field(
-        description="<critical_instructions>Actionable critique on what information is missing, hallucinatory, or well-executed regarding relevance.</critical_instructions>"
+        description="Nhận xét phần thiếu thiếu căn cứ hoặc phù hợp với truy vấn"
     )
 
 
 class HallucinationGrade(BaseModel):
     is_refusal_or_hallucination: bool = Field(
-        description="<critical_instructions>Set to True if the response refuses the prompt, states ignorance, or uses artificial identity markers. Set to False if it is a normal, helpful response.</critical_instructions>"
+        description="Đúng khi kết quả từ chối hoặc chứa thông tin không được xác minh"
     )
     reason: str = Field(
-        description="<critical_instructions>A concise 1-sentence reason explaining why the response was graded as a refusal/hallucination or a valid response.</critical_instructions>"
+        description="Lý do ngắn gọn cho đánh giá"
     )
 
 
@@ -101,18 +101,18 @@ class JudgeScores(BaseModel):
     accuracy: int = Field(
         ge=0,
         le=10,
-        description="<output_format>Factual accuracy score from zero to ten.</output_format>",
+        description="Điểm chính xác từ 0 đến 10",
     )
     completeness: int = Field(
-        ge=0, le=10, description="<output_format>Coverage score from zero to ten.</output_format>"
+        ge=0, le=10, description="Điểm đầy đủ từ 0 đến 10"
     )
     relevance: int = Field(
         ge=0,
         le=10,
-        description="<output_format>Task relevance score from zero to ten.</output_format>",
+        description="Điểm liên quan từ 0 đến 10",
     )
     explanation: str = Field(
         min_length=1,
         max_length=2000,
-        description="<output_format>Concise evidence for the scores.</output_format>",
+        description="Căn cứ ngắn gọn cho các điểm đánh giá",
     )

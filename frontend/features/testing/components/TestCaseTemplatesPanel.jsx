@@ -57,7 +57,7 @@ export default function TestCaseTemplatesPanel({ project }) {
   const role = project.current_membership?.project_role;
   const canArchive =
     canManage &&
-    (role === "QA_LEAD" ||
+    (role === "QA" ||
       (role === "TESTER" && project.settings?.tester_can_archive_testcase_templates === true));
 
   const load = useCallback(async () => {

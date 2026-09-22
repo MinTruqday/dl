@@ -69,7 +69,7 @@ class MeasurementDefinitionCreate(BaseModel):
     target: float | None = None
     warning_threshold: float | None = None
     critical_threshold: float | None = None
-    owner_role: Literal["QA_LEAD", "TESTER", "BA", "DEVELOPER"]
+    owner_role: Literal["QA", "TESTER", "BA", "DEVELOPER"]
 
     @model_validator(mode="after")
     def validate_thresholds(self):
@@ -99,7 +99,7 @@ class MeasurementDefinitionPatch(BaseModel):
     target: float | None = None
     warning_threshold: float | None = None
     critical_threshold: float | None = None
-    owner_role: Literal["QA_LEAD", "TESTER", "BA", "DEVELOPER"] | None = None
+    owner_role: Literal["QA", "TESTER", "BA", "DEVELOPER"] | None = None
 
 
 class MeasurementTransition(BaseModel):

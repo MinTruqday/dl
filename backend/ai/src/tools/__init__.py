@@ -1,16 +1,3 @@
-from src.agents.workflow.reduction import agent_summarize_long_document
-from src.tools.document import (
-    delete_document,
-    get_document_analytics,
-    get_my_documents,
-    get_trash_documents,
-    read_document,
-    recommend_documents,
-    restore_document,
-    update_document_metadata,
-)
-from src.tools.instructions import manage_user_instructions
-from src.tools.mindmap import generate_mindmap
 from src.tools.testing import (
     analyze_change_impact,
     apply_test_case_revision,
@@ -53,19 +40,9 @@ from src.tools.testing import (
     search_test_cases,
     suggest_regression_scope,
 )
+from src.tools.skills import structured_skills
 
 tools = [
-    agent_summarize_long_document,
-    update_document_metadata,
-    get_my_documents,
-    read_document,
-    recommend_documents,
-    generate_mindmap,
-    manage_user_instructions,
-    get_trash_documents,
-    delete_document,
-    restore_document,
-    get_document_analytics,
     get_project_context,
     search_project_knowledge,
     get_requirement_version,
@@ -106,4 +83,5 @@ tools = [
     get_execution_history,
     get_bug_history,
     link_bug_candidates,
+    *structured_skills,
 ]

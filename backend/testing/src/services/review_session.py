@@ -330,7 +330,7 @@ async def resolve_finding(db, finding_id, payload, user):
         membership = await db.project_members.find_one(
             {"project_id": finding["project_id"], "user_id": user.id, "status": "ACTIVE"}
         )
-        if (membership or {}).get("project_role") != "QA_LEAD":
+        if (membership or {}).get("project_role") != "QA":
             raise HTTPException(status_code=403, detail={"code": "REVIEW_FINDING_OWNER_REQUIRED"})
     value = await db.review_findings.find_one_and_update(
         {

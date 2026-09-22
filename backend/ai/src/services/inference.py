@@ -1,5 +1,4 @@
 import asyncio
-import json
 from contextvars import ContextVar
 from typing import Awaitable, Callable, List
 
@@ -8,6 +7,7 @@ from src.core.model_runtime import run_chat_completion
 from src.core.registry import PromptType, registry
 from src.core.security.guardrails import guardrails_engine
 from src.core.security.scanning import security
+from src.prompts.structured import correction_instruction, schema_instruction
 from src.schemas.routing import CrossDocumentQueries, MultiQueryOutput
 from src.utils.model_provider import model_client
 from src.utils.structured_output import validate_structured_output
@@ -64,18 +64,7 @@ async def structured(
     provider_schema=True,
 ):
     response_schema = schema.model_json_schema()
-    schema_rules = [
-        "OUTPUT_JSON_SCHEMA",
-        json.dumps(response_schema, ensure_ascii=False, separators=(",", ":")),
-        "Mọi thuộc tính trong required phải xuất hiện",
-        "Thuộc tính nullable không sử dụng phải là null",
-    ]
-    if "target_fields" in json.dumps(response_schema, ensure_ascii=False):
-        schema_rules.append(
-            "Không được khai báo target field nếu revised field tương ứng là null"
-        )
-    schema_instruction = "\n".join(schema_rules)
-    constrained_prompt = f"{prompt}\n{schema_instruction}"
+    constrained_prompt = f"{prompt}\n{schema_instruction(response_schema)}"
     raw = await chat(
         [{"role": "user", "content": constrained_prompt}],
         max_tokens=max_tokens,
@@ -93,8 +82,7 @@ async def structured(
                 {"role": "assistant", "content": raw[:4000]},
                 {
                     "role": "user",
-                    "content": "Return one corrected strictly valid JSON object only The previous response failed schema validation "
-                    + str(error)[:2000],
+                    "content": correction_instruction(error),
                 },
             ],
             max_tokens=max_tokens,

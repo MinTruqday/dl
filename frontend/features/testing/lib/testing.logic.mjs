@@ -110,7 +110,7 @@ const valueLabels = {
   data_protection: "Bảo vệ dữ liệu",
   ADMIN: "Quản trị viên",
   USER: "Người dùng",
-  QA_LEAD: "Trưởng nhóm kiểm thử",
+  QA: "QA",
   TESTER: "Kiểm thử viên",
   BA: "Chuyên viên phân tích nghiệp vụ",
   DEVELOPER: "Lập trình viên",

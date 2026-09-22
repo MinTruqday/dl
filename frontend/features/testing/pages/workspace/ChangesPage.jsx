@@ -222,7 +222,7 @@ export default function ChangesPage({ project }) {
         expected_revision: impact.revision,
         reason: answer.reason,
         knowledge_index_version: answer.knowledge_index_version || null,
-        algorithm_version: "impact-pipeline-v1",
+        algorithm_version: "impact_pipeline",
       });
       setImpact(result);
       setOverrides({});

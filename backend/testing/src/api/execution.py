@@ -50,6 +50,7 @@ from src.domain.schemas import (
     TestSuitePatch,
 )
 from src.services.execution_context import resolve_execution_context
+from src.services.domain_policy import domain_policy
 from src.services.project_knowledge import index_artifact
 from src.services.test_plan import (
     plan_completeness,
@@ -211,7 +212,7 @@ async def create_test_plan(
         environment=payload.environment,
     )
     if payload.members:
-        await require_action_policy(payload.project_id, user, "testplan.assignments", {"QA_LEAD"})
+        await require_action_policy(payload.project_id, user, "testplan.assignments", {"QA"})
     strategy_binding = await resolve_strategy_binding(
         payload.project_id, payload.strategy_version_id, auto_bind=True
     )
@@ -289,7 +290,7 @@ async def update_test_plan(
     if plan.get("status") != "DRAFT":
         raise HTTPException(status_code=409, detail={"code": "TEST_PLAN_NOT_DRAFT"})
     if payload.members is not None:
-        await require_action_policy(plan["project_id"], user, "testplan.assignments", {"QA_LEAD"})
+        await require_action_policy(plan["project_id"], user, "testplan.assignments", {"QA"})
     changes = payload.model_dump(exclude_unset=True)
     changes.pop("expected_revision", None)
     if "strategy_version_id" in changes:
@@ -681,6 +682,18 @@ async def create_test_run(
         run["_id"],
         payload.project_id,
         {"test_count": len(version_ids)},
+    )
+    await index_artifact(
+        payload.project_id,
+        "test_execution",
+        run["_id"],
+        run["_id"],
+        run.get("name") or run["_id"],
+        " ".join([run.get("name") or run["_id"], run.get("build") or ""]),
+        run["status"],
+        "PROJECT_REFERENCE",
+        run["revision"],
+        test_case_version_ids=version_ids,
     )
     return envelope(run, revision=1)
 
@@ -1175,6 +1188,25 @@ async def record_test_result(
         run["project_id"],
         {"status": payload.status},
     )
+    await index_artifact(
+        run["project_id"],
+        "test_result",
+        result["_id"],
+        result["_id"],
+        result["_id"],
+        " ".join(
+            [
+                str(result.get("status") or ""),
+                plain_text(result.get("actual_result_doc", {})),
+                str(result.get("note") or ""),
+            ]
+        ),
+        result["status"],
+        "PROJECT_REFERENCE",
+        result.get("revision", 1),
+        test_run_id=run_id,
+        test_case_version_id=test_case_version_id,
+    )
     return envelope(result)
 
 
@@ -1478,6 +1510,8 @@ async def create_defect(
         defect["status"],
         "PROJECT_REFERENCE",
         1,
+        linked_test_result_id=defect.get("linked_test_result_id"),
+        linked_requirement_version_ids=defect.get("linked_requirement_version_ids", []),
     )
     await audit(user.id, "defect_created", "Defect", defect["_id"], project_id)
     return envelope(defect, revision=1)
@@ -1593,6 +1627,7 @@ async def find_duplicate_defects(project_id: str, user: CurrentUser = Depends(ge
         .to_list(2000)
     )
     pairs = []
+    policy = domain_policy("duplicate_detection")
     for index, left in enumerate(defects):
         left_text = " ".join(
             [left.get("title", ""), plain_text(left.get("description_doc", {}))]
@@ -1602,7 +1637,7 @@ async def find_duplicate_defects(project_id: str, user: CurrentUser = Depends(ge
                 [right.get("title", ""), plain_text(right.get("description_doc", {}))]
             ).lower()
             similarity = round(SequenceMatcher(None, left_text, right_text).ratio(), 4)
-            if similarity >= 0.65:
+            if similarity >= policy["defect_minimum"]:
                 pairs.append(
                     {
                         "_id": f"{left['_id']}:{right['_id']}",
@@ -1613,7 +1648,7 @@ async def find_duplicate_defects(project_id: str, user: CurrentUser = Depends(ge
                     }
                 )
     pairs.sort(key=lambda item: item["similarity"], reverse=True)
-    return envelope(pairs[:100])
+    return envelope(pairs[: policy["maximum_pairs"]])
 
 
 @router.get("/du-an/{project_id}/loi/xuat")
@@ -1702,7 +1737,16 @@ async def defect_detail(
     )
 
 
+def confidence_band(score, policy):
+    if score >= policy["high_confidence_minimum"]:
+        return "HIGH"
+    if score >= policy["medium_confidence_minimum"]:
+        return "MEDIUM"
+    return "LOW"
+
+
 async def build_defect_trace_candidates(defect):
+    policy = domain_policy("defect_trace")
     text = " ".join(
         [
             defect.get("title", ""),
@@ -1756,15 +1800,20 @@ async def build_defect_trace_candidates(defect):
         similarity = SequenceMatcher(None, text, version_text).ratio()
         direct = version["_id"] in linked_requirements
         test_trace = version["_id"] in linked_test_requirements
-        score = min(1, similarity * 0.7 + (0.35 if direct else 0) + (0.2 if test_trace else 0))
-        if score < 0.25:
+        score = min(
+            1,
+            similarity * policy["text_weight"]
+            + (policy["requirement_direct_increment"] if direct else 0)
+            + (policy["requirement_test_trace_increment"] if test_trace else 0),
+        )
+        if score < policy["requirement_minimum"]:
             continue
         reasons = []
         if direct:
             reasons.append("CURRENT_REQUIREMENT_LINK")
         if test_trace:
             reasons.append("LINKED_TEST_CASE_TRACE")
-        if similarity >= 0.3:
+        if similarity >= policy["requirement_text_reason_minimum"]:
             reasons.append("SIMILAR_REQUIREMENT_TEXT")
         requirement_candidates.append(
             {
@@ -1776,7 +1825,7 @@ async def build_defect_trace_candidates(defect):
                 or requirement.get("requirement_key"),
                 "title": version.get("title") or requirement.get("title", ""),
                 "confidence": round(score, 4),
-                "confidence_band": "HIGH" if score >= 0.75 else "MEDIUM" if score >= 0.5 else "LOW",
+                "confidence_band": confidence_band(score, policy),
                 "reason_codes": reasons,
                 "evidence": [
                     {"artifact_type": "defect", "artifact_id": defect["_id"]},
@@ -1797,16 +1846,19 @@ async def build_defect_trace_candidates(defect):
         shared_requirements = linked_requirements & set(version.get("requirement_version_ids", []))
         direct = defect.get("linked_test_case_version_id") == version["_id"]
         score = min(
-            1, similarity * 0.7 + (0.25 if shared_requirements else 0) + (0.3 if direct else 0)
+            1,
+            similarity * policy["text_weight"]
+            + (policy["test_shared_requirement_increment"] if shared_requirements else 0)
+            + (policy["test_direct_increment"] if direct else 0),
         )
-        if score < 0.3:
+        if score < policy["test_minimum"]:
             continue
         reasons = []
         if direct:
             reasons.append("CURRENT_LINK")
         if shared_requirements:
             reasons.append("SHARED_REQUIREMENT_TRACE")
-        if similarity >= 0.35:
+        if similarity >= policy["test_text_reason_minimum"]:
             reasons.append("SIMILAR_BEHAVIOR_TEXT")
         test_case_candidates.append(
             {
@@ -1819,7 +1871,7 @@ async def build_defect_trace_candidates(defect):
                 "title": version["title"],
                 "requirement_version_ids": version.get("requirement_version_ids", []),
                 "confidence": round(score, 4),
-                "confidence_band": "HIGH" if score >= 0.75 else "MEDIUM" if score >= 0.5 else "LOW",
+                "confidence_band": confidence_band(score, policy),
                 "reason_codes": reasons,
                 "evidence": [
                     {"artifact_type": "defect", "artifact_id": defect["_id"]},
@@ -1833,7 +1885,8 @@ async def build_defect_trace_candidates(defect):
         )
     requirement_candidates.sort(key=lambda item: item["confidence"], reverse=True)
     test_case_candidates.sort(key=lambda item: item["confidence"], reverse=True)
-    return requirement_candidates[:50], test_case_candidates[:50]
+    maximum = policy["maximum_candidates"]
+    return requirement_candidates[:maximum], test_case_candidates[:maximum]
 
 
 @router.post("/du-an/{project_id}/ai/loi/{defect_id}/goi-y-truy-vet", status_code=201)
@@ -1870,10 +1923,10 @@ async def suggest_defect_trace(
         "test_case_candidates": test_case_candidates,
         "model": {
             "provider": "hybrid-deterministic",
-            "model": "bug-trace-evidence-v1",
-            "prompt_version": "bug-trace-v1",
+            "model": "defect_trace_evidence",
+            "prompt_version": "defect_trace",
             "tool_schema_version": "1",
-            "retrieval_version": "project-filter-v1",
+            "retrieval_version": "project_evidence",
         },
         "idempotency_key": payload.idempotency_key,
         "review_status": "PENDING",
@@ -2198,7 +2251,7 @@ async def transition_defect(
     )
     if payload.to_status in {"REJECTED", "DUPLICATE"}:
         await require_action_policy(
-            defect["project_id"], user, f"defect.{payload.to_status.lower()}", {"QA_LEAD"}
+            defect["project_id"], user, f"defect.{payload.to_status.lower()}", {"QA"}
         )
     allowed = DEFECT_TRANSITIONS.get(defect["status"], set())
     if payload.to_status not in allowed:

@@ -132,9 +132,9 @@ async def operations(
         {"index_status": {"$in": ["PENDING", "FAILED"]}}
     )
     ai_models = {
-        "impact_analysis": "agentic-hybrid-v1",
-        "maintenance_proposal": "maintenance-agent-v1",
-        "regression": "risk-score-v1",
+        "impact_analysis": "evidence_impact_analysis",
+        "maintenance_proposal": "maintenance_analysis",
+        "regression": "risk_scoring",
     }
     audit_filter = {}
     if audit_event:

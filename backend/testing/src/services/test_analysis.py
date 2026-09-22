@@ -11,6 +11,7 @@ from src.core.database import database
 from src.domain.test_analysis import TestConditionCreate, condition_hash, condition_snapshot
 from src.repositories.test_condition import test_condition_repository
 from src.services.design_assistance import ai_contract_metadata, request_design_assistance
+from src.services.quality_policy import evaluate_rules
 
 BASIS_COLLECTIONS = {
     "REQUIREMENT_VERSION": "requirement_versions",
@@ -335,22 +336,7 @@ async def run_ai_analysis(project_id, payload, user):
         for item in basis_snapshots
     ]
     instruction = json.dumps(
-        {
-            "task": "Chỉ đề xuất test condition dương âm và biên từ bằng chứng không đánh giá chất lượng Requirement không tạo finding không phê duyệt hay sửa artifact",
-            "user_instruction": payload.instruction,
-            "required_condition_fields": [
-                "title",
-                "description",
-                "category",
-                "coverage_item",
-                "test_level",
-                "test_type",
-                "risk",
-                "priority",
-                "technique_candidates",
-                "testability_status",
-            ],
-        },
+        {"user_instruction": payload.instruction},
         ensure_ascii=False,
     )
     ai_result = await request_design_assistance(
@@ -495,22 +481,18 @@ def deterministic_testability_findings(basis_snapshots):
                 or snapshot.get("resolved_id"),
             }
         ]
-        rules = []
-        if not text:
-            rules.append(
-                ("UNTESTABLE", "BLOCKER", "Nội dung kiểm thử đang trống", "EMPTY_EXPECTED_BEHAVIOR")
-            )
-        for index, (category, severity, description, reason_code) in enumerate(rules, 1):
+        rules = evaluate_rules("test_basis", {"text": text})
+        for index, rule in enumerate(rules, 1):
             findings.append(
                 {
                     "candidate_id": f"DET-{snapshot['resolved_id']}-{index}",
-                    "category": category,
-                    "severity": severity,
-                    "title": description,
-                    "description": description,
-                    "suggestion": "Bổ sung tiêu chí quan sát được và có thể kiểm chứng",
+                    "category": rule["category"],
+                    "severity": rule["severity"],
+                    "title": rule["message"],
+                    "description": rule["message"],
+                    "suggestion": rule["suggestion"],
                     "evidence_refs": evidence,
-                    "reason_codes": [reason_code],
+                    "reason_codes": [rule["rule_id"]],
                     "candidate_only": True,
                 }
             )
@@ -530,12 +512,12 @@ async def run_deterministic_analysis(project_id, payload, user):
         {
             "basis_count": len(snapshots),
             "finding_count": len(findings),
-            "engine": "deterministic-v1",
+            "engine": "deterministic_rules",
         },
     )
     return {
         "status": "SUCCESS",
-        "engine": "deterministic-v1",
+        "engine": "deterministic_rules",
         "findings": findings,
         "basis_snapshots": snapshots,
     }

@@ -5,6 +5,8 @@ from typing import List
 
 from loguru import logger
 
+from src.core.security.guardrails import guardrails_engine, security_rules
+
 
 @dataclass
 class ScanResult:
@@ -16,17 +18,6 @@ class ScanResult:
 
 
 class SecurityHarness:
-    """
-    <module_purpose>
-    Veriq Security Harness for runtime prompt injection detection and content sanitization.
-    </module_purpose>
-    <contract>
-    - Precondition: Raw input text from users or external sources.
-    - Postcondition: Returns a sanitized string and scan result indicating if it was blocked.
-    - Error Handling: Defaults to strict blocking if the security analysis engine fails.
-    </contract>
-    """
-
     def __init__(self):
         self.analyzer = None
         self.anonymizer = None
@@ -34,6 +25,7 @@ class SecurityHarness:
         self._pii_engine_lock = asyncio.Lock()
 
     def _initialize_pii_engine(self):
+        pii_policy = security_rules()["pii"]
         try:
             from presidio_analyzer import AnalyzerEngine
             from presidio_analyzer.nlp_engine import NlpEngineProvider
@@ -41,8 +33,13 @@ class SecurityHarness:
 
             provider = NlpEngineProvider(
                 nlp_configuration={
-                    "nlp_engine_name": "spacy",
-                    "models": [{"lang_code": "en", "model_name": "en_core_web_sm"}],
+                    "nlp_engine_name": pii_policy["nlp_engine"],
+                    "models": [
+                        {
+                            "lang_code": pii_policy["language"],
+                            "model_name": pii_policy["model"],
+                        }
+                    ],
                 }
             )
             self.analyzer = AnalyzerEngine(nlp_engine=provider.create_engine())
@@ -73,8 +70,6 @@ class SecurityHarness:
         from src.utils.huggingface import create_chat_model
 
         violations = []
-        from src.core.security.guardrails import guardrails_engine
-
         baseline = guardrails_engine.inspect_input(text)
         sanitized = baseline.get("sanitized_text", text)
         category = baseline.get("threat_category", "none")
@@ -89,8 +84,8 @@ class SecurityHarness:
             try:
                 results = self.analyzer.analyze(
                     text=sanitized,
-                    entities=["EMAIL_ADDRESS", "PHONE_NUMBER", "CREDIT_CARD", "CRYPTO"],
-                    language="en",
+                    entities=security_rules()["pii"]["entities"],
+                    language=security_rules()["pii"]["language"],
                 )
                 if results:
                     violations.append("pii_detected")
@@ -102,16 +97,7 @@ class SecurityHarness:
                 logger.exception("Presidio scan failed")
 
         normalized = sanitized.casefold()
-        suspicious_markers = (
-            "ignore previous",
-            "ignore all previous",
-            "system prompt",
-            "developer message",
-            "bỏ qua chỉ dẫn",
-            "bỏ qua hướng dẫn",
-            "tiết lộ prompt",
-            "hiển thị prompt hệ thống",
-        )
+        suspicious_markers = security_rules()["prompt_injection_markers"]
         requires_ai_review = category != "none" or any(
             marker in normalized for marker in suspicious_markers
         )
@@ -150,16 +136,18 @@ class SecurityHarness:
     def _anomaly_score(self, text: str) -> float:
         if not text:
             return 0.0
+        policy = security_rules()["anomaly"]
         special_ratio = sum(1 for c in text if not c.isalnum() and not c.isspace()) / max(
             len(text), 1
         )
-        length_penalty = min(len(text) / 10000, 0.3)
-        return min(special_ratio * 0.5 + length_penalty, 1.0)
+        length_penalty = min(
+            len(text) / policy["length_scale"], policy["length_penalty_cap"]
+        )
+        return min(special_ratio * policy["special_character_weight"] + length_penalty, 1.0)
 
     async def ascan_input(
         self, text: str, session_id: str = "", user_id: str = "", allow_ai_review: bool = True
     ) -> ScanResult:
-        """Inspect and sanitize inbound text with deterministic and optional model checks"""
         if not text or not text.strip():
             return ScanResult(passed=True, risk_score=0.0, sanitized_text=text or "")
 
@@ -172,8 +160,11 @@ class SecurityHarness:
         pii_violations = [v for v in violations if "pii" in v]
 
         anomaly = self._anomaly_score(text)
-        injection_score = min(len(injection_violations) * 0.4, 1.0)
-        risk_score = min(injection_score + anomaly * 0.2, 1.0)
+        anomaly_policy = security_rules()["anomaly"]
+        injection_score = min(
+            len(injection_violations) * anomaly_policy["injection_violation_weight"], 1.0
+        )
+        risk_score = min(injection_score + anomaly * anomaly_policy["anomaly_weight"], 1.0)
 
         classifier_failures = [v for v in violations if "security_classifier_unavailable" in v]
 
@@ -201,15 +192,16 @@ class SecurityHarness:
     async def ascan_output(self, text: str, session_id: str = "") -> str:
         if not text:
             return text
-        from src.core.security.guardrails import guardrails_engine
-
         baseline = guardrails_engine.inspect_output(text)
         text = baseline.get("sanitized_text", text)
         if baseline.get("threat_category") == "credential_leak":
             raise PermissionError("output_credential_leak_blocked")
         sanitized, violations = await self._adetect_security_issues(text, allow_ai_review=False)
         sanitized = re.sub(
-            r"<(think|thought)>.*?</\1>", "", sanitized, flags=re.IGNORECASE | re.DOTALL
+            security_rules()["hidden_reasoning_pattern"],
+            "",
+            sanitized,
+            flags=re.IGNORECASE | re.DOTALL,
         ).strip()
         if any("credential_leak" in v for v in violations):
             logger.error("System proactively blocked and neutralized credential leak risk")

@@ -1,0 +1,63 @@
+{
+  "project": {"label": "Project"},
+  "requirement": {"label": "Requirement"},
+  "requirement_version": {
+    "label": "RequirementVersion",
+    "parent_label": "Requirement",
+    "parent_relationship": "HAS_VERSION",
+    "project_parent_relationship": "HAS_REQUIREMENT",
+    "relationships": [
+      {"field": "acceptance_criterion_ids", "source": "self", "target_label": "AcceptanceCriterion", "relationship": "HAS_AC"},
+      {"field": "source_document_ids", "source": "target", "target_label": "Document", "relationship": "DESCRIBES"}
+    ]
+  },
+  "acceptance_criterion": {"label": "AcceptanceCriterion", "parent_label": "RequirementVersion", "parent_relationship": "HAS_AC"},
+  "test_case": {"label": "TestCase"},
+  "test_case_version": {
+    "label": "TestCaseVersion",
+    "parent_label": "TestCase",
+    "parent_relationship": "HAS_VERSION",
+    "relationships": [
+      {"field": "requirement_version_ids", "source": "parent", "target_label": "RequirementVersion", "relationship": "COVERS"},
+      {"field": "acceptance_criterion_ids", "source": "parent", "target_label": "AcceptanceCriterion", "relationship": "COVERS_AC"}
+    ]
+  },
+  "test_execution": {
+    "label": "TestExecution",
+    "relationships": [
+      {"field": "test_case_version_ids", "source": "self", "target_label": "TestCaseVersion", "relationship": "EXECUTES"}
+    ]
+  },
+  "test_result": {
+    "label": "TestResult",
+    "relationships": [
+      {"field": "test_run_id", "source": "target", "target_label": "TestExecution", "relationship": "PRODUCED"}
+    ]
+  },
+  "defect": {
+    "label": "Defect",
+    "relationships": [
+      {"field": "linked_test_result_id", "source": "target", "target_label": "TestResult", "relationship": "RELATED_TO"},
+      {"field": "linked_requirement_version_ids", "source": "self", "target_label": "RequirementVersion", "relationship": "AFFECTS"}
+    ]
+  },
+  "change": {
+    "label": "Change",
+    "relationships": [
+      {"field": "requirement_version_ids", "source": "self", "target_label": "RequirementVersion", "relationship": "CHANGES"},
+      {"field": "test_case_ids", "source": "self", "target_label": "TestCase", "relationship": "IMPACTS"}
+    ]
+  },
+  "document": {
+    "label": "Document",
+    "relationships": [
+      {"field": "requirement_ids", "source": "self", "target_label": "Requirement", "relationship": "DESCRIBES"}
+    ]
+  },
+  "requirement_document": {
+    "label": "Document",
+    "relationships": [
+      {"field": "requirement_ids", "source": "self", "target_label": "Requirement", "relationship": "DESCRIBES"}
+    ]
+  }
+}

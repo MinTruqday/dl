@@ -1,6 +1,9 @@
 import math
+import json
 import re
 from collections import Counter
+from functools import lru_cache
+from pathlib import Path
 from typing import Any, Dict
 
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -10,6 +13,13 @@ from src.core.infrastructure.configuration import settings
 from src.core.registry import PromptType, registry
 from src.schemas.guardrails import SecurityAssessment
 from src.utils.huggingface import create_chat_model
+
+
+@lru_cache(maxsize=1)
+def security_rules():
+    path = Path(__file__).with_name("rules.json")
+    with path.open(encoding="utf-8") as source:
+        return json.load(source)
 
 
 class GuardrailsEngine:
@@ -27,52 +37,48 @@ class GuardrailsEngine:
 
     def _redact_structural_secrets(self, text: str) -> tuple[str, bool]:
         found = False
+        policy = security_rules()["secret_detection"]
 
         def redact(match: re.Match) -> str:
             nonlocal found
             candidate = match.group(0)
-            identifier = candidate.strip("\"'`,;:[]{}()")
-            if re.fullmatch(
-                r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}",
-                identifier,
-            ):
+            identifier = candidate.strip(policy["identifier_strip_characters"])
+            if re.fullmatch(policy["uuid_pattern"], identifier):
                 return candidate
-            if re.fullmatch(r"[A-Z][A-Z0-9]{0,15}-[0-9a-fA-F]{32}", identifier):
+            if re.fullmatch(policy["domain_identifier_pattern"], identifier):
                 return candidate
             has_character_mix = bool(
                 re.search(r"[A-Za-z]", candidate) and re.search(r"\d", candidate)
             )
             compact_ratio = sum(character.isalnum() for character in candidate) / len(candidate)
-            credential_shape = (len(candidate) >= 32 and compact_ratio >= 0.85) or (
-                len(candidate) == 20 and candidate.upper() == candidate and compact_ratio == 1.0
+            credential_shape = (
+                len(candidate) >= policy["long_candidate_minimum_length"]
+                and compact_ratio >= policy["compact_ratio_threshold"]
+            ) or (
+                len(candidate) == policy["fixed_uppercase_length"]
+                and candidate.upper() == candidate
+                and compact_ratio == 1.0
             )
-            credential_uri = "://" in candidate and "@" in candidate
+            credential_uri = (
+                policy["uri_scheme_marker"] in candidate
+                and policy["uri_identity_marker"] in candidate
+            )
             if (
                 has_character_mix
-                and self._entropy(candidate) >= 3.5
+                and self._entropy(candidate) >= policy["entropy_threshold"]
                 and (credential_shape or credential_uri)
             ):
                 found = True
-                return "[REDACTED]"
+                return policy["redaction"]
             return candidate
 
-        sanitized = re.sub(r"(?<![\w])[^\s]{20,}(?![\w])", redact, text)
+        sanitized = re.sub(policy["candidate_pattern"], redact, text)
         return sanitized, found
 
     def _deterministic_assessment(self, text: str) -> Dict[str, Any]:
         sanitized, credential_found = self._redact_structural_secrets(text)
         normalized = sanitized.casefold()
-        injection_markers = (
-            "ignore previous",
-            "ignore all previous",
-            "reveal secret credentials",
-            "system prompt",
-            "developer message",
-            "bỏ qua chỉ dẫn",
-            "bỏ qua hướng dẫn",
-            "tiết lộ prompt",
-            "hiển thị prompt hệ thống",
-        )
+        injection_markers = security_rules()["prompt_injection_markers"]
         injection_found = any(marker in normalized for marker in injection_markers)
         if credential_found:
             threat_category = "credential_leak"

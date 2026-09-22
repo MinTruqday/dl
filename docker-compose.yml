@@ -198,7 +198,7 @@ services:
       - 38470-38479:38470-38479
     labels:
       - traefik.enable=true
-      - traefik.http.routers.ai.rule=PathPrefix(`/suy-luan`) || PathPrefix(`/su-kien`) || PathPrefix(`/tiep-nap`) || PathPrefix(`/tri-thuc`) || PathPrefix(`/danh-gia`)
+      - traefik.http.routers.ai.rule=PathPrefix(`/suy-luan`) || PathPrefix(`/su-kien`) || PathPrefix(`/tiep-nap`) || PathPrefix(`/tri-thuc`) || PathPrefix(`/danh-gia`) || PathPrefix(`/tac-tu`)
       - traefik.http.services.ai.loadbalancer.server.port=8000
     environment:
       <<: [*service-environment, *object-storage-environment]
@@ -216,6 +216,9 @@ services:
       RERANKER_MODEL: ${RERANKER_MODEL:?RERANKER_MODEL is required}
       EMBEDDING_MODEL: ${EMBEDDING_MODEL:?EMBEDDING_MODEL is required}
       NLI_MODEL_NAME: ${NLI_MODEL_NAME:?NLI_MODEL_NAME is required}
+      NEO4J_URI: ${NEO4J_URI:?NEO4J_URI is required}
+      NEO4J_USER: ${NEO4J_USER:?NEO4J_USER is required}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD:?NEO4J_PASSWORD is required}
       TAVILY_API_KEY: ${TAVILY_API_KEY:?TAVILY_API_KEY is required}
       AGENT_SLOW_DURATION_MS_THRESHOLD: ${AGENT_SLOW_DURATION_MS_THRESHOLD:?AGENT_SLOW_DURATION_MS_THRESHOLD is required}
       AGENT_ROUTE_CONFIDENCE_THRESHOLD: ${AGENT_ROUTE_CONFIDENCE_THRESHOLD:?AGENT_ROUTE_CONFIDENCE_THRESHOLD is required}
@@ -224,6 +227,13 @@ services:
       AGENT_MAX_CONTEXT_TOKENS: ${AGENT_MAX_CONTEXT_TOKENS:?AGENT_MAX_CONTEXT_TOKENS is required}
       AGENT_HISTORY_MAX_TURNS: ${AGENT_HISTORY_MAX_TURNS:?AGENT_HISTORY_MAX_TURNS is required}
       AGENT_DEFAULT_MAX_OUTPUT_TOKENS: ${AGENT_DEFAULT_MAX_OUTPUT_TOKENS:?AGENT_DEFAULT_MAX_OUTPUT_TOKENS is required}
+      AGENT_MAX_SUPERVISOR_STEPS: ${AGENT_MAX_SUPERVISOR_STEPS:?AGENT_MAX_SUPERVISOR_STEPS is required}
+      AGENT_MAX_SPECIALIST_STEPS: ${AGENT_MAX_SPECIALIST_STEPS:?AGENT_MAX_SPECIALIST_STEPS is required}
+      AGENT_MAX_TOOL_CALLS_PER_TASK: ${AGENT_MAX_TOOL_CALLS_PER_TASK:?AGENT_MAX_TOOL_CALLS_PER_TASK is required}
+      AGENT_MAX_TOOL_ERRORS: ${AGENT_MAX_TOOL_ERRORS:?AGENT_MAX_TOOL_ERRORS is required}
+      AGENT_MAX_RETRIES: ${AGENT_MAX_RETRIES:?AGENT_MAX_RETRIES is required}
+      AGENT_TASK_TIMEOUT_SECONDS: ${AGENT_TASK_TIMEOUT_SECONDS:?AGENT_TASK_TIMEOUT_SECONDS is required}
+      AGENT_MAX_EVIDENCE_ITEMS: ${AGENT_MAX_EVIDENCE_ITEMS:?AGENT_MAX_EVIDENCE_ITEMS is required}
       AGENT_FILE_ROOT: ${AGENT_FILE_ROOT:?AGENT_FILE_ROOT is required}
       AGENT_ARCHIVE_MAX_FILES: ${AGENT_ARCHIVE_MAX_FILES:?AGENT_ARCHIVE_MAX_FILES is required}
       AGENT_ARCHIVE_MAX_UNCOMPRESSED_BYTES: ${AGENT_ARCHIVE_MAX_UNCOMPRESSED_BYTES:?AGENT_ARCHIVE_MAX_UNCOMPRESSED_BYTES is required}
@@ -241,6 +251,8 @@ services:
         condition: service_started
       qdrant:
         condition: service_started
+      neo4j:
+        condition: service_healthy
     volumes:
       - hf_cache:/home/appuser/.cache/huggingface
     networks:
@@ -289,6 +301,32 @@ services:
       - qdrant_data:/qdrant/storage
     networks:
       - veriq_network
+
+  neo4j:
+    image: neo4j:5.26.12-community
+    container_name: veriq_neo4j
+    restart: always
+    environment:
+      NEO4J_AUTH: ${NEO4J_USER:?NEO4J_USER is required}/${NEO4J_PASSWORD:?NEO4J_PASSWORD is required}
+      NEO4J_server_memory_heap_initial__size: 256m
+      NEO4J_server_memory_heap_max__size: 512m
+      NEO4J_server_memory_pagecache_size: 256m
+    ports:
+      - 7474:7474
+      - 7687:7687
+    volumes:
+      - neo4j_data:/data
+    networks:
+      - veriq_network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "cypher-shell -u ${NEO4J_USER:?NEO4J_USER is required} -p ${NEO4J_PASSWORD:?NEO4J_PASSWORD is required} 'RETURN 1'",
+        ]
+      interval: 15s
+      timeout: 10s
+      retries: 10
 
   prometheus:
     image: prom/prometheus:v3.13.0@sha256:c6b27ea434f8389bfe233fbc7be381cf50587c286e871bc842008f5a1b1908a7
@@ -479,6 +517,7 @@ volumes:
   redis_data: null
   rabbitmq_data: null
   qdrant_data: null
+  neo4j_data: null
   prometheus_data: null
   grafana_data: null
   hf_cache:

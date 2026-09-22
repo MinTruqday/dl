@@ -1,0 +1,38 @@
+{
+  "terminal_characters": ".!?…",
+  "closing_characters": "\"'”’)",
+  "invalid_patterns": ["\\]\\(null\\)$"],
+  "hidden_reasoning_pattern": "<(think|thought)>.*?</\\1>",
+  "narrative_fields": [
+    "answer",
+    "summary",
+    "title",
+    "description",
+    "content",
+    "message",
+    "suggestion",
+    "rationale",
+    "warning",
+    "warnings",
+    "executive_summary",
+    "risk_explanation",
+    "recommendation_narrative",
+    "closure_summary",
+    "residual_risk_summary",
+    "recommendation_rationale",
+    "observation",
+    "impact",
+    "recommendation"
+  ],
+  "reserved_field_names": [
+    "task_id",
+    "status",
+    "summary",
+    "evidence_refs",
+    "reason_codes",
+    "proposals",
+    "warnings",
+    "actions",
+    "success_criteria_met"
+  ]
+}

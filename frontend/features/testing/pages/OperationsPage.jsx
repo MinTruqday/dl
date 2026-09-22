@@ -22,9 +22,9 @@ const taskLabels = {
 };
 
 const modelLabels = {
-  "agentic-hybrid-v1": "Mô hình tác tử kết hợp phiên bản 1",
-  "maintenance-agent-v1": "Mô hình bảo trì phiên bản 1",
-  "risk-score-v1": "Mô hình chấm điểm rủi ro phiên bản 1",
+  evidence_impact_analysis: "Phân tích ảnh hưởng dựa trên bằng chứng",
+  maintenance_analysis: "Phân tích bảo trì",
+  risk_scoring: "Chấm điểm rủi ro",
 };
 
 export default function OperationsPage() {

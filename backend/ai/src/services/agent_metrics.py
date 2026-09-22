@@ -1,4 +1,5 @@
 import asyncio
+from contextvars import ContextVar
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Literal, Optional
@@ -36,17 +37,11 @@ class SessionMetrics:
     llm_latencies_ms: list = field(default_factory=list)
 
 
-PROMETHEUS_PREFIX = "system_agent"
+PROMETHEUS_PREFIX = "veriq_agent"
+_current_session: ContextVar[str | None] = ContextVar("agent_session", default=None)
 
 
-class AgentopsHarness:
-    """
-    <module_purpose>
-    <purpose>Provides observability and telemetry for all agent interactions.</purpose>
-    <metis_behavior>Traces LLM calls transparently. Strictly avoids logging PII or secure tokens.</metis_behavior>
-    </module_purpose>
-    """
-
+class AgentMetrics:
     def __init__(self):
         self._sessions: dict[str, SessionMetrics] = {}
         self._db_client = None
@@ -60,7 +55,7 @@ class AgentopsHarness:
                 from src.core.infrastructure.configuration import settings
 
                 client = AsyncIOMotorClient(settings.MONGODB_URI)
-                self._db_client = client.get_default_database()
+                self._db_client = client[settings.AI_DB_NAME]
             except Exception:
                 logger.exception("MongoDB connection error")
         return self._db_client
@@ -70,6 +65,7 @@ class AgentopsHarness:
             session_id=session_id, user_id=user_id, started_at=datetime.now(timezone.utc)
         )
         self._sessions[session_id] = metrics
+        _current_session.set(session_id)
         logger.info("Started recording session")
 
     def record_session_end(
@@ -85,6 +81,11 @@ class AgentopsHarness:
         )
         logger.info("Finished recording session")
         create_background_task(self._flush_session(session_id), f"agentops-flush-{session_id}")
+        if _current_session.get() == session_id:
+            _current_session.set(None)
+
+    def current_session_id(self):
+        return _current_session.get()
 
     def record_tool_call(
         self, session_id: str, tool_name: str, duration_ms: int, success: bool, error: str = ""
@@ -196,4 +197,4 @@ class AgentopsHarness:
         return "\n".join(lines) + "\n"
 
 
-agentops = AgentopsHarness()
+agentops = AgentMetrics()

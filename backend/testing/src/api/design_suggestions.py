@@ -69,11 +69,7 @@ async def generate_security_test_suggestions(
         "security_test_generation",
         project_id,
         json.dumps(
-            {
-                "task": "Sinh kiểm thử bảo mật cụ thể theo bằng chứng bằng tiếng Việt không tuyên bố đã quét lỗ hổng mỗi nhóm có ít nhất một đề xuất",
-                "categories": payload.categories,
-                "suggestion_schema": SecurityCandidate.model_json_schema(),
-            },
+            {"categories": payload.categories},
             ensure_ascii=False,
         ),
         evidence
@@ -180,13 +176,11 @@ async def generate_performance_plan_draft(
         project_id,
         json.dumps(
             {
-                "task": "Sinh kế hoạch hiệu năng bằng tiếng Việt gắn với hành vi trong bằng chứng mỗi workload có ít nhất một kịch bản không chạy phát tải",
                 "workload_types": payload.workload_types,
                 "target_virtual_users": payload.target_virtual_users,
                 "target_requests_per_second": payload.target_requests_per_second,
                 "duration_minutes": payload.duration_minutes,
                 "objective": payload.objective,
-                "suggestion_schema": PerformanceScenario.model_json_schema(),
             },
             ensure_ascii=False,
         ),
