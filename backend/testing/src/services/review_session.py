@@ -154,11 +154,7 @@ async def update_review(db, review_id, payload, user):
         *(changes.get("reviewers") or review["reviewers"]),
         changes.get("scribe_id", review.get("scribe_id")),
     ]
-    if (
-        participants[0] == review["author_id"]
-        or review["author_id"] in participants[2:-1]
-        or participants[0] in participants[2:-1]
-    ):
+    if review["author_id"] in participants[2:-1] or participants[0] in participants[2:-1]:
         raise HTTPException(status_code=422, detail={"code": "REVIEW_PARTICIPANT_ROLE_CONFLICT"})
     await validate_members(db, review["project_id"], participants)
     changes["updated_at"] = now()
@@ -189,8 +185,7 @@ async def assign_reviewers(db, review_id, payload, user):
     if review["status"] != "PLANNED":
         raise HTTPException(status_code=409, detail={"code": "REVIEW_ASSIGNMENT_STATE_INVALID"})
     if (
-        review["author_id"] == payload.moderator_id
-        or review["author_id"] in payload.reviewer_ids
+        review["author_id"] in payload.reviewer_ids
         or payload.moderator_id in payload.reviewer_ids
     ):
         raise HTTPException(status_code=422, detail={"code": "REVIEW_PARTICIPANT_ROLE_CONFLICT"})

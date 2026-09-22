@@ -2328,8 +2328,6 @@ async def retest_defect(
         raise HTTPException(status_code=422, detail={"code": "INVALID_RETEST_RESULT"})
     if result.get("status") not in {"PASS", "FAIL"}:
         raise HTTPException(status_code=422, detail={"code": "RETEST_RESULT_MUST_PASS_OR_FAIL"})
-    if result["status"] == "PASS":
-        await get_project(project_id, user, "defect.close")
     linked_version_id = defect.get("linked_test_case_version_id")
     if linked_version_id and result.get("test_case_version_id") != linked_version_id:
         raise HTTPException(status_code=422, detail={"code": "RETEST_CASE_VERSION_MISMATCH"})

@@ -801,9 +801,8 @@ export default function DefectsPage({ project }) {
                     {results
                       .filter(
                         (result) =>
-                          (!item.linked_test_case_version_id ||
-                            result.test_case_version_id === item.linked_test_case_version_id) &&
-                          (result.status !== "PASS" || can("defect.close")),
+                          !item.linked_test_case_version_id ||
+                          result.test_case_version_id === item.linked_test_case_version_id,
                       )
                       .map((result) => (
                         <option key={result._id} value={result._id}>

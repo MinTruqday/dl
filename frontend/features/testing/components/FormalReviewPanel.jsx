@@ -4,7 +4,7 @@ import DataTable from "./DataTable";
 import ReviewChecklist from "./ReviewChecklist";
 import ReviewFindingsTable from "./ReviewFindingsTable";
 import { ErrorState, Panel, StatusPill, useActionDialog } from "./WorkspacePrimitives";
-import { messageOf } from "../lib/testing";
+import { messageOf, valueLabel } from "../lib/testing";
 import { testingApi } from "../services/testing.service";
 
 export default function FormalReviewPanel({
@@ -20,6 +20,8 @@ export default function FormalReviewPanel({
   const [error, setError] = useState("");
   const { ask, dialog } = useActionDialog();
   const can = (permission) => project.current_permissions?.includes(permission);
+  const userId = project.current_membership?.user_id;
+  const role = project.current_membership?.project_role;
   const load = useCallback(async () => {
     try {
       const [result, memberValues] = await Promise.all([
@@ -43,6 +45,16 @@ export default function FormalReviewPanel({
     value: item.user_id,
     label: item.user_label || item.email || item.user_id,
   }));
+  const memberName = (value) =>
+    memberOptions.find((item) => item.value === value)?.label || value || "Chưa phân công";
+  const participantsAreValid = (moderatorId, authorId, reviewerIds) => {
+    const values = Array.isArray(reviewerIds) ? reviewerIds : [reviewerIds];
+    if (values.includes(moderatorId) || values.includes(authorId)) {
+      setError("Người rà soát phải khác người điều phối và tác giả");
+      return false;
+    }
+    return true;
+  };
   const create = async () => {
     const answer = await ask({
       title: "Tạo phiên rà soát chính thức",
@@ -51,15 +63,16 @@ export default function FormalReviewPanel({
         { name: "objective", label: "Mục tiêu", required: true, multiline: true, autoFocus: true },
         {
           name: "moderator_id",
-          label: "Moderator",
+          label: "Người điều phối",
           required: true,
           options: [{ value: "", label: "Chọn thành viên" }, ...memberOptions],
         },
         {
-          name: "reviewer_id",
-          label: "Reviewer",
+          name: "reviewer_ids",
+          label: "Người rà soát",
           required: true,
-          options: [{ value: "", label: "Chọn thành viên" }, ...memberOptions],
+          multiple: true,
+          options: memberOptions,
         },
         {
           name: "author_id",
@@ -67,9 +80,15 @@ export default function FormalReviewPanel({
           required: true,
           options: [{ value: "", label: "Chọn thành viên" }, ...memberOptions],
         },
+        {
+          name: "scribe_id",
+          label: "Người ghi biên bản",
+          options: [{ value: "", label: "Không phân công" }, ...memberOptions],
+        },
       ],
     });
     if (!answer) return;
+    if (!participantsAreValid(answer.moderator_id, answer.author_id, answer.reviewer_ids)) return;
     try {
       const value = await testingApi.createReviewSession(project._id, {
         idempotency_key: crypto.randomUUID(),
@@ -81,7 +100,8 @@ export default function FormalReviewPanel({
         checklist_version: "1",
         moderator_id: answer.moderator_id,
         author_id: answer.author_id,
-        reviewers: [answer.reviewer_id],
+        reviewers: answer.reviewer_ids,
+        scribe_id: answer.scribe_id || null,
         checklist: [],
       });
       setSelected(value);
@@ -108,7 +128,7 @@ export default function FormalReviewPanel({
               label: "Quyết định",
               required: true,
               options: ["ACCEPTED", "ACCEPTED_WITH_ACTIONS", "REWORK_REQUIRED", "REJECTED"].map(
-                (value) => ({ value, label: value }),
+                (value) => ({ value, label: valueLabel(value) }),
               ),
             },
             { name: "note", label: "Ghi chú", multiline: true },
@@ -133,7 +153,7 @@ export default function FormalReviewPanel({
           label: "Mức độ",
           options: ["MAJOR", "MINOR", "QUESTION", "IMPROVEMENT"].map((value) => ({
             value,
-            label: value,
+            label: valueLabel(value),
           })),
         },
         {
@@ -148,7 +168,7 @@ export default function FormalReviewPanel({
             "SECURITY",
             "PERFORMANCE",
             "MAINTAINABILITY",
-          ].map((value) => ({ value, label: value })),
+          ].map((value) => ({ value, label: valueLabel(value) })),
         },
         { name: "description", label: "Nội dung", required: true, multiline: true },
         {
@@ -180,33 +200,35 @@ export default function FormalReviewPanel({
       fields: [
         {
           name: "moderator_id",
-          label: "Moderator",
+          label: "Người điều phối",
           required: true,
           options: [{ value: "", label: "Chọn thành viên" }, ...memberOptions],
           initialValue: selected.moderator_id,
         },
         {
-          name: "reviewer_id",
-          label: "Reviewer",
+          name: "reviewer_ids",
+          label: "Người rà soát",
           required: true,
-          options: [{ value: "", label: "Chọn thành viên" }, ...memberOptions],
-          initialValue: (selected.reviewer_ids || selected.reviewers || [])[0],
+          multiple: true,
+          options: memberOptions,
+          initialValue: selected.reviewer_ids || selected.reviewers || [],
         },
         {
           name: "scribe_id",
-          label: "Scribe",
+          label: "Người ghi biên bản",
           options: [{ value: "", label: "Không phân công" }, ...memberOptions],
           initialValue: selected.scribe_id || "",
         },
       ],
     });
     if (!answer) return;
+    if (!participantsAreValid(answer.moderator_id, selected.author_id, answer.reviewer_ids)) return;
     try {
       setSelected(
         await testingApi.assignReviewSessionReviewers(selected._id, {
           expected_revision: selected.revision,
           moderator_id: answer.moderator_id,
-          reviewer_ids: [answer.reviewer_id],
+          reviewer_ids: answer.reviewer_ids,
           scribe_id: answer.scribe_id || null,
         }),
       );
@@ -282,21 +304,23 @@ export default function FormalReviewPanel({
         { name: "objective", label: "Mục tiêu", required: true, multiline: true },
         {
           name: "moderator_id",
-          label: "Moderator",
+          label: "Người điều phối",
           required: true,
           options: [{ value: "", label: "Chọn thành viên" }, ...memberOptions],
           initialValue: selected.moderator_id,
         },
         {
-          name: "reviewer_id",
-          label: "Reviewer",
+          name: "reviewer_ids",
+          label: "Người rà soát",
           required: true,
-          options: [{ value: "", label: "Chọn thành viên" }, ...memberOptions],
-          initialValue: (selected.reviewer_ids || selected.reviewers || [])[0],
+          multiple: true,
+          options: memberOptions,
+          initialValue: selected.reviewer_ids || selected.reviewers || [],
         },
       ],
     });
     if (!answer) return;
+    if (!participantsAreValid(answer.moderator_id, selected.author_id, answer.reviewer_ids)) return;
     try {
       setSelected(
         await testingApi.createFollowUpReviewSession(selected._id, {
@@ -304,7 +328,7 @@ export default function FormalReviewPanel({
           idempotency_key: crypto.randomUUID(),
           objective: answer.objective,
           moderator_id: answer.moderator_id,
-          reviewer_ids: [answer.reviewer_id],
+          reviewer_ids: answer.reviewer_ids,
           scribe_id: null,
         }),
       );
@@ -355,13 +379,17 @@ export default function FormalReviewPanel({
         items={sessions}
         empty="Chưa có phiên rà soát"
         columns={[
-          { key: "review_type", label: "Loại" },
+          { key: "review_type", label: "Loại", render: (item) => valueLabel(item.review_type) },
           {
             key: "status",
             label: "Trạng thái",
             render: (item) => <StatusPill value={item.status} />,
           },
-          { key: "decision", label: "Quyết định" },
+          {
+            key: "decision",
+            label: "Quyết định",
+            render: (item) => (item.decision ? valueLabel(item.decision) : "Chưa có"),
+          },
           {
             key: "action",
             label: "Thao tác",
@@ -392,14 +420,16 @@ export default function FormalReviewPanel({
                   <button className="secondary-button" type="button" onClick={assignParticipants}>
                     Phân công
                   </button>
-                  <button
-                    className="secondary-button"
-                    type="button"
-                    onClick={() => transition(testingApi.startReviewSession)}
-                  >
-                    Bắt đầu
-                  </button>
-                  {can("reviewsession.complete") && (
+                  {selected.moderator_id === userId && (
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      onClick={() => transition(testingApi.startReviewSession)}
+                    >
+                      Bắt đầu
+                    </button>
+                  )}
+                  {can("reviewsession.complete") && selected.moderator_id === userId && (
                     <button
                       className="danger-button"
                       type="button"
@@ -415,38 +445,44 @@ export default function FormalReviewPanel({
                   Thêm phát hiện
                 </button>
               )}
-              {selected.status === "IN_PROGRESS" && can("reviewsession.complete") && (
-                <button
-                  className="apple-button"
-                  type="button"
-                  onClick={() => transition(testingApi.recordReviewSessionDecision, "decision")}
-                >
-                  Ghi quyết định
-                </button>
-              )}
-              {selected.status === "DECISION_PENDING" && can("reviewsession.complete") && (
-                <button
-                  className="apple-button"
-                  type="button"
-                  onClick={() => transition(testingApi.completeReviewSession, "complete")}
-                >
-                  Hoàn tất
-                </button>
-              )}
+              {selected.status === "IN_PROGRESS" &&
+                can("reviewsession.complete") &&
+                selected.moderator_id === userId && (
+                  <button
+                    className="apple-button"
+                    type="button"
+                    onClick={() => transition(testingApi.recordReviewSessionDecision, "decision")}
+                  >
+                    Ghi quyết định
+                  </button>
+                )}
+              {selected.status === "DECISION_PENDING" &&
+                can("reviewsession.complete") &&
+                selected.moderator_id === userId && (
+                  <button
+                    className="apple-button"
+                    type="button"
+                    onClick={() => transition(testingApi.completeReviewSession, "complete")}
+                  >
+                    Hoàn tất
+                  </button>
+                )}
               {selected.status === "COMPLETED" && can("reviewsession.create") && (
                 <button className="secondary-button" type="button" onClick={createFollowUp}>
                   Tạo phiên tiếp theo
                 </button>
               )}
-              {selected.status === "COMPLETED" && can("reviewsession.complete") && (
-                <button
-                  className="secondary-button"
-                  type="button"
-                  onClick={() => terminalTransition("ARCHIVED")}
-                >
-                  Lưu trữ
-                </button>
-              )}
+              {selected.status === "COMPLETED" &&
+                can("reviewsession.complete") &&
+                selected.moderator_id === userId && (
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={() => terminalTransition("ARCHIVED")}
+                  >
+                    Lưu trữ
+                  </button>
+                )}
               <button
                 className="secondary-button"
                 type="button"
@@ -459,6 +495,28 @@ export default function FormalReviewPanel({
                 Xuất CSV
               </button>
             </div>
+          </div>
+          <div className="grid gap-3 text-sm sm:grid-cols-4">
+            <p>
+              <span className="field-label">Người điều phối</span>
+              <br />
+              {memberName(selected.moderator_id)}
+            </p>
+            <p>
+              <span className="field-label">Tác giả</span>
+              <br />
+              {memberName(selected.author_id)}
+            </p>
+            <p>
+              <span className="field-label">Người rà soát</span>
+              <br />
+              {(selected.reviewer_ids || selected.reviewers || []).map(memberName).join(" · ")}
+            </p>
+            <p>
+              <span className="field-label">Người ghi biên bản</span>
+              <br />
+              {memberName(selected.scribe_id)}
+            </p>
           </div>
           {selected.metrics && (
             <div className="grid gap-3 text-sm sm:grid-cols-4">
@@ -487,7 +545,16 @@ export default function FormalReviewPanel({
           <ReviewChecklist items={selected.checklist} />
           <ReviewFindingsTable
             findings={selected.findings}
-            canManage={can("reviewsession.finding.manage")}
+            canAssign={() => can("reviewsession.finding.manage")}
+            canResolve={(item) =>
+              can("reviewsession.finding.manage") && (role === "QA" || item.owner_id === userId)
+            }
+            canVerify={(item) =>
+              can("reviewsession.finding.manage") &&
+              (selected.moderator_id === userId ||
+                (selected.reviewer_ids || selected.reviewers || []).includes(userId)) &&
+              item.resolved_by !== userId
+            }
             onAssign={assignFinding}
             onResolve={resolveFinding}
             onVerify={verifyFinding}

@@ -68,12 +68,8 @@ class ReviewSessionCreate(BaseModel):
     @model_validator(mode="after")
     def validate_participants(self):
         self.reviewers = list(dict.fromkeys(self.reviewers))
-        if (
-            self.moderator_id == self.author_id
-            or self.moderator_id in self.reviewers
-            or self.author_id in self.reviewers
-        ):
-            raise ValueError("Moderator tác giả và reviewer phải độc lập")
+        if self.moderator_id in self.reviewers or self.author_id in self.reviewers:
+            raise ValueError("Người rà soát phải độc lập với người điều phối và tác giả")
         return self
 
 
